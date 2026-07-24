@@ -918,7 +918,7 @@ export default function ApplicationWorkspacePage() {
         </div>
         {hasScaffolds && app?.status !== 'complete' && (
           <button onClick={markSubmitted} style={{
-            fontFamily: UI, fontWeight: 600, fontSize: compact ? 12.5 : 13, color: '#F1F7E4',
+            fontFamily: UI, fontWeight: 600, fontSize: compact ? 12.5 : 13, color: 'var(--state-success-pale)',
             background: T.greenDeep, border: 'none', padding: compact ? '6px 12px' : '8px 14px',
             borderRadius: 8, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6,
           }}>
@@ -1257,7 +1257,7 @@ export default function ApplicationWorkspacePage() {
               {guidelinesError && <p style={{ fontFamily: BODY, fontSize: 12.5, color: T.coralText, margin: 0 }}>{guidelinesError}</p>}
               <div style={{ display: 'flex', gap: 10 }}>
                 <button onClick={submitGuidelines} disabled={guidelinesBusy} style={{
-                  fontFamily: UI, fontWeight: 600, fontSize: 13, color: '#F1F7E4',
+                  fontFamily: UI, fontWeight: 600, fontSize: 13, color: 'var(--state-success-pale)',
                   background: T.greenDeep, border: 'none', padding: '8px 16px', borderRadius: 8,
                   cursor: guidelinesBusy ? 'wait' : 'pointer', opacity: guidelinesBusy ? 0.7 : 1,
                 }}>
@@ -1506,7 +1506,7 @@ export default function ApplicationWorkspacePage() {
                 {returnError && <p style={{ fontFamily: BODY, fontSize: 13, color: T.coralText, margin: '0 0 10px' }}>{returnError}</p>}
                 <div style={{ display: 'flex', gap: 10 }}>
                   <button onClick={mapReturnedDoc} disabled={returnBusy} style={{
-                    fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: '#F1F7E4',
+                    fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: 'var(--state-success-pale)',
                     background: T.greenDeep, border: 'none', padding: '9px 18px', borderRadius: 8,
                     cursor: returnBusy ? 'wait' : 'pointer', opacity: returnBusy ? 0.7 : 1,
                   }}>
@@ -1541,7 +1541,7 @@ export default function ApplicationWorkspacePage() {
                             display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
                           }}
                         >
-                          {a.apply && <Check size={13} color="#fff" />}
+                          {a.apply && <Check size={13} color="var(--surface-card)" />}
                         </button>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 3 }}>
@@ -1676,7 +1676,7 @@ export default function ApplicationWorkspacePage() {
       {toast && (
         <div style={{
           position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
-          background: T.greenDeep, color: '#F1F7E4', fontFamily: UI, fontWeight: 500, fontSize: 13.5,
+          background: T.greenDeep, color: 'var(--state-success-pale)', fontFamily: UI, fontWeight: 500, fontSize: 13.5,
           padding: '11px 20px', borderRadius: 10, zIndex: 60, boxShadow: '0 8px 32px rgba(23,52,4,0.3)',
         }}>
           {toast}
@@ -2358,7 +2358,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
                                   cursor: 'pointer', padding: 0,
                                 }}
                               >
-                                {g.dismissed && <Check size={10} color="#fff" />}
+                                {g.dismissed && <Check size={10} color="var(--surface-card)" />}
                               </button>
                               <button
                                 onClick={() => setExpandedGap(gOpen ? null : i)}

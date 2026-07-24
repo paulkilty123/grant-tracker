@@ -42,7 +42,7 @@ function HowItWorks({ withCta }: { withCta?: boolean }) {
           <div key={i} style={{ flex: '1 1 150px', minWidth: 150 }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
               <span style={{
-                fontFamily: UI, fontWeight: 700, fontSize: 13, color: '#F1F7E4', background: T.greenDeep,
+                fontFamily: UI, fontWeight: 700, fontSize: 13, color: 'var(--state-success-pale)', background: T.greenDeep,
                 width: 30, height: 30, borderRadius: 999, display: 'inline-flex', alignItems: 'center',
                 justifyContent: 'center', flexShrink: 0,
               }}>
@@ -73,7 +73,7 @@ function HowItWorks({ withCta }: { withCta?: boolean }) {
 const STATUS_STYLE: Record<string, { bg: string; color: string; label: string }> = {
   draft:       { bg: T.surfaceSunken,      color: T.textSecondary, label: 'Draft' },
   in_progress: { bg: T.paleGreen2, color: T.stateSuccess,          label: 'In progress' },
-  complete:    { bg: '#C0DD97',    color: T.greenDeep,     label: 'Complete' },
+  complete:    { bg: 'var(--sage-pale)',    color: T.greenDeep,     label: 'Complete' },
 }
 
 interface PipeItem {
@@ -360,7 +360,7 @@ export default function ApplicationsPage() {
                   <button
                     onClick={e => { e.preventDefault(); e.stopPropagation(); deleteApplication(app.id) }}
                     style={{
-                      fontFamily: UI, fontWeight: 600, fontSize: 12, color: '#fff',
+                      fontFamily: UI, fontWeight: 600, fontSize: 12, color: 'var(--surface-card)',
                       background: T.coral, border: 'none', padding: '5px 12px', borderRadius: 8, cursor: 'pointer',
                     }}
                   >

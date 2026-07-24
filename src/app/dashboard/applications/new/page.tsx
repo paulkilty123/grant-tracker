@@ -86,7 +86,7 @@ function StepDot({ n, label, active, done }: { n: number; label: string; active:
         width: 24, height: 24, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontFamily: UI, fontWeight: 700, fontSize: 12,
         background: done ? T.lime : active ? T.greenDeep : T.surfaceSunken,
-        color: done ? T.greenDeep : active ? '#F1F7E4' : T.textTertiary,
+        color: done ? T.greenDeep : active ? 'var(--state-success-pale)' : T.textTertiary,
       }}>
         {done ? <Check size={13} /> : n}
       </div>
