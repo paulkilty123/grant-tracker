@@ -124,6 +124,21 @@ const config: Config = {
         teal:  '#4EAAB4',
         sage:  '#9BCA9D',
         sky:   '#ABCBEE',
+        // Text-on-pale siblings for the type-programme/type-investment accents,
+        // same relationship as gold/gold-deep above (decorative accent vs. a
+        // darkened, text-safe variant of the same hue) — added for
+        // TAB_INACTIVE_STYLES (search/page.tsx), the first occurrence that
+        // needed an icon/count colour in the *category's own family* instead
+        // of borrowing a semantic state token. Contrast on their own pale
+        // token: teal-deep/type-programme-pale 3.16:1, terra-deep/
+        // type-investment-pale 3.16:1 — in the same tier as the existing
+        // gold-deep/type-grant-pale (3.24:1) and sage-deep/type-inkind-pale
+        // (3.01:1) pairs, not full 4.5:1 text-AA. Consistent with the
+        // existing gold-deep precedent rather than an improvement on it;
+        // worth a real accessibility pass across all four in the primitives
+        // pass, not solved here.
+        'teal-deep':  '#40929C',
+        'terra-deep': '#D36645',
 
         // Funding types (category colours, always paired with a label)
         'type-grant':           '#EBCE78',

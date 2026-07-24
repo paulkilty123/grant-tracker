@@ -422,7 +422,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
   const tierHue    = score >= 80 ? { ring: 'var(--sage-deep)', title: 'var(--state-success)', panelBg: 'var(--surface-page)', border: 'var(--sage-deep)', barBg: 'rgba(99,153,34,0.15)',    positive: 'var(--sage-deep)', caveat: 'var(--sage-deep)', caveatText: 'var(--state-success)' }
                    : score >= 70 ? { ring: '#5A9080' /* eslint-disable-line no-restricted-syntax -- no safe token yet — see hex-token-map.ts EXCLUDED_VALUES (#5A9080) */, title: 'var(--text-muted)', panelBg: 'var(--surface-pill)', border: '#5A9080', barBg: 'rgba(90,144,128,0.15)',   positive: '#5A9080', caveat: '#5A9080', caveatText: 'var(--text-muted)' }
                    : score >= 50 ? { ring: 'var(--gold-deep)', title: 'var(--state-warning)', panelBg: 'var(--surface-page)', border: 'var(--gold-deep)', barBg: 'rgba(186,117,23,0.12)',   positive: 'var(--gold-deep)', caveat: 'var(--gold-deep)', caveatText: 'var(--state-warning)' }
-                   :               { ring: 'var(--terra)', title: 'var(--state-error)', panelBg: 'var(--surface-sunken)', border: 'var(--terra)', barBg: 'rgba(160,96,96,0.12)',    positive: 'var(--terra)', caveat: 'var(--terra)', caveatText: 'var(--state-error)' }
+                   :               { ring: 'var(--terra)', title: 'var(--state-error)', panelBg: 'var(--state-error-pale)', border: 'var(--terra)', barBg: 'rgba(160,96,96,0.12)',    positive: 'var(--terra)', caveat: 'var(--terra)', caveatText: 'var(--state-error)' }
   const moduleTitle = score >= 80 ? 'Why this strongly matches' : score >= 70 ? 'Why this is a good match' : score >= 50 ? 'Why this partially matches' : 'Why this weakly matches'
 
   // ── Funder type label ──
@@ -2392,11 +2392,17 @@ export default function SearchPage() {
     in_kind:    { bg: 'var(--state-warning-pale)', border: 'var(--state-warning)', text: 'var(--state-warning)', count: 'var(--state-warning)' },
   }
 
+  // Realigned to the funding-type family (not semantic state tokens — icon/count
+  // here signal WHICH CATEGORY this tab is, not an app state, so borrowing
+  // state-error/state-info/state-warning was the same category-vs-state
+  // confusion fixed elsewhere in this pass). gold-deep/teal-deep/terra-deep/
+  // sage-deep are each the darkened, text-safe sibling of that type's own
+  // accent (type-grant/type-programme/type-investment/type-inkind).
   const TAB_INACTIVE_STYLES: Record<string, { bg: string; iconColor: string; countColor: string }> = {
-    grant:      { bg: 'var(--surface-page)', iconColor: 'var(--sage-deep)', countColor: 'var(--sage-deep)' },
-    programme:  { bg: 'var(--surface-page)', iconColor: 'var(--state-error)', countColor: 'var(--state-error)' },
-    investment: { bg: 'var(--surface-page)', iconColor: 'var(--state-info)', countColor: 'var(--state-info)' },
-    in_kind:    { bg: 'var(--surface-page)', iconColor: 'var(--state-warning)', countColor: 'var(--state-warning)' },
+    grant:      { bg: 'var(--type-grant-pale)', iconColor: 'var(--gold-deep)', countColor: 'var(--gold-deep)' },
+    programme:  { bg: 'var(--type-programme-pale)', iconColor: 'var(--teal-deep)', countColor: 'var(--teal-deep)' },
+    investment: { bg: 'var(--type-investment-pale)', iconColor: 'var(--terra-deep)', countColor: 'var(--terra-deep)' },
+    in_kind:    { bg: 'var(--type-inkind-pale)', iconColor: 'var(--sage-deep)', countColor: 'var(--sage-deep)' },
   }
 
   const CATEGORY_TABS = [

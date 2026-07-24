@@ -136,6 +136,10 @@
     --teal:  #4EAAB4;
     --sage:  #9BCA9D;
     --sky:   #ABCBEE;
+    /* Text-on-pale siblings for teal/terra, same relationship as gold/gold-deep
+       above. See tailwind.config.ts for the full contrast-numbers note. */
+    --teal-deep:  #40929C;
+    --terra-deep: #D36645;
 
     /* Funding types (category colours, always paired with a label) */
     --type-grant:           #EBCE78;

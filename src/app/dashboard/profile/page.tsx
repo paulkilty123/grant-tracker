@@ -854,7 +854,7 @@ function ScanBar({ orgId, website, onSaved }: { orgId: string; website?: string 
       )}
       {/* Scan feedback message */}
       {scanMsg && (
-        <div style={{ marginTop: 12, padding: '10px 14px', background: scanMsg.type === 'success' ? 'var(--type-inkind-pale)' : 'var(--surface-page)', border: `1px solid ${scanMsg.type === 'success' ? '#8ECB3C' : 'var(--border-warm)'}` /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ marginTop: 12, padding: '10px 14px', background: scanMsg.type === 'success' ? 'var(--type-inkind-pale)' : 'var(--state-error-pale)', border: `1px solid ${scanMsg.type === 'success' ? '#8ECB3C' : 'var(--coral-mid)'}` /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontFamily: BODY, fontSize: 13, color: scanMsg.type === 'success' ? T.greenDeep : 'var(--state-error)' }}>{scanMsg.text}</span>
           <button onClick={() => setScanMsg(null)} style={{ fontFamily: UI, fontSize: 12, color: scanMsg.type === 'success' ? T.greenDeep : 'var(--state-error)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, flexShrink: 0, marginLeft: 12 }}>Dismiss</button>
         </div>
@@ -2196,7 +2196,7 @@ export default function ProfilePage() {
             </button>
           ) : (
             <div style={{
-              background: 'var(--surface-page)', border: '1px solid rgba(185,64,64,0.3)',
+              background: 'var(--state-error-pale)', border: '1px solid rgba(185,64,64,0.3)',
               borderRadius: 10, padding: '18px 20px',
             }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 14 }}>
