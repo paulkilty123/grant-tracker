@@ -13,16 +13,16 @@ const BODY = 'var(--font-dm-sans), Plus Jakarta Sans, sans-serif'
 
 export default function PrivacyPage() {
   return (
-    <div style={{ background: '#FAFAF7', minHeight: '100vh', fontFamily: BODY, color: '#2C2C2A' }}>
+    <div style={{ background: 'var(--surface-page)', minHeight: '100vh', fontFamily: BODY, color: 'var(--text-body)' }}>
 
       {/* NAV */}
       <nav style={{ background: 'white', borderBottom: '0.5px solid rgba(23,52,4,0.08)', padding: '18px 0' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/" className="no-underline" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <LogoMark size={22} />
-            <span style={{ fontFamily: UI, fontWeight: 700, fontSize: 18, color: '#173404', letterSpacing: '-0.025em' }}>{brand.name}</span>
+            <span style={{ fontFamily: UI, fontWeight: 700, fontSize: 18, color: 'var(--deep)', letterSpacing: '-0.025em' }}>{brand.name}</span>
           </Link>
-          <Link href="/" className="no-underline" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: UI, fontSize: 13, fontWeight: 600, color: '#173404' }}>
+          <Link href="/" className="no-underline" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: UI, fontSize: 13, fontWeight: 600, color: 'var(--deep)' }}>
             <ArrowLeft size={14} /> Back home
           </Link>
         </div>
@@ -30,19 +30,19 @@ export default function PrivacyPage() {
 
       {/* CONTENT */}
       <main style={{ maxWidth: 760, margin: '0 auto', padding: '64px 24px 96px' }}>
-        <h1 style={{ fontFamily: UI, fontSize: 'clamp(36px, 5vw, 48px)', fontWeight: 700, letterSpacing: '-0.025em', color: '#173404', margin: 0, lineHeight: 1.05 }}>
+        <h1 style={{ fontFamily: UI, fontSize: 'clamp(36px, 5vw, 48px)', fontWeight: 700, letterSpacing: '-0.025em', color: 'var(--deep)', margin: 0, lineHeight: 1.05 }}>
           Privacy policy
         </h1>
-        <p style={{ marginTop: 12, marginBottom: 40, fontSize: 14, color: '#5F5E5A' }}>
-          <strong style={{ color: '#2C2C2A' }}>Last updated:</strong> 9 June 2026
+        <p style={{ marginTop: 12, marginBottom: 40, fontSize: 14, color: 'var(--text-muted)' }}>
+          <strong style={{ color: 'var(--text-body)' }}>Last updated:</strong> 9 June 2026
         </p>
 
-        <div style={{ fontSize: 16, lineHeight: 1.65, color: '#2C2C2A' }}>
+        <div style={{ fontSize: 16, lineHeight: 1.65, color: 'var(--text-body)' }}>
           <p>
             This privacy policy explains how {brand.name} collects, uses, and protects your personal data. {brand.name} is operated by Paul Kilty as a sole trader, based in Brighton, United Kingdom.
           </p>
           <p>
-            If you have any questions about this policy or how we handle your data, please email <a href={`mailto:${brand.email.hello}`} style={{ color: '#3B6D11', fontWeight: 600 }}>{brand.email.hello}</a>.
+            If you have any questions about this policy or how we handle your data, please email <a href={`mailto:${brand.email.hello}`} style={{ color: 'var(--state-success)', fontWeight: 600 }}>{brand.email.hello}</a>.
           </p>
 
           <Heading>Who we are</Heading>
@@ -50,9 +50,9 @@ export default function PrivacyPage() {
             {brand.name} is a service that helps UK charities, community interest companies, social enterprises, co-operatives, and impact-focused organisations discover and manage funding opportunities.
           </p>
           <p>For the purposes of UK data protection law, the data controller is:</p>
-          <p style={{ background: '#F1F7E4', borderRadius: 12, padding: '16px 20px', margin: '16px 0' }}>
+          <p style={{ background: 'var(--state-success-pale)', borderRadius: 12, padding: '16px 20px', margin: '16px 0' }}>
             Paul Kilty, sole trader, trading as {brand.name}<br />
-            Email: <a href={`mailto:${brand.email.hello}`} style={{ color: '#3B6D11', fontWeight: 600 }}>{brand.email.hello}</a>
+            Email: <a href={`mailto:${brand.email.hello}`} style={{ color: 'var(--state-success)', fontWeight: 600 }}>{brand.email.hello}</a>
           </p>
 
           <Heading>What data we collect</Heading>
@@ -103,16 +103,16 @@ export default function PrivacyPage() {
           <p>We share your data only with the following categories of recipient, and only as necessary:</p>
           <p><strong>Service providers.</strong> We use trusted third-party providers to run the service. These are:</p>
           <ul style={{ paddingLeft: 22, margin: '8px 0 16px' }}>
-            <li style={{ marginBottom: 8 }}><strong>Supabase</strong> stores your account data, profile data, and pipeline data. Supabase is a data processor acting on our instructions. Their privacy policy is at <a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: '#3B6D11', fontWeight: 600 }}>supabase.com/privacy</a>.</li>
-            <li style={{ marginBottom: 8 }}><strong>Vercel</strong> hosts the website and processes the technical requests needed to load pages. Vercel acts as a data processor. Their privacy policy is at <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" style={{ color: '#3B6D11', fontWeight: 600 }}>vercel.com/legal/privacy-policy</a>.</li>
-            <li><strong>Upstash</strong> provides the rate-limit counters used by our MCP server (see &ldquo;MCP, OAuth, and API access&rdquo; below). Upstash stores short-lived per-IP and per-key request counts; no profile or pipeline data is sent to Upstash. Their privacy policy is at <a href="https://upstash.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: '#3B6D11', fontWeight: 600 }}>upstash.com/privacy</a>.</li>
+            <li style={{ marginBottom: 8 }}><strong>Supabase</strong> stores your account data, profile data, and pipeline data. Supabase is a data processor acting on our instructions. Their privacy policy is at <a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--state-success)', fontWeight: 600 }}>supabase.com/privacy</a>.</li>
+            <li style={{ marginBottom: 8 }}><strong>Vercel</strong> hosts the website and processes the technical requests needed to load pages. Vercel acts as a data processor. Their privacy policy is at <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--state-success)', fontWeight: 600 }}>vercel.com/legal/privacy-policy</a>.</li>
+            <li><strong>Upstash</strong> provides the rate-limit counters used by our MCP server (see &ldquo;MCP, OAuth, and API access&rdquo; below). Upstash stores short-lived per-IP and per-key request counts; no profile or pipeline data is sent to Upstash. Their privacy policy is at <a href="https://upstash.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--state-success)', fontWeight: 600 }}>upstash.com/privacy</a>.</li>
           </ul>
           <p>We do not sell your personal data to anyone. We do not share your organisation&apos;s data with funders, other organisations, or third parties without your explicit permission.</p>
           <p><strong>Legal disclosures.</strong> We may disclose your data if required by law, court order, or to protect our legal rights, but only to the extent necessary.</p>
 
           <Heading>MCP, OAuth, and API access</Heading>
           <p>
-            {brand.name} operates a read-only Model Context Protocol (MCP) server at <a href={`${brand.siteUrl}/mcp`} style={{ color: '#3B6D11', fontWeight: 600 }}>{brand.domain}/mcp</a>. The MCP exposes our funding catalogue to AI agents, including Claude, ChatGPT, Gemini, and any other MCP-compatible client, so that an agent you use can answer your funding questions on your behalf. Connecting an AI agent is opt-in.
+            {brand.name} operates a read-only Model Context Protocol (MCP) server at <a href={`${brand.siteUrl}/mcp`} style={{ color: 'var(--state-success)', fontWeight: 600 }}>{brand.domain}/mcp</a>. The MCP exposes our funding catalogue to AI agents, including Claude, ChatGPT, Gemini, and any other MCP-compatible client, so that an agent you use can answer your funding questions on your behalf. Connecting an AI agent is opt-in.
           </p>
           <p>You connect by completing the OAuth 2.0 consent flow that an MCP-compatible client initiates when it adds {brand.name} as a connector. This uses Dynamic Client Registration, which means the client registers itself with us automatically the first time it connects.</p>
           <p>
@@ -152,14 +152,14 @@ export default function PrivacyPage() {
           <p>The right to data portability. You can ask us to provide your data in a portable format.</p>
           <p>The right to object. You can object to processing based on legitimate interests.</p>
           <p>The right to withdraw consent at any time, where we are relying on consent.</p>
-          <p>To exercise any of these rights, please email <a href={`mailto:${brand.email.hello}`} style={{ color: '#3B6D11', fontWeight: 600 }}>{brand.email.hello}</a>. We will respond within one month.</p>
-          <p>If you are not satisfied with how we have handled your data, you have the right to complain to the Information Commissioner&apos;s Office (ICO), the UK data protection regulator. You can contact them at <a href="https://ico.org.uk" target="_blank" rel="noopener noreferrer" style={{ color: '#3B6D11', fontWeight: 600 }}>ico.org.uk</a> or on 0303 123 1113.</p>
+          <p>To exercise any of these rights, please email <a href={`mailto:${brand.email.hello}`} style={{ color: 'var(--state-success)', fontWeight: 600 }}>{brand.email.hello}</a>. We will respond within one month.</p>
+          <p>If you are not satisfied with how we have handled your data, you have the right to complain to the Information Commissioner&apos;s Office (ICO), the UK data protection regulator. You can contact them at <a href="https://ico.org.uk" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--state-success)', fontWeight: 600 }}>ico.org.uk</a> or on 0303 123 1113.</p>
 
           <Heading>Changes to this policy</Heading>
           <p>We may update this policy from time to time. If we make significant changes, we will let you know by email or through a notice on the service. The &ldquo;last updated&rdquo; date at the top of this page will always show when the policy was last changed.</p>
 
           <Heading>Contact us</Heading>
-          <p>If you have any questions about this privacy policy or how we handle your data, please email <a href={`mailto:${brand.email.hello}`} style={{ color: '#3B6D11', fontWeight: 600 }}>{brand.email.hello}</a>.</p>
+          <p>If you have any questions about this privacy policy or how we handle your data, please email <a href={`mailto:${brand.email.hello}`} style={{ color: 'var(--state-success)', fontWeight: 600 }}>{brand.email.hello}</a>.</p>
         </div>
       </main>
     </div>
@@ -168,7 +168,7 @@ export default function PrivacyPage() {
 
 function Heading({ children }: { children: React.ReactNode }) {
   return (
-    <h2 style={{ fontFamily: UI, fontSize: 22, fontWeight: 700, color: '#173404', letterSpacing: '-0.015em', marginTop: 36, marginBottom: 12 }}>
+    <h2 style={{ fontFamily: UI, fontSize: 22, fontWeight: 700, color: 'var(--deep)', letterSpacing: '-0.015em', marginTop: 36, marginBottom: 12 }}>
       {children}
     </h2>
   )
