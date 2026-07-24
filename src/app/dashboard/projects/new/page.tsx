@@ -75,7 +75,7 @@ export default function NewProjectPage() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{
-            width: 24, height: 24, borderRadius: 999, background: T.greenDeep, color: '#F1F7E4',
+            width: 24, height: 24, borderRadius: 999, background: T.greenDeep, color: 'var(--state-success-pale)',
             fontFamily: UI, fontWeight: 700, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>1</span>
           <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.textPrimary }}>Describe</span>

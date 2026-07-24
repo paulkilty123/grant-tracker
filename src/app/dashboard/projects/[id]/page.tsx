@@ -47,15 +47,15 @@ type MatchBuckets = {
 const TYPE_STYLE: Record<string, { bg: string; color: string; label: string }> = {
   project:   { bg: T.paleGreen,  color: T.stateSuccess,      label: 'Project' },
   campaign:  { bg: T.amberBg,    color: T.amberText, label: 'Campaign' },
-  programme: { bg: '#FAECE7',    color: '#993C1D',   label: 'Programme' },
+  programme: { bg: 'var(--state-error-pale)',    color: 'var(--state-error)',   label: 'Programme' },
 }
 
 // Funding-type section markers — same palette as Find Funding's tabs.
 const FUNDING_TYPE_STYLE: Record<string, { dot: string }> = {
-  grant:      { dot: '#97C459' },
-  programme:  { dot: '#F0997B' },
-  investment: { dot: '#85B7EB' },
-  in_kind:    { dot: '#EF9F27' },
+  grant:      { dot: 'var(--sage)' },
+  programme:  { dot: 'var(--type-programme)' },
+  investment: { dot: 'var(--type-investment)' },
+  in_kind:    { dot: 'var(--type-inkind)' },
 }
 
 const CANONICAL_TYPES = new Set(['grant', 'programme', 'investment', 'in_kind'])
@@ -447,8 +447,8 @@ export default function ProjectPage() {
               style={{
                 fontFamily: UI, fontWeight: on ? 600 : 500, fontSize: 12,
                 color: on ? T.greenDeep : T.textSecondary,
-                background: on ? '#C0DD97' : T.white,
-                border: `1px solid ${on ? '#C0DD97' : T.borderStrong}`,
+                background: on ? 'var(--sage-pale)' : T.white,
+                border: `1px solid ${on ? 'var(--sage-pale)' : T.borderStrong}`,
                 padding: '5px 12px', borderRadius: 999, cursor: full ? 'not-allowed' : 'pointer',
                 opacity: full ? 0.45 : 1,
               }}
