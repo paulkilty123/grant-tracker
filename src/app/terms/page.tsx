@@ -13,16 +13,16 @@ const BODY = 'var(--font-dm-sans), Plus Jakarta Sans, sans-serif'
 
 export default function TermsPage() {
   return (
-    <div style={{ background: '#FAFAF7', minHeight: '100vh', fontFamily: BODY, color: '#2C2C2A' }}>
+    <div style={{ background: 'var(--surface-page)', minHeight: '100vh', fontFamily: BODY, color: 'var(--text-body)' }}>
 
       {/* NAV */}
       <nav style={{ background: 'white', borderBottom: '0.5px solid rgba(23,52,4,0.08)', padding: '18px 0' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/" className="no-underline" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <LogoMark size={22} />
-            <span style={{ fontFamily: UI, fontWeight: 700, fontSize: 18, color: '#173404', letterSpacing: '-0.025em' }}>{brand.name}</span>
+            <span style={{ fontFamily: UI, fontWeight: 700, fontSize: 18, color: 'var(--deep)', letterSpacing: '-0.025em' }}>{brand.name}</span>
           </Link>
-          <Link href="/" className="no-underline" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: UI, fontSize: 13, fontWeight: 600, color: '#173404' }}>
+          <Link href="/" className="no-underline" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: UI, fontSize: 13, fontWeight: 600, color: 'var(--deep)' }}>
             <ArrowLeft size={14} /> Back home
           </Link>
         </div>
@@ -30,19 +30,19 @@ export default function TermsPage() {
 
       {/* CONTENT */}
       <main style={{ maxWidth: 760, margin: '0 auto', padding: '64px 24px 96px' }}>
-        <h1 style={{ fontFamily: UI, fontSize: 'clamp(36px, 5vw, 48px)', fontWeight: 700, letterSpacing: '-0.025em', color: '#173404', margin: 0, lineHeight: 1.05 }}>
+        <h1 style={{ fontFamily: UI, fontSize: 'clamp(36px, 5vw, 48px)', fontWeight: 700, letterSpacing: '-0.025em', color: 'var(--deep)', margin: 0, lineHeight: 1.05 }}>
           Terms of service
         </h1>
-        <p style={{ marginTop: 12, marginBottom: 40, fontSize: 14, color: '#5F5E5A' }}>
-          <strong style={{ color: '#2C2C2A' }}>Last updated:</strong> 28 April 2026
+        <p style={{ marginTop: 12, marginBottom: 40, fontSize: 14, color: 'var(--text-muted)' }}>
+          <strong style={{ color: 'var(--text-body)' }}>Last updated:</strong> 28 April 2026
         </p>
 
-        <div style={{ fontSize: 16, lineHeight: 1.65, color: '#2C2C2A' }}>
+        <div style={{ fontSize: 16, lineHeight: 1.65, color: 'var(--text-body)' }}>
           <p>
             These terms govern your use of {brand.name}. By creating an account or otherwise using the service, you agree to these terms. If you do not agree, please do not use the service.
           </p>
           <p>
-            If you have any questions about these terms, please email <a href={`mailto:${brand.email.hello}`} style={{ color: '#3B6D11', fontWeight: 600 }}>{brand.email.hello}</a>.
+            If you have any questions about these terms, please email <a href={`mailto:${brand.email.hello}`} style={{ color: 'var(--state-success)', fontWeight: 600 }}>{brand.email.hello}</a>.
           </p>
 
           <Heading>Who we are</Heading>
@@ -57,7 +57,7 @@ export default function TermsPage() {
 
           <Heading>Founding cohort</Heading>
           <p>
-            During the founding cohort phase, the service is offered free of charge to invited members. Founding cohort terms are set out on the application page at <Link href="/apply" style={{ color: '#3B6D11', fontWeight: 600 }}>{brand.domain}/apply</Link> and form part of these terms for cohort members. In summary:
+            During the founding cohort phase, the service is offered free of charge to invited members. Founding cohort terms are set out on the application page at <Link href="/apply" style={{ color: 'var(--state-success)', fontWeight: 600 }}>{brand.domain}/apply</Link> and form part of these terms for cohort members. In summary:
           </p>
           <ul style={{ paddingLeft: 22, margin: '8px 0 16px' }}>
             <li style={{ marginBottom: 8 }}>Founding cohort members get free access during beta and for six months after paid signups open.</li>
@@ -69,7 +69,7 @@ export default function TermsPage() {
           <Heading>Your account</Heading>
           <p>To use the service you must create an account. You must provide accurate information, keep your password secure, and not share your account with others. You are responsible for activity that happens under your account.</p>
           <p>You must be at least 18 years old to create an account. The service is intended for use by UK organisations engaged in social impact work, broadly defined. We may decline an application or close an account at our discretion if we believe the service is being used outside its intended purpose.</p>
-          <p>You can close your account at any time by emailing <a href={`mailto:${brand.email.hello}`} style={{ color: '#3B6D11', fontWeight: 600 }}>{brand.email.hello}</a>. We will delete or anonymise your personal data within 30 days, subject to any legal requirements to retain certain records.</p>
+          <p>You can close your account at any time by emailing <a href={`mailto:${brand.email.hello}`} style={{ color: 'var(--state-success)', fontWeight: 600 }}>{brand.email.hello}</a>. We will delete or anonymise your personal data within 30 days, subject to any legal requirements to retain certain records.</p>
 
           <Heading>Acceptable use</Heading>
           <p>When using the service, you agree not to:</p>
@@ -89,7 +89,7 @@ export default function TermsPage() {
           <p>We are not a funder, and using {brand.name} does not guarantee that you will receive funding. We do not take a commission, finder&apos;s fee, or any cut of grants you secure through the service.</p>
 
           <Heading>Your data</Heading>
-          <p>We take privacy seriously. Our <Link href="/privacy" style={{ color: '#3B6D11', fontWeight: 600 }}>privacy policy</Link> explains what data we collect, how we use it, and the rights you have over it. By using the service, you agree to the practices set out in the privacy policy.</p>
+          <p>We take privacy seriously. Our <Link href="/privacy" style={{ color: 'var(--state-success)', fontWeight: 600 }}>privacy policy</Link> explains what data we collect, how we use it, and the rights you have over it. By using the service, you agree to the practices set out in the privacy policy.</p>
           <p>Your organisation&apos;s data stays private to your account. We do not share it with funders, other organisations, or third parties without your explicit permission.</p>
 
           <Heading>Your content</Heading>
@@ -131,7 +131,7 @@ export default function TermsPage() {
           <p>These terms are governed by the laws of England and Wales. Any disputes will be subject to the exclusive jurisdiction of the courts of England and Wales.</p>
 
           <Heading>Contact us</Heading>
-          <p>If you have any questions about these terms, please email <a href={`mailto:${brand.email.hello}`} style={{ color: '#3B6D11', fontWeight: 600 }}>{brand.email.hello}</a>.</p>
+          <p>If you have any questions about these terms, please email <a href={`mailto:${brand.email.hello}`} style={{ color: 'var(--state-success)', fontWeight: 600 }}>{brand.email.hello}</a>.</p>
         </div>
       </main>
     </div>
@@ -140,7 +140,7 @@ export default function TermsPage() {
 
 function Heading({ children }: { children: React.ReactNode }) {
   return (
-    <h2 style={{ fontFamily: UI, fontSize: 22, fontWeight: 700, color: '#173404', letterSpacing: '-0.015em', marginTop: 36, marginBottom: 12 }}>
+    <h2 style={{ fontFamily: UI, fontSize: 22, fontWeight: 700, color: 'var(--deep)', letterSpacing: '-0.015em', marginTop: 36, marginBottom: 12 }}>
       {children}
     </h2>
   )
