@@ -152,6 +152,25 @@ const config: Config = {
         // both call sites at one definition instead of two copies.
         'status-invite':      '#6B21A8',
         'status-invite-pale': '#F3EDFA',
+
+        // Ordinal scale — for admin tooling and any graded indicator (score
+        // bands, confidence tiers, coverage bars, provenance sources). Added
+        // because the polysemy audit found admin tooling repeatedly borrowing
+        // the funding-type dot colours for exactly this (13+ times across
+        // score/confidence/coverage/provenance schemes) since there was no
+        // dedicated token for "graded tier" and the nearest-looking category
+        // colour got taken instead. After the sweep, funding-type colours
+        // must be reachable only via their own type-* names, never raw hex;
+        // anything graded uses this scale instead. Values intentionally
+        // reuse state-success/sage-deep/state-warning/state-error — same
+        // hex, a second name for a different semantic role (ordinal
+        // position, not app-wide state), same pattern as type-grant-pale /
+        // state-warning-pale / gold-pale already sharing one value.
+        'ordinal-4-strong': '#3B6D11', // best band: high score, high confidence, good coverage
+        'ordinal-3-good':   '#639922',
+        'ordinal-2-fair':      '#854F0B',
+        'ordinal-2-fair-pale': '#FAEEDA',
+        'ordinal-1-weak':   '#993C1D', // worst band: low score, low confidence, flagged
       },
       fontFamily: {
         sans:    ['var(--font-dm-sans)', 'system-ui', 'sans-serif'],
