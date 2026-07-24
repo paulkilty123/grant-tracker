@@ -31,10 +31,10 @@ function serviceClient() {
 }
 
 const SCORE_BAND = (score: number) => {
-  if (score >= 80) return { label: 'Good',    bg: '#F1F7E4', text: '#3B6D11', border: '#8ECB3C' }
-  if (score >= 65) return { label: 'Moderate', bg: '#FAEEDA', text: '#854F0B', border: '#EF9F27' }
-  if (score >= 45) return { label: 'Weak',    bg: '#F5F1E8', text: '#5F5E5A', border: '#E8E0D1' }
-  return                    { label: 'Poor',    bg: '#FAECE7', text: '#993C1D', border: '#D85A30' }
+  if (score >= 80) return { label: 'Good',    bg: 'var(--state-success-pale)', text: 'var(--state-success)', border: '#8ECB3C' }
+  if (score >= 65) return { label: 'Moderate', bg: 'var(--state-warning-pale)', text: 'var(--state-warning)', border: 'var(--ordinal-3-good)' }
+  if (score >= 45) return { label: 'Weak',    bg: 'var(--surface-sunken)', text: 'var(--text-muted)', border: 'var(--border-warm)' }
+  return                    { label: 'Poor',    bg: 'var(--state-error-pale)', text: 'var(--state-error)', border: 'var(--terra)' }
 }
 
 type OrgRow = Record<string, unknown>
