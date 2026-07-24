@@ -26,9 +26,9 @@ type LogoMarkProps = {
 }
 
 const palettes = {
-  default: { short: '#173404', tall: '#7CC242' },
-  onInk:   { short: '#F5F1E8', tall: '#7CC242' },
-  onGreen: { short: '#173404', tall: '#F5F1E8' },
+  default: { short: 'var(--deep)', tall: 'var(--sage-deep)' },
+  onInk:   { short: 'var(--surface-sunken)', tall: 'var(--sage-deep)' },
+  onGreen: { short: 'var(--deep)', tall: 'var(--surface-sunken)' },
 }
 
 const LogoMark = ({ size = 28, className, variant = 'default' }: LogoMarkProps) => {

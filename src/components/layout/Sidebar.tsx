@@ -58,7 +58,7 @@ const ADMIN_EMAIL = 'paulkilty1@gmail.com'
 
 const SB = {
   text:       'rgba(245,241,232,0.72)',
-  textBright: '#F5F1E8',
+  textBright: 'var(--surface-sunken)',
   icon:       'rgba(245,241,232,0.55)',
   iconActive: '#8ECB3C',
   hover:      'rgba(245,241,232,0.06)',
@@ -66,7 +66,7 @@ const SB = {
   accent:     '#8ECB3C',
   divider:    'rgba(245,241,232,0.08)',
   badgeBg:    'rgba(142,203,60,0.18)',
-  badgeText:  '#C0DD97',
+  badgeText:  'var(--sage-pale)',
 }
 
 const MAIN_NAV = [
@@ -220,7 +220,7 @@ export default function Sidebar({ org, userEmail, companionSurface = false }: Pr
         'md:translate-x-0',
         mobileOpen ? 'translate-x-0' : '-translate-x-full',
       )}
-      style={{ background: '#173404', padding: '20px 12px 12px' }}
+      style={{ background: 'var(--deep)', padding: '20px 12px 12px' }}
     >
       {/* Logo */}
       <div
@@ -341,7 +341,7 @@ export default function Sidebar({ org, userEmail, companionSurface = false }: Pr
         >
           <div style={{
             width: 30, height: 30, borderRadius: '50%', flexShrink: 0,
-            background: '#8ECB3C', color: '#173404',
+            background: '#8ECB3C', color: 'var(--deep)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-space-grotesk)',
           }}>
@@ -371,7 +371,7 @@ export default function Sidebar({ org, userEmail, companionSurface = false }: Pr
             position: 'absolute',
             bottom: 'calc(100% + 6px)',
             left: 0, right: 0,
-            background: '#1E3D06',
+            background: 'var(--text-body)',
             borderRadius: 10,
             border: `0.5px solid ${SB.divider}`,
             overflow: 'hidden',
@@ -418,7 +418,7 @@ export default function Sidebar({ org, userEmail, companionSurface = false }: Pr
           'transition-opacity duration-200',
           mobileOpen ? 'opacity-0 pointer-events-none' : 'opacity-100',
         )}
-        style={{ background: '#173404', color: '#F5F1E8' }}
+        style={{ background: 'var(--deep)', color: 'var(--surface-sunken)' }}
         aria-label="Open menu"
       >
         <Menu className="h-5 w-5" />
