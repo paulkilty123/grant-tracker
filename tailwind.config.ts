@@ -80,6 +80,65 @@ const config: Config = {
         mid:      '#5F5E5A',
         light:    '#8A8986',
         border:   '#E4E2DA',
+
+        // ============================================================
+        // SHOOTS TOKENS (new, coexisting) — from shoots-app-tokens.md.
+        // Additive only: nothing above is removed or repointed yet.
+        // 'sage', 'cream' and 'gold' from the new set are deliberately
+        // NOT added here — those bare names are still occupied by the
+        // legacy aliases above with different values, and duplicating a
+        // key breaks `tsc`. sage/cream are reintroduced when the name
+        // collisions are resolved; 'gold' is a fourth, newly-found
+        // collision the source doc didn't flag and is unresolved.
+        // ============================================================
+
+        // Surfaces
+        'surface-page':    '#FBF9F4',
+        'surface-card':    '#FFFFFF',
+        'surface-sunken':  '#F6F1E7',
+        'surface-pill':    '#F1F0EA',
+        'surface-inverse': '#1D3C3E',
+
+        // Text
+        'text-heading':     '#1D3C3E',
+        'text-body':        '#2E2E2E',
+        'text-muted':       '#5F6B64',
+        'text-subtle':      '#8A978F',
+        'text-on-dark':     '#F6F1E7',
+        'text-on-dark-mut': '#B8C7C2',
+
+        // Borders and focus
+        'border-hairline': 'rgba(29,60,62,0.10)',
+        'border-mid':      'rgba(29,60,62,0.15)',
+        'border-strong':   'rgba(29,60,62,0.25)',
+        'border-warm':     '#E8E0D1',
+        'focus-ring':       '#4EAAB4',
+
+        // Brand and action (sage / cream / gold deferred — see note above)
+        deep:  '#1D3C3E',
+        terra: '#D67558',
+        teal:  '#4EAAB4',
+        sky:   '#ABCBEE',
+
+        // Funding types (category colours, always paired with a label)
+        'type-grant':           '#EBCE78',
+        'type-grant-pale':      '#FAEEDA',
+        'type-investment':      '#D67558',
+        'type-investment-pale': '#FAECE7',
+        'type-programme':       '#4EAAB4',
+        'type-programme-pale':  '#E6F1FB',
+        'type-inkind':          '#9BCA9D',
+        'type-inkind-pale':     '#EAF3DE',
+
+        // Semantic states (unchanged values from today — deliberately)
+        'state-success':      '#3B6D11',
+        'state-success-pale': '#EAF3DE',
+        'state-warning':      '#854F0B',
+        'state-warning-pale': '#FAEEDA',
+        'state-error':        '#993C1D',
+        'state-error-pale':   '#FAECE7',
+        'state-info':         '#0C447C',
+        'state-info-pale':    '#E6F1FB',
       },
       fontFamily: {
         sans:    ['var(--font-dm-sans)', 'system-ui', 'sans-serif'],
