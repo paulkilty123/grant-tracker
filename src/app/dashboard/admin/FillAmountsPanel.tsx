@@ -52,7 +52,7 @@ export default function FillAmountsPanel() {
       <div className="flex items-center gap-2 mb-5">
         <button
           onClick={() => setDryRun(v => !v)}
-          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${dryRun ? 'bg-gold' : 'bg-sage-deep'}`}
+          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${dryRun ? 'bg-gold-deep' : 'bg-sage-deep'}`}
         >
           <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow transition-transform ${dryRun ? 'translate-x-1' : 'translate-x-4.5'}`} />
         </button>
@@ -77,7 +77,7 @@ export default function FillAmountsPanel() {
 
       {result && (
         <div className="mt-5 space-y-3">
-          <div className={`rounded-lg px-4 py-3 text-sm font-medium ${result.dry_run ? 'bg-gold/10 text-amber-800 border border-gold/30' : 'bg-green-50 text-green-800 border border-green-200'}`}>
+          <div className={`rounded-lg px-4 py-3 text-sm font-medium ${result.dry_run ? 'bg-gold-deep/10 text-amber-800 border border-gold-deep/30' : 'bg-green-50 text-green-800 border border-green-200'}`}>
             {result.dry_run
               ? `✓ Preview — ${result.filled} grants would be updated, ${result.skipped} skipped`
               : `✓ Done — ${result.filled} grants updated, ${result.skipped} skipped`}

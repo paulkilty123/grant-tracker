@@ -73,7 +73,7 @@ const config: Config = {
         // `cream` retired: old value (#FAFAF7, aliased to bg-page) is now covered by
         // `surface-page` (#FBF9F4, added below) — see the collision resolution note.
         warm:     '#E8E0D1',
-        gold:     '#BA7517',
+        'gold-deep': '#BA7517',  // was bare `gold` — renamed, name collision with new gold accent (see below)
         'gold-light': '#FAC775',
         coral:         '#D85A30',
         'coral-light': '#F5C4B3',
@@ -86,7 +86,7 @@ const config: Config = {
         // ============================================================
         // SHOOTS TOKENS (new, coexisting) — from shoots-app-tokens.md.
         // Additive only: nothing above is removed or repointed yet,
-        // except the three resolved name collisions:
+        // except the four resolved name collisions:
         //  - old `sage` (#639922) -> `sage-deep` above; new `sage`
         //    (#9BCA9D) below is the brand accent, a different colour.
         //  - old `cream` (#FAFAF7) -> retired, repointed to
@@ -94,9 +94,9 @@ const config: Config = {
         //    accent, a different colour.
         //  - old `border` (#E4E2DA) -> retired, repointed to
         //    `border-warm`.
-        // `gold` is a fourth, newly-found collision the source doc
-        // didn't flag (old `gold` #BA7517 above vs. new accent `gold`
-        // #EBCE78) and remains unresolved — not added below.
+        //  - old `gold` (#BA7517) -> `gold-deep` above (decorative vs.
+        //    semantic split — see `gold-deep` comment); new `gold`
+        //    (#EBCE78) below is the brand accent, a different colour.
         // ============================================================
 
         // Surfaces
@@ -121,10 +121,17 @@ const config: Config = {
         'border-warm':     '#E8E0D1',
         'focus-ring':       '#4EAAB4',
 
-        // Brand and action (gold deferred — see note above)
+        // Brand and action
         deep:  '#1D3C3E',
         cream: '#F6F1E7',
         terra: '#D67558',
+        // `gold` is the decorative accent (backgrounds, icon chips); `gold-deep`
+        // (legacy alias above, #BA7517) is text-on-gold/amber-surface — kept
+        // deliberately separate from `state-warning` (#854F0B): visually close,
+        // but one is decorative and one is semantic, and merging them would
+        // change rendered output for no benefit. Flagged as a consolidation
+        // candidate to revisit in the primitives pass, not resolved here.
+        gold:  '#EBCE78',
         teal:  '#4EAAB4',
         sage:  '#9BCA9D',
         sky:   '#ABCBEE',

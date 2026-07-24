@@ -127,7 +127,7 @@ function ProgrammeCard({ prog, onViewDetail, onAddToPipeline }: {
           {/* Amount + arrow */}
           <div className="flex flex-col items-end gap-1 flex-shrink-0 ml-2">
             {amount && (
-              <p className="text-base font-bold text-gold whitespace-nowrap">{amount}</p>
+              <p className="text-base font-bold text-gold-deep whitespace-nowrap">{amount}</p>
             )}
             {deadlineDisplay && (
               <p className="text-[11px] font-medium" style={deadlineDisplay.style}>

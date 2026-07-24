@@ -171,7 +171,7 @@ export default function DiscoveryPanel() {
         </div>
         {queueStats && (
           <div className="flex gap-2 flex-shrink-0">
-            <span className="text-[10px] font-semibold bg-gold/15 text-amber-700 rounded-full px-2.5 py-1 uppercase tracking-wider">
+            <span className="text-[10px] font-semibold bg-gold-deep/15 text-amber-700 rounded-full px-2.5 py-1 uppercase tracking-wider">
               {queueStats.pending} pending
             </span>
             {queueStats.total > 0 && (
@@ -187,7 +187,7 @@ export default function DiscoveryPanel() {
       {queueStats && queueStats.total > 0 && (
         <div className="grid grid-cols-4 gap-2 mb-5">
           {[
-            { label: 'Pending',    value: queueStats.pending,   colour: 'text-amber-700 bg-gold/10'  },
+            { label: 'Pending',    value: queueStats.pending,   colour: 'text-amber-700 bg-gold-deep/10'  },
             { label: 'Processed',  value: queueStats.processed, colour: 'text-green-700 bg-green-50' },
             { label: 'Duplicates', value: queueStats.duplicate, colour: 'text-mid bg-warm/40'         },
             { label: 'Rejected',   value: queueStats.rejected,  colour: 'text-coral-saturated bg-coral-pale'     },

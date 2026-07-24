@@ -220,7 +220,7 @@ export default async function AdminPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-7">
         {[
           { label: 'Total sources',   value: stats.length,                      colour: 'text-forest' },
-          { label: 'Active grants',   value: totalActive.toLocaleString(),       colour: 'text-gold'   },
+          { label: 'Active grants',   value: totalActive.toLocaleString(),       colour: 'text-gold-deep'   },
           { label: '🟢 Healthy',      value: healthyCount,                       colour: 'text-green-700' },
           { label: '🔴 Issues',       value: errorCount + staleCount,            colour: errorCount + staleCount > 0 ? 'text-coral-deep' : 'text-forest' },
         ].map(kpi => (

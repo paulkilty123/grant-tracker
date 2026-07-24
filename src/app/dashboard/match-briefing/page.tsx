@@ -254,7 +254,7 @@ export default function MatchBriefingPage() {
                 <p className="text-sm font-semibold text-charcoal leading-snug line-clamp-2">{item.grant_name}</p>
                 <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                   {formatRange(item.amount_min, item.amount_max ?? item.amount_requested) && (
-                    <span className="text-[11px] font-semibold text-gold">
+                    <span className="text-[11px] font-semibold text-gold-deep">
                       {formatRange(item.amount_min, item.amount_max ?? item.amount_requested)}
                     </span>
                   )}
@@ -369,7 +369,7 @@ export default function MatchBriefingPage() {
                       <p className="text-[9px] font-bold uppercase tracking-wide text-light mb-1">From your profile</p>
                       <p className="text-xs text-mid leading-relaxed">{c.profileEvidence}</p>
                     </div>
-                    <div className="bg-amber-50/80 rounded-lg px-3 py-2.5 border-l-2 border-gold/60">
+                    <div className="bg-amber-50/80 rounded-lg px-3 py-2.5 border-l-2 border-gold-deep/60">
                       <p className="text-[9px] font-bold uppercase tracking-wide text-amber-700/70 mb-1">Recommendation</p>
                       <p className="text-xs text-charcoal leading-relaxed">{c.suggestion}</p>
                     </div>

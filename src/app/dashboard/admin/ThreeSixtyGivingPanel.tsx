@@ -82,7 +82,7 @@ export default function ThreeSixtyGivingPanel() {
           <button
             onClick={() => setDryRun(v => !v)}
             className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors
-              ${dryRun ? 'bg-gold' : 'bg-sage-deep'}`}
+              ${dryRun ? 'bg-gold-deep' : 'bg-sage-deep'}`}
           >
             <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow transition-transform
               ${dryRun ? 'translate-x-1' : 'translate-x-4.5'}`} />
@@ -98,7 +98,7 @@ export default function ThreeSixtyGivingPanel() {
         {mode === 'enrich' && <p><strong>Enrich:</strong> Updates funder_brief on existing grants with real award history (typical size, years active, locations).</p>}
         {mode === 'discover' && <p><strong>Discover:</strong> Creates new inactive entries in Needs Review for funders not yet in the catalogue.</p>}
         {mode === 'both' && <p><strong>Both:</strong> Enriches existing grants with award history, and surfaces new funders into Needs Review.</p>}
-        {dryRun && <p className="text-gold font-medium">⚠ Dry run — no changes will be written. Toggle off to run for real.</p>}
+        {dryRun && <p className="text-gold-deep font-medium">⚠ Dry run — no changes will be written. Toggle off to run for real.</p>}
       </div>
 
       {/* Run button */}
@@ -120,7 +120,7 @@ export default function ThreeSixtyGivingPanel() {
       {/* Results */}
       {result && (
         <div className="mt-5 space-y-3">
-          <div className={`rounded-lg px-4 py-3 text-sm font-medium ${result.dry_run ? 'bg-gold/10 text-amber-800 border border-gold/30' : 'bg-green-50 text-green-800 border border-green-200'}`}>
+          <div className={`rounded-lg px-4 py-3 text-sm font-medium ${result.dry_run ? 'bg-gold-deep/10 text-amber-800 border border-gold-deep/30' : 'bg-green-50 text-green-800 border border-green-200'}`}>
             {result.dry_run ? '✓ Dry run complete — no changes written' : '✓ Ingest complete'}
           </div>
 

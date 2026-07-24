@@ -1709,7 +1709,7 @@ export default function UrlAdminPage() {
   if (!authorised) return (
     <div className="flex h-64 items-center justify-center">
       <div className="rounded-2xl border border-warm bg-white p-10 text-center shadow-warm">
-        <AlertTriangle className="mx-auto mb-4 h-8 w-8 text-gold" />
+        <AlertTriangle className="mx-auto mb-4 h-8 w-8 text-gold-deep" />
         <p className="font-serif text-lg text-charcoal">Admin access only</p>
       </div>
     </div>
@@ -3365,7 +3365,7 @@ export default function UrlAdminPage() {
       </span>
     )
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-gold/10 px-2 py-0.5 text-[10px] font-semibold text-gold">
+      <span className="inline-flex items-center gap-1 rounded-full bg-gold-deep/10 px-2 py-0.5 text-[10px] font-semibold text-gold-deep">
         <Clock className="h-2.5 w-2.5" /> unchecked
       </span>
     )
@@ -3563,7 +3563,7 @@ export default function UrlAdminPage() {
             { label: 'Total grants',   value: stats.total,         Icon: Database,      colour: 'text-charcoal', bg: 'bg-white',   border: 'border-warm'    },
             { label: 'Links verified', value: stats.ok,            Icon: CheckCircle,   colour: 'text-sage-deep',     bg: 'bg-sage-deep/5',  border: 'border-sage-deep/20' },
             { label: 'Dead links',     value: stats.dead,          Icon: AlertTriangle, colour: 'text-coral-saturated',  bg: 'bg-coral-pale',  border: 'border-coral-mid' },
-            { label: 'New this week',  value: stats.newCount ?? 0, Icon: Clock,         colour: 'text-gold',     bg: 'bg-gold/5',  border: 'border-gold/20' },
+            { label: 'New this week',  value: stats.newCount ?? 0, Icon: Clock,         colour: 'text-gold-deep',     bg: 'bg-gold-deep/5',  border: 'border-gold-deep/20' },
           ].map(s => (
             <div key={s.label} className={`rounded-2xl border ${s.border} ${s.bg} p-5 shadow-warm`}>
               <s.Icon className={`mb-2 h-5 w-5 ${s.colour}`} />
@@ -3939,7 +3939,7 @@ export default function UrlAdminPage() {
                         <td className="px-5 py-3 max-w-[160px]">
                           <p className="text-xs text-charcoal truncate">{grant.source}</p>
                           {newSources.has(grant.source) && (
-                            <span className="inline-block mt-1 rounded-full bg-gold/15 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                            <span className="inline-block mt-1 rounded-full bg-gold-deep/15 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
                               ✦ New source
                             </span>
                           )}
@@ -4021,7 +4021,7 @@ export default function UrlAdminPage() {
                             <CheckCircle className="h-2.5 w-2.5" /> rolling
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-gold/10 px-2 py-0.5 text-[10px] font-semibold text-gold">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-gold-deep/10 px-2 py-0.5 text-[10px] font-semibold text-gold-deep">
                             <Clock className="h-2.5 w-2.5" /> deadline
                           </span>
                         )}

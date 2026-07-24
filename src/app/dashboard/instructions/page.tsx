@@ -84,7 +84,7 @@ export default function InstructionsPage() {
       </div>
 
       {/* Quick-start */}
-      <Section icon={Zap} colour="bg-gold/15 text-gold" title="Quick start — 3 steps to your first matches">
+      <Section icon={Zap} colour="bg-gold-deep/15 text-gold-deep" title="Quick start — 3 steps to your first matches">
         <div className="space-y-4">
           <Step n={1} title="Complete your profile">
             Go to <strong className="text-charcoal">Profile</strong> in the sidebar and fill in your organisation details — name, type, mission, themes, areas of work, location, and income band. The more you fill in, the better your matches will be.
@@ -122,7 +122,7 @@ export default function InstructionsPage() {
         {/* My Matches */}
         <div className="mt-2 p-4 rounded-lg border border-warm bg-warm/30">
           <div className="flex items-center gap-2 mb-2">
-            <Trophy className="w-4 h-4 text-gold" strokeWidth={2} />
+            <Trophy className="w-4 h-4 text-gold-deep" strokeWidth={2} />
             <p className="font-semibold text-charcoal">My Matches</p>
           </div>
           <p className="text-sm text-mid leading-relaxed">
