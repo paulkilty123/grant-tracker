@@ -16,7 +16,7 @@ export default function PrivacyPage() {
     <div style={{ background: 'var(--surface-page)', minHeight: '100vh', fontFamily: BODY, color: 'var(--text-body)' }}>
 
       {/* NAV */}
-      <nav style={{ background: 'white', borderBottom: '0.5px solid rgba(23,52,4,0.08)', padding: '18px 0' }}>
+      <nav style={{ background: 'white', borderBottom: '0.5px solid color-mix(in srgb, var(--deep) 8%, transparent)', padding: '18px 0' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/" className="no-underline" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <LogoMark size={22} />

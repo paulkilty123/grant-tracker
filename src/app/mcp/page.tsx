@@ -55,12 +55,12 @@ export default function MCPLandingPage() {
         </div>
 
         {/* ── Connect ───────────────────────────────────────────────────── */}
-        <section id="connect" style={{ borderTop: '0.5px solid rgba(23,52,4,0.08)', paddingTop: 32, marginBottom: 36 }}>
+        <section id="connect" style={{ borderTop: '0.5px solid color-mix(in srgb, var(--deep) 8%, transparent)', paddingTop: 32, marginBottom: 36 }}>
           <h2 style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, fontSize: 22, letterSpacing: '-0.02em', color: 'var(--text-body)', marginBottom: 14 }}>Connect</h2>
           <p style={{ fontSize: 15, lineHeight: 1.6, color: 'var(--text-muted)', marginBottom: 10 }}>
             <strong style={{ color: 'var(--text-body)' }}>In Claude, ChatGPT, Gemini, or any MCP-compatible client:</strong> add a custom connector pointing at the remote MCP server URL below, then sign in to {brand.name} and authorise access. Authentication uses OAuth 2.0 with Dynamic Client Registration and PKCE — you don&apos;t paste a client ID or secret; the client registers itself.
           </p>
-          <pre style={{ background: 'var(--state-success-pale)', border: '0.5px solid rgba(23,52,4,0.12)', borderRadius: 8, padding: '12px 14px', fontSize: 13, color: 'var(--deep)', overflowX: 'auto', margin: '0 0 12px' }}>{`${brand.siteUrl}/api/mcp/v1/mcp`}</pre>
+          <pre style={{ background: 'var(--state-success-pale)', border: '0.5px solid color-mix(in srgb, var(--deep) 12%, transparent)', borderRadius: 8, padding: '12px 14px', fontSize: 13, color: 'var(--deep)', overflowX: 'auto', margin: '0 0 12px' }}>{`${brand.siteUrl}/api/mcp/v1/mcp`}</pre>
           <p style={{ fontSize: 13, color: 'var(--text-subtle)', lineHeight: 1.6 }}>Transport: Streamable HTTP (JSON-RPC). Authentication is OAuth 2.0. The server is read-only.</p>
         </section>
 
@@ -113,7 +113,7 @@ export default function MCPLandingPage() {
 
 function Feature({ icon, title, body }: { icon: React.ReactNode; title: string; body: string }) {
   return (
-    <div style={{ background: 'white', border: '0.5px solid rgba(23,52,4,0.10)', borderRadius: 12, padding: 18, boxShadow: '0 2px 16px rgba(26,46,43,0.04)' }}>
+    <div style={{ background: 'white', border: '0.5px solid rgba(23,52,4,0.10)', borderRadius: 12, padding: 18, boxShadow: '0 2px 16px color-mix(in srgb, var(--text-body) 4%, transparent)' }}>
       <div style={{ color: 'var(--state-success)', marginBottom: 8 }}>{icon}</div>
       <p style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, fontSize: 14, color: 'var(--text-body)', marginBottom: 4 }}>
         {title}

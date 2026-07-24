@@ -92,7 +92,7 @@ export default function ForgotPasswordPage() {
               </p>
               <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 {error && (
-                  <div style={{ background: 'var(--state-error-pale)', border: '0.5px solid rgba(153,60,29,0.25)', color: 'var(--state-error)', fontSize: 13, padding: '11px 14px', borderRadius: 10 }}>
+                  <div style={{ background: 'var(--state-error-pale)', border: '0.5px solid color-mix(in srgb, var(--state-error) 25%, transparent)', color: 'var(--state-error)', fontSize: 13, padding: '11px 14px', borderRadius: 10 }}>
                     {error}
                   </div>
                 )}

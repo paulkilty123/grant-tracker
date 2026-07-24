@@ -114,7 +114,7 @@ export default function CohortSignupPage() {
 
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         {error && (
-          <div style={{ background: 'var(--state-error-pale)', border: '0.5px solid rgba(153,60,29,0.25)', color: 'var(--state-error)', fontSize: 13, padding: '11px 14px', borderRadius: 10 }}>
+          <div style={{ background: 'var(--state-error-pale)', border: '0.5px solid color-mix(in srgb, var(--state-error) 25%, transparent)', color: 'var(--state-error)', fontSize: 13, padding: '11px 14px', borderRadius: 10 }}>
             {error}{' '}
             {error.includes('already exists') && (
               <Link href="/auth/login" style={{ color: 'var(--state-error)', fontWeight: 600, textDecoration: 'underline' }}>Sign in</Link>

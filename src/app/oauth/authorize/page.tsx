@@ -155,7 +155,7 @@ function ErrorScreen({ error, description }: { error: string; description: strin
     <div style={{ background: 'var(--surface-page)', minHeight: '100vh', fontFamily: 'var(--font-plus-jakarta, Plus Jakarta Sans, sans-serif)', color: 'var(--text-body)' }}>
       <PortalNav />
       <main style={{ maxWidth: 560, margin: '0 auto', padding: '64px 32px' }}>
-        <div className="rounded-xl p-8" style={{ background: 'white', border: '0.5px solid rgba(23,52,4,0.08)', boxShadow: '0 2px 16px rgba(26,46,43,0.04)' }}>
+        <div className="rounded-xl p-8" style={{ background: 'white', border: '0.5px solid rgba(23,52,4,0.08)', boxShadow: '0 2px 16px color-mix(in srgb, var(--text-body) 4%, transparent)' }}>
           <div className="text-[11px] font-bold uppercase tracking-wider mb-2" style={{ fontFamily: 'var(--font-space-grotesk)', color: 'var(--state-error)' }}>
             Authorization request rejected
           </div>
@@ -205,7 +205,7 @@ function ConsentScreen({
     <div style={{ background: 'var(--surface-page)', minHeight: '100vh', fontFamily: 'var(--font-plus-jakarta, Plus Jakarta Sans, sans-serif)', color: 'var(--text-body)' }}>
       <PortalNav />
       <main style={{ maxWidth: 560, margin: '0 auto', padding: '48px 32px' }}>
-        <div className="rounded-xl p-8" style={{ background: 'white', border: '0.5px solid rgba(23,52,4,0.08)', boxShadow: '0 2px 16px rgba(26,46,43,0.04)' }}>
+        <div className="rounded-xl p-8" style={{ background: 'white', border: '0.5px solid rgba(23,52,4,0.08)', boxShadow: '0 2px 16px color-mix(in srgb, var(--text-body) 4%, transparent)' }}>
           <div className="text-[11px] font-bold uppercase tracking-wider mb-2" style={{ fontFamily: 'var(--font-space-grotesk)', color: 'var(--text-muted)' }}>
             Authorize connection
           </div>
@@ -216,7 +216,7 @@ function ConsentScreen({
             <strong>{clientName}</strong> is asking for <strong>read access</strong> to your {brand.name} funding catalogue.
           </p>
 
-          <div className="rounded-lg p-4 mb-5" style={{ background: 'var(--state-success-pale)', border: '0.5px solid rgba(59,109,17,0.18)' }}>
+          <div className="rounded-lg p-4 mb-5" style={{ background: 'var(--state-success-pale)', border: '0.5px solid color-mix(in srgb, var(--state-success) 18%, transparent)' }}>
             <div className="text-[11px] font-bold uppercase tracking-wider mb-2" style={{ fontFamily: 'var(--font-space-grotesk)', color: 'var(--state-success)' }}>
               What it can do
             </div>
@@ -229,7 +229,7 @@ function ConsentScreen({
             </ul>
           </div>
 
-          <div className="rounded-lg p-4 mb-6" style={{ background: 'var(--surface-sunken)', border: '0.5px solid rgba(95,94,90,0.18)' }}>
+          <div className="rounded-lg p-4 mb-6" style={{ background: 'var(--surface-sunken)', border: '0.5px solid color-mix(in srgb, var(--text-muted) 18%, transparent)' }}>
             <div className="text-[11px] font-bold uppercase tracking-wider mb-2" style={{ fontFamily: 'var(--font-space-grotesk)', color: 'var(--text-muted)' }}>
               What it can&apos;t do
             </div>
