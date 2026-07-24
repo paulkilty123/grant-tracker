@@ -19,29 +19,29 @@ const ADMIN_EMAIL = 'paulkilty1@gmail.com'
    ═══════════════════════════════════════════════ */
 const T = {
   lime:          '#8ECB3C',
-  greenDeep:     '#173404',
-  greenMid:      '#639922',
-  pageBg:        '#FAFAF7',
-  cream:         '#F5F1E8',
-  white:         '#FFFFFF',
-  textPrimary:   '#2C2C2A',
-  textSecondary: '#5F5E5A',
-  textTertiary:  '#8A8986',
+  greenDeep:     'var(--deep)',
+  greenMid:      'var(--sage-deep)',
+  pageBg:        'var(--surface-page)',
+  cream:         'var(--surface-sunken)',
+  white:         'var(--surface-card)',
+  textPrimary:   'var(--text-body)',
+  textSecondary: 'var(--text-muted)',
+  textTertiary:  'var(--text-subtle)',
   border:        'rgba(23, 52, 4, 0.08)',
   borderStrong:  'rgba(23, 52, 4, 0.14)',
   // Completion tier palette (mirrors opportunity card match tiers)
-  strongBorder:  '#639922',
-  strongPanel:   '#F4F9ED',
+  strongBorder:  'var(--sage-deep)',
+  strongPanel:   'var(--surface-page)',
   partialBorder: '#5A9080',
-  partialPanel:  '#F0F5F3',
-  weakBorder:    '#808580',
-  weakPanel:     '#F4F6F4',
+  partialPanel:  'var(--surface-pill)',
+  weakBorder:    'var(--text-subtle)',
+  weakPanel:     'var(--surface-page)',
   // Pill families
-  greenBg:       '#E8F2D8',
-  greenText:     '#3F6018',
-  coralBg:       '#FAECE7',
-  coralText:     '#993C1D',
-  creamText:     '#3A3000',
+  greenBg:       'var(--type-inkind-pale)',
+  greenText:     'var(--state-success)',
+  coralBg:       'var(--state-error-pale)',
+  coralText:     'var(--state-error)',
+  creamText:     'var(--text-body)',
 }
 
 const UI  = 'var(--font-space-grotesk)'
@@ -449,7 +449,7 @@ function Toggle({ enabled, onToggle }: { enabled: boolean; onToggle: () => void 
       onClick={onToggle}
       style={{
         width: 36, height: 20, borderRadius: 10, position: 'relative', cursor: 'pointer',
-        background: enabled ? T.lime : '#E0DFD9', transition: 'background 0.2s ease', flexShrink: 0,
+        background: enabled ? T.lime : 'var(--border-warm)', transition: 'background 0.2s ease', flexShrink: 0,
       }}
     >
       <div style={{
@@ -472,7 +472,7 @@ function PickerChip({ label, chipState, dimmed, onClick, showMakePrimary, onMake
   const isSecondary = chipState === 'secondary'
   const isSelected  = isPrimary || isSecondary
 
-  const bg = isPrimary ? T.greenDeep : isSecondary ? T.greenBg : hov ? '#F0EFEB' : T.white
+  const bg = isPrimary ? T.greenDeep : isSecondary ? T.greenBg : hov ? 'var(--surface-pill)' : T.white
   const color = isPrimary ? T.white : isSecondary ? T.greenText : dimmed ? T.textTertiary : T.textSecondary
   const border = isPrimary ? T.greenDeep : isSecondary ? T.greenMid : T.borderStrong
 
@@ -690,9 +690,9 @@ function CompletionMeter({ org, onJumpToCard }: { org: Organisation; onJumpToCar
                 style={{
                   fontFamily: UI, fontWeight: 500, fontSize: 12,
                   padding: '4px 10px', borderRadius: 8, cursor: card ? 'pointer' : 'default',
-                  border: `1px solid ${m.impact === 'high' ? '#C97B1A' : T.borderStrong}`,
-                  background: m.impact === 'high' ? '#FEF3E2' : T.pageBg,
-                  color: m.impact === 'high' ? '#854F0B' : T.textSecondary,
+                  border: `1px solid ${m.impact === 'high' ? 'var(--terra)' : T.borderStrong}`,
+                  background: m.impact === 'high' ? 'var(--surface-sunken)' : T.pageBg,
+                  color: m.impact === 'high' ? 'var(--state-warning)' : T.textSecondary,
                   display: 'inline-flex', alignItems: 'center', gap: 5,
                   transition: 'all 0.12s',
                 }}
@@ -854,9 +854,9 @@ function ScanBar({ orgId, website, onSaved }: { orgId: string; website?: string 
       )}
       {/* Scan feedback message */}
       {scanMsg && (
-        <div style={{ marginTop: 12, padding: '10px 14px', background: scanMsg.type === 'success' ? '#F0FAE5' : '#FEF2F2', border: `1px solid ${scanMsg.type === 'success' ? '#8ECB3C' : '#FECACA'}`, borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontFamily: BODY, fontSize: 13, color: scanMsg.type === 'success' ? T.greenDeep : '#991B1B' }}>{scanMsg.text}</span>
-          <button onClick={() => setScanMsg(null)} style={{ fontFamily: UI, fontSize: 12, color: scanMsg.type === 'success' ? T.greenDeep : '#991B1B', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, flexShrink: 0, marginLeft: 12 }}>Dismiss</button>
+        <div style={{ marginTop: 12, padding: '10px 14px', background: scanMsg.type === 'success' ? 'var(--type-inkind-pale)' : 'var(--surface-page)', border: `1px solid ${scanMsg.type === 'success' ? '#8ECB3C' : 'var(--border-warm)'}`, borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontFamily: BODY, fontSize: 13, color: scanMsg.type === 'success' ? T.greenDeep : 'var(--state-error)' }}>{scanMsg.text}</span>
+          <button onClick={() => setScanMsg(null)} style={{ fontFamily: UI, fontSize: 12, color: scanMsg.type === 'success' ? T.greenDeep : 'var(--state-error)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, flexShrink: 0, marginLeft: 12 }}>Dismiss</button>
         </div>
       )}
     </div>
@@ -877,7 +877,7 @@ function CardShell({ title, badge, isEditing, onEdit, editDisabled, children, fo
   hasIncomplete?: boolean
   cardId?: string
 }) {
-  const borderColor = isEditing ? T.greenDeep : hasIncomplete ? '#C97B1A' : T.border
+  const borderColor = isEditing ? T.greenDeep : hasIncomplete ? 'var(--terra)' : T.border
   return (
     <section id={cardId} style={{
       background: T.white, border: `1px solid ${borderColor}`,
@@ -938,7 +938,7 @@ function SaveBtn({ saving, onClick }: { saving: boolean; onClick: () => void }) 
       disabled={saving}
       style={{
         fontFamily: UI, fontWeight: 500, fontSize: 13.5,
-        background: saving ? '#C5E08A' : T.lime, color: T.greenDeep,
+        background: saving ? 'var(--sage-pale)' : T.lime, color: T.greenDeep,
         border: 'none', padding: '8px 18px', borderRadius: 8,
         cursor: saving ? 'not-allowed' : 'pointer',
       }}
@@ -1108,7 +1108,7 @@ function AboutCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
             />
           </FieldRow>
 
-          {saveError && <p style={{ fontFamily: BODY, fontSize: 13, color: '#B91C1C', marginTop: 4 }}>{saveError}</p>}
+          {saveError && <p style={{ fontFamily: BODY, fontSize: 13, color: 'var(--state-error)', marginTop: 4 }}>{saveError}</p>}
         </>
       ) : (
         <>
@@ -1277,7 +1277,7 @@ function FocusCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
     fontFamily: UI, fontWeight: 500, fontSize: 12.5, padding: '4px 10px', borderRadius: 20,
     display: 'inline-flex', alignItems: 'center', gap: 5,
     background: isPrimary ? T.greenDeep : T.greenBg,
-    color:      isPrimary ? '#F1F7E4'   : T.greenText,
+    color:      isPrimary ? 'var(--state-success-pale)'   : T.greenText,
   })
 
   return (
@@ -1324,7 +1324,7 @@ function FocusCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
           {/* Sub-tag panel — tri-state chips. Click cycles:
               neutral (off-white) → include (green) → exclude (red strikethrough) → neutral */}
           {draft.impactSectors.filter(s => NICHE_TAGS_BY_SECTOR[s]).length > 0 && (
-            <div style={{ background: '#F5F1E8', borderLeft: '3px solid #8ECB3C', borderRadius: 8, padding: '12px 14px' }}>
+            <div style={{ background: 'var(--surface-sunken)', borderLeft: '3px solid #8ECB3C', borderRadius: 8, padding: '12px 14px' }}>
               <div style={{
                 fontFamily: UI,
                 fontSize: 12.5,
@@ -1333,12 +1333,12 @@ function FocusCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
                 marginBottom: 14,
                 padding: '10px 12px',
                 background: 'rgba(255,255,255,0.75)',
-                borderLeft: '3px solid #639922',
+                borderLeft: '3px solid var(--sage-deep)',
                 borderRadius: 4,
                 lineHeight: 1.5,
               }}>
-                <strong style={{ color: '#3B6D11', fontWeight: 700, letterSpacing: '0.01em' }}>Tip</strong>
-                <span style={{ color: '#3B6D11' }}> · </span>
+                <strong style={{ color: 'var(--state-success)', fontWeight: 700, letterSpacing: '0.01em' }}>Tip</strong>
+                <span style={{ color: 'var(--state-success)' }}> · </span>
                 Click once to mark as a specialism. Click again to <strong>exclude</strong> (we won&apos;t show grants targeting it). Click a third time to reset.
               </div>
               {draft.impactSectors.filter(s => NICHE_TAGS_BY_SECTOR[s]).map(sector => {
@@ -1353,9 +1353,9 @@ function FocusCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
                       {opts.map(opt => {
                         const isIncluded = draft.nicheTags.includes(opt.value)
                         const isExcluded = draft.excludedNicheTags.includes(opt.value)
-                        const borderCol = isIncluded ? '#8ECB3C' : isExcluded ? '#D85A30' : '#D9D4C7'
-                        const bgCol     = isIncluded ? '#EEF8D8' : isExcluded ? '#FAECE7' : '#FEFCF8'
-                        const txtCol    = isIncluded ? '#3A6B0E' : isExcluded ? '#993C1D' : T.textSecondary
+                        const borderCol = isIncluded ? '#8ECB3C' : isExcluded ? 'var(--terra)' : 'var(--border-warm)'
+                        const bgCol     = isIncluded ? 'var(--type-inkind-pale)' : isExcluded ? 'var(--state-error-pale)' : 'var(--surface-page)'
+                        const txtCol    = isIncluded ? 'var(--state-success)' : isExcluded ? 'var(--state-error)' : T.textSecondary
                         return (
                           <button
                             key={opt.value}
@@ -1412,7 +1412,7 @@ function FocusCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
             </div>
           </div>
 
-          {saveError && <p style={{ fontFamily: BODY, fontSize: 13, color: '#B91C1C' }}>{saveError}</p>}
+          {saveError && <p style={{ fontFamily: BODY, fontSize: 13, color: 'var(--state-error)' }}>{saveError}</p>}
         </>
       ) : (
         <>
@@ -1522,7 +1522,7 @@ function LocationCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEdit
   }
 
   const locationPill = (text: string) => (
-    <span style={{ fontFamily: UI, fontWeight: 500, fontSize: 12.5, padding: '4px 10px', borderRadius: 12, background: '#F0EFEB', color: T.textSecondary, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+    <span style={{ fontFamily: UI, fontWeight: 500, fontSize: 12.5, padding: '4px 10px', borderRadius: 12, background: 'var(--surface-pill)', color: T.textSecondary, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
       📍 {text}
     </span>
   )
@@ -1559,7 +1559,7 @@ function LocationCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEdit
               ))}
             </select>
           </FieldRow>
-          {saveError && <p style={{ fontFamily: BODY, fontSize: 13, color: '#B91C1C' }}>{saveError}</p>}
+          {saveError && <p style={{ fontFamily: BODY, fontSize: 13, color: 'var(--state-error)' }}>{saveError}</p>}
         </>
       ) : (
         <>
@@ -1748,7 +1748,7 @@ function FundingCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditE
               </p>
             </div>
           </FieldRow>
-          {saveError && <p style={{ fontFamily: BODY, fontSize: 13, color: '#B91C1C' }}>{saveError}</p>}
+          {saveError && <p style={{ fontFamily: BODY, fontSize: 13, color: 'var(--state-error)' }}>{saveError}</p>}
         </>
       ) : (
         <>
@@ -1829,15 +1829,15 @@ function StoryCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
   }
 
   const quickWinBadge = !hasMission && !editing ? (
-    <span style={{ fontFamily: UI, fontWeight: 500, fontSize: 12, color: '#854F0B', padding: '3px 10px', background: '#FAEEDA', borderRadius: 10 }}>
+    <span style={{ fontFamily: UI, fontWeight: 500, fontSize: 12, color: 'var(--state-warning)', padding: '3px 10px', background: 'var(--state-warning-pale)', borderRadius: 10 }}>
       Quick win
     </span>
   ) : null
 
-  const storyBorder = editing ? T.greenDeep : (!hasMission && hasIncomplete) ? '#C97B1A' : hasMission ? T.border : 'rgba(142,203,60,0.2)'
+  const storyBorder = editing ? T.greenDeep : (!hasMission && hasIncomplete) ? 'var(--terra)' : hasMission ? T.border : 'rgba(142,203,60,0.2)'
   return (
     <section id="card-story" style={{
-      background: hasMission ? T.white : 'linear-gradient(135deg, #FDFCF7 0%, #F8F5EC 100%)',
+      background: hasMission ? T.white : 'linear-gradient(135deg, var(--surface-page) 0%, var(--surface-sunken) 100%)',
       border: `1px solid ${storyBorder}`,
       borderRadius: 12, overflow: 'hidden',
       boxShadow: editing ? '0 0 0 3px rgba(23,52,4,0.05)' : (!hasMission && hasIncomplete) ? '0 0 0 3px rgba(201,123,26,0.06)' : 'none',
@@ -1898,7 +1898,7 @@ function StoryCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
                 Comma-separated keywords that describe your work in your own words. Useful when your sectors don&apos;t fully capture what you do (e.g. a specific method, audience, or angle).
               </p>
             </div>
-            {saveError && <p style={{ fontFamily: BODY, fontSize: 13, color: '#B91C1C' }}>{saveError}</p>}
+            {saveError && <p style={{ fontFamily: BODY, fontSize: 13, color: 'var(--state-error)' }}>{saveError}</p>}
           </>
         ) : hasMission ? (
           <>
@@ -2058,8 +2058,8 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FAFAF7' }}>
-        <p style={{ fontFamily: UI, fontSize: 14, color: '#8A8986' }}>Loading…</p>
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--surface-page)' }}>
+        <p style={{ fontFamily: UI, fontSize: 14, color: 'var(--text-subtle)' }}>Loading…</p>
       </div>
     )
   }
@@ -2085,16 +2085,16 @@ export default function ProfilePage() {
 
   if (!activeOrg) {
     return (
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FAFAF7', padding: 24 }}>
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--surface-page)', padding: 24 }}>
         <div style={{ maxWidth: 440, width: '100%' }}>
-          <h1 style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 28, letterSpacing: '-0.02em', color: '#2C2C2A', marginBottom: 8 }}>
+          <h1 style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 28, letterSpacing: '-0.02em', color: 'var(--text-body)', marginBottom: 8 }}>
             {"Let's set up your profile"}
           </h1>
-          <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 14, color: '#5F5E5A', marginBottom: 32 }}>
+          <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 14, color: 'var(--text-muted)', marginBottom: 32 }}>
             {"Start with your organisation name and we'll walk you through the rest."}
           </p>
           <form onSubmit={handleCreateOrg}>
-            <label style={{ display: 'block', fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, fontSize: 13, color: '#2C2C2A', marginBottom: 6 }}>
+            <label style={{ display: 'block', fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, fontSize: 13, color: 'var(--text-body)', marginBottom: 6 }}>
               Organisation name
             </label>
             <input
@@ -2103,12 +2103,12 @@ export default function ProfilePage() {
               onChange={e => setNewOrgName(e.target.value)}
               placeholder="e.g. AudioActive"
               required
-              style={{ display: 'block', width: '100%', padding: '10px 14px', border: '1.5px solid rgba(23,52,4,0.14)', borderRadius: 10, fontFamily: 'var(--font-dm-sans)', fontSize: 14, color: '#2C2C2A', background: '#fff', marginBottom: 16, boxSizing: 'border-box' as const }}
+              style={{ display: 'block', width: '100%', padding: '10px 14px', border: '1.5px solid rgba(23,52,4,0.14)', borderRadius: 10, fontFamily: 'var(--font-dm-sans)', fontSize: 14, color: 'var(--text-body)', background: 'var(--surface-card)', marginBottom: 16, boxSizing: 'border-box' as const }}
             />
             <button
               type="submit"
               disabled={creating || !newOrgName.trim()}
-              style={{ width: '100%', padding: '11px 0', background: '#8ECB3C', color: '#173404', border: 'none', borderRadius: 10, fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 14, cursor: 'pointer', opacity: (creating || !newOrgName.trim()) ? 0.6 : 1 }}
+              style={{ width: '100%', padding: '11px 0', background: '#8ECB3C', color: 'var(--deep)', border: 'none', borderRadius: 10, fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 14, cursor: 'pointer', opacity: (creating || !newOrgName.trim()) ? 0.6 : 1 }}
             >
               {creating ? 'Creating\u2026' : 'Continue \u2192'}
             </button>
@@ -2139,11 +2139,11 @@ export default function ProfilePage() {
 
         {/* Page header */}
         <div style={{ marginBottom: 28 }}>
-          <h1 style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: isMobile ? 28 : 36, letterSpacing: '-0.02em', color: '#2C2C2A', lineHeight: 1.1, margin: '0 0 6px' }}>
+          <h1 style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: isMobile ? 28 : 36, letterSpacing: '-0.02em', color: 'var(--text-body)', lineHeight: 1.1, margin: '0 0 6px' }}>
             Your profile
           </h1>
           <div style={{ display: 'flex', alignItems: isMobile ? 'flex-start' : 'center', justifyContent: 'space-between', gap: isMobile ? 10 : 16, flexDirection: isMobile ? 'column' : 'row' }}>
-            <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 14, color: '#5F5E5A', margin: 0 }}>
+            <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 14, color: 'var(--text-muted)', margin: 0 }}>
               Refine the details that drive your funding matches.
             </p>
           </div>
@@ -2185,7 +2185,7 @@ export default function ProfilePage() {
               onClick={() => setShowDeleteConfirm(true)}
               style={{
                 fontFamily: UI, fontWeight: 500, fontSize: 13,
-                color: '#B94040', background: 'transparent',
+                color: 'var(--state-error)', background: 'transparent',
                 border: '1px solid rgba(185,64,64,0.25)', borderRadius: 8,
                 padding: '8px 16px', cursor: 'pointer',
                 display: 'inline-flex', alignItems: 'center', gap: 6,
@@ -2196,16 +2196,16 @@ export default function ProfilePage() {
             </button>
           ) : (
             <div style={{
-              background: '#FEF2F2', border: '1px solid rgba(185,64,64,0.3)',
+              background: 'var(--surface-page)', border: '1px solid rgba(185,64,64,0.3)',
               borderRadius: 10, padding: '18px 20px',
             }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 14 }}>
-                <AlertTriangle size={16} style={{ color: '#B94040', flexShrink: 0, marginTop: 2 }} />
+                <AlertTriangle size={16} style={{ color: 'var(--state-error)', flexShrink: 0, marginTop: 2 }} />
                 <div>
-                  <div style={{ fontFamily: UI, fontWeight: 600, fontSize: 14, color: '#7A2020', marginBottom: 4 }}>
+                  <div style={{ fontFamily: UI, fontWeight: 600, fontSize: 14, color: 'var(--state-error)', marginBottom: 4 }}>
                     Delete &ldquo;{activeOrg.name}&rdquo;?
                   </div>
-                  <div style={{ fontFamily: BODY, fontSize: 13, color: '#9A4040', lineHeight: 1.5 }}>
+                  <div style={{ fontFamily: BODY, fontSize: 13, color: 'var(--state-error)', lineHeight: 1.5 }}>
                     This will permanently remove the organisation, its profile, and all pipeline records. This cannot be undone.
                   </div>
                 </div>
@@ -2216,7 +2216,7 @@ export default function ProfilePage() {
                   disabled={deleting}
                   style={{
                     fontFamily: UI, fontWeight: 600, fontSize: 13,
-                    background: '#B94040', color: '#fff',
+                    background: 'var(--state-error)', color: 'var(--surface-card)',
                     border: 'none', borderRadius: 8,
                     padding: '8px 18px', cursor: deleting ? 'not-allowed' : 'pointer',
                     opacity: deleting ? 0.7 : 1,
@@ -2229,7 +2229,7 @@ export default function ProfilePage() {
                   disabled={deleting}
                   style={{
                     fontFamily: UI, fontWeight: 500, fontSize: 13,
-                    background: 'transparent', color: '#7A2020',
+                    background: 'transparent', color: 'var(--state-error)',
                     border: '1px solid rgba(185,64,64,0.25)', borderRadius: 8,
                     padding: '8px 16px', cursor: 'pointer',
                   }}
