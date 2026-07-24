@@ -43,9 +43,9 @@ export default function OnboardingWelcomePage() {
       padding: '20px 24px 40px',
       minHeight: 620,
       width: '100%',
-      background: '#fff',
+      background: 'var(--surface-card)',
       fontFamily: BODY,
-      color: '#2C2C2A',
+      color: 'var(--text-body)',
     }}>
       {/* Hero — matches wizard step 'entry' positioning */}
       <div style={{
@@ -83,7 +83,7 @@ export default function OnboardingWelcomePage() {
           fontSize: 'clamp(36px, 5.5vw, 52px)',
           lineHeight: 1.08,
           letterSpacing: '-0.025em',
-          color: '#2C2C2A',
+          color: 'var(--text-body)',
           marginBottom: 18,
         }}>
           Welcome, {name}.
@@ -93,7 +93,7 @@ export default function OnboardingWelcomePage() {
           fontFamily: BODY,
           fontSize: 17,
           lineHeight: 1.55,
-          color: '#5F5E5A',
+          color: 'var(--text-muted)',
           maxWidth: 460,
           marginBottom: 36,
         }}>
@@ -107,7 +107,7 @@ export default function OnboardingWelcomePage() {
             fontWeight: 600,
             fontSize: 15,
             background: '#8ECB3C',
-            color: '#173404',
+            color: 'var(--deep)',
             padding: '13px 24px',
             borderRadius: 10,
             textDecoration: 'none',
@@ -128,7 +128,7 @@ export default function OnboardingWelcomePage() {
       <div style={{ textAlign: 'center' }}>
         <Link
           href="/dashboard/profile"
-          style={{ fontFamily: UI, fontSize: 13, color: '#8A8986', padding: '12px 16px', display: 'inline-block', textDecoration: 'none' }}
+          style={{ fontFamily: UI, fontSize: 13, color: 'var(--text-subtle)', padding: '12px 16px', display: 'inline-block', textDecoration: 'none' }}
         >
           Set up later
         </Link>

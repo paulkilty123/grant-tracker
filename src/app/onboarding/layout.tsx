@@ -11,7 +11,7 @@ export default async function OnboardingLayout({
   if (!user) redirect('/auth/login')
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#FAFAF7' }}>
+    <div className="min-h-screen flex flex-col" style={{ background: 'var(--surface-page)' }}>
       <main className="flex-1 flex flex-col">{children}</main>
     </div>
   )

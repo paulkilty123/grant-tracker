@@ -21,24 +21,24 @@ import { brand } from '@/config/brand'
 
 const T = {
   lime:          '#8ECB3C',
-  greenMid:      '#639922',
-  greenDeep:     '#173404',
-  greenTextDeep: '#3B6D11',
-  greenSoft:     '#97C459',
-  greenCream:    '#EAF3DE',
-  cream1:        '#F5F1E8',
-  creamHover:    '#EAE5D7',
-  pageBg:        '#FAFAF7',
-  amberMid:      '#BA7517',
-  amberBgSoft:   '#FDFBF5',
-  coralBg:       '#FAECE7',
-  coralText:     '#993C1D',
+  greenMid:      'var(--sage-deep)',
+  greenDeep:     'var(--deep)',
+  greenTextDeep: 'var(--state-success)',
+  greenSoft:     'var(--sage)',
+  greenCream:    'var(--state-success-pale)',
+  cream1:        'var(--surface-sunken)',
+  creamHover:    'var(--border-warm)',
+  pageBg:        'var(--surface-page)',
+  amberMid:      'var(--gold-deep)',
+  amberBgSoft:   'var(--surface-page)',
+  coralBg:       'var(--state-error-pale)',
+  coralText:     'var(--state-error)',
   borderLight:   'rgba(0,0,0,0.06)',
   borderMid:     'rgba(0,0,0,0.1)',
   borderInput:   'rgba(0,0,0,0.14)',
-  textPrimary:   '#2C2C2A',
-  textSecondary: '#5F5E5A',
-  textTertiary:  '#8A8986',
+  textPrimary:   'var(--text-body)',
+  textSecondary: 'var(--text-muted)',
+  textTertiary:  'var(--text-subtle)',
 } as const
 
 /* ═══════════════════════════════════════════════
@@ -284,7 +284,7 @@ const INPUT_STYLE: React.CSSProperties = {
   fontFamily: 'var(--font-dm-sans)',
   fontSize: 14,
   color: T.textPrimary,
-  background: '#fff',
+  background: 'var(--surface-card)',
   outline: 'none',
   boxSizing: 'border-box',
 }
@@ -460,8 +460,8 @@ function PickerChip({
         padding: '9px 12px',
         border: `0.5px solid ${isPrimary ? T.greenDeep : isSecondary ? T.greenMid : showHover ? T.greenMid : T.borderInput}`,
         borderRadius: 8,
-        background: isPrimary ? T.greenDeep : isSecondary || showHover ? T.greenCream : '#fff',
-        color: isPrimary ? '#fff' : isSecondary || showHover ? T.greenTextDeep : T.textPrimary,
+        background: isPrimary ? T.greenDeep : isSecondary || showHover ? T.greenCream : 'var(--surface-card)',
+        color: isPrimary ? 'var(--surface-card)' : isSecondary || showHover ? T.greenTextDeep : T.textPrimary,
         fontSize: 12,
         fontWeight: isPrimary || isSecondary ? 500 : 400,
         cursor: dimmed ? 'default' : 'pointer',
@@ -524,7 +524,7 @@ function CardShell({
     <div className="flex-1 flex items-start justify-center px-4 py-8 md:py-12">
       <div className="w-full max-w-[720px]">
         <div style={{
-          background: '#fff',
+          background: 'var(--surface-card)',
           border: `0.5px solid ${T.borderMid}`,
           borderRadius: 16,
           overflow: 'hidden',
@@ -967,7 +967,7 @@ export default function OnboardingWizardPage() {
         minHeight: 620,
         width: '100%',
         // Gradient per design spec (not in HTML .hero-page, but explicit in text requirements)
-        background: '#fff',
+        background: 'var(--surface-card)',
       }}>
         {/* Top-right step dots */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: 60 }}>
@@ -1277,7 +1277,7 @@ function ReviewField({ label, value, fieldState: fState, isConfirmed, isEditing,
   const iconBg  = effective === 'confident' ? T.greenMid
                 : effective === 'uncertain' ? T.amberMid : 'transparent'
   const iconChar = effective === 'confident' ? '✓' : effective === 'uncertain' ? '?' : '+'
-  const iconColor = (fState === 'missing' && !isConfirmed) ? T.textTertiary : '#fff'
+  const iconColor = (fState === 'missing' && !isConfirmed) ? T.textTertiary : 'var(--surface-card)'
 
   return (
     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '14px 16px', background: bg, borderRadius: 10, border: `0.5px ${borderStyle} ${borderColor}`, transition: 'background 120ms ease' }}>
@@ -1314,8 +1314,8 @@ function ReviewField({ label, value, fieldState: fState, isConfirmed, isEditing,
                       padding: '5px 10px', borderRadius: 6, fontSize: 12,
                       fontFamily: 'var(--font-space-grotesk)', cursor: dimmed ? 'not-allowed' : 'pointer',
                       opacity: dimmed ? 0.4 : 1, transition: 'all 120ms ease',
-                      background: isPrimary ? T.greenDeep : sel ? T.greenCream : '#fff',
-                      color: isPrimary ? '#fff' : sel ? T.greenTextDeep : T.textSecondary,
+                      background: isPrimary ? T.greenDeep : sel ? T.greenCream : 'var(--surface-card)',
+                      color: isPrimary ? 'var(--surface-card)' : sel ? T.greenTextDeep : T.textSecondary,
                       border: `1px solid ${isPrimary ? T.greenDeep : sel ? T.greenMid : T.borderInput}`,
                       fontWeight: sel ? 500 : 400,
                     }}
@@ -1642,7 +1642,7 @@ function StepSectors({ impactSectors, nicheTags, excludedNicheTags, toggleSector
           Pick 1
           <span aria-label="primary" style={{
             display: 'inline-flex', alignItems: 'center', gap: 4,
-            background: T.greenDeep, color: '#fff',
+            background: T.greenDeep, color: 'var(--surface-card)',
             padding: '2px 8px', borderRadius: 99,
             fontSize: 11, fontWeight: 500,
             fontFamily: 'var(--font-space-grotesk)',
@@ -1695,7 +1695,7 @@ function StepSectors({ impactSectors, nicheTags, excludedNicheTags, toggleSector
           Click cycles: neutral → include (green) → exclude (coral strikethrough) → neutral */}
       {nicheSectors.length > 0 && (
         <div style={{
-          background: '#F5F1E8',
+          background: 'var(--surface-sunken)',
           borderLeft: '3px solid #8ECB3C',
           borderRadius: 8,
           padding: '12px 14px',
@@ -1710,12 +1710,12 @@ function StepSectors({ impactSectors, nicheTags, excludedNicheTags, toggleSector
             marginBottom: 14,
             padding: '10px 12px',
             background: 'rgba(255,255,255,0.75)',
-            borderLeft: '3px solid #639922',
+            borderLeft: '3px solid var(--sage-deep)',
             borderRadius: 4,
             lineHeight: 1.5,
           }}>
-            <strong style={{ color: '#3B6D11', fontWeight: 700, letterSpacing: '0.01em' }}>Tip</strong>
-            <span style={{ color: '#3B6D11' }}> · </span>
+            <strong style={{ color: 'var(--state-success)', fontWeight: 700, letterSpacing: '0.01em' }}>Tip</strong>
+            <span style={{ color: 'var(--state-success)' }}> · </span>
             Click once to mark as a specialism. Click again to <strong>exclude</strong> (we won&apos;t show grants targeting it). Click a third time to reset.
           </div>
           {nicheSectors.map(sector => {
@@ -1730,9 +1730,9 @@ function StepSectors({ impactSectors, nicheTags, excludedNicheTags, toggleSector
                   {opts.map(opt => {
                     const isIncluded = nicheTags.includes(opt.value)
                     const isExcluded = excludedNicheTags.includes(opt.value)
-                    const borderCol = isIncluded ? '#8ECB3C' : isExcluded ? '#D85A30' : '#D9D4C7'
-                    const bgCol     = isIncluded ? '#EEF8D8' : isExcluded ? '#FAECE7' : '#FEFCF8'
-                    const txtCol    = isIncluded ? '#3A6B0E' : isExcluded ? '#993C1D' : T.textSecondary
+                    const borderCol = isIncluded ? '#8ECB3C' : isExcluded ? 'var(--terra)' : 'var(--border-warm)'
+                    const bgCol     = isIncluded ? 'var(--type-inkind-pale)' : isExcluded ? 'var(--state-error-pale)' : 'var(--surface-page)'
+                    const txtCol    = isIncluded ? 'var(--state-success)' : isExcluded ? 'var(--state-error)' : T.textSecondary
                     return (
                       <button
                         key={opt.value}
@@ -1810,7 +1810,7 @@ function StepBeneficiaries({ beneficiaryGroups, toggleBeneficiary, makePrimaryBe
           Pick 1
           <span aria-label="primary" style={{
             display: 'inline-flex', alignItems: 'center', gap: 4,
-            background: T.greenDeep, color: '#fff',
+            background: T.greenDeep, color: 'var(--surface-card)',
             padding: '2px 8px', borderRadius: 99,
             fontSize: 11, fontWeight: 500,
             fontFamily: 'var(--font-space-grotesk)',
@@ -1967,7 +1967,7 @@ function FundingTypeChip({ label, desc, active, onClick }: { label: string; desc
       style={{
         padding: '10px 12px',
         textAlign: 'left' as const,
-        background: active || hov ? T.greenCream : '#fff',
+        background: active || hov ? T.greenCream : 'var(--surface-card)',
         border: `${active ? '1.5px' : '0.5px'} solid ${active || hov ? T.greenMid : T.borderInput}`,
         borderRadius: 8,
         cursor: 'pointer',
@@ -2102,7 +2102,7 @@ function NudgeCard({ title, subtitle, onAction, actionLabel }: { title: string; 
         onClick={onAction}
         onMouseEnter={() => setHov(true)}
         onMouseLeave={() => setHov(false)}
-        style={{ background: hov ? '#fff' : 'transparent', border: `0.5px solid ${T.borderInput}`, padding: '6px 12px', borderRadius: 8, fontSize: 12, fontFamily: 'var(--font-space-grotesk)', color: T.textPrimary, cursor: 'pointer', alignSelf: 'center', fontWeight: 500, whiteSpace: 'nowrap' as const, transition: 'background 120ms ease' }}
+        style={{ background: hov ? 'var(--surface-card)' : 'transparent', border: `0.5px solid ${T.borderInput}`, padding: '6px 12px', borderRadius: 8, fontSize: 12, fontFamily: 'var(--font-space-grotesk)', color: T.textPrimary, cursor: 'pointer', alignSelf: 'center', fontWeight: 500, whiteSpace: 'nowrap' as const, transition: 'background 120ms ease' }}
       >
         {actionLabel}
       </button>
