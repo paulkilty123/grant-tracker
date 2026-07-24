@@ -12,22 +12,22 @@ import { brand } from '@/config/brand'
 /* ─── design tokens ─── */
 const T = {
   lime:          '#8ECB3C',
-  greenDeep:     '#173404',
-  greenMid:      '#639922',
-  pageBg:        '#FAFAF7',
-  cream:         '#F5F1E8',
-  white:         '#FFFFFF',
-  textPrimary:   '#2C2C2A',
-  textSecondary: '#5F5E5A',
-  textTertiary:  '#8A8986',
+  greenDeep:     'var(--deep)',
+  greenMid:      'var(--sage-deep)',
+  pageBg:        'var(--surface-page)',
+  cream:         'var(--surface-sunken)',
+  white:         'var(--surface-card)',
+  textPrimary:   'var(--text-body)',
+  textSecondary: 'var(--text-muted)',
+  textTertiary:  'var(--text-subtle)',
   border:        'rgba(23, 52, 4, 0.08)',
   borderStrong:  'rgba(23, 52, 4, 0.14)',
-  strongPanel:   '#F4F9ED',
-  coralBg:       '#FAECE7',
-  coralText:     '#993C1D',
-  coralStrong:   '#D85A30',
-  amberBg:       '#FAEEDA',
-  amberText:     '#854F0B',
+  strongPanel:   'var(--surface-page)',
+  coralBg:       'var(--state-error-pale)',
+  coralText:     'var(--state-error)',
+  coralStrong:   'var(--terra)',
+  amberBg:       'var(--state-warning-pale)',
+  amberText:     'var(--state-warning)',
 }
 const UI   = 'var(--font-space-grotesk)'
 const BODY = 'var(--font-dm-sans)'
@@ -150,7 +150,7 @@ function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void 
     <div
       onClick={() => onChange(!on)}
       style={{
-        width: 40, height: 22, background: on ? T.lime : '#E0DFD9',
+        width: 40, height: 22, background: on ? T.lime : 'var(--border-warm)',
         borderRadius: 11, position: 'relative', cursor: 'pointer',
         transition: 'background 0.2s ease', flexShrink: 0,
       }}
@@ -426,7 +426,7 @@ function TwoFADisableModal({ factorId, onClose, onDisabled }: { factorId: string
       <ModalActions>
         <InlineLink onClick={onClose}>Keep 2FA on</InlineLink>
         <button onClick={handle} disabled={removing}
-          style={{ fontFamily: UI, fontWeight: 500, fontSize: 14, background: removing ? '#E0DFD9' : T.coralStrong, color: T.white, border: 'none', borderRadius: 8, padding: '9px 20px', cursor: removing ? 'default' : 'pointer' }}>
+          style={{ fontFamily: UI, fontWeight: 500, fontSize: 14, background: removing ? 'var(--border-warm)' : T.coralStrong, color: T.white, border: 'none', borderRadius: 8, padding: '9px 20px', cursor: removing ? 'default' : 'pointer' }}>
           {removing ? 'Removing…' : 'Disable 2FA'}
         </button>
       </ModalActions>
@@ -467,7 +467,7 @@ function DeleteModal({ email, onClose, onConfirm }: { email: string; onClose: ()
           disabled={!match || deleting}
           style={{
             fontFamily: UI, fontWeight: 500, fontSize: 14,
-            background: match ? T.coralStrong : '#E0DFD9',
+            background: match ? T.coralStrong : 'var(--border-warm)',
             color: match ? T.white : T.textTertiary,
             border: 'none', borderRadius: 8, padding: '9px 20px',
             cursor: match ? 'pointer' : 'default',
@@ -662,7 +662,7 @@ export default function AccountPage() {
           <a
             href="/api/export"
             download
-            style={{ fontFamily: UI, fontWeight: 600, fontSize: 13, color: '#173404', background: '#fff', border: '1px solid #2C2C2A', padding: '8px 16px', borderRadius: 8, textDecoration: 'none', whiteSpace: 'nowrap' }}
+            style={{ fontFamily: UI, fontWeight: 600, fontSize: 13, color: 'var(--deep)', background: 'var(--surface-card)', border: '1px solid var(--text-body)', padding: '8px 16px', borderRadius: 8, textDecoration: 'none', whiteSpace: 'nowrap' }}
           >
             Download JSON
           </a>
