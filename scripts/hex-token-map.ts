@@ -2,53 +2,73 @@
  * Hex sweep mapping — old raw hex literal -> new Shoots token.
  *
  * FOR REVIEW ONLY. This file is data, not a script: nothing imports or runs
- * it, and no substitution has been performed. It exists so the mapping can
- * be checked by eye before the actual sweep (steps 5+ in shoots-app-tokens.md's
- * suggested order) is scripted in a later session.
+ * it, and no substitution has been performed.
  *
  * Source population: every distinct 6-digit hex literal found in `src/**\/*.{ts,tsx}`,
- * excluding the three token-definition files (tailwind.config.ts, globals.css,
- * builder/tokens.ts) since those hold the NEW tokens, not old values to sweep.
- * 165 distinct values, 2,449 occurrences, 80 files, as of this commit.
+ * excluding the four token-definition files (tailwind.config.ts, globals.css,
+ * builder/tokens.ts, and this file itself). 165 distinct values as of the
+ * gold-collision commit. See KNOWN_GAPS at the bottom for what this scan
+ * structurally cannot see.
  *
- * Four tiers, in descending order of trust:
+ * ============================================================
+ * WHY THIS FILE CHANGED SHAPE
+ * ============================================================
+ * The original version was purely value-keyed: one row per hex, one target
+ * token. That broke down for #85B7EB and #EF9F27 — both are a funding-type
+ * "dot" colour in some files and something completely unrelated (an admin
+ * data-provenance bar, a match-score-band border, a citation-confidence
+ * chip) in others. A value-keyed sweep would have repainted those unrelated
+ * occurrences into funding-type colours by coincidence.
  *
- * 1. DOC_MAPPING — the 25 values shoots-app-tokens.md's own mapping table
- *    covers explicitly. Governing, not a suggestion — copied verbatim,
- *    including its two HIGH-risk "repaint" rows (#173404 -> deep, and
- *    #8ECB3C which has no direct token at all and is retired via the new
- *    button-hierarchy variants instead — see that doc's Button hierarchy
- *    section) and the CONFIRMED Programme decision (#F0997B -> type-programme,
- *    teal, despite the salmon->teal hue jump).
+ * The requested re-audit (checking all 165 values against a full inventory
+ * of every categorical colour-scheme in the codebase, not just the ones
+ * already under discussion) found the SAME problem in two more places:
+ * #F0997B and #97C459 — see POLYSEMOUS_VALUES. All four turn out to be the
+ * complete Grant/Programme/Investment/In-Kind funding-type dot family. That
+ * is not a coincidence: these four hexes are the only ones in the palette
+ * playing an ARBITRARY CATEGORY-BRAND role (which funding type is this)
+ * rather than a STATE role (is this good/bad/warning/info) — and admin
+ * tooling had repeatedly borrowed them for ad hoc "traffic-light" tiers
+ * because they happen to look the part. Nothing else in the 165 behaves
+ * this way: the state-coloured values (green/amber/coral/blue and their
+ * pales) are reused dozens of times across match-quality tiers, pipeline
+ * stages, profile-completion bands, submission statuses, etc., but always
+ * meaning the SAME thing (good/warning/bad/info) — safe to map once.
  *
- * 2. FLAGGED — two funding-type category dot colours (Investment, In-Kind)
- *    that are NOT in the doc's table but are the same class of decision as
- *    Programme: CLAUDE.md documents them as category dots, and the new
- *    Funding-types section pairs their categories with accents that are a
- *    long way from their current hue. Deliberately left with token: null —
- *    guessing here would be inventing a design decision, not sweeping one.
+ * Six tiers now, in descending order of trust:
  *
- * 3. NEAREST_TOKEN_MAPPING — the remaining 131 values, assigned by actual
- *    redmean colour-distance to the candidate token palette (not eyeballed).
- *    This is the "map conservatively" tier: the assignment preserves current
- *    appearance as closely as an existing token allows. `distance` is the
- *    redmean score (0 = identical; roughly <30 is a barely-visible nudge,
- *    30-80 a noticeable but plausible-as-the-same-role shift, 80-110 a real
- *    but defensible squint). Skim the high-distance end of this list before
- *    running the sweep — "nearest available" is not the same as "correct."
+ * 1. DOC_MAPPING (23) — shoots-app-tokens.md's own table, minus the two
+ *    entries that turned out to be polysemous (#97C459, #F0997B — moved to
+ *    tier 2, their TRUE-occurrence target is unchanged from what the doc/
+ *    confirmed decision said).
  *
- * 4. ORPHANS — 7 values with no reasonable nearest token (distance > 110
- *    against every candidate). Not assigned anywhere. Two clusters: a purple
- *    pair (#6D28D9, #6B21A8 — no purple exists anywhere in the new palette)
- *    and an amber/orange cluster (#FAC775, #FFB74D, #C96A00 — downstream of
- *    the still-unresolved 4th "gold" collision from the token-landing commit),
- *    plus one salmon-pink (#F4A0A0) and one saturated blue (#1D4ED8) that
- *    don't match anything in the new system. Per instruction: do not invent
- *    tokens to accommodate them — these need an explicit decision (new token,
- *    or fold into an existing one on human judgement) before they can sweep.
+ * 2. POLYSEMOUS_VALUES (4) — occurrence-keyed. Every file:line the value
+ *    appears in, each with its own target or `EXCLUDE-needs-triage`.
+ *
+ * 3. DECIDED_MAPPING (7) — the 6 resolved orphans/flagged-dots from the usage
+ *    report (minus #85B7EB/#EF9F27, which moved to tier 2 as polysemous) plus
+ *    #BA7517, moved out of tier 5 once gold-deep existed as its exact match.
+ *    Each row carries the reasoning, including the two places semantic role
+ *    overrode raw colour distance (#FFB74D, #C96A00).
+ *
+ * 4. ONE_OFFS (2) — deliberately NOT tokens. #F4A0A0/#6dbf6d, now a named
+ *    `FEEDBACK_CHART` constant in admin/feedback/page.tsx rather than a
+ *    swept value.
+ *
+ * 5. NEAREST_TOKEN_MAPPING (129) — algorithmic redmean colour-distance
+ *    assignment, minus #BA7517 (moved to tier 3 — it's gold-deep's exact
+ *    value now that gold-deep exists as a candidate, not "terra" at 107.4
+ *    as it was before the gold collision was resolved).
+ *
+ * 6. ORPHANS (0) — empty. All 7 from the usage report are now decided
+ *    (tiers 2 and 3). Kept as an export for structural completeness.
+ *
+ * NEW_FINDINGS_NOT_YET_DECIDED and KNOWN_GAPS at the bottom are this pass's
+ * own discoveries, not yet acted on — surfaced per instruction rather than
+ * silently absorbed into a "close enough" nearest-token guess.
  */
 
-export type MappingSource = 'doc' | 'flag' | 'nearest'
+export type MappingSource = 'doc' | 'nearest'
 
 export interface DocMappingRow {
   hex: string
@@ -58,12 +78,32 @@ export interface DocMappingRow {
   source: 'doc'
 }
 
-export interface FlaggedRow {
+export interface PolysemousOccurrence {
+  file: string
+  line: number
+  target: string // a real token name, or the literal string 'EXCLUDE-needs-triage'
+  note: string
+}
+
+export interface PolysemousValue {
   hex: string
   count: number
-  token: null
-  note: string
-  source: 'flag'
+  trueRoleTarget: string // what it becomes IF the occurrence is the real category role
+  occurrences: PolysemousOccurrence[]
+}
+
+export interface DecidedRow {
+  hex: string
+  count: number
+  token: string
+  reasoning: string
+}
+
+export interface OneOffRow {
+  hex: string
+  count: number
+  reason: string
+  extractedTo: string
 }
 
 export interface NearestMappingRow {
@@ -81,7 +121,8 @@ export interface OrphanRow {
   distance: number
 }
 
-// ==== 1. DOC-SPECIFIED (from shoots-app-tokens.md mapping table) — 25 values ====
+// ==== 1. DOC-SPECIFIED (shoots-app-tokens.md mapping table) — 23 values ====
+// (25 in the doc's own table, minus #97C459 and #F0997B — see POLYSEMOUS_VALUES)
 export const DOC_MAPPING: DocMappingRow[] = [
   { hex: '#5F5E5A', count: 268, token: 'text-muted', risk: 'none', source: 'doc' },
   { hex: '#2C2C2A', count: 266, token: 'text-body', risk: 'none', source: 'doc' },
@@ -96,7 +137,7 @@ export const DOC_MAPPING: DocMappingRow[] = [
   { hex: '#FAFAF7', count: 59, token: 'surface-page', risk: 'none (value updates to #FBF9F4)', source: 'doc' },
   { hex: '#FAECE7', count: 57, token: 'terra-pale / state-error-pale', risk: 'none', source: 'doc' },
   { hex: '#E8E0D1', count: 51, token: 'border-warm', risk: 'none', source: 'doc' },
-  { hex: '#008080', count: 48, token: 'teal', risk: 'low, admin only (value updates to #4EAAB4)', source: 'doc' },
+  { hex: '#008080', count: 48, token: 'teal', risk: 'low, admin only (value updates to #4EAAB4). Heads up: teal is ALSO now type-programme — two concepts converge on one colour post-sweep. Not a mapping error (both were independently decided), just a cosmetic overlap worth a glance in the primitives pass.', source: 'doc' },
   { hex: '#854F0B', count: 46, token: 'state-warning', risk: 'none', source: 'doc' },
   { hex: '#FFFFFF', count: 33, token: 'surface-card', risk: 'none', source: 'doc' },
   { hex: '#0C447C', count: 33, token: 'state-info', risk: 'none', source: 'doc' },
@@ -106,23 +147,157 @@ export const DOC_MAPPING: DocMappingRow[] = [
   { hex: '#C0DD97', count: 27, token: 'sage-pale', risk: 'none', source: 'doc' },
   { hex: '#E6F1FB', count: 25, token: 'sky-pale / state-info-pale', risk: 'none', source: 'doc' },
   { hex: '#F1F0EA', count: 21, token: 'surface-pill', risk: 'none', source: 'doc' },
-  { hex: '#97C459', count: 16, token: 'sage', risk: 'none (value updates to #9BCA9D)', source: 'doc' },
-  { hex: '#F0997B', count: 13, token: 'type-programme', risk: 'HIGH — hue change (salmon->teal), CONFIRMED decision', source: 'doc' },
 ]
 
-// ==== 2. FLAGGED — needs a human decision, not auto-assigned — 2 values ====
-export const FLAGGED: FlaggedRow[] = [
+// ==== 2. POLYSEMOUS_VALUES — occurrence-keyed, 4 values ====
+// The complete funding-type dot family (Grant/Programme/Investment/In-Kind).
+// Every occurrence below was verified directly (grep + read), not inferred.
+export const POLYSEMOUS_VALUES: PolysemousValue[] = [
   {
-    hex: '#85B7EB', count: 11, token: null, source: 'flag',
-    note: "Investment category dot (CLAUDE.md). Doc's Funding-types section pairs type-investment with terra (#D67558) — a blue-to-orange hue change, same class of decision as Programme. NOT auto-assigned.",
+    hex: '#97C459',
+    count: 16,
+    trueRoleTarget: 'sage', // per doc: this is green-text-nav, a brand accent — NOT type-grant
+    occurrences: [
+      { file: 'src/app/grants/[id]/page.tsx', line: 43, target: 'sage', note: 'FT_BRAND.grant.dot — true funding-type Grant dot' },
+      { file: 'src/app/grants/[id]/page.tsx', line: 350, target: 'sage', note: 'Grant chip border, same FT_BRAND rendering' },
+      { file: 'src/app/dashboard/deadlines/page.tsx', line: 21, target: 'sage', note: 'TYPE_DOT.grant — true funding-type Grant dot' },
+      { file: 'src/app/dashboard/deadlines/page.tsx', line: 89, target: 'sage', note: 'TYPE_CHIPS grant entry — true funding-type Grant dot' },
+      { file: 'src/app/dashboard/projects/[id]/page.tsx', line: 55, target: 'sage', note: 'FUNDING_TYPE_STYLE.grant.dot — true funding-type Grant dot' },
+      { file: 'src/components/briefing/ui.tsx', line: 31, target: 'EXCLUDE-needs-triage', note: "MIX_COLOR.capital — a DIFFERENT taxonomy (funding CHARACTER: unrestricted/project/capital, not funding TYPE: grant/programme/investment/in_kind). 'capital' is not 'Grant'; don't assume the correlation." },
+      { file: 'src/app/opengraph-image.tsx', line: 77, target: 'EXCLUDE-needs-triage', note: 'OG image wordmark/domain text colour — marketing asset, unrelated to funding type' },
+      { file: 'src/app/opengraph-image.tsx', line: 80, target: 'EXCLUDE-needs-triage', note: 'OG image tagline text colour — marketing asset, unrelated to funding type' },
+      { file: 'src/components/landing/LandingPage.tsx', line: 1146, target: 'EXCLUDE-needs-triage', note: 'Footer text colour — generic brand-green, unrelated to funding type' },
+      { file: 'src/components/landing/LandingPage.tsx', line: 1159, target: 'EXCLUDE-needs-triage', note: 'Footer nav links colour — generic brand-green' },
+      { file: 'src/components/landing/LandingPage.tsx', line: 1167, target: 'EXCLUDE-needs-triage', note: 'Footer bottom row colour — generic brand-green' },
+      { file: 'src/components/landing/LandingPage.tsx', line: 1170, target: 'EXCLUDE-needs-triage', note: 'Footer "Privacy" link colour — generic brand-green' },
+      { file: 'src/components/landing/LandingPage.tsx', line: 1171, target: 'EXCLUDE-needs-triage', note: 'Footer "Terms" link colour — generic brand-green' },
+      { file: 'src/app/apply/page.tsx', line: 278, target: 'EXCLUDE-needs-triage', note: 'Footer nav links colour — generic brand-green, same pattern as LandingPage' },
+      { file: 'src/app/apply/page.tsx', line: 286, target: 'EXCLUDE-needs-triage', note: 'Footer bottom row colour — generic brand-green' },
+      { file: 'src/app/onboarding/wizard/page.tsx', line: 27, target: 'EXCLUDE-needs-triage', note: "Local token object's `greenSoft` — needs a read to confirm role before assigning; not a funding-type dot by name" },
+    ],
   },
   {
-    hex: '#EF9F27', count: 8, token: null, source: 'flag',
-    note: "In-Kind category dot (CLAUDE.md). Doc's Funding-types section pairs type-inkind with sage (#9BCA9D) — an amber-to-green hue change, same class of decision as Programme. NOT auto-assigned.",
+    hex: '#F0997B',
+    count: 13,
+    trueRoleTarget: 'type-programme', // CONFIRMED decision: Programme = teal #4EAAB4
+    occurrences: [
+      { file: 'src/app/grants/[id]/page.tsx', line: 44, target: 'type-programme', note: "FT_BRAND.programme.dot — true funding-type Programme dot" },
+      { file: 'src/app/grants/[id]/page.tsx', line: 45, target: 'type-programme', note: 'FT_BRAND.support_programme.dot — same Programme category' },
+      { file: 'src/app/grants/[id]/page.tsx', line: 46, target: 'type-programme', note: 'FT_BRAND.accelerator.dot — same Programme category' },
+      { file: 'src/app/dashboard/deadlines/page.tsx', line: 22, target: 'type-programme', note: 'TYPE_DOT.programme — true funding-type Programme dot' },
+      { file: 'src/app/dashboard/deadlines/page.tsx', line: 90, target: 'type-programme', note: 'TYPE_CHIPS programme entry — true funding-type Programme dot' },
+      { file: 'src/app/dashboard/projects/[id]/page.tsx', line: 56, target: 'type-programme', note: 'FUNDING_TYPE_STYLE.programme.dot — true funding-type Programme dot' },
+      { file: 'src/app/dashboard/page.tsx', line: 1123, target: 'EXCLUDE-needs-triage', note: "Verified via context (comment above says 'declined (with coral marker)'): this is a PIPELINE-STAGE 'declined' marker, not Programme. Coincidental hex reuse." },
+      { file: 'src/app/dashboard/admin/urls/page.tsx', line: 4541, target: 'EXCLUDE-needs-triage', note: 'Tag-audit disagreement score >=6 tier background — admin data-quality metric, unrelated to funding type' },
+      { file: 'src/app/dashboard/admin/application-review/ReviewSpikeForm.tsx', line: 557, target: 'EXCLUDE-needs-triage', note: 'Verified via context: generic `draftError` banner border, not a Programme badge despite matching the bg/text/border triple by coincidence' },
+      { file: 'src/app/dashboard/admin/application-review/ReviewSpikeForm.tsx', line: 562, target: 'EXCLUDE-needs-triage', note: 'Same generic `error` banner border, second occurrence' },
+      { file: 'src/app/dashboard/admin/quality/page.tsx', line: 212, target: 'EXCLUDE-needs-triage', note: 'Field-coverage percentage bar, 70-90% tier — admin metric, unrelated to funding type' },
+      { file: 'src/app/dashboard/admin/quality/page.tsx', line: 276, target: 'EXCLUDE-needs-triage', note: "Data-provenance colour switch, '360giving' source — admin metric, unrelated to funding type" },
+      { file: 'src/app/dashboard/admin/quality/page.tsx', line: 350, target: 'EXCLUDE-needs-triage', note: 'Sector/beneficiary tag-density tier, >=3 grants — admin metric, unrelated to funding type' },
+    ],
+  },
+  {
+    hex: '#85B7EB',
+    count: 11,
+    trueRoleTarget: 'type-investment', // decision this session: same class of call as Programme
+    occurrences: [
+      { file: 'src/app/grants/[id]/page.tsx', line: 47, target: 'type-investment', note: 'FT_BRAND.social_investment.dot — true funding-type Investment dot' },
+      { file: 'src/app/grants/[id]/page.tsx', line: 48, target: 'type-investment', note: 'FT_BRAND.loan.dot — same Investment category' },
+      { file: 'src/app/grants/[id]/page.tsx', line: 49, target: 'type-investment', note: 'FT_BRAND.equity.dot — same Investment category' },
+      { file: 'src/app/grants/[id]/page.tsx', line: 50, target: 'type-investment', note: 'FT_BRAND.blended_finance.dot — same Investment category' },
+      { file: 'src/app/dashboard/page.tsx', line: 850, target: 'type-investment', note: 'TYPE_BAR.investment — chart-bar fill + card accent, same Investment category, different visual role' },
+      { file: 'src/app/dashboard/page.tsx', line: 852, target: 'type-investment', note: 'TYPE_BAR.blended_finance — same Investment category' },
+      { file: 'src/app/dashboard/projects/[id]/page.tsx', line: 57, target: 'type-investment', note: 'FUNDING_TYPE_STYLE.investment.dot — true funding-type Investment dot' },
+      { file: 'src/app/dashboard/deadlines/page.tsx', line: 23, target: 'type-investment', note: 'TYPE_DOT.investment — true funding-type Investment dot' },
+      { file: 'src/app/dashboard/deadlines/page.tsx', line: 91, target: 'type-investment', note: 'TYPE_CHIPS investment entry — true funding-type Investment dot' },
+      { file: 'src/components/briefing/ui.tsx', line: 32, target: 'type-investment', note: "MIX_COLOR.investment — same Investment concept in the funding-CHARACTER mix system, consistent with funding-type Investment" },
+      { file: 'src/app/dashboard/admin/quality/page.tsx', line: 274, target: 'EXCLUDE-needs-triage', note: "Data-provenance colour switch, 'ai_classifier' source — admin metric, unrelated to funding type" },
+    ],
+  },
+  {
+    hex: '#EF9F27',
+    count: 8,
+    trueRoleTarget: 'type-inkind', // decision this session: same class of call as Programme
+    occurrences: [
+      { file: 'src/app/grants/[id]/page.tsx', line: 51, target: 'type-inkind', note: 'FT_BRAND.in_kind.dot — true funding-type In-Kind dot' },
+      { file: 'src/app/grants/[id]/page.tsx', line: 52, target: 'type-inkind', note: "FT_BRAND['in-kind'].dot — same In-Kind category, hyphen-variant key" },
+      { file: 'src/app/dashboard/page.tsx', line: 848, target: 'type-inkind', note: 'TYPE_BAR.in_kind — chart-bar fill + card accent, same In-Kind category, different visual role' },
+      { file: 'src/app/dashboard/deadlines/page.tsx', line: 24, target: 'type-inkind', note: 'TYPE_DOT.in_kind — true funding-type In-Kind dot' },
+      { file: 'src/app/dashboard/deadlines/page.tsx', line: 92, target: 'type-inkind', note: 'TYPE_CHIPS in_kind entry — true funding-type In-Kind dot' },
+      { file: 'src/app/dashboard/projects/[id]/page.tsx', line: 58, target: 'type-inkind', note: 'FUNDING_TYPE_STYLE.in_kind.dot — true funding-type In-Kind dot' },
+      { file: 'src/app/dashboard/projects/[id]/page.tsx', line: 116, target: 'EXCLUDE-needs-triage', note: "Reuses FUNDING_TYPE_STYLE.in_kind.dot as a generic 'Worth checking' warning-list bullet — nothing to do with a grant's actual funding type" },
+      { file: 'src/app/dashboard/admin/cohort-match-audit/page.tsx', line: 35, target: 'EXCLUDE-needs-triage', note: "SCORE_BAND 'Moderate' (65-79) border — admin match-quality tier, unrelated to funding type" },
+      { file: 'src/components/admin/GrantEditor.tsx', line: 230, target: 'EXCLUDE-needs-triage', note: "CONFIDENCE_STYLES 'med' border (as #EF9F2766, with alpha) — admin citation-confidence tier, unrelated to funding type" },
+    ],
+  },
+]
+// Note: MIX_COLOR (briefing/ui.tsx) doesn't have a 'grant' entry (only
+// unrestricted/project/capital/investment/in_kind), so #97C459 has no
+// MIX_COLOR occurrence to classify — capital's own value is what's listed
+// above under EXCLUDE-needs-triage.
+//
+// Implementation note for whoever runs the eventual sweep: repainting a
+// dot alone is not enough. Every TRUE occurrence above is one field in a
+// larger {bg, text, dot} (or {colour, pillBg, pillFg}) triple for its
+// funding type. Programme/Investment/In-Kind's dot is moving to teal/terra/
+// sage but their CURRENT bg/text neighbours (coral-pale/coral-deep for
+// Programme, blue-pale/blue-deep for Investment, amber-pale/amber-deep for
+// In-Kind) are not being repainted by this file at all — they already map
+// safely via DOC_MAPPING/NEAREST_TOKEN_MAPPING to their own destinations,
+// which is fine value-by-value but will leave each funding-type badge
+// visually incoherent (new-coloured dot, old-coloured bg/text) until the
+// primitives pass updates each {bg, text, dot} triple together, per type,
+// in one edit.
+
+// ==== 3. DECIDED_MAPPING — from the usage report, 6 values ====
+export const DECIDED_MAPPING: DecidedRow[] = [
+  {
+    hex: '#FAC775', count: 3, token: 'gold',
+    reasoning: 'Icon-chip background (Exclusions callout) + pipeline progress-bar low-band fill. Distance to gold: 29.6 — near-identical. Both real roles match gold\'s own definition (decorative accent, icon chips).',
+  },
+  {
+    hex: '#FFB74D', count: 1, token: 'gold-deep',
+    reasoning: "CORRECTED from the initial recommendation (gold). This is TEXT colour on the GrantDetailModal 'Amount' figure — gold (#EBCE78) is a pale background/accent token and would fail contrast as text. gold-deep (#BA7517) is the text-on-pale role. Distance to gold-deep: 90.9 (vs 84.1 to gold) — slightly further by raw colour, but correct by role.",
+  },
+  {
+    hex: '#C96A00', count: 1, token: 'state-warning',
+    reasoning: "Overridden from the closer colour match (gold-deep, distance 47.8) to the correct semantic token (state-warning, distance 124.4 — much further). This is the `warn` style on the admin feedback page, gated on a real threshold (>=3 events, >=70% negative) — genuine semantic warning duty, not decoration. Same decorative-vs-semantic split as the gold-deep/state-warning distinction itself: don't let a closer colour match override a value that's actually doing semantic work.",
+  },
+  {
+    hex: '#6D28D9', count: 2, token: 'type-programme',
+    reasoning: "GrantDetailModal.tsx's own FUNDING_TYPE_BADGES map colours 'support_programme'/'programme' purple, while every other file in the app colours the same Programme category salmon (#F0997B, itself now -> type-programme/teal). This is an existing within-component inconsistency, not a deliberate distinct colour — retire the purple, unify with the rest of the app. FLAG for the primitives pass: GrantDetailModal.tsx's badge map needs its Programme entry's bg/text pair updated to match FT_BRAND's scheme too, not just the colour swapped in isolation.",
+  },
+  {
+    hex: '#1D4ED8', count: 1, token: 'state-info',
+    reasoning: "Text colour on GrantDetailModal's 'Opens {date}' reopening-notice badge — informational in role despite being a much more saturated 'royal blue' than any current info token (distance 98.5). Single low-traffic occurrence (conditional on next_open_date being set) makes the value shift low-risk either way.",
+  },
+  {
+    hex: '#6B21A8', count: 2, token: 'status-invite',
+    reasoning: "NEW token, now built (this session) — added to tailwind.config.ts + globals.css as status-invite (#6B21A8) / status-invite-pale (#F3EDFA). A real, recurring, cross-file status (dashboard/page.tsx + dashboard/search/page.tsx's 'Invite only' badge, both using the identical bg/text pair) with no purple anywhere else in the new palette to fall back on. Token exists; the 2 call sites are not yet repointed to it (that's the sweep).",
+  },
+  {
+    hex: '#BA7517', count: 11, token: 'gold-deep',
+    reasoning: "Moved out of NEAREST_TOKEN_MAPPING, not newly decided by the usage report — flagging the correction here rather than losing it. Originally auto-assigned to terra at distance 107.4 (a poor match) because gold-deep didn't exist as a candidate yet when that tier was first computed. Now that the gold collision is resolved, #BA7517 IS gold-deep's exact value (distance 0.0) — this was always amber-saturated, the same value gold-deep aliases to.",
   },
 ]
 
-// ==== 3. NEAREST-TOKEN (algorithmic, redmean colour distance) — 131 values ====
+// ==== 4. ONE_OFFS — deliberately NOT tokens, 2 values ====
+export const ONE_OFFS: OneOffRow[] = [
+  {
+    hex: '#f4a0a0', count: 3,
+    reason: "Pastel negative/down-vote colour, paired with #6dbf6d, in 3 chart widgets on ONE admin page (activity bar chart, legend swatch, reason-chip proportion bar). No analog anywhere in the new token system — every new semantic token is much darker/more saturated than this pastel register.",
+    extractedTo: "src/app/dashboard/admin/feedback/page.tsx — FEEDBACK_CHART.negative (this session)",
+  },
+  {
+    hex: '#6dbf6d', count: 3,
+    reason: "Pastel positive/up-vote colour, paired with #f4a0a0 (see above). Was ALSO in NEAREST_TOKEN_MAPPING originally, mapped to text-subtle at a poor 106.7 distance — mapping one half of the pair without the other would have left the chart mismatched, which is why both are excluded together.",
+    extractedTo: "src/app/dashboard/admin/feedback/page.tsx — FEEDBACK_CHART.positive (this session)",
+  },
+]
+
+// ==== 5. NEAREST-TOKEN (algorithmic, redmean colour distance) — 129 values ====
+// (131 originally, minus #BA7517 — moved to DECIDED_MAPPING as gold-deep's
+// exact value — and minus #6dbf6d — moved to ONE_OFFS, paired with #F4A0A0)
 export const NEAREST_TOKEN_MAPPING: NearestMappingRow[] = [
   { hex: '#1A3C2E', count: 18, token: 'surface-inverse', distance: 27.5, source: 'nearest' },
   { hex: '#6B6B6B', count: 17, token: 'text-muted', distance: 21.7, source: 'nearest' },
@@ -133,7 +308,6 @@ export const NEAREST_TOKEN_MAPPING: NearestMappingRow[] = [
   { hex: '#FAF7F2', count: 12, token: 'surface-page', distance: 5.2, source: 'nearest' },
   { hex: '#F4F9ED', count: 11, token: 'surface-page', distance: 15.6, source: 'nearest' },
   { hex: '#C9963A', count: 11, token: 'terra', distance: 82.4, source: 'nearest' },
-  { hex: '#BA7517', count: 11, token: 'terra', distance: 107.4, source: 'nearest' },
   { hex: '#F0EDE2', count: 10, token: 'surface-pill', distance: 13.1, source: 'nearest' },
   { hex: '#E4E2DA', count: 10, token: 'border-warm', distance: 15.2, source: 'nearest' },
   { hex: '#3F6814', count: 8, token: 'state-success', distance: 12.7, source: 'nearest' },
@@ -160,7 +334,6 @@ export const NEAREST_TOKEN_MAPPING: NearestMappingRow[] = [
   { hex: '#7CC242', count: 3, token: 'sage-deep', distance: 104.3, source: 'nearest' },
   { hex: '#7A4E10', count: 3, token: 'state-warning', distance: 19.2, source: 'nearest' },
   { hex: '#7A3030', count: 3, token: 'state-error', distance: 62.5, source: 'nearest' },
-  { hex: '#6DBF6D', count: 3, token: 'text-subtle', distance: 106.7, source: 'nearest' },
   { hex: '#27500A', count: 3, token: 'state-success', distance: 66.2, source: 'nearest' },
   { hex: '#FEFCF8', count: 2, token: 'surface-page', distance: 9.7, source: 'nearest' },
   { hex: '#FEF2F2', count: 2, token: 'surface-page', distance: 15.2, source: 'nearest' },
@@ -257,16 +430,39 @@ export const NEAREST_TOKEN_MAPPING: NearestMappingRow[] = [
   { hex: '#0369A1', count: 1, token: 'state-info', distance: 98.5, source: 'nearest' },
 ]
 
-// ==== 4. ORPHANS — no reasonable nearest token, NOT assigned — 7 values ====
-export const ORPHANS: OrphanRow[] = [
-  { hex: '#FAC775', count: 3, nearestGuess: 'sage-pale', distance: 118.5 },
-  { hex: '#F4A0A0', count: 3, nearestGuess: 'text-on-dark-mut', distance: 137.1 },
-  { hex: '#6D28D9', count: 2, nearestGuess: 'state-info', distance: 219.2 },
-  { hex: '#6B21A8', count: 2, nearestGuess: 'state-info', distance: 174.4 },
-  { hex: '#FFB74D', count: 1, nearestGuess: 'terra', distance: 150.3 },
-  { hex: '#C96A00', count: 1, nearestGuess: 'state-warning', distance: 124.4 },
-  { hex: '#1D4ED8', count: 1, nearestGuess: 'state-info', distance: 160.3 },
+// ==== 6. ORPHANS — none remain ====
+// All 7 from the usage report are decided: #FAC775/#FFB74D/#C96A00/#6D28D9/
+// #1D4ED8/#6B21A8 -> DECIDED_MAPPING; #F4A0A0 -> ONE_OFFS. Kept as an export
+// for structural completeness / in case a future pass finds new ones.
+export const ORPHANS: OrphanRow[] = []
+
+// ============================================================
+// NEW_FINDINGS_NOT_YET_DECIDED — surfaced by this polysemy pass, not acted
+// on. Lower stakes than POLYSEMOUS_VALUES (these are semantic-role
+// mismatches in the auto-nearest tier, not colour reused for conflicting
+// meanings), but the same principle applies: don't silently paper over a
+// bad-fit auto-assignment.
+// ============================================================
+export const NEW_FINDINGS_NOT_YET_DECIDED = [
+  {
+    hex: '#5A9080', count: 6,
+    issue: "Currently mapped to text-subtle (distance 80.0) in NEAREST_TOKEN_MAPPING — but every real occurrence is a 'good, but not the best tier' ACCENT colour (match-quality score>=70 ring/title in search's GrantCard, profile-completion 60-79% border, feedback-status 'actioned' colour), never body text. text-subtle is the wrong ROLE regardless of distance. Nearest candidate by colour is actually `teal` (distance 101.3, closer than text-subtle's own 80.0 is misleading since that's to a text token, not an accent one) but teal is now also type-programme's colour, which would be an odd match for a generic 'second-tier good' meaning. No clean token represents this specific 'good-but-not-excellent, three unrelated scales' role. Needs a human call: fold into state-success anyway, or leave as its own small accent.",
+  },
+  {
+    hex: '#EEEDFE', count: 4,
+    issue: "Currently mapped to type-programme-pale (distance 16.4) — but every occurrence is a SECTOR_PILL background (education/housing/employment impact-sector tags in search's GrantCard), nothing to do with funding type. Paired with #3C3489 as sector-tag text (see below). No sector-taxonomy token family exists in the new system at all (sectors were out of scope for this token set). Low individual stakes (a 14-sector decorative palette), but the current auto-assignment would visually tie these three unrelated sectors to the Programme funding type by coincidence.",
+  },
+  {
+    hex: '#3C3489', count: 4,
+    issue: "Currently mapped to state-info (distance 80.2) — same SECTOR_PILL text colour, paired with #EEEDFE above. Like the invite-only purple, there's no purple in the new 5-accent palette (terra/gold/teal/sage/sky), so 'nearest' is necessarily a squint. Bundle with #EEEDFE if this gets its own decision.",
+  },
 ]
 
-// Totals: doc=25 flagged=2 nearest=131 orphans=7 -> 165 distinct values,
-// matching the current src/**/*.{ts,tsx} population (definition files excluded).
+// ============================================================
+// KNOWN_GAPS — what this file's methodology cannot see, found while
+// investigating the above. Listed rather than silently left out.
+// ============================================================
+export const KNOWN_GAPS = [
+  "3-digit hex shorthand is entirely outside this file's scope (it was built by scanning for #[0-9a-fA-F]{6} only). Confirmed in active semantic use: #c00 (admin/feedback/page.tsx's old 'pillStyle' down-vote text colour, a SECOND up/down pastel pair on the same page, distinct from the ONE_OFFS FEEDBACK_CHART pair above) plus at least 9 more distinct 3-digit values found earlier in this session (#fff x116, #888 x7, #666 x5, #eee x3, #999 x3, #444 x3, #DDD x1, #aaa x1) that were never individually triaged. Needs its own short pass before the sweep is considered complete, even though most of that list is generic greys/white with low polysemy risk.",
+  "Pipeline-stage colours (identified/applying/submitted/won/declined) are hardcoded independently in AT LEAST 6 places found across both research passes this session: STAGE_STYLE (deadlines/page.tsx), STAGE_STYLE (briefing/PlanView.tsx, separately defined, identical values), STAGE_BG_HEX (pipeline/page.tsx, values diverge from the other two for applying/submitted/won), tones (PipelineModal.tsx, its own bg values, matching STAGE_BG_HEX not STAGE_STYLE), stageData (dashboard/page.tsx, matching STAGE_STYLE), and STAGE_COLOURS (admin/users/[id]/page.tsx, a previously-undiscovered 4th independent copy). None of the individual hex values here are dangerously polysemous — they consistently map to their correct DOC_MAPPING/NEAREST_TOKEN_MAPPING destinations wherever they appear — but the 6-way duplication with 2 genuinely divergent value sets (STAGE_STYLE's bg for applying/submitted/won vs STAGE_BG_HEX/tones/STAGE_COLOURS's bg for the same 3 stages) is worth a consolidation pass alongside or after the sweep.",
+]
