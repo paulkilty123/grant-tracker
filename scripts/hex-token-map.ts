@@ -237,9 +237,10 @@ export const POLYSEMOUS_VALUES: PolysemousValue[] = [
   },
   {
     hex: '#EF9F27',
-    count: 8,
+    count: 10,
     trueRoleTarget: 'type-inkind', // decision this session: same class of call as Programme
     occurrences: [
+      { file: 'src/components/briefing/ui.tsx', line: 32, target: 'type-inkind', note: "MIX_COLOR.in_kind — found during sweep execution, missed by the original polysemy audit (only MIX_COLOR.investment at this same line was captured). Per the file's own comment ('the funding-type accents for investment/in-kind'), in_kind here deliberately reuses the true funding-type accent, same treatment as MIX_COLOR.investment -> type-investment above." },
       { file: 'src/app/grants/[id]/page.tsx', line: 51, target: 'type-inkind', note: 'FT_BRAND.in_kind.dot — true funding-type In-Kind dot' },
       { file: 'src/app/grants/[id]/page.tsx', line: 52, target: 'type-inkind', note: "FT_BRAND['in-kind'].dot — same In-Kind category, hyphen-variant key" },
       { file: 'src/app/dashboard/page.tsx', line: 848, target: 'type-inkind', note: 'TYPE_BAR.in_kind — chart-bar fill + card accent, same In-Kind category, different visual role' },
