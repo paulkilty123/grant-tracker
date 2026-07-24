@@ -36,7 +36,7 @@ export default function ContactForm() {
         style={{
           background: 'var(--state-success-pale)',
           border: '0.5px solid rgba(57,109,17,0.18)',
-          boxShadow: '0 1px 3px rgba(23,52,4,0.04)',
+          boxShadow: '0 1px 3px color-mix(in srgb, var(--deep) 4%, transparent)',
         }}
       >
         <div

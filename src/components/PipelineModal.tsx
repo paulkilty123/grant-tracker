@@ -160,7 +160,7 @@ export function PipelineModal({
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-white w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-xl" style={{ boxShadow: '0 16px 64px rgba(26,46,43,0.18)' }} onClick={e => e.stopPropagation()}>
+      <div className="bg-white w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-xl" style={{ boxShadow: '0 16px 64px color-mix(in srgb, var(--text-body) 18%, transparent)' }} onClick={e => e.stopPropagation()}>
         <div className="px-6 py-5 border-b border-border-warm flex justify-between items-start" style={{ background: 'var(--surface-page)' }}>
           <div>
             <h3 className="text-xl font-bold text-charcoal leading-snug" style={{ fontFamily: "var(--font-space-grotesk)" }}>{item.grant_name}</h3>

@@ -829,14 +829,14 @@ export default function LandingPage() {
                   <motion.div {...fadeInView(0.12)} className="absolute" style={{ width: '210px', top: '340px', right: '0px', zIndex: 2 }}>
                     <div className="bg-white rounded-2xl p-4" style={{ transform: 'rotate(4deg)', boxShadow: '0 8px 32px rgba(0,0,0,0.08)' }}>
                       <div className="flex items-center gap-2 mb-3">
-                        <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(99,153,34,0.12)' }}>
+                        <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'color-mix(in srgb, var(--sage-deep) 12%, transparent)' }}>
                           <Award className="w-3.5 h-3.5" style={{ color: 'var(--sage-deep)' }} />
                         </div>
                         <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--sage-deep)' }}>Awarded</p>
                       </div>
                       <p className="text-[13px] font-semibold text-text-body leading-snug mb-1">London Community Foundation</p>
                       <p className="text-[11px] text-text-muted mb-3">Grow to Give — Community Growing</p>
-                      <div className="flex items-center justify-between rounded-xl px-3 py-2" style={{ background: 'rgba(99,153,34,0.10)' }}>
+                      <div className="flex items-center justify-between rounded-xl px-3 py-2" style={{ background: 'color-mix(in srgb, var(--sage-deep) 10%, transparent)' }}>
                         <span className="text-[11px] text-text-muted">Grant awarded</span>
                         <span className="text-[15px] font-bold" style={{ color: 'var(--sage-deep)' }}>£8,000</span>
                       </div>

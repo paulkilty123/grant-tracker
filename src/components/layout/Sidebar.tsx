@@ -57,14 +57,14 @@ function matchProfileScore(org: Organisation | null): number {
 const ADMIN_EMAIL = 'paulkilty1@gmail.com'
 
 const SB = {
-  text:       'rgba(245,241,232,0.72)',
+  text:       'color-mix(in srgb, var(--surface-sunken) 72%, transparent)',
   textBright: 'var(--surface-sunken)',
-  icon:       'rgba(245,241,232,0.55)',
+  icon:       'color-mix(in srgb, var(--surface-sunken) 55%, transparent)',
   iconActive: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */,
-  hover:      'rgba(245,241,232,0.06)',
+  hover:      'color-mix(in srgb, var(--surface-sunken) 6%, transparent)',
   activeBg:   'rgba(142,203,60,0.14)',
   accent:     '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */,
-  divider:    'rgba(245,241,232,0.08)',
+  divider:    'color-mix(in srgb, var(--surface-sunken) 8%, transparent)',
   badgeBg:    'rgba(142,203,60,0.18)',
   badgeText:  'var(--sage-pale)',
 }
@@ -427,7 +427,7 @@ export default function Sidebar({ org, userEmail, companionSurface = false }: Pr
       {mobileOpen && (
         <div
           className="fixed inset-0 z-40 md:hidden"
-          style={{ background: 'rgba(23, 52, 4, 0.4)' }}
+          style={{ background: 'color-mix(in srgb, var(--deep) 40%, transparent)' }}
           onClick={() => setMobileOpen(false)}
         />
       )}

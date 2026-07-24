@@ -23,7 +23,7 @@ const T = {
   textPrimary:   'var(--text-body)',
   textSecondary: 'var(--text-muted)',
   textTertiary:  'var(--text-subtle)',
-  border:        'rgba(23, 52, 4, 0.08)',
+  border:        'color-mix(in srgb, var(--deep) 8%, transparent)',
   greenBg:       'var(--type-inkind-pale)',
   greenText:     'var(--state-success)',
 }

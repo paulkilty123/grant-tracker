@@ -263,7 +263,7 @@ export function MatchFeedbackBlock({ grantId, userId, matchScore, compact = fals
                 onClick={() => handleChipToggle(chip.value)}
                 style={{
                   background: isSelected ? 'var(--deep)' : 'white',
-                  border: `0.5px solid ${isSelected ? 'var(--deep)' : 'rgba(23,52,4,0.14)'}`,
+                  border: `0.5px solid ${isSelected ? 'var(--deep)' : 'color-mix(in srgb, var(--deep) 14%, transparent)'}`,
                   borderRadius: 18, padding: '5px 12px',
                   fontFamily: 'var(--font-space-grotesk)', fontSize: 12, fontWeight: 500,
                   color: isSelected ? 'white' : 'var(--text-body)', cursor: 'pointer',

@@ -54,7 +54,7 @@ export default function CompanionDrawer({ examplePrompt }: { examplePrompt: stri
           next-move actions). The ask bar itself lives in CompanionAskBar. */}
       {open && (
         <div className="fixed inset-0 z-50" role="dialog" aria-label="Your adviser">
-          <div className="absolute inset-0" style={{ background: 'rgba(44,44,42,0.25)' }} onClick={() => setOpen(false)} />
+          <div className="absolute inset-0" style={{ background: 'color-mix(in srgb, var(--text-body) 25%, transparent)' }} onClick={() => setOpen(false)} />
           <div className="absolute inset-y-0 right-0 w-full max-w-md bg-white shadow-2xl flex flex-col">
             <div className="p-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--border-warm)' }}>
               <div className="flex items-center gap-2">
