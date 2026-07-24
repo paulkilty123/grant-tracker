@@ -1,8 +1,11 @@
 /**
  * Hex sweep mapping — old raw hex literal -> new Shoots token.
  *
- * FOR REVIEW ONLY. This file is data, not a script: nothing imports or runs
- * it, and no substitution has been performed.
+ * Historical record of the sweep, kept as reference now that it's run (see
+ * git history for the per-directory sweep commits). Also read as data (text
+ * parse, not a TS import) by scripts/check-functional-colors.mjs, which
+ * reuses this mapping to catch rgba()/rgb()/hsl()/hsla() shadows of these
+ * same old values.
  *
  * Source population: every distinct 6-digit hex literal found in `src/**\/*.{ts,tsx}`,
  * excluding the four token-definition files (tailwind.config.ts, globals.css,
