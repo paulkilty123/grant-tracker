@@ -118,12 +118,27 @@ export async function verifyPendingCFFunds(
   // disclaimer bug (Bedfordshire & Luton, found this session) shows up as one
   // verbatim snippet reused across many funds, which only a row-in-isolation
   // check would never catch.
-  const snippetGroups = new Map<string, string[]>() // `${funder}|${snippet}` -> row ids
+  //
+  // Found live 2026-07-24: this check over-fired on Suffolk/Oxfordshire/
+  // Merseyside/Lincolnshire CF — 19 rows flagged, all false positives.
+  // Verified against the real source pages: every one of those funds has its
+  // OWN distinct apply_url (a dedicated per-fund page), and each page
+  // genuinely, independently states the same round-number cap (e.g. five
+  // separate Suffolk funds each really do say "Maximum grant: £5,000" on
+  // their own page — a common default small-grant ceiling, not a disclaimer
+  // copy-pasted from one page). The ORIGINAL Bedfordshire & Luton bug this
+  // check was built for had multiple funds falling back to the SAME shared
+  // listing-page URL (no distinct per-fund link found — see cf-fund-
+  // extract.ts's `fund.apply_url || config.listingUrl` fallback), so the
+  // snippet AND the URL were both identical. A shared snippet across
+  // genuinely distinct apply_urls is not evidence of that bug — track URL
+  // alongside snippet so the check only fires on the real pattern.
+  const snippetGroups = new Map<string, { id: string; applyUrl: string | null }[]>() // `${funder}|${snippet}` -> rows
   for (const row of candidates) {
     const snippet = row.raw_data?.amount_snippet as string | null | undefined
     if (!snippet) continue
     const key = `${row.funder}|${snippet}`
-    snippetGroups.set(key, [...(snippetGroups.get(key) ?? []), row.id])
+    snippetGroups.set(key, [...(snippetGroups.get(key) ?? []), { id: row.id, applyUrl: row.apply_url }])
   }
 
   const today = new Date().toISOString().slice(0, 10)
@@ -176,11 +191,15 @@ export async function verifyPendingCFFunds(
       flags.push({ code: 'possible_multi_round_uncaptured', detail: `deadline text suggests multiple rounds ("${deadlineSnippet.slice(0, 120)}") but no deadline_cycle was captured — likely to go stale once this one date passes` })
     }
 
-    // Uniform snippet — cross-fund check computed above.
+    // Uniform snippet — cross-fund check computed above. Only suspicious when
+    // the shared snippet ALSO comes with a shared apply_url; distinct
+    // per-fund URLs mean each was independently sourced from its own page,
+    // not one shared disclaimer duplicated across funds (see comment above).
     if (amountSnippet) {
       const siblings = snippetGroups.get(`${row.funder}|${amountSnippet}`) ?? []
-      if (siblings.length >= 3) {
-        flags.push({ code: 'uniform_snippet_suspected', detail: `Same amount snippet reused across ${siblings.length} funds from ${row.funder} — likely a page-wide disclaimer misattributed to each fund individually` })
+      const distinctUrls = new Set(siblings.map(s => s.applyUrl)).size
+      if (siblings.length >= 3 && distinctUrls === 1) {
+        flags.push({ code: 'uniform_snippet_suspected', detail: `Same amount snippet AND same apply_url reused across ${siblings.length} funds from ${row.funder} — likely a page-wide disclaimer misattributed to each fund individually` })
       }
     }
 
