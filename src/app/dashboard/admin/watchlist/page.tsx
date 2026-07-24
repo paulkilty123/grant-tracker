@@ -194,10 +194,10 @@ export default function WatchlistAdminPage() {
         <div className="flex items-start justify-between gap-4 mb-5">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <Sparkles className="w-5 h-5" style={{ color: '#008080' }} />
-              <h1 className="text-2xl font-bold text-[#1C1C2E]">Funder Intelligence</h1>
+              <Sparkles className="w-5 h-5" style={{ color: 'var(--teal)' }} />
+              <h1 className="text-2xl font-bold text-text-body">Funder Intelligence</h1>
             </div>
-            <p className="text-sm text-[#5F5E5A]">
+            <p className="text-sm text-text-muted">
               Monitor funder listing pages — alerts when grant programmes are added or removed.
             </p>
           </div>
@@ -205,27 +205,27 @@ export default function WatchlistAdminPage() {
             <button
               onClick={() => setShowAddForm(v => !v)}
               className="flex items-center gap-1.5 px-3 py-2 text-sm font-bold text-white transition-opacity hover:opacity-80"
-              style={{ borderRadius: 9999, backgroundColor: '#008080' }}>
+              style={{ borderRadius: 9999, backgroundColor: 'var(--teal)' }}>
               <Plus className="h-4 w-4" />Add funder
             </button>
             <button
               onClick={runCheck}
               disabled={running}
               className="flex items-center gap-1.5 px-3 py-2 text-sm font-bold border transition-colors disabled:opacity-50"
-              style={{ borderRadius: 9999, borderColor: '#E8E0D1', color: '#5F5E5A' }}>
+              style={{ borderRadius: 9999, borderColor: 'var(--border-warm)', color: 'var(--text-muted)' }}>
               <RefreshCw className={`h-4 w-4 ${running ? 'animate-spin' : ''}`} />
               {running ? 'Checking…' : 'Run check now'}
             </button>
           </div>
         </div>
-        <div className="flex gap-1 border-b border-[#E8E0D1]">
+        <div className="flex gap-1 border-b border-border-warm">
           <NextLink href="/dashboard/admin/intelligence"
-            className="px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-[#5F5E5A] hover:text-[#1C1C2E] transition-colors">
+            className="px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-text-muted hover:text-text-body transition-colors">
             Enrichment
           </NextLink>
           <NextLink href="/dashboard/admin/watchlist"
             className="px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors"
-            style={{ borderColor: '#008080', color: '#008080' }}>
+            style={{ borderColor: 'var(--teal)', color: 'var(--teal)' }}>
             Watchlist
           </NextLink>
         </div>

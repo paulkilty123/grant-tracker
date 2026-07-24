@@ -39,7 +39,7 @@ export default function ClearProfileButton() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {done && <span className="text-xs font-medium" style={{ color: '#3B6D11' }}>Cleared. Refresh the page you want to preview.</span>}
+          {done && <span className="text-xs font-medium" style={{ color: 'var(--state-success)' }}>Cleared. Refresh the page you want to preview.</span>}
           {error && <span className="text-xs font-medium text-coral-deep">{error}</span>}
           <button
             onClick={handleClick}
@@ -47,8 +47,8 @@ export default function ClearProfileButton() {
             className="text-sm font-semibold rounded-[10px] px-4 py-2"
             style={{
               fontFamily: 'var(--font-space-grotesk)',
-              background: '#FAECE7',
-              color: '#993C1D',
+              background: 'var(--state-error-pale)',
+              color: 'var(--state-error)',
               border: '0.5px solid rgba(153,60,29,0.25)',
               cursor: busy ? 'default' : 'pointer',
               opacity: busy ? 0.7 : 1,
