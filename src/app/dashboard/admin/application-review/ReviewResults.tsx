@@ -22,9 +22,9 @@ export default function ReviewResults(
     const para = (s: string) => esc(s).split(/\n+/).filter(Boolean).map(p => `<p>${p}</p>`).join('') || '<p></p>'
 
     const sections = result.questions.map((qf, i) => `
-      <h2 style="color:#173404;">${esc(qf.question || `Question ${i + 1}`)}</h2>
+      <h2 style="color:var(--deep);">${esc(qf.question || `Question ${i + 1}`)}</h2>
       ${para(answerFor(qf.question, i))}
-      <div style="background:#f3f1ea;padding:10px 16px;margin:6px 0 22px;">
+      <div style="background:var(--surface-pill);padding:10px 16px;margin:6px 0 22px;">
         <p><strong>What's working:</strong> ${esc(qf.whatsWorking)}</p>
         <p><strong>What to strengthen:</strong> ${esc(qf.whatToStrengthen)}</p>
         ${qf.criteriaNotes ? `<p><strong>Against the criteria:</strong> ${esc(qf.criteriaNotes)}</p>` : ''}
@@ -32,7 +32,7 @@ export default function ReviewResults(
       </div>`).join('')
 
     const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Application draft</title></head>
-<body style="font-family:Calibri,Arial,sans-serif;color:#2C2C2A;">
+<body style="font-family:Calibri,Arial,sans-serif;color:var(--text-body);">
 <h1>Application draft</h1>
 <h3>Priority improvements</h3>
 <ul>${strengthSummary.priorityImprovements.map(p => `<li>${esc(p)}</li>`).join('')}</ul>
@@ -118,7 +118,7 @@ ${sections}
               )}
               {q.whatToStrengthen && (
                 <p className="text-xs text-charcoal leading-relaxed">
-                  <span className="font-semibold text-[#854F0B] uppercase tracking-wide">What to strengthen — </span>
+                  <span className="font-semibold text-state-warning uppercase tracking-wide">What to strengthen — </span>
                   {q.whatToStrengthen}
                 </p>
               )}

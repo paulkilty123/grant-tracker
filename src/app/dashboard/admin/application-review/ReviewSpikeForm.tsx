@@ -514,7 +514,7 @@ export default function ReviewSpikeForm(
               placeholder="Your draft answer — or generate one below, then edit it here"
             />
             {personalise[idx] && (
-              <p className="mt-2 rounded-lg bg-amber-pale px-3 py-2 text-xs text-[#854F0B] leading-relaxed">
+              <p className="mt-2 rounded-lg bg-amber-pale px-3 py-2 text-xs text-state-warning leading-relaxed">
                 <span className="font-semibold">To personalise: </span>{personalise[idx]}
               </p>
             )}
@@ -530,7 +530,7 @@ export default function ReviewSpikeForm(
         <button
           onClick={generateDraft}
           disabled={!canGenerate}
-          className="rounded-lg border border-[#173404] bg-white px-5 py-2.5 text-sm font-semibold text-[#173404] disabled:opacity-40 disabled:cursor-not-allowed"
+          className="rounded-lg border border-deep bg-white px-5 py-2.5 text-sm font-semibold text-deep disabled:opacity-40 disabled:cursor-not-allowed"
           style={{ fontFamily: 'var(--font-space-grotesk)' }}
         >
           {generating ? 'Generating…' : 'Generate draft answers'}
@@ -538,7 +538,7 @@ export default function ReviewSpikeForm(
         <button
           onClick={submit}
           disabled={!canSubmit}
-          className="rounded-lg bg-[#8ECB3C] px-5 py-2.5 text-sm font-semibold text-[#173404] disabled:opacity-40 disabled:cursor-not-allowed"
+          className="rounded-lg bg-[#8ECB3C] px-5 py-2.5 text-sm font-semibold text-deep disabled:opacity-40 disabled:cursor-not-allowed"
           style={{ fontFamily: 'var(--font-space-grotesk)' }}
         >
           {submitting ? 'Reviewing…' : 'Review draft'}
@@ -554,12 +554,12 @@ export default function ReviewSpikeForm(
       </p>
 
       {draftError && (
-        <div className="mt-5 rounded-lg border border-[#F0997B] bg-[#FAECE7] px-4 py-3 text-sm text-[#993C1D]">
+        <div className="mt-5 rounded-lg border border-state-error bg-state-error-pale px-4 py-3 text-sm text-state-error">
           {draftError}
         </div>
       )}
       {error && (
-        <div className="mt-5 rounded-lg border border-[#F0997B] bg-[#FAECE7] px-4 py-3 text-sm text-[#993C1D]">
+        <div className="mt-5 rounded-lg border border-state-error bg-state-error-pale px-4 py-3 text-sm text-state-error">
           {error}
         </div>
       )}
