@@ -79,7 +79,7 @@ function ProgrammeCard({ prog, onViewDetail, onAddToPipeline }: {
   // Deadline display
   let deadlineDisplay: { text: string; style: React.CSSProperties } | null = null
   if (prog.is_rolling) {
-    deadlineDisplay = { text: 'Always open', style: { color: '#639922' } }
+    deadlineDisplay = { text: 'Always open', style: { color: 'var(--sage-deep)' } }
   } else if (prog.deadline) {
     const parts = prog.deadline.split('-').map(Number)
     if (parts.length === 3 && !parts.some(isNaN)) {
@@ -87,7 +87,7 @@ function ProgrammeCard({ prog, onViewDetail, onAddToPipeline }: {
       const date = new Date(y, m - 1, d)
       if (!isNaN(date.getTime())) {
         const formatted = date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-        deadlineDisplay = { text: `Closes ${formatted}`, style: { color: '#7a6e64' } }
+        deadlineDisplay = { text: `Closes ${formatted}`, style: { color: 'var(--text-muted)' } }
       }
     }
   }
@@ -115,7 +115,7 @@ function ProgrammeCard({ prog, onViewDetail, onAddToPipeline }: {
         {/* Header row */}
         <div className="flex items-start gap-3 mb-3">
           {/* Funder avatar */}
-          <div className="h-10 w-10 bg-[#F5F1E8] flex items-center justify-center text-charcoal font-bold text-sm flex-shrink-0 border border-warm">
+          <div className="h-10 w-10 bg-surface-sunken flex items-center justify-center text-charcoal font-bold text-sm flex-shrink-0 border border-warm">
             {initials}
           </div>
           <div className="flex-1 min-w-0">
@@ -170,7 +170,7 @@ function ProgrammeCard({ prog, onViewDetail, onAddToPipeline }: {
         <button
           onClick={e => { e.stopPropagation(); onAddToPipeline(prog) }}
           className="px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:opacity-90"
-          style={{ background: '#E8725C' }}
+          style={{ background: 'var(--terra)' }}
         >
           + Pipeline
         </button>
@@ -181,7 +181,7 @@ function ProgrammeCard({ prog, onViewDetail, onAddToPipeline }: {
             rel="noopener noreferrer"
             onClick={e => e.stopPropagation()}
             className="px-3 py-1.5 text-xs font-medium transition-colors hover:opacity-90"
-            style={{ background: '#1a2e2b', color: '#ffffff' }}
+            style={{ background: 'var(--text-body)', color: 'var(--surface-card)' }}
           >
             Visit website →
           </a>
@@ -264,7 +264,7 @@ export default function ProgrammesPage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: '#faf7f2' }}>
+    <div className="min-h-screen" style={{ background: 'var(--surface-page)' }}>
       {/* Always-rendered detail panel */}
       <GrantDetailModal
         grantId={selectedId}
@@ -286,7 +286,7 @@ export default function ProgrammesPage() {
         {/* Pipeline toast */}
         {pipelineMsg && (
           <div className="fixed bottom-6 right-6 z-50 px-4 py-3 text-sm font-medium text-white shadow-lg"
-            style={{ background: '#1a2e2b' }}>
+            style={{ background: 'var(--text-body)' }}>
             {pipelineMsg}
           </div>
         )}

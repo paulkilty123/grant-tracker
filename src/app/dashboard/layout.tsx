@@ -41,7 +41,7 @@ export default async function AppLayout({
         <Sidebar org={org} userEmail={user.email ?? ''} companionSurface={companionSurface} />
         <main
           className="md:ml-60 flex-1 min-h-screen overflow-x-hidden flex flex-col"
-          style={{ background: '#FAFAF7' }}
+          style={{ background: 'var(--surface-page)' }}
         >
           <div className="flex-1 px-4 pt-16 pb-8 md:pt-8 md:px-16">
             {children}

@@ -272,7 +272,7 @@ export default function MatchBriefingPage() {
 
       {/* ── Right panel: briefing sheet ──────────────────────────────── */}
       {selected ? (
-        <div className="flex-1 overflow-y-auto bg-[#faf9f7]">
+        <div className="flex-1 overflow-y-auto bg-surface-page">
           <div className="max-w-2xl mx-auto px-8 py-8">
 
             {/* Header */}
@@ -449,7 +449,7 @@ export default function MatchBriefingPage() {
           </div>
         </div>
       ) : (
-        <div className="flex-1 flex items-center justify-center bg-[#faf9f7]">
+        <div className="flex-1 flex items-center justify-center bg-surface-page">
           <div className="text-center">
             <span className="text-4xl mb-4 block">✦</span>
             <p className="text-sm font-semibold text-charcoal">Select a grant to view its briefing</p>
