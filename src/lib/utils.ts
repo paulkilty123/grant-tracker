@@ -123,7 +123,7 @@ export const PIPELINE_STAGES = [
 ] as const
 
 export const STAGE_COLOURS: Record<PipelineStage, string> = {
-  identified: 'border-[rgba(0,0,0,0.10)] text-[#5F5E5A]',
+  identified: 'border-[rgba(0,0,0,0.10)] text-text-muted',
   applying:   'border-green-mid text-green-text-deep',
   submitted:  'border-green-pale-3 text-green-deep',
   won:        'border-green-mid text-green-deep',

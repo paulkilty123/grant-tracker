@@ -1795,9 +1795,9 @@ export function scoreColour(score: number): { bg: string; text: string; bar: str
 // dashboard quality legend). scoreColour above is the Tailwind-class sibling
 // for Find Funding's bars; both are the same green family, kept in step here.
 export const MATCH_TIER = {
-  strong:  { label: 'Strong',  bg: '#C0DD97', color: '#173404', dot: '#639922' },
-  good:    { label: 'Good',    bg: '#EAF3DE', color: '#3B6D11', dot: '#8ECB3C' },
-  partial: { label: 'Partial', bg: '#F5F1E8', color: '#5F5E5A', dot: '#C0DD97' },
+  strong:  { label: 'Strong',  bg: 'var(--sage-pale)', color: 'var(--deep)', dot: 'var(--sage-deep)' },
+  good:    { label: 'Good',    bg: 'var(--state-success-pale)', color: 'var(--state-success)', dot: '#8ECB3C' },
+  partial: { label: 'Partial', bg: 'var(--surface-sunken)', color: 'var(--text-muted)', dot: 'var(--sage-pale)' },
 } as const
 
 /** Score -> tier colours. Thresholds match the project funder-fit list
