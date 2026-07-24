@@ -167,10 +167,15 @@ interface ExtractedFund {
   // fund gets discarded.
   amount_status:     'stated' | 'unstated' | 'uncapped'
   amount_snippet:    string | null
-  deadline:          string | null   // ISO date or null
+  deadline:          string | null   // ISO date or null — when applications CLOSE, never when they open
   is_rolling:        boolean
   deadline_snippet:  string | null
   deadline_cycle:    DeadlineCycleEntry[] | null
+  // Populated only when the fund is currently CLOSED and the page states
+  // when it next opens — an opening date is never a deadline. See
+  // buildSystemPrompt's OPENING DATE section.
+  next_open_date:        string | null   // free-text as stated, e.g. "September 2026"
+  next_open_date_parsed: string | null   // best-effort ISO date, or null if not resolvable
   eligibility_notes: string | null
   apply_url:         string | null
 }
@@ -245,7 +250,11 @@ async function fetchPageText(url: string): Promise<string> {
 function buildSystemPrompt(todayISO: string): string {
   return `You are extracting EVERY individual named grant fund mentioned on a UK Community Foundation's funds/grants listing page — small and large alike. Do not filter or omit anything based on amount; a downstream process decides which funds are worth cataloguing, not you. Your only job is complete, accurately-grounded extraction.
 
-Today's date is ${todayISO}. This matters for deadlines: found live in production data — a fund whose page states a recurring pattern like "Application deadlines: 1 February, 1 August" was extracted with deadline "2025-02-01", a date in the PAST, because the year was guessed rather than reasoned from today's date. When a fund's deadline is described as a recurring pattern (multiple dates per year, "next closing date", etc.), you MUST compute the NEXT occurrence strictly after ${todayISO} — never return a deadline date that has already passed.
+Today's date is ${todayISO}. This matters for deadlines: found live in production data — a fund whose page states a recurring pattern like "Application deadlines: 1 February, 1 August" was extracted with deadline "2025-02-01", a date in the PAST, because the year was guessed rather than reasoned from today's date. When a fund's deadline is described as a GENUINELY RECURRING pattern (multiple dates per year explicitly stated, "next closing date", "rounds run every March and September", etc.), you MUST compute the NEXT occurrence strictly after ${todayISO} — never return a deadline date that has already passed.
+
+This rolling-forward rule applies ONLY when the page itself states or clearly implies recurrence. Also found live in production data — the opposite mistake: a page stating a single one-off date with no recurrence language at all (e.g. just "Deadline: 9th January 2026", nothing about future rounds) had its year silently bumped to 2027, inventing a future deadline with no basis in the source. If a stated date has already passed and the page gives no evidence of a repeating pattern, do NOT guess a future year — leave deadline null instead (amount_status-style honesty: an invented date is worse than no date).
+
+OPENING DATE vs DEADLINE — these are opposite things and must never be conflated. 'deadline' means when applications CLOSE. Many CF funds run seasonal windows and are CURRENTLY CLOSED, with the page stating only when they next open (e.g. "Opens September 2026", "Opening date: 1st September", "Applications reopen in the autumn", "Current status: Closed"). An opening date is NOT a deadline — if you cannot find a separate, explicitly-stated CLOSING date for the same round, leave deadline null and instead populate next_open_date (verbatim or close to it, e.g. "September 2026", "Spring 2027") and next_open_date_parsed (best-effort YYYY-MM-DD — use the 1st of the stated month when no day is given, or null if the text is too vague to resolve to any date, e.g. "later this year"). A fund can have BOTH an explicit opening date AND an explicit closing date stated (e.g. "Opening date: 1st September, Closing date: 28th September") — in that case populate deadline from the closing date as normal, and next_open_date from the opening date too.
 
 CRITICAL grounding rule: amount_max is what a SINGLE applicant can receive from THIS SPECIFIC named fund. Do NOT use a total programme pot, cumulative annual distribution, or a "grants of up to £Xm distributed since Y" figure — those describe the whole portfolio, not one grant. Also found live in production data — a foundation's page had a single page-wide disclaimer ("Most of our funds are for grants under £10,000") that got wrongly copied onto EVERY fund as if each one specifically said this. A statement about the foundation's funds IN GENERAL, or about "most" of its funds, is NOT evidence for any ONE named fund's specific amount — if a fund has no amount stated for IT BY NAME, set amount_status to "unstated" even if a general/aggregate statement exists elsewhere on the page. Never guess a number, and never reuse one generic statement across multiple funds unless the page explicitly states that exact figure applies to each of them by name.
 
@@ -273,7 +282,9 @@ ${pageText}
 
 Extract EVERY named fund mentioned on this page, regardless of size — including small funds under £1,000. Do not skip or omit any fund based on its amount; return the complete list and let amount_min/amount_max/amount_status speak for themselves.
 
-For any deadline, compute the next occurrence strictly after ${todayISO} — if the page states a recurring pattern (e.g. two dates a year), pick whichever of those dates is soonest after today, rolling into next year if every stated date this year has already passed. If that recurring pattern gives explicit day-of-month + month for each round, also populate deadline_cycle (see system instructions) — otherwise leave it null.
+For any deadline, only roll forward to the next occurrence when the page explicitly states or clearly implies a recurring pattern — pick whichever stated date is soonest after today, rolling into next year if every stated date this year has already passed. If that recurring pattern gives explicit day-of-month + month for each round, also populate deadline_cycle (see system instructions) — otherwise leave it null. If a single one-off date is stated with NO recurrence evidence and it has already passed, leave deadline null rather than inventing a future year.
+
+If the fund is currently closed and the page states an opening date instead of (or in addition to) a closing deadline, populate next_open_date / next_open_date_parsed per the OPENING DATE section above — do not put an opening date into deadline.
 
 For apply_url, use the per-fund link (formatted "text [URL: ...]" per the system instructions) that appears with that fund's own details, not the page's own URL.
 
@@ -290,6 +301,8 @@ Return JSON in this exact format:
       "is_rolling": false,
       "deadline_snippet": "verbatim text backing the deadline or rolling status",
       "deadline_cycle": null,
+      "next_open_date": null,
+      "next_open_date_parsed": null,
       "eligibility_notes": "brief eligibility summary",
       "apply_url": "https://... specific fund page if linked, else null"
     }
@@ -440,6 +453,11 @@ async function upsertFund(
     // DOES find cycle detail (or an admin who adds one manually) is never
     // clobbered by an earlier run's "no cycle found" result.
     ...(fund.deadline_cycle && fund.deadline_cycle.length > 0 ? { deadline_cycle: fund.deadline_cycle } : {}),
+    // Same omit-rather-than-null pattern as deadline_cycle above — only
+    // written when the model actually found an opening date, so a run that
+    // finds nothing here never clobbers a value another source set.
+    ...(fund.next_open_date ? { next_open_date: fund.next_open_date } : {}),
+    ...(fund.next_open_date_parsed ? { next_open_date_parsed: fund.next_open_date_parsed } : {}),
     is_local:              true,
     sectors:               [] as string[],
     eligibility_criteria:  [] as string[],
