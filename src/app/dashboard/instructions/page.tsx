@@ -99,7 +99,7 @@ export default function InstructionsPage() {
       </Section>
 
       {/* Profile */}
-      <Section icon={User} colour="bg-sage/20 text-forest" title="Setting up your profile">
+      <Section icon={User} colour="bg-sage-deep/20 text-forest" title="Setting up your profile">
         <p>
           Your profile is the engine behind your grant matches. Navigate to <strong className="text-charcoal">Profile</strong> in the sidebar to complete it.
         </p>

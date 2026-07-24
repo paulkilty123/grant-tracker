@@ -34,11 +34,11 @@ const WRITING_STAGE_ICONS: Record<number, React.ReactNode> = {
 
 const WRITING_STAGES = [
   { label: 'Not started', value: 0,   emoji: '○',  colour: 'text-light' },
-  { label: 'Research',    value: 17,  emoji: '🔍', colour: 'text-sage' },
+  { label: 'Research',    value: 17,  emoji: '🔍', colour: 'text-sage-deep' },
   { label: 'Outline',     value: 33,  emoji: '📝', colour: 'text-amber-500' },
   { label: 'First draft', value: 50,  emoji: '✏️', colour: 'text-amber-saturated' },
   { label: 'Revising',    value: 67,  emoji: '🔄', colour: 'text-orange-500' },
-  { label: 'Review',      value: 83,  emoji: '👀', colour: 'text-sage' },
+  { label: 'Review',      value: 83,  emoji: '👀', colour: 'text-sage-deep' },
   { label: 'Final',       value: 100, emoji: '✅', colour: 'text-forest' },
 ] as const
 

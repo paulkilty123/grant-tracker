@@ -175,7 +175,7 @@ export default function DiscoveryPanel() {
               {queueStats.pending} pending
             </span>
             {queueStats.total > 0 && (
-              <span className="text-[10px] font-semibold bg-sage/10 text-sage rounded-full px-2.5 py-1 uppercase tracking-wider">
+              <span className="text-[10px] font-semibold bg-sage-deep/10 text-sage-deep rounded-full px-2.5 py-1 uppercase tracking-wider">
                 {queueStats.total} total
               </span>
             )}
@@ -209,8 +209,8 @@ export default function DiscoveryPanel() {
             <button key={key} onClick={() => toggleType(key)}
               className={`text-left border rounded-lg px-3 py-2 transition-colors text-sm ${
                 selectedTypes.has(key)
-                  ? 'bg-forest text-cream border-forest'
-                  : 'bg-white text-charcoal border-warm hover:border-sage hover:text-forest'
+                  ? 'bg-forest text-surface-page border-forest'
+                  : 'bg-white text-charcoal border-warm hover:border-sage-deep hover:text-forest'
               }`}>
               <span className="font-semibold block">{label}</span>
               <span className="text-[11px] opacity-70">{description}</span>
@@ -241,7 +241,7 @@ export default function DiscoveryPanel() {
         )}
 
         <button onClick={runDiscovery} disabled={discovering || selectedTypes.size === 0}
-          className="bg-forest text-cream text-sm font-semibold rounded-lg px-5 py-2 hover:bg-sage transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+          className="bg-forest text-surface-page text-sm font-semibold rounded-lg px-5 py-2 hover:bg-sage-deep transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
           {discovering ? 'Discovering…' : 'Run discovery'}
         </button>
       </div>
@@ -261,7 +261,7 @@ export default function DiscoveryPanel() {
           Classifies each queued item (impact sectors, funder type, amounts) and imports into <strong>Needs Review</strong>. Deduplicates automatically.
         </div>
         <button onClick={runProcess} disabled={processing || (queueStats?.pending ?? 0) === 0}
-          className="bg-sage text-cream text-sm font-semibold rounded-lg px-5 py-2 hover:bg-forest transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+          className="bg-sage-deep text-surface-page text-sm font-semibold rounded-lg px-5 py-2 hover:bg-forest transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
           {processing ? 'Processing…' : `Process ${Math.min(processLimit, queueStats?.pending ?? 0)} pending`}
         </button>
       </div>

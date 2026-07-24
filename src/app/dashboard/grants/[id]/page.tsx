@@ -27,11 +27,11 @@ const FUNDER_LABELS: Record<string, string> = {
 
 const TYPE_COLOURS: Record<string, string> = {
   lottery:             'bg-green-50 text-green-700',
-  trust_foundation:    'bg-sage/10 text-forest',
-  community_foundation:'bg-sage/10 text-forest',
-  corporate_foundation:'bg-sage/10 text-forest',
+  trust_foundation:    'bg-sage-deep/10 text-forest',
+  community_foundation:'bg-sage-deep/10 text-forest',
+  corporate_foundation:'bg-sage-deep/10 text-forest',
   capacity_builder:    'bg-emerald-50 text-emerald-700',
-  foundation:          'bg-sage/10 text-forest',
+  foundation:          'bg-sage-deep/10 text-forest',
   corporate:           'bg-amber-50 text-amber-700',
   local_authority:     'bg-amber-pale text-amber-deep',
   housing_association: 'bg-teal-50 text-teal-700',
@@ -138,7 +138,7 @@ export default async function GrantDetailPage({
 
   // Deadline display
   const deadlinePassed = !grant.is_rolling && grant.deadline && new Date(grant.deadline) < new Date()
-  const deadlineColour = grant.is_rolling ? 'text-sage'
+  const deadlineColour = grant.is_rolling ? 'text-sage-deep'
     : deadlinePassed ? 'text-coral-saturated'
     : 'text-charcoal'
 
@@ -149,7 +149,7 @@ export default async function GrantDetailPage({
 
       {/* Breadcrumb */}
       <div className="mb-5 flex items-center gap-2 text-sm">
-        <a href="/dashboard/search" className="text-sage hover:underline">Search Grants</a>
+        <a href="/dashboard/search" className="text-sage-deep hover:underline">Search Grants</a>
         <span className="text-light">›</span>
         <span className="text-mid truncate max-w-xs">{grant.title}</span>
       </div>
@@ -159,7 +159,7 @@ export default async function GrantDetailPage({
 
         {/* Header */}
         <div className="flex items-start gap-4 mb-5">
-          <div className="w-12 h-12 rounded-xl bg-sage/20 flex items-center justify-center text-sage font-bold text-xl flex-shrink-0">
+          <div className="w-12 h-12 rounded-xl bg-sage-deep/20 flex items-center justify-center text-sage-deep font-bold text-xl flex-shrink-0">
             {String(grant.funder ?? '?')[0]}
           </div>
           <div className="flex-1 min-w-0">
@@ -227,7 +227,7 @@ export default async function GrantDetailPage({
             <ul className="space-y-2">
               {eligibility.map((c, i) => (
                 <li key={i} className="flex gap-2.5 text-sm text-mid">
-                  <span className="text-sage flex-shrink-0 mt-0.5 font-bold">✓</span>
+                  <span className="text-sage-deep flex-shrink-0 mt-0.5 font-bold">✓</span>
                   <span>{c}</span>
                 </li>
               ))}

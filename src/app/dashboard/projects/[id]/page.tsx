@@ -44,7 +44,7 @@ type MatchBuckets = {
 }
 
 const TYPE_STYLE: Record<string, { bg: string; color: string; label: string }> = {
-  project:   { bg: T.paleGreen,  color: T.sage,      label: 'Project' },
+  project:   { bg: T.paleGreen,  color: T.stateSuccess,      label: 'Project' },
   campaign:  { bg: T.amberBg,    color: T.amberText, label: 'Campaign' },
   programme: { bg: '#FAECE7',    color: '#993C1D',   label: 'Programme' },
 }
@@ -91,10 +91,10 @@ function MatchDetail({ m }: { m: ScoredMatch }) {
   const hasBrief = briefFields.length > 0
 
   return (
-    <div style={{ borderTop: `1px solid ${T.border}`, marginTop: 13, paddingTop: 14, display: 'flex', flexDirection: 'column', gap: 14 }}>
+    <div style={{ borderTop: `1px solid ${T.borderHairline}`, marginTop: 13, paddingTop: 14, display: 'flex', flexDirection: 'column', gap: 14 }}>
       {m.positives.length > 0 && (
         <div>
-          <p style={{ fontFamily: UI, fontWeight: 600, fontSize: 11.5, letterSpacing: '0.04em', textTransform: 'uppercase', color: T.sage, margin: '0 0 5px' }}>
+          <p style={{ fontFamily: UI, fontWeight: 600, fontSize: 11.5, letterSpacing: '0.04em', textTransform: 'uppercase', color: T.stateSuccess, margin: '0 0 5px' }}>
             Why this matched your project
           </p>
           {m.positives.slice(0, 4).map((r, i) => (
@@ -135,7 +135,7 @@ function MatchDetail({ m }: { m: ScoredMatch }) {
             rel="noopener noreferrer"
             onClick={e => e.stopPropagation()}
             style={{
-              fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.sage,
+              fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.stateSuccess,
               textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5,
             }}
           >
@@ -352,7 +352,7 @@ export default function ProjectPage() {
   if (allowed === false) {
     return (
       <div style={{ maxWidth: 660 }}>
-        <div style={{ background: T.cream, borderRadius: 12, padding: '20px 24px' }}>
+        <div style={{ background: T.surfaceSunken, borderRadius: 12, padding: '20px 24px' }}>
           <p style={{ fontFamily: BODY, fontSize: 14, color: T.textSecondary, margin: 0, lineHeight: 1.6 }}>
             Projects are currently available to founding cohort members.
           </p>
@@ -363,10 +363,10 @@ export default function ProjectPage() {
   if (!loaded) {
     return (
       <div style={{ maxWidth: 760, marginInline: 'auto' }}>
-        <div style={{ height: 16, width: 120, background: T.cream, borderRadius: 6, marginBottom: 20 }} />
-        <div style={{ height: 26, width: '46%', background: T.cream, borderRadius: 8, marginBottom: 16 }} />
-        <div style={{ height: 90, background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, marginBottom: 14 }} />
-        <div style={{ height: 220, background: T.white, border: `1px solid ${T.border}`, borderRadius: 12 }} />
+        <div style={{ height: 16, width: 120, background: T.surfaceSunken, borderRadius: 6, marginBottom: 20 }} />
+        <div style={{ height: 26, width: '46%', background: T.surfaceSunken, borderRadius: 8, marginBottom: 16 }} />
+        <div style={{ height: 90, background: T.white, border: `1px solid ${T.borderHairline}`, borderRadius: 12, marginBottom: 14 }} />
+        <div style={{ height: 220, background: T.white, border: `1px solid ${T.borderHairline}`, borderRadius: 12 }} />
       </div>
     )
   }
@@ -374,7 +374,7 @@ export default function ProjectPage() {
     return (
       <div style={{ maxWidth: 660, marginInline: 'auto' }}>
         <p style={{ fontFamily: BODY, fontSize: 14, color: T.textSecondary }}>
-          That project could not be found. <Link href="/dashboard/projects" style={{ color: T.sage }}>Back to projects</Link>
+          That project could not be found. <Link href="/dashboard/projects" style={{ color: T.stateSuccess }}>Back to projects</Link>
         </p>
       </div>
     )
@@ -493,21 +493,21 @@ export default function ProjectPage() {
       </div>
 
       {/* Completeness */}
-      <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, padding: '18px 22px', margin: '16px 0 14px' }}>
+      <div style={{ background: T.white, border: `1px solid ${T.borderHairline}`, borderRadius: 12, padding: '18px 22px', margin: '16px 0 14px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 10 }}>
           <p style={{ fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.textPrimary, margin: 0 }}>
             {pct === 100 ? 'Fully described' : `${pct}% described`}
           </p>
           <span style={{
             fontFamily: UI, fontWeight: 600, fontSize: 11.5, padding: '4px 12px', borderRadius: 999,
-            background: ready ? T.paleGreen2 : T.cream, color: ready ? T.sage : T.textSecondary,
+            background: ready ? T.paleGreen2 : T.surfaceSunken, color: ready ? T.stateSuccess : T.textSecondary,
             display: 'inline-flex', alignItems: 'center', gap: 5,
           }}>
             {ready && <Check size={12} />}
             {ready ? 'Ready to match' : 'Not ready to match yet'}
           </span>
         </div>
-        <div style={{ height: 7, background: T.cream, borderRadius: 999, overflow: 'hidden' }}>
+        <div style={{ height: 7, background: T.surfaceSunken, borderRadius: 999, overflow: 'hidden' }}>
           <div style={{
             height: '100%', width: `${pct}%`, background: ready ? T.lime : T.greenMid,
             borderRadius: 999, transition: 'width 250ms ease',
@@ -536,7 +536,7 @@ export default function ProjectPage() {
             ))}
             {gaps.length > 3 && !showAllGaps && (
               <button onClick={() => setShowAllGaps(true)} style={{
-                fontFamily: UI, fontWeight: 600, fontSize: 12, color: T.sage, background: 'transparent',
+                fontFamily: UI, fontWeight: 600, fontSize: 12, color: T.stateSuccess, background: 'transparent',
                 border: 'none', cursor: 'pointer', padding: 0, textAlign: 'left',
               }}>
                 Show {gaps.length - 3} more
@@ -550,9 +550,9 @@ export default function ProjectPage() {
           onClick={() => setDetailsOpen(o => !o)}
           aria-expanded={detailsOpen}
           style={{
-            fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.sage,
+            fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.stateSuccess,
             background: 'transparent', border: 'none', cursor: 'pointer',
-            padding: '12px 0 0', marginTop: 12, borderTop: `1px solid ${T.border}`,
+            padding: '12px 0 0', marginTop: 12, borderTop: `1px solid ${T.borderHairline}`,
             width: '100%', textAlign: 'left',
             display: 'flex', alignItems: 'center', gap: 6,
           }}
@@ -564,7 +564,7 @@ export default function ProjectPage() {
 
       {/* Sections (collapsed by default once the project is matchable) */}
       {detailsOpen && (
-      <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div style={{ background: T.white, border: `1px solid ${T.borderHairline}`, borderRadius: 12, padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: 16 }}>
         {textField(PROJECT_FIELDS.find(f => f.key === 'what_it_will_do')!)}
         {textField(PROJECT_FIELDS.find(f => f.key === 'who_benefits')!)}
         {textField(PROJECT_FIELDS.find(f => f.key === 'difference_it_makes')!)}
@@ -627,7 +627,7 @@ export default function ProjectPage() {
               disabled={matching}
               aria-label="Re-check matches against the latest catalogue"
               style={{
-                fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.sage, background: 'transparent',
+                fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.stateSuccess, background: 'transparent',
                 border: 'none', cursor: matching ? 'default' : 'pointer', whiteSpace: 'nowrap',
                 display: 'inline-flex', alignItems: 'center', gap: 5, opacity: matching ? 0.6 : 1,
               }}
@@ -643,7 +643,7 @@ export default function ProjectPage() {
         </p>
 
         {!ready && (
-          <div style={{ background: T.cream, borderRadius: 12, padding: '18px 22px' }}>
+          <div style={{ background: T.surfaceSunken, borderRadius: 12, padding: '18px 22px' }}>
             <p style={{ fontFamily: BODY, fontSize: 13.5, color: T.textSecondary, margin: 0, lineHeight: 1.6 }}>
               Add what the project will do, a sector and a rough budget above, and matches will
               appear here.
@@ -654,9 +654,9 @@ export default function ProjectPage() {
         {ready && matching && matches === null && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {[0, 1, 2].map(i => (
-              <div key={i} style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, padding: '15px 18px' }}>
-                <div style={{ height: 13, width: `${56 - i * 9}%`, background: T.cream, borderRadius: 6, marginBottom: 7 }} />
-                <div style={{ height: 10, width: '32%', background: T.cream, borderRadius: 6, opacity: 0.7 }} />
+              <div key={i} style={{ background: T.white, border: `1px solid ${T.borderHairline}`, borderRadius: 12, padding: '15px 18px' }}>
+                <div style={{ height: 13, width: `${56 - i * 9}%`, background: T.surfaceSunken, borderRadius: 6, marginBottom: 7 }} />
+                <div style={{ height: 10, width: '32%', background: T.surfaceSunken, borderRadius: 6, opacity: 0.7 }} />
               </div>
             ))}
           </div>
@@ -676,11 +676,11 @@ export default function ProjectPage() {
           return (
             <>
               {cashCount === 0 && (
-                <div style={{ background: T.cream, borderRadius: 12, padding: '18px 22px' }}>
+                <div style={{ background: T.surfaceSunken, borderRadius: 12, padding: '18px 22px' }}>
                   <p style={{ fontFamily: BODY, fontSize: 13.5, color: T.textSecondary, margin: 0, lineHeight: 1.6 }}>
                     No funding fits in the catalogue right now{matches.support.length > 0 ? ', though there is in-kind support below' : ''}.
                     Try broadening the sectors, or check{' '}
-                    <Link href="/dashboard/search" style={{ color: T.sage }}>Find Funding</Link> for the wider pool.
+                    <Link href="/dashboard/search" style={{ color: T.stateSuccess }}>Find Funding</Link> for the wider pool.
                   </p>
                 </div>
               )}
@@ -711,7 +711,7 @@ export default function ProjectPage() {
                             const amount = fmtAmount(grant)
                             return (
                               <div key={id} style={{
-                                background: T.white, border: `1px solid ${open ? T.borderStrong : T.border}`,
+                                background: T.white, border: `1px solid ${open ? T.borderStrong : T.borderHairline}`,
                                 borderRadius: 12, padding: '15px 18px',
                               }}>
                                 <div
@@ -795,7 +795,7 @@ export default function ProjectPage() {
                 const open = expandedId === id
                 return (
                   <div key={id} style={{
-                    background: T.softGreen, border: `1px solid ${open ? T.borderStrong : T.border}`,
+                    background: T.softGreen, border: `1px solid ${open ? T.borderStrong : T.borderHairline}`,
                     borderRadius: 10, padding: '11px 16px',
                   }}>
                     <div
@@ -816,7 +816,7 @@ export default function ProjectPage() {
                         href={`/dashboard/applications/new?opportunity=${grant.uuid}&project=${project.id}`}
                         onClick={e => e.stopPropagation()}
                         style={{
-                          fontFamily: UI, fontWeight: 600, fontSize: 12, color: T.sage,
+                          fontFamily: UI, fontWeight: 600, fontSize: 12, color: T.stateSuccess,
                           textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0,
                         }}
                       >
@@ -839,11 +839,11 @@ export default function ProjectPage() {
         {/* Secondary: a funder-agnostic proposal, clearly distinct from the
             match list above (was a confusing link beside the heading). */}
         {ready && (
-          <div style={{ marginTop: 18, paddingTop: 16, borderTop: `1px solid ${T.border}` }}>
+          <div style={{ marginTop: 18, paddingTop: 16, borderTop: `1px solid ${T.borderHairline}` }}>
             <Link
               href={`/dashboard/applications/new?project=${project.id}`}
               style={{
-                fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.sage, textDecoration: 'none',
+                fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.stateSuccess, textDecoration: 'none',
                 display: 'inline-flex', alignItems: 'center', gap: 6,
               }}
             >
@@ -866,7 +866,7 @@ export default function ProjectPage() {
               const answered = (a.questions ?? []).filter(q => q.user_answer?.trim()).length
               return (
                 <Link key={a.id} href={`/dashboard/applications/${a.id}`} style={{
-                  background: T.white, border: `1px solid ${T.border}`, borderRadius: 12,
+                  background: T.white, border: `1px solid ${T.borderHairline}`, borderRadius: 12,
                   padding: '13px 18px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 12,
                 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>

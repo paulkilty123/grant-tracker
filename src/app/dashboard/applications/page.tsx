@@ -31,9 +31,9 @@ const HOW_IT_WORKS_STEPS = [
 
 function HowItWorks({ withCta }: { withCta?: boolean }) {
   return (
-    <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, padding: '22px 24px' }}>
+    <div style={{ background: T.white, border: `1px solid ${T.borderHairline}`, borderRadius: 12, padding: '22px 24px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18 }}>
-        <HelpCircle size={18} color={T.sage} />
+        <HelpCircle size={18} color={T.stateSuccess} />
         <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 16, color: T.textPrimary }}>How it works</span>
       </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14 }}>
@@ -70,8 +70,8 @@ function HowItWorks({ withCta }: { withCta?: boolean }) {
 }
 
 const STATUS_STYLE: Record<string, { bg: string; color: string; label: string }> = {
-  draft:       { bg: T.cream,      color: T.textSecondary, label: 'Draft' },
-  in_progress: { bg: T.paleGreen2, color: T.sage,          label: 'In progress' },
+  draft:       { bg: T.surfaceSunken,      color: T.textSecondary, label: 'Draft' },
+  in_progress: { bg: T.paleGreen2, color: T.stateSuccess,          label: 'In progress' },
   complete:    { bg: '#C0DD97',    color: T.greenDeep,     label: 'Complete' },
 }
 
@@ -179,7 +179,7 @@ export default function ApplicationsPage() {
         <h1 style={{ fontFamily: UI, fontWeight: 600, fontSize: 24, color: T.textPrimary, letterSpacing: '-0.01em', marginBottom: 8 }}>
           Applications
         </h1>
-        <div style={{ background: T.cream, borderRadius: 12, padding: '20px 24px' }}>
+        <div style={{ background: T.surfaceSunken, borderRadius: 12, padding: '20px 24px' }}>
           <p style={{ fontFamily: BODY, fontSize: 14, color: T.textSecondary, margin: 0, lineHeight: 1.6 }}>
             The application builder is currently available to founding cohort members while we
             shape it together. It will open more widely soon.
@@ -222,7 +222,7 @@ export default function ApplicationsPage() {
           onClick={() => setPrinciplesOpen(o => !o)}
           aria-expanded={principlesOpen}
           style={{
-            fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.sage, background: 'transparent',
+            fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.stateSuccess, background: 'transparent',
             border: 'none', cursor: 'pointer', padding: 0, display: 'inline-flex', alignItems: 'center', gap: 6,
           }}
         >
@@ -231,13 +231,13 @@ export default function ApplicationsPage() {
         </button>
         {principlesOpen && (
           <div style={{
-            background: T.softGreen, border: `1px solid ${T.border}`, borderRadius: 12,
+            background: T.softGreen, border: `1px solid ${T.borderHairline}`, borderRadius: 12,
             padding: '18px 20px', marginTop: 10, display: 'flex', flexDirection: 'column', gap: 12,
           }}>
             {STRONG_APPLICATION_PRINCIPLES.map((p, i) => (
               <div key={i} style={{ display: 'flex', gap: 11 }}>
                 <span style={{
-                  fontFamily: UI, fontWeight: 700, fontSize: 11, color: T.sage, background: T.paleGreen,
+                  fontFamily: UI, fontWeight: 700, fontSize: 11, color: T.stateSuccess, background: T.paleGreen,
                   width: 22, height: 22, borderRadius: 999, display: 'flex', alignItems: 'center',
                   justifyContent: 'center', flexShrink: 0, marginTop: 1,
                 }}>
@@ -258,14 +258,14 @@ export default function ApplicationsPage() {
         const inProgress = apps.filter(a => a.status === 'in_progress' || a.status === 'draft').length
         const complete = apps.filter(a => a.status === 'complete').length
         const tiles = [
-          { n: inProgress, label: 'In progress', accent: T.sage },
+          { n: inProgress, label: 'In progress', accent: T.stateSuccess },
           { n: complete, label: 'Complete', accent: T.greenDeep },
           { n: deadlineSoon, label: 'Deadline soon', accent: deadlineSoon > 0 ? T.coral : T.textTertiary },
         ]
         return (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginTop: 18 }}>
             {tiles.map(t => (
-              <div key={t.label} style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 10, padding: '12px 16px' }}>
+              <div key={t.label} style={{ background: T.white, border: `1px solid ${T.borderHairline}`, borderRadius: 10, padding: '12px 16px' }}>
                 <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 22, color: t.accent, display: 'block', lineHeight: 1.1 }}>{t.n}</span>
                 <span style={{ fontFamily: BODY, fontSize: 12.5, color: T.textSecondary }}>{t.label}</span>
               </div>
@@ -278,14 +278,14 @@ export default function ApplicationsPage() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 22 }}>
         {!loaded && [0, 1, 2].map(i => (
           <div key={i} style={{
-            background: T.white, border: `1px solid ${T.border}`, borderRadius: 12,
+            background: T.white, border: `1px solid ${T.borderHairline}`, borderRadius: 12,
             padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 16,
           }}>
             <div style={{ flex: 1 }}>
-              <div style={{ height: 14, width: `${52 - i * 8}%`, background: T.cream, borderRadius: 6, marginBottom: 8 }} />
-              <div style={{ height: 11, width: '30%', background: T.cream, borderRadius: 6, opacity: 0.7 }} />
+              <div style={{ height: 14, width: `${52 - i * 8}%`, background: T.surfaceSunken, borderRadius: 6, marginBottom: 8 }} />
+              <div style={{ height: 11, width: '30%', background: T.surfaceSunken, borderRadius: 6, opacity: 0.7 }} />
             </div>
-            <div style={{ height: 5, width: 90, background: T.cream, borderRadius: 999 }} />
+            <div style={{ height: 5, width: 90, background: T.surfaceSunken, borderRadius: 999 }} />
           </div>
         ))}
         {loaded && apps.length === 0 && readyToStart.length === 0 && <HowItWorks withCta />}
@@ -301,14 +301,14 @@ export default function ApplicationsPage() {
               onMouseEnter={() => setHoveredId(app.id)}
               onMouseLeave={() => setHoveredId(null)}
               style={{
-                background: T.white, border: `1px solid ${T.border}`, borderRadius: 12,
+                background: T.white, border: `1px solid ${T.borderHairline}`, borderRadius: 12,
                 padding: '14px 18px', textDecoration: 'none',
                 display: 'flex', alignItems: 'center', gap: 14,
               }}
             >
               <span style={{
                 width: 42, height: 42, borderRadius: 10, flexShrink: 0,
-                background: T.paleGreen, color: T.sage, fontFamily: UI, fontWeight: 600, fontSize: 14.5,
+                background: T.paleGreen, color: T.stateSuccess, fontFamily: UI, fontWeight: 600, fontSize: 14.5,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
                 {monogram(app.funder_name || app.grant_name || '?')}
@@ -341,11 +341,11 @@ export default function ApplicationsPage() {
                     <span style={{ fontFamily: BODY, fontSize: 11.5, color: T.textSecondary }}>
                       {answered} of {total} written
                     </span>
-                    <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 11.5, color: T.sage }}>
+                    <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 11.5, color: T.stateSuccess }}>
                       {Math.round((answered / total) * 100)}%
                     </span>
                   </div>
-                  <div style={{ height: 6, background: T.cream, borderRadius: 999, overflow: 'hidden' }}>
+                  <div style={{ height: 6, background: T.surfaceSunken, borderRadius: 999, overflow: 'hidden' }}>
                     <div style={{
                       height: '100%', width: `${Math.round((answered / total) * 100)}%`,
                       background: T.lime, borderRadius: 999, transition: 'width 200ms ease',
@@ -423,12 +423,12 @@ export default function ApplicationsPage() {
                 const overdue = !!p.deadline && p.deadline < new Date().toISOString().split('T')[0]
                 return (
                   <div key={p.id} style={{
-                    background: T.white, border: `1px solid ${T.border}`, borderRadius: 12,
+                    background: T.white, border: `1px solid ${T.borderHairline}`, borderRadius: 12,
                     padding: '13px 16px', display: 'flex', alignItems: 'center', gap: 14,
                   }}>
                     <span style={{
                       width: 38, height: 38, borderRadius: 10, flexShrink: 0,
-                      background: T.cream, color: T.textSecondary, fontFamily: UI, fontWeight: 600, fontSize: 13,
+                      background: T.surfaceSunken, color: T.textSecondary, fontFamily: UI, fontWeight: 600, fontSize: 13,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>
                       {monogram(p.funder_name || p.grant_name || '?')}
@@ -440,7 +440,7 @@ export default function ApplicationsPage() {
                         </span>
                         <span style={{
                           fontFamily: UI, fontWeight: 600, fontSize: 10.5, letterSpacing: '0.03em',
-                          background: T.cream, color: T.textSecondary, padding: '2px 9px', borderRadius: 999,
+                          background: T.surfaceSunken, color: T.textSecondary, padding: '2px 9px', borderRadius: 999,
                         }}>
                           {stageLabel}
                         </span>
@@ -477,7 +477,7 @@ export default function ApplicationsPage() {
             ? <HowItWorks />
             : (
               <button onClick={() => setHowOpen(true)} style={{
-                fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.sage,
+                fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.stateSuccess,
                 background: 'transparent', border: 'none', cursor: 'pointer',
                 padding: '6px 0', textAlign: 'left', alignSelf: 'flex-start',
               }}>

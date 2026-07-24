@@ -130,9 +130,9 @@ export default async function CohortMatchAuditPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-7">
         {[
           { label: 'Orgs reviewed',     value: cohortRollup.org_count,           colour: 'text-forest' },
-          { label: 'With profile gaps', value: cohortRollup.orgs_with_flags,     colour: cohortRollup.orgs_with_flags > 0 ? 'text-coral-saturated' : 'text-sage' },
-          { label: 'Avg top-1 score',   value: cohortRollup.avg_top1_score,      colour: cohortRollup.avg_top1_score >= 70 ? 'text-sage' : 'text-amber-700' },
-          { label: 'Orgs with weak best', value: cohortRollup.orgs_with_poor_best, colour: cohortRollup.orgs_with_poor_best > 0 ? 'text-coral-saturated' : 'text-sage' },
+          { label: 'With profile gaps', value: cohortRollup.orgs_with_flags,     colour: cohortRollup.orgs_with_flags > 0 ? 'text-coral-saturated' : 'text-sage-deep' },
+          { label: 'Avg top-1 score',   value: cohortRollup.avg_top1_score,      colour: cohortRollup.avg_top1_score >= 70 ? 'text-sage-deep' : 'text-amber-700' },
+          { label: 'Orgs with weak best', value: cohortRollup.orgs_with_poor_best, colour: cohortRollup.orgs_with_poor_best > 0 ? 'text-coral-saturated' : 'text-sage-deep' },
         ].map(k => (
           <div key={k.label} className="bg-white rounded-xl p-5 shadow-card text-center">
             <p className={`font-display text-3xl font-bold ${k.colour}`}>{k.value}</p>
@@ -171,7 +171,7 @@ export default async function CohortMatchAuditPage() {
                       <span className="text-mid">avg</span> <span className="font-semibold text-charcoal">{stats.avg}</span>
                     </span>
                     <span title="Matches scoring ≥80 in band 'Good'">
-                      <span className="text-sage font-semibold">{stats.good}</span> <span className="text-mid">good</span>
+                      <span className="text-sage-deep font-semibold">{stats.good}</span> <span className="text-mid">good</span>
                     </span>
                     <span title="Score 65-79: moderate">
                       <span className="text-amber-700 font-semibold">{stats.moderate}</span> <span className="text-mid">mod</span>
@@ -214,7 +214,7 @@ export default async function CohortMatchAuditPage() {
                         const band = SCORE_BAND(result.score)
                         const bd = result.breakdown
                         return (
-                          <tr key={String(grant.id)} className="hover:bg-cream/30 transition-colors">
+                          <tr key={String(grant.id)} className="hover:bg-surface-page/30 transition-colors">
                             <td className="px-5 py-3 text-center">
                               <span
                                 className="inline-flex items-center justify-center min-w-[36px] h-7 rounded-full text-xs font-bold"
@@ -247,7 +247,7 @@ export default async function CohortMatchAuditPage() {
                                 {arr(org.impact_sectors).join(', ') || <span className="italic text-light">none</span>}
                               </p>
                               {arr(grant.impactSectors).filter(s => arr(org.impact_sectors).includes(s)).length > 0 && (
-                                <p className="mt-1 text-sage">
+                                <p className="mt-1 text-sage-deep">
                                   ∩ {arr(grant.impactSectors).filter(s => arr(org.impact_sectors).includes(s)).join(', ')}
                                 </p>
                               )}
@@ -267,7 +267,7 @@ export default async function CohortMatchAuditPage() {
       {/* Empty-state footer */}
       {perOrg.length === 0 && (
         <div className="rounded-xl border border-warm bg-white px-6 py-12 text-center">
-          <CheckCircle className="mx-auto mb-3 h-8 w-8 text-sage" />
+          <CheckCircle className="mx-auto mb-3 h-8 w-8 text-sage-deep" />
           <p className="text-mid text-sm">No cohort organisations to review yet.</p>
         </div>
       )}

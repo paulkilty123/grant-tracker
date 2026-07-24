@@ -165,7 +165,7 @@ export default async function PublicGrantPage({
   const signupReturn = `/auth/signup?return=${encodeURIComponent(`/grants/${externalId}`)}`
 
   return (
-    <div className="min-h-screen bg-cream flex flex-col">
+    <div className="min-h-screen bg-surface-page flex flex-col">
 
       {/* Top bar — wordmark sizing + container matched to LandingPage nav */}
       <header className="border-b border-warm bg-white">

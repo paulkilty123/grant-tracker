@@ -166,7 +166,7 @@ export default async function QualityPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-7">
         {[
           { label: 'Published',  value: pipelineCounts.published, Icon: CheckCircle,   colour: 'text-forest' },
-          { label: 'Tagged',     value: pipelineCounts.tagged,    Icon: Brain,         colour: 'text-sage' },
+          { label: 'Tagged',     value: pipelineCounts.tagged,    Icon: Brain,         colour: 'text-sage-deep' },
           { label: 'Captured',   value: pipelineCounts.captured,  Icon: Sparkles,      colour: 'text-amber-700' },
           { label: 'Archived',   value: pipelineCounts.archived,  Icon: Database,      colour: 'text-mid' },
         ].map(kpi => (
@@ -198,7 +198,7 @@ export default async function QualityPage() {
             </thead>
             <tbody className="divide-y divide-warm/60">
               {coverage.map(f => (
-                <tr key={f.field} className="hover:bg-cream/50 transition-colors">
+                <tr key={f.field} className="hover:bg-surface-page/50 transition-colors">
                   <td className="px-5 py-3 font-medium text-charcoal">{f.label}</td>
                   <td className="px-5 py-3 text-right text-sm font-semibold" style={{ color: '#3B6D11' }}>{f.populated}</td>
                   <td className="px-5 py-3 text-right text-sm font-semibold" style={{ color: f.missing > 0 ? '#993C1D' : '#5F5E5A' }}>{f.missing}</td>

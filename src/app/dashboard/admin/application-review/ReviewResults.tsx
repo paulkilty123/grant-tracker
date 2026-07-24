@@ -55,7 +55,7 @@ ${sections}
 
       {/* Header — score + export */}
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-sm font-bold uppercase tracking-wide text-sage" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+        <h2 className="text-sm font-bold uppercase tracking-wide text-sage-deep" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
           Review
         </h2>
         <div className="flex items-center gap-3">
@@ -109,10 +109,10 @@ ${sections}
               {answerFor(q.question, i) || <span className="text-light italic">No draft answer.</span>}
             </p>
 
-            <div className="rounded-lg bg-cream/60 px-4 py-3 space-y-2">
+            <div className="rounded-lg bg-surface-page/60 px-4 py-3 space-y-2">
               {q.whatsWorking && (
                 <p className="text-xs text-charcoal leading-relaxed">
-                  <span className="font-semibold text-sage uppercase tracking-wide">What&apos;s working — </span>
+                  <span className="font-semibold text-sage-deep uppercase tracking-wide">What&apos;s working — </span>
                   {q.whatsWorking}
                 </p>
               )}

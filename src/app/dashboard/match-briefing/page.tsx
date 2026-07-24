@@ -217,7 +217,7 @@ export default function MatchBriefingPage() {
     <div className="flex h-full min-h-0">
 
       {/* ── Left panel: applying grants ──────────────────────────────── */}
-      <div className="w-64 xl:w-72 flex-shrink-0 border-r border-warm bg-cream/30 flex flex-col overflow-hidden">
+      <div className="w-64 xl:w-72 flex-shrink-0 border-r border-warm bg-surface-page/30 flex flex-col overflow-hidden">
         <div className="px-5 py-5 border-b border-warm flex-shrink-0">
           <h1 className="font-serif text-lg font-bold text-charcoal">Match Briefing</h1>
           <p className="text-xs text-mid mt-0.5">Applications in progress</p>
@@ -364,7 +364,7 @@ export default function MatchBriefingPage() {
                         {c.match === 'strong' ? '● Strong' : c.match === 'partial' ? '◐ Partial' : '○ Gap'}
                       </span>
                     </div>
-                    <div className="bg-cream/60 rounded-lg px-3 py-2.5 mb-2 border-l-2 border-warm">
+                    <div className="bg-surface-page/60 rounded-lg px-3 py-2.5 mb-2 border-l-2 border-warm">
                       <p className="text-[9px] font-bold uppercase tracking-wide text-light mb-1">From your profile</p>
                       <p className="text-xs text-mid leading-relaxed">{c.profileEvidence}</p>
                     </div>
@@ -410,7 +410,7 @@ export default function MatchBriefingPage() {
                     </div>
                   </div>
                 ))}
-                <div className="rounded-xl border border-dashed border-warm bg-cream/40 p-4 mt-4">
+                <div className="rounded-xl border border-dashed border-warm bg-surface-page/40 p-4 mt-4">
                   <p className="text-[9px] font-bold uppercase tracking-wide text-light mb-1">Help improve this briefing</p>
                   <p className="text-xs text-mid leading-relaxed">
                     Applied to {selected.funder_name} before? Share what worked (or didn&apos;t) — your feedback helps everyone write stronger applications.

@@ -131,7 +131,7 @@ export const STAGE_COLOURS: Record<PipelineStage, string> = {
 }
 
 export const STAGE_BG: Record<PipelineStage, string> = {
-  identified: 'bg-cream-1',
+  identified: 'bg-surface-page-1',
   applying:   'bg-green-pale-2',
   submitted:  'bg-green-pale-3',
   won:        'bg-green-mid',

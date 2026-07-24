@@ -107,7 +107,7 @@ export default function AdminUsersPage() {
           { label: 'Total accounts',  value: rows.length,    colour: 'text-forest' },
           { label: 'Today',           value: signupsToday,   colour: 'text-forest' },
           { label: 'Last 7 days',     value: signupsWeek,    colour: 'text-forest' },
-          { label: 'Onboarded',       value: `${onboardedCount}/${rows.length}`, colour: 'text-sage' },
+          { label: 'Onboarded',       value: `${onboardedCount}/${rows.length}`, colour: 'text-sage-deep' },
         ].map(kpi => (
           <div key={kpi.label} className="bg-white rounded-xl p-5 shadow-card text-center" style={{ border: '0.5px solid rgba(23,52,4,0.08)' }}>
             <p className={`font-display text-3xl font-bold ${kpi.colour}`}>{kpi.value}</p>
@@ -187,12 +187,12 @@ export default function AdminUsersPage() {
                     <td className="px-4 py-3 text-mid whitespace-nowrap text-xs">{fmtDateTime(u.last_sign_in_at)}</td>
                     <td className="px-3 py-3 text-center">
                       {u.email_confirmed_at
-                        ? <span className="text-sage">✓</span>
+                        ? <span className="text-sage-deep">✓</span>
                         : <span className="text-coral-deep text-xs font-semibold">No</span>}
                     </td>
                     <td className="px-3 py-3 text-center">
                       {u.onboarding_complete
-                        ? <span className="text-sage">✓</span>
+                        ? <span className="text-sage-deep">✓</span>
                         : <span className="text-light text-xs">{u.org_id ? 'Partial' : 'No org'}</span>}
                     </td>
                     <td className="px-3 py-3 text-right text-charcoal font-medium">{u.pipeline_count || <span className="text-light">—</span>}</td>

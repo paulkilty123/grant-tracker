@@ -84,7 +84,7 @@ function StepDot({ n, label, active, done }: { n: number; label: string; active:
       <div style={{
         width: 24, height: 24, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontFamily: UI, fontWeight: 700, fontSize: 12,
-        background: done ? T.lime : active ? T.greenDeep : T.cream,
+        background: done ? T.lime : active ? T.greenDeep : T.surfaceSunken,
         color: done ? T.greenDeep : active ? '#F1F7E4' : T.textTertiary,
       }}>
         {done ? <Check size={13} /> : n}
@@ -278,7 +278,7 @@ export default function NewApplicationPage() {
         <StepDot n={1} label="Set up" active={step === 'setup'} done={step === 'confirm'} />
         <div style={{ flex: '0 0 32px', height: 1, background: T.borderStrong }} />
         <StepDot n={2} label={mode === 'project' ? 'Describe your project' : 'Check the questions'} active={step === 'confirm'} done={false} />
-        <div style={{ flex: '0 0 32px', height: 1, background: T.border }} />
+        <div style={{ flex: '0 0 32px', height: 1, background: T.borderHairline }} />
         <StepDot n={3} label="Build" active={false} done={false} />
       </div>
 
@@ -291,7 +291,7 @@ export default function NewApplicationPage() {
             background: T.paleGreen, borderRadius: 10, padding: '12px 16px',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap',
           }}>
-            <span style={{ fontFamily: BODY, fontSize: 12.5, color: T.sage, lineHeight: 1.5 }}>
+            <span style={{ fontFamily: BODY, fontSize: 12.5, color: T.stateSuccess, lineHeight: 1.5 }}>
               Applying to more than one funder, or the form is behind a portal? Start with a project
               and we&apos;ll match you to funders.
             </span>
@@ -310,7 +310,7 @@ export default function NewApplicationPage() {
           </div>
 
           {/* Funder / opportunity card */}
-          <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, padding: '20px 24px' }}>
+          <div style={{ background: T.white, border: `1px solid ${T.borderHairline}`, borderRadius: 12, padding: '20px 24px' }}>
             <h2 style={{ fontFamily: UI, fontWeight: 600, fontSize: 16, color: T.textPrimary, margin: '0 0 4px' }}>
               Who are you applying to?
             </h2>
@@ -327,7 +327,7 @@ export default function NewApplicationPage() {
               }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontFamily: UI, fontWeight: 600, fontSize: 14, color: T.textPrimary }}>{picked.title}</div>
-                  <div style={{ fontFamily: BODY, fontSize: 12.5, color: T.sage }}>{picked.funder} · from the catalogue</div>
+                  <div style={{ fontFamily: BODY, fontSize: 12.5, color: T.stateSuccess }}>{picked.funder} · from the catalogue</div>
                 </div>
                 <button onClick={() => { setPicked(null); setOppQuery('') }} aria-label="Remove linked opportunity"
                   style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: T.textSecondary, padding: 6 }}>
@@ -358,7 +358,7 @@ export default function NewApplicationPage() {
                         style={{
                           display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px',
                           background: 'transparent', border: 'none', cursor: 'pointer',
-                          borderBottom: `1px solid ${T.border}`,
+                          borderBottom: `1px solid ${T.borderHairline}`,
                         }}
                       >
                         <div style={{ fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: T.textPrimary }}>{r.title}</div>
@@ -371,7 +371,7 @@ export default function NewApplicationPage() {
                   <button
                     onClick={() => setShowManual(true)}
                     style={{
-                      fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.sage,
+                      fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.stateSuccess,
                       background: 'transparent', border: 'none', cursor: 'pointer',
                       padding: 0, marginTop: 12,
                     }}
@@ -401,7 +401,7 @@ export default function NewApplicationPage() {
           </div>
 
           {/* Questions paste card */}
-          <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, padding: '20px 24px' }}>
+          <div style={{ background: T.white, border: `1px solid ${T.borderHairline}`, borderRadius: 12, padding: '20px 24px' }}>
             <h2 style={{ fontFamily: UI, fontWeight: 600, fontSize: 16, color: T.textPrimary, margin: '0 0 4px' }}>
               Paste the application questions
             </h2>
@@ -419,17 +419,17 @@ export default function NewApplicationPage() {
                 <div style={{ background: T.paleGreen, borderRadius: 10, padding: '14px 16px', marginBottom: 14 }}>
                   {picked.howToApply && (
                     <div style={{ marginBottom: picked.applyUrl ? 12 : 0 }}>
-                      <p style={{ fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.sage, margin: '0 0 6px' }}>
+                      <p style={{ fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.stateSuccess, margin: '0 0 6px' }}>
                         How to apply
                       </p>
                       {steps ? (
                         <ol style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 4 }}>
                           {steps.map((s, i) => (
-                            <li key={i} style={{ fontFamily: BODY, fontSize: 12.5, color: T.sage, lineHeight: 1.5 }}>{s}</li>
+                            <li key={i} style={{ fontFamily: BODY, fontSize: 12.5, color: T.stateSuccess, lineHeight: 1.5 }}>{s}</li>
                           ))}
                         </ol>
                       ) : (
-                        <p style={{ fontFamily: BODY, fontSize: 12.5, color: T.sage, margin: 0, lineHeight: 1.5 }}>
+                        <p style={{ fontFamily: BODY, fontSize: 12.5, color: T.stateSuccess, margin: 0, lineHeight: 1.5 }}>
                           {picked.howToApply}
                         </p>
                       )}
@@ -466,7 +466,7 @@ export default function NewApplicationPage() {
           {/* Describe this project — optional material fed into the Build step
               so the per-question drafts compose from real plans, not just the
               org profile. Persisted as applications.project_brief. */}
-          <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, padding: '20px 24px' }}>
+          <div style={{ background: T.white, border: `1px solid ${T.borderHairline}`, borderRadius: 12, padding: '20px 24px' }}>
             <h2 style={{ fontFamily: UI, fontWeight: 600, fontSize: 16, color: T.textPrimary, margin: '0 0 4px' }}>
               Describe this project{' '}
               <span style={{ fontFamily: BODY, fontWeight: 400, fontSize: 13, color: T.textTertiary }}>(optional, but it gives you a real head start)</span>
@@ -513,7 +513,7 @@ export default function NewApplicationPage() {
 
       {step === 'confirm' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, padding: '20px 24px' }}>
+          <div style={{ background: T.white, border: `1px solid ${T.borderHairline}`, borderRadius: 12, padding: '20px 24px' }}>
             <h2 style={{ fontFamily: UI, fontWeight: 600, fontSize: 16, color: T.textPrimary, margin: '0 0 4px' }}>
               {mode === 'project'
                 ? 'Describe your project'
@@ -538,7 +538,7 @@ export default function NewApplicationPage() {
               {questions.map((q, i) => (
                 <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                   <span style={{
-                    fontFamily: UI, fontWeight: 700, fontSize: 12.5, color: T.sage, background: T.paleGreen,
+                    fontFamily: UI, fontWeight: 700, fontSize: 12.5, color: T.stateSuccess, background: T.paleGreen,
                     width: 26, height: 26, borderRadius: 999, display: 'flex', alignItems: 'center',
                     justifyContent: 'center', flexShrink: 0, marginTop: 11,
                   }}>

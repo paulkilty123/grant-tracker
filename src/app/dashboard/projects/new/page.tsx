@@ -82,7 +82,7 @@ export default function NewProjectPage() {
         <div style={{ flex: '0 0 32px', height: 1, background: T.borderStrong }} />
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{
-            width: 24, height: 24, borderRadius: 999, background: T.cream, color: T.textTertiary,
+            width: 24, height: 24, borderRadius: 999, background: T.surfaceSunken, color: T.textTertiary,
             fontFamily: UI, fontWeight: 700, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>2</span>
           <span style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, color: T.textTertiary }}>Review &amp; match</span>
@@ -98,7 +98,7 @@ export default function NewProjectPage() {
         will sort it into sections you can edit.
       </p>
 
-      <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, padding: '20px 24px' }}>
+      <div style={{ background: T.white, border: `1px solid ${T.borderHairline}`, borderRadius: 12, padding: '20px 24px' }}>
         <label htmlFor="project-description" style={{
           fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.textPrimary, display: 'block', marginBottom: 8,
         }}>

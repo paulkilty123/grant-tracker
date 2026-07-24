@@ -631,7 +631,7 @@ export function GrantEditor(props: GrantEditorProps) {
               <button
                 type="button"
                 onClick={onDetectEligibility}
-                className="flex items-center gap-1 text-xs font-semibold text-forest hover:text-sage transition-colors"
+                className="flex items-center gap-1 text-xs font-semibold text-forest hover:text-sage-deep transition-colors"
               >
                 <Sparkles className="w-3 h-3" /> Detect
               </button>
@@ -699,7 +699,7 @@ export function GrantEditor(props: GrantEditorProps) {
         </button>
         {grant.funder_brief && (
           <>
-            <span className="text-xs text-sage font-medium">✓ Enriched</span>
+            <span className="text-xs text-sage-deep font-medium">✓ Enriched</span>
             <button
               type="button"
               onClick={onPopulateFromBrief}
@@ -856,7 +856,7 @@ export function GrantEditor(props: GrantEditorProps) {
             type="button"
             onClick={onPublish}
             disabled={publishing}
-            className="rounded-full bg-forest px-4 py-1.5 text-xs font-semibold text-white hover:bg-sage transition-colors disabled:opacity-40"
+            className="rounded-full bg-forest px-4 py-1.5 text-xs font-semibold text-white hover:bg-sage-deep transition-colors disabled:opacity-40"
           >
             {publishing ? 'Publishing…' : '✓ Confirm & Publish'}
           </button>
@@ -865,7 +865,7 @@ export function GrantEditor(props: GrantEditorProps) {
             type="button"
             onClick={onSave}
             disabled={publishing}
-            className="rounded-full bg-forest px-4 py-1.5 text-xs font-semibold text-white hover:bg-sage transition-colors disabled:opacity-40"
+            className="rounded-full bg-forest px-4 py-1.5 text-xs font-semibold text-white hover:bg-sage-deep transition-colors disabled:opacity-40"
           >
             {publishing ? 'Saving…' : '✓ Save changes'}
           </button>

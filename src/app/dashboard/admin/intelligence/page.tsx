@@ -527,7 +527,7 @@ export default function FunderIntelligencePage() {
                         {editSaving[grant.id] ? 'Saving…' : 'Save changes'}
                       </button>
                       <button onClick={()=>publishGrant(grant)} disabled={publishSaving[grant.id]}
-                        className="rounded-full bg-forest px-4 py-1 text-xs font-semibold text-white hover:bg-sage transition-colors disabled:opacity-40 flex items-center gap-1">
+                        className="rounded-full bg-forest px-4 py-1 text-xs font-semibold text-white hover:bg-sage-deep transition-colors disabled:opacity-40 flex items-center gap-1">
                         {publishSaving[grant.id] ? 'Publishing…' : '✓ Confirm & publish'}
                       </button>
                     </div>

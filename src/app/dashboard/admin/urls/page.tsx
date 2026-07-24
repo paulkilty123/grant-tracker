@@ -199,7 +199,7 @@ function SavedForLaterTab() {
             const ft = grant.funding_type
             const ftStyle = ft ? (FT_STYLE[ft] ?? { bg: '#f3f4f6', color: '#5F5E5A', label: ft }) : null
             return (
-              <tr key={grant.id} id={`grant-row-${grant.id}`} className="hover:bg-cream/50 transition-colors">
+              <tr key={grant.id} id={`grant-row-${grant.id}`} className="hover:bg-surface-page/50 transition-colors">
                 <td className="px-5 py-3 max-w-[200px]">
                   <p className="font-medium text-charcoal leading-snug line-clamp-2">{grant.title}</p>
                   <p className="text-xs text-mid mt-0.5">{grant.funder}</p>
@@ -3226,7 +3226,7 @@ export default function UrlAdminPage() {
         </button>
         {grant.url_status !== 'ok' && (
           <button onClick={() => markOk(grant.id)} title="Approve — mark URL as ok"
-            className="rounded-full border border-warm p-1.5 text-mid hover:border-sage hover:text-sage transition-colors">
+            className="rounded-full border border-warm p-1.5 text-mid hover:border-sage-deep hover:text-sage-deep transition-colors">
             <Check className="h-3 w-3" />
           </button>
         )}
@@ -3355,7 +3355,7 @@ export default function UrlAdminPage() {
   // ── Status badge ──────────────────────────────────────────────────────────────
   function StatusBadge({ status }: { status: 'ok' | 'dead' | 'unchecked' }) {
     if (status === 'ok') return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-sage/10 px-2 py-0.5 text-[10px] font-semibold text-sage">
+      <span className="inline-flex items-center gap-1 rounded-full bg-sage-deep/10 px-2 py-0.5 text-[10px] font-semibold text-sage-deep">
         <CheckCircle className="h-2.5 w-2.5" /> ok
       </span>
     )
@@ -3517,7 +3517,7 @@ export default function UrlAdminPage() {
       )}
       {runResult && (
         <div className="mb-6 space-y-3">
-          <div className="rounded-xl border border-sage/20 bg-sage/10 px-4 py-3 text-sm text-forest">
+          <div className="rounded-xl border border-sage-deep/20 bg-sage-deep/10 px-4 py-3 text-sm text-forest">
             ✓ Validation complete — {runResult.ok} ok, {runResult.dead} scraped grants flagged as dead
             {runResult.deadSeedGrants.length === 0 && ' · all seed grant links ok'}
           </div>
@@ -3548,7 +3548,7 @@ export default function UrlAdminPage() {
       )}
 
       {promoteResult && (
-        <div className={`mb-6 rounded-xl border px-4 py-3 text-sm ${promoteResult.message.startsWith('Error') ? 'border-coral-mid bg-coral-pale text-coral-deep' : 'border-sage/20 bg-sage/10 text-forest'}`}>
+        <div className={`mb-6 rounded-xl border px-4 py-3 text-sm ${promoteResult.message.startsWith('Error') ? 'border-coral-mid bg-coral-pale text-coral-deep' : 'border-sage-deep/20 bg-sage-deep/10 text-forest'}`}>
           {promoteResult.message.startsWith('Error') ? '✗' : '✓'} {promoteResult.message}
           {!promoteResult.message.startsWith('Error') && promoteResult.inserted > 0 && (
             <span className="ml-2 text-mid">Run URL validation now to check their links.</span>
@@ -3561,7 +3561,7 @@ export default function UrlAdminPage() {
         <div className="mb-7 grid grid-cols-2 gap-4 sm:grid-cols-4">
           {[
             { label: 'Total grants',   value: stats.total,         Icon: Database,      colour: 'text-charcoal', bg: 'bg-white',   border: 'border-warm'    },
-            { label: 'Links verified', value: stats.ok,            Icon: CheckCircle,   colour: 'text-sage',     bg: 'bg-sage/5',  border: 'border-sage/20' },
+            { label: 'Links verified', value: stats.ok,            Icon: CheckCircle,   colour: 'text-sage-deep',     bg: 'bg-sage-deep/5',  border: 'border-sage-deep/20' },
             { label: 'Dead links',     value: stats.dead,          Icon: AlertTriangle, colour: 'text-coral-saturated',  bg: 'bg-coral-pale',  border: 'border-coral-mid' },
             { label: 'New this week',  value: stats.newCount ?? 0, Icon: Clock,         colour: 'text-gold',     bg: 'bg-gold/5',  border: 'border-gold/20' },
           ].map(s => (
@@ -3678,8 +3678,8 @@ export default function UrlAdminPage() {
                 onClick={() => { setFundingTypeTab(t.key); setSearch('') }}
                 className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                   fundingTypeTab === t.key
-                    ? 'bg-sage text-white'
-                    : 'border border-warm bg-white text-mid hover:border-sage/50 hover:text-charcoal'
+                    ? 'bg-sage-deep text-white'
+                    : 'border border-warm bg-white text-mid hover:border-sage-deep/50 hover:text-charcoal'
                 }`}>
                 {t.label}{t.count > 0 ? ` (${t.count})` : ''}
               </button>
@@ -3773,7 +3773,7 @@ export default function UrlAdminPage() {
                         <tbody className="divide-y divide-warm/60">
                           {grants.map(grant => (
                             <React.Fragment key={`${grant.is_seed ? 'seed' : 'db'}-${grant.id}`}>
-                            <tr className="hover:bg-cream/50 transition-colors">
+                            <tr className="hover:bg-surface-page/50 transition-colors">
 
                               {/* Title + funder + source badge */}
                               <td className="px-5 py-3 max-w-[220px]">
@@ -3788,7 +3788,7 @@ export default function UrlAdminPage() {
                                         if (e.key === 'Enter') saveTitle(grant.id)
                                         if (e.key === 'Escape') setEditingTitleId(null)
                                       }}
-                                      className="flex-1 min-w-0 rounded-lg border border-sage px-2 py-1 text-xs font-medium focus:border-forest focus:outline-none"
+                                      className="flex-1 min-w-0 rounded-lg border border-sage-deep px-2 py-1 text-xs font-medium focus:border-forest focus:outline-none"
                                     />
                                     <button onClick={() => saveTitle(grant.id)} disabled={savingTitle}
                                       className="flex-shrink-0 rounded-full bg-forest p-1 text-white disabled:opacity-50">
@@ -3905,7 +3905,7 @@ export default function UrlAdminPage() {
           <div className="rounded-xl border border-warm bg-white overflow-hidden shadow-card">
             {filtered.length === 0 ? (
               <div className="py-16 text-center">
-                <CheckCircle className="mx-auto mb-3 h-8 w-8 text-sage" />
+                <CheckCircle className="mx-auto mb-3 h-8 w-8 text-sage-deep" />
                 <p className="text-mid text-sm">{q ? `No new grants matching "${q}"` : 'No new grants in the last 7 days'}</p>
               </div>
             ) : (
@@ -3927,7 +3927,7 @@ export default function UrlAdminPage() {
                   </thead>
                   <tbody className="divide-y divide-warm/60">
                     {filtered.map(grant => (
-                      <tr className={`hover:bg-cream/50 transition-colors ${selectedIds.has(grant.id) ? 'bg-coral-pale' : ''}`}>
+                      <tr className={`hover:bg-surface-page/50 transition-colors ${selectedIds.has(grant.id) ? 'bg-coral-pale' : ''}`}>
                         <td className="px-3 py-3 w-8">
                           <input type="checkbox" checked={selectedIds.has(grant.id)} onChange={() => toggleSelect(grant.id)}
                             className="h-3.5 w-3.5 rounded accent-forest cursor-pointer" />
@@ -3987,7 +3987,7 @@ export default function UrlAdminPage() {
                 </thead>
                 <tbody className="divide-y divide-warm/60">
                   {filteredSeedGrants.map(grant => (
-                    <tr key={grant.id} id={`grant-row-${grant.id}`} className="hover:bg-cream/50 transition-colors">
+                    <tr key={grant.id} id={`grant-row-${grant.id}`} className="hover:bg-surface-page/50 transition-colors">
                       <td className="px-5 py-3 max-w-[220px]">
                         <p className="font-medium text-charcoal leading-snug line-clamp-2">{grant.title}</p>
                         <p className="text-xs text-mid mt-0.5">{grant.funder}</p>
@@ -4017,7 +4017,7 @@ export default function UrlAdminPage() {
                       </td>
                       <td className="px-5 py-3 text-center">
                         {grant.isRolling ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-sage/10 px-2 py-0.5 text-[10px] font-semibold text-sage">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-sage-deep/10 px-2 py-0.5 text-[10px] font-semibold text-sage-deep">
                             <CheckCircle className="h-2.5 w-2.5" /> rolling
                           </span>
                         ) : (
@@ -4042,7 +4042,7 @@ export default function UrlAdminPage() {
 
       {filter === 'between_rounds' && (
         <div className="rounded-xl border border-warm bg-white overflow-hidden shadow-card">
-          <div className="border-b border-warm bg-cream px-5 py-3">
+          <div className="border-b border-warm bg-surface-page px-5 py-3">
             <p className="text-sm font-semibold text-charcoal">
               {betweenRoundsGrants.length} grant{betweenRoundsGrants.length !== 1 ? 's' : ''} between rounds
             </p>
@@ -4052,7 +4052,7 @@ export default function UrlAdminPage() {
           </div>
           {betweenRoundsGrants.length === 0 ? (
             <div className="py-16 text-center">
-              <CheckCircle className="mx-auto mb-3 h-8 w-8 text-sage" />
+              <CheckCircle className="mx-auto mb-3 h-8 w-8 text-sage-deep" />
               <p className="text-mid text-sm">Nothing between rounds.</p>
             </div>
           ) : (
@@ -4076,7 +4076,7 @@ export default function UrlAdminPage() {
                     .map(grant => {
                       const g = grant as Grant & { next_open_date?: string | null }
                       return (
-                        <tr key={grant.id} className="hover:bg-cream/50 transition-colors">
+                        <tr key={grant.id} className="hover:bg-surface-page/50 transition-colors">
                           <td className="px-5 py-3 max-w-[320px]">
                             <p className="font-medium text-charcoal leading-snug line-clamp-2">{grant.title}</p>
                             <p className="text-xs text-mid mt-0.5">{grant.funder ?? '—'}</p>
@@ -4177,7 +4177,7 @@ export default function UrlAdminPage() {
           )}
           {reviewGrants.length === 0 ? (
             <div className="py-16 text-center">
-              <CheckCircle className="mx-auto mb-3 h-8 w-8 text-sage" />
+              <CheckCircle className="mx-auto mb-3 h-8 w-8 text-sage-deep" />
               <p className="text-mid text-sm">No grants pending review — all clear!</p>
             </div>
           ) : (() => {
@@ -4201,7 +4201,7 @@ export default function UrlAdminPage() {
                 <tbody className="divide-y divide-warm/60">
                   {reviewGrants.map(grant => (
                     <React.Fragment key={grant.id}>
-                    <tr className={`hover:bg-cream/50 transition-colors ${selectedIds.has(grant.id) ? 'bg-coral-pale' : ''}`}>
+                    <tr className={`hover:bg-surface-page/50 transition-colors ${selectedIds.has(grant.id) ? 'bg-coral-pale' : ''}`}>
                       <td className="px-3 py-3 w-8">
                         <input type="checkbox" checked={selectedIds.has(grant.id)} onChange={() => toggleSelect(grant.id)}
                           className="h-3.5 w-3.5 rounded accent-forest cursor-pointer" />
@@ -4319,7 +4319,7 @@ export default function UrlAdminPage() {
           </div>
           {capturedGrants.length === 0 ? (
             <div className="py-16 text-center">
-              <CheckCircle className="mx-auto mb-3 h-8 w-8 text-sage" />
+              <CheckCircle className="mx-auto mb-3 h-8 w-8 text-sage-deep" />
               <p className="text-mid text-sm">No captured grants — classifier has caught up.</p>
             </div>
           ) : (
@@ -4336,7 +4336,7 @@ export default function UrlAdminPage() {
                 <tbody className="divide-y divide-warm/60">
                   {capturedGrants.map(grant => (
                     <React.Fragment key={grant.id}>
-                    <tr className="hover:bg-cream/50 transition-colors">
+                    <tr className="hover:bg-surface-page/50 transition-colors">
                       <td className="px-5 py-3 max-w-[200px]">
                         <p className="font-medium text-charcoal leading-snug line-clamp-2">{grant.title}</p>
                         <p className="text-xs text-mid mt-0.5">{grant.funder}</p>
@@ -4399,7 +4399,7 @@ export default function UrlAdminPage() {
               <p className="text-sm font-semibold text-[#173404]">
                 {needsEnrichmentGrants.length} published grant{needsEnrichmentGrants.length !== 1 ? 's' : ''} missing a funder brief
               </p>
-              <p className="text-xs text-sage mt-0.5">
+              <p className="text-xs text-sage-deep mt-0.5">
                 Funder brief is the intelligence panel users see on each grant page (what they fund, who can apply, typical award, etc.). Enrich now to lift match quality and user trust.
               </p>
             </div>
@@ -4414,7 +4414,7 @@ export default function UrlAdminPage() {
           </div>
           {needsEnrichmentGrants.length === 0 ? (
             <div className="py-16 text-center">
-              <CheckCircle className="mx-auto mb-3 h-8 w-8 text-sage" />
+              <CheckCircle className="mx-auto mb-3 h-8 w-8 text-sage-deep" />
               <p className="text-mid text-sm">Every published grant has a funder brief — nice work.</p>
             </div>
           ) : (
@@ -4431,7 +4431,7 @@ export default function UrlAdminPage() {
                 <tbody className="divide-y divide-warm/60">
                   {needsEnrichmentGrants.map(grant => (
                     <React.Fragment key={grant.id}>
-                    <tr className="hover:bg-cream/50 transition-colors">
+                    <tr className="hover:bg-surface-page/50 transition-colors">
                       <td className="px-5 py-3 max-w-[200px]">
                         <p className="font-medium text-charcoal leading-snug line-clamp-2">{grant.title}</p>
                         <p className="text-xs text-mid mt-0.5">{grant.funder}</p>
@@ -4514,7 +4514,7 @@ export default function UrlAdminPage() {
             <div className="py-16 text-center text-sm text-mid">Scanning… (this can take a few seconds)</div>
           ) : tagAuditRows.length === 0 ? (
             <div className="py-16 text-center">
-              <CheckCircle className="mx-auto mb-3 h-8 w-8 text-sage" />
+              <CheckCircle className="mx-auto mb-3 h-8 w-8 text-sage-deep" />
               <p className="text-mid text-sm">No tagging disagreements — the catalogue looks clean.</p>
             </div>
           ) : (
@@ -4532,7 +4532,7 @@ export default function UrlAdminPage() {
                 <tbody className="divide-y divide-warm/60">
                   {tagAuditRows.map(row => (
                     <React.Fragment key={row.id}>
-                    <tr className="hover:bg-cream/50 transition-colors">
+                    <tr className="hover:bg-surface-page/50 transition-colors">
                       <td className="px-5 py-3 w-16 text-center">
                         <span
                           className="inline-flex items-center justify-center min-w-[28px] h-6 rounded-full text-xs font-bold"
@@ -4635,7 +4635,7 @@ export default function UrlAdminPage() {
           </div>
           {recentGrants.length === 0 ? (
             <div className="py-16 text-center">
-              <CheckCircle className="mx-auto mb-3 h-8 w-8 text-sage" />
+              <CheckCircle className="mx-auto mb-3 h-8 w-8 text-sage-deep" />
               <p className="text-mid text-sm">Nothing activated in the last 21 days.</p>
             </div>
           ) : (
@@ -4671,7 +4671,7 @@ export default function UrlAdminPage() {
                         : '—'
                     return (
                       <React.Fragment key={grant.id}>
-                        <tr id={`grant-row-${grant.id}`} className={flagged ? 'bg-amber-50/40' : 'hover:bg-cream/50 transition-colors'}>
+                        <tr id={`grant-row-${grant.id}`} className={flagged ? 'bg-amber-50/40' : 'hover:bg-surface-page/50 transition-colors'}>
                           <td className="px-5 py-3 max-w-[260px]">
                             <p className="font-medium text-charcoal leading-snug line-clamp-2">{grant.title}</p>
                             <p className="text-xs text-mid mt-0.5">{grant.funder ?? '—'}</p>
@@ -4742,7 +4742,7 @@ export default function UrlAdminPage() {
               </thead>
               <tbody className="divide-y divide-warm/60">
                 {suspiciousGrants.map(grant => (
-                  <tr key={grant.id} id={`grant-row-${grant.id}`} className="group hover:bg-cream/40 transition-colors">
+                  <tr key={grant.id} id={`grant-row-${grant.id}`} className="group hover:bg-surface-page/40 transition-colors">
                     <td className="px-5 py-3">
                       <input
                         type="checkbox"
@@ -4804,7 +4804,7 @@ export default function UrlAdminPage() {
                             <Pencil className="h-3 w-3" />
                           </button>
                           <button onClick={() => markOk(grant.id)} title="Mark as OK — clear suspicious flag"
-                            className="rounded-full border border-warm p-1.5 text-mid hover:border-sage hover:text-sage transition-colors">
+                            className="rounded-full border border-warm p-1.5 text-mid hover:border-sage-deep hover:text-sage-deep transition-colors">
                             <Check className="h-3 w-3" />
                           </button>
                           <button onClick={() => markDead(grant.id)} title="Flag as dead"
@@ -4834,7 +4834,7 @@ export default function UrlAdminPage() {
         <div className="rounded-xl border border-warm bg-white overflow-hidden shadow-card">
           {grants.length === 0 ? (
             <div className="py-16 text-center">
-              <CheckCircle className="mx-auto mb-3 h-8 w-8 text-sage" />
+              <CheckCircle className="mx-auto mb-3 h-8 w-8 text-sage-deep" />
               <p className="text-mid text-sm">
                 {filter === 'dead' ? 'No dead links found — run validation to check' : 'No results for this filter'}
               </p>
@@ -4861,7 +4861,7 @@ export default function UrlAdminPage() {
                 <tbody className="divide-y divide-warm/60">
                   {grants.map(grant => (
                     <React.Fragment key={grant.id}>
-                    <tr className={`hover:bg-cream/50 transition-colors ${selectedIds.has(grant.id) ? 'bg-coral-pale' : ''}`}>
+                    <tr className={`hover:bg-surface-page/50 transition-colors ${selectedIds.has(grant.id) ? 'bg-coral-pale' : ''}`}>
                       <td className="px-3 py-3 w-8">
                         <input type="checkbox" checked={selectedIds.has(grant.id)} onChange={() => toggleSelect(grant.id)}
                           className="h-3.5 w-3.5 rounded accent-forest cursor-pointer" />
@@ -5232,7 +5232,7 @@ export default function UrlAdminPage() {
                   </div>
                 )}
                 {fetchedFrom && !fetchError && (
-                  <div className="flex items-center gap-2 text-xs text-sage">
+                  <div className="flex items-center gap-2 text-xs text-sage-deep">
                     <CheckCircle className="h-3.5 w-3.5 flex-shrink-0" />
                     <span>Fields populated from <span className="font-medium truncate max-w-[280px] inline-block align-bottom">{fetchedFrom}</span> — review and edit below</span>
                   </div>

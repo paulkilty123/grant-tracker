@@ -293,7 +293,7 @@ export default function LandingPage() {
   // }, [])
 
   return (
-    <div className="min-h-screen bg-cream">
+    <div className="min-h-screen bg-surface-page">
 
       {/* NAVBAR */}
       <motion.nav
@@ -497,7 +497,7 @@ export default function LandingPage() {
                 <motion.div
                   key={grant.id}
                   {...fadeInView(i * 0.06)}
-                  className="bg-cream border border-warm/80 p-5 flex flex-col"
+                  className="bg-surface-page border border-warm/80 p-5 flex flex-col"
                   style={{ boxShadow: '0 2px 12px rgba(26,46,43,0.06)' }}
                 >
                   {/* Funder + amount */}

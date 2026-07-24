@@ -49,7 +49,7 @@ export default function ThreeSixtyGivingPanel() {
             Pulls open awards data from 200+ UK funders to enrich funder intelligence and surface new catalogue entries.
           </p>
         </div>
-        <span className="text-[10px] font-semibold bg-sage/10 text-sage rounded-full px-2.5 py-1 uppercase tracking-wider">
+        <span className="text-[10px] font-semibold bg-sage-deep/10 text-sage-deep rounded-full px-2.5 py-1 uppercase tracking-wider">
           24 priority funders
         </span>
       </div>
@@ -67,7 +67,7 @@ export default function ThreeSixtyGivingPanel() {
                 onClick={() => setMode(m)}
                 className={`px-3 py-1.5 font-medium transition-colors capitalize
                   ${mode === m
-                    ? 'bg-forest text-cream'
+                    ? 'bg-forest text-surface-page'
                     : 'bg-white text-mid hover:bg-warm/50'
                   }`}
               >
@@ -82,7 +82,7 @@ export default function ThreeSixtyGivingPanel() {
           <button
             onClick={() => setDryRun(v => !v)}
             className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors
-              ${dryRun ? 'bg-gold' : 'bg-sage'}`}
+              ${dryRun ? 'bg-gold' : 'bg-sage-deep'}`}
           >
             <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow transition-transform
               ${dryRun ? 'translate-x-1' : 'translate-x-4.5'}`} />
@@ -105,7 +105,7 @@ export default function ThreeSixtyGivingPanel() {
       <button
         onClick={run}
         disabled={running}
-        className="bg-forest text-cream text-sm font-semibold rounded-lg px-5 py-2 hover:bg-sage transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="bg-forest text-surface-page text-sm font-semibold rounded-lg px-5 py-2 hover:bg-sage-deep transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {running ? 'Running…' : dryRun ? 'Preview run' : 'Run ingest'}
       </button>

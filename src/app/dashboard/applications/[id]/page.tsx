@@ -931,7 +931,7 @@ export default function ApplicationWorkspacePage() {
   if (notAllowed) {
     return (
       <div style={{ maxWidth: 660 }}>
-        <div style={{ background: T.cream, borderRadius: 12, padding: '20px 24px' }}>
+        <div style={{ background: T.surfaceSunken, borderRadius: 12, padding: '20px 24px' }}>
           <p style={{ fontFamily: BODY, fontSize: 14, color: T.textSecondary, margin: 0 }}>
             The application builder is currently available to founding cohort members.
           </p>
@@ -965,7 +965,7 @@ export default function ApplicationWorkspacePage() {
       {stuck && (
         <div style={{
           position: 'sticky', top: 8, zIndex: 40,
-          background: T.white, border: `1px solid ${T.border}`, borderRadius: 12,
+          background: T.white, border: `1px solid ${T.borderHairline}`, borderRadius: 12,
           padding: '9px 16px', marginBottom: 12, boxShadow: '0 6px 24px rgba(26,46,43,0.10)',
           display: 'flex', alignItems: 'center', gap: 12,
         }}>
@@ -987,7 +987,7 @@ export default function ApplicationWorkspacePage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 6 }}>
             {linkedProject ? (
               <Link href={`/dashboard/projects/${linkedProject.id}`} style={{
-                fontFamily: UI, fontWeight: 600, fontSize: 11.5, color: T.sage, background: T.paleGreen,
+                fontFamily: UI, fontWeight: 600, fontSize: 11.5, color: T.stateSuccess, background: T.paleGreen,
                 padding: '3px 10px', borderRadius: 999, textDecoration: 'none',
                 display: 'inline-flex', alignItems: 'center', gap: 4,
               }}>
@@ -1000,7 +1000,7 @@ export default function ApplicationWorkspacePage() {
                 href="/dashboard/projects/new"
                 title="Define this as a project once and match it to more funders"
                 style={{
-                  fontFamily: UI, fontWeight: 600, fontSize: 11.5, color: T.sage, background: 'transparent',
+                  fontFamily: UI, fontWeight: 600, fontSize: 11.5, color: T.stateSuccess, background: 'transparent',
                   border: `1px dashed ${T.borderStrong}`, padding: '3px 10px', borderRadius: 999,
                   textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4,
                 }}
@@ -1026,7 +1026,7 @@ export default function ApplicationWorkspacePage() {
             {oppDeadline && (
               <span style={{
                 fontFamily: UI, fontWeight: 600, fontSize: 11.5, color: T.textSecondary,
-                background: T.cream, padding: '3px 10px', borderRadius: 999,
+                background: T.surfaceSunken, padding: '3px 10px', borderRadius: 999,
               }}>
                 Deadline: {oppDeadline}
               </span>
@@ -1048,7 +1048,7 @@ export default function ApplicationWorkspacePage() {
             </span>
           )}
         </div>
-        <div style={{ height: 6, background: T.cream, borderRadius: 999, overflow: 'hidden' }}>
+        <div style={{ height: 6, background: T.surfaceSunken, borderRadius: 999, overflow: 'hidden' }}>
           <div style={{
             height: '100%',
             width: `${app.questions.length ? Math.round((answeredCount / app.questions.length) * 100) : 0}%`,
@@ -1061,7 +1061,7 @@ export default function ApplicationWorkspacePage() {
       {app.opportunity_id && (
         <div style={{ marginBottom: 16 }}>
           {gateLoading && (
-            <div style={{ background: T.cream, borderRadius: 12, padding: '14px 18px', fontFamily: BODY, fontSize: 13.5, color: T.textSecondary, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ background: T.surfaceSunken, borderRadius: 12, padding: '14px 18px', fontFamily: BODY, fontSize: 13.5, color: T.textSecondary, display: 'flex', alignItems: 'center', gap: 8 }}>
               <Loader2 size={14} className="animate-spin" /> Checking your eligibility before you spend any time writing…
             </div>
           )}
@@ -1120,7 +1120,7 @@ export default function ApplicationWorkspacePage() {
             <div style={{ background: T.paleGreen, borderRadius: 12, padding: '13px 18px', display: 'flex', alignItems: 'flex-start', gap: 9 }}>
               <CheckCircle2 size={16} color={T.greenMid} style={{ marginTop: 1, flexShrink: 0 }} />
               <div>
-                <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: T.sage }}>
+                <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: T.stateSuccess }}>
                   {STATUS_LABELS[gate.overall_status] ?? gate.overall_status}
                 </span>
                 <span style={{ display: 'block', fontFamily: BODY, fontSize: 11.5, color: T.textSecondary, marginTop: 2 }}>
@@ -1141,7 +1141,7 @@ export default function ApplicationWorkspacePage() {
 
       {/* ── No funder linked: say so honestly ── */}
       {!app.opportunity_id && (
-        <div style={{ background: T.cream, borderRadius: 12, padding: '11px 18px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 9 }}>
+        <div style={{ background: T.surfaceSunken, borderRadius: 12, padding: '11px 18px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 9 }}>
           <FileText size={14} color={T.textTertiary} style={{ flexShrink: 0 }} />
           <span style={{ fontFamily: BODY, fontSize: 12.5, color: T.textSecondary }}>
             No funder linked. Guides build from your profile and library only, and there is no
@@ -1156,7 +1156,7 @@ export default function ApplicationWorkspacePage() {
         const missingKeys = BRIEF_FIELD_ORDER.filter(k => !briefData[k])
         const thin = heldKeys.length < 3
         return (
-        <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, marginBottom: 16, overflow: 'hidden' }}>
+        <div style={{ background: T.white, border: `1px solid ${T.borderHairline}`, borderRadius: 12, marginBottom: 16, overflow: 'hidden' }}>
           {/* Header: expand to read the actual content */}
           <button
             onClick={() => setContextOpen(o => !o)}
@@ -1198,7 +1198,7 @@ export default function ApplicationWorkspacePage() {
 
           {/* Expanded: the actual brief content, field by field */}
           {contextOpen && (
-            <div style={{ borderTop: `1px solid ${T.border}`, padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ borderTop: `1px solid ${T.borderHairline}`, padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
               {heldKeys.map(k => (
                 <div key={k}>
                   <div style={{ fontFamily: UI, fontWeight: 700, fontSize: 11.5, letterSpacing: '0.01em', color: T.greenMid, marginBottom: 3 }}>
@@ -1219,7 +1219,7 @@ export default function ApplicationWorkspacePage() {
                   onClick={() => setGuidelinesOpen(true)}
                   style={{
                     ...ghostBtn(), paddingLeft: 0, textAlign: 'left',
-                    color: T.sage, fontSize: 12.5, alignSelf: 'flex-start',
+                    color: T.stateSuccess, fontSize: 12.5, alignSelf: 'flex-start',
                   }}
                 >
                   Seen something on the funder&apos;s site that&apos;s missing here? Add their guidance
@@ -1228,7 +1228,7 @@ export default function ApplicationWorkspacePage() {
             </div>
           )}
           {guidelinesOpen && (
-            <div style={{ borderTop: `1px solid ${T.border}`, padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ borderTop: `1px solid ${T.borderHairline}`, padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 10 }}>
               <textarea
                 value={guidelinesText}
                 onChange={e => setGuidelinesText(e.target.value)}
@@ -1277,12 +1277,12 @@ export default function ApplicationWorkspacePage() {
         <div style={{ background: T.paleGreen, borderRadius: 12, marginBottom: 16, overflow: 'hidden' }}>
           <div style={{ padding: '11px 18px', display: 'flex', alignItems: 'center', gap: 9, flexWrap: 'wrap' }}>
             <FileText size={14} color={T.greenMid} style={{ flexShrink: 0 }} />
-            <span style={{ flex: 1, fontFamily: BODY, fontSize: 12.5, color: T.sage, minWidth: 180 }}>
+            <span style={{ flex: 1, fontFamily: BODY, fontSize: 12.5, color: T.stateSuccess, minWidth: 180 }}>
               The funder&apos;s guidance you supplied is being used to shape guides and drafts.
             </span>
             <button
               onClick={() => setGuidelinesViewOpen(o => !o)}
-              style={{ fontFamily: UI, fontWeight: 600, fontSize: 12, color: T.sage, background: 'transparent', border: 'none', cursor: 'pointer', padding: '2px 6px' }}
+              style={{ fontFamily: UI, fontWeight: 600, fontSize: 12, color: T.stateSuccess, background: 'transparent', border: 'none', cursor: 'pointer', padding: '2px 6px' }}
             >
               {guidelinesViewOpen ? 'Hide' : 'View'}
             </button>
@@ -1317,7 +1317,7 @@ export default function ApplicationWorkspacePage() {
       {(!hasScaffolds || generating) && (
         <div style={{
           background: `linear-gradient(135deg, ${T.white} 0%, ${T.softGreen} 100%)`,
-          border: `1px solid ${T.border}`, borderRadius: 12, padding: '26px 28px', marginBottom: 18,
+          border: `1px solid ${T.borderHairline}`, borderRadius: 12, padding: '26px 28px', marginBottom: 18,
           textAlign: 'center',
         }}>
           <div style={{
@@ -1352,7 +1352,7 @@ export default function ApplicationWorkspacePage() {
             </button>
           )}
           {generating && (
-            <div style={{ height: 5, background: T.cream, borderRadius: 999, overflow: 'hidden', maxWidth: 320, margin: '0 auto' }}>
+            <div style={{ height: 5, background: T.surfaceSunken, borderRadius: 999, overflow: 'hidden', maxWidth: 320, margin: '0 auto' }}>
               <div style={{
                 height: '100%',
                 width: `${Math.max(8, Math.round((streamedCount / Math.max(1, app.questions.length)) * 100))}%`,
@@ -1367,7 +1367,7 @@ export default function ApplicationWorkspacePage() {
       {importedSinceBuild && hasScaffolds && !generating && (
         <div style={{ background: T.paleGreen, borderRadius: 12, padding: '12px 18px', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           <Compass size={15} color={T.greenMid} style={{ flexShrink: 0 }} />
-          <span style={{ flex: 1, fontFamily: BODY, fontSize: 13, color: T.sage, minWidth: 200 }}>
+          <span style={{ flex: 1, fontFamily: BODY, fontSize: 13, color: T.stateSuccess, minWidth: 200 }}>
             Your material grew since these answer plans were made. Re-plan to map your new material in.
           </span>
           <button onClick={generate} style={{
@@ -1548,7 +1548,7 @@ export default function ApplicationWorkspacePage() {
                               {q.question_text.slice(0, 70)}{q.question_text.length > 70 ? '…' : ''}
                             </span>
                             {unchanged && (
-                              <span style={{ fontFamily: UI, fontWeight: 500, fontSize: 10.5, color: T.textTertiary, background: T.cream, padding: '2px 8px', borderRadius: 999 }}>
+                              <span style={{ fontFamily: UI, fontWeight: 500, fontSize: 10.5, color: T.textTertiary, background: T.surfaceSunken, padding: '2px 8px', borderRadius: 999 }}>
                                 No change
                               </span>
                             )}
@@ -1604,9 +1604,9 @@ export default function ApplicationWorkspacePage() {
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 12 }}>
               {editDrafts.map((d, i) => (
-                <div key={d.id} style={{ border: `1px solid ${T.border}`, borderRadius: 10, padding: '11px 13px', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                <div key={d.id} style={{ border: `1px solid ${T.borderHairline}`, borderRadius: 10, padding: '11px 13px', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
                   <span style={{
-                    fontFamily: UI, fontWeight: 700, fontSize: 12, color: T.sage, background: T.paleGreen,
+                    fontFamily: UI, fontWeight: 700, fontSize: 12, color: T.stateSuccess, background: T.paleGreen,
                     width: 24, height: 24, borderRadius: 999, display: 'flex', alignItems: 'center',
                     justifyContent: 'center', flexShrink: 0, marginTop: 4,
                   }}>
@@ -1700,7 +1700,7 @@ function ScoreRing({ score, stale }: { score: number | null; stale: boolean }) {
     : T.lime
   return (
     <svg width={52} height={52} viewBox="0 0 52 52" style={{ opacity: stale ? 0.45 : 1, flexShrink: 0 }}>
-      <circle cx={26} cy={26} r={r} fill="none" stroke={T.cream} strokeWidth={5} />
+      <circle cx={26} cy={26} r={r} fill="none" stroke={T.surfaceSunken} strokeWidth={5} />
       <circle
         cx={26} cy={26} r={r} fill="none" stroke={colour} strokeWidth={5}
         strokeLinecap="round"
@@ -1804,8 +1804,8 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
     if (overLimit) return { label: `${words - limit!} words over`, bg: T.coralBg, color: T.coralText }
     if (placeholders > 0) return { label: `${placeholders} ${placeholders === 1 ? 'placeholder' : 'placeholders'}`, bg: T.amberBg, color: T.amberText }
     if (review && !reviewStale) return { label: `${review.score % 1 === 0 ? review.score : review.score.toFixed(1)}/10`, bg: reviewTier.bg, color: reviewTier.color }
-    if (words === 0) return { label: 'Not started', bg: T.cream, color: T.textTertiary }
-    return { label: 'In progress', bg: T.paleGreen2, color: T.sage }
+    if (words === 0) return { label: 'Not started', bg: T.surfaceSunken, color: T.textTertiary }
+    return { label: 'In progress', bg: T.paleGreen2, color: T.stateSuccess }
   })()
 
   if (!open) {
@@ -1814,13 +1814,13 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
         onClick={onToggle}
         aria-expanded={false}
         style={{
-          width: '100%', textAlign: 'left', background: T.white, border: `1px solid ${T.border}`,
+          width: '100%', textAlign: 'left', background: T.white, border: `1px solid ${T.borderHairline}`,
           borderRadius: 12, padding: '13px 18px', cursor: 'pointer',
           display: 'flex', alignItems: 'center', gap: 12,
         }}
       >
         <span style={{
-          fontFamily: UI, fontWeight: 700, fontSize: 12, color: T.sage, background: T.paleGreen,
+          fontFamily: UI, fontWeight: 700, fontSize: 12, color: T.stateSuccess, background: T.paleGreen,
           width: 26, height: 26, borderRadius: 999, display: 'flex', alignItems: 'center',
           justifyContent: 'center', flexShrink: 0,
         }}>
@@ -1844,12 +1844,12 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
   }
 
   return (
-    <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, overflow: 'visible' }}>
+    <div style={{ background: T.white, border: `1px solid ${T.borderHairline}`, borderRadius: 12, overflow: 'visible' }}>
       {/* Expanded header */}
       <div style={{ padding: '16px 20px 0' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
           <span style={{
-            fontFamily: UI, fontWeight: 700, fontSize: 12, color: T.sage, background: T.paleGreen,
+            fontFamily: UI, fontWeight: 700, fontSize: 12, color: T.stateSuccess, background: T.paleGreen,
             width: 26, height: 26, borderRadius: 999, display: 'flex', alignItems: 'center',
             justifyContent: 'center', flexShrink: 0, marginTop: 1,
           }}>
@@ -1870,7 +1870,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
                 <button
                   onClick={() => setShowFullQ(f => !f)}
                   style={{
-                    fontFamily: UI, fontWeight: 600, fontSize: 11.5, color: T.sage,
+                    fontFamily: UI, fontWeight: 600, fontSize: 11.5, color: T.stateSuccess,
                     background: 'transparent', border: 'none', cursor: 'pointer', padding: '1px 0 0',
                     display: 'block',
                   }}
@@ -1898,7 +1898,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
           {limit !== null && (
             <span style={{
               fontFamily: UI, fontWeight: 600, fontSize: 11, padding: '3px 10px', borderRadius: 999,
-              background: overLimit ? T.coralBg : T.cream, color: overLimit ? T.coralText : T.textSecondary,
+              background: overLimit ? T.coralBg : T.surfaceSunken, color: overLimit ? T.coralText : T.textSecondary,
             }}>
               {overLimit ? `${words - limit} words over the ${limit} limit` : `${words} of ${limit} words`}
             </span>
@@ -1935,7 +1935,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
                   style={{
                     fontFamily: UI, fontWeight: 600, fontSize: 11.5, padding: '4px 11px', borderRadius: 999,
                     background: expandedStep === i ? T.paleGreen : T.softGreen,
-                    color: T.sage, border: `1px solid ${expandedStep === i ? 'rgba(59,109,17,0.3)' : T.border}`,
+                    color: T.stateSuccess, border: `1px solid ${expandedStep === i ? 'rgba(59,109,17,0.3)' : T.borderHairline}`,
                     cursor: 'pointer',
                   }}
                 >
@@ -1959,7 +1959,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
         gap: 0,
         alignItems: 'start',
         marginTop: 12,
-        borderTop: `1px solid ${T.border}`,
+        borderTop: `1px solid ${T.borderHairline}`,
       }}>
         <div style={{ padding: '14px 20px 16px' }}>
           {!showDraftPanel && (
@@ -1985,7 +1985,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
                   <button
                     onClick={() => setPreview(p => !p)}
                     style={{
-                      fontFamily: UI, fontWeight: 600, fontSize: 11.5, color: preview ? T.sage : T.textSecondary,
+                      fontFamily: UI, fontWeight: 600, fontSize: 11.5, color: preview ? T.stateSuccess : T.textSecondary,
                       background: preview ? T.paleGreen : 'transparent', border: `1px solid ${preview ? 'rgba(59,109,17,0.3)' : T.borderStrong}`,
                       borderRadius: 8, padding: '4px 10px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5,
                     }}
@@ -2000,13 +2000,13 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
 
           {showDraftPanel ? (
             /* State A: lead with the draft action */
-            <div style={{ border: `1px solid ${T.border}`, borderRadius: 10, background: T.editorBg, padding: '22px 20px', textAlign: 'center' }}>
+            <div style={{ border: `1px solid ${T.borderHairline}`, borderRadius: 10, background: T.editorBg, padding: '22px 20px', textAlign: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
                 {['Draft', 'Review & check', 'Make it yours'].map((label, i) => (
                   <span key={label} style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                     <span style={{
                       fontFamily: UI, fontWeight: 600, fontSize: 11, padding: '3px 10px', borderRadius: 999,
-                      background: i === 0 ? T.paleGreen : T.cream, color: i === 0 ? T.sage : T.textTertiary,
+                      background: i === 0 ? T.paleGreen : T.surfaceSunken, color: i === 0 ? T.stateSuccess : T.textTertiary,
                     }}>
                       {i + 1} {label}
                     </span>
@@ -2015,7 +2015,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
                 ))}
               </div>
               <div style={{
-                width: 46, height: 46, borderRadius: 12, background: T.paleGreen, color: T.sage,
+                width: 46, height: 46, borderRadius: 12, background: T.paleGreen, color: T.stateSuccess,
                 display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px',
               }}>
                 <FilePenLine size={22} />
@@ -2032,7 +2032,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
               </button>
               <div style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary, marginTop: 12 }}>
                 or{' '}
-                <button onClick={() => setScratch(true)} className="gt-link" style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.sage }}>
+                <button onClick={() => setScratch(true)} className="gt-link" style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.stateSuccess }}>
                   write it from scratch
                 </button>
               </div>
@@ -2046,7 +2046,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
                   title="Click to edit"
                   style={{
                     fontFamily: BODY, fontSize: 14, color: T.textPrimary, width: '100%',
-                    padding: '10px 12px', borderRadius: 8, border: `1px solid ${T.border}`,
+                    padding: '10px 12px', borderRadius: 8, border: `1px solid ${T.borderHairline}`,
                     background: T.editorBg, lineHeight: 1.65, whiteSpace: 'pre-wrap',
                     cursor: 'text', minHeight: 80,
                   }}
@@ -2083,7 +2083,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
                 placeholder={hasScaffold ? 'Write in your own voice, or draft a starting version below.' : 'Plan your answers first, or just start writing.'}
                 style={{
                   fontFamily: BODY, fontSize: 14, color: T.textPrimary, width: '100%',
-                  padding: '10px 12px', borderRadius: 8, border: `1px solid ${drafting ? T.lime : T.border}`,
+                  padding: '10px 12px', borderRadius: 8, border: `1px solid ${drafting ? T.lime : T.borderHairline}`,
                   background: T.editorBg, outline: 'none', resize: 'vertical', lineHeight: 1.65,
                 }}
               />
@@ -2118,7 +2118,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
                   <button
                     onClick={onBank}
                     className="gt-link"
-                    style={{ ...ghostBtn(), display: 'inline-flex', alignItems: 'center', gap: 6, color: T.sage, ...(hasScaffold ? {} : { paddingLeft: 0 }) }}
+                    style={{ ...ghostBtn(), display: 'inline-flex', alignItems: 'center', gap: 6, color: T.stateSuccess, ...(hasScaffold ? {} : { paddingLeft: 0 }) }}
                   >
                     <BookmarkPlus size={14} /> Save to your material
                   </button>
@@ -2128,7 +2128,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
           )}
           {voicePrompts.length > 0 && (
             <div style={{ background: T.paleGreen, borderRadius: 8, padding: '10px 13px', marginTop: 8 }}>
-              <div style={{ fontFamily: UI, fontWeight: 700, fontSize: 11.5, letterSpacing: '0.01em', color: T.sage, marginBottom: 5 }}>
+              <div style={{ fontFamily: UI, fontWeight: 700, fontSize: 11.5, letterSpacing: '0.01em', color: T.stateSuccess, marginBottom: 5 }}>
                 Make it yours
               </div>
               <ul style={{ margin: 0, paddingLeft: 16 }}>
@@ -2166,7 +2166,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
                       <p style={{ fontFamily: BODY, fontSize: 12.5, color: T.textPrimary, margin: '0 0 4px', lineHeight: 1.5, fontStyle: 'italic' }}>
                         &ldquo;{m.excerpt}&rdquo;
                       </p>
-                      <span style={{ fontFamily: UI, fontSize: 11, color: T.sage }}>{m.relevance_note}</span>
+                      <span style={{ fontFamily: UI, fontSize: 11, color: T.stateSuccess }}>{m.relevance_note}</span>
                     </div>
                   ))}
                 </div>
@@ -2179,8 +2179,8 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
         {showRail && (
           <div style={{
             padding: '14px 18px 16px',
-            borderLeft: isMobile ? 'none' : `1px solid ${T.border}`,
-            borderTop: isMobile ? `1px solid ${T.border}` : 'none',
+            borderLeft: isMobile ? 'none' : `1px solid ${T.borderHairline}`,
+            borderTop: isMobile ? `1px solid ${T.borderHairline}` : 'none',
             background: T.softGreen,
             position: isMobile ? 'static' : 'sticky',
             top: 76,
@@ -2250,7 +2250,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
               const headline = structured ? top.headline : (top.match(/^[^.?!]*[.?!]?/)?.[0] ?? top).trim()
               const detail = structured ? top.detail : top
               return (
-                <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 8, padding: '10px 12px', marginBottom: 8 }}>
+                <div style={{ background: T.white, border: `1px solid ${T.borderHairline}`, borderRadius: 8, padding: '10px 12px', marginBottom: 8 }}>
                   <div style={{ fontFamily: UI, fontWeight: 700, fontSize: 11, letterSpacing: '0.01em', color: T.amberText, marginBottom: 3 }}>
                     Next best fix
                   </div>
@@ -2265,7 +2265,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
               <button
                 onClick={() => setRailOpen(true)}
                 className="gt-link"
-                style={{ ...ghostBtn(), paddingLeft: 0, fontSize: 12, color: T.sage }}
+                style={{ ...ghostBtn(), paddingLeft: 0, fontSize: 12, color: T.stateSuccess }}
               >
                 {[
                   review && review.tips.length > 1 ? `${review.tips.length - 1} more ${review.tips.length - 1 === 1 ? 'tip' : 'tips'}` : null,
@@ -2282,7 +2282,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
                     {review.strengths.map((s, i) => (
                       <div key={i} style={{ display: 'flex', gap: 7, alignItems: 'flex-start', marginBottom: 4 }}>
                         <CheckCircle2 size={13} color={T.greenMid} style={{ flexShrink: 0, marginTop: 2 }} />
-                        <span style={{ fontFamily: BODY, fontSize: 12, color: T.sage, lineHeight: 1.45 }}>{s}</span>
+                        <span style={{ fontFamily: BODY, fontSize: 12, color: T.stateSuccess, lineHeight: 1.45 }}>{s}</span>
                       </div>
                     ))}
                   </div>

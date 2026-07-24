@@ -143,7 +143,7 @@ export default function AdminUserDetailPage() {
         <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-mid">
           <span>Signed up <strong className="text-charcoal">{fmtDate(user.created_at)}</strong></span>
           <span>Last seen <strong className="text-charcoal">{fmtDateTime(user.last_sign_in_at)}</strong></span>
-          <span>{user.email_confirmed_at ? <span className="text-sage font-semibold">Confirmed ✓</span> : <span className="text-coral-deep font-semibold">Unconfirmed</span>}</span>
+          <span>{user.email_confirmed_at ? <span className="text-sage-deep font-semibold">Confirmed ✓</span> : <span className="text-coral-deep font-semibold">Unconfirmed</span>}</span>
         </div>
       </div>
 
@@ -244,7 +244,7 @@ export default function AdminUserDetailPage() {
                         <td className="px-3 py-3 text-mid whitespace-nowrap text-xs">{fmtDate(p.created_at)}</td>
                         <td className="px-3 py-3 text-center">
                           {p.grant_url
-                            ? <a href={p.grant_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-forest hover:text-sage"><ExternalLink size={13} /></a>
+                            ? <a href={p.grant_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-forest hover:text-sage-deep"><ExternalLink size={13} /></a>
                             : <span className="text-light">—</span>}
                         </td>
                       </tr>
@@ -297,7 +297,7 @@ export default function AdminUserDetailPage() {
                       <td className="px-3 py-3 text-mid whitespace-nowrap text-xs">{fmtDate(s.saved_at)}</td>
                       <td className="px-3 py-3 text-center">
                         {s.grant?.apply_url
-                          ? <a href={s.grant.apply_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-forest hover:text-sage"><ExternalLink size={13} /></a>
+                          ? <a href={s.grant.apply_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-forest hover:text-sage-deep"><ExternalLink size={13} /></a>
                           : <span className="text-light">—</span>}
                       </td>
                     </tr>

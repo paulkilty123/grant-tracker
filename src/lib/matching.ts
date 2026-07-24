@@ -1784,7 +1784,7 @@ export function computeMatchScore(
 // stronger match, neutral then coral for weak. Mirrors the project funder-fit
 // and dashboard tier colours so match strength reads the same everywhere.
 export function scoreColour(score: number): { bg: string; text: string; bar: string } {
-  if (score >= 80) return { bg: 'bg-sage/15',       text: 'text-sage',            bar: 'bg-sage'         }
+  if (score >= 80) return { bg: 'bg-sage-deep/15',       text: 'text-sage-deep',            bar: 'bg-sage-deep'         }
   if (score >= 65) return { bg: 'bg-green-pale-2',  text: 'text-green-text-deep', bar: 'bg-green-pale-3' }
   if (score >= 45) return { bg: 'bg-warm',          text: 'text-mid',             bar: 'bg-mid'          }
   return               { bg: 'bg-coral-pale',         text: 'text-coral-saturated', bar: 'bg-coral-mid'  }

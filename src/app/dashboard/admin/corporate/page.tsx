@@ -113,7 +113,7 @@ function BriefEditor({ brief, onChange }: { brief: PartnerBrief; onChange: (b: P
         value={(brief[key] as string | undefined) ?? ''}
         onChange={e => set(key, e.target.value as never)}
         placeholder={placeholder}
-        className="w-full text-sm border border-warm rounded-lg px-3 py-2 text-charcoal resize-none focus:outline-none focus:border-sage placeholder:text-light"
+        className="w-full text-sm border border-warm rounded-lg px-3 py-2 text-charcoal resize-none focus:outline-none focus:border-sage-deep placeholder:text-light"
       />
     </div>
   )
@@ -131,8 +131,8 @@ function BriefEditor({ brief, onChange }: { brief: PartnerBrief; onChange: (b: P
               onClick={() => set('category', cat)}
               className={`text-xs px-3 py-2 rounded-lg border text-left transition-colors ${
                 brief.category === cat
-                  ? 'bg-forest text-cream border-forest font-medium'
-                  : 'bg-white text-charcoal border-warm hover:border-sage'
+                  ? 'bg-forest text-surface-page border-forest font-medium'
+                  : 'bg-white text-charcoal border-warm hover:border-sage-deep'
               }`}
             >
               {BRIEF_CATEGORY_LABELS[cat]}
@@ -159,7 +159,7 @@ function BriefEditor({ brief, onChange }: { brief: PartnerBrief; onChange: (b: P
           value={(brief.key_facts ?? []).join('\n')}
           onChange={e => set('key_facts', e.target.value.split('\n').map(s => s.trim()).filter(Boolean))}
           placeholder={'£75k average award\nFunded 42 orgs in 2024\nNo statutory bodies'}
-          className="w-full text-sm border border-warm rounded-lg px-3 py-2 text-charcoal resize-none focus:outline-none focus:border-sage placeholder:text-light font-mono"
+          className="w-full text-sm border border-warm rounded-lg px-3 py-2 text-charcoal resize-none focus:outline-none focus:border-sage-deep placeholder:text-light font-mono"
         />
       </div>
 
@@ -244,7 +244,7 @@ function EditModal({
         return (
           <button key={item} type="button" onClick={() => toggleArray(key, item)}
             className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
-              selected ? 'bg-forest text-cream border-forest' : 'bg-white text-charcoal border-warm hover:border-sage'
+              selected ? 'bg-forest text-surface-page border-forest' : 'bg-white text-charcoal border-warm hover:border-sage-deep'
             }`}>
             {labels?.[item] ?? item.replace(/_/g, ' ')}
           </button>
@@ -259,18 +259,18 @@ function EditModal({
       {type === 'textarea' ? (
         <textarea rows={3} value={(form[key] ?? '') as string}
           onChange={e => setField(key, e.target.value as never)}
-          className="w-full text-sm border border-warm rounded-lg px-3 py-2 text-charcoal resize-none focus:outline-none focus:border-sage" />
+          className="w-full text-sm border border-warm rounded-lg px-3 py-2 text-charcoal resize-none focus:outline-none focus:border-sage-deep" />
       ) : (
         <input type={type} value={(form[key] ?? '') as string | number}
           onChange={e => setField(key, (type === 'number' ? (e.target.value ? Number(e.target.value) : null) : e.target.value) as never)}
-          className="w-full text-sm border border-warm rounded-lg px-3 py-2 text-charcoal focus:outline-none focus:border-sage" />
+          className="w-full text-sm border border-warm rounded-lg px-3 py-2 text-charcoal focus:outline-none focus:border-sage-deep" />
       )}
     </div>
   )
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 overflow-y-auto py-8">
-      <div className="bg-cream rounded-xl shadow-2xl w-full max-w-2xl mx-4 my-auto">
+      <div className="bg-surface-page rounded-xl shadow-2xl w-full max-w-2xl mx-4 my-auto">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-warm">
           <h2 className="font-display text-xl font-bold text-forest">
@@ -308,7 +308,7 @@ function EditModal({
             <label className="block text-xs font-semibold text-mid uppercase tracking-wider mb-1">Application Route</label>
             <select value={form.application_route ?? 'open_application'}
               onChange={e => setField('application_route', e.target.value as never)}
-              className="w-full text-sm border border-warm rounded-lg px-3 py-2 text-charcoal focus:outline-none focus:border-sage">
+              className="w-full text-sm border border-warm rounded-lg px-3 py-2 text-charcoal focus:outline-none focus:border-sage-deep">
               {Object.entries(ROUTE_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
             </select>
           </div>
@@ -333,7 +333,7 @@ function EditModal({
             <input type="text"
               value={(form.example_recipients ?? []).join(', ')}
               onChange={e => setField('example_recipients', e.target.value.split(',').map(s => s.trim()).filter(Boolean) as never)}
-              className="w-full text-sm border border-warm rounded-lg px-3 py-2 text-charcoal focus:outline-none focus:border-sage"
+              className="w-full text-sm border border-warm rounded-lg px-3 py-2 text-charcoal focus:outline-none focus:border-sage-deep"
               placeholder="Org A, Org B, Org C" />
           </div>
           <div className="flex items-center gap-3">
@@ -381,7 +381,7 @@ function EditModal({
             Cancel
           </button>
           <button onClick={save} disabled={saving}
-            className="flex items-center gap-2 text-sm px-5 py-2 rounded-lg bg-forest text-cream hover:bg-sage transition-colors disabled:opacity-60">
+            className="flex items-center gap-2 text-sm px-5 py-2 rounded-lg bg-forest text-surface-page hover:bg-sage-deep transition-colors disabled:opacity-60">
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             {saving ? 'Saving…' : 'Save'}
           </button>
@@ -477,7 +477,7 @@ export default function AdminCorporatePage() {
           </p>
         </div>
         <button onClick={() => setEditTarget('new')}
-          className="flex items-center gap-2 text-sm px-4 py-2.5 rounded-lg bg-forest text-cream hover:bg-sage transition-colors">
+          className="flex items-center gap-2 text-sm px-4 py-2.5 rounded-lg bg-forest text-surface-page hover:bg-sage-deep transition-colors">
           <Plus className="h-4 w-4" /> Add Partner
         </button>
       </div>
@@ -509,12 +509,12 @@ export default function AdminCorporatePage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-mid" />
           <input type="text" placeholder="Search partners…" value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-sm border border-warm rounded-lg focus:outline-none focus:border-sage bg-white text-charcoal" />
+            className="w-full pl-9 pr-4 py-2 text-sm border border-warm rounded-lg focus:outline-none focus:border-sage-deep bg-white text-charcoal" />
         </div>
         {(['all', 'active', 'inactive'] as const).map(f => (
           <button key={f} onClick={() => setFilterActive(f)}
             className={`text-xs px-3.5 py-2 rounded-lg border font-medium transition-colors capitalize ${
-              filterActive === f ? 'bg-forest text-cream border-forest' : 'bg-white text-mid border-warm hover:border-sage'
+              filterActive === f ? 'bg-forest text-surface-page border-forest' : 'bg-white text-mid border-warm hover:border-sage-deep'
             }`}>
             {f}
           </button>
@@ -584,7 +584,7 @@ export default function AdminCorporatePage() {
                   </td>
                   <td className="px-3 py-3 text-center">
                     <button onClick={() => toggleActive(p)} disabled={togglingId === p.id}
-                      className={`transition-colors disabled:opacity-50 ${p.is_active ? 'text-forest hover:text-sage' : 'text-mid hover:text-charcoal'}`}
+                      className={`transition-colors disabled:opacity-50 ${p.is_active ? 'text-forest hover:text-sage-deep' : 'text-mid hover:text-charcoal'}`}
                       title={p.is_active ? 'Deactivate' : 'Activate'}>
                       {togglingId === p.id
                         ? <Loader2 className="h-5 w-5 animate-spin" />

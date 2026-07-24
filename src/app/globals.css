@@ -81,21 +81,29 @@
     --backdrop-modal: rgba(23, 52, 4, 0.4);
 
     /* Legacy aliases (point at new tokens) */
-    --forest: var(--green-deep);
-    --sage:   var(--green-mid);
-    --mint:   var(--green-pale-3);
-    --cream:  var(--bg-page);
-    --warm:   #E8E0D1;
-    --gold:   var(--amber-saturated);
+    --forest:    var(--green-deep);
+    --sage-deep: var(--green-mid); /* was --sage — renamed, name collision with new sage accent below */
+    --mint:      var(--green-pale-3);
+    /* --cream retired: old value (var(--bg-page)) is now covered by
+       --surface-page (below) — see the collision resolution note. */
+    --warm:      #E8E0D1;
+    --gold:      var(--amber-saturated);
+    /* no legacy --border existed here to retire (only tailwind.config.ts had a bare `border` key) */
 
     /* ============================================================
        SHOOTS TOKENS (new, coexisting) — from shoots-app-tokens.md.
-       Additive only: nothing above is removed or repointed yet.
-       --sage, --cream and --gold from the new set are deliberately
-       NOT added here — those names are still occupied by the legacy
-       aliases above with different values. sage/cream are reintroduced
-       when the name collisions are resolved; gold is a fourth, newly-
-       found collision the source doc didn't flag and is unresolved.
+       Additive only: nothing above is removed or repointed yet,
+       except the three resolved name collisions:
+        - old --sage (var(--green-mid))  -> --sage-deep above; new
+          --sage (#9BCA9D) below is the brand accent, a different colour.
+        - old --cream (var(--bg-page))   -> retired, repointed to
+          --surface-page; new --cream (#F6F1E7) below is the brand
+          accent, a different colour.
+        - old `border` (tailwind.config.ts only, #E4E2DA) -> retired,
+          repointed to --border-warm.
+       --gold is a fourth, newly-found collision the source doc didn't
+       flag (old --gold vs. new accent gold #EBCE78) and remains
+       unresolved — not added below.
        ============================================================ */
 
     /* Surfaces */
@@ -120,10 +128,12 @@
     --border-warm:     #E8E0D1;
     --focus-ring:       #4EAAB4;
 
-    /* Brand and action (sage / cream / gold deferred — see note above) */
+    /* Brand and action (gold deferred — see note above) */
     --deep:  #1D3C3E;
+    --cream: #F6F1E7;
     --terra: #D67558;
     --teal:  #4EAAB4;
+    --sage:  #9BCA9D;
     --sky:   #ABCBEE;
 
     /* Funding types (category colours, always paired with a label) */

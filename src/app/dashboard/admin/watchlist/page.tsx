@@ -425,7 +425,7 @@ export default function WatchlistAdminPage() {
                     href={selectedEntry.listing_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-[10px] text-sage hover:underline truncate block"
+                    className="text-[10px] text-sage-deep hover:underline truncate block"
                   >
                     {selectedEntry.listing_url}
                   </a>

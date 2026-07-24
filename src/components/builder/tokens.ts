@@ -5,16 +5,22 @@ export const T = {
   lime:          '#8ECB3C',
   greenDeep:     '#173404',
   greenMid:      '#639922',
-  sage:          '#3B6D11',
+  // was `sage` (#3B6D11) — renamed per the Shoots collision resolution.
+  // Same value: it was always the state-success colour under a brand name.
+  stateSuccess:  '#3B6D11',
   pageBg:        '#FAFAF7',
-  cream:         '#F5F1E8',
+  // was `cream` (#F5F1E8) — renamed per the Shoots collision resolution,
+  // value updated to match the canonical surface-sunken token (#F6F1E7).
+  surfaceSunken: '#F6F1E7',
   paleGreen:     '#F1F7E4',
   paleGreen2:    '#EAF3DE',
   white:         '#FFFFFF',
   textPrimary:   '#2C2C2A',
   textSecondary: '#5F5E5A',
   textTertiary:  '#8A8986',
-  border:        'rgba(23, 52, 4, 0.08)',
+  // was `border` (rgba(23, 52, 4, 0.08)) — renamed per the Shoots collision
+  // resolution, value updated to match the canonical border-hairline token.
+  borderHairline: 'rgba(29,60,62,0.10)',
   borderStrong:  'rgba(23, 52, 4, 0.16)',
   greenBg:       '#E8F2D8',
   greenText:     '#3F6018',

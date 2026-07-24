@@ -68,9 +68,10 @@ const config: Config = {
 
         // Legacy aliases (remapped to new tokens)
         forest:   '#173404',
-        sage:     '#639922',
+        'sage-deep': '#639922',  // was bare `sage` — renamed, name collision with new sage accent (see below)
         mint:     '#C0DD97',
-        cream:    '#FAFAF7',
+        // `cream` retired: old value (#FAFAF7, aliased to bg-page) is now covered by
+        // `surface-page` (#FBF9F4, added below) — see the collision resolution note.
         warm:     '#E8E0D1',
         gold:     '#BA7517',
         'gold-light': '#FAC775',
@@ -79,17 +80,23 @@ const config: Config = {
         charcoal: '#2C2C2A',
         mid:      '#5F5E5A',
         light:    '#8A8986',
-        border:   '#E4E2DA',
+        // `border` retired: old value (#E4E2DA) is now covered by `border-warm`
+        // (#E8E0D1, added below) — see the collision resolution note.
 
         // ============================================================
         // SHOOTS TOKENS (new, coexisting) — from shoots-app-tokens.md.
-        // Additive only: nothing above is removed or repointed yet.
-        // 'sage', 'cream' and 'gold' from the new set are deliberately
-        // NOT added here — those bare names are still occupied by the
-        // legacy aliases above with different values, and duplicating a
-        // key breaks `tsc`. sage/cream are reintroduced when the name
-        // collisions are resolved; 'gold' is a fourth, newly-found
-        // collision the source doc didn't flag and is unresolved.
+        // Additive only: nothing above is removed or repointed yet,
+        // except the three resolved name collisions:
+        //  - old `sage` (#639922) -> `sage-deep` above; new `sage`
+        //    (#9BCA9D) below is the brand accent, a different colour.
+        //  - old `cream` (#FAFAF7) -> retired, repointed to
+        //    `surface-page`; new `cream` (#F6F1E7) below is the brand
+        //    accent, a different colour.
+        //  - old `border` (#E4E2DA) -> retired, repointed to
+        //    `border-warm`.
+        // `gold` is a fourth, newly-found collision the source doc
+        // didn't flag (old `gold` #BA7517 above vs. new accent `gold`
+        // #EBCE78) and remains unresolved — not added below.
         // ============================================================
 
         // Surfaces
@@ -114,10 +121,12 @@ const config: Config = {
         'border-warm':     '#E8E0D1',
         'focus-ring':       '#4EAAB4',
 
-        // Brand and action (sage / cream / gold deferred — see note above)
+        // Brand and action (gold deferred — see note above)
         deep:  '#1D3C3E',
+        cream: '#F6F1E7',
         terra: '#D67558',
         teal:  '#4EAAB4',
+        sage:  '#9BCA9D',
         sky:   '#ABCBEE',
 
         // Funding types (category colours, always paired with a label)

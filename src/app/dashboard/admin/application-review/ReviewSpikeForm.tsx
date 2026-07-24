@@ -332,11 +332,11 @@ export default function ReviewSpikeForm(
         >
           {savingDraft ? 'Saving…' : draftId ? 'Save draft' : 'Save as new draft'}
         </button>
-        {draftSaved && <span className="text-xs text-sage">Saved</span>}
+        {draftSaved && <span className="text-xs text-sage-deep">Saved</span>}
       </div>
 
       {/* Your organisation */}
-      <div className="rounded-xl border border-warm bg-cream/40 p-4 mb-6">
+      <div className="rounded-xl border border-warm bg-surface-page/40 p-4 mb-6">
         <p className="text-xs font-semibold uppercase tracking-wide text-mid mb-2">Your organisation</p>
         {org ? (
           <>
@@ -369,7 +369,7 @@ export default function ReviewSpikeForm(
               >
                 {savingNotes ? 'Saving…' : 'Save org notes'}
               </button>
-              {notesSaved && <span className="text-xs text-sage">Saved</span>}
+              {notesSaved && <span className="text-xs text-sage-deep">Saved</span>}
             </div>
           </>
         ) : (
@@ -470,7 +470,7 @@ export default function ReviewSpikeForm(
       {/* What makes this a strong application — shown after draft generation */}
       {strengthSummary && strengthSummary.length > 0 && (
         <div className="rounded-xl border border-warm bg-green-pale-1 p-5 mb-5">
-          <p className="text-xs font-semibold uppercase tracking-wide text-sage mb-2">
+          <p className="text-xs font-semibold uppercase tracking-wide text-sage-deep mb-2">
             What makes this a strong application
           </p>
           <ul className="list-disc list-inside space-y-1">
@@ -484,7 +484,7 @@ export default function ReviewSpikeForm(
       {/* Questions */}
       <div className="space-y-4">
         {questions.map((q, idx) => (
-          <div key={idx} className="rounded-xl border border-warm bg-cream/40 p-4">
+          <div key={idx} className="rounded-xl border border-warm bg-surface-page/40 p-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-semibold uppercase tracking-wide text-mid">Question {idx + 1}</span>
               {questions.length > 1 && (
@@ -522,7 +522,7 @@ export default function ReviewSpikeForm(
         ))}
       </div>
 
-      <button onClick={addQuestion} className="mt-3 text-sm text-sage font-medium hover:underline">
+      <button onClick={addQuestion} className="mt-3 text-sm text-sage-deep font-medium hover:underline">
         + Add question
       </button>
 

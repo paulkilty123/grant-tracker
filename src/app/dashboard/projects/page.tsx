@@ -14,15 +14,15 @@ import { T, UI, BODY } from '@/components/builder/tokens'
 import { projectCompleteness, readyToMatch, type Project } from '@/lib/builder/projects'
 
 const TYPE_STYLE: Record<string, { bg: string; color: string; label: string }> = {
-  project:   { bg: T.paleGreen,  color: T.sage,       label: 'Project' },
+  project:   { bg: T.paleGreen,  color: T.stateSuccess,       label: 'Project' },
   campaign:  { bg: T.amberBg,    color: T.amberText,  label: 'Campaign' },
   programme: { bg: '#FAECE7',    color: '#993C1D',    label: 'Programme' },
 }
 
 const STATUS_STYLE: Record<string, { bg: string; color: string; label: string }> = {
-  active:   { bg: T.paleGreen2, color: T.sage,          label: 'Active' },
+  active:   { bg: T.paleGreen2, color: T.stateSuccess,          label: 'Active' },
   funded:   { bg: '#C0DD97',    color: T.greenDeep,     label: 'Funded' },
-  archived: { bg: T.cream,      color: T.textSecondary, label: 'Archived' },
+  archived: { bg: T.surfaceSunken,      color: T.textSecondary, label: 'Archived' },
 }
 
 const HOW_STEPS = [
@@ -34,9 +34,9 @@ const HOW_STEPS = [
 
 function HowItWorks({ withCta }: { withCta?: boolean }) {
   return (
-    <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, padding: '22px 24px' }}>
+    <div style={{ background: T.white, border: `1px solid ${T.borderHairline}`, borderRadius: 12, padding: '22px 24px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18 }}>
-        <HelpCircle size={18} color={T.sage} />
+        <HelpCircle size={18} color={T.stateSuccess} />
         <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 16, color: T.textPrimary }}>How it works</span>
       </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14 }}>
@@ -116,7 +116,7 @@ export default function ProjectsPage() {
         <h1 style={{ fontFamily: UI, fontWeight: 600, fontSize: 24, color: T.textPrimary, letterSpacing: '-0.01em', marginBottom: 8 }}>
           Projects
         </h1>
-        <div style={{ background: T.cream, borderRadius: 12, padding: '20px 24px' }}>
+        <div style={{ background: T.surfaceSunken, borderRadius: 12, padding: '20px 24px' }}>
           <p style={{ fontFamily: BODY, fontSize: 14, color: T.textSecondary, margin: 0, lineHeight: 1.6 }}>
             Projects are currently available to founding cohort members while we shape them
             together. They will open more widely soon.
@@ -158,14 +158,14 @@ export default function ProjectsPage() {
         const funded = projects.filter(p => p.status === 'funded').length
         const inDraft = projects.filter(p => p.status === 'active' && !readyToMatch(p)).length
         const tiles = [
-          { n: ready, label: 'Ready to match', accent: T.sage },
+          { n: ready, label: 'Ready to match', accent: T.stateSuccess },
           { n: funded, label: 'Funded', accent: T.greenDeep },
           { n: inDraft, label: 'In draft', accent: T.textTertiary },
         ]
         return (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginTop: 18 }}>
             {tiles.map(t => (
-              <div key={t.label} style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 10, padding: '12px 16px' }}>
+              <div key={t.label} style={{ background: T.white, border: `1px solid ${T.borderHairline}`, borderRadius: 10, padding: '12px 16px' }}>
                 <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 22, color: t.accent, display: 'block', lineHeight: 1.1 }}>{t.n}</span>
                 <span style={{ fontFamily: BODY, fontSize: 12.5, color: T.textSecondary }}>{t.label}</span>
               </div>
@@ -178,14 +178,14 @@ export default function ProjectsPage() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 22 }}>
         {!loaded && [0, 1].map(i => (
           <div key={i} style={{
-            background: T.white, border: `1px solid ${T.border}`, borderRadius: 12,
+            background: T.white, border: `1px solid ${T.borderHairline}`, borderRadius: 12,
             padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 16,
           }}>
             <div style={{ flex: 1 }}>
-              <div style={{ height: 14, width: `${50 - i * 10}%`, background: T.cream, borderRadius: 6, marginBottom: 8 }} />
-              <div style={{ height: 11, width: '28%', background: T.cream, borderRadius: 6, opacity: 0.7 }} />
+              <div style={{ height: 14, width: `${50 - i * 10}%`, background: T.surfaceSunken, borderRadius: 6, marginBottom: 8 }} />
+              <div style={{ height: 11, width: '28%', background: T.surfaceSunken, borderRadius: 6, opacity: 0.7 }} />
             </div>
-            <div style={{ height: 5, width: 90, background: T.cream, borderRadius: 999 }} />
+            <div style={{ height: 5, width: 90, background: T.surfaceSunken, borderRadius: 999 }} />
           </div>
         ))}
         {loaded && projects.length === 0 && <HowItWorks withCta />}
@@ -201,7 +201,7 @@ export default function ProjectsPage() {
               onMouseEnter={() => setHoveredId(p.id)}
               onMouseLeave={() => setHoveredId(null)}
               style={{
-                background: T.white, border: `1px solid ${T.border}`, borderRadius: 12,
+                background: T.white, border: `1px solid ${T.borderHairline}`, borderRadius: 12,
                 padding: '14px 18px', textDecoration: 'none',
                 display: 'flex', alignItems: 'center', gap: 14,
               }}
@@ -238,9 +238,9 @@ export default function ProjectsPage() {
               <div style={{ width: 132, flexShrink: 0 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
                   <span style={{ fontFamily: BODY, fontSize: 11.5, color: T.textSecondary }}>Described</span>
-                  <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 11.5, color: T.sage }}>{pct}%</span>
+                  <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 11.5, color: T.stateSuccess }}>{pct}%</span>
                 </div>
-                <div style={{ height: 6, background: T.cream, borderRadius: 999, overflow: 'hidden' }}>
+                <div style={{ height: 6, background: T.surfaceSunken, borderRadius: 999, overflow: 'hidden' }}>
                   <div style={{
                     height: '100%', width: `${pct}%`,
                     background: T.lime, borderRadius: 999, transition: 'width 200ms ease',

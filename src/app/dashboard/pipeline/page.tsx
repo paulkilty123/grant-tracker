@@ -393,7 +393,7 @@ function AddModal({
 
         <div className="overflow-y-auto flex-1">
           {/* Tip: add from funding list */}
-          <div className="mx-6 mt-5 flex items-start gap-3 px-4 py-3 rounded-lg border border-sage/30 bg-sage/5">
+          <div className="mx-6 mt-5 flex items-start gap-3 px-4 py-3 rounded-lg border border-sage-deep/30 bg-sage-deep/5">
             <Sparkles className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: "#8ECB3C" }} strokeWidth={2} />
             <div className="text-sm text-[#2C2C2A] leading-relaxed">
               The fastest way to add a grant is directly from the{' '}
