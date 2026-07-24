@@ -18,19 +18,19 @@ const ACTIVE_STAGES = ['identified', 'applying'] // 'submitted' excluded — tho
 
 // ── Funding-type dot colours ──────────────────────────────────────────────────
 const TYPE_DOT: Record<string, string> = {
-  grant:      '#97C459',
-  programme:  '#F0997B',
-  investment: '#85B7EB',
-  in_kind:    '#EF9F27',
+  grant:      'var(--sage)',
+  programme:  'var(--type-programme)',
+  investment: 'var(--type-investment)',
+  in_kind:    'var(--type-inkind)',
 }
 const TYPE_LABEL: Record<string, string> = {
   grant: 'Grant', programme: 'Programme', investment: 'Investment', in_kind: 'In-Kind',
 }
 const TYPE_BG: Record<string, string> = {
-  grant: '#F1F7E4', programme: '#FAECE7', investment: '#E6F1FB', in_kind: '#FAEEDA',
+  grant: 'var(--state-success-pale)', programme: 'var(--state-error-pale)', investment: 'var(--state-info-pale)', in_kind: 'var(--state-warning-pale)',
 }
 const TYPE_TEXT: Record<string, string> = {
-  grant: '#3B6D11', programme: '#993C1D', investment: '#0C447C', in_kind: '#854F0B',
+  grant: 'var(--state-success)', programme: 'var(--state-error)', investment: 'var(--state-info)', in_kind: 'var(--state-warning)',
 }
 
 // Pipeline items don't carry funding_type directly — default to 'grant' until
@@ -86,10 +86,10 @@ const TYPE_CHIPS: {
   text: string
   Icon: LucideIcon
 }[] = [
-  { key: 'grant',      label: 'Grant',      dot: '#97C459', bg: '#F1F7E4', text: '#3B6D11', Icon: Landmark   },
-  { key: 'programme',  label: 'Programme',  dot: '#F0997B', bg: '#FAECE7', text: '#993C1D', Icon: Rocket     },
-  { key: 'investment', label: 'Investment', dot: '#85B7EB', bg: '#E6F1FB', text: '#0C447C', Icon: TrendingUp  },
-  { key: 'in_kind',    label: 'In-Kind',    dot: '#EF9F27', bg: '#FAEEDA', text: '#854F0B', Icon: Gift       },
+  { key: 'grant',      label: 'Grant',      dot: 'var(--sage)', bg: 'var(--state-success-pale)', text: 'var(--state-success)', Icon: Landmark   },
+  { key: 'programme',  label: 'Programme',  dot: 'var(--type-programme)', bg: 'var(--state-error-pale)', text: 'var(--state-error)', Icon: Rocket     },
+  { key: 'investment', label: 'Investment', dot: 'var(--type-investment)', bg: 'var(--state-info-pale)', text: 'var(--state-info)', Icon: TrendingUp  },
+  { key: 'in_kind',    label: 'In-Kind',    dot: 'var(--type-inkind)', bg: 'var(--state-warning-pale)', text: 'var(--state-warning)', Icon: Gift       },
 ]
 
 function AddDeadlineModal({ orgId, userId, onClose, onSaved }: {
@@ -144,7 +144,7 @@ function AddDeadlineModal({ orgId, userId, onClose, onSaved }: {
       style={{ background: 'rgba(23,52,4,0.40)' }}
       onClick={onClose}>
       <div className="w-full flex flex-col"
-        style={{ maxWidth: 480, background: '#fff', borderRadius: 16, overflow: 'hidden',
+        style={{ maxWidth: 480, background: 'var(--surface-card)', borderRadius: 16, overflow: 'hidden',
           boxShadow: '0 20px 60px rgba(23,52,4,0.25)',
           maxHeight: 'calc(100vh - 60px)' }}
         onClick={e => e.stopPropagation()}>
@@ -154,17 +154,17 @@ function AddDeadlineModal({ orgId, userId, onClose, onSaved }: {
           display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexShrink: 0 }}>
           <div>
             <h3 style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 17, fontWeight: 500,
-              letterSpacing: '-0.01em', margin: '0 0 4px', color: '#2C2C2A' }}>Add a deadline</h3>
-            <p style={{ fontSize: 12, color: '#5F5E5A', margin: 0, lineHeight: 1.5 }}>
+              letterSpacing: '-0.01em', margin: '0 0 4px', color: 'var(--text-body)' }}>Add a deadline</h3>
+            <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
               Log an opportunity not already in your pipeline or saved list.
             </p>
           </div>
           <button onClick={onClose}
-            style={{ width: 28, height: 28, borderRadius: 8, background: '#F1F0EA', border: 'none',
+            style={{ width: 28, height: 28, borderRadius: 8, background: 'var(--surface-pill)', border: 'none',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#5F5E5A', cursor: 'pointer', flexShrink: 0 }}
-            onMouseEnter={e => { e.currentTarget.style.background = '#E5E2D7' }}
-            onMouseLeave={e => { e.currentTarget.style.background = '#F1F0EA' }}>
+              color: 'var(--text-muted)', cursor: 'pointer', flexShrink: 0 }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'var(--border-warm)' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'var(--surface-pill)' }}>
             <XIcon size={13} strokeWidth={2.5} />
           </button>
         </div>
@@ -174,58 +174,58 @@ function AddDeadlineModal({ orgId, userId, onClose, onSaved }: {
 
           {/* Opportunity name */}
           <div style={{ marginBottom: 16 }}>
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#2C2C2A', marginBottom: 6 }}>
-              Opportunity name <span style={{ color: '#D85A30' }}>*</span>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--text-body)', marginBottom: 6 }}>
+              Opportunity name <span style={{ color: 'var(--terra)' }}>*</span>
             </label>
             <input type="text" value={grantName} onChange={e => setGrantName(e.target.value)}
               placeholder="e.g. Arts Council Project Grants"
               style={{ width: '100%', height: 40, border: '0.5px solid rgba(0,0,0,0.14)', borderRadius: 10,
-                padding: '0 12px', fontFamily: 'inherit', fontSize: 13, color: '#2C2C2A',
-                background: '#fff', outline: 'none', boxSizing: 'border-box' }}
-              onFocus={e => { e.currentTarget.style.borderColor = '#639922' }}
+                padding: '0 12px', fontFamily: 'inherit', fontSize: 13, color: 'var(--text-body)',
+                background: 'var(--surface-card)', outline: 'none', boxSizing: 'border-box' }}
+              onFocus={e => { e.currentTarget.style.borderColor = 'var(--sage-deep)' }}
               onBlur={e => { e.currentTarget.style.borderColor = 'rgba(0,0,0,0.14)' }} />
           </div>
 
           {/* Funder */}
           <div style={{ marginBottom: 16 }}>
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#2C2C2A', marginBottom: 6 }}>
-              Funder <span style={{ color: '#8A8986', fontWeight: 400 }}>&middot; optional</span>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--text-body)', marginBottom: 6 }}>
+              Funder <span style={{ color: 'var(--text-subtle)', fontWeight: 400 }}>&middot; optional</span>
             </label>
             <input type="text" value={funderName} onChange={e => setFunderName(e.target.value)}
               placeholder="e.g. Arts Council England"
               style={{ width: '100%', height: 40, border: '0.5px solid rgba(0,0,0,0.14)', borderRadius: 10,
-                padding: '0 12px', fontFamily: 'inherit', fontSize: 13, color: '#2C2C2A',
-                background: '#fff', outline: 'none', boxSizing: 'border-box' }}
-              onFocus={e => { e.currentTarget.style.borderColor = '#639922' }}
+                padding: '0 12px', fontFamily: 'inherit', fontSize: 13, color: 'var(--text-body)',
+                background: 'var(--surface-card)', outline: 'none', boxSizing: 'border-box' }}
+              onFocus={e => { e.currentTarget.style.borderColor = 'var(--sage-deep)' }}
               onBlur={e => { e.currentTarget.style.borderColor = 'rgba(0,0,0,0.14)' }} />
           </div>
 
           {/* Date + Amount row */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
             <div>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#2C2C2A', marginBottom: 6 }}>
-                Deadline <span style={{ color: '#D85A30' }}>*</span>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--text-body)', marginBottom: 6 }}>
+                Deadline <span style={{ color: 'var(--terra)' }}>*</span>
               </label>
               <input type="date" value={deadline} onChange={e => setDeadline(e.target.value)}
                 style={{ width: '100%', height: 40, border: '0.5px solid rgba(0,0,0,0.14)', borderRadius: 10,
-                  padding: '0 12px', fontFamily: 'inherit', fontSize: 13, color: '#2C2C2A',
-                  background: '#fff', outline: 'none', boxSizing: 'border-box' }}
-                onFocus={e => { e.currentTarget.style.borderColor = '#639922' }}
+                  padding: '0 12px', fontFamily: 'inherit', fontSize: 13, color: 'var(--text-body)',
+                  background: 'var(--surface-card)', outline: 'none', boxSizing: 'border-box' }}
+                onFocus={e => { e.currentTarget.style.borderColor = 'var(--sage-deep)' }}
                 onBlur={e => { e.currentTarget.style.borderColor = 'rgba(0,0,0,0.14)' }} />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#2C2C2A', marginBottom: 6 }}>
-                Amount <span style={{ color: '#8A8986', fontWeight: 400 }}>&middot; optional</span>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--text-body)', marginBottom: 6 }}>
+                Amount <span style={{ color: 'var(--text-subtle)', fontWeight: 400 }}>&middot; optional</span>
               </label>
               <div style={{ position: 'relative' }}>
                 <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
-                  color: '#8A8986', fontSize: 13, pointerEvents: 'none' }}>£</span>
+                  color: 'var(--text-subtle)', fontSize: 13, pointerEvents: 'none' }}>£</span>
                 <input type="text" inputMode="numeric" value={amount} onChange={e => setAmount(e.target.value)}
                   placeholder="0"
                   style={{ width: '100%', height: 40, border: '0.5px solid rgba(0,0,0,0.14)', borderRadius: 10,
-                    padding: '0 12px 0 24px', fontFamily: 'inherit', fontSize: 13, color: '#2C2C2A',
-                    background: '#fff', outline: 'none', boxSizing: 'border-box' }}
-                  onFocus={e => { e.currentTarget.style.borderColor = '#639922' }}
+                    padding: '0 12px 0 24px', fontFamily: 'inherit', fontSize: 13, color: 'var(--text-body)',
+                    background: 'var(--surface-card)', outline: 'none', boxSizing: 'border-box' }}
+                  onFocus={e => { e.currentTarget.style.borderColor = 'var(--sage-deep)' }}
                   onBlur={e => { e.currentTarget.style.borderColor = 'rgba(0,0,0,0.14)' }} />
               </div>
             </div>
@@ -233,8 +233,8 @@ function AddDeadlineModal({ orgId, userId, onClose, onSaved }: {
 
           {/* Funding type chips */}
           <div style={{ marginBottom: 16 }}>
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#2C2C2A', marginBottom: 6 }}>
-              Funding type <span style={{ color: '#D85A30' }}>*</span>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--text-body)', marginBottom: 6 }}>
+              Funding type <span style={{ color: 'var(--terra)' }}>*</span>
             </label>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
               {TYPE_CHIPS.map(tc => {
@@ -243,7 +243,7 @@ function AddDeadlineModal({ orgId, userId, onClose, onSaved }: {
                   <button key={tc.key} type="button" onClick={() => setFundingType(tc.key)}
                     style={{
                       border: sel ? `1.5px solid ${tc.dot}` : '0.5px solid rgba(0,0,0,0.10)',
-                      background: sel ? tc.bg : '#fff',
+                      background: sel ? tc.bg : 'var(--surface-card)',
                       borderRadius: 10, padding: '10px 8px', textAlign: 'center',
                       cursor: 'pointer', fontFamily: 'inherit',
                     }}>
@@ -251,10 +251,10 @@ function AddDeadlineModal({ orgId, userId, onClose, onSaved }: {
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       background: sel ? tc.dot : tc.bg }}>
                       <tc.Icon size={12} strokeWidth={sel ? 2.5 : 2}
-                        style={{ color: sel ? '#fff' : tc.dot }} />
+                        style={{ color: sel ? 'var(--surface-card)' : tc.dot }} />
                     </div>
                     <div style={{ fontSize: 11, fontWeight: sel ? 600 : 500,
-                      color: sel ? tc.text : '#5F5E5A' }}>{tc.label}</div>
+                      color: sel ? tc.text : 'var(--text-muted)' }}>{tc.label}</div>
                   </button>
                 )
               })}
@@ -263,34 +263,34 @@ function AddDeadlineModal({ orgId, userId, onClose, onSaved }: {
 
           {/* Notes */}
           <div style={{ marginBottom: 16 }}>
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#2C2C2A', marginBottom: 6 }}>
-              Notes <span style={{ color: '#8A8986', fontWeight: 400 }}>&middot; optional</span>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--text-body)', marginBottom: 6 }}>
+              Notes <span style={{ color: 'var(--text-subtle)', fontWeight: 400 }}>&middot; optional</span>
             </label>
             <textarea value={notes} onChange={e => setNotes(e.target.value)}
               placeholder="Link to guidelines, application notes, or anything else you want to remember."
               rows={2}
               style={{ width: '100%', minHeight: 60, border: '0.5px solid rgba(0,0,0,0.14)', borderRadius: 10,
-                padding: '10px 12px', fontFamily: 'inherit', fontSize: 13, color: '#2C2C2A',
-                background: '#fff', outline: 'none', resize: 'vertical', lineHeight: 1.5,
+                padding: '10px 12px', fontFamily: 'inherit', fontSize: 13, color: 'var(--text-body)',
+                background: 'var(--surface-card)', outline: 'none', resize: 'vertical', lineHeight: 1.5,
                 boxSizing: 'border-box' }}
-              onFocus={e => { e.currentTarget.style.borderColor = '#639922' }}
+              onFocus={e => { e.currentTarget.style.borderColor = 'var(--sage-deep)' }}
               onBlur={e => { e.currentTarget.style.borderColor = 'rgba(0,0,0,0.14)' }} />
           </div>
 
           {/* Also add to pipeline */}
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer',
-            background: '#F5F1E8', borderRadius: 10, padding: '10px 12px', marginBottom: 20 }}
+            background: 'var(--surface-sunken)', borderRadius: 10, padding: '10px 12px', marginBottom: 20 }}
             onClick={() => setAddToPipeline(v => !v)}>
             <div style={{ width: 16, height: 16, borderRadius: 4, flexShrink: 0, marginTop: 2,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: addToPipeline ? '#639922' : '#fff',
-              border: addToPipeline ? 'none' : '1.5px solid #D9D6CB',
+              background: addToPipeline ? 'var(--sage-deep)' : 'var(--surface-card)',
+              border: addToPipeline ? 'none' : '1.5px solid var(--border-warm)',
               cursor: 'pointer' }}>
-              {addToPipeline && <Check size={9} strokeWidth={3.5} style={{ color: '#fff' }} />}
+              {addToPipeline && <Check size={9} strokeWidth={3.5} style={{ color: 'var(--surface-card)' }} />}
             </div>
             <div>
-              <div style={{ fontSize: 12, fontWeight: 500, color: '#2C2C2A' }}>Also add to pipeline</div>
-              <div style={{ fontSize: 11, color: '#5F5E5A', marginTop: 2, lineHeight: 1.45 }}>
+              <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-body)' }}>Also add to pipeline</div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2, lineHeight: 1.45 }}>
                 Creates a card in the Identified column so you can track progress.
               </div>
             </div>
@@ -301,20 +301,20 @@ function AddDeadlineModal({ orgId, userId, onClose, onSaved }: {
         {/* Footer */}
         <div style={{ padding: '14px 24px', borderTop: '0.5px solid rgba(0,0,0,0.08)',
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          background: '#FAFAF7', flexShrink: 0, gap: 12 }}>
-          <span style={{ fontSize: 11, color: '#8A8986' }}>
+          background: 'var(--surface-page)', flexShrink: 0, gap: 12 }}>
+          <span style={{ fontSize: 11, color: 'var(--text-subtle)' }}>
             Manual deadlines show on the calendar with a pencil icon.
           </span>
           <div style={{ display: 'flex', gap: 8 }}>
             <button type="button" onClick={onClose}
-              style={{ fontSize: 12, fontWeight: 500, color: '#5F5E5A', padding: '8px 14px',
+              style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-muted)', padding: '8px 14px',
                 borderRadius: 10, cursor: 'pointer', background: 'transparent', border: 'none', fontFamily: 'inherit' }}
               onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.04)' }}
               onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
               Cancel
             </button>
             <button type="button" onClick={handleSave} disabled={!grantName.trim() || !deadline || saving}
-              style={{ fontSize: 12, fontWeight: 500, background: '#8ECB3C', color: '#173404',
+              style={{ fontSize: 12, fontWeight: 500, background: '#8ECB3C', color: 'var(--deep)',
                 padding: '8px 16px', borderRadius: 10, cursor: 'pointer', border: 'none', fontFamily: 'inherit',
                 opacity: (!grantName.trim() || !deadline || saving) ? 0.5 : 1 }}>
               {saving ? 'Saving\u2026' : 'Save deadline'}
@@ -351,7 +351,7 @@ function EditDeadlineModal({ item, onClose, onSaved }: {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-5"
       style={{ background: 'rgba(23,52,4,0.40)' }}
       onClick={onClose}>
-      <div style={{ width: '100%', maxWidth: 400, background: '#fff', borderRadius: 16, overflow: 'hidden',
+      <div style={{ width: '100%', maxWidth: 400, background: 'var(--surface-card)', borderRadius: 16, overflow: 'hidden',
         boxShadow: '0 20px 60px rgba(23,52,4,0.25)' }}
         onClick={e => e.stopPropagation()}>
         {/* Header */}
@@ -359,44 +359,44 @@ function EditDeadlineModal({ item, onClose, onSaved }: {
           display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14 }}>
           <div style={{ minWidth: 0 }}>
             <h3 style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 15, fontWeight: 500,
-              margin: '0 0 3px', color: '#2C2C2A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              margin: '0 0 3px', color: 'var(--text-body)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {item.grant_name}
             </h3>
-            <p style={{ fontSize: 12, color: '#5F5E5A', margin: 0 }}>{item.funder_name}</p>
+            <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>{item.funder_name}</p>
           </div>
           <button onClick={onClose}
-            style={{ width: 28, height: 28, borderRadius: 8, background: '#F1F0EA', border: 'none',
+            style={{ width: 28, height: 28, borderRadius: 8, background: 'var(--surface-pill)', border: 'none',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#5F5E5A', cursor: 'pointer', flexShrink: 0 }}
-            onMouseEnter={e => { e.currentTarget.style.background = '#E5E2D7' }}
-            onMouseLeave={e => { e.currentTarget.style.background = '#F1F0EA' }}>
+              color: 'var(--text-muted)', cursor: 'pointer', flexShrink: 0 }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'var(--border-warm)' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'var(--surface-pill)' }}>
             <XIcon size={13} strokeWidth={2.5} />
           </button>
         </div>
         {/* Body */}
         <div style={{ padding: '18px 22px' }}>
-          <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#2C2C2A', marginBottom: 6 }}>
-            Deadline <span style={{ color: '#D85A30' }}>*</span>
+          <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--text-body)', marginBottom: 6 }}>
+            Deadline <span style={{ color: 'var(--terra)' }}>*</span>
           </label>
           <input type="date" value={deadline} onChange={e => setDeadline(e.target.value)}
             style={{ width: '100%', height: 40, border: '0.5px solid rgba(0,0,0,0.14)', borderRadius: 10,
-              padding: '0 12px', fontFamily: 'inherit', fontSize: 13, color: '#2C2C2A',
-              background: '#fff', outline: 'none', boxSizing: 'border-box' }}
-            onFocus={e => { e.currentTarget.style.borderColor = '#639922' }}
+              padding: '0 12px', fontFamily: 'inherit', fontSize: 13, color: 'var(--text-body)',
+              background: 'var(--surface-card)', outline: 'none', boxSizing: 'border-box' }}
+            onFocus={e => { e.currentTarget.style.borderColor = 'var(--sage-deep)' }}
             onBlur={e => { e.currentTarget.style.borderColor = 'rgba(0,0,0,0.14)' }} />
         </div>
         {/* Footer */}
         <div style={{ padding: '12px 22px 18px', display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
           <button type="button" onClick={onClose}
-            style={{ fontSize: 12, fontWeight: 500, color: '#5F5E5A', padding: '8px 14px',
+            style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-muted)', padding: '8px 14px',
               borderRadius: 10, cursor: 'pointer', background: 'transparent', border: 'none', fontFamily: 'inherit' }}
             onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.04)' }}
             onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
             Cancel
           </button>
           <button type="button" onClick={handleSave} disabled={!deadline || saving}
-            style={{ fontSize: 12, fontWeight: 500, background: deadline ? '#8ECB3C' : '#F5F1E8',
-              color: deadline ? '#173404' : '#8A8986',
+            style={{ fontSize: 12, fontWeight: 500, background: deadline ? '#8ECB3C' : 'var(--surface-sunken)',
+              color: deadline ? 'var(--deep)' : 'var(--text-subtle)',
               padding: '8px 16px', borderRadius: 10, cursor: deadline ? 'pointer' : 'not-allowed',
               border: 'none', fontFamily: 'inherit' }}>
             {saving ? 'Saving\u2026' : 'Save deadline'}
@@ -422,17 +422,17 @@ function DayAlertsSheet({ alerts, onSelect, onClose }: {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-5"
       style={{ background: 'rgba(23,52,4,0.40)' }}
       onClick={onClose}>
-      <div style={{ width: '100%', maxWidth: 380, background: '#fff', borderRadius: 14, overflow: 'hidden',
+      <div style={{ width: '100%', maxWidth: 380, background: 'var(--surface-card)', borderRadius: 14, overflow: 'hidden',
         boxShadow: '0 16px 48px rgba(23,52,4,0.22)' }}
         onClick={e => e.stopPropagation()}>
         <div style={{ padding: '16px 18px 12px', borderBottom: '0.5px solid rgba(0,0,0,0.08)',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 14, fontWeight: 500, color: '#2C2C2A' }}>
+          <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 14, fontWeight: 500, color: 'var(--text-body)' }}>
             {dateStr} — {alerts.length} deadlines
           </span>
           <button onClick={onClose}
-            style={{ width: 26, height: 26, borderRadius: 7, background: '#F1F0EA', border: 'none',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5F5E5A', cursor: 'pointer' }}>
+            style={{ width: 26, height: 26, borderRadius: 7, background: 'var(--surface-pill)', border: 'none',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', cursor: 'pointer' }}>
             <XIcon size={12} strokeWidth={2.5} />
           </button>
         </div>
@@ -444,18 +444,18 @@ function DayAlertsSheet({ alerts, onSelect, onClose }: {
                 onClick={() => { onSelect(a.item) }}
                 style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 18px',
                   background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit' }}
-                onMouseEnter={e => { e.currentTarget.style.background = '#FAFAF7' }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'var(--surface-page)' }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'none' }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontSize: 13, fontWeight: 500, color: '#2C2C2A', margin: '0 0 2px',
+                  <p style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-body)', margin: '0 0 2px',
                     overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.item.grant_name}</p>
-                  <p style={{ fontSize: 11, color: '#5F5E5A', margin: 0 }}>{a.item.funder_name}</p>
+                  <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: 0 }}>{a.item.funder_name}</p>
                 </div>
                 <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 999, fontWeight: 500,
                   background: TYPE_BG[type], color: TYPE_TEXT[type], flexShrink: 0 }}>
                   {TYPE_LABEL[type]}
                 </span>
-                <Pencil size={13} style={{ color: '#8A8986', flexShrink: 0 }} />
+                <Pencil size={13} style={{ color: 'var(--text-subtle)', flexShrink: 0 }} />
               </button>
             )
           })}
@@ -500,36 +500,36 @@ function DatePickerInput({ value, onChange, popoverSide = 'right' }: { value: st
   return (
     <div ref={ref} style={{ position: 'relative', flexShrink: 0 }}>
       <button type="button" onClick={() => setOpen(o => !o)}
-        style={{ width: 120, height: 26, border: `0.5px solid ${open ? '#639922' : 'rgba(0,0,0,0.14)'}`,
+        style={{ width: 120, height: 26, border: `0.5px solid ${open ? 'var(--sage-deep)' : 'rgba(0,0,0,0.14)'}`,
           borderRadius: 10, padding: '0 8px', fontSize: 11, fontFamily: 'inherit',
-          color: value ? '#2C2C2A' : '#8A8986', background: '#fff', cursor: 'pointer',
+          color: value ? 'var(--text-body)' : 'var(--text-subtle)', background: 'var(--surface-card)', cursor: 'pointer',
           display: 'inline-flex', alignItems: 'center', gap: 6, textAlign: 'left', boxSizing: 'border-box' }}>
-        <Calendar size={10} strokeWidth={2} style={{ color: '#8A8986', flexShrink: 0 }} />
+        <Calendar size={10} strokeWidth={2} style={{ color: 'var(--text-subtle)', flexShrink: 0 }} />
         <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayStr}</span>
       </button>
       {open && (
         <div style={{ position: 'absolute', top: 'calc(100% + 4px)', ...(popoverSide === 'left' ? { left: 0 } : { right: 0 }), zIndex: 300,
-          background: '#fff', border: '0.5px solid rgba(0,0,0,0.12)', borderRadius: 10,
+          background: 'var(--surface-card)', border: '0.5px solid rgba(0,0,0,0.12)', borderRadius: 10,
           boxShadow: '0 8px 24px rgba(0,0,0,0.12)', padding: 10, width: 196 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
             <button type="button" onClick={prevMonth}
-              style={{ width: 20, height: 20, borderRadius: 6, background: '#F1F0EA', border: 'none',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#5F5E5A' }}>
+              style={{ width: 20, height: 20, borderRadius: 6, background: 'var(--surface-pill)', border: 'none',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-muted)' }}>
               <ChevronLeft size={10} strokeWidth={2.5} />
             </button>
             <span style={{ flex: 1, textAlign: 'center', fontFamily: 'var(--font-space-grotesk)',
-              fontSize: 12, fontWeight: 500, color: '#2C2C2A' }}>
+              fontSize: 12, fontWeight: 500, color: 'var(--text-body)' }}>
               {MONTH_NAMES[viewMonth]} {viewYear}
             </span>
             <button type="button" onClick={nextMonth}
-              style={{ width: 20, height: 20, borderRadius: 6, background: '#F1F0EA', border: 'none',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#5F5E5A' }}>
+              style={{ width: 20, height: 20, borderRadius: 6, background: 'var(--surface-pill)', border: 'none',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-muted)' }}>
               <ChevronRight size={10} strokeWidth={2.5} />
             </button>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 2 }}>
             {['M','T','W','T','F','S','S'].map((d, i) => (
-              <div key={i} style={{ textAlign: 'center', color: '#8A8986', fontSize: 9,
+              <div key={i} style={{ textAlign: 'center', color: 'var(--text-subtle)', fontSize: 9,
                 letterSpacing: '0.05em', padding: '2px 0' }}>{d}</div>
             ))}
             {calDp.map((day, i) => {
@@ -541,8 +541,8 @@ function DatePickerInput({ value, onChange, popoverSide = 'right' }: { value: st
                   onClick={() => { if (!day.isCurrentMonth) return; onChange(iso); setOpen(false) }}
                   style={{ textAlign: 'center', padding: '4px 1px', borderRadius: 6, border: 'none',
                     cursor: day.isCurrentMonth ? 'pointer' : 'default',
-                    background: isSel ? '#639922' : isToday ? '#F1F7E4' : 'transparent',
-                    color: isSel ? '#fff' : !day.isCurrentMonth ? '#D9D6CB' : isToday ? '#3B6D11' : '#2C2C2A',
+                    background: isSel ? 'var(--sage-deep)' : isToday ? 'var(--state-success-pale)' : 'transparent',
+                    color: isSel ? 'var(--surface-card)' : !day.isCurrentMonth ? 'var(--border-warm)' : isToday ? 'var(--state-success)' : 'var(--text-body)',
                     fontFamily: 'inherit', fontSize: 11, fontWeight: isSel ? 600 : 400 }}>
                   {day.date.getDate()}
                 </button>
@@ -578,8 +578,8 @@ function StageChip({ stage }: { stage: string }) {
 function TypeChip({ type }: { type: string }) {
   return (
     <span style={{ fontSize: 11, padding: '2px 7px', borderRadius: 999, fontWeight: 500,
-      whiteSpace: 'nowrap', background: TYPE_BG[type] ?? '#F1F7E4',
-      color: TYPE_TEXT[type] ?? '#3B6D11', flexShrink: 0 }}>
+      whiteSpace: 'nowrap', background: TYPE_BG[type] ?? 'var(--state-success-pale)',
+      color: TYPE_TEXT[type] ?? 'var(--state-success)', flexShrink: 0 }}>
       {TYPE_LABEL[type] ?? type}
     </span>
   )
@@ -640,9 +640,9 @@ function GrantPreviewModal({
   const stripSub = brief ? 'What they fund, who qualifies, tips for applying' : 'Eligibility, who qualifies, and more'
 
   const PAL = {
-    green: { bg: '#F1F7E4', stroke: '#3B6D11' },
-    coral: { bg: '#FAECE7', stroke: '#993C1D' },
-    amber: { bg: '#FAEEDA', stroke: '#854F0B' },
+    green: { bg: 'var(--state-success-pale)', stroke: 'var(--state-success)' },
+    coral: { bg: 'var(--state-error-pale)', stroke: 'var(--state-error)' },
+    amber: { bg: 'var(--state-warning-pale)', stroke: 'var(--state-warning)' },
   } as const
 
   const briefBlocks: { Icon: LucideIcon; pal: keyof typeof PAL; label: string; text: string }[] = brief ? ([
@@ -668,7 +668,7 @@ function GrantPreviewModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-5"
       style={{ background: 'rgba(23,52,4,0.40)', overflowY: 'auto' }}
       onClick={onClose}>
-      <div style={{ width: '100%', maxWidth: 640, maxHeight: '90vh', background: '#fff', borderRadius: 16,
+      <div style={{ width: '100%', maxWidth: 640, maxHeight: '90vh', background: 'var(--surface-card)', borderRadius: 16,
         overflow: 'hidden', display: 'flex', flexDirection: 'column',
         boxShadow: '0 20px 60px rgba(23,52,4,0.25)' }}
         onClick={e => e.stopPropagation()}>
@@ -681,27 +681,27 @@ function GrantPreviewModal({
               <TypeChip type={fundingType} />
               {grant.eligibilityStatus === 'eligible' && (
                 <span style={{ fontFamily: UI_FONT, fontSize: 11, padding: '2px 8px', borderRadius: 999, fontWeight: 500,
-                  background: '#F1F7E4', color: '#3B6D11' }}>Eligible</span>
+                  background: 'var(--state-success-pale)', color: 'var(--state-success)' }}>Eligible</span>
               )}
               {grant.eligibilityStatus === 'check_required' && (
                 <span style={{ fontFamily: UI_FONT, fontSize: 11, padding: '2px 8px', borderRadius: 999, fontWeight: 500,
-                  background: '#FAEEDA', color: '#854F0B' }}>Check required</span>
+                  background: 'var(--state-warning-pale)', color: 'var(--state-warning)' }}>Check required</span>
               )}
             </div>
             <h3 style={{ fontFamily: UI_FONT, fontSize: 19, fontWeight: 600, letterSpacing: '-0.01em',
-              margin: '0 0 4px', color: '#2C2C2A', lineHeight: 1.25 }}>
+              margin: '0 0 4px', color: 'var(--text-body)', lineHeight: 1.25 }}>
               {grant.title}
             </h3>
             {grant.funder && grant.funder !== grant.title && (
-              <p style={{ fontFamily: BODY_FONT, fontSize: 13, color: '#5F5E5A', margin: 0 }}>{grant.funder}</p>
+              <p style={{ fontFamily: BODY_FONT, fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>{grant.funder}</p>
             )}
           </div>
           <button onClick={onClose}
-            style={{ width: 30, height: 30, borderRadius: 8, background: '#F1F0EA', border: 'none',
+            style={{ width: 30, height: 30, borderRadius: 8, background: 'var(--surface-pill)', border: 'none',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#5F5E5A', cursor: 'pointer', flexShrink: 0 }}
-            onMouseEnter={e => { e.currentTarget.style.background = '#E5E2D7' }}
-            onMouseLeave={e => { e.currentTarget.style.background = '#F1F0EA' }}>
+              color: 'var(--text-muted)', cursor: 'pointer', flexShrink: 0 }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'var(--border-warm)' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'var(--surface-pill)' }}>
             <XIcon size={14} strokeWidth={2.5} />
           </button>
         </div>
@@ -712,21 +712,21 @@ function GrantPreviewModal({
           {/* Amount & deadline strip */}
           {(amtStr || dlLabel) && (
             <div style={{ display: 'grid', gridTemplateColumns: amtStr && dlLabel ? '1fr 1fr' : '1fr',
-              padding: '16px 24px', gap: 16, borderBottom: '0.5px solid rgba(0,0,0,0.06)', background: '#FAFAF7' }}>
+              padding: '16px 24px', gap: 16, borderBottom: '0.5px solid rgba(0,0,0,0.06)', background: 'var(--surface-page)' }}>
               {amtStr && (
                 <div>
                   <p style={{ fontFamily: UI_FONT, fontSize: 10, fontWeight: 500, letterSpacing: '0.08em',
-                    textTransform: 'uppercase', color: '#8A8986', margin: '0 0 4px' }}>Grant amount</p>
-                  <p style={{ fontFamily: UI_FONT, fontSize: 18, fontWeight: 600, color: '#3B6D11', margin: 0 }}>{amtStr}</p>
+                    textTransform: 'uppercase', color: 'var(--text-subtle)', margin: '0 0 4px' }}>Grant amount</p>
+                  <p style={{ fontFamily: UI_FONT, fontSize: 18, fontWeight: 600, color: 'var(--state-success)', margin: 0 }}>{amtStr}</p>
                 </div>
               )}
               {dlLabel && (
                 <div>
                   <p style={{ fontFamily: UI_FONT, fontSize: 10, fontWeight: 500, letterSpacing: '0.08em',
-                    textTransform: 'uppercase', color: '#8A8986', margin: '0 0 4px' }}>Deadline</p>
-                  <p style={{ fontFamily: UI_FONT, fontSize: 14, fontWeight: 500, color: '#2C2C2A', margin: 0,
+                    textTransform: 'uppercase', color: 'var(--text-subtle)', margin: '0 0 4px' }}>Deadline</p>
+                  <p style={{ fontFamily: UI_FONT, fontSize: 14, fontWeight: 500, color: 'var(--text-body)', margin: 0,
                     display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <Calendar size={13} strokeWidth={2} style={{ color: '#5F5E5A' }} />
+                    <Calendar size={13} strokeWidth={2} style={{ color: 'var(--text-muted)' }} />
                     {dlLabel}
                   </p>
                 </div>
@@ -738,8 +738,8 @@ function GrantPreviewModal({
           {grant.description && (
             <div style={{ padding: '18px 24px', borderBottom: '0.5px solid rgba(0,0,0,0.06)' }}>
               <p style={{ fontFamily: UI_FONT, fontSize: 10, fontWeight: 500, letterSpacing: '0.08em',
-                textTransform: 'uppercase', color: '#8A8986', margin: '0 0 8px' }}>About this grant</p>
-              <p style={{ fontFamily: BODY_FONT, fontSize: 13.5, lineHeight: 1.55, color: '#2C2C2A', margin: 0 }}>
+                textTransform: 'uppercase', color: 'var(--text-subtle)', margin: '0 0 8px' }}>About this grant</p>
+              <p style={{ fontFamily: BODY_FONT, fontSize: 13.5, lineHeight: 1.55, color: 'var(--text-body)', margin: 0 }}>
                 {grant.description}
               </p>
             </div>
@@ -749,11 +749,11 @@ function GrantPreviewModal({
           {grant.impactSectors && grant.impactSectors.length > 0 && (
             <div style={{ padding: '16px 24px', borderBottom: '0.5px solid rgba(0,0,0,0.06)' }}>
               <p style={{ fontFamily: UI_FONT, fontSize: 10, fontWeight: 500, letterSpacing: '0.08em',
-                textTransform: 'uppercase', color: '#8A8986', margin: '0 0 10px' }}>Impact sectors</p>
+                textTransform: 'uppercase', color: 'var(--text-subtle)', margin: '0 0 10px' }}>Impact sectors</p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {grant.impactSectors.map(s => (
                   <span key={s} style={{ fontFamily: BODY_FONT, fontSize: 12, padding: '4px 10px', borderRadius: 999,
-                    background: '#F1F7E4', color: '#3B6D11', fontWeight: 500 }}>{s}</span>
+                    background: 'var(--state-success-pale)', color: 'var(--state-success)', fontWeight: 500 }}>{s}</span>
                 ))}
               </div>
             </div>
@@ -763,17 +763,17 @@ function GrantPreviewModal({
           {(!grant.deadline || grant.isRolling) && (
             <div style={{ padding: '16px 24px', borderBottom: '0.5px solid rgba(0,0,0,0.06)' }}>
               <p style={{ fontFamily: UI_FONT, fontSize: 10, fontWeight: 500, letterSpacing: '0.08em',
-                textTransform: 'uppercase', color: '#8A8986', margin: '0 0 8px' }}>Add a deadline</p>
+                textTransform: 'uppercase', color: 'var(--text-subtle)', margin: '0 0 8px' }}>Add a deadline</p>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                 <DatePickerInput value={deadlineValue} onChange={setDeadlineValue} popoverSide="left" />
                 <button onClick={handleSetDeadlineClick} disabled={!deadlineValue || saving}
                   style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 500, padding: '7px 14px', border: 'none', borderRadius: 8,
                     cursor: deadlineValue && !saving ? 'pointer' : 'not-allowed',
-                    background: deadlineValue ? '#8ECB3C' : '#F0EFEB', color: deadlineValue ? '#173404' : '#8A8986' }}>
+                    background: deadlineValue ? '#8ECB3C' : 'var(--surface-pill)', color: deadlineValue ? 'var(--deep)' : 'var(--text-subtle)' }}>
                   {saving ? '…' : inPipeline ? 'Set deadline' : 'Set date & save to pipeline'}
                 </button>
               </div>
-              <p style={{ fontFamily: BODY_FONT, fontSize: 11.5, color: '#8A8986', margin: '8px 0 0' }}>
+              <p style={{ fontFamily: BODY_FONT, fontSize: 11.5, color: 'var(--text-subtle)', margin: '8px 0 0' }}>
                 {grant.isRolling
                   ? 'This funder accepts rolling applications. Set your own target submission date.'
                   : inPipeline
@@ -794,7 +794,7 @@ function GrantPreviewModal({
                   style={{
                     width: '100%', display: 'flex', alignItems: 'center', gap: 12,
                     padding: '14px 22px 14px 19px',
-                    background: insightsHover ? '#F1F7E4' : '#fff',
+                    background: insightsHover ? 'var(--state-success-pale)' : 'var(--surface-card)',
                     borderLeft: '3px solid #8ECB3C',
                     borderRight: 'none', borderTop: 'none', borderBottom: 'none',
                     cursor: 'pointer', textAlign: 'left',
@@ -802,21 +802,21 @@ function GrantPreviewModal({
                     fontFamily: BODY_FONT,
                   }}
                 >
-                  <Info size={16} strokeWidth={2} style={{ color: insightsHover ? '#639922' : '#173404', flexShrink: 0, transition: 'color 160ms ease' }} />
+                  <Info size={16} strokeWidth={2} style={{ color: insightsHover ? 'var(--sage-deep)' : 'var(--deep)', flexShrink: 0, transition: 'color 160ms ease' }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 500, color: '#2C2C2A' }}>{stripTitle}</div>
-                    <div style={{ fontSize: 11, marginTop: 1, color: '#5F5E5A' }}>{stripSub}</div>
+                    <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-body)' }}>{stripTitle}</div>
+                    <div style={{ fontSize: 11, marginTop: 1, color: 'var(--text-muted)' }}>{stripSub}</div>
                   </div>
-                  <ChevronDown size={14} strokeWidth={2.5} style={{ color: '#5F5E5A', flexShrink: 0 }} />
+                  <ChevronDown size={14} strokeWidth={2.5} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
                 </button>
               ) : (
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center',
-                    padding: '12px 22px', background: '#F1F7E4', borderBottom: '0.5px dashed rgba(57,109,17,0.2)' }}>
+                    padding: '12px 22px', background: 'var(--state-success-pale)', borderBottom: '0.5px dashed rgba(57,109,17,0.2)' }}>
                     <button onClick={() => setInsightsExpanded(false)}
                       style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: BODY_FONT,
                         fontSize: 11, fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase',
-                        color: '#3B6D11', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}>
+                        color: 'var(--state-success)', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}>
                       <ChevronUp size={12} strokeWidth={2.5} />
                       Hide insights
                     </button>
@@ -824,7 +824,7 @@ function GrantPreviewModal({
 
                   {brief && briefBlocks.length > 0 ? (
                     <>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', background: '#fff' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', background: 'var(--surface-card)' }}>
                         {briefBlocks.map((b, i) => {
                           const Icon = b.Icon
                           return (
@@ -839,24 +839,24 @@ function GrantPreviewModal({
                                   <Icon size={13} style={{ color: PAL[b.pal].stroke }} />
                                 </div>
                                 <p style={{ fontFamily: BODY_FONT, fontSize: 11, fontWeight: 500, letterSpacing: '0.08em',
-                                  textTransform: 'uppercase', color: '#2C2C2A', margin: 0 }}>{b.label}</p>
+                                  textTransform: 'uppercase', color: 'var(--text-body)', margin: 0 }}>{b.label}</p>
                               </div>
-                              <p style={{ fontFamily: BODY_FONT, fontSize: 13, lineHeight: 1.55, color: '#5F5E5A', margin: 0 }}>{b.text}</p>
+                              <p style={{ fontFamily: BODY_FONT, fontSize: 13, lineHeight: 1.55, color: 'var(--text-muted)', margin: 0 }}>{b.text}</p>
                             </div>
                           )
                         })}
                       </div>
                       {brief.exclusions && (
                         <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start',
-                          padding: '16px 22px', background: '#FAEEDA', borderTop: '0.5px solid rgba(186,117,23,0.2)' }}>
-                          <div style={{ width: 26, height: 26, borderRadius: 7, background: '#FAC775',
+                          padding: '16px 22px', background: 'var(--state-warning-pale)', borderTop: '0.5px solid rgba(186,117,23,0.2)' }}>
+                          <div style={{ width: 26, height: 26, borderRadius: 7, background: 'var(--gold)',
                             display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                            <AlertTriangle size={13} style={{ color: '#854F0B' }} />
+                            <AlertTriangle size={13} style={{ color: 'var(--state-warning)' }} />
                           </div>
                           <div>
                             <p style={{ fontFamily: BODY_FONT, fontSize: 11, fontWeight: 500, letterSpacing: '0.08em',
-                              textTransform: 'uppercase', color: '#412402', margin: '0 0 4px' }}>Exclusions</p>
-                            <p style={{ fontFamily: BODY_FONT, fontSize: 13, lineHeight: 1.55, color: '#854F0B', margin: 0 }}>{brief.exclusions}</p>
+                              textTransform: 'uppercase', color: 'var(--text-body)', margin: '0 0 4px' }}>Exclusions</p>
+                            <p style={{ fontFamily: BODY_FONT, fontSize: 13, lineHeight: 1.55, color: 'var(--state-warning)', margin: 0 }}>{brief.exclusions}</p>
                           </div>
                         </div>
                       )}
@@ -866,11 +866,11 @@ function GrantPreviewModal({
                       {grant.eligibilityCriteria && grant.eligibilityCriteria.length > 0 && (
                         <div style={{ marginBottom: 16 }}>
                           <p style={{ fontFamily: BODY_FONT, fontSize: 10, fontWeight: 500, letterSpacing: '0.08em',
-                            textTransform: 'uppercase', color: '#8A8986', margin: '0 0 10px' }}>Eligibility criteria</p>
+                            textTransform: 'uppercase', color: 'var(--text-subtle)', margin: '0 0 10px' }}>Eligibility criteria</p>
                           <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
                             {grant.eligibilityCriteria.map((c, i) => (
-                              <li key={i} style={{ display: 'flex', gap: 10, fontFamily: BODY_FONT, fontSize: 13, color: '#5F5E5A' }}>
-                                <CheckCircle2 size={14} style={{ flexShrink: 0, marginTop: 2, color: '#639922' }} />
+                              <li key={i} style={{ display: 'flex', gap: 10, fontFamily: BODY_FONT, fontSize: 13, color: 'var(--text-muted)' }}>
+                                <CheckCircle2 size={14} style={{ flexShrink: 0, marginTop: 2, color: 'var(--sage-deep)' }} />
                                 <span style={{ lineHeight: 1.45 }}>{c}</span>
                               </li>
                             ))}
@@ -880,11 +880,11 @@ function GrantPreviewModal({
                       {grant.eligibleStructures && grant.eligibleStructures.length > 0 && (
                         <div>
                           <p style={{ fontFamily: BODY_FONT, fontSize: 10, fontWeight: 500, letterSpacing: '0.08em',
-                            textTransform: 'uppercase', color: '#8A8986', margin: '0 0 8px' }}>Eligible organisations</p>
+                            textTransform: 'uppercase', color: 'var(--text-subtle)', margin: '0 0 8px' }}>Eligible organisations</p>
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                             {grant.eligibleStructures.map(s => (
                               <span key={s} style={{ fontFamily: BODY_FONT, fontSize: 11, fontWeight: 500, padding: '4px 10px',
-                                borderRadius: 9999, background: 'rgba(142,203,60,0.12)', color: '#639922' }}>
+                                borderRadius: 9999, background: 'rgba(142,203,60,0.12)', color: 'var(--sage-deep)' }}>
                                 {STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
                               </span>
                             ))}
@@ -901,13 +901,13 @@ function GrantPreviewModal({
         </div>
 
         {/* Footer actions */}
-        <div style={{ padding: '14px 22px', borderTop: '0.5px solid rgba(0,0,0,0.08)', background: '#FAFAF7',
+        <div style={{ padding: '14px 22px', borderTop: '0.5px solid rgba(0,0,0,0.08)', background: 'var(--surface-page)',
           display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 10, flexWrap: 'wrap', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
             {grant.applyUrl && (
               <a href={grant.applyUrl} target="_blank" rel="noopener noreferrer"
                 style={{ fontFamily: UI_FONT, fontSize: 12.5, fontWeight: 500,
-                  background: '#173404', color: '#F1F7E4', padding: '8px 14px', borderRadius: 8,
+                  background: 'var(--deep)', color: 'var(--state-success-pale)', padding: '8px 14px', borderRadius: 8,
                   textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
                 Apply now <ExternalLink size={11} />
               </a>
@@ -915,8 +915,8 @@ function GrantPreviewModal({
             {!inPipeline && (
               <button onClick={onAddToPipeline} disabled={saving}
                 style={{ fontFamily: UI_FONT, fontSize: 12.5, fontWeight: 500,
-                  background: saving ? '#F5F1E8' : '#8ECB3C',
-                  color: saving ? '#8A8986' : '#173404',
+                  background: saving ? 'var(--surface-sunken)' : '#8ECB3C',
+                  color: saving ? 'var(--text-subtle)' : 'var(--deep)',
                   padding: '8px 14px', borderRadius: 8, border: 'none',
                   cursor: saving ? 'not-allowed' : 'pointer',
                   display: 'inline-flex', alignItems: 'center', gap: 5 }}>
@@ -925,7 +925,7 @@ function GrantPreviewModal({
             )}
             {inPipeline && (
               <span style={{ fontFamily: UI_FONT, fontSize: 11.5, fontWeight: 500,
-                color: '#3B6D11', background: '#F1F7E4', padding: '6px 10px', borderRadius: 8,
+                color: 'var(--state-success)', background: 'var(--state-success-pale)', padding: '6px 10px', borderRadius: 8,
                 display: 'inline-flex', alignItems: 'center', gap: 5 }}>
                 <Check size={11} strokeWidth={2.5} /> In pipeline
               </span>
@@ -1298,15 +1298,15 @@ export default function DeadlinesPage() {
   }
 
   function dot(label: string): React.ReactNode {
-    return <span style={{ color: '#8A8986', margin: '0 2px' }}>&middot;</span>
+    return <span style={{ color: 'var(--text-subtle)', margin: '0 2px' }}>&middot;</span>
   }
 
   // ── Loading / error states ────────────────────────────────────────────────────
   if (loading) return (
-    <div className="flex items-center justify-center h-64 text-[#5F5E5A] text-sm">Loading deadlines…</div>
+    <div className="flex items-center justify-center h-64 text-text-muted text-sm">Loading deadlines…</div>
   )
   if (error) return (
-    <div className="p-8 text-center"><p style={{ color: '#993C1D' }} className="font-medium">{error}</p></div>
+    <div className="p-8 text-center"><p style={{ color: 'var(--state-error)' }} className="font-medium">{error}</p></div>
   )
 
   // ── Render ─────────────────────────────────────────────────────────────────────────────────
@@ -1345,8 +1345,8 @@ export default function DeadlinesPage() {
     const dlLabel  = dateLabel(dl ?? null)
 
     // Countdown pill colours
-    const ctBg     = bucket === 'week'  ? '#FAECE7' : bucket === 'month' ? '#F4F9ED' : '#FAFAF7'
-    const ctColor  = bucket === 'week'  ? '#993C1D' : bucket === 'month' ? '#639922' : '#5F5E5A'
+    const ctBg     = bucket === 'week'  ? 'var(--state-error-pale)' : bucket === 'month' ? 'var(--surface-page)' : 'var(--surface-page)'
+    const ctColor  = bucket === 'week'  ? 'var(--state-error)' : bucket === 'month' ? 'var(--sage-deep)' : 'var(--text-muted)'
     const ctBorder = bucket === 'later' ? '1px solid rgba(23,52,4,0.08)' : 'none'
 
     // Body data
@@ -1373,17 +1373,17 @@ export default function DeadlinesPage() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
           {stage === 'applying' && (
             <span style={{ fontFamily: UI_FONT, fontSize: 11, padding: '2px 8px', borderRadius: 10, fontWeight: 500,
-              background: '#EEEDFE', color: '#3C3489', whiteSpace: 'nowrap' }}>Applying</span>
+              background: 'var(--status-invite-pale)', color: 'var(--status-invite)', whiteSpace: 'nowrap' }}>Applying</span>
           )}
           {stage === 'submitted' && (
             <span style={{ fontFamily: UI_FONT, fontSize: 11, padding: '2px 8px', borderRadius: 10, fontWeight: 500,
-              background: '#F4F9ED', color: '#639922', whiteSpace: 'nowrap' }}>Submitted</span>
+              background: 'var(--surface-page)', color: 'var(--sage-deep)', whiteSpace: 'nowrap' }}>Submitted</span>
           )}
           <a href="/dashboard/pipeline"
             style={{ width: 28, height: 28, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              color: '#8A8986', borderRadius: 6, textDecoration: 'none', background: 'transparent' }}
-            onMouseEnter={e => { e.currentTarget.style.background = '#F5F1E8'; e.currentTarget.style.color = '#173404' }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#8A8986' }}>
+              color: 'var(--text-subtle)', borderRadius: 6, textDecoration: 'none', background: 'transparent' }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'var(--surface-sunken)'; e.currentTarget.style.color = 'var(--deep)' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-subtle)' }}>
             <ArrowRight size={14} />
           </a>
         </div>
@@ -1392,7 +1392,7 @@ export default function DeadlinesPage() {
       actions = (
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
           <button onClick={() => handleDismissMatch(row.grant)}
-            style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 500, color: '#8A8986', padding: '6px 8px', borderRadius: 6,
+            style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 500, color: 'var(--text-subtle)', padding: '6px 8px', borderRadius: 6,
               border: 'none', background: 'transparent', cursor: 'pointer', whiteSpace: 'nowrap' }}
             title="Not for us — hide this grant">
             Not for us
@@ -1400,7 +1400,7 @@ export default function DeadlinesPage() {
           <button
             onClick={() => handlePipelineMatch(row.grant)}
             style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 500, padding: '6px 12px', borderRadius: 6,
-              border: 'none', background: '#8ECB3C', color: '#173404', cursor: 'pointer',
+              border: 'none', background: '#8ECB3C', color: 'var(--deep)', cursor: 'pointer',
               display: 'inline-flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
             <Plus size={10} />Pipeline
           </button>
@@ -1414,10 +1414,10 @@ export default function DeadlinesPage() {
         actions = (
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
             <span style={{ fontFamily: UI_FONT, fontSize: 11, padding: '2px 8px', borderRadius: 10, fontWeight: 500,
-              background: '#FAFAF7', color: '#5F5E5A', border: '1px solid rgba(23,52,4,0.14)', whiteSpace: 'nowrap' }}>Saved</span>
+              background: 'var(--surface-page)', color: 'var(--text-muted)', border: '1px solid rgba(23,52,4,0.14)', whiteSpace: 'nowrap' }}>Saved</span>
             <button onClick={() => handlePipelineMatch(row.grant)}
               style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 500, padding: '6px 12px', borderRadius: 6,
-                border: 'none', background: '#8ECB3C', color: '#173404', cursor: 'pointer',
+                border: 'none', background: '#8ECB3C', color: 'var(--deep)', cursor: 'pointer',
                 display: 'inline-flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
               <Plus size={10} />Pipeline
             </button>
@@ -1427,17 +1427,17 @@ export default function DeadlinesPage() {
         actions = (
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
             <span style={{ fontFamily: UI_FONT, fontSize: 11, padding: '2px 8px', borderRadius: 10, fontWeight: 500,
-              background: '#F4F9ED', color: '#639922', whiteSpace: 'nowrap' }}>Identified</span>
+              background: 'var(--surface-page)', color: 'var(--sage-deep)', whiteSpace: 'nowrap' }}>Identified</span>
             <a href="/dashboard/pipeline"
               style={{ width: 28, height: 28, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                color: '#8A8986', borderRadius: 6, textDecoration: 'none' }}>
+                color: 'var(--text-subtle)', borderRadius: 6, textDecoration: 'none' }}>
               <ArrowRight size={14} />
             </a>
           </div>
         )
       } else if (actioning === 'done') {
         actions = (
-          <span style={{ fontFamily: UI_FONT, fontSize: 11, fontWeight: 500, color: '#3B6D11',
+          <span style={{ fontFamily: UI_FONT, fontSize: 11, fontWeight: 500, color: 'var(--state-success)',
             display: 'inline-flex', alignItems: 'center', gap: 3 }}>
             <Check size={10} strokeWidth={3} /> Added
           </span>
@@ -1446,23 +1446,23 @@ export default function DeadlinesPage() {
         actions = (
           <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
             <button onClick={() => handleDismissMatch(row.grant)} disabled={!!actioning}
-              style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 500, color: '#8A8986', padding: '6px 8px',
+              style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 500, color: 'var(--text-subtle)', padding: '6px 8px',
                 borderRadius: 6, border: 'none', background: 'transparent',
                 cursor: actioning ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap' }}
               title="Not for us — hide this grant">
               Not for us
             </button>
             <button onClick={() => handleSaveMatch(gId)} disabled={!!actioning}
-              style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 500, color: '#5F5E5A', padding: '6px 10px',
-                borderRadius: 6, border: '0.5px solid rgba(23,52,4,0.14)', background: '#fff',
+              style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 500, color: 'var(--text-muted)', padding: '6px 10px',
+                borderRadius: 6, border: '0.5px solid rgba(23,52,4,0.14)', background: 'var(--surface-card)',
                 cursor: actioning ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap' }}>
               {actioning === 'saving' ? '…' : 'Save'}
             </button>
             <button onClick={() => handlePipelineMatch(row.grant)} disabled={!!actioning}
               style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 500, padding: '6px 12px', borderRadius: 6,
                 border: 'none', cursor: actioning ? 'not-allowed' : 'pointer',
-                background: actioning ? '#F5F1E8' : '#8ECB3C',
-                color: actioning ? '#8A8986' : '#173404',
+                background: actioning ? 'var(--surface-sunken)' : '#8ECB3C',
+                color: actioning ? 'var(--text-subtle)' : 'var(--deep)',
                 display: 'inline-flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
               {actioning === 'pipelining' ? '…' : <><Plus size={10} />Pipeline</>}
             </button>
@@ -1478,7 +1478,7 @@ export default function DeadlinesPage() {
           padding: '14px 22px',
           borderBottom: isLast ? 'none' : '1px solid rgba(23,52,4,0.08)',
         }}
-        onMouseEnter={e => { e.currentTarget.style.background = '#FAFAF7' }}
+        onMouseEnter={e => { e.currentTarget.style.background = 'var(--surface-page)' }}
         onMouseLeave={e => { e.currentTarget.style.background = '' }}>
 
         {/* Countdown pill */}
@@ -1505,15 +1505,15 @@ export default function DeadlinesPage() {
           style={{ minWidth: 0, color: 'inherit', background: 'transparent', border: 'none', padding: 0,
             textAlign: 'left', cursor: 'pointer', font: 'inherit' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 4, flexWrap: 'wrap' }}>
-            <span style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 14.5, color: '#2C2C2A', letterSpacing: '-0.005em' }}>
+            <span style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 14.5, color: 'var(--text-body)', letterSpacing: '-0.005em' }}>
               {title}
             </span>
             <TypeChip type={fundingType} />
           </div>
-          <div style={{ fontFamily: BODY_FONT, fontSize: 13, color: '#8A8986', display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
-            {funder && <span style={{ color: '#5F5E5A' }}>{funder}</span>}
+          <div style={{ fontFamily: BODY_FONT, fontSize: 13, color: 'var(--text-subtle)', display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
+            {funder && <span style={{ color: 'var(--text-muted)' }}>{funder}</span>}
             {funder && amtStr && <span style={{ opacity: 0.5 }}>·</span>}
-            {amtStr && <span style={{ color: '#639922', fontFamily: UI_FONT, fontWeight: 500, fontSize: 12.5 }}>{amtStr}</span>}
+            {amtStr && <span style={{ color: 'var(--sage-deep)', fontFamily: UI_FONT, fontWeight: 500, fontSize: 12.5 }}>{amtStr}</span>}
           </div>
         </button>
 
@@ -1530,13 +1530,13 @@ export default function DeadlinesPage() {
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 28 }}>
         <div>
           <h1 style={{ fontFamily: UI_FONT, fontSize: 28, fontWeight: 600, letterSpacing: '-0.02em',
-            margin: '0 0 4px', color: '#2C2C2A' }}>Deadlines</h1>
-          <p style={{ fontFamily: BODY_FONT, fontSize: 14.5, color: '#5F5E5A', margin: 0 }}>
+            margin: '0 0 4px', color: 'var(--text-body)' }}>Deadlines</h1>
+          <p style={{ fontFamily: BODY_FONT, fontSize: 14.5, color: 'var(--text-muted)', margin: 0 }}>
             What's coming up across your pipeline, saved grants, and live matches.
           </p>
         </div>
         <button onClick={() => setAddOpen(true)}
-          style={{ fontFamily: UI_FONT, fontSize: 13.5, fontWeight: 500, background: '#8ECB3C', color: '#173404',
+          style={{ fontFamily: UI_FONT, fontSize: 13.5, fontWeight: 500, background: '#8ECB3C', color: 'var(--deep)',
             border: 'none', padding: '9px 16px', borderRadius: 8, cursor: 'pointer',
             display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0 }}
           onMouseEnter={e => { e.currentTarget.style.filter = 'brightness(0.95)' }}
@@ -1555,13 +1555,13 @@ export default function DeadlinesPage() {
 
           {/* This week */}
           {thisWeek.length > 0 && (
-            <div style={{ background: '#fff', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
+            <div style={{ background: 'var(--surface-card)', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '16px 22px', borderBottom: '1px solid rgba(23,52,4,0.08)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ fontFamily: UI_FONT, fontWeight: 600, fontSize: 15, color: '#2C2C2A', letterSpacing: '-0.01em' }}>This week</span>
-                  <span style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 12, color: '#993C1D', background: '#FAECE7', padding: '3px 9px', borderRadius: 10 }}>{thisWeek.length}</span>
+                  <span style={{ fontFamily: UI_FONT, fontWeight: 600, fontSize: 15, color: 'var(--text-body)', letterSpacing: '-0.01em' }}>This week</span>
+                  <span style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 12, color: 'var(--state-error)', background: 'var(--state-error-pale)', padding: '3px 9px', borderRadius: 10 }}>{thisWeek.length}</span>
                 </div>
-                <span style={{ fontFamily: BODY_FONT, fontSize: 12, color: '#8A8986' }}>Due in the next 7 days</span>
+                <span style={{ fontFamily: BODY_FONT, fontSize: 12, color: 'var(--text-subtle)' }}>Due in the next 7 days</span>
               </div>
               {thisWeek.map((row, i) => renderScheduledRow(row, 'week', i === thisWeek.length - 1,
                 row.kind === 'pipeline' ? row.alert.item.id : row.grant.id + '-week-' + i))}
@@ -1570,13 +1570,13 @@ export default function DeadlinesPage() {
 
           {/* Next 6 weeks */}
           {nextSixWeeks.length > 0 && (
-            <div style={{ background: '#fff', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
+            <div style={{ background: 'var(--surface-card)', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '16px 22px', borderBottom: '1px solid rgba(23,52,4,0.08)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ fontFamily: UI_FONT, fontWeight: 600, fontSize: 15, color: '#2C2C2A', letterSpacing: '-0.01em' }}>Next 6 weeks</span>
-                  <span style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 12, color: '#8A8986', background: '#FAFAF7', padding: '3px 9px', borderRadius: 10 }}>{nextSixWeeks.length}</span>
+                  <span style={{ fontFamily: UI_FONT, fontWeight: 600, fontSize: 15, color: 'var(--text-body)', letterSpacing: '-0.01em' }}>Next 6 weeks</span>
+                  <span style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 12, color: 'var(--text-subtle)', background: 'var(--surface-page)', padding: '3px 9px', borderRadius: 10 }}>{nextSixWeeks.length}</span>
                 </div>
-                <span style={{ fontFamily: BODY_FONT, fontSize: 12, color: '#8A8986' }}>{windowMeta}</span>
+                <span style={{ fontFamily: BODY_FONT, fontSize: 12, color: 'var(--text-subtle)' }}>{windowMeta}</span>
               </div>
               {nextSixWeeks.map((row, i) => renderScheduledRow(row, 'month', i === nextSixWeeks.length - 1,
                 row.kind === 'pipeline' ? row.alert.item.id : row.grant.id + '-month-' + i))}
@@ -1585,8 +1585,8 @@ export default function DeadlinesPage() {
 
           {/* Empty state */}
           {displayedScheduled.length === 0 && (
-            <div style={{ background: '#fff', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 12, padding: '32px 22px', textAlign: 'center', marginBottom: 16 }}>
-              <p style={{ fontFamily: BODY_FONT, color: '#8A8986', fontSize: 14, margin: 0 }}>
+            <div style={{ background: 'var(--surface-card)', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 12, padding: '32px 22px', textAlign: 'center', marginBottom: 16 }}>
+              <p style={{ fontFamily: BODY_FONT, color: 'var(--text-subtle)', fontSize: 14, margin: 0 }}>
                 {dayFilter ? `No deadlines on ${dateLabel(dayFilter)}.` : 'No scheduled deadlines yet. Add one to get started.'}
               </p>
             </div>
@@ -1595,13 +1595,13 @@ export default function DeadlinesPage() {
 
           {/* Needs a deadline */}
           {needsDeadlineAll.length > 0 && (
-            <div style={{ background: '#fff', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '16px 22px', borderBottom: '1px solid rgba(23,52,4,0.08)', background: '#FAFAF7' }}>
+            <div style={{ background: 'var(--surface-card)', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '16px 22px', borderBottom: '1px solid rgba(23,52,4,0.08)', background: 'var(--surface-page)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ fontFamily: UI_FONT, fontWeight: 600, fontSize: 15, color: '#2C2C2A', letterSpacing: '-0.01em' }}>Needs a deadline</span>
-                  <span style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 12, color: '#8A8986', background: '#F0EFEB', padding: '3px 9px', borderRadius: 10 }}>{needsDeadlineAll.length}</span>
+                  <span style={{ fontFamily: UI_FONT, fontWeight: 600, fontSize: 15, color: 'var(--text-body)', letterSpacing: '-0.01em' }}>Needs a deadline</span>
+                  <span style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 12, color: 'var(--text-subtle)', background: 'var(--surface-pill)', padding: '3px 9px', borderRadius: 10 }}>{needsDeadlineAll.length}</span>
                 </div>
-                <span style={{ fontFamily: BODY_FONT, fontSize: 12, color: '#8A8986' }}>Pick a date to schedule</span>
+                <span style={{ fontFamily: BODY_FONT, fontSize: 12, color: 'var(--text-subtle)' }}>Pick a date to schedule</span>
               </div>
               <div>
                   {needsDeadlineAll.map((row, idx) => {
@@ -1617,29 +1617,29 @@ export default function DeadlinesPage() {
                           display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 12, alignItems: 'center',
                           padding: '12px 22px', borderBottom: isLast ? 'none' : '1px solid rgba(23,52,4,0.06)',
                         }}
-                          onMouseEnter={e => { e.currentTarget.style.background = '#FAFAF7' }}
+                          onMouseEnter={e => { e.currentTarget.style.background = 'var(--surface-page)' }}
                           onMouseLeave={e => { e.currentTarget.style.background = '' }}>
                           <button type="button" onClick={() => openPipelineForDeadline(item)}
                             style={{ color: 'inherit', background: 'transparent', border: 'none', padding: 0,
                               textAlign: 'left', cursor: 'pointer', font: 'inherit', minWidth: 0 }}>
-                            <div style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 14, color: '#2C2C2A', marginBottom: 2 }}>{item.grant_name}</div>
-                            <div style={{ fontFamily: BODY_FONT, fontSize: 12.5, color: '#8A8986' }}>
+                            <div style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 14, color: 'var(--text-body)', marginBottom: 2 }}>{item.grant_name}</div>
+                            <div style={{ fontFamily: BODY_FONT, fontSize: 12.5, color: 'var(--text-subtle)' }}>
                               {item.funder_name !== item.grant_name && <span>{item.funder_name} &middot; </span>}
-                              {amtStr && <span style={{ color: '#639922', fontFamily: UI_FONT, fontWeight: 500 }}>{amtStr}</span>}
+                              {amtStr && <span style={{ color: 'var(--sage-deep)', fontFamily: UI_FONT, fontWeight: 500 }}>{amtStr}</span>}
                             </div>
                           </button>
                           <DatePickerInput value={val}
                             onChange={v => setDeadlineInputs(prev => ({ ...prev, [item.id]: v }))} />
                           {success ? (
-                            <span style={{ fontFamily: UI_FONT, fontSize: 11, fontWeight: 500, color: '#3B6D11', padding: '4px 10px',
-                              background: '#F4F9ED', borderRadius: 6, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                            <span style={{ fontFamily: UI_FONT, fontSize: 11, fontWeight: 500, color: 'var(--state-success)', padding: '4px 10px',
+                              background: 'var(--surface-page)', borderRadius: 6, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                               <Check size={11} strokeWidth={3} /> Set
                             </span>
                           ) : (
                             <button onClick={() => handleSetDeadline(item.id, val)} disabled={!val || saving}
                               style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 500, padding: '6px 12px', border: 'none', borderRadius: 6,
                                 cursor: val && !saving ? 'pointer' : 'not-allowed',
-                                background: val ? '#8ECB3C' : '#F0EFEB', color: val ? '#173404' : '#8A8986' }}>
+                                background: val ? '#8ECB3C' : 'var(--surface-pill)', color: val ? 'var(--deep)' : 'var(--text-subtle)' }}>
                               {saving ? '…' : 'Set date'}
                             </button>
                           )}
@@ -1656,29 +1656,29 @@ export default function DeadlinesPage() {
                           display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 12, alignItems: 'center',
                           padding: '12px 22px', borderBottom: isLast ? 'none' : '1px solid rgba(23,52,4,0.06)',
                         }}
-                          onMouseEnter={e => { e.currentTarget.style.background = '#FAFAF7' }}
+                          onMouseEnter={e => { e.currentTarget.style.background = 'var(--surface-page)' }}
                           onMouseLeave={e => { e.currentTarget.style.background = '' }}>
                           <button type="button" onClick={() => setPreviewGrant(g)}
                             style={{ color: 'inherit', background: 'transparent', border: 'none', padding: 0,
                               textAlign: 'left', cursor: 'pointer', font: 'inherit', minWidth: 0 }}>
-                            <div style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 14, color: '#2C2C2A', marginBottom: 2 }}>{g.title}</div>
-                            <div style={{ fontFamily: BODY_FONT, fontSize: 12.5, color: '#8A8986' }}>
+                            <div style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 14, color: 'var(--text-body)', marginBottom: 2 }}>{g.title}</div>
+                            <div style={{ fontFamily: BODY_FONT, fontSize: 12.5, color: 'var(--text-subtle)' }}>
                               {g.funder && g.funder !== g.title && <span>{g.funder} &middot; </span>}
-                              {amtStr && <span style={{ color: '#639922', fontFamily: UI_FONT, fontWeight: 500 }}>{amtStr}</span>}
+                              {amtStr && <span style={{ color: 'var(--sage-deep)', fontFamily: UI_FONT, fontWeight: 500 }}>{amtStr}</span>}
                             </div>
                           </button>
                           <DatePickerInput value={val}
                             onChange={v => setSavedInputs(prev => ({ ...prev, [g.id]: v }))} />
                           {success ? (
-                            <span style={{ fontFamily: UI_FONT, fontSize: 11, fontWeight: 500, color: '#3B6D11', padding: '4px 10px',
-                              background: '#F4F9ED', borderRadius: 6, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                            <span style={{ fontFamily: UI_FONT, fontSize: 11, fontWeight: 500, color: 'var(--state-success)', padding: '4px 10px',
+                              background: 'var(--surface-page)', borderRadius: 6, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                               <Check size={11} strokeWidth={3} /> Set
                             </span>
                           ) : (
                             <button onClick={() => handleSetSavedDeadline(g, val)} disabled={!val || saving}
                               style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 500, padding: '6px 12px', border: 'none', borderRadius: 6,
                                 cursor: val && !saving ? 'pointer' : 'not-allowed',
-                                background: val ? '#8ECB3C' : '#F0EFEB', color: val ? '#173404' : '#8A8986' }}>
+                                background: val ? '#8ECB3C' : 'var(--surface-pill)', color: val ? 'var(--deep)' : 'var(--text-subtle)' }}>
                               {saving ? '…' : 'Set date'}
                             </button>
                           )}
@@ -1692,13 +1692,13 @@ export default function DeadlinesPage() {
 
           {/* Later */}
           {laterRows.length > 0 && (
-            <div style={{ background: '#fff', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '16px 22px', borderBottom: '1px solid rgba(23,52,4,0.08)', background: '#FAFAF7' }}>
+            <div style={{ background: 'var(--surface-card)', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '16px 22px', borderBottom: '1px solid rgba(23,52,4,0.08)', background: 'var(--surface-page)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ fontFamily: UI_FONT, fontWeight: 600, fontSize: 15, color: '#2C2C2A', letterSpacing: '-0.01em' }}>Later</span>
-                  <span style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 12, color: '#8A8986', background: '#F0EFEB', padding: '3px 9px', borderRadius: 10 }}>{laterRows.length}</span>
+                  <span style={{ fontFamily: UI_FONT, fontWeight: 600, fontSize: 15, color: 'var(--text-body)', letterSpacing: '-0.01em' }}>Later</span>
+                  <span style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 12, color: 'var(--text-subtle)', background: 'var(--surface-pill)', padding: '3px 9px', borderRadius: 10 }}>{laterRows.length}</span>
                 </div>
-                <span style={{ fontFamily: BODY_FONT, fontSize: 12, color: '#8A8986' }}>Awareness only</span>
+                <span style={{ fontFamily: BODY_FONT, fontSize: 12, color: 'var(--text-subtle)' }}>Awareness only</span>
               </div>
               {laterRows.map((row, i) => renderScheduledRow(row, 'later', i === laterRows.length - 1,
                 row.kind === 'pipeline' ? row.alert.item.id : row.grant.id + '-later-' + i))}
@@ -1711,28 +1711,28 @@ export default function DeadlinesPage() {
         <aside style={{ display: 'flex', flexDirection: 'column', gap: 16, position: 'sticky', top: 24 }} className="deadlines-sidebar">
 
           {/* Calendar */}
-          <div style={{ background: '#fff', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 12, padding: '18px 20px' }}>
+          <div style={{ background: 'var(--surface-card)', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 12, padding: '18px 20px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-              <span style={{ fontFamily: UI_FONT, fontWeight: 600, fontSize: 14, color: '#2C2C2A' }}>Calendar</span>
-              <span style={{ fontFamily: UI_FONT, fontSize: 11.5, color: '#8A8986', fontWeight: 500 }}>{MONTH_NAMES[calMonth]} {calYear}</span>
+              <span style={{ fontFamily: UI_FONT, fontWeight: 600, fontSize: 14, color: 'var(--text-body)' }}>Calendar</span>
+              <span style={{ fontFamily: UI_FONT, fontSize: 11.5, color: 'var(--text-subtle)', fontWeight: 500 }}>{MONTH_NAMES[calMonth]} {calYear}</span>
             </div>
 
             {/* Nav */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
               <button onClick={() => { if (calMonth === 0) { setCalMonth(11); setCalYear(y => y - 1) } else setCalMonth(m => m - 1) }}
                 style={{ width: 24, height: 24, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  background: 'transparent', border: 'none', color: '#5F5E5A', cursor: 'pointer', borderRadius: 6 }}
-                onMouseEnter={e => { e.currentTarget.style.background = '#FAFAF7' }}
+                  background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', borderRadius: 6 }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'var(--surface-page)' }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
                 <ChevronLeft size={14} />
               </button>
-              <span style={{ fontFamily: UI_FONT, fontWeight: 600, fontSize: 13.5, color: '#2C2C2A' }}>
+              <span style={{ fontFamily: UI_FONT, fontWeight: 600, fontSize: 13.5, color: 'var(--text-body)' }}>
                 {MONTH_NAMES[calMonth]} {calYear}
               </span>
               <button onClick={() => { if (calMonth === 11) { setCalMonth(0); setCalYear(y => y + 1) } else setCalMonth(m => m + 1) }}
                 style={{ width: 24, height: 24, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  background: 'transparent', border: 'none', color: '#5F5E5A', cursor: 'pointer', borderRadius: 6 }}
-                onMouseEnter={e => { e.currentTarget.style.background = '#FAFAF7' }}
+                  background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', borderRadius: 6 }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'var(--surface-page)' }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
                 <ChevronRight size={14} />
               </button>
@@ -1742,7 +1742,7 @@ export default function DeadlinesPage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 2 }}>
               {['M','T','W','T','F','S','S'].map((d, i) => (
                 <div key={i} style={{ textAlign: 'center', fontFamily: UI_FONT, fontWeight: 500, fontSize: 10.5,
-                  color: '#8A8986', padding: '4px 0', letterSpacing: '0.02em' }}>{d}</div>
+                  color: 'var(--text-subtle)', padding: '4px 0', letterSpacing: '0.02em' }}>{d}</div>
               ))}
               {calDays.map((day, i) => {
                 const cellIso  = day.date.toISOString().split('T')[0]
@@ -1750,12 +1750,12 @@ export default function DeadlinesPage() {
                 const hasAlerts= !!markers
                 const isActive = dayFilter === cellIso
                 const hasUrgent= markers?.hasUrgent ?? false
-                let bg = 'transparent', textColor = day.isCurrentMonth ? '#2C2C2A' : '#C5C3BC', border = 'none', fw = 400
+                let bg = 'transparent', textColor = day.isCurrentMonth ? 'var(--text-body)' : 'var(--text-on-dark-mut)', border = 'none', fw = 400
                 if (day.isCurrentMonth) {
-                  if      (isActive)   { bg = '#8ECB3C'; textColor = '#173404'; fw = 600 }
-                  else if (hasUrgent)  { bg = '#FAECE7'; textColor = '#993C1D'; fw = 600 }
-                  else if (hasAlerts)  { bg = '#F4F9ED'; textColor = '#639922'; fw = 600 }
-                  else if (day.isToday){ bg = '#FDFCF8'; border = '1.5px solid #8ECB3C'; textColor = '#639922'; fw = 600 }
+                  if      (isActive)   { bg = '#8ECB3C'; textColor = 'var(--deep)'; fw = 600 }
+                  else if (hasUrgent)  { bg = 'var(--state-error-pale)'; textColor = 'var(--state-error)'; fw = 600 }
+                  else if (hasAlerts)  { bg = 'var(--surface-page)'; textColor = 'var(--sage-deep)'; fw = 600 }
+                  else if (day.isToday){ bg = 'var(--surface-page)'; border = '1.5px solid #8ECB3C'; textColor = 'var(--sage-deep)'; fw = 600 }
                 }
                 return (
                   <div key={i}
@@ -1776,12 +1776,12 @@ export default function DeadlinesPage() {
             {dayFilter && (
               <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(23,52,4,0.08)',
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                <span style={{ fontFamily: BODY_FONT, fontSize: 12.5, color: '#5F5E5A' }}>
-                  Filtered to <strong style={{ color: '#2C2C2A', fontFamily: UI_FONT }}>{dateLabel(dayFilter)}</strong>{' '}
+                <span style={{ fontFamily: BODY_FONT, fontSize: 12.5, color: 'var(--text-muted)' }}>
+                  Filtered to <strong style={{ color: 'var(--text-body)', fontFamily: UI_FONT }}>{dateLabel(dayFilter)}</strong>{' '}
                   &middot; {displayedScheduled.length} deadline{displayedScheduled.length !== 1 ? 's' : ''}
                 </span>
                 <button onClick={() => setDayFilter(null)}
-                  style={{ fontFamily: UI_FONT, fontSize: 11.5, color: '#5F5E5A', background: 'transparent',
+                  style={{ fontFamily: UI_FONT, fontSize: 11.5, color: 'var(--text-muted)', background: 'transparent',
                     border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
                   Clear
                 </button>
@@ -1792,23 +1792,23 @@ export default function DeadlinesPage() {
             <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid rgba(23,52,4,0.08)',
               display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 12px' }}>
               {[
-                { bg: '#FAECE7', label: 'Urgent (≤7d)' },
-                { bg: '#F4F9ED', label: 'Has deadline' },
+                { bg: 'var(--state-error-pale)', label: 'Urgent (≤7d)' },
+                { bg: 'var(--surface-page)', label: 'Has deadline' },
                 { bg: '#8ECB3C', label: 'Selected' },
-                { bg: '#FDFCF8', border: '1.5px solid #8ECB3C', label: 'Today' },
+                { bg: 'var(--surface-page)', border: '1.5px solid #8ECB3C', label: 'Today' },
               ].map(({ bg: d, label, border: b }) => (
                 <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <span style={{ width: 10, height: 10, borderRadius: 3, background: d,
                     border: b ?? 'none', display: 'inline-block', flexShrink: 0 }} />
-                  <span style={{ fontFamily: BODY_FONT, fontSize: 11.5, color: '#5F5E5A' }}>{label}</span>
+                  <span style={{ fontFamily: BODY_FONT, fontSize: 11.5, color: 'var(--text-muted)' }}>{label}</span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Sources filter */}
-          <div style={{ background: '#fff', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 12, padding: '18px 20px' }}>
-            <div style={{ fontFamily: UI_FONT, fontWeight: 600, fontSize: 14, color: '#2C2C2A', marginBottom: 14 }}>
+          <div style={{ background: 'var(--surface-card)', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 12, padding: '18px 20px' }}>
+            <div style={{ fontFamily: UI_FONT, fontWeight: 600, fontSize: 14, color: 'var(--text-body)', marginBottom: 14 }}>
               Show deadlines from
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -1820,18 +1820,18 @@ export default function DeadlinesPage() {
                 <div key={label} onClick={toggle}
                   style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                     padding: '7px 10px', margin: '0 -10px', borderRadius: 6, cursor: 'pointer', userSelect: 'none' as const }}
-                  onMouseEnter={e => { e.currentTarget.style.background = '#FAFAF7' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--surface-page)' }}
                   onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <div style={{ width: 16, height: 16, borderRadius: 4, flexShrink: 0,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      background: checked ? '#173404' : '#fff',
+                      background: checked ? 'var(--deep)' : 'var(--surface-card)',
                       border: checked ? 'none' : '1.5px solid rgba(23,52,4,0.14)' }}>
-                      {checked && <Check size={10} strokeWidth={3} style={{ color: '#fff' }} />}
+                      {checked && <Check size={10} strokeWidth={3} style={{ color: 'var(--surface-card)' }} />}
                     </div>
-                    <span style={{ fontFamily: UI_FONT, fontSize: 13, color: '#2C2C2A' }}>{label}</span>
+                    <span style={{ fontFamily: UI_FONT, fontSize: 13, color: 'var(--text-body)' }}>{label}</span>
                   </div>
-                  <span style={{ fontFamily: UI_FONT, fontSize: 11.5, color: '#8A8986' }}>{count}</span>
+                  <span style={{ fontFamily: UI_FONT, fontSize: 11.5, color: 'var(--text-subtle)' }}>{count}</span>
                 </div>
               ))}
             </div>
@@ -1965,7 +1965,7 @@ export default function DeadlinesPage() {
 
       {toast && (
         <div className="fixed bottom-6 right-6 px-5 py-3 rounded-xl shadow-lg text-sm z-50"
-          style={{ background: '#173404', color: '#F1F7E4' }}>
+          style={{ background: 'var(--deep)', color: 'var(--state-success-pale)' }}>
           ✓ {toast}
         </div>
       )}
