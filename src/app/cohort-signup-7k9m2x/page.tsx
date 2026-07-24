@@ -86,14 +86,14 @@ export default function CohortSignupPage() {
   if (checkEmail) {
     return (
       <Shell>
-        <h1 style={{ fontFamily: UI, fontWeight: 500, fontSize: 24, letterSpacing: '-0.02em', color: '#2C2C2A', marginBottom: 10 }}>
+        <h1 style={{ fontFamily: UI, fontWeight: 500, fontSize: 24, letterSpacing: '-0.02em', color: 'var(--text-body)', marginBottom: 10 }}>
           Check your email
         </h1>
-        <p style={{ fontFamily: BODY, fontSize: 14.5, color: '#5F5E5A', lineHeight: 1.55, marginBottom: 18 }}>
-          We&apos;ve sent a confirmation link to <strong style={{ color: '#2C2C2A' }}>{email}</strong>. Click it to activate your account and finish setup.
+        <p style={{ fontFamily: BODY, fontSize: 14.5, color: 'var(--text-muted)', lineHeight: 1.55, marginBottom: 18 }}>
+          We&apos;ve sent a confirmation link to <strong style={{ color: 'var(--text-body)' }}>{email}</strong>. Click it to activate your account and finish setup.
         </p>
-        <p style={{ fontFamily: BODY, fontSize: 13, color: '#8A8986' }}>
-          Can&apos;t find it? Check your spam folder, or email <a href={`mailto:${brand.email.hello}`} style={{ color: '#3B6D11', textDecoration: 'none' }}>{brand.email.hello}</a>.
+        <p style={{ fontFamily: BODY, fontSize: 13, color: 'var(--text-subtle)' }}>
+          Can&apos;t find it? Check your spam folder, or email <a href={`mailto:${brand.email.hello}`} style={{ color: 'var(--state-success)', textDecoration: 'none' }}>{brand.email.hello}</a>.
         </p>
       </Shell>
     )
@@ -105,41 +105,41 @@ export default function CohortSignupPage() {
         <span style={{ width: 6, height: 6, background: '#8ECB3C', borderRadius: '50%', display: 'inline-block', flexShrink: 0 }} />
         Founding cohort
       </div>
-      <h1 style={{ fontFamily: UI, fontWeight: 500, fontSize: 28, lineHeight: 1.2, letterSpacing: '-0.02em', color: '#2C2C2A', marginBottom: 10 }}>
+      <h1 style={{ fontFamily: UI, fontWeight: 500, fontSize: 28, lineHeight: 1.2, letterSpacing: '-0.02em', color: 'var(--text-body)', marginBottom: 10 }}>
         Welcome to the {brand.name} founding cohort
       </h1>
-      <p style={{ fontFamily: BODY, fontSize: 14.5, color: '#5F5E5A', lineHeight: 1.55, marginBottom: 28 }}>
-        Set up your account below to get started. If you have any questions just email <a href={`mailto:${brand.email.hello}`} style={{ color: '#3B6D11', textDecoration: 'none' }}>{brand.email.hello}</a>.
+      <p style={{ fontFamily: BODY, fontSize: 14.5, color: 'var(--text-muted)', lineHeight: 1.55, marginBottom: 28 }}>
+        Set up your account below to get started. If you have any questions just email <a href={`mailto:${brand.email.hello}`} style={{ color: 'var(--state-success)', textDecoration: 'none' }}>{brand.email.hello}</a>.
       </p>
 
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         {error && (
-          <div style={{ background: '#FAECE7', border: '0.5px solid rgba(153,60,29,0.25)', color: '#993C1D', fontSize: 13, padding: '11px 14px', borderRadius: 10 }}>
+          <div style={{ background: 'var(--state-error-pale)', border: '0.5px solid rgba(153,60,29,0.25)', color: 'var(--state-error)', fontSize: 13, padding: '11px 14px', borderRadius: 10 }}>
             {error}{' '}
             {error.includes('already exists') && (
-              <Link href="/auth/login" style={{ color: '#993C1D', fontWeight: 600, textDecoration: 'underline' }}>Sign in</Link>
+              <Link href="/auth/login" style={{ color: 'var(--state-error)', fontWeight: 600, textDecoration: 'underline' }}>Sign in</Link>
             )}
           </div>
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label style={{ display: 'block', fontFamily: UI, fontWeight: 500, fontSize: 13, color: '#2C2C2A', marginBottom: 6 }}>First name</label>
+            <label style={{ display: 'block', fontFamily: UI, fontWeight: 500, fontSize: 13, color: 'var(--text-body)', marginBottom: 6 }}>First name</label>
             <input type="text" value={firstName} onChange={e => setFirstName(e.target.value)} className="form-input" placeholder="Jane" autoComplete="given-name" required />
           </div>
           <div>
-            <label style={{ display: 'block', fontFamily: UI, fontWeight: 500, fontSize: 13, color: '#2C2C2A', marginBottom: 6 }}>Last name</label>
+            <label style={{ display: 'block', fontFamily: UI, fontWeight: 500, fontSize: 13, color: 'var(--text-body)', marginBottom: 6 }}>Last name</label>
             <input type="text" value={lastName} onChange={e => setLastName(e.target.value)} className="form-input" placeholder="Doe" autoComplete="family-name" required />
           </div>
         </div>
 
         <div>
-          <label style={{ display: 'block', fontFamily: UI, fontWeight: 500, fontSize: 13, color: '#2C2C2A', marginBottom: 6 }}>Email</label>
+          <label style={{ display: 'block', fontFamily: UI, fontWeight: 500, fontSize: 13, color: 'var(--text-body)', marginBottom: 6 }}>Email</label>
           <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="form-input" placeholder="you@organisation.org" autoComplete="email" required />
         </div>
 
         <div>
-          <label style={{ display: 'block', fontFamily: UI, fontWeight: 500, fontSize: 13, color: '#2C2C2A', marginBottom: 6 }}>Password</label>
+          <label style={{ display: 'block', fontFamily: UI, fontWeight: 500, fontSize: 13, color: 'var(--text-body)', marginBottom: 6 }}>Password</label>
           <div style={{ position: 'relative' }}>
             <input
               type={showPw ? 'text' : 'password'}
@@ -152,14 +152,14 @@ export default function CohortSignupPage() {
               minLength={8}
               required
             />
-            <button type="button" onClick={() => setShowPw(v => !v)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontFamily: UI, fontSize: 12, color: '#8A8986', background: 'transparent', border: 'none', cursor: 'pointer' }} tabIndex={-1}>
+            <button type="button" onClick={() => setShowPw(v => !v)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontFamily: UI, fontSize: 12, color: 'var(--text-subtle)', background: 'transparent', border: 'none', cursor: 'pointer' }} tabIndex={-1}>
               {showPw ? 'Hide' : 'Show'}
             </button>
           </div>
         </div>
 
         <div>
-          <label style={{ display: 'block', fontFamily: UI, fontWeight: 500, fontSize: 13, color: '#2C2C2A', marginBottom: 6 }}>Confirm password</label>
+          <label style={{ display: 'block', fontFamily: UI, fontWeight: 500, fontSize: 13, color: 'var(--text-body)', marginBottom: 6 }}>Confirm password</label>
           <input
             type={showPw ? 'text' : 'password'}
             value={confirm}
@@ -178,7 +178,7 @@ export default function CohortSignupPage() {
           style={{
             marginTop: 8,
             background: '#8ECB3C',
-            color: '#173404',
+            color: 'var(--deep)',
             fontFamily: UI,
             fontWeight: 600,
             fontSize: 15,
@@ -199,14 +199,14 @@ export default function CohortSignupPage() {
 
 function Shell({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ background: '#FAFAF7', minHeight: '100vh', fontFamily: BODY, color: '#2C2C2A' }}>
+    <div style={{ background: 'var(--surface-page)', minHeight: '100vh', fontFamily: BODY, color: 'var(--text-body)' }}>
       <nav style={{ background: 'white', borderBottom: '0.5px solid rgba(23,52,4,0.08)', padding: '18px 0' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}>
             <LogoMark size={30} />
-            <span style={{ fontFamily: UI, fontWeight: 700, fontSize: 24, letterSpacing: '-0.025em', color: '#2C2C2A' }}>{brand.name}</span>
+            <span style={{ fontFamily: UI, fontWeight: 700, fontSize: 24, letterSpacing: '-0.025em', color: 'var(--text-body)' }}>{brand.name}</span>
           </Link>
-          <Link href="/" style={{ fontFamily: UI, fontSize: 13.5, color: '#5F5E5A', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          <Link href="/" style={{ fontFamily: UI, fontSize: 13.5, color: 'var(--text-muted)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
             <ArrowLeft size={14} /> Back to home
           </Link>
         </div>
