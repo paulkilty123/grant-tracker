@@ -15,16 +15,16 @@ const SERIF = "'Fraunces', Georgia, serif"
 
 export default function ApplyPage() {
   return (
-    <div style={{ background: '#FAFAF7', minHeight: '100vh', fontFamily: BODY, color: '#2C2C2A' }}>
+    <div style={{ background: 'var(--surface-page)', minHeight: '100vh', fontFamily: BODY, color: 'var(--text-body)' }}>
 
       {/* NAV */}
       <nav style={{ background: 'white', borderBottom: '0.5px solid rgba(23,52,4,0.08)', padding: '18px 0' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}>
             <LogoMark size={30} />
-            <span style={{ fontFamily: UI, fontWeight: 700, fontSize: 24, letterSpacing: '-0.03em', color: '#2C2C2A' }}>{brand.name}</span>
+            <span style={{ fontFamily: UI, fontWeight: 700, fontSize: 24, letterSpacing: '-0.03em', color: 'var(--text-body)' }}>{brand.name}</span>
           </Link>
-          <Link href="/" style={{ fontFamily: UI, fontSize: 13.5, color: '#5F5E5A', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          <Link href="/" style={{ fontFamily: UI, fontSize: 13.5, color: 'var(--text-muted)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
             <ArrowLeft size={14} /> Back to home
           </Link>
         </div>
@@ -38,66 +38,66 @@ export default function ApplyPage() {
             <span style={{ width: 6, height: 6, background: '#8ECB3C', borderRadius: '50%', display: 'inline-block', flexShrink: 0 }} />
             Founding cohort, applications open
           </div>
-          <h1 style={{ fontFamily: UI, fontWeight: 500, fontSize: 44, lineHeight: 1.08, letterSpacing: '-0.025em', color: '#2C2C2A', marginBottom: 28 }}>
+          <h1 style={{ fontFamily: UI, fontWeight: 500, fontSize: 44, lineHeight: 1.08, letterSpacing: '-0.025em', color: 'var(--text-body)', marginBottom: 28 }}>
             Help me build <span style={{ color: '#8ECB3C' }}>something better.</span>
           </h1>
           <div>
-            <p style={{ fontFamily: SERIF, fontWeight: 400, fontSize: 19, lineHeight: 1.6, color: '#2C2C2A', marginBottom: 18, letterSpacing: '-0.005em' }}>
+            <p style={{ fontFamily: SERIF, fontWeight: 400, fontSize: 19, lineHeight: 1.6, color: 'var(--text-body)', marginBottom: 18, letterSpacing: '-0.005em' }}>
               Hi, I&apos;m Paul. I&apos;ve spent the last twenty years in the social enterprise and charity sector, and I&apos;ve built {brand.name} because I got tired of watching good people spend more time hunting for funding than doing the work the funding was meant to support.
             </p>
-            <p style={{ fontFamily: SERIF, fontWeight: 400, fontSize: 19, lineHeight: 1.6, color: '#2C2C2A', marginBottom: 18, letterSpacing: '-0.005em' }}>
+            <p style={{ fontFamily: SERIF, fontWeight: 400, fontSize: 19, lineHeight: 1.6, color: 'var(--text-body)', marginBottom: 18, letterSpacing: '-0.005em' }}>
               I&apos;m building {brand.name} with a small group of real users before opening it more widely in June. Not a waitlist or marketing funnel, but a genuine founding cohort of around 20 to 30 organisations whose feedback shapes how {brand.name} works, who get to try new features first, and who benefit from being here first.
             </p>
-            <p style={{ fontFamily: SERIF, fontWeight: 400, fontSize: 19, lineHeight: 1.6, color: '#2C2C2A', letterSpacing: '-0.005em' }}>
+            <p style={{ fontFamily: SERIF, fontWeight: 400, fontSize: 19, lineHeight: 1.6, color: 'var(--text-body)', letterSpacing: '-0.005em' }}>
               If that sounds interesting, I&apos;d love to hear from you.
             </p>
           </div>
-          <div style={{ fontFamily: BODY, fontSize: 14, color: '#5F5E5A', marginTop: 32 }}>
-            <strong style={{ fontWeight: 500, color: '#2C2C2A' }}>Paul Kilty</strong>, founder
+          <div style={{ fontFamily: BODY, fontSize: 14, color: 'var(--text-muted)', marginTop: 32 }}>
+            <strong style={{ fontWeight: 500, color: 'var(--text-body)' }}>Paul Kilty</strong>, founder
           </div>
         </div>
 
         {/* WHAT THE PRODUCT DOES */}
         <section style={{ padding: '0 0 56px' }}>
-          <h2 style={{ fontFamily: UI, fontWeight: 500, fontSize: 28, lineHeight: 1.15, letterSpacing: '-0.02em', color: '#2C2C2A', marginBottom: 20 }}>
+          <h2 style={{ fontFamily: UI, fontWeight: 500, fontSize: 28, lineHeight: 1.15, letterSpacing: '-0.02em', color: 'var(--text-body)', marginBottom: 20 }}>
             What {brand.name} <span style={{ color: '#8ECB3C' }}>does.</span>
           </h2>
-          <p style={{ fontSize: 16, color: '#5F5E5A', lineHeight: 1.65, marginBottom: 16 }}>
+          <p style={{ fontSize: 16, color: 'var(--text-muted)', lineHeight: 1.65, marginBottom: 16 }}>
             {brand.name} covers the full UK funding picture: grants, programmes, social investment, and in-kind support. It helps you find what fits your impact, track what you&apos;re applying for, and keep on top of deadlines.
           </p>
-          <p style={{ fontSize: 16, color: '#5F5E5A', lineHeight: 1.65 }}>
+          <p style={{ fontSize: 16, color: 'var(--text-muted)', lineHeight: 1.65 }}>
             It&apos;s for UK CICs, charities, social enterprises, co-operatives, and the people doing fundraising work alongside everything else.
           </p>
         </section>
 
         {/* WHAT'S THERE NOW */}
         <section style={{ padding: '0 0 56px' }}>
-          <h2 style={{ fontFamily: UI, fontWeight: 500, fontSize: 28, lineHeight: 1.15, letterSpacing: '-0.02em', color: '#2C2C2A', marginBottom: 20 }}>
+          <h2 style={{ fontFamily: UI, fontWeight: 500, fontSize: 28, lineHeight: 1.15, letterSpacing: '-0.02em', color: 'var(--text-body)', marginBottom: 20 }}>
             What&apos;s <span style={{ color: '#8ECB3C' }}>there now.</span>
           </h2>
-          <p style={{ fontSize: 16, color: '#5F5E5A', lineHeight: 1.65, marginBottom: 16 }}>
+          <p style={{ fontSize: 16, color: 'var(--text-muted)', lineHeight: 1.65, marginBottom: 16 }}>
             600+ live funding opportunities in the catalogue right now, growing each week as new ones come in and old ones expire. They include grants, programmes, social investment and in-kind support, covering UK foundations, government, lottery, and corporate funders.
           </p>
-          <p style={{ fontSize: 16, color: '#5F5E5A', lineHeight: 1.65, marginBottom: 16 }}>
+          <p style={{ fontSize: 16, color: 'var(--text-muted)', lineHeight: 1.65, marginBottom: 16 }}>
             When you add your organisation profile, {brand.name} matches you against the catalogue and scores each opportunity for fit. The matching engine checks eligibility against the things that actually disqualify you: legal structure, geography, organisation size. Ineligible opportunities are flagged so you don&apos;t waste time chasing them.
           </p>
-          <p style={{ fontSize: 16, color: '#5F5E5A', lineHeight: 1.65, marginBottom: 16 }}>
+          <p style={{ fontSize: 16, color: 'var(--text-muted)', lineHeight: 1.65, marginBottom: 16 }}>
             Once you find something worth applying for, you can move it into a pipeline view with five stages, from identified through to won or declined, and set deadlines that show up on a calendar. If a deadline is coming up, you&apos;ll see it.
           </p>
-          <p style={{ fontSize: 16, color: '#5F5E5A', lineHeight: 1.65 }}>
+          <p style={{ fontSize: 16, color: 'var(--text-muted)', lineHeight: 1.65 }}>
             The product is working but not finished. There are rough edges in the catalogue (some funders are better-covered than others), in the matching (it gets some things wrong, particularly for less common organisation shapes), and places where the design needs polish. The founding cohort exists in part to find these and tell me about them.
           </p>
         </section>
 
         {/* WHO I'M LOOKING FOR */}
         <section style={{ padding: '0 0 56px' }}>
-          <h2 style={{ fontFamily: UI, fontWeight: 500, fontSize: 28, lineHeight: 1.15, letterSpacing: '-0.02em', color: '#2C2C2A', marginBottom: 20 }}>
+          <h2 style={{ fontFamily: UI, fontWeight: 500, fontSize: 28, lineHeight: 1.15, letterSpacing: '-0.02em', color: 'var(--text-body)', marginBottom: 20 }}>
             Who I&apos;m <span style={{ color: '#8ECB3C' }}>looking for.</span>
           </h2>
-          <p style={{ fontSize: 16, color: '#5F5E5A', lineHeight: 1.65, marginBottom: 16 }}>
+          <p style={{ fontSize: 16, color: 'var(--text-muted)', lineHeight: 1.65, marginBottom: 16 }}>
             {brand.name} is built for UK organisations doing social impact work. For the founding cohort specifically, I&apos;m prioritising organisations where I can genuinely learn from how you use the product, and where the product can genuinely help you.
           </p>
-          <p style={{ fontSize: 16, color: '#5F5E5A', lineHeight: 1.65, marginBottom: 0 }}>
+          <p style={{ fontSize: 16, color: 'var(--text-muted)', lineHeight: 1.65, marginBottom: 0 }}>
             That means I&apos;m most interested in hearing from:
           </p>
           <ul style={{ listStyle: 'none', margin: '20px 0 0', padding: 0 }}>
@@ -107,27 +107,27 @@ export default function ApplyPage() {
               'Co-operatives and community groups, including worker-led, community-owned, and unincorporated groups',
               'Impact founders who are early-stage, pre-revenue, or working as an individual',
             ].map((item, i) => (
-              <li key={i} style={{ position: 'relative', paddingLeft: 20, marginBottom: 12, fontSize: 16, color: '#5F5E5A', lineHeight: 1.6 }}>
+              <li key={i} style={{ position: 'relative', paddingLeft: 20, marginBottom: 12, fontSize: 16, color: 'var(--text-muted)', lineHeight: 1.6 }}>
                 <span style={{ position: 'absolute', left: 0, top: 10, width: 6, height: 6, background: '#8ECB3C', borderRadius: '50%', display: 'inline-block' }} />
                 {item}
               </li>
             ))}
           </ul>
-          <p style={{ fontSize: 16, color: '#5F5E5A', lineHeight: 1.65, marginTop: 20 }}>
+          <p style={{ fontSize: 16, color: 'var(--text-muted)', lineHeight: 1.65, marginTop: 20 }}>
             I&apos;m keen to bring together organisations at different stages of fundraising experience and across different sectors. The cohort works best with a range of perspectives, so don&apos;t rule yourself out if you&apos;re newer to this, and don&apos;t assume you&apos;re in if you&apos;ve been doing it for decades.
           </p>
-          <p style={{ fontSize: 16, color: '#5F5E5A', lineHeight: 1.65, marginTop: 16 }}>
+          <p style={{ fontSize: 16, color: 'var(--text-muted)', lineHeight: 1.65, marginTop: 16 }}>
             You don&apos;t need to fit neatly into one of these. If you&apos;re doing impact work in the UK and looking for funding, tell me about you.
           </p>
         </section>
 
         {/* WHAT I'M COMMITTING TO */}
         <section style={{ padding: '0 0 56px' }}>
-          <div style={{ background: '#F5F1E8', borderRadius: 14, padding: '40px 36px' }}>
-            <h2 style={{ fontFamily: UI, fontWeight: 500, fontSize: 28, lineHeight: 1.15, letterSpacing: '-0.02em', color: '#2C2C2A', marginBottom: 14 }}>
+          <div style={{ background: 'var(--surface-sunken)', borderRadius: 14, padding: '40px 36px' }}>
+            <h2 style={{ fontFamily: UI, fontWeight: 500, fontSize: 28, lineHeight: 1.15, letterSpacing: '-0.02em', color: 'var(--text-body)', marginBottom: 14 }}>
               What I&apos;m <span style={{ color: '#8ECB3C' }}>committing to.</span>
             </h2>
-            <p style={{ fontSize: 16, color: '#5F5E5A', lineHeight: 1.65, marginBottom: 0 }}>
+            <p style={{ fontSize: 16, color: 'var(--text-muted)', lineHeight: 1.65, marginBottom: 0 }}>
               If you&apos;re part of the founding cohort, here&apos;s what you get from me:
             </p>
             <ul style={{ listStyle: 'none', margin: '20px 0 0', padding: 0 }}>
@@ -137,9 +137,9 @@ export default function ApplyPage() {
                 { title: 'A permanent founding rate.', body: `After your free six months, cohort members lock in a price significantly below the standard subscription, for as long as you stay with ${brand.name}.` },
                 { title: 'A direct line to me.', body: "When something’s not working, when you have an idea, when you want to talk to someone who can actually change the product, that’s me." },
               ].map((item, i) => (
-                <li key={i} style={{ position: 'relative', paddingLeft: 28, marginBottom: 16, fontSize: 16, color: '#5F5E5A', lineHeight: 1.6 }}>
-                  <span style={{ position: 'absolute', left: 0, top: 2, color: '#639922', fontWeight: 500, fontSize: 17, lineHeight: 1 }}>✓</span>
-                  <strong style={{ color: '#2C2C2A', fontWeight: 500 }}>{item.title}</strong> {item.body}
+                <li key={i} style={{ position: 'relative', paddingLeft: 28, marginBottom: 16, fontSize: 16, color: 'var(--text-muted)', lineHeight: 1.6 }}>
+                  <span style={{ position: 'absolute', left: 0, top: 2, color: 'var(--sage-deep)', fontWeight: 500, fontSize: 17, lineHeight: 1 }}>✓</span>
+                  <strong style={{ color: 'var(--text-body)', fontWeight: 500 }}>{item.title}</strong> {item.body}
                 </li>
               ))}
             </ul>
@@ -148,14 +148,14 @@ export default function ApplyPage() {
 
         {/* WHAT I'M ASKING IN RETURN */}
         <section style={{ padding: '0 0 56px' }}>
-          <div style={{ background: '#E8DFC8', borderRadius: 14, padding: '40px 36px' }}>
-            <h2 style={{ fontFamily: UI, fontWeight: 500, fontSize: 28, lineHeight: 1.15, letterSpacing: '-0.02em', color: '#173404', marginBottom: 14 }}>
-              What I&apos;m asking <span style={{ color: '#639922' }}>in return.</span>
+          <div style={{ background: 'var(--border-warm)', borderRadius: 14, padding: '40px 36px' }}>
+            <h2 style={{ fontFamily: UI, fontWeight: 500, fontSize: 28, lineHeight: 1.15, letterSpacing: '-0.02em', color: 'var(--deep)', marginBottom: 14 }}>
+              What I&apos;m asking <span style={{ color: 'var(--sage-deep)' }}>in return.</span>
             </h2>
-            <p style={{ fontSize: 16, color: '#2C2C2A', lineHeight: 1.65, marginBottom: 16 }}>
+            <p style={{ fontSize: 16, color: 'var(--text-body)', lineHeight: 1.65, marginBottom: 16 }}>
               One real thing: your honest engagement.
             </p>
-            <p style={{ fontSize: 16, color: '#2C2C2A', lineHeight: 1.65, marginBottom: 8 }}>
+            <p style={{ fontSize: 16, color: 'var(--text-body)', lineHeight: 1.65, marginBottom: 8 }}>
               In practice that looks like:
             </p>
             <ul style={{ listStyle: 'none', margin: '0 0 20px', padding: 0 }}>
@@ -165,19 +165,19 @@ export default function ApplyPage() {
                 "Responding when I ask specific questions about what’s working and what isn’t",
                 "Willingness to try something that’s still being built, and tell me honestly when it doesn’t work",
               ].map((item, i) => (
-                <li key={i} style={{ position: 'relative', paddingLeft: 20, marginBottom: 10, fontSize: 16, color: '#2C2C2A', lineHeight: 1.6 }}>
-                  <span style={{ position: 'absolute', left: 0, top: 10, width: 6, height: 6, background: '#639922', borderRadius: '50%', display: 'inline-block' }} />
+                <li key={i} style={{ position: 'relative', paddingLeft: 20, marginBottom: 10, fontSize: 16, color: 'var(--text-body)', lineHeight: 1.6 }}>
+                  <span style={{ position: 'absolute', left: 0, top: 10, width: 6, height: 6, background: 'var(--sage-deep)', borderRadius: '50%', display: 'inline-block' }} />
                   {item}
                 </li>
               ))}
             </ul>
-            <p style={{ fontSize: 16, color: '#2C2C2A', lineHeight: 1.65, marginBottom: 16 }}>
+            <p style={{ fontSize: 16, color: 'var(--text-body)', lineHeight: 1.65, marginBottom: 16 }}>
               You&apos;ll also be the first to see new features and shape them before they go live.
             </p>
-            <p style={{ fontSize: 16, color: '#2C2C2A', lineHeight: 1.65, marginBottom: 20 }}>
+            <p style={{ fontSize: 16, color: 'var(--text-body)', lineHeight: 1.65, marginBottom: 20 }}>
               That&apos;s the whole deal. If you&apos;re willing to give that, I&apos;d love to have you in the cohort.
             </p>
-            <p style={{ fontSize: 14.5, color: '#5F5E5A', lineHeight: 1.6, borderTop: '0.5px solid rgba(23,52,4,0.12)', paddingTop: 16 }}>
+            <p style={{ fontSize: 14.5, color: 'var(--text-muted)', lineHeight: 1.6, borderTop: '0.5px solid rgba(23,52,4,0.12)', paddingTop: 16 }}>
               One condition: cohort benefits, including the founding rate, depend on staying active and staying in touch. If you go quiet for six months, cohort status lapses and you move to standard pricing. Not as a penalty, just to keep the cohort what it&apos;s meant to be: a working group, not a free tier.
             </p>
           </div>
@@ -186,10 +186,10 @@ export default function ApplyPage() {
         {/* APPLICATION FORM */}
         <section style={{ padding: '0 0 56px' }}>
           <div style={{ background: 'white', border: '0.5px solid rgba(23,52,4,0.08)', borderRadius: 14, padding: '40px 36px' }}>
-            <h2 style={{ fontFamily: UI, fontWeight: 500, fontSize: 28, lineHeight: 1.15, letterSpacing: '-0.02em', color: '#2C2C2A', marginBottom: 12 }}>
+            <h2 style={{ fontFamily: UI, fontWeight: 500, fontSize: 28, lineHeight: 1.15, letterSpacing: '-0.02em', color: 'var(--text-body)', marginBottom: 12 }}>
               Apply to <span style={{ color: '#8ECB3C' }}>join.</span>
             </h2>
-            <p style={{ fontSize: 16, color: '#5F5E5A', lineHeight: 1.65, marginBottom: 28 }}>
+            <p style={{ fontSize: 16, color: 'var(--text-muted)', lineHeight: 1.65, marginBottom: 28 }}>
               A few questions about you and your organisation. I read every application personally.
             </p>
             {/* Tally form embed */}
@@ -215,15 +215,15 @@ export default function ApplyPage() {
 
         {/* WHAT HAPPENS NEXT */}
         <section style={{ padding: '0 0 56px' }}>
-          <h3 style={{ fontFamily: UI, fontWeight: 500, fontSize: 18, color: '#2C2C2A', marginBottom: 14, letterSpacing: '-0.01em' }}>What happens next</h3>
+          <h3 style={{ fontFamily: UI, fontWeight: 500, fontSize: 18, color: 'var(--text-body)', marginBottom: 14, letterSpacing: '-0.01em' }}>What happens next</h3>
           <ol style={{ listStyle: 'none', padding: 0 }}>
             {[
               'I read every application personally, usually within a week.',
               "If you’re a good fit for the founding cohort, I’ll email you with next steps and an invite to set up your account.",
               "If now isn’t the right time, I’ll still reply. You’ll hear back either way.",
             ].map((step, i) => (
-              <li key={i} style={{ position: 'relative', paddingLeft: 38, marginBottom: 16, fontSize: 15, color: '#5F5E5A', lineHeight: 1.6 }}>
-                <span style={{ position: 'absolute', left: 0, top: 2, width: 24, height: 24, background: '#EAF3DE', color: '#3B6D11', fontFamily: UI, fontWeight: 500, fontSize: 12, borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{i + 1}</span>
+              <li key={i} style={{ position: 'relative', paddingLeft: 38, marginBottom: 16, fontSize: 15, color: 'var(--text-muted)', lineHeight: 1.6 }}>
+                <span style={{ position: 'absolute', left: 0, top: 2, width: 24, height: 24, background: 'var(--state-success-pale)', color: 'var(--state-success)', fontFamily: UI, fontWeight: 500, fontSize: 12, borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{i + 1}</span>
                 {step}
               </li>
             ))}
@@ -232,7 +232,7 @@ export default function ApplyPage() {
 
         {/* FAQ */}
         <section style={{ padding: '0 0 72px' }}>
-          <h2 style={{ fontFamily: UI, fontWeight: 500, fontSize: 28, lineHeight: 1.15, letterSpacing: '-0.02em', color: '#2C2C2A', marginBottom: 28 }}>
+          <h2 style={{ fontFamily: UI, fontWeight: 500, fontSize: 28, lineHeight: 1.15, letterSpacing: '-0.02em', color: 'var(--text-body)', marginBottom: 28 }}>
             A few <span style={{ color: '#8ECB3C' }}>questions.</span>
           </h2>
           {[
@@ -262,8 +262,8 @@ export default function ApplyPage() {
             },
           ].map((item, i, arr) => (
             <div key={i} style={{ padding: '20px 0', borderTop: '0.5px solid rgba(23,52,4,0.08)', ...(i === arr.length - 1 ? { borderBottom: '0.5px solid rgba(23,52,4,0.08)' } : {}) }}>
-              <p style={{ fontFamily: UI, fontWeight: 500, fontSize: 16, color: '#2C2C2A', marginBottom: 8, letterSpacing: '-0.005em', lineHeight: 1.5 }}>{item.q}</p>
-              <p style={{ fontSize: 15, color: '#5F5E5A', lineHeight: 1.6, marginBottom: 0 }}>{item.a}</p>
+              <p style={{ fontFamily: UI, fontWeight: 500, fontSize: 16, color: 'var(--text-body)', marginBottom: 8, letterSpacing: '-0.005em', lineHeight: 1.5 }}>{item.q}</p>
+              <p style={{ fontSize: 15, color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: 0 }}>{item.a}</p>
             </div>
           ))}
         </section>
@@ -271,11 +271,11 @@ export default function ApplyPage() {
       </div>
 
       {/* FOOTER */}
-      <footer style={{ background: '#0F2502', padding: '32px 40px 28px' }}>
+      <footer style={{ background: 'var(--text-body)', padding: '32px 40px 28px' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 20, borderBottom: '0.5px solid rgba(192,221,151,0.15)', marginBottom: 20, flexWrap: 'wrap', gap: 16 }}>
             <span style={{ fontFamily: UI, fontWeight: 500, fontSize: 18, color: 'white', letterSpacing: '-0.02em' }}>{brand.name}</span>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 22, fontFamily: UI, fontSize: 12.5, color: '#97C459', fontWeight: 500 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 22, fontFamily: UI, fontSize: 12.5, color: 'var(--sage)', fontWeight: 500 }}>
               <Link href="/#how" style={{ color: 'inherit', textDecoration: 'none' }}>How it works</Link>
               <Link href="/#features" style={{ color: 'inherit', textDecoration: 'none' }}>Features</Link>
               <Link href="/#cohort" style={{ color: 'inherit', textDecoration: 'none' }}>Founding cohort</Link>
@@ -283,7 +283,7 @@ export default function ApplyPage() {
               <Link href="/#contact" style={{ color: 'inherit', textDecoration: 'none' }}>Contact</Link>
             </div>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11.5, color: '#97C459', flexWrap: 'wrap', gap: 6 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11.5, color: 'var(--sage)', flexWrap: 'wrap', gap: 6 }}>
             <span>Built for the UK social impact sector.</span>
             <span>&copy; 2026 {brand.name}</span>
           </div>
