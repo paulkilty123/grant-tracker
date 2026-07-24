@@ -56,21 +56,21 @@ export default function CompanionDrawer({ examplePrompt }: { examplePrompt: stri
         <div className="fixed inset-0 z-50" role="dialog" aria-label="Your adviser">
           <div className="absolute inset-0" style={{ background: 'rgba(44,44,42,0.25)' }} onClick={() => setOpen(false)} />
           <div className="absolute inset-y-0 right-0 w-full max-w-md bg-white shadow-2xl flex flex-col">
-            <div className="p-4 flex items-center justify-between" style={{ borderBottom: '1px solid #E9E6DD' }}>
+            <div className="p-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--border-warm)' }}>
               <div className="flex items-center gap-2">
                 <CompanionMark size={30} />
                 <div>
-                  <div className="text-sm font-bold" style={{ ...grotesk, color: '#2C2C2A' }}>Your adviser</div>
-                  <div className="text-[11px]" style={{ color: '#8A8986' }}>{ADVISER_BOUNDARY}</div>
+                  <div className="text-sm font-bold" style={{ ...grotesk, color: 'var(--text-body)' }}>Your adviser</div>
+                  <div className="text-[11px]" style={{ color: 'var(--text-subtle)' }}>{ADVISER_BOUNDARY}</div>
                 </div>
               </div>
-              <button onClick={() => setOpen(false)} aria-label="Close" className="text-xl leading-none px-2" style={{ color: '#5F5E5A' }}>×</button>
+              <button onClick={() => setOpen(false)} aria-label="Close" className="text-xl leading-none px-2" style={{ color: 'var(--text-muted)' }}>×</button>
             </div>
 
             <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
-              {!loaded && <div className="text-xs" style={{ color: '#8A8986' }}>Loading your conversation…</div>}
+              {!loaded && <div className="text-xs" style={{ color: 'var(--text-subtle)' }}>Loading your conversation…</div>}
               {loaded && messages.length === 0 && (
-                <div className="text-sm rounded-xl p-3" style={{ background: '#F1F7E4', color: '#3B6D11' }}>
+                <div className="text-sm rounded-xl p-3" style={{ background: 'var(--state-success-pale)', color: 'var(--state-success)' }}>
                   Ask about your plan, your candidates, or what to do next. For example “{examplePrompt}”.
                 </div>
               )}
@@ -79,11 +79,11 @@ export default function CompanionDrawer({ examplePrompt }: { examplePrompt: stri
                   <div
                     className={`max-w-[85%] rounded-xl px-3 py-2 text-sm leading-relaxed ${m.role === 'user' ? 'whitespace-pre-wrap' : ''}`}
                     style={m.role === 'user'
-                      ? { background: '#F5F1E8', color: '#2C2C2A' }
-                      : { background: '#fff', border: '1px solid #E9E6DD', color: '#2C2C2A' }}
+                      ? { background: 'var(--surface-sunken)', color: 'var(--text-body)' }
+                      : { background: 'var(--surface-card)', border: '1px solid var(--border-warm)', color: 'var(--text-body)' }}
                   >
                     {m.tool_names.length > 0 && (
-                      <div className="text-[11px] mb-1" style={{ color: '#8A8986' }}>
+                      <div className="text-[11px] mb-1" style={{ color: 'var(--text-subtle)' }}>
                         {m.tool_names.map(t => TOOL_LABELS[t] ?? t).join(' · ')}
                       </div>
                     )}
@@ -95,7 +95,7 @@ export default function CompanionDrawer({ examplePrompt }: { examplePrompt: stri
               ))}
             </div>
 
-            <div className="p-3 flex gap-2" style={{ borderTop: '1px solid #E9E6DD' }}>
+            <div className="p-3 flex gap-2" style={{ borderTop: '1px solid var(--border-warm)' }}>
               <input
                 ref={inputRef}
                 value={input}
@@ -103,14 +103,14 @@ export default function CompanionDrawer({ examplePrompt }: { examplePrompt: stri
                 onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit() } }}
                 placeholder="Ask your adviser…"
                 className="flex-1 text-sm px-3 py-2 rounded-lg outline-none"
-                style={{ border: '1px solid #E9E6DD', color: '#2C2C2A' }}
+                style={{ border: '1px solid var(--border-warm)', color: 'var(--text-body)' }}
                 disabled={busy}
               />
               <button
                 onClick={submit}
                 disabled={busy || !input.trim()}
                 className="text-sm font-semibold px-4 py-2 rounded-lg disabled:opacity-50"
-                style={{ ...grotesk, background: '#173404', color: '#F1F7E4' }}
+                style={{ ...grotesk, background: 'var(--deep)', color: 'var(--state-success-pale)' }}
               >
                 {busy ? '…' : 'Send'}
               </button>

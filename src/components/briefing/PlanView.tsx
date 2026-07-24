@@ -232,7 +232,7 @@ export default function PlanView({ plan, pipeline, planRead = null }: {
       </div>
       {declinedItems.length > 0 && (
         <div className="bg-white rounded-xl p-4 mt-3" style={{ border: `1px solid ${COLOR.hair}` }}>
-          <div className="text-xs font-semibold" style={{ ...grotesk, color: '#993C1D' }}>Ruled out, and why</div>
+          <div className="text-xs font-semibold" style={{ ...grotesk, color: 'var(--state-error)' }}>Ruled out, and why</div>
           <ul className="mt-2 space-y-1.5">
             {declinedItems.map(i => {
               const reason = declineReason(i)
@@ -264,7 +264,7 @@ export default function PlanView({ plan, pipeline, planRead = null }: {
                   <div
                     key={i.pipeline_item_id}
                     className="absolute top-1/2 -translate-y-1/2 rounded-full"
-                    style={{ left: `calc(${pct}% - 5px)`, width: 10, height: 10, background: urgent ? '#D85A30' : COLOR.secured, border: '2px solid #fff' }}
+                    style={{ left: `calc(${pct}% - 5px)`, width: 10, height: 10, background: urgent ? 'var(--terra)' : COLOR.secured, border: '2px solid var(--surface-card)' }}
                     title={`${i.grant_name} · ${fmtDate(i.deadline)}`}
                   />
                 )
@@ -280,7 +280,7 @@ export default function PlanView({ plan, pipeline, planRead = null }: {
                 const s = STAGE_STYLE[i.stage] ?? STAGE_STYLE.identified
                 return (
                   <li key={i.pipeline_item_id} className="text-[13px] flex flex-wrap items-baseline gap-x-2" style={{ color: COLOR.ink }}>
-                    <span className="text-xs tabular-nums" style={{ color: urgent ? '#D85A30' : COLOR.faint }}>{fmtDate(i.deadline)}</span>
+                    <span className="text-xs tabular-nums" style={{ color: urgent ? 'var(--terra)' : COLOR.faint }}>{fmtDate(i.deadline)}</span>
                     <span>{i.grant_name}</span>
                     <span className="text-[11px] px-2 py-0.5" style={{ background: s.bg, color: s.color, borderRadius: 999 }}>{s.label}</span>
                     {i.amount_requested != null && <span className="text-xs" style={{ color: COLOR.mid }}>{gbp(i.amount_requested)}</span>}
@@ -291,7 +291,7 @@ export default function PlanView({ plan, pipeline, planRead = null }: {
           </>
         )}
         {overdue.length > 0 && (
-          <p className="mt-3 text-xs" style={{ color: '#D85A30' }}>
+          <p className="mt-3 text-xs" style={{ color: 'var(--terra)' }}>
             {overdue.length} deadline{overdue.length === 1 ? ' has' : 's have'} passed with the item still open: {overdue.map(i => i.grant_name).join(', ')}.
           </p>
         )}

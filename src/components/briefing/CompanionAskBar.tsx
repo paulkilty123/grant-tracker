@@ -33,7 +33,7 @@ export default function CompanionAskBar({ examplePrompt, suggestions = [] }: { e
             key={s}
             onClick={() => openCompanion(s)}
             className="text-[12px] px-2.5 py-1 rounded-full"
-            style={{ background: COLOR.pale, color: COLOR.sage, border: '1px solid #DCE8C8' }}
+            style={{ background: COLOR.pale, color: COLOR.sage, border: '1px solid var(--border-warm)' }}
           >
             {s}
           </button>

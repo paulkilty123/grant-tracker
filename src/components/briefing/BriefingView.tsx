@@ -81,7 +81,7 @@ function ActionButton({ action, primary }: { action: Move['action']; primary?: b
   const cls = 'text-[12.5px] font-semibold px-3 py-1.5 rounded-lg shrink-0'
   const style = primary
     ? { ...grotesk, background: COLOR.forest, color: COLOR.pale }
-    : { ...grotesk, border: `1px solid ${COLOR.ink}`, color: COLOR.ink, background: '#fff' }
+    : { ...grotesk, border: `1px solid ${COLOR.ink}`, color: COLOR.ink, background: 'var(--surface-card)' }
   if (action.mode === 'link' && action.href) {
     return <Link href={action.href} className={`${cls} no-underline`} style={style}>{action.label}</Link>
   }
@@ -131,7 +131,7 @@ export default function BriefingView({ briefing, plan, pipeline, displayName, si
       <div className="max-w-3xl mx-auto">
         <h1 className="text-2xl font-bold" style={{ ...grotesk, color: COLOR.ink }}>{greeting}, {displayName}.</h1>
         <p className="mt-1 text-[13px]" style={{ color: COLOR.mid }}>Your adviser is ready. It needs a goal to hold a plan with you.</p>
-        <div className="mt-6 rounded-xl p-6" style={{ background: COLOR.pale, border: '1px solid #DCE8C8' }}>
+        <div className="mt-6 rounded-xl p-6" style={{ background: COLOR.pale, border: '1px solid var(--border-warm)' }}>
           <p className="text-[15px] leading-relaxed" style={{ color: COLOR.ink }}>{ob?.message}</p>
         </div>
       </div>

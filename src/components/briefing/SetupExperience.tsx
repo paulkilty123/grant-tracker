@@ -101,24 +101,24 @@ export default function SetupExperience({ org }: { org: OrgSummary }) {
 
   return (
     <div className="max-w-5xl">
-      <h1 className="text-2xl font-bold" style={{ ...grotesk, color: '#2C2C2A' }}>Let’s build your funding plan.</h1>
-      <p className="mt-1 text-sm" style={{ color: '#5F5E5A' }}>A two-minute conversation. Your plan assembles on the right as you answer.</p>
+      <h1 className="text-2xl font-bold" style={{ ...grotesk, color: 'var(--text-body)' }}>Let’s build your funding plan.</h1>
+      <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>A two-minute conversation. Your plan assembles on the right as you answer.</p>
 
       <div className="mt-6 grid md:grid-cols-[58%_1fr] gap-4 items-start">
         {/* conversation column */}
-        <div className="bg-white rounded-xl flex flex-col" style={{ border: '1px solid #E9E6DD', minHeight: 420 }}>
+        <div className="bg-white rounded-xl flex flex-col" style={{ border: '1px solid var(--border-warm)', minHeight: 420 }}>
           <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3" style={{ maxHeight: 480 }}>
-            {!loaded && <div className="text-xs" style={{ color: '#8A8986' }}>One moment…</div>}
+            {!loaded && <div className="text-xs" style={{ color: 'var(--text-subtle)' }}>One moment…</div>}
             {messages.map((m, i) => (
               <div key={i} className={m.role === 'user' ? 'flex justify-end' : 'flex justify-start'}>
                 <div
                   className={`max-w-[90%] rounded-xl px-3 py-2 text-sm leading-relaxed ${m.role === 'user' ? 'whitespace-pre-wrap' : ''}`}
                   style={m.role === 'user'
-                    ? { background: '#F5F1E8', color: '#2C2C2A' }
-                    : { background: '#fff', border: '1px solid #E9E6DD', color: '#2C2C2A' }}
+                    ? { background: 'var(--surface-sunken)', color: 'var(--text-body)' }
+                    : { background: 'var(--surface-card)', border: '1px solid var(--border-warm)', color: 'var(--text-body)' }}
                 >
                   {m.tool_names.length > 0 && (
-                    <div className="text-[11px] mb-1" style={{ color: '#8A8986' }}>
+                    <div className="text-[11px] mb-1" style={{ color: 'var(--text-subtle)' }}>
                       {m.tool_names.map(t => TOOL_LABELS[t] ?? t).join(' · ')}
                     </div>
                   )}
@@ -135,31 +135,31 @@ export default function SetupExperience({ org }: { org: OrgSummary }) {
             <div className="px-4 pb-2 flex gap-2 flex-wrap">
               <button onClick={() => submit('Sounds right — set it up.')}
                 className="text-xs font-semibold px-3 py-1.5 rounded-lg"
-                style={{ ...grotesk, background: '#8ECB3C', color: '#173404' }}>Sounds right</button>
+                style={{ ...grotesk, background: '#8ECB3C', color: 'var(--deep)' }}>Sounds right</button>
               <button onClick={() => submit('I’d like to adjust the mix.')}
                 className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-white"
-                style={{ ...grotesk, border: '1px solid #2C2C2A', color: '#2C2C2A' }}>Adjust the mix</button>
+                style={{ ...grotesk, border: '1px solid var(--text-body)', color: 'var(--text-body)' }}>Adjust the mix</button>
               <button onClick={() => submit('Why unrestricted?')}
                 className="text-xs px-3 py-1.5 rounded-lg"
-                style={{ color: '#3B6D11' }}>Why unrestricted?</button>
+                style={{ color: 'var(--state-success)' }}>Why unrestricted?</button>
             </div>
           )}
 
-          <div className="p-3 flex gap-2" style={{ borderTop: '1px solid #E9E6DD' }}>
+          <div className="p-3 flex gap-2" style={{ borderTop: '1px solid var(--border-warm)' }}>
             <input
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit() } }}
               placeholder="Type your answer…"
               className="flex-1 text-sm px-3 py-2 rounded-lg outline-none"
-              style={{ border: '1px solid #E9E6DD', color: '#2C2C2A' }}
+              style={{ border: '1px solid var(--border-warm)', color: 'var(--text-body)' }}
               disabled={busy}
             />
             <button
               onClick={() => submit()}
               disabled={busy || !input.trim()}
               className="text-sm font-semibold px-4 py-2 rounded-lg disabled:opacity-50"
-              style={{ ...grotesk, background: '#173404', color: '#F1F7E4' }}
+              style={{ ...grotesk, background: 'var(--deep)', color: 'var(--state-success-pale)' }}
             >
               {busy ? '…' : 'Send'}
             </button>
@@ -167,36 +167,36 @@ export default function SetupExperience({ org }: { org: OrgSummary }) {
         </div>
 
         {/* the plan, assembling */}
-        <div className="rounded-xl p-4" style={{ background: '#F5F1E8', border: '1px solid #E9E6DD' }}>
-          <div className="text-[11px] uppercase tracking-wide" style={{ color: '#8A8986' }}>Your plan, assembling</div>
-          <div className="text-sm font-semibold mt-1" style={{ ...grotesk, color: '#2C2C2A' }}>
+        <div className="rounded-xl p-4" style={{ background: 'var(--surface-sunken)', border: '1px solid var(--border-warm)' }}>
+          <div className="text-[11px] uppercase tracking-wide" style={{ color: 'var(--text-subtle)' }}>Your plan, assembling</div>
+          <div className="text-sm font-semibold mt-1" style={{ ...grotesk, color: 'var(--text-body)' }}>
             {org.name}
           </div>
-          <div className="text-[11px] mt-0.5" style={{ color: '#5F5E5A' }}>
+          <div className="text-[11px] mt-0.5" style={{ color: 'var(--text-muted)' }}>
             {[org.structure, org.sectors.slice(0, 3).join(', '), org.incomeBand, org.location].filter(Boolean).join(' · ')}
           </div>
 
-          <div className="mt-4 space-y-2 text-sm" style={{ color: '#2C2C2A' }}>
+          <div className="mt-4 space-y-2 text-sm" style={{ color: 'var(--text-body)' }}>
             <div className="flex justify-between gap-2">
-              <span style={{ color: '#5F5E5A' }}>Target</span>
+              <span style={{ color: 'var(--text-muted)' }}>Target</span>
               <span className="font-semibold" style={grotesk}>{panel.goal ? gbp(panel.goal.target_amount) : '—'}</span>
             </div>
             <div className="flex justify-between gap-2">
-              <span style={{ color: '#5F5E5A' }}>Deadline</span>
+              <span style={{ color: 'var(--text-muted)' }}>Deadline</span>
               <span className="font-semibold" style={grotesk}>{panel.goal ? fmtDate(panel.goal.end_date) : '—'}</span>
             </div>
           </div>
 
           <div className="mt-4">
-            <div className="text-[11px] uppercase tracking-wide" style={{ color: '#8A8986' }}>What the money is for</div>
+            <div className="text-[11px] uppercase tracking-wide" style={{ color: 'var(--text-subtle)' }}>What the money is for</div>
             {purposeRows.length === 0 ? (
-              <div className="text-sm mt-1" style={{ color: '#8A8986' }}>—</div>
+              <div className="text-sm mt-1" style={{ color: 'var(--text-subtle)' }}>—</div>
             ) : (
               <ul className="mt-1.5 space-y-1">
                 {purposeRows.map((p, i) => (
-                  <li key={i} className="text-sm flex justify-between gap-2" style={{ color: '#2C2C2A' }}>
+                  <li key={i} className="text-sm flex justify-between gap-2" style={{ color: 'var(--text-body)' }}>
                     <span>{p.label}</span>
-                    <span style={{ color: '#5F5E5A' }}>{approx(p.amount)}</span>
+                    <span style={{ color: 'var(--text-muted)' }}>{approx(p.amount)}</span>
                   </li>
                 ))}
               </ul>
@@ -205,28 +205,28 @@ export default function SetupExperience({ org }: { org: OrgSummary }) {
 
           <div className="mt-4">
             <div className="flex items-center gap-2">
-              <div className="text-[11px] uppercase tracking-wide" style={{ color: '#8A8986' }}>Recommended mix</div>
+              <div className="text-[11px] uppercase tracking-wide" style={{ color: 'var(--text-subtle)' }}>Recommended mix</div>
               {awaitingConfirm && (
-                <span className="text-[10px] px-2 py-0.5" style={{ background: '#FAEEDA', color: '#854F0B', borderRadius: 999 }}>awaiting your confirm</span>
+                <span className="text-[10px] px-2 py-0.5" style={{ background: 'var(--state-warning-pale)', color: 'var(--state-warning)', borderRadius: 999 }}>awaiting your confirm</span>
               )}
               {panel.goalWritten && panel.goal?.mix_targets && (
-                <span className="text-[10px] px-2 py-0.5" style={{ background: '#EAF3DE', color: '#3B6D11', borderRadius: 999 }}>confirmed</span>
+                <span className="text-[10px] px-2 py-0.5" style={{ background: 'var(--state-success-pale)', color: 'var(--state-success)', borderRadius: 999 }}>confirmed</span>
               )}
             </div>
             {(() => {
               // Hold the chips while a refinement is open — the pre-answer split
               // is provisional and would flash a number that then changes.
               if (hasOpenRefinement) {
-                return <div className="text-xs mt-1" style={{ color: '#8A8986' }}>one detail to confirm first…</div>
+                return <div className="text-xs mt-1" style={{ color: 'var(--text-subtle)' }}>one detail to confirm first…</div>
               }
               const mix = panel.goalWritten ? panel.goal?.mix_targets : panel.mix?.recommended_mix
               const entries = Object.entries((mix ?? {}) as Record<string, number>)
               return entries.length === 0
-                ? <div className="text-sm mt-1" style={{ color: '#8A8986' }}>—</div>
+                ? <div className="text-sm mt-1" style={{ color: 'var(--text-subtle)' }}>—</div>
                 : (
                   <div className="flex gap-1.5 flex-wrap mt-1.5">
                     {entries.map(([k, v]) => (
-                      <span key={k} className="text-[11px] px-2 py-0.5 bg-white" style={{ color: '#3B6D11', borderRadius: 999, border: '1px solid #DCE8C8' }}>{k} {v}%</span>
+                      <span key={k} className="text-[11px] px-2 py-0.5 bg-white" style={{ color: 'var(--state-success)', borderRadius: 999, border: '1px solid var(--border-warm)' }}>{k} {v}%</span>
                     ))}
                   </div>
                 )
@@ -235,17 +235,17 @@ export default function SetupExperience({ org }: { org: OrgSummary }) {
 
           {/* the closing "This means" card */}
           {panel.goalWritten && panel.arithmetic && (
-            <div className="mt-4 bg-white rounded-xl p-3" style={{ border: '1px solid #DCE8C8' }}>
-              <div className="text-[11px] uppercase tracking-wide" style={{ color: '#8A8986' }}>This means</div>
-              <div className="text-lg font-bold mt-1" style={{ ...grotesk, color: '#2C2C2A' }}>{gbp(panel.arithmetic.requiredRunRateMonthly)} per month</div>
-              <div className="text-xs mt-0.5" style={{ color: '#5F5E5A' }}>to close the {gbp(panel.arithmetic.gap)} gap in {panel.arithmetic.monthsRemaining} months</div>
+            <div className="mt-4 bg-white rounded-xl p-3" style={{ border: '1px solid var(--border-warm)' }}>
+              <div className="text-[11px] uppercase tracking-wide" style={{ color: 'var(--text-subtle)' }}>This means</div>
+              <div className="text-lg font-bold mt-1" style={{ ...grotesk, color: 'var(--text-body)' }}>{gbp(panel.arithmetic.requiredRunRateMonthly)} per month</div>
+              <div className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>to close the {gbp(panel.arithmetic.gap)} gap in {panel.arithmetic.monthsRemaining} months</div>
               {typeof panel.candidateCount === 'number' && (
-                <div className="text-xs mt-1.5" style={{ color: '#3B6D11' }}>{panel.candidateCount} eligibility-checked matches, re-ranked for this mix</div>
+                <div className="text-xs mt-1.5" style={{ color: 'var(--state-success)' }}>{panel.candidateCount} eligibility-checked matches, re-ranked for this mix</div>
               )}
               <button
                 onClick={() => router.refresh()}
                 className="mt-3 w-full text-sm font-semibold px-4 py-2 rounded-lg"
-                style={{ ...grotesk, background: '#8ECB3C', color: '#173404' }}
+                style={{ ...grotesk, background: '#8ECB3C', color: 'var(--deep)' }}
               >
                 See your briefing
               </button>

@@ -65,7 +65,7 @@ export default function AdviserRail({ myRead, awaitingRead = false, suggestions 
             <div key={i} className={m.role === 'user' ? 'flex justify-end' : 'flex justify-start'}>
               <div
                 className={`max-w-[90%] rounded-xl px-3 py-2 text-[13px] leading-relaxed ${m.role === 'user' ? 'whitespace-pre-wrap' : ''}`}
-                style={m.role === 'user' ? { background: COLOR.cream, color: COLOR.ink } : { background: '#fff', border: `1px solid ${COLOR.hair}`, color: COLOR.ink }}
+                style={m.role === 'user' ? { background: COLOR.cream, color: COLOR.ink } : { background: 'var(--surface-card)', border: `1px solid ${COLOR.hair}`, color: COLOR.ink }}
               >
                 {m.tool_names.length > 0 && (
                   <div className="text-[11px] mb-1" style={{ color: COLOR.faint }}>{m.tool_names.map(t => TOOL_LABELS[t] ?? t).join(' · ')}</div>
@@ -114,7 +114,7 @@ export default function AdviserRail({ myRead, awaitingRead = false, suggestions 
           <>
             <div className="flex flex-wrap gap-2 mt-2">
               {suggestions.slice(0, 3).map(s => (
-                <button key={s} onClick={() => prefill(s)} className="text-[12px] px-2.5 py-1 rounded-full text-left" style={{ background: COLOR.pale, color: COLOR.sage, border: '1px solid #DCE8C8' }}>{s}</button>
+                <button key={s} onClick={() => prefill(s)} className="text-[12px] px-2.5 py-1 rounded-full text-left" style={{ background: COLOR.pale, color: COLOR.sage, border: '1px solid var(--border-warm)' }}>{s}</button>
               ))}
             </div>
             <div className="text-[11px] mt-2" style={{ color: COLOR.faint }}>{ADVISER_BOUNDARY}</div>

@@ -140,7 +140,7 @@ function GhostButton({ children, onClick, disabled }: { children: React.ReactNod
   return (
     <button type="button" onClick={onClick} disabled={disabled}
       className="text-sm font-medium px-4 py-2.5 rounded-lg disabled:opacity-50"
-      style={{ ...grotesk, background: '#fff', color: COLOR.ink, border: `1px solid ${COLOR.ink}`, cursor: disabled ? 'not-allowed' : 'pointer' }}>
+      style={{ ...grotesk, background: 'var(--surface-card)', color: COLOR.ink, border: `1px solid ${COLOR.ink}`, cursor: disabled ? 'not-allowed' : 'pointer' }}>
       {children}
     </button>
   )
@@ -389,7 +389,7 @@ export default function SetupStepper({ org }: { org: OrgSummary }) {
       <div className="mt-5 grid md:grid-cols-[58%_1fr] gap-4 items-start">
         {/* step column */}
         <div className="bg-white rounded-xl p-5" style={{ border: `1px solid ${COLOR.hair}`, minHeight: 420 }}>
-          {errorMsg && <p className="text-xs mb-3" style={{ color: '#D85A30' }}>{errorMsg}</p>}
+          {errorMsg && <p className="text-xs mb-3" style={{ color: 'var(--terra)' }}>{errorMsg}</p>}
 
           {step === 'target' && (
             <>
@@ -419,7 +419,7 @@ export default function SetupStepper({ org }: { org: OrgSummary }) {
                   return (
                     <button key={c.key} type="button" onClick={() => addPurposeRow(c.key)}
                       className="text-sm px-3 py-1.5 rounded-lg"
-                      style={{ ...grotesk, border: count > 0 ? `1.5px solid ${COLOR.sage}` : `1px solid ${COLOR.hair}`, background: count > 0 ? COLOR.pale : '#fff', color: count > 0 ? COLOR.sage : COLOR.ink }}>
+                      style={{ ...grotesk, border: count > 0 ? `1.5px solid ${COLOR.sage}` : `1px solid ${COLOR.hair}`, background: count > 0 ? COLOR.pale : 'var(--surface-card)', color: count > 0 ? COLOR.sage : COLOR.ink }}>
                       {c.label}{count > 0 ? ` (${count})` : ''}
                     </button>
                   )
@@ -439,10 +439,10 @@ export default function SetupStepper({ org }: { org: OrgSummary }) {
                             <input type="text" value={row.label} placeholder={def.placeholder}
                               onChange={e => updatePurposeRow(row.id, { label: e.target.value })}
                               className="text-sm rounded-lg outline-none px-3"
-                              style={{ height: 38, border: `1px solid ${COLOR.hair}`, color: COLOR.ink, background: '#fff' }} />
+                              style={{ height: 38, border: `1px solid ${COLOR.hair}`, color: COLOR.ink, background: 'var(--surface-card)' }} />
                             <PoundInput value={row.amount} onChange={v => updatePurposeRow(row.id, { amount: v })} />
                             <button type="button" onClick={() => removePurposeRow(row.id)}
-                              className="flex items-center justify-center rounded-md" style={{ width: 28, height: 28, background: '#fff', border: `1px solid ${COLOR.hair}`, color: COLOR.mid, cursor: 'pointer' }}>
+                              className="flex items-center justify-center rounded-md" style={{ width: 28, height: 28, background: 'var(--surface-card)', border: `1px solid ${COLOR.hair}`, color: COLOR.mid, cursor: 'pointer' }}>
                               ×
                             </button>
                           </div>
@@ -493,10 +493,10 @@ export default function SetupStepper({ org }: { org: OrgSummary }) {
                       <input type="text" value={row.name} placeholder="e.g. Garfield Weston Foundation"
                         onChange={e => setInMotion(prev => prev.map(r => (r.id === row.id ? { ...r, name: e.target.value } : r)))}
                         className="text-sm rounded-lg outline-none px-3"
-                        style={{ height: 38, border: `1px solid ${COLOR.hair}`, color: COLOR.ink, background: '#fff' }} />
+                        style={{ height: 38, border: `1px solid ${COLOR.hair}`, color: COLOR.ink, background: 'var(--surface-card)' }} />
                       <PoundInput value={row.amount} onChange={v => setInMotion(prev => prev.map(r => (r.id === row.id ? { ...r, amount: v } : r)))} />
                       <button type="button" onClick={() => removeInMotionRow(row.id)}
-                        className="flex items-center justify-center rounded-md" style={{ width: 28, height: 28, background: '#fff', border: `1px solid ${COLOR.hair}`, color: COLOR.mid, cursor: 'pointer' }}>
+                        className="flex items-center justify-center rounded-md" style={{ width: 28, height: 28, background: 'var(--surface-card)', border: `1px solid ${COLOR.hair}`, color: COLOR.mid, cursor: 'pointer' }}>
                         ×
                       </button>
                     </div>
@@ -506,7 +506,7 @@ export default function SetupStepper({ org }: { org: OrgSummary }) {
                         return (
                           <button key={s} type="button" onClick={() => setInMotion(prev => prev.map(r => (r.id === row.id ? { ...r, status: s } : r)))}
                             className="text-xs px-2.5 py-1 rounded-lg"
-                            style={{ ...grotesk, border: sel ? `1.5px solid ${COLOR.sage}` : `1px solid ${COLOR.hair}`, background: sel ? '#fff' : 'transparent', color: sel ? COLOR.sage : COLOR.mid }}>
+                            style={{ ...grotesk, border: sel ? `1.5px solid ${COLOR.sage}` : `1px solid ${COLOR.hair}`, background: sel ? 'var(--surface-card)' : 'transparent', color: sel ? COLOR.sage : COLOR.mid }}>
                             {s === 'confirmed' ? 'Confirmed' : 'Expected'}
                           </button>
                         )
@@ -558,7 +558,7 @@ export default function SetupStepper({ org }: { org: OrgSummary }) {
                         <button key={opt.value} type="button"
                           onClick={() => answerClarify(openClarify.category, openClarify.label, opt.value)}
                           className="text-sm px-3 py-1.5 rounded-lg"
-                          style={{ ...grotesk, border: `1px solid ${COLOR.hair}`, background: '#fff', color: COLOR.ink }}>
+                          style={{ ...grotesk, border: `1px solid ${COLOR.hair}`, background: 'var(--surface-card)', color: COLOR.ink }}>
                           {opt.label}
                         </button>
                       ))}
@@ -592,7 +592,7 @@ export default function SetupStepper({ org }: { org: OrgSummary }) {
                         return (
                           <button key={opt.value} type="button" onClick={() => toggleClarifySelection(opt.value)}
                             className="text-sm px-3 py-1.5 rounded-lg"
-                            style={{ ...grotesk, border: sel ? `1.5px solid ${COLOR.sage}` : `1px solid ${COLOR.hair}`, background: sel ? COLOR.pale : '#fff', color: sel ? COLOR.sage : COLOR.ink }}>
+                            style={{ ...grotesk, border: sel ? `1.5px solid ${COLOR.sage}` : `1px solid ${COLOR.hair}`, background: sel ? COLOR.pale : 'var(--surface-card)', color: sel ? COLOR.sage : COLOR.ink }}>
                             {opt.label}
                           </button>
                         )
@@ -649,7 +649,7 @@ export default function SetupStepper({ org }: { org: OrgSummary }) {
                             <div className="grid gap-2" style={{ gridTemplateColumns: '1fr 140px' }}>
                               <input type="text" value={editDraft.label} onChange={e => setEditDraft(d => ({ ...d, label: e.target.value }))}
                                 className="text-sm rounded-lg outline-none px-3"
-                                style={{ height: 36, border: `1px solid ${COLOR.hair}`, color: COLOR.ink, background: '#fff' }} />
+                                style={{ height: 36, border: `1px solid ${COLOR.hair}`, color: COLOR.ink, background: 'var(--surface-card)' }} />
                               <PoundInput value={editDraft.amount} onChange={v => setEditDraft(d => ({ ...d, amount: v }))} />
                             </div>
                           ) : (
@@ -667,7 +667,7 @@ export default function SetupStepper({ org }: { org: OrgSummary }) {
                           {editing && (
                             <div className="mt-2 flex gap-2 justify-end">
                               <button type="button" onClick={() => setEditingIndex(null)}
-                                className="text-xs px-2.5 py-1 rounded-lg" style={{ ...grotesk, border: `1px solid ${COLOR.hair}`, background: '#fff', color: COLOR.mid }}>
+                                className="text-xs px-2.5 py-1 rounded-lg" style={{ ...grotesk, border: `1px solid ${COLOR.hair}`, background: 'var(--surface-card)', color: COLOR.mid }}>
                                 Cancel
                               </button>
                               <button type="button" onClick={() => saveEditComponent(c)}

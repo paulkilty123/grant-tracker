@@ -114,7 +114,7 @@ export default function DurationDatePicker({ value, onChange }: { value: string 
                   style={{
                     ...grotesk,
                     border: sel ? `1.5px solid ${COLOR.sage}` : `1px solid ${COLOR.hair}`,
-                    background: sel ? COLOR.pale : '#fff',
+                    background: sel ? COLOR.pale : 'var(--surface-card)',
                     color: sel ? COLOR.sage : COLOR.ink,
                   }}>
                   {c.label}
@@ -126,7 +126,7 @@ export default function DurationDatePicker({ value, onChange }: { value: string 
               style={{
                 ...grotesk,
                 border: activeChip === 'custom' ? `1.5px solid ${COLOR.sage}` : `1px solid ${COLOR.hair}`,
-                background: activeChip === 'custom' ? COLOR.pale : '#fff',
+                background: activeChip === 'custom' ? COLOR.pale : 'var(--surface-card)',
                 color: activeChip === 'custom' ? COLOR.sage : COLOR.ink,
               }}>
               Custom
@@ -144,7 +144,7 @@ export default function DurationDatePicker({ value, onChange }: { value: string 
               />
               <select value={customUnit} onChange={e => setCustomUnit(e.target.value as 'weeks' | 'months' | 'years')}
                 className="text-sm px-2 py-1.5 rounded-lg outline-none"
-                style={{ border: `1px solid ${COLOR.hair}`, color: COLOR.ink, background: '#fff' }}>
+                style={{ border: `1px solid ${COLOR.hair}`, color: COLOR.ink, background: 'var(--surface-card)' }}>
                 <option value="weeks">weeks</option>
                 <option value="months">months</option>
                 <option value="years">years</option>
@@ -194,7 +194,7 @@ export default function DurationDatePicker({ value, onChange }: { value: string 
                     padding: '5px 1px', border: 'none',
                     cursor: day.isCurrentMonth ? 'pointer' : 'default',
                     background: isSel ? COLOR.secured : day.isToday ? COLOR.pale : 'transparent',
-                    color: isSel ? '#fff' : !day.isCurrentMonth ? '#D9D6CB' : day.isToday ? COLOR.sage : COLOR.ink,
+                    color: isSel ? 'var(--surface-card)' : !day.isCurrentMonth ? 'var(--border-warm)' : day.isToday ? COLOR.sage : COLOR.ink,
                     fontFamily: 'inherit', fontSize: 12, fontWeight: isSel ? 600 : 400,
                   }}>
                   {day.date.getDate()}
