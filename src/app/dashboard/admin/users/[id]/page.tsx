@@ -332,7 +332,7 @@ function ChipField({ label, items }: { label: string; items: string[] | null | u
       {items && items.length > 0 ? (
         <div className="flex flex-wrap gap-1.5">
           {items.map(t => (
-            <span key={t} className="inline-block px-2 py-0.5 rounded-md text-xs" style={{ background: '#F1F7E4', color: '#3B6D11' }}>
+            <span key={t} className="inline-block px-2 py-0.5 rounded-md text-xs" style={{ background: 'var(--state-success-pale)', color: 'var(--state-success)' }}>
               {t.replace(/_/g, ' ')}
             </span>
           ))}
