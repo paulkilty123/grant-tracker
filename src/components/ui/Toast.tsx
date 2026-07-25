@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { CheckCircle, AlertTriangle, Info, X } from 'lucide-react'
 
 type ToastKind = 'success' | 'error' | 'info'
@@ -41,11 +41,21 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     setTimeout(() => dismiss(id), DURATION_MS)
   }, [dismiss])
 
-  const api: ToastApi = {
-    success: msg => push('success', msg),
-    error:   msg => push('error',   msg),
-    info:    msg => push('info',    msg),
-  }
+  // Memoised so the context value has a stable identity. Without this, `api` was
+  // rebuilt on every ToastProvider render — and the provider re-renders whenever
+  // a toast is shown or dismissed — so useToast() returned a new object each
+  // time. Any consumer that (correctly) listed `toast` in a useCallback /
+  // useEffect dependency array would then see its dependency change on every
+  // toast, and a callback that shows a toast on failure could drive an infinite
+  // loop: load fails → toast → provider re-renders → new api identity → effect
+  // refires → load fails → …
+  //
+  // push/dismiss are already stable useCallbacks, so this is permanently stable.
+  const api: ToastApi = useMemo(() => ({
+    success: (msg: string) => push('success', msg),
+    error:   (msg: string) => push('error',   msg),
+    info:    (msg: string) => push('info',    msg),
+  }), [push])
 
   return (
     <ToastContext.Provider value={api}>

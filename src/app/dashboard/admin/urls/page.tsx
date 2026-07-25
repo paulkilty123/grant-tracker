@@ -522,9 +522,18 @@ export default function UrlAdminPage() {
         .in('pipeline_state', ['captured', 'enriched', 'tagged', 'tagged_awaiting_review'])
         .or(`field_provenance->pipeline_state->>source.is.null,field_provenance->pipeline_state->>source.neq.${RECLASSIFY_SOURCE}`)
     }
-    const { data } = await query
+    // The error was previously destructured away, so a failed query set [] and
+    // the UI rendered "No grants pending review — all clear!" — reporting an
+    // empty queue when it had simply failed to read it. On error, surface it and
+    // leave the existing list alone rather than replacing it with an empty one.
+    const { data, error } = await query
       .order('last_seen_at', { ascending: false })
       .limit(500)
+    if (error) {
+      console.error('loadReviewGrants failed:', error.message)
+      toast.error(`Could not load the review queue: ${error.message}`)
+      return
+    }
     const grants = (data ?? []) as Grant[]
     setReviewGrants(grants)
     // Pre-populate sources panel from any previously saved grant_sources
@@ -541,20 +550,25 @@ export default function UrlAdminPage() {
       }
       return next
     })
-  }, [filter])
+  }, [filter, toast])
 
   // ── Load captured (untagged) grants ─────────────────────────────────────────
   // pipeline_state='captured' = arrived but no AI classifier / enricher has
   // touched it yet. Worklist for "run classify-grants on the backlog."
   const loadCapturedGrants = useCallback(async () => {
     if (filter !== 'captured') return
-    const { data } = await createClient()
+    const { data, error } = await createClient()
       .from('scraped_grants')
       .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_brief, grant_sources, description, funder_type, funding_type, location_tag, amount_min, amount_max, deadline, is_rolling, eligible_structures, next_open_date, impact_sectors, target_beneficiaries, pipeline_state, field_provenance')
       .eq('pipeline_state', 'captured')
       .not('saved_for_later', 'is', 'true')
       .order('first_seen_at', { ascending: false })
       .limit(500)
+    if (error) {
+      console.error('loadCapturedGrants failed:', error.message)
+      toast.error(`Could not load captured grants: ${error.message}`)
+      return
+    }
     const grants = (data ?? []) as Grant[]
     setCapturedGrants(grants)
     setReviewSources(prev => {
@@ -570,7 +584,7 @@ export default function UrlAdminPage() {
       }
       return next
     })
-  }, [filter])
+  }, [filter, toast])
 
   // ── Load needs-enrichment grants ────────────────────────────────────────────
   // Published grants without a funder_brief. Replaces the main worklist of
@@ -578,13 +592,18 @@ export default function UrlAdminPage() {
   // the brief; the merger stamps ai_enrich:v1 provenance on the result.
   const loadNeedsEnrichmentGrants = useCallback(async () => {
     if (filter !== 'needs_enrichment') return
-    const { data } = await createClient()
+    const { data, error } = await createClient()
       .from('scraped_grants')
       .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_brief, grant_sources, description, funder_type, funding_type, location_tag, amount_min, amount_max, deadline, is_rolling, eligible_structures, next_open_date, impact_sectors, target_beneficiaries, pipeline_state, field_provenance')
       .eq('pipeline_state', 'published')
       .is('funder_brief', null)
       .order('last_seen_at', { ascending: false })
       .limit(500)
+    if (error) {
+      console.error('loadNeedsEnrichmentGrants failed:', error.message)
+      toast.error(`Could not load needs-enrichment list: ${error.message}`)
+      return
+    }
     const grants = (data ?? []) as Grant[]
     setNeedsEnrichmentGrants(grants)
     setReviewSources(prev => {
@@ -600,7 +619,7 @@ export default function UrlAdminPage() {
       }
       return next
     })
-  }, [filter])
+  }, [filter, toast])
 
   // ── Load tag-audit rows from the bulk scan API ──────────────────────────────
   // Calls /api/admin/audit-tag-agreement which runs suggestTags() server-side
@@ -640,15 +659,20 @@ export default function UrlAdminPage() {
   const loadRecentGrants = useCallback(async () => {
     if (filter !== 'recent') return
     const since = new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString()
-    const { data } = await createClient()
+    const { data, error } = await createClient()
       .from('scraped_grants')
       .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_brief, grant_sources, description, location_tag, amount_min, amount_max, deadline, is_rolling, eligible_structures, funder_type, funding_type, first_seen_at, impact_sectors, target_beneficiaries, field_provenance')
       .eq('is_active', true)
       .gte('first_seen_at', since)
       .order('first_seen_at', { ascending: false })
       .limit(300)
+    if (error) {
+      console.error('loadRecentGrants failed:', error.message)
+      toast.error(`Could not load recently activated: ${error.message}`)
+      return
+    }
     setRecentGrants((data ?? []) as Grant[])
-  }, [filter])
+  }, [filter, toast])
 
   // ── Load between-rounds grants ──────────────────────────────────────────────
   // Active rows where the expire-grants cron has cleared the deadline and set
@@ -657,7 +681,7 @@ export default function UrlAdminPage() {
   // schedule, not driven by nightly cron firings.
   const loadBetweenRoundsGrants = useCallback(async () => {
     if (filter !== 'between_rounds') return
-    const { data } = await createClient()
+    const { data, error } = await createClient()
       .from('scraped_grants')
       .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_brief, grant_sources, description, location_tag, amount_min, amount_max, deadline, is_rolling, next_open_date, eligible_structures, funder_type, funding_type, first_seen_at, impact_sectors, target_beneficiaries, field_provenance')
       .eq('is_active', true)
@@ -665,13 +689,18 @@ export default function UrlAdminPage() {
       .not('next_open_date', 'is', null)
       .order('next_open_date_parsed', { ascending: true, nullsFirst: false })
       .limit(500)
+    if (error) {
+      console.error('loadBetweenRoundsGrants failed:', error.message)
+      toast.error(`Could not load between-rounds list: ${error.message}`)
+      return
+    }
     setBetweenRoundsGrants((data ?? []) as Grant[])
-  }, [filter])
+  }, [filter, toast])
 
   // ── Load suspicious grants (low quality score) ───────────────────────────────
   const loadSuspiciousGrants = useCallback(async () => {
     if (filter !== 'suspicious') return
-    const { data } = await createClient()
+    const { data, error } = await createClient()
       .from('scraped_grants')
       .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_brief, grant_sources, url_quality_score, url_quality_issues')
       .eq('is_active', true)
@@ -679,8 +708,13 @@ export default function UrlAdminPage() {
       .lt('url_quality_score', 60)
       .order('url_quality_score', { ascending: true })
       .limit(500)
+    if (error) {
+      console.error('loadSuspiciousGrants failed:', error.message)
+      toast.error(`Could not load suspicious grants: ${error.message}`)
+      return
+    }
     setSuspiciousGrants((data ?? []) as SuspiciousGrant[])
-  }, [filter])
+  }, [filter, toast])
 
   // ── Approve all pending review grants ─────────────────────────────────────────
   // The button opens a ConfirmDialog (replaces the old native confirm()).
@@ -692,40 +726,66 @@ export default function UrlAdminPage() {
   async function approveAllReviewConfirmed() {
     setConfirmApproveAll(false)
     setApprovingAll(true)
-    const total = reviewGrants.length
+    // 2026-07-25: this checked res.ok per batch and toasted on failure, but then
+    // called setReviewGrants([]) unconditionally and reported
+    // "Published N grants" using the PRE-flight count. A failed batch therefore
+    // cleared the whole queue from the UI and still reported total success, so
+    // the unpublished rows were invisible until the next full reload.
+    //
+    // Now only successfully-published ids are removed from the queue, and the
+    // toast reports what actually landed.
     try {
-      // Batch approve in groups of 50 to avoid URL length limits
       const ids = reviewGrants.map(g => g.id)
+      const publishedIds = new Set<string>()
+      let failedCount = 0
+
+      // Batch in groups of 50 to avoid URL length limits
       for (let i = 0; i < ids.length; i += 50) {
-        const res = await fetch('/api/admin/update-grant', {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ids: ids.slice(i, i + 50), fields: { is_active: true } }),
-        })
-        if (!res.ok) {
-          toast.error(`Batch ${i}–${i + 50} failed (${res.status})`)
+        const slice = ids.slice(i, i + 50)
+        try {
+          const res = await fetch('/api/admin/update-grant', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ids: slice, fields: { is_active: true } }),
+          })
+          if (res.ok) {
+            slice.forEach(id => publishedIds.add(id))
+          } else {
+            failedCount += slice.length
+            const json = await res.json().catch(() => ({}))
+            toast.error(`Batch of ${slice.length} failed: ${json.error ?? `HTTP ${res.status}`}`)
+          }
+        } catch (err) {
+          failedCount += slice.length
+          toast.error(`Batch of ${slice.length} failed: ${err instanceof Error ? err.message : String(err)}`)
         }
       }
-      setReviewGrants([])
+
+      // Keep the rows that did NOT publish, so they stay actionable.
+      setReviewGrants(prev => prev.filter(g => !publishedIds.has(g.id)))
       await loadStats()
-      toast.success(`Published ${total} grant${total !== 1 ? 's' : ''}`)
-    } catch (err) {
-      toast.error(`Approve-all failed: ${err instanceof Error ? err.message : String(err)}`)
+
+      if (publishedIds.size > 0) {
+        toast.success(`Published ${publishedIds.size} grant${publishedIds.size !== 1 ? 's' : ''}`)
+      }
+      if (failedCount > 0) {
+        toast.error(`${failedCount} grant${failedCount !== 1 ? 's' : ''} could not be published and remain in the queue`)
+      }
     } finally {
       setApprovingAll(false)
     }
   }
 
   // ── Approve a single review grant ─────────────────────────────────────────────
+  // 2026-07-25: this used to fire-and-forget the PATCH and then unconditionally
+  // remove the row from the queue. On an expired session (401) or a 500 the row
+  // vanished from Needs Review while remaining UNPUBLISHED — the single worst
+  // silent failure in the admin surface, because the reviewer's only feedback is
+  // the row disappearing, which is exactly what success looks like.
   async function approveGrant(id: string) {
-    await fetch('/api/admin/update-grant', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, fields: { is_active: true } }),
-    })
+    if (!await updateGrantChecked(id, { is_active: true }, 'Publishing')) return
     setReviewGrants(prev => prev.filter(g => g.id !== id))
     await loadStats()
-
   }
 
 
@@ -1186,11 +1246,32 @@ export default function UrlAdminPage() {
     return { ok: true }
   }
 
+  // Checked wrapper. updateGrant already returns { ok, error }, but until
+  // 2026-07-25 seven of its eight call sites discarded that result and then
+  // optimistically mutated local state anyway — so an expired session (401) or a
+  // 500 left the UI showing a change that never reached the database, and the
+  // edit was silently lost on reload. Use this instead of bare updateGrant for
+  // anything user-initiated: it surfaces the failure and tells the caller
+  // whether it is safe to update local state.
+  async function updateGrantChecked(
+    id: string,
+    fields: Record<string, unknown>,
+    what: string,
+  ): Promise<boolean> {
+    const result = await updateGrant(id, fields)
+    if (!result.ok) {
+      toast.error(`${what} failed: ${result.error ?? 'unknown error'}`)
+      return false
+    }
+    return true
+  }
+
   // ── Save edited URL ──────────────────────────────────────────────────────────
   async function saveUrl(id: string) {
     setSaving(true)
     // Clear quality score when URL changes — old score no longer applies to new URL
-    await updateGrant(id, { apply_url: editUrl || null, url_status: 'unchecked', url_last_checked: null, url_quality_score: null, url_quality_issues: [] })
+    const ok = await updateGrantChecked(id, { apply_url: editUrl || null, url_status: 'unchecked', url_last_checked: null, url_quality_score: null, url_quality_issues: [] }, 'Saving URL')
+    if (!ok) { setSaving(false); return }
     const updateInList = (g: Grant) =>
       g.id === id ? { ...g, apply_url: editUrl || null, url_status: 'unchecked' as const, url_last_checked: null } : g
     setGrants(prev => prev.map(updateInList))
@@ -1209,7 +1290,8 @@ export default function UrlAdminPage() {
     const val = editTitleValue.trim()
     if (!val) return
     setSavingTitle(true)
-    await updateGrant(id, { title: val })
+    const ok = await updateGrantChecked(id, { title: val }, 'Saving title')
+    if (!ok) { setSavingTitle(false); return }
     setGrants(prev => prev.map(g => g.id === id ? { ...g, title: val } : g))
     setCategoryGrants(prev => prev.map(g => g.id === id ? { ...g, title: val } : g))
     setNewGrants(prev => prev.map(g => g.id === id ? { ...g, title: val } : g))
@@ -1221,7 +1303,7 @@ export default function UrlAdminPage() {
 
   // ── Mark dead manually ────────────────────────────────────────────────────────
   async function markDead(id: string) {
-    await updateGrant(id, { url_status: 'dead', url_last_checked: new Date().toISOString() })
+    if (!await updateGrantChecked(id, { url_status: 'dead', url_last_checked: new Date().toISOString() }, 'Marking dead')) return
     const update = (g: Grant) => g.id === id ? { ...g, url_status: 'dead' as const } : g
     setGrants(prev => prev.map(update))
     setCategoryGrants(prev => prev.map(g => g.id === id ? { ...g, url_status: 'dead' as const } : g))
@@ -1232,7 +1314,7 @@ export default function UrlAdminPage() {
   // ── Mark ok manually ─────────────────────────────────────────────────────────
   async function markOk(id: string) {
     // Clear url_quality_score so it no longer matches the suspicious filter (score < 60)
-    await updateGrant(id, { url_status: 'ok', url_last_checked: new Date().toISOString(), url_quality_score: null, url_quality_issues: [] })
+    if (!await updateGrantChecked(id, { url_status: 'ok', url_last_checked: new Date().toISOString(), url_quality_score: null, url_quality_issues: [] }, 'Marking OK')) return
     const patchOk = (g: Grant) => g.id === id ? { ...g, url_status: 'ok' as const, url_last_checked: new Date().toISOString() } : g
     // For dead/unchecked filter views, remove from list; for others, update in place
     if (filter === 'dead' || filter === 'unchecked') {
@@ -1248,7 +1330,7 @@ export default function UrlAdminPage() {
 
   // ── Toggle invite-only ────────────────────────────────────────────────────────
   async function toggleInviteOnly(id: string, current: boolean) {
-    await updateGrant(id, { is_invite_only: !current })
+    if (!await updateGrantChecked(id, { is_invite_only: !current }, 'Toggling invite-only')) return
     const update = (g: Grant) => g.id === id ? { ...g, is_invite_only: !current } : g
     setGrants(prev => prev.map(update))
     setCategoryGrants(prev => prev.map(g => g.id === id ? { ...g, is_invite_only: !current } : g))
@@ -1259,10 +1341,12 @@ export default function UrlAdminPage() {
   // mode 'review' → is_active=false only → moves grant to Needs Review for re-triage
   // Review-tab 'Hide' always implies 'dead' so the row doesn't come back next load.
   async function removeGrant(id: string, mode: 'dead' | 'review' = 'dead') {
-    if (filter === 'review' || mode === 'dead') {
-      await updateGrant(id, { url_status: 'dead', is_active: false })
-    } else {
-      await updateGrant(id, { is_active: false })
+    const removeFields = (filter === 'review' || mode === 'dead')
+      ? { url_status: 'dead', is_active: false }
+      : { is_active: false }
+    if (!await updateGrantChecked(id, removeFields, 'Hiding grant')) {
+      setConfirmDeleteId(null)
+      return
     }
     setReviewGrants(prev => prev.filter(g => g.id !== id))
     setGrants(prev => prev.filter(g => g.id !== id))
@@ -5427,10 +5511,25 @@ export default function UrlAdminPage() {
       )}
 
       {/* Confirm dialog for "Approve all" bulk action — replaces native confirm() */}
+      {/* Approve-all sends only { is_active: true }, so any edits staged in
+          reviewEdits are NOT saved. That was previously silent; the dialog now
+          says so and names the affected rows. Properly folding staged edits into
+          the batch is a follow-up (it needs a per-row payload, not one shared
+          fields object). */}
       <ConfirmDialog
         open={confirmApproveAll}
         title="Approve all pending grants?"
-        message={`This will publish ${reviewGrants.length} grant${reviewGrants.length !== 1 ? 's' : ''} to the live catalogue. They'll appear in user matches immediately.`}
+        message={(() => {
+          const base = `This will publish ${reviewGrants.length} grant${reviewGrants.length !== 1 ? 's' : ''} to the live catalogue. They'll appear in user matches immediately.`
+          const unsaved = reviewGrants.filter(g => {
+            const edits = reviewEdits[g.id]
+            return edits && Object.keys(edits).length > 0
+          })
+          if (unsaved.length === 0) return base
+          const names = unsaved.slice(0, 3).map(g => g.title).join(', ')
+          const more = unsaved.length > 3 ? ` and ${unsaved.length - 3} more` : ''
+          return `${base}\n\nWarning: ${unsaved.length} row${unsaved.length !== 1 ? 's have' : ' has'} unsaved edits (${names}${more}). Approve all publishes the stored values only, so those edits will be discarded. Save them individually first if you want them kept.`
+        })()}
         confirmLabel={`Approve ${reviewGrants.length}`}
         cancelLabel="Cancel"
         busy={approvingAll}
