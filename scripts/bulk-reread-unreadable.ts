@@ -115,7 +115,16 @@ async function probe(u: string): Promise<{ ok: boolean; why: string }> {
   const t = setTimeout(() => ctl.abort(), 15_000)
   try {
     const res = await fetch(u, { redirect: 'follow', signal: ctl.signal, headers: { 'User-Agent': PROBE_UA, Accept: 'text/html' } })
-    if (!res.ok) return { ok: false, why: `HTTP ${res.status}${res.status === 403 ? ' (bot wall)' : ''}` }
+    // A bot wall is no longer a reason to skip IF a reader proxy is configured:
+    // enrich-grant retries through it after the direct fetch fails, and that is
+    // the only route into these hosts. Without a proxy configured they are still
+    // skipped, because re-reading them would only rewrite the brief from memory.
+    if (res.status === 403 || res.status === 406) {
+      return process.env.READER_PROXY_URL
+        ? { ok: true, why: 'bot wall, will use reader proxy' }
+        : { ok: false, why: `HTTP ${res.status} (bot wall, no reader proxy configured)` }
+    }
+    if (!res.ok) return { ok: false, why: `HTTP ${res.status}` }
     const body = await res.text()
     if (/just a moment|enable javascript|checking your browser/i.test(body)) return { ok: false, why: '200 but JS/bot wall' }
     if (body.length < 3000) return { ok: false, why: `200 but only ${body.length} bytes` }
