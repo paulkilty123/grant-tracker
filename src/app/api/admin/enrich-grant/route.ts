@@ -6,6 +6,7 @@ import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
 import { mergeGrantUpdate, type ProvenanceEntry } from '@/lib/grant-merge'
 import { extractIncomeGate } from '@/lib/extract-income-gate'
 import { extractInvestmentTerms } from '@/lib/extract-investment-terms'
+import { buildAwardText, extractGrantAmounts } from '@/lib/grant-amounts'
 
 type Citation = NonNullable<ProvenanceEntry['citation']>
 
@@ -26,6 +27,21 @@ const INCOME_SOURCE = 'ai_extract:income:v1'
 // gate. Only runs for funding_type='investment'. Writes si_security_required +
 // si_interest_rate_percent resolved-or-null so a removed term self-clears.
 const INVESTMENT_SOURCE = 'ai_extract:investment:v1'
+
+// Per-applicant grant amounts, derived from the brief + description by the
+// shared cue-based extractor in src/lib/grant-amounts.ts.
+//
+// Added 2026-07-25. Before this, the automated chain (process-pipeline-queue →
+// enrich → classify → sweep) never derived amounts at all: the pool-aware logic
+// existed only in the admin UI and ran when a human clicked "Detect all", and
+// the only automated alternative was api/admin/fill-amounts, a cruder regex that
+// wrote a funder's total annual distribution as the per-applicant figure.
+//
+// Trust 50 (`ai_extract:*`), deliberately: that is ABOVE `scraper` (40), so a
+// derived amount survives the next crawl. fill-amounts writes as `ai_detect:*`
+// (trust 30), below scraper, so its values are erased twice a week — which is
+// why this, not that route, is the durable path.
+const AMOUNTS_SOURCE = 'ai_extract:amounts:v1'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -203,7 +219,11 @@ export async function POST(req: NextRequest) {
   // Load grant
   const { data: grant, error } = await supabase
     .from('scraped_grants')
-    .select('id, title, funder, apply_url, description, eligibility_criteria, funder_brief, funding_type, amount_min, amount_max')
+    // raw_data is selected so the amount-conflict writer below can merge into it
+    // rather than replacing it. Without it, `...existingRaw` would spread an
+    // undefined-shaped {} and silently drop any existing raw_data keys (e.g.
+    // cf-fund-verify's verify.flags).
+    .select('id, title, funder, apply_url, description, eligibility_criteria, funder_brief, funding_type, amount_min, amount_max, raw_data')
     .eq('id', grantId)
     .single()
 
@@ -605,6 +625,112 @@ NOTE: _deadline_cycle and its _citations entry are ONLY present when a recurring
       db:        supabase,
     })
 
+    // ── Per-applicant amounts ────────────────────────────────────────────────
+    // Same source text and same extractor the admin "Detect all" button uses,
+    // so the automated chain and the manual button can no longer disagree.
+    //
+    // NOTE: unlike the income gate and investment terms above, this does NOT
+    // write resolved-or-null. Those two describe claims that either are or are
+    // not present in the text, so a removed claim should clear the field. An
+    // amount can legitimately come from somewhere this prose scan never sees
+    // (structured markup on the listing page, a scraper's own parse), so
+    // "detected nothing" is not evidence of "there is no amount" and must not
+    // wipe a good value. Only positive detections are written.
+    const amounts = extractGrantAmounts(buildAwardText([
+      typeof briefToSave.typical_award   === 'string' ? briefToSave.typical_award   : null,
+      typeof briefToSave.what_they_fund  === 'string' ? briefToSave.what_they_fund  : null,
+      typeof grant.description           === 'string' ? grant.description           : null,
+      typeof grant.title                 === 'string' ? grant.title                 : null,
+    ]))
+
+    // ── Write policy: GAP-FILL ONLY, never overwrite ─────────────────────────
+    // This is deliberately conservative, and the reason is empirical. When this
+    // extractor was first dry-run over 60 live rows on 2026-07-25 it disagreed
+    // with the stored value on 18 of them. Some disagreements were correct (The
+    // Mercers' Company had amount_max £2,600,000 stored where the text says
+    // "Awards of £50,000 to £120,000 in total" — the £2.6m was the fund's pot).
+    // But several were the extractor being wrong, because broadening the source
+    // text beyond typical_award also pulls in fund-level figures: "invest a
+    // minimum of £15 million across all projects", "from a total £50 million
+    // programme", "£40 million (major sector programmes)", "a share of up to
+    // £25 million". Those four are now covered by new cues, but one class still
+    // is not ("up to 45% / 35% of £250k-£2m" — a percentage of project cost).
+    //
+    // In the admin UI this logic was safe to trust because a human read the
+    // output before it was saved. In an unattended chain it is not. So:
+    //   - if the field is NULL, write the derived value (can only add information)
+    //   - if a value already exists and the derived one differs materially, DO
+    //     NOT overwrite. Record the discrepancy instead, so the checker/review
+    //     surface can ask a human. Flagging is cheap; silently rewriting a
+    //     correct £10m cap to £15m is not.
+    const existingMin = typeof grant.amount_min === 'number' ? grant.amount_min : null
+    const existingMax = typeof grant.amount_max === 'number' ? grant.amount_max : null
+
+    const amountFields: Record<string, unknown> = {}
+    if (amounts.amount_max !== null && existingMax === null) amountFields.amount_max = amounts.amount_max
+    if (amounts.amount_min !== null && existingMin === null) amountFields.amount_min = amounts.amount_min
+
+    // Material = a factor of 2 or more apart. Mirrors the ratio-threshold
+    // approach cf-fund-verify already uses for amount sanity.
+    const CONFLICT_RATIO = 2
+    const conflicts: Array<{ field: string; stored: number; derived: number; note: string }> = []
+    if (amounts.amount_max !== null && existingMax !== null && existingMax > 0) {
+      const ratio = existingMax / amounts.amount_max
+      if (ratio >= CONFLICT_RATIO) {
+        conflicts.push({
+          field: 'amount_max', stored: existingMax, derived: amounts.amount_max,
+          note: `stored amount_max is ${ratio.toFixed(1)}x the per-applicant figure derived from the text — stored value may be the whole fund's pot rather than one applicant's cap`,
+        })
+      } else if (amounts.amount_max / existingMax >= CONFLICT_RATIO) {
+        conflicts.push({
+          field: 'amount_max', stored: existingMax, derived: amounts.amount_max,
+          note: `text suggests a per-applicant ceiling ${(amounts.amount_max / existingMax).toFixed(1)}x higher than the stored amount_max`,
+        })
+      }
+    }
+
+    let amountsApplied:  string[] = []
+    let amountsRejected: typeof incomeResult.rejected = []
+    if (Object.keys(amountFields).length > 0) {
+      const amountsResult = await mergeGrantUpdate({
+        id:     grantId,
+        fields: amountFields,
+        source: AMOUNTS_SOURCE,
+        pinned: false,
+        db:     supabase,
+      })
+      amountsApplied  = amountsResult.applied
+      amountsRejected = amountsResult.rejected
+    }
+
+    // Persist conflicts under raw_data (untracked, so no trust-ladder
+    // interaction) using the same shape cf-fund-verify uses for its flags, so a
+    // single review surface can read both.
+    if (conflicts.length > 0) {
+      const existingRaw = (grant.raw_data && typeof grant.raw_data === 'object')
+        ? grant.raw_data as Record<string, unknown>
+        : {}
+      try {
+        await mergeGrantUpdate({
+          id:     grantId,
+          source: AMOUNTS_SOURCE,
+          db:     supabase,
+          fields: {
+            raw_data: {
+              ...existingRaw,
+              amount_check: { checked_at: new Date().toISOString(), conflicts },
+            },
+          },
+        })
+      } catch (err) {
+        console.error('[enrich-grant] failed to record amount conflict:', err)
+      }
+      console.warn(
+        `[enrich-grant] amount conflict on ${grantId}: ` +
+        conflicts.map(c => `${c.field} stored=${c.stored} derived=${c.derived}`).join('; ')
+      )
+    }
+
     // Social-investment terms — only for investment products. Writes the two
     // verdict-driving fields resolved-or-null (self-clearing); ticket / term are
     // deliberately left untouched (engine falls back to amount_min; terms are
@@ -653,8 +779,8 @@ NOTE: _deadline_cycle and its _citations entry are ONLY present when a recurring
     return NextResponse.json({
       success:  true,
       brief,
-      applied:  [...result.applied, ...incomeResult.applied, ...investmentApplied],
-      rejected: [...result.rejected, ...incomeResult.rejected, ...investmentRejected],
+      applied:  [...result.applied, ...incomeResult.applied, ...amountsApplied, ...investmentApplied],
+      rejected: [...result.rejected, ...incomeResult.rejected, ...amountsRejected, ...investmentRejected],
       _debug:   {
         primaryFetch:     primaryFetchDebug,
         fetchedFromUrl,
@@ -664,6 +790,11 @@ NOTE: _deadline_cycle and its _citations entry are ONLY present when a recurring
           min:               incomeGate.minOrgIncome ?? null,
           max:               incomeGate.maxOrgIncome ?? null,
           gateLanguagePresent: incomeGate.gateLanguagePresent,
+        },
+        amounts: {
+          detectedMin: amounts.amount_min,
+          detectedMax: amounts.amount_max,
+          written:     amountsApplied,
         },
         investmentTerms: investmentDebug,
       },

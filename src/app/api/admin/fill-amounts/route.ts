@@ -1,17 +1,26 @@
 // POST /api/admin/fill-amounts
 //
-// Parses amount_min / amount_max from funder_brief.typical_award text for grants
-// that are missing one or both amount fields. No AI calls — pure regex.
+// Parses amount_min / amount_max for grants missing one or both amount fields,
+// using the shared cue-based extractor in src/lib/grant-amounts.ts. No AI calls.
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
 import { mergeGrantUpdate } from '@/lib/grant-merge'
+import { buildAwardText, extractGrantAmounts } from '@/lib/grant-amounts'
 
 export const dynamic = 'force-dynamic'
 
-// Bump when the regex parser below changes materially.
-const DETECT_VERSION    = 'v1'
+// v2 (2026-07-25): swapped the local crude regex for the shared pool-aware
+// extractor, and widened the source text beyond typical_award.
+//
+// Trust note: this writes as `ai_detect:*`, which is trust 30 — BELOW
+// `scraper` at 40. So anything written here is erased by the next crawl of that
+// source. That predates this change and is deliberately left alone rather than
+// silently re-ranked, but it means this route is a stopgap: the durable path is
+// the same extractor running inside enrich-grant under `ai_extract:amounts:v1`
+// (trust 50), which survives a crawl. See grant-amounts.ts.
+const DETECT_VERSION    = 'v2'
 const PROVENANCE_SOURCE = `ai_detect:fill_amounts:${DETECT_VERSION}`
 
 async function isAuthorised(req: NextRequest): Promise<boolean> {
@@ -27,39 +36,24 @@ function adminClient() {
   )
 }
 
-// ── Parse amounts from typical_award text ─────────────────────────────────────
-function parseAmounts(text: string): { min?: number; max?: number } {
-  if (!text || text.length < 3) return {}
-
-  // Normalise: remove commas in numbers, convert £Xk → £X000, £Xm → £X000000
-  let t = text
-    .replace(/£([\d,]+)/g, (_, n) => `£${n.replace(/,/g, '')}`)          // £1,000 → £1000
-    .replace(/£(\d+(?:\.\d+)?)m\b/gi, (_, n) => `£${Math.round(parseFloat(n) * 1_000_000)}`)  // £1.5m → £1500000
-    .replace(/£(\d+(?:\.\d+)?)k\b/gi, (_, n) => `£${Math.round(parseFloat(n) * 1_000)}`)      // £15k → £15000
-
-  // "£X to £Y" / "£X–£Y" / "£X - £Y" / "between £X and £Y"
-  const rangeMatch = t.match(/(?:between\s+)?£(\d+)\s*(?:to|–|-|and)\s*£(\d+)/i)
-  if (rangeMatch) {
-    const min = parseInt(rangeMatch[1])
-    const max = parseInt(rangeMatch[2])
-    if (min > 0 && max >= min) return { min, max }
-  }
-
-  // "up to £X" / "maximum £X" / "max £X" / "no more than £X"
-  const maxMatch = t.match(/(?:up to|maximum|max|no more than|not exceed)\s*£(\d+)/i)
-  if (maxMatch) return { max: parseInt(maxMatch[1]) }
-
-  // "from £X" / "minimum £X" / "at least £X" / "over £X" / "starts at £X"
-  const minMatch = t.match(/(?:from|minimum|min|at least|over|starts? at|starting from)\s*£(\d+)/i)
-  if (minMatch) return { min: parseInt(minMatch[1]) }
-
-  // Single "£X per grant/organisation/award"
-  const singleMatch = t.match(/(?:grants? of|award of|grants? up to|each grant)\s*£(\d+)/i)
-    ?? t.match(/£(\d+)\s*(?:per grant|per organisation|each|per award)/i)
-  if (singleMatch) return { max: parseInt(singleMatch[1]) }
-
-  return {}
-}
+// Amount parsing now uses the shared cue-based implementation in
+// src/lib/grant-amounts.ts.
+//
+// 2026-07-25: the crude regex that used to live here read ONLY
+// funder_brief.typical_award and had no pool-vs-per-grant cues, so a funder's
+// total distribution was written as the per-applicant amount. Measured against
+// the real cases the shared logic was built from:
+//
+//   "the Trust awarded a total of between £90,000 and £97,000"
+//       old -> min £90,000 / max £97,000        (the funder's ANNUAL TOTAL)
+//       new -> nothing                          (correctly recognised as a pool)
+//
+//   "total awarded each year is around £450,000–£470,000"
+//       old -> min £450,000 / max £470,000
+//       new -> nothing
+//
+// It also filled min and max from independent matches with no cross-field check,
+// so it could write a minimum above the maximum.
 
 export async function POST(req: NextRequest) {
   if (!await isAuthorised(req)) {
@@ -72,10 +66,12 @@ export async function POST(req: NextRequest) {
 
   const supabase = adminClient()
 
-  // Fetch grants missing at least one amount field but with typical_award text
+  // `description` is now selected too: briefs often generalise typical_award to
+  // "small grants, no fixed amount" while the scraped description carries an
+  // explicit "Up to £X".
   const { data: grants, error } = await supabase
     .from('scraped_grants')
-    .select('id, title, funder, amount_min, amount_max, funder_brief')
+    .select('id, title, funder, amount_min, amount_max, funder_brief, description')
     .eq('is_active', true)
     .or('amount_min.is.null,amount_max.is.null')
     .not('funder_brief', 'is', null)
@@ -88,16 +84,23 @@ export async function POST(req: NextRequest) {
 
   for (const grant of grants ?? []) {
     const brief = grant.funder_brief as Record<string, unknown> | null
-    const typicalAward = (brief?.typical_award as string) ?? ''
-    if (!typicalAward) { skipped++; continue }
+    const awardText = buildAwardText([
+      brief?.typical_award as string | null | undefined,
+      brief?.what_they_fund as string | null | undefined,
+      grant.description as string | null | undefined,
+      grant.title as string | null | undefined,
+    ])
+    if (!awardText) { skipped++; continue }
 
-    const parsed = parseAmounts(typicalAward)
-    if (!parsed.min && !parsed.max) { skipped++; continue }
+    const parsed = extractGrantAmounts(awardText)
+    if (parsed.amount_min === null && parsed.amount_max === null) { skipped++; continue }
 
-    // Only fill fields that are currently null — don't overwrite existing values
+    // Only fill fields that are currently null — don't overwrite existing values.
+    // amount_min is only written alongside a max the extractor also derived, so
+    // the min < max invariant it enforces internally is preserved on write.
     const update: Record<string, number> = {}
-    if (grant.amount_min === null && parsed.min) update.amount_min = parsed.min
-    if (grant.amount_max === null && parsed.max) update.amount_max = parsed.max
+    if (grant.amount_max === null && parsed.amount_max !== null) update.amount_max = parsed.amount_max
+    if (grant.amount_min === null && parsed.amount_min !== null) update.amount_min = parsed.amount_min
 
     if (Object.keys(update).length === 0) { skipped++; continue }
 
