@@ -637,7 +637,39 @@ export function ensureExplicitStructures(
   // CIC variants for this phrase specifically. Found live: the model was
   // tagging cic_guarantee/cic_shares correctly but dropping ltd_guarantee,
   // and this backstop had the identical gap instead of catching it.
-  if (/social enterprise/.test(text)) { add('cic_guarantee'); add('cic_shares'); add('ltd_guarantee') }
+  if (/social enterprise/.test(text)) {
+    add('cic_guarantee'); add('cic_shares'); add('ltd_guarantee')
+    // A co-operative / community benefit society IS a social-enterprise form, and
+    // the prompt's own mapping table says so ("social enterprises (broad)" ->
+    // cic_guarantee, cic_shares, ltd_guarantee, cooperative). The deterministic
+    // backstop was missing it, which is why `cooperative` was the single
+    // most-removed value in the catalogue (31 of 152 removals).
+    add('cooperative')
+  }
+
+  // ── Umbrella terms -> legal forms ──────────────────────────────────────────
+  // These mappings already existed in the CLASSIFIER PROMPT, where they steer
+  // the model. They did not exist here, in the deterministic backstop that is
+  // supposed to guarantee the floor — so when the model's output drifted, there
+  // was nothing to catch it. Same shape as every other bug in this file: the
+  // rule was written where it was first needed and never promoted to the shared
+  // path.
+  //
+  // Measured 2026-07-25: of 45 queue rows still missing a structure a re-classify
+  // had removed, 35 contained one of these umbrella phrases in their own text.
+  // The evidence was sitting in the row the whole time and nothing read it.
+
+  // "Community group" is the ordinary English for an unincorporated association,
+  // and funders use it constantly. The prompt maps it (add "unincorporated" when
+  // "community groups" or "constituted groups" is explicit); this did not.
+  if (/\bcommunity (?:group|organisation|association)s?\b/.test(text)) add('unincorporated')
+
+  // "Voluntary organisation", "not-for-profit", "VCS/VCSE" all normally admit a
+  // company limited by guarantee — the standard non-profit company form. The
+  // prompt maps "registered charities and community organisations" -> +ltd_guarantee.
+  if (/\bnot[- ]for[- ]profit\b|\bnon[- ]profit\b|\bvoluntary (?:organisation|sector|group)s?\b|\bvcse?\b/.test(text)) {
+    add('ltd_guarantee')
+  }
   // Explicit-breadth phrasing. When a funder states it does NOT restrict by legal
   // form, the correct answer is the full incorporated set, not the CIC pair.
   //
@@ -693,11 +725,17 @@ export function ensureExplicitStructures(
   return out
 }
 
-/** Charity-status restrictions that DO justify dropping non-charity forms. */
-const CHARITY_ONLY_RE = /\b(?:registered\s+)?charit(?:y|ies)\s+only\b|\bonly\s+(?:registered\s+)?charit(?:y|ies)\b|\bmust\s+be\s+a\s+registered\s+charity\b|\bcharity\s+(?:status|number)\s+(?:is\s+)?(?:required|essential|mandatory)\b/i
+/**
+ * Charity-status restrictions that DO justify dropping non-charity forms.
+ *
+ * Exported so the guard (which prevents new wrong removals) and the restore
+ * script (which undoes the old ones) cannot disagree — one rule, both
+ * directions, same reasoning as charityFormJurisdiction().
+ */
+export const CHARITY_ONLY_RE = /\b(?:registered\s+)?charit(?:y|ies)\s+only\b|\bonly\s+(?:registered\s+)?charit(?:y|ies)\b|\bmust\s+be\s+a\s+registered\s+charity\b|\bcharity\s+(?:status|number)\s+(?:is\s+)?(?:required|essential|mandatory)\b/i
 
 /** Decided by geography, not by the model — see charityFormJurisdiction(). */
-const JURISDICTION_MANAGED = new Set(['cio', 'scio'])
+export const JURISDICTION_MANAGED = new Set(['cio', 'scio'])
 
 // ── Shared post-processing: model result → DB patch ──────────────────────────
 /**
