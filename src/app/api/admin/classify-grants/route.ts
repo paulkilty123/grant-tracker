@@ -34,7 +34,7 @@ const PROVENANCE_SOURCE  = `ai_classifier:${CLASSIFIER_VERSION}`
 async function classifyOnce(supabase: SupabaseClient<any>, limit: number): Promise<{ classified: number; failed: number; done: boolean }> {
   const { data: grantsRaw, error } = await supabase
     .from('scraped_grants')
-    .select('id, title, funder, description, impact_sectors, funder_brief, location_tag')
+    .select('id, title, funder, description, impact_sectors, funder_brief, location_tag, eligible_structures')
     .eq('is_active', true)
     .or('impact_sectors.is.null,impact_sectors.eq.{}')
     .order('id')
@@ -76,6 +76,9 @@ async function classifyOnce(supabase: SupabaseClient<any>, limit: number): Promi
           funderBrief: g.funder_brief as Record<string, unknown> | null,
           locationTag: g.location_tag as string | null,
           honourEmpty: false,
+          // Required by the narrowing guard. Without it the guard is inert and a
+          // re-classify silently drops structures again.
+          existingStructures: g.eligible_structures as string[] | null,
         })
 
         return mergeGrantUpdate({
@@ -232,7 +235,7 @@ export async function POST(req: NextRequest) {
   // it here so the filter can correctly evaluate ≤1 on both arrays.
   let query = supabase
     .from('scraped_grants')
-    .select('id, title, funder, description, impact_sectors, target_beneficiaries, funder_brief, location_tag')
+    .select('id, title, funder, description, impact_sectors, target_beneficiaries, funder_brief, location_tag, eligible_structures')
     .order('id')
 
   // Active filter: ON unless include_review explicitly requests is_active=false rows
@@ -345,6 +348,7 @@ export async function POST(req: NextRequest) {
             funderBrief: g.funder_brief as Record<string, unknown> | null,
           locationTag: g.location_tag as string | null,
             honourEmpty,
+            existingStructures: g.eligible_structures as string[] | null,
           })
           return mergeGrantUpdate({
             id: g.id, fields: patch, source: PROVENANCE_SOURCE, pinned: false, db: supabase,

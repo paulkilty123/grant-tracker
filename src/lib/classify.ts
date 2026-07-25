@@ -670,6 +670,20 @@ export function ensureExplicitStructures(
   // don't end up CIC-only and wrongly exclude charities.
   // registered_charity is jurisdiction-neutral (CCEW, OSCR and CCNI all issue
   // one), so it is always safe. The incorporated forms are gated above.
+  // "Constituted community group" IS the unincorporated form, and funders name it
+  // constantly. Groundwork's own applicant list reads "Registered UK Charities,
+  // Charitable Incorporated Organisations, Companies Limited by Guarantee,
+  // Not-for-Profit Registered Community Interest Companies, Constituted Community
+  // Groups, or Voluntary Sector Organisations" — and its ONLY exclusion is
+  // "Unconstituted organisations", i.e. groups with no governing document.
+  //
+  // Those two words differ by one prefix and mean opposite things, and the
+  // classifier was reading the exclusion of UNconstituted groups as a reason to
+  // drop `unincorporated` from CONSTITUTED ones. The negative lookbehind is the
+  // whole point of this rule.
+  if (/(?<!un)constituted\s+(?:community\s+|voluntary\s+|local\s+)?(?:group|organisation|association)/.test(text)) {
+    add('unincorporated')
+  }
   if (/\bcharit/.test(text)) {
     add('registered_charity')
     if (cioAllowed)  add('cio')
@@ -678,6 +692,12 @@ export function ensureExplicitStructures(
 
   return out
 }
+
+/** Charity-status restrictions that DO justify dropping non-charity forms. */
+const CHARITY_ONLY_RE = /\b(?:registered\s+)?charit(?:y|ies)\s+only\b|\bonly\s+(?:registered\s+)?charit(?:y|ies)\b|\bmust\s+be\s+a\s+registered\s+charity\b|\bcharity\s+(?:status|number)\s+(?:is\s+)?(?:required|essential|mandatory)\b/i
+
+/** Decided by geography, not by the model — see charityFormJurisdiction(). */
+const JURISDICTION_MANAGED = new Set(['cio', 'scio'])
 
 // ── Shared post-processing: model result → DB patch ──────────────────────────
 /**
@@ -728,6 +748,13 @@ export function buildClassifyPatch(input: {
   locationTag?: string | null
   /** Honour an empty array as a deliberate clear for beneficiaries / niche_tags. */
   honourEmpty?: boolean
+  /**
+   * The row's CURRENT eligible_structures. Required for the narrowing guard —
+   * without it a re-classification cannot tell that it is dropping a value, and
+   * silently narrows. Callers that omit it get the old replace-wholesale
+   * behaviour, so pass it.
+   */
+  existingStructures?: string[] | null
 }): {
   patch:     Record<string, unknown>
   citations: Record<string, ClassificationCitation>
@@ -743,9 +770,46 @@ export function buildClassifyPatch(input: {
   // what the classify-grants route has always used.
   const whoCanApply = typeof funderBrief?.who_can_apply === 'string' ? funderBrief.who_can_apply : ''
   const structureSource = `${whoCanApply} ${description ?? ''}`
-  const structures = ensureExplicitStructures(r.eligible_structures, structureSource, {
+  const proposed = ensureExplicitStructures(r.eligible_structures, structureSource, {
     locationTag: locationTag ?? (typeof funderBrief?.location_tag === 'string' ? funderBrief.location_tag : null),
   })
+
+  // ── Narrowing guard ────────────────────────────────────────────────────────
+  // This file already refuses to honour an EMPTY structure list, because that
+  // once wiped structures catalogue-wide. The same reasoning applies to a list
+  // that is merely SHORTER, and it was not being applied.
+  //
+  // The model does not return [] when a page is silent on legal form — it
+  // returns a narrowed non-empty list, which then replaces the stored array
+  // wholesale. With the prompt's stated "DEFAULT BIAS: TIGHT — when uncertain,
+  // EXCLUDE", every pass over an ambiguous page tends to come back shorter than
+  // the last, so eligibility ratchets down one re-classification at a time.
+  // Measured over the review queue on 2026-07-25: mean structures per row fell
+  // 4.05 -> 3.61 in a single pass, 152 values removed against 117 added, and the
+  // values lost were overwhelmingly cooperative, unincorporated and the ltd
+  // forms — precisely the legal forms of the CICs and social enterprises this
+  // catalogue exists to serve.
+  //
+  // Eight of those removals were checked against the funders' own pages: six
+  // were plainly wrong, one partly wrong, one right by luck. Five of the eight
+  // pages said NOTHING about legal structure at all, so the tag was dropped on
+  // silence. Removing eligibility on silence is the damaging direction: the
+  // organisation is simply never shown a fund it could have won, and nothing
+  // anywhere reports that it happened.
+  //
+  // So: additions land immediately, removals need evidence. A structure already
+  // on the row is put back unless the source actually restricts to charities.
+  //
+  // cio/scio are exempt because they are NOT model judgement — charityFormJurisdiction()
+  // decides them deterministically from geography, and scripts/fix-scio-jurisdiction.ts
+  // depends on being able to drop the wrong one. A drop there is already evidence-based.
+  const existing = (input.existingStructures ?? []).filter(v => VALID_STRUCTURES.has(v))
+  let structures = proposed
+  if (proposed.length > 0 && existing.length > 0 && !CHARITY_ONLY_RE.test(structureSource)) {
+    const restored = existing.filter(v => !proposed.includes(v) && !JURISDICTION_MANAGED.has(v))
+    if (restored.length > 0) structures = [...proposed, ...restored]
+  }
+
   if (structures.length > 0) patch.eligible_structures = structures
 
   if (honourEmpty || r.target_beneficiaries.length > 0) {
@@ -782,7 +846,7 @@ export async function classifyUnclassified(
   // mostly already-classified. Catches both NULL and empty-array {} cases.
   const { data: grantsRaw, error } = await supabase
     .from('scraped_grants')
-    .select('id, title, funder, description, impact_sectors, funder_brief, location_tag')
+    .select('id, title, funder, description, impact_sectors, funder_brief, location_tag, eligible_structures')
     .eq('is_active', true)
     .or('impact_sectors.is.null,impact_sectors.eq.{}')
     .order('first_seen_at', { ascending: false })
@@ -840,6 +904,7 @@ export async function classifyUnclassified(
             funderBrief: g.funder_brief as Record<string, unknown> | null,
             locationTag: g.location_tag as string | null,
             honourEmpty: false,
+            existingStructures: g.eligible_structures as string[] | null,
           })
 
           try {
