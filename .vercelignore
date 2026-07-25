@@ -1,0 +1,59 @@
+# Controls what the Vercel CLI uploads when deploying from a working copy
+# (`vercel --prod`). Git-triggered deploys are unaffected — those take the repo
+# contents, not the working directory.
+#
+# ⚠️  When a .vercelignore exists, Vercel uses it INSTEAD OF .gitignore, so
+# everything .gitignore protects has to be repeated here. That is why the
+# secrets block below must never be trimmed: .env.local holds the Supabase
+# service-role key, and without these lines a CLI deploy would upload it into
+# the build context.
+#
+# Added 2026-07-25, when Vercel stopped producing production builds from git
+# pushes (and from a deploy hook) and a direct CLI deploy became the way to ship.
+#
+# Patterns are root-anchored (`/*.md`, not `*.md`) so they cannot reach into
+# src/ or public/. Verified before writing: nothing under src/ imports .md or
+# .html, MDX is not configured, and the `@/lib/supabase/*` imports resolve to
+# src/lib/ via the tsconfig alias, not the root supabase/ migrations directory.
+
+# ── Secrets — mirrors .gitignore. Never remove. ──────────────────────────────
+.env
+.env.local
+.env*.local
+*.pem
+
+# ── Dependencies and build output — mirrors .gitignore ───────────────────────
+node_modules/
+/.pnp
+.pnp.js
+/.next/
+/out/
+/build
+/coverage
+*.tsbuildinfo
+.vercel
+
+# ── Noise — mirrors .gitignore ───────────────────────────────────────────────
+.DS_Store
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ── Not needed to build the app ──────────────────────────────────────────────
+# None of these are imported by src/. Excluding them keeps the upload small and
+# keeps internal working material out of the deployment.
+/docs/
+/data/
+/reports/
+/scripts/
+/supabase/
+/.claude/
+
+# ── Working files kept loose in the repo root ────────────────────────────────
+# Audits, link-check reports, redesign mockups, drafts. Untracked but NOT
+# gitignored, so without these lines a CLI deploy would ship them. Root-anchored
+# so src/ and public/ are untouched.
+/*.md
+/*.txt
+/*.docx
+/*.html
