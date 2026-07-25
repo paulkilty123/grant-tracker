@@ -52,7 +52,7 @@ export interface VerifyFlag {
   code:   'eligibility_empty' | 'amount_ratio_disparity' | 'amount_implausible_large'
         | 'missing_amount_citation' | 'deadline_missing' | 'deadline_stale'
         | 'missing_deadline_citation' | 'possible_multi_round_uncaptured'
-        | 'uniform_snippet_suspected' | 'url_dead'
+        | 'uniform_snippet_suspected' | 'url_dead' | 'url_unverified'
   detail: string
 }
 
@@ -232,8 +232,30 @@ export async function verifyPendingCFFunds(
       result.errors.push(`url check failed for "${row.title}": ${e instanceof Error ? e.message : String(e)}`)
     }
 
-    if (urlStatus === 'dead') {
-      const urlFlag: VerifyFlag = { code: 'url_dead', detail: 'apply_url did not resolve to a live page' }
+    // Only a positively-verified URL may auto-publish.
+    //
+    // 2026-07-25: this gate used to be `urlStatus === 'dead'`, so anything else
+    // published — including 'unchecked', which is the value urlStatus keeps when
+    // the row has no apply_url at all, or when checkUrl THROWS (the catch above
+    // only records an error string and leaves the initialiser in place). The row
+    // then went live via line ~264 stamping url_last_checked, so it looked
+    // freshly verified while never having been checked.
+    //
+    // This also matters more after the url-validator repair in the same commit:
+    // transient network failures now correctly return 'unchecked' instead of a
+    // false 'ok', which would otherwise have widened this hole rather than
+    // closing it.
+    //
+    // The comment above ("An auto-published grant with a dead link is worse than
+    // one that waited a few extra days in Needs Review") is the stated intent;
+    // this now implements it. Held rows stay in Needs Review and are retried on
+    // the next run, so nothing is lost — only delayed.
+    if (urlStatus !== 'ok') {
+      const urlFlag: VerifyFlag = urlStatus === 'dead'
+        ? { code: 'url_dead',       detail: 'apply_url did not resolve to a live page' }
+        : { code: 'url_unverified', detail: row.apply_url
+            ? 'apply_url could not be positively verified (network error, TLS failure, 5xx, or blocked request) — holding rather than publishing unverified'
+            : 'row has no apply_url to verify' }
       if (!dryRun) {
         try {
           await mergeGrantUpdate({

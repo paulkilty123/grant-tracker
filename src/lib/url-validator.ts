@@ -143,6 +143,26 @@ export async function deepCheckUrl(
       return { status: 'dead', qualityScore: 0, issues: ['http_404'] }
     }
 
+    // ── Server errors / blocked requests ────────────────────────────────────────
+    // Previously unhandled: a 500, 403 or 429 fell through to the content checks
+    // below, so the outcome depended on whether the funder's name happened to
+    // appear in the error or challenge page's HTML. That produced arbitrary
+    // 'ok' verdicts for pages nobody can read.
+    //
+    // Deliberately 'wrong_page' (→ url_status='unchecked'), not 'dead': all
+    // three are typically transient or specific to our client (bot challenge,
+    // rate limit, brief outage), and the page is often fine for a real user.
+    // Marking them dead would auto-deactivate a good grant.
+    if (res.status >= 500) {
+      return { status: 'wrong_page', qualityScore: 20, issues: ['http_5xx'] }
+    }
+    if (res.status === 403) {
+      return { status: 'wrong_page', qualityScore: 20, issues: ['http_403_blocked'] }
+    }
+    if (res.status === 429) {
+      return { status: 'wrong_page', qualityScore: 20, issues: ['http_429_rate_limited'] }
+    }
+
     // ── Redirect-to-homepage ────────────────────────────────────────────────────
     const finalUrl = res.url
     if (finalUrl && finalUrl !== url) {
@@ -298,8 +318,17 @@ export async function deepCheckUrl(
     }
 
     // Invalid/expired/self-signed TLS cert — browsers block the page, so it's
-    // unreachable for users. Flag as wrong_page (→ url_status='unchecked':
-    // hidden from default search, kept for a human re-check) rather than 'ok'.
+    // unreachable for users. Flag as wrong_page (→ url_status='unchecked')
+    // rather than 'ok'.
+    //
+    // NB: this comment used to claim 'unchecked' is "hidden from default
+    // search". It is not. Web surfaces (search, dashboard, deadlines, projects,
+    // repository) only exclude url_status='dead'; only MCP filters on
+    // url_status='ok' (mcp-search.ts, exclude_unverified_urls defaults true).
+    // So an 'unchecked' row is hidden from agents and fully visible in the web
+    // app — two surfaces, two freshness contracts. Reconciling that changes what
+    // users see, so it is deliberately left as a product decision rather than
+    // folded into this repair.
     // Deliberately NOT 'dead': cert lapses are usually transient (e.g. a
     // Let's Encrypt renewal), and 'dead' would auto-deactivate/archive a good
     // grant in the cron. It re-validates back to 'ok' once the cert recovers.
@@ -307,7 +336,21 @@ export async function deepCheckUrl(
       return { status: 'wrong_page', qualityScore: 15, issues: ['tls_cert_error'] }
     }
 
-    return { status: 'ok', qualityScore: 25, issues: ['network_error'] }
+    // Catch-all: timeout (10s abort), ECONNREFUSED, ECONNRESET, socket hang-up,
+    // and anything else that isn't DNS or TLS.
+    //
+    // 2026-07-25: this used to `return { status: 'ok', ... }`, so a persistently
+    // unreachable page was recorded as a VERIFIED live URL. It also returned
+    // directly with qualityScore 25, bypassing the `qualityScore < 30 →
+    // wrong_page` classification above, so the row wasn't even flagged as
+    // suspicious. The 2026-06 TLS fix closed one branch of this catch-all but
+    // left the catch-all itself returning 'ok'.
+    //
+    // Now 'wrong_page' (→ url_status='unchecked'), matching the TLS branch: not
+    // claimed as verified, but not 'dead' either, since a transient network
+    // failure must not auto-deactivate a good grant. The row re-validates to
+    // 'ok' on the next successful check.
+    return { status: 'wrong_page', qualityScore: 25, issues: ['network_error'] }
   }
 }
 
@@ -327,6 +370,10 @@ export async function checkUrl(url: string, funderName?: string): Promise<'ok' |
 
     // ── Hard failures ──────────────────────────────────────────────────────────
     if (res.status === 404 || res.status === 410 || res.status === 400) return 'dead'
+
+    // Server errors / blocked requests — 'unchecked', not 'ok' and not 'dead'.
+    // See the equivalent block in deepCheckUrl for the reasoning.
+    if (res.status >= 500 || res.status === 403 || res.status === 429) return 'unchecked'
 
     // ── Soft 404 detection ─────────────────────────────────────────────────────
     const finalUrl = res.url
@@ -426,6 +473,9 @@ export async function checkUrl(url: string, funderName?: string): Promise<'ok' |
     // TLS cert failure — unreachable in a browser. Flag (not 'ok', not 'dead').
     if (isTlsCertError(combined)) return 'unchecked'
 
-    return 'ok'
+    // Catch-all (timeout, ECONNREFUSED, ECONNRESET, socket hang-up). Was 'ok',
+    // which recorded unreachable pages as verified — see the matching note in
+    // deepCheckUrl. 'unchecked' flags it without deactivating the grant.
+    return 'unchecked'
   }
 }
