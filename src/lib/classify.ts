@@ -554,6 +554,42 @@ export function validate(raw: ClassificationResult) {
  * negative (missing a genuine CIC) is preferred over a false positive
  * (surfacing a grant to a CIC that can't actually apply).
  */
+/**
+ * Which jurisdiction-specific charity incorporation forms may this fund carry?
+ *
+ * A CIO is an England-and-Wales form registered with the Charity Commission; a
+ * SCIO is Scottish and registered with OSCR. They are NOT interchangeable, and
+ * tagging either outside its jurisdiction surfaces a fund to organisations that
+ * cannot legally apply.
+ *
+ * `locationTag` is the curated geography field and WINS when present. The free
+ * text is only a fallback, because it is noisy: a Wandsworth or Northern Ireland
+ * fund whose brief says "UK-registered charity" reads as UK-wide and would pick
+ * up a SCIO. (Only 1 of 731 active rows has no location_tag, so the fallback is
+ * near-vacuous in practice.)
+ *
+ * Exported so the add path (ensureExplicitStructures) and the cleanup path
+ * (scripts/fix-scio-jurisdiction.ts) cannot disagree — one rule, both directions.
+ */
+export function charityFormJurisdiction(opts: {
+  locationTag?: string | null
+  text?: string | null
+}): { scioAllowed: boolean; cioAllowed: boolean } {
+  const tag   = (opts.locationTag ?? '').trim().toLowerCase()
+  const scope = tag !== '' ? tag : (opts.text ?? '').toLowerCase()
+
+  const ukWide            = /\buk\b|united kingdom|nationwide|\bbritain\b|\bbritish\b|\bgb\b|global/.test(scope)
+  const namesScotland     = /\bscotland\b|\bscottish\b/.test(scope)
+  const namesEnglandWales = /\bengland\b|\benglish\b|\bwales\b|\bwelsh\b/.test(scope)
+
+  return {
+    // Scotland must be POSITIVELY in scope — silence is not permission.
+    scioAllowed: ukWide || namesScotland,
+    // England/Wales form: allowed unless the fund is Scotland-only.
+    cioAllowed:  ukWide || namesEnglandWales || !namesScotland,
+  }
+}
+
 export function ensureExplicitStructures(
   structures: string[],
   sourceText: string | null | undefined,
@@ -582,20 +618,10 @@ export function ensureExplicitStructures(
   //
   // Conservative by construction: SCIO requires Scotland to be POSITIVELY in
   // scope; when nothing indicates jurisdiction we add neither Scottish form.
-  // location_tag is the curated geography field and WINS when present. Falling
-  // back to the free text is noisy: a Wandsworth or Northern Ireland fund whose
-  // brief happens to say "UK-registered charity" would otherwise read as
-  // UK-wide and pick up a SCIO. Only when location_tag is absent do we scan the
-  // prose, and then conservatively.
-  const tag = (opts?.locationTag ?? '').trim().toLowerCase()
-  const scope = tag !== '' ? tag : text
-  const ukWide            = /\buk\b|united kingdom|nationwide|\bbritain\b|\bbritish\b|\bgb\b|global/.test(scope)
-  const namesScotland     = /\bscotland\b|\bscottish\b/.test(scope)
-  const namesEnglandWales = /\bengland\b|\benglish\b|\bwales\b|\bwelsh\b/.test(scope)
-  // Scotland must be positively in scope.
-  const scioAllowed = ukWide || namesScotland
-  // England/Wales form: allowed unless the fund is Scotland-only.
-  const cioAllowed  = ukWide || namesEnglandWales || !namesScotland
+  const { scioAllowed, cioAllowed } = charityFormJurisdiction({
+    locationTag: opts?.locationTag,
+    text,
+  })
 
   // Any exclusion or hedge near structure eligibility → leave the model's call
   // untouched. Mirrors the false-positive phrasings caught in manual review.
