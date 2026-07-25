@@ -7,6 +7,8 @@ import { mergeGrantUpdate, type ProvenanceEntry } from '@/lib/grant-merge'
 import { extractIncomeGate } from '@/lib/extract-income-gate'
 import { extractInvestmentTerms } from '@/lib/extract-investment-terms'
 import { buildAwardText, extractGrantAmounts } from '@/lib/grant-amounts'
+import { detectUncapturedMultiRound } from '@/lib/grant-deadlines'
+import { recordGrantFlags, type GrantFlagCode } from '@/lib/grant-flags'
 
 type Citation = NonNullable<ProvenanceEntry['citation']>
 
@@ -42,6 +44,12 @@ const INVESTMENT_SOURCE = 'ai_extract:investment:v1'
 // (trust 30), below scraper, so its values are erased twice a week — which is
 // why this, not that route, is the durable path.
 const AMOUNTS_SOURCE = 'ai_extract:amounts:v1'
+
+// Source string for quality flags written to raw_data.checks. Separate from the
+// field-writing sources above because recordGrantFlags is idempotent PER SOURCE:
+// every flag this route raises must share one source so a re-run replaces the
+// whole set rather than accumulating duplicates.
+const CHECKS_SOURCE = 'system:enrich_checks:v1'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -223,7 +231,9 @@ export async function POST(req: NextRequest) {
     // rather than replacing it. Without it, `...existingRaw` would spread an
     // undefined-shaped {} and silently drop any existing raw_data keys (e.g.
     // cf-fund-verify's verify.flags).
-    .select('id, title, funder, apply_url, description, eligibility_criteria, funder_brief, funding_type, amount_min, amount_max, raw_data')
+    // deadline, is_rolling and deadline_cycle are selected for the uncaptured
+    // multi-round check below.
+    .select('id, title, funder, apply_url, description, eligibility_criteria, funder_brief, funding_type, amount_min, amount_max, raw_data, deadline, is_rolling, deadline_cycle')
     .eq('id', grantId)
     .single()
 
@@ -673,20 +683,48 @@ NOTE: _deadline_cycle and its _citations entry are ONLY present when a recurring
     // Material = a factor of 2 or more apart. Mirrors the ratio-threshold
     // approach cf-fund-verify already uses for amount sanity.
     const CONFLICT_RATIO = 2
-    const conflicts: Array<{ field: string; stored: number; derived: number; note: string }> = []
+    const flags: Array<{ code: GrantFlagCode; detail: string }> = []
     if (amounts.amount_max !== null && existingMax !== null && existingMax > 0) {
-      const ratio = existingMax / amounts.amount_max
-      if (ratio >= CONFLICT_RATIO) {
-        conflicts.push({
-          field: 'amount_max', stored: existingMax, derived: amounts.amount_max,
-          note: `stored amount_max is ${ratio.toFixed(1)}x the per-applicant figure derived from the text — stored value may be the whole fund's pot rather than one applicant's cap`,
+      const potRatio = existingMax / amounts.amount_max
+      if (potRatio >= CONFLICT_RATIO) {
+        flags.push({
+          code:   'amount_pot_suspected',
+          detail: `stored amount_max £${existingMax.toLocaleString('en-GB')} is ${potRatio.toFixed(1)}x the per-applicant figure derived from the text (£${amounts.amount_max.toLocaleString('en-GB')}) — the stored value may be the whole fund's pot rather than one applicant's cap`,
         })
       } else if (amounts.amount_max / existingMax >= CONFLICT_RATIO) {
-        conflicts.push({
-          field: 'amount_max', stored: existingMax, derived: amounts.amount_max,
-          note: `text suggests a per-applicant ceiling ${(amounts.amount_max / existingMax).toFixed(1)}x higher than the stored amount_max`,
+        flags.push({
+          code:   'amount_under_stated',
+          detail: `text suggests a per-applicant ceiling of £${amounts.amount_max.toLocaleString('en-GB')}, ${(amounts.amount_max / existingMax).toFixed(1)}x the stored amount_max of £${existingMax.toLocaleString('en-GB')}`,
         })
       }
+    }
+
+    // ── Uncaptured multi-round cycle ─────────────────────────────────────────
+    // Fires when the grant has one deadline, no structured deadline_cycle, and
+    // the text says there will be another round. That combination is the silent
+    // rot case: the date passes and expire-grants has no cycle to roll forward
+    // to, so the row quietly becomes wrong rather than advancing.
+    //
+    // This check existed only in cf-fund-verify, i.e. for community-foundation
+    // funds. Promoted to the shared path 2026-07-25 so every source gets it.
+    const effectiveCycle = Array.isArray(updatePayload.deadline_cycle)
+      ? updatePayload.deadline_cycle as unknown[]
+      : Array.isArray(grant.deadline_cycle) ? grant.deadline_cycle as unknown[] : null
+    const multiRound = detectUncapturedMultiRound({
+      isRolling:     typeof grant.is_rolling === 'boolean' ? grant.is_rolling : null,
+      deadline:      typeof grant.deadline === 'string' ? grant.deadline : null,
+      deadlineCycle: effectiveCycle,
+      sourceTexts: [
+        typeof briefCitations.deadline_cycle?.snippet === 'string' ? briefCitations.deadline_cycle.snippet : null,
+        typeof briefToSave.decision_timeline === 'string' ? briefToSave.decision_timeline : null,
+        typeof grant.description === 'string' ? grant.description : null,
+      ],
+    })
+    if (multiRound.suspected) {
+      flags.push({
+        code:   'possible_multi_round_uncaptured',
+        detail: `text suggests a recurring cycle ("${multiRound.matched}") but only a single deadline (${grant.deadline}) was captured and no deadline_cycle was set — this will go stale once that date passes, and expire-grants has no cycle to roll forward to`,
+      })
     }
 
     let amountsApplied:  string[] = []
@@ -703,31 +741,25 @@ NOTE: _deadline_cycle and its _citations entry are ONLY present when a recurring
       amountsRejected = amountsResult.rejected
     }
 
-    // Persist conflicts under raw_data (untracked, so no trust-ladder
-    // interaction) using the same shape cf-fund-verify uses for its flags, so a
-    // single review surface can read both.
-    if (conflicts.length > 0) {
-      const existingRaw = (grant.raw_data && typeof grant.raw_data === 'object')
-        ? grant.raw_data as Record<string, unknown>
-        : {}
-      try {
-        await mergeGrantUpdate({
-          id:     grantId,
-          source: AMOUNTS_SOURCE,
-          db:     supabase,
-          fields: {
-            raw_data: {
-              ...existingRaw,
-              amount_check: { checked_at: new Date().toISOString(), conflicts },
-            },
-          },
-        })
-      } catch (err) {
-        console.error('[enrich-grant] failed to record amount conflict:', err)
-      }
+    // Persist flags in the one shared place (raw_data.checks). Idempotent per
+    // source, so re-enriching refreshes these findings rather than duplicating
+    // them — and an empty array clears them when a re-check finds the problem
+    // resolved, which is why this runs unconditionally rather than only when
+    // flags exist.
+    try {
+      await recordGrantFlags({
+        db:              supabase,
+        grantId,
+        existingRawData: grant.raw_data,
+        source:          CHECKS_SOURCE,
+        flags,
+      })
+    } catch (err) {
+      console.error('[enrich-grant] failed to record quality flags:', err)
+    }
+    if (flags.length > 0) {
       console.warn(
-        `[enrich-grant] amount conflict on ${grantId}: ` +
-        conflicts.map(c => `${c.field} stored=${c.stored} derived=${c.derived}`).join('; ')
+        `[enrich-grant] ${grantId} flagged: ` + flags.map(f => f.code).join(', ')
       )
     }
 

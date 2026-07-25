@@ -25,6 +25,7 @@ import { SupabaseClient } from '@supabase/supabase-js'
 import { mergeGrantUpdate } from '@/lib/grant-merge'
 import { checkUrl } from '@/lib/url-validator'
 import { PROVENANCE_SOURCE, adminClient } from '@/lib/cf-fund-extract'
+import { MULTI_ROUND_PATTERN } from '@/lib/grant-deadlines'
 
 export const VERIFY_PROVENANCE_SOURCE = 'system:cf_fund_verify'
 
@@ -46,7 +47,9 @@ export const AMOUNT_IMPLAUSIBLE_MAX = 150_000
 // find explicit day+month for every round). Not a proof of multi-round —
 // just enough signal to defer to a human rather than publish a deadline
 // that's likely to go stale the moment this one round closes.
-const MULTI_ROUND_PATTERN = /\bround\s*(one|two|three|four|1|2|3|4|i|ii|iii|iv)\b|\b(twice|two|three|four)\s+(times\s+)?(a|per)\s*year\b|\bmulti-?round\b|\bseveral\s+rounds?\b/i
+// MULTI_ROUND_PATTERN now lives in src/lib/grant-deadlines.ts (imported above) so
+// the general enrich path gets the same check, instead of it living only in this
+// CF-specific pipeline. Behaviour of the check below is unchanged.
 
 export interface VerifyFlag {
   code:   'eligibility_empty' | 'amount_ratio_disparity' | 'amount_implausible_large'
