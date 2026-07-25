@@ -6,7 +6,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
 export const dynamic     = 'force-dynamic'
-export const maxDuration = 60
+// Was 60s, which with a 12s per-site timeout and a sequential loop meant the
+// function was killed long before it reached the end of a 239-entry list. Raised
+// in line with the other catalogue crons (validate-urls uses 300).
+export const maxDuration = 270
+
+// Fetch ceiling; the wall-clock budget below decides how many actually get
+// checked. Over-fetching is deliberate so a run of fast-responding sites can use
+// its whole budget rather than idling.
+const BATCH_LIMIT    = 120
+const TIME_BUDGET_MS = 240_000
 
 function getAdminClient() {
   return createClient(
@@ -76,17 +85,43 @@ export async function GET(req: NextRequest) {
   const supabase = getAdminClient()
   const ranAt    = new Date().toISOString()
 
+  // Oldest-checked first, never-checked before that, and capped to what one run
+  // can actually finish.
+  //
+  // 2026-07-25: this used to select every active entry with NO .order() and NO
+  // .limit(), then walk them sequentially under a 60s maxDuration with a 12s
+  // per-site timeout. The function was killed partway through every time, and
+  // because the order was unspecified it re-checked the same head-of-relation
+  // rows each week. Result: 64 of 239 entries stamped per run, and 121 of 239
+  // (51%) had last_checked IS NULL — never checked once, ever. Those have no
+  // baseline fingerprint, so they could never raise a listing_changed alert.
+  // The weekly alerts that DID fire masked the missing half.
+  //
+  // Ordering by last_checked NULLS FIRST makes coverage rotate: never-checked
+  // entries lead, then the stalest. Every entry is now reached within a few
+  // weeks instead of never.
   const { data: entries, error } = await supabase
     .from('funder_watchlist')
     .select('id, name, listing_url, last_fingerprint')
     .eq('status', 'active')
+    .order('last_checked', { ascending: true, nullsFirst: true })
+    .limit(BATCH_LIMIT)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   const results: CheckResult[] = []
+  const startedAt = Date.now()
+  let skippedForBudget = 0
 
-  // Process sequentially — we're checking ~20 external sites, no need to hammer
+  // Process sequentially — we're checking external sites, no need to hammer
   for (const entry of (entries ?? []) as WatchlistEntry[]) {
+    // Same wall-clock guard as the fetch cap: stop before the platform kills us
+    // mid-check, so last_checked is stamped for everything we did reach and the
+    // rotation advances cleanly.
+    if (Date.now() - startedAt > TIME_BUDGET_MS) {
+      skippedForBudget = (entries ?? []).length - results.length
+      break
+    }
     try {
       const res = await fetch(entry.listing_url, {
         signal: AbortSignal.timeout(12000),
@@ -169,6 +204,13 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  if (skippedForBudget > 0) {
+    console.log(
+      `[check-watchlist] time budget spent after ${results.length} entries; ` +
+      `${skippedForBudget} deferred to the next run (they lead the rotation)`
+    )
+  }
+
   return NextResponse.json({
     ranAt,
     checked:  results.length,
@@ -176,6 +218,8 @@ export async function GET(req: NextRequest) {
     ok:       results.filter(r => r.status === 'ok').length,
     changed:  results.filter(r => r.status === 'changed').length,
     errors:   results.filter(r => r.status === 'error').length,
+    skippedForBudget,
+    elapsedMs: Date.now() - startedAt,
     results,
   })
 }

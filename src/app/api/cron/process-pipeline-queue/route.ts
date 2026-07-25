@@ -6,17 +6,30 @@
 //
 // Each step is a self-HTTP call to the corresponding admin route with the
 // ADMIN_SECRET bearer. Step failures quarantine the row (one-shot, no retries
-// in v1 — admin clears needs_intervention_reason to retry). Cron schedule is
-// every 5 min (see vercel.json).
+// in v1 — admin clears needs_intervention_reason to retry).
 //
 // GET /api/cron/process-pipeline-queue
 //   Auth: Bearer ${CRON_SECRET}
 //   Returns: { processed, enriched, classified, swept, quarantined, batches }
 //
-// Sizing: Vercel maxDuration cap is 300s. Each row's chain takes ~15-25s
-// (enrich + classify + sweep). 12 rows per run is a safe ceiling. Cron runs
-// every 5 min → ~140 rows/hour throughput. Sufficient until catalogue scale
-// is 10x current.
+// ── Throughput history ───────────────────────────────────────────────────────
+// This route was written for a 5-minute cadence (288 runs/day x 12 rows =
+// ~3,456 rows/day). Commit 1d05315 moved it to daily because Vercel HOBBY
+// rejects sub-daily crons, and a rejected schedule silently fails EVERY build.
+// The header comment kept claiming "every 5 min" and "~140 rows/hour" while it
+// actually ran once a day: 12 rows/day, a 288x throttle. A 300-row scraper burst
+// would have taken 25 days to drain.
+//
+// 2026-07-25: the account is demonstrably on Pro (26 cron entries deploy from
+// main; Hobby caps at 2 and daily-only), so the schedule is back to */10.
+//
+// Sizing: each row's chain takes ~15-25s (enrich + classify + sweep). At the old
+// fixed BATCH_LIMIT of 12 with no time guard, 12 x 25s = 300s exceeded the 270s
+// maxDuration — the tail rows were killed mid-chain, after paying for enrich but
+// before sweep, so the next run re-paid the enrich cost. There is now a wall-clock
+// budget: rows are processed until the budget is spent, so the batch is
+// self-limiting and stays safe at any frequency or chain latency. BATCH_LIMIT is
+// now just the fetch ceiling.
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
@@ -24,7 +37,15 @@ import { createClient } from '@supabase/supabase-js'
 export const dynamic     = 'force-dynamic'
 export const maxDuration = 270  // ~4.5 min, leaves buffer under 300s cap
 
-const BATCH_LIMIT = 12
+// Fetch ceiling. Higher than what one run can finish, deliberately: the time
+// budget below decides how many actually get processed, and over-fetching means
+// a fast run can use its whole budget instead of idling.
+const BATCH_LIMIT = 24
+
+// Stop starting new rows past this point, so the function returns a clean
+// summary instead of being killed mid-chain by the platform timeout. Sized to
+// leave one worst-case chain (~25s) of headroom under maxDuration.
+const TIME_BUDGET_MS = 240_000
 
 function adminClient() {
   return createClient(
@@ -169,8 +190,18 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ processed: 0, enriched: 0, classified: 0, swept: 0, quarantined: 0, batches: 0, message: 'queue empty' })
   }
 
+  const startedAt = Date.now()
   const results: ChainResult[] = []
+  let skippedForBudget = 0
+
   for (const id of ids) {
+    // Wall-clock guard: never START a chain we may not be able to finish.
+    // Being killed mid-chain wastes the enrich spend and leaves the row in
+    // 'captured' to be re-enriched from scratch next run.
+    if (Date.now() - startedAt > TIME_BUDGET_MS) {
+      skippedForBudget = ids.length - results.length
+      break
+    }
     results.push(await processOne(db, id))
   }
 
@@ -179,9 +210,18 @@ export async function GET(req: NextRequest) {
   const swept       = results.filter(r => r.swept).length
   const quarantined = results.filter(r => r.quarantined).length
 
+  if (skippedForBudget > 0) {
+    console.log(
+      `[process-pipeline-queue] time budget spent after ${results.length} rows; ` +
+      `${skippedForBudget} left for the next run`
+    )
+  }
+
   return NextResponse.json({
     processed:   results.length,
     enriched, classified, swept, quarantined,
+    skippedForBudget,
+    elapsedMs:   Date.now() - startedAt,
     batches:     1,
     quarantines: results.filter(r => r.quarantined).map(r => ({ id: r.id, error: r.error })),
   })
