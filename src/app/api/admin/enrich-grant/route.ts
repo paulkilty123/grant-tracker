@@ -169,6 +169,55 @@ function detectUngroundedAmounts(value: string, groundingText: string): number[]
 }
 
 // Fetch page text with realistic browser headers, strip HTML tags
+/**
+ * Reader-proxy fallback for funders whose WAF refuses non-browser clients.
+ *
+ * 21 catalogue rows across 16 hosts — Arts Council England, Historic England,
+ * Groundwork, camden.gov.uk, Spacehive and others — return HTTP 403 to every
+ * plain fetch. Measured 2026-07-25: four different header profiles (the current
+ * one, a full Chrome set with sec-ch-ua, Googlebot, and no headers at all) all
+ * got an identical 403, and `curl` got 403 too. So this is TLS/behavioural
+ * fingerprinting at the WAF, not anything a User-Agent can talk its way past.
+ *
+ * The consequence was silent and bad: the fetch failed, enrichment fell through
+ * to the knowledge_fallback path, and the brief got written from the model's
+ * memory instead of the funder's page. Those rows then sat in the review queue
+ * flagged unreadable, and re-reading them could never work — it just spent
+ * another LLM call to write another brief from memory.
+ *
+ * A reader proxy renders the page and returns text, which does get through.
+ *
+ * OFF BY DEFAULT. Set READER_PROXY_URL to enable (e.g. "https://r.jina.ai/").
+ * It is gated because it sends the funder URL to a third party, which is a
+ * deployment decision rather than a code one — public grant pages, but still an
+ * external dependency in the enrichment path and a service that then knows which
+ * pages we read. Unset, behaviour is exactly as before.
+ *
+ * Only ever called AFTER a direct fetch has already failed, so it costs nothing
+ * on the ~95% of hosts that work normally.
+ */
+async function fetchViaReaderProxy(url: string): Promise<string> {
+  const base = process.env.READER_PROXY_URL
+  if (!base) throw new Error('reader proxy not configured')
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 30000)
+  try {
+    const res = await fetch(`${base.replace(/\/$/, '')}/${url}`, {
+      signal: controller.signal,
+      headers: {
+        Accept: 'text/plain',
+        ...(process.env.READER_PROXY_KEY ? { Authorization: `Bearer ${process.env.READER_PROXY_KEY}` } : {}),
+      },
+    })
+    if (!res.ok) throw new Error(`reader proxy HTTP ${res.status}`)
+    // Already text/markdown, so no tag stripping — just the same length cap the
+    // direct path uses, to keep the prompt the same size either way.
+    return (await res.text()).replace(/\s{2,}/g, ' ').trim().slice(0, 12000)
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
 async function fetchPageText(url: string): Promise<string> {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 10000)
@@ -262,8 +311,24 @@ export async function POST(req: NextRequest) {
         console.warn('[enrich-grant] short fetch', grant.apply_url, primaryFetchDebug)
       }
     } catch (err) {
-      primaryFetchDebug = `fetch failed: ${err instanceof Error ? err.message : String(err)}`
-      console.warn('[enrich-grant] fetch error', grant.apply_url, primaryFetchDebug)
+      const direct = err instanceof Error ? err.message : String(err)
+      // Retry through the reader proxy, if one is configured. This is the only
+      // route into the ~16 hosts whose WAF 403s every non-browser client; without
+      // it the brief silently gets written from memory instead of the page.
+      try {
+        const viaProxy = await fetchViaReaderProxy(grant.apply_url)
+        if (viaProxy.length >= 200) {
+          sections.push(`Primary source (${grant.apply_url}):\n---\n${viaProxy}\n---`)
+          fetchedFromUrl = true
+          primaryFetchDebug = `direct fetch failed (${direct}); recovered via reader proxy (${viaProxy.length} chars)`
+        } else {
+          primaryFetchDebug = `direct fetch failed (${direct}); reader proxy returned only ${viaProxy.length} chars`
+        }
+      } catch (proxyErr) {
+        const why = proxyErr instanceof Error ? proxyErr.message : String(proxyErr)
+        primaryFetchDebug = `fetch failed: ${direct}` + (why === 'reader proxy not configured' ? '' : `; reader proxy also failed: ${why}`)
+      }
+      if (!fetchedFromUrl) console.warn('[enrich-grant] fetch error', grant.apply_url, primaryFetchDebug)
     }
   } else {
     primaryFetchDebug = 'no apply_url on grant'
