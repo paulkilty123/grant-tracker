@@ -165,6 +165,16 @@ export default async function CataloguePage({ searchParams }: { searchParams: SP
                 <div style={{ fontSize: 12.5, color: 'var(--color-text-secondary)' }}>
                   {r.funder}
                   {r.funding_type ? ` · ${r.funding_type.replace(/_/g, '-')}` : ''}
+                  {/* Visibility belongs in the text, not only in a right-aligned
+                      pill. Two near-identically titled rows — one live, one long
+                      archived — are told apart ONLY by their state, and on a
+                      narrow window the pills scroll out of view, so the single
+                      distinguishing fact was the first thing lost. */}
+                  {!r.is_active && (
+                    <span style={{ color: 'var(--coral-deep)' }}>
+                      {' · '}{r.pipeline_state === 'archived' ? 'archived, not shown to users' : 'hidden from users'}
+                    </span>
+                  )}
                   {reasons.length > 0 ? ` · ${reasons.length} ${reasons.length === 1 ? 'thing' : 'things'} to check` : ''}
                 </div>
               </div>
