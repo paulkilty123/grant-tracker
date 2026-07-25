@@ -2515,44 +2515,24 @@ async function crawlTudorTrust(): Promise<CrawlResult> {
   }
 }
 
-// ── Source 53 — Ufi VocTech Trust ─────────────────────────────────────────────
-// Independent UK charity investing in technology that helps adults improve their
-// vocational skills. Funds R&D and growth of digital tools for workplace and
-// vocational learning. Periodic themed funding rounds.
-async function crawlUfiVocTech(): Promise<CrawlResult> {
-  const SOURCE = 'ufi_voctech'
-  try {
-    const grants: ScrapedGrant[] = [{
-      external_id:          `${SOURCE}_voctech_fund`,
-      source:               SOURCE,
-      title:                'Ufi VocTech Trust — VocTech Impact Fund',
-      funder:               'Ufi VocTech Trust',
-      funder_type:          'trust_foundation',
-      description:          'Grants and investment for organisations developing or scaling technology that ' +
-                            'helps adults improve their vocational and technical skills. Covers digital tools ' +
-                            'for workplace learning, apprenticeships, skills bootcamps and adult education. ' +
-                            'Periodic funding rounds — check website for current calls.',
-      amount_min:           50000,
-      amount_max:           500000,
-      deadline:             null,
-      is_rolling:           false,
-      is_local:             false,
-      sectors:              ['education', 'technology', 'employment', 'skills', 'digital'],
-      eligibility_criteria: [
-        'UK-based organisation (charity, social enterprise, or commercial)',
-        'Project must use technology to improve adult vocational learning',
-        'Can be R&D (earlier stage) or scaling proven tools',
-        'Must demonstrate potential for significant reach and impact',
-        'Commercial organisations eligible but must show social benefit',
-      ],
-      apply_url:            'https://ufi.co.uk/grant-funding/',
-      raw_data:             { note: 'Hardcoded entry — check website for open funding rounds' },
-    }]
-    return await upsertGrants(SOURCE, grants)
-  } catch (err) {
-    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
-  }
-}
+// ── Source 53 — Ufi VocTech Trust — REMOVED 2026-07-25 ────────────────────────
+// crawlUfiVocTech was named like a scraper but fetched nothing: it returned one
+// hardcoded object whose own raw_data said "Hardcoded entry — check website for
+// open funding rounds".
+//
+// It invented a fund. "Ufi VocTech Trust — VocTech Impact Fund" is not a name Ufi
+// has ever used, and its £50,000–£500,000 range matched none of Ufi's four real
+// programmes (Together up to £10k, Activate £30k–£60k, Challenge £200k–£250k,
+// Ignite by invitation). Ufi's own page states "Grant funding for vocational
+// technology from £30k to £150k".
+//
+// Because it upserted daily, it also made the row uncorrectable: any fix to the
+// title or amounts was overwritten by the next crawl. The catalogue already holds
+// a better Ufi row under the funder's real name, so this seed was a duplicate
+// generator, not a source. The row it created has been archived.
+//
+// If Ufi is re-added, catalogue the four named programmes from the live page —
+// do not re-add an umbrella row with invented figures.
 
 // ── Source 54 — Devon Community Foundation ────────────────────────────────────
 // devoncf.com — supports charities and community groups across Devon.
@@ -4144,7 +4124,7 @@ const BATCH_3_SOURCES = [
   'paul_hamlyn_foundation', 'esmee_fairbairn', 'henry_smith',
   'garfield_weston', 'clothworkers_foundation',
   'jrct', 'peoples_health_trust',
-  'national_churches_trust', 'tudor_trust', 'ufi_voctech',
+  'national_churches_trust', 'tudor_trust',
 ] as const
 
 // Batch 4: new community foundations + major national funders (06:15)
@@ -4227,7 +4207,7 @@ export async function crawlAllSources(batch?: BatchNum): Promise<CrawlResult[]> 
     paulHamlynFoundation, esmeeFairbairn, henrySmith,
     garfieldWeston, clothworkersFoundation,
     jrct, peoplesHealthTrust,
-    nationalChurchesTrust, tudorTrust, ufiVocTech,
+    nationalChurchesTrust, tudorTrust,
     // Batch 4
     leedsCF,
     lloydsBankFoundation, powerToChange, kingsTrust,
@@ -4286,7 +4266,6 @@ export async function crawlAllSources(batch?: BatchNum): Promise<CrawlResult[]> 
     run('peoples_health_trust',    crawlPeoplesHealthTrust),
     run('national_churches_trust', crawlNationalChurchesTrust),
     run('tudor_trust',             crawlTudorTrust),
-    run('ufi_voctech',             crawlUfiVocTech),
     // Batch 4
     run('leeds_cf',                crawlLeedsCF),
     run('lloyds_bank_foundation',  crawlLloydsBankFoundation),
@@ -4394,7 +4373,6 @@ export async function crawlAllSources(batch?: BatchNum): Promise<CrawlResult[]> 
     peoplesHealthTrust.status     === 'fulfilled' ? peoplesHealthTrust.value     : fallback('peoples_health_trust'),
     nationalChurchesTrust.status  === 'fulfilled' ? nationalChurchesTrust.value  : fallback('national_churches_trust'),
     tudorTrust.status             === 'fulfilled' ? tudorTrust.value             : fallback('tudor_trust'),
-    ufiVocTech.status             === 'fulfilled' ? ufiVocTech.value             : fallback('ufi_voctech'),
     // Batch 4
     leedsCF.status                === 'fulfilled' ? leedsCF.value                : fallback('leeds_cf'),
     lloydsBankFoundation.status   === 'fulfilled' ? lloydsBankFoundation.value   : fallback('lloyds_bank_foundation'),
