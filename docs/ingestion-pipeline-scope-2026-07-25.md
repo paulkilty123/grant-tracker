@@ -435,6 +435,35 @@ Only worth doing once the above holds.
 
 ---
 
+## 8b. Scheduled: review the admin nav (Paul, 25 Jul — not urgent)
+
+Six sections in the admin sidebar. Paul uses **Grant Manager** (the redesign
+target) and **Users** ("good to keep tabs"); the rest he does not really use.
+Worth a deliberate review of what to keep and how to present it, scheduled
+rather than urgent.
+
+Audit findings already in hand for each, which should make the review quick:
+
+| Nav item | Route | What the audit found |
+|---|---|---|
+| **Grant Health** | `/dashboard/admin` | The at-a-glance KPI used a **30-hour** freshness window against a Mon+Thu crawl, so "🔴 Issues" was pinned high from Tuesday onward. Fixed in `3bed701`. Also hosts the Discovery / 360Giving / Fill-amounts panels, which are really *actions*, not health. |
+| **Grant Manager** | `/dashboard/admin/urls` | 5,442 lines, 12 tabs. Being replaced by the three surfaces (Inbox / Catalogue / Grant detail). Eight of the twelve tabs become Catalogue filters. |
+| **Tagging Quality** | `/dashboard/admin/quality` | Read-only completeness + provenance dashboard. Ungated until `3bed701`. Shows coverage but **no confidence signals** — no citation-confidence rollup, no stale-date or ungrounded-amount counts. Candidate to fold into Catalogue health filters. |
+| **Cohort Matches** | `/dashboard/admin/cohort-match-audit` | Read-only. The only admin page that already used `requireAdmin()` server-side. |
+| **Users** | `/dashboard/admin/users`, `/users/[id]` | Keep — Paul's stated use. Note `users/[id]` had **no auth gate at all** (user PII) until `3bed701`. |
+| **Match Feedback** | `/dashboard/admin/feedback` | **Partly broken**: joins `match_feedback.grant_id` against `scraped_grants.id`, but that column stores the normalised id (`external_id ?? uuid`), so scraper rows miss and the title falls back to a raw id. 156 flags, ~85% negative, consumed by nothing else. |
+
+Two structural questions the review should answer, not just a visual pass:
+
+1. **Health vs actions.** Grant Health, Tagging Quality and the Catalogue health
+   filters are three surfaces answering one question ("what's degrading?").
+   The weekly digest (Phase 5) may replace most of it.
+2. **What earns a nav slot.** A section Paul never opens is a section whose
+   signal should be arriving by email instead. Nav position should track how
+   often a human genuinely has to act, not how much data exists.
+
+---
+
 ## 9. Docs drift to correct
 
 - `CLAUDE.md`: "`scraped_grants` — ~300 rows" → **1,729**. "360Giving import — deferred post-beta" → **shipped and runnable**. Current-priorities section predates GA.
