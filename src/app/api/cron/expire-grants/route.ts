@@ -8,10 +8,24 @@
 // occurrence, so the grant stays in the catalogue between rounds without
 // admin intervention.
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@supabase/supabase-js'
 import { mergeGrantUpdate } from '@/lib/grant-merge'
 
 export const dynamic = 'force-dynamic'
+
+// Service-role client. MUST NOT be the cookie-based `@/lib/supabase/server`
+// helper: a cron request carries no session cookie, so that client runs as
+// `anon`, and `scraped_grants` RLS exposes only a public SELECT policy with no
+// UPDATE policy. PostgREST accepts the request, RLS matches zero rows, and
+// **no error is returned** — so every write here silently did nothing while
+// the handler reported non-zero counts. Diagnosed 2026-07-25: provenance
+// source `system:expire_grants:*` appeared on 0 of 1,729 rows.
+function getAdminClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  )
+}
 
 // Bump if the roll-forward parser or between-rounds behaviour changes materially.
 // v2 (2026-05-27): prefer structured deadline_cycle column when populated;
@@ -113,7 +127,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const supabase = await createClient()
+  const supabase = getAdminClient()
   const today = new Date().toISOString().split('T')[0]  // YYYY-MM-DD
 
   // Find every grant whose deadline has passed

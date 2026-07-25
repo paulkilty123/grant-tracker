@@ -18,9 +18,20 @@
 // recently and left it as-is, don't keep re-flagging.
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'
+
+// Service-role client. MUST NOT be the cookie-based `@/lib/supabase/server`
+// helper — see the same note in cron/expire-grants/route.ts. A cron carries no
+// session cookie, so that client is `anon`, and `scraped_grants` RLS has no
+// UPDATE policy: the write silently affects zero rows and returns no error.
+function getAdminClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  )
+}
 
 const PROVENANCE_SOURCE = 'system:check_stale_rounds:v1'
 const STALE_GRACE_DAYS  = 14
@@ -33,7 +44,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const supabase = await createClient()
+  const supabase = getAdminClient()
   const todayISO = new Date().toISOString().split('T')[0]
   const cutoffDate = new Date()
   cutoffDate.setDate(cutoffDate.getDate() - STALE_GRACE_DAYS)
