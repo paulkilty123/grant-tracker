@@ -35,6 +35,8 @@ export type QueueItem = {
   title: string
   funder: string
   applyUrl: string | null
+  /** Other live rows on this exact apply_url. >0 means the link cannot identify this row. */
+  linkSharedWith: number
   isActive: boolean
   pipelineState: string
   reasons: ReviewReason[]
@@ -190,25 +192,40 @@ export function ReviewQueue({ items }: { items: QueueItem[] }) {
     }
   }, [toast])
 
+  const classify = useCallback((id: string, label: string) => runJob(id, '/api/admin/classify-grants', {
+    grant_ids:      [id],
+    include_review: true,
+    force:          true,
+    // Automated re-tag: an empty array from the model must not wipe good tags.
+    preserve_empty: true,
+  }, label), [runJob])
+
+  // Re-read = enrich THEN classify, mirroring the automated chain.
+  //
+  // The first version called enrich-grant alone. But enrich-grant never writes
+  // impact_sectors, target_beneficiaries or eligible_structures — tagging is a
+  // separate classifier pass. So on a row whose whole question was "a re-read
+  // changed the tagging", pressing the button rewrote the brief and left the
+  // tags untouched: the one field being asked about was the one field it could
+  // not move. The button promised something it structurally could not deliver.
   const reRead = useCallback(async (item: QueueItem) => {
-    const ok = await runJob(item.id, '/api/admin/enrich-grant', { grantId: item.id }, 'Re-reading the page')
-    if (!ok) return
-    toast.success('Page re-read')
+    if (!await runJob(item.id, '/api/admin/enrich-grant', { grantId: item.id }, 'Reading the page')) return
+    // The brief is already saved at this point. A classifier failure must not be
+    // reported as though the whole re-read failed.
+    if (!await classify(item.id, 'Re-tagging from what it says')) {
+      toast.error('The page was re-read and the summary updated, but re-tagging failed. Try Re-tag on its own.')
+      router.refresh()
+      return
+    }
+    toast.success('Page re-read and tags refreshed')
     router.refresh()
-  }, [runJob, router, toast])
+  }, [runJob, classify, router, toast])
 
   const reClassify = useCallback(async (item: QueueItem) => {
-    const ok = await runJob(item.id, '/api/admin/classify-grants', {
-      grant_ids:      [item.id],
-      include_review: true,
-      force:          true,
-      // Automated re-tag: an empty array from the model must not wipe good tags.
-      preserve_empty: true,
-    }, 'Re-tagging')
-    if (!ok) return
+    if (!await classify(item.id, 'Re-tagging')) return
     toast.success('Re-tagged')
     router.refresh()
-  }, [runJob, router, toast])
+  }, [classify, router, toast])
 
   const fixLink = useCallback(async (item: QueueItem) => {
     const next = window.prompt(
@@ -479,6 +496,19 @@ function Row({
           {ask.line}
         </p>
 
+        {/* What this row actually is. Essential when the funder link points at a
+            page covering several of our rows: it is the only thing on screen that
+            distinguishes "JRCT — Rights & Justice" from "JRCT — Sustainable
+            Future", and without it a correct tag change reads as a wrong one. */}
+        {item.brief?.whatTheyFund && (
+          <p style={{
+            fontSize: 12.5, lineHeight: 1.55, color: 'var(--color-text-secondary)',
+            margin: '8px 0 0', maxWidth: '84ch',
+          }}>
+            {item.brief.whatTheyFund}
+          </p>
+        )}
+
         {/* The evidence for that ask, on the face of the card. "a re-read changed
             1 field" told the reviewer nothing without saying which field. */}
         {shownDiffs.length > 0 && (
@@ -557,6 +587,16 @@ function Row({
             <a href={item.applyUrl} target="_blank" rel="noopener noreferrer" style={secondaryBtn}>
               Open funder page
             </a>
+          )}
+          {item.linkSharedWith > 0 && (
+            <span style={{
+              fontSize: 11.5, lineHeight: 1.4, color: 'var(--amber-deep)', background: 'var(--amber-pale)',
+              borderRadius: 'var(--radius-badge, 8px)', padding: '5px 10px', maxWidth: '46ch',
+            }}>
+              That page also covers {item.linkSharedWith} other {item.linkSharedWith === 1 ? 'fund' : 'funds'} we
+              list, so it will not show you this one on its own. Judge it against the summary below,
+              not the page as a whole.
+            </span>
           )}
           <span style={{ flex: '1 1 auto' }} />
           <button onClick={onToggle} style={ghostBtn} aria-expanded={open}>

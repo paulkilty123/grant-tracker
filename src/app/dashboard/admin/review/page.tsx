@@ -90,12 +90,36 @@ export default async function ReviewPage() {
     funder_brief: Record<string, unknown> | null
   }>
 
+  // How many OTHER live rows sit on the same apply_url.
+  //
+  // JRCT is catalogued as three programme rows that all link to
+  // /funding-priorities, the index page listing all five programmes. Opening the
+  // link to check a row therefore shows you every programme except, specifically,
+  // which one this row is — and a reviewer reasonably concludes the row is
+  // mis-tagged when it is not. 47 active rows share a URL this way, so the row
+  // has to say so rather than leaving the reviewer to discover it.
+  const { data: urlRows } = await db
+    .from('scraped_grants')
+    .select('apply_url')
+    .eq('is_active', true)
+    .not('apply_url', 'is', null)
+  const urlCount = new Map<string, number>()
+  for (const u of (urlRows ?? []) as { apply_url: string | null }[]) {
+    const k = (u.apply_url ?? '').trim().replace(/\/$/, '')
+    if (k) urlCount.set(k, (urlCount.get(k) ?? 0) + 1)
+  }
+  const sharedWith = (url: string | null) => {
+    const k = (url ?? '').trim().replace(/\/$/, '')
+    return k ? Math.max(0, (urlCount.get(k) ?? 1) - 1) : 0
+  }
+
   const items: QueueItem[] = rows
     .map(r => ({
       id:            r.id,
       title:         r.title,
       funder:        r.funder ?? '',
       applyUrl:      r.apply_url ?? null,
+      linkSharedWith: sharedWith(r.apply_url ?? null),
       isActive:      r.is_active === true,
       pipelineState: r.pipeline_state,
       reasons:       deriveReviewReasons(r),
