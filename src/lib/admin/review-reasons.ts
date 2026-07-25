@@ -1,0 +1,354 @@
+// Why is this row waiting for a human?
+//
+// ─────────────────────────────────────────────────────────────────────────────
+// This is deliberately a shared, pure module rather than logic inside the review
+// page, because three separate things need the same answer:
+//
+//   1. the Inbox list — one reason chip per row, and the sort order
+//   2. the grant detail view — the same reasons, expanded
+//   3. the auto-publish gate (not built yet) — a row with NO reasons is exactly
+//      a row that can publish itself
+//
+// That third consumer is the whole point. If the gate derived its own criteria
+// separately, the queue and the gate would drift apart, and this session has
+// been almost entirely about repairing that exact class of drift: the amount
+// extractor that lived in the admin page, the structures backstop that ran on
+// one of two classify paths, the multi-round check that ran only for community
+// foundations. One implementation, three callers.
+//
+// Every signal read here already exists in the database today. None of it is
+// newly computed — it was all being calculated, persisted, and then never shown.
+// ─────────────────────────────────────────────────────────────────────────────
+
+import { readGrantFlags, type GrantFlag } from '@/lib/grant-flags'
+
+/** Matches cron/reenrich-stale's STALE_AFTER_DAYS. Keep in step. */
+const STALE_AFTER_DAYS = 90
+
+/** Below this, url-validator's quality score means "probably the wrong page". */
+const URL_QUALITY_SUSPECT = 60
+
+export type ReviewSeverity =
+  /** Wrong or unusable data that is likely misleading a user right now. */
+  | 'critical'
+  /** Needs a look, but plausibly fine. */
+  | 'check'
+  /** The machine changed something and wants confirmation. */
+  | 'changed'
+
+export type ReviewReasonCode =
+  | 'tags_changed'
+  | 'page_unreadable'
+  | 'no_brief'
+  | 'link_unverified'
+  | 'link_dead'
+  | 'no_amount'
+  | 'amount_zero'
+  | 'amount_pot_suspected'
+  | 'amount_under_stated'
+  | 'amount_ungrounded'
+  | 'amount_inverted'
+  | 'no_deadline'
+  | 'deadline_passed'
+  | 'multi_round_uncaptured'
+  | 'stale_dates'
+  | 'eligibility_missing'
+  | 'sectors_missing'
+  | 'beneficiaries_generic_only'
+  | 'stale_enrichment'
+  | 'quarantined'
+
+export type ReviewReason = {
+  code:     ReviewReasonCode
+  severity: ReviewSeverity
+  /** Short, bold, scannable. Sentence case, no trailing punctuation. */
+  label:    string
+  /** The explanatory clause that follows the label. */
+  detail:   string
+}
+
+/** One changed field from the re-classify diff. */
+export type FieldDiff = {
+  field:   string
+  before:  string[]
+  after:   string[]
+  added:   string[]
+  removed: string[]
+}
+
+/**
+ * The row shape this module needs. Structural on purpose so any query that
+ * selects these columns satisfies it, without importing a generated DB type.
+ */
+export type ReviewRow = {
+  id:                        string
+  title?:                    string | null
+  is_active?:                boolean | null
+  url_status?:               string | null
+  url_quality_score?:        number | null
+  amount_min?:               number | null
+  amount_max?:               number | null
+  deadline?:                 string | null
+  is_rolling?:               boolean | null
+  next_open_date?:           string | null
+  deadline_cycle?:           unknown[] | null
+  eligible_structures?:      string[] | null
+  impact_sectors?:           string[] | null
+  target_beneficiaries?:     string[] | null
+  funder_brief?:             Record<string, unknown> | null
+  field_provenance?:         Record<string, unknown> | null
+  raw_data?:                 unknown
+  needs_intervention_reason?: string | null
+}
+
+const SEVERITY_ORDER: Record<ReviewSeverity, number> = { critical: 0, check: 1, changed: 2 }
+
+/** Sort key: most severe first, then most reasons first. */
+export function compareBySeverity(a: ReviewReason[], b: ReviewReason[]): number {
+  const worst = (rs: ReviewReason[]) =>
+    rs.length === 0 ? 99 : Math.min(...rs.map(r => SEVERITY_ORDER[r.severity]))
+  const d = worst(a) - worst(b)
+  return d !== 0 ? d : b.length - a.length
+}
+
+/**
+ * Pull the re-classify diff out of field_provenance.
+ *
+ * reenrich-stale stores it at field_provenance.pipeline_state.diff as
+ * { field: { before: [...], after: [...] } }. It is written on every material
+ * tag change and has never been rendered anywhere — which is why 145 of the 174
+ * rows currently in the queue cost a full re-review instead of a glance.
+ */
+export function extractTagsDiff(fieldProvenance: Record<string, unknown> | null | undefined): FieldDiff[] {
+  const ps = fieldProvenance?.pipeline_state
+  if (!ps || typeof ps !== 'object') return []
+  const diff = (ps as Record<string, unknown>).diff
+  if (!diff || typeof diff !== 'object') return []
+
+  const out: FieldDiff[] = []
+  for (const [field, raw] of Object.entries(diff as Record<string, unknown>)) {
+    if (!raw || typeof raw !== 'object') continue
+    const r = raw as Record<string, unknown>
+    const before = Array.isArray(r.before) ? r.before.map(String) : []
+    const after  = Array.isArray(r.after)  ? r.after.map(String)  : []
+    out.push({
+      field,
+      before,
+      after,
+      added:   after.filter(v => !before.includes(v)),
+      removed: before.filter(v => !after.includes(v)),
+    })
+  }
+  return out
+}
+
+function daysSince(iso: string | null | undefined): number | null {
+  if (!iso) return null
+  const t = Date.parse(iso)
+  if (!Number.isFinite(t)) return null
+  return Math.floor((Date.now() - t) / 86_400_000)
+}
+
+function plural(n: number, one: string, many: string): string {
+  return n === 1 ? one : many
+}
+
+/**
+ * Derive every reason this row is waiting on a human.
+ *
+ * An empty array means nothing is wrong with the row that we know how to detect
+ * — i.e. the row is a candidate for auto-publish.
+ */
+export function deriveReviewReasons(row: ReviewRow, todayISO?: string): ReviewReason[] {
+  const today   = todayISO ?? new Date().toISOString().slice(0, 10)
+  const reasons: ReviewReason[] = []
+  const brief   = row.funder_brief ?? null
+  const flags   = readGrantFlags(row.raw_data)
+
+  // ── The chain gave up on this row ────────────────────────────────────────
+  // Terminal today: process-pipeline-queue excludes these forever and no admin
+  // tab surfaces them, so they are invisible until something like this renders.
+  if (row.needs_intervention_reason) {
+    reasons.push({
+      code: 'quarantined', severity: 'critical',
+      label: 'Processing failed',
+      detail: `the automated chain stopped on this row (${row.needs_intervention_reason}) and will not retry it`,
+    })
+  }
+
+  // ── Enrichment quality ───────────────────────────────────────────────────
+  if (!brief) {
+    reasons.push({
+      code: 'no_brief', severity: 'critical',
+      label: 'Never enriched',
+      detail: 'nothing has been read from the funder’s page yet',
+    })
+  } else if (brief.source === 'knowledge_fallback') {
+    reasons.push({
+      code: 'page_unreadable', severity: 'critical',
+      label: 'Page unreadable',
+      detail: 'the funder’s page could not be read, so this was written from memory with amounts and dates dropped',
+    })
+  }
+
+  // ── Link health ──────────────────────────────────────────────────────────
+  if (row.url_status === 'dead') {
+    reasons.push({
+      code: 'link_dead', severity: 'critical',
+      label: 'Link dead',
+      detail: 'the application link did not resolve to a live page',
+    })
+  } else if (row.url_status && row.url_status !== 'ok') {
+    reasons.push({
+      code: 'link_unverified', severity: 'check',
+      label: 'Link not verified',
+      detail: typeof row.url_quality_score === 'number'
+        ? `page quality scored ${row.url_quality_score}/100`
+        : 'the application link has not been confirmed',
+    })
+  } else if (typeof row.url_quality_score === 'number' && row.url_quality_score < URL_QUALITY_SUSPECT) {
+    reasons.push({
+      code: 'link_unverified', severity: 'check',
+      label: 'Link looks wrong',
+      detail: `page quality scored ${row.url_quality_score}/100 — it may not be the application page`,
+    })
+  }
+
+  // ── Amounts ──────────────────────────────────────────────────────────────
+  const min = row.amount_min, max = row.amount_max
+  if (min !== null && min !== undefined && max !== null && max !== undefined && min > max) {
+    reasons.push({
+      code: 'amount_inverted', severity: 'critical',
+      label: 'Amounts inverted',
+      detail: `minimum £${min.toLocaleString('en-GB')} is above the maximum £${max.toLocaleString('en-GB')}`,
+    })
+  } else if (min === 0 && max === 0) {
+    reasons.push({
+      code: 'amount_zero', severity: 'check',
+      label: 'Amount reads £0 to £0',
+      detail: 'no usable figure was found on the page',
+    })
+  } else if (max === null || max === undefined) {
+    reasons.push({
+      code: 'no_amount', severity: 'check',
+      label: 'No amount',
+      detail: 'nothing states what an applicant can ask for',
+    })
+  }
+
+  // Flags raised by enrich-grant's shared checkers (grant-flags.ts).
+  for (const f of flags) {
+    const mapped = mapFlagToReason(f)
+    if (mapped) reasons.push(mapped)
+  }
+
+  // Brief-level guards that enrich-grant computes and nothing has ever rendered.
+  if (asArray(brief?._ungrounded_amounts).length > 0) {
+    const n = asArray(brief?._ungrounded_amounts).length
+    reasons.push({
+      code: 'amount_ungrounded', severity: 'check',
+      label: 'Amount not in the text',
+      detail: `${n} ${plural(n, 'figure', 'figures')} appear in the write-up with no matching wording on the page`,
+    })
+  }
+  if (asArray(brief?._stale_dates).length > 0) {
+    reasons.push({
+      code: 'stale_dates', severity: 'check',
+      label: 'Date already past',
+      detail: 'the write-up quotes a date that has gone, so the page may not have been updated',
+    })
+  }
+
+  // ── Deadlines ────────────────────────────────────────────────────────────
+  if (row.deadline && row.deadline < today) {
+    reasons.push({
+      code: 'deadline_passed', severity: 'critical',
+      label: 'Deadline passed',
+      detail: `closed on ${row.deadline} and no next round is recorded`,
+    })
+  } else if (!row.is_rolling && !row.deadline && !row.next_open_date) {
+    reasons.push({
+      code: 'no_deadline', severity: 'check',
+      label: 'No deadline',
+      detail: 'not marked rolling, but no closing date or next opening is recorded',
+    })
+  }
+
+  // ── Tagging ──────────────────────────────────────────────────────────────
+  if (!row.eligible_structures || row.eligible_structures.length === 0) {
+    reasons.push({
+      code: 'eligibility_missing', severity: 'critical',
+      label: 'No eligibility',
+      detail: 'no legal structures are tagged, so this cannot match anyone correctly',
+    })
+  }
+  if (!row.impact_sectors || row.impact_sectors.length === 0) {
+    reasons.push({
+      code: 'sectors_missing', severity: 'check',
+      label: 'No sectors',
+      detail: 'nothing records what this fund is for',
+    })
+  }
+  if (row.target_beneficiaries?.length === 1 && row.target_beneficiaries[0] === 'general_public') {
+    reasons.push({
+      code: 'beneficiaries_generic_only', severity: 'check',
+      label: 'Beneficiaries unspecific',
+      detail: 'only “general public” is tagged, which is often what gets recorded when nothing could be determined',
+    })
+  }
+
+  // ── Freshness ────────────────────────────────────────────────────────────
+  const age = daysSince(typeof brief?.last_enriched === 'string' ? brief.last_enriched : null)
+  if (age !== null && age > STALE_AFTER_DAYS) {
+    const months = Math.floor(age / 30)
+    reasons.push({
+      code: 'stale_enrichment', severity: 'check',
+      label: `Not re-read for ${months} ${plural(months, 'month', 'months')}`,
+      detail: `last read on ${String(brief?.last_enriched).slice(0, 10)}`,
+    })
+  }
+
+  // ── Tags changed ─────────────────────────────────────────────────────────
+  // Last, because it is the most common and the least alarming: it means the
+  // machine improved something and wants a nod. Severity rises to critical when
+  // the change REMOVED eligibility, because that silently hides the fund from
+  // organisations that can actually apply.
+  const diffs = extractTagsDiff(row.field_provenance)
+  if (diffs.length > 0) {
+    const structuresLost = diffs.find(d => d.field === 'eligible_structures' && d.removed.length > 0)
+    if (structuresLost) {
+      reasons.push({
+        code: 'tags_changed', severity: 'critical',
+        label: 'Eligibility narrowed',
+        detail: `a re-read removed ${structuresLost.removed.join(', ')} — confirm the funder really excludes ${plural(structuresLost.removed.length, 'it', 'them')}`,
+      })
+    } else {
+      const n = diffs.length
+      reasons.push({
+        code: 'tags_changed', severity: 'changed',
+        label: 'Tags changed',
+        detail: `a re-read changed ${n} ${plural(n, 'field', 'fields')}`,
+      })
+    }
+  }
+
+  return reasons
+}
+
+function mapFlagToReason(f: GrantFlag): ReviewReason | null {
+  switch (f.code) {
+    case 'amount_pot_suspected':
+      return { code: 'amount_pot_suspected', severity: 'critical', label: 'Amount may be the whole fund', detail: f.detail }
+    case 'amount_under_stated':
+      return { code: 'amount_under_stated', severity: 'check', label: 'Amount may be too low', detail: f.detail }
+    case 'possible_multi_round_uncaptured':
+      return { code: 'multi_round_uncaptured', severity: 'check', label: 'Looks multi-round', detail: f.detail }
+    default:
+      // Unknown code from an older or newer deploy — ignore rather than throw.
+      return null
+  }
+}
+
+function asArray(v: unknown): unknown[] {
+  return Array.isArray(v) ? v : []
+}

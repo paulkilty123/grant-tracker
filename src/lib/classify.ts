@@ -576,6 +576,33 @@ export function ensureExplicitStructures(
   // tagging cic_guarantee/cic_shares correctly but dropping ltd_guarantee,
   // and this backstop had the identical gap instead of catching it.
   if (/social enterprise/.test(text)) { add('cic_guarantee'); add('cic_shares'); add('ltd_guarantee') }
+  // Explicit-breadth phrasing. When a funder states it does NOT restrict by legal
+  // form, the correct answer is the full incorporated set, not the CIC pair.
+  //
+  // Found live 2026-07-25 by auditing the re-classify diffs: 50 of 145 diffs had
+  // REMOVED structures, and the same three kept disappearing — cooperative,
+  // ltd_guarantee, ltd_shares. Three of the affected rows say, in their own
+  // who_can_apply text:
+  //   Just Enterprise (Scotland's social enterprise support service)
+  //     "No specific legal structure restrictions ... are stated"  -> tagged CIC-only
+  //   Social Enterprise UK, Buy Social Corporate Challenge
+  //     "Registered social enterprises in any legal form"          -> tagged CIC-only
+  //   Triodos Bank UK, Business Loans
+  //     "Small and large businesses ... and commercial operators"   -> no ltd_*, no co-op
+  //
+  // Mis-tagging in this direction is the damaging one: it silently hides a fund
+  // from organisations that are eligible, and the user just sees fewer matches.
+  //
+  // Deliberately limited to incorporated forms. "Any legal form" in a
+  // social-enterprise context should not be read as including sole traders or
+  // unincorporated associations, which many such funds do exclude — and the
+  // charity rule below already covers charity types when they are named.
+  const explicitBreadth = /\b(?:any|all)\s+(?:legal\s+)?(?:form|forms|structure|structures|constitution)|no\s+(?:specific\s+)?(?:legal\s+)?structure\s+(?:restriction|requirement)|regardless\s+of\s+(?:their\s+)?legal\s+(?:form|structure)|whatever\s+(?:their\s+)?legal\s+(?:form|structure)|all\s+legal\s+structures/.test(text)
+  if (explicitBreadth && /social enterprise|business|compan/.test(text)) {
+    add('cic_guarantee'); add('cic_shares')
+    add('ltd_guarantee'); add('ltd_shares')
+    add('cooperative')
+  }
   // Ensure charity types too when charities are explicitly named — guards the
   // edge where the model returns [] for a "charities and CICs" grant, so we
   // don't end up CIC-only and wrongly exclude charities.
