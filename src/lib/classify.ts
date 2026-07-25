@@ -557,9 +557,45 @@ export function validate(raw: ClassificationResult) {
 export function ensureExplicitStructures(
   structures: string[],
   sourceText: string | null | undefined,
+  opts?: { locationTag?: string | null },
 ): string[] {
   const text = (sourceText ?? '').toLowerCase()
   if (!text) return structures
+
+  // ── Jurisdiction gate for the charity forms ─────────────────────────────
+  // CIO and SCIO are NOT interchangeable: a CIO is an England-and-Wales form
+  // registered with the Charity Commission, a SCIO is Scottish and registered
+  // with OSCR. Tagging either outside its jurisdiction surfaces a fund to
+  // organisations that cannot legally apply.
+  //
+  // Found 2026-07-25: this guard added registered_charity + cio + scio on any
+  // mention of "charit", with no regard to geography. Live consequences in the
+  // catalogue — ALL 5 Oxfordshire rows, ALL 4 Berkshire rows and 4 of the 6
+  // rows tagged "England & Wales" carried scio. A dry run of the backfill would
+  // have added scio to a further 298 rows, including London Borough of Sutton's
+  // Neighbourhood Fund.
+  //
+  // This is the over-tagging direction, which the header above explicitly says
+  // this function must avoid: "a false negative (missing a genuine CIC) is
+  // preferred over a false positive (surfacing a grant to a CIC that can't
+  // actually apply)". Same principle, applied to jurisdiction.
+  //
+  // Conservative by construction: SCIO requires Scotland to be POSITIVELY in
+  // scope; when nothing indicates jurisdiction we add neither Scottish form.
+  // location_tag is the curated geography field and WINS when present. Falling
+  // back to the free text is noisy: a Wandsworth or Northern Ireland fund whose
+  // brief happens to say "UK-registered charity" would otherwise read as
+  // UK-wide and pick up a SCIO. Only when location_tag is absent do we scan the
+  // prose, and then conservatively.
+  const tag = (opts?.locationTag ?? '').trim().toLowerCase()
+  const scope = tag !== '' ? tag : text
+  const ukWide            = /\buk\b|united kingdom|nationwide|\bbritain\b|\bbritish\b|\bgb\b|global/.test(scope)
+  const namesScotland     = /\bscotland\b|\bscottish\b/.test(scope)
+  const namesEnglandWales = /\bengland\b|\benglish\b|\bwales\b|\bwelsh\b/.test(scope)
+  // Scotland must be positively in scope.
+  const scioAllowed = ukWide || namesScotland
+  // England/Wales form: allowed unless the fund is Scotland-only.
+  const cioAllowed  = ukWide || namesEnglandWales || !namesScotland
 
   // Any exclusion or hedge near structure eligibility → leave the model's call
   // untouched. Mirrors the false-positive phrasings caught in manual review.
@@ -606,7 +642,13 @@ export function ensureExplicitStructures(
   // Ensure charity types too when charities are explicitly named — guards the
   // edge where the model returns [] for a "charities and CICs" grant, so we
   // don't end up CIC-only and wrongly exclude charities.
-  if (/\bcharit/.test(text)) { add('registered_charity'); add('cio'); add('scio') }
+  // registered_charity is jurisdiction-neutral (CCEW, OSCR and CCNI all issue
+  // one), so it is always safe. The incorporated forms are gated above.
+  if (/\bcharit/.test(text)) {
+    add('registered_charity')
+    if (cioAllowed)  add('cio')
+    if (scioAllowed) add('scio')
+  }
 
   return out
 }
@@ -656,13 +698,15 @@ export function buildClassifyPatch(input: {
   result:      ReturnType<typeof validate>
   description: string | null | undefined
   funderBrief: Record<string, unknown> | null | undefined
+  /** Row's location_tag — gates the jurisdiction-specific charity forms. */
+  locationTag?: string | null
   /** Honour an empty array as a deliberate clear for beneficiaries / niche_tags. */
   honourEmpty?: boolean
 }): {
   patch:     Record<string, unknown>
   citations: Record<string, ClassificationCitation>
 } {
-  const { result: r, description, funderBrief, honourEmpty = false } = input
+  const { result: r, description, funderBrief, locationTag, honourEmpty = false } = input
 
   const patch: Record<string, unknown> = {
     impact_sectors: r.impact_sectors,
@@ -673,7 +717,9 @@ export function buildClassifyPatch(input: {
   // what the classify-grants route has always used.
   const whoCanApply = typeof funderBrief?.who_can_apply === 'string' ? funderBrief.who_can_apply : ''
   const structureSource = `${whoCanApply} ${description ?? ''}`
-  const structures = ensureExplicitStructures(r.eligible_structures, structureSource)
+  const structures = ensureExplicitStructures(r.eligible_structures, structureSource, {
+    locationTag: locationTag ?? (typeof funderBrief?.location_tag === 'string' ? funderBrief.location_tag : null),
+  })
   if (structures.length > 0) patch.eligible_structures = structures
 
   if (honourEmpty || r.target_beneficiaries.length > 0) {
@@ -710,7 +756,7 @@ export async function classifyUnclassified(
   // mostly already-classified. Catches both NULL and empty-array {} cases.
   const { data: grantsRaw, error } = await supabase
     .from('scraped_grants')
-    .select('id, title, funder, description, impact_sectors, funder_brief')
+    .select('id, title, funder, description, impact_sectors, funder_brief, location_tag')
     .eq('is_active', true)
     .or('impact_sectors.is.null,impact_sectors.eq.{}')
     .order('first_seen_at', { ascending: false })
@@ -766,6 +812,7 @@ export async function classifyUnclassified(
             result:      byId[g.id],
             description: g.description as string | null,
             funderBrief: g.funder_brief as Record<string, unknown> | null,
+            locationTag: g.location_tag as string | null,
             honourEmpty: false,
           })
 

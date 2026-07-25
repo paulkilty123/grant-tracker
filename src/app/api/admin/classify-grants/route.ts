@@ -34,7 +34,7 @@ const PROVENANCE_SOURCE  = `ai_classifier:${CLASSIFIER_VERSION}`
 async function classifyOnce(supabase: SupabaseClient<any>, limit: number): Promise<{ classified: number; failed: number; done: boolean }> {
   const { data: grantsRaw, error } = await supabase
     .from('scraped_grants')
-    .select('id, title, funder, description, impact_sectors, funder_brief')
+    .select('id, title, funder, description, impact_sectors, funder_brief, location_tag')
     .eq('is_active', true)
     .or('impact_sectors.is.null,impact_sectors.eq.{}')
     .order('id')
@@ -74,6 +74,7 @@ async function classifyOnce(supabase: SupabaseClient<any>, limit: number): Promi
           result:      byId[g.id],
           description: g.description as string | null,
           funderBrief: g.funder_brief as Record<string, unknown> | null,
+          locationTag: g.location_tag as string | null,
           honourEmpty: false,
         })
 
@@ -231,7 +232,7 @@ export async function POST(req: NextRequest) {
   // it here so the filter can correctly evaluate ≤1 on both arrays.
   let query = supabase
     .from('scraped_grants')
-    .select('id, title, funder, description, impact_sectors, target_beneficiaries, funder_brief')
+    .select('id, title, funder, description, impact_sectors, target_beneficiaries, funder_brief, location_tag')
     .order('id')
 
   // Active filter: ON unless include_review explicitly requests is_active=false rows
@@ -342,6 +343,7 @@ export async function POST(req: NextRequest) {
             result:      byId[g.id],
             description: g.description as string | null,
             funderBrief: g.funder_brief as Record<string, unknown> | null,
+          locationTag: g.location_tag as string | null,
             honourEmpty,
           })
           return mergeGrantUpdate({
