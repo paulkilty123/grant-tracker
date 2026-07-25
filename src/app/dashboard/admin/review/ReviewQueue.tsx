@@ -12,11 +12,11 @@
 //
 // So this component NEVER sends a field the reviewer did not deliberately set:
 //
-//   Accept   — writes NO fields at all. Accepting a machine suggestion is not a
-//              decision about the value, it is a confirmation that the machine
-//              was right. The value keeps its ai_classifier provenance and stays
-//              improvable. Only is_active is sent, and is_active is untracked so
-//              it pins nothing.
+//   Accept   — writes NO tracked field at all. Accepting a machine suggestion is
+//              not a decision about the value, it is a confirmation that the
+//              machine was right. The value keeps its ai_classifier provenance
+//              and stays improvable. Only is_active and pipeline_state are sent,
+//              and neither is tracked, so it pins nothing.
 //   Revert   — writes that ONE field. This IS a human overruling the machine,
 //              so pinning it is correct.
 //   Reject   — writes pipeline_state + rejection_reason. Neither is tracked.
@@ -126,9 +126,16 @@ export function ReviewQueue({ items }: { items: QueueItem[] }) {
 
   const publish = useCallback(async (item: QueueItem) => {
     setBusyId(item.id)
-    // Only is_active. No tag values are sent, so accepting the machine's work
-    // pins nothing and leaves it improvable.
-    const ok = await patch(item.id, { is_active: true }, 'Publishing')
+    // is_active makes it visible; pipeline_state is what takes it OUT of the queue.
+    //
+    // Sending only is_active was a bug: the queue selects on pipeline_state, so
+    // the row stayed in 'tagged_awaiting_review', disappeared from the list only
+    // because setDone hides it client-side, and came straight back on the next
+    // refresh. The queue could never shrink no matter how much reviewing got done.
+    //
+    // Neither field is in TRACKED_FIELDS, so this still pins nothing — the whole
+    // point of Accept remains intact.
+    const ok = await patch(item.id, { is_active: true, pipeline_state: 'published' }, 'Publishing')
     setBusyId(null)
     if (!ok) return
     setDone(d => new Set(d).add(item.id))

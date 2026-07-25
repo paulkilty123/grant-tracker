@@ -99,6 +99,7 @@ export type ReviewRow = {
   field_provenance?:         Record<string, unknown> | null
   raw_data?:                 unknown
   needs_intervention_reason?: string | null
+  location_tag?: string | null
 }
 
 const SEVERITY_ORDER: Record<ReviewSeverity, number> = { critical: 0, check: 1, changed: 2 }
