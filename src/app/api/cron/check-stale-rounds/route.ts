@@ -16,6 +16,30 @@
 //
 // 30-day admin-touch guard: if an admin explicitly reviewed the row
 // recently and left it as-is, don't keep re-flagging.
+//
+// ⚠️ 2026-07-25 — THIS CRON CANNOT CURRENTLY FIRE. Its client was fixed (it
+// previously ran as `anon` and every write was silently rejected by RLS), but
+// its candidate predicate is structurally unreachable:
+//
+//   - It requires next_open_date_parsed < today - 14 AND pipeline_state='published'.
+//   - check-coming-soon runs daily at 07:00 and nulls next_open_date_parsed the
+//     moment it reaches <= today, so a row can never age 14 days past it.
+//   - Even if the column were preserved, check-coming-soon now moves the row to
+//     'captured' (Needs Review) on day 0, and the guard above deliberately skips
+//     rows already in a review state.
+//
+// Verified against prod 2026-07-25: `next_open_date_parsed < current_date - 14`
+// matches 0 rows in any state, and 0 rows table-wide carry
+// system:check_stale_rounds provenance.
+//
+// So for the parseable-open-date population this job is redundant by design now
+// that check-coming-soon works correctly. The genuine remaining gap it does NOT
+// cover: 85 rows have next_open_date text but a NULL next_open_date_parsed
+// (unparseable), so neither cron can ever see them. Repointing this job at that
+// population is a real improvement but is new behaviour, not a repair — left as
+// a follow-up decision rather than changed silently here.
+//
+// Options: delete this route, or repoint it at the unparseable-date gap.
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
