@@ -56,8 +56,23 @@ for (const line of readFileSync(resolve(HERE, '..', '.env.local'), 'utf8').split
 
 const SOURCE = 'system:cycle_derive:v1'
 
+// --as-admin writes at admin trust instead. Needed, not preferred.
+//
+// Unpinning a form-save artefact removes the LOCK but not the TRUST: the field
+// keeps source admin:<someone> at trust 100, and the merger refuses any strictly
+// lower source, so a system-level write (50) is still refused with 'lower_trust'.
+// Twelve rows sat in exactly that state — unpinned, empty, and still unreachable.
+//
+// admin-over-admin does NOT auto-pin (grant-merge.ts:177 fires only when an
+// admin source overrides a NON-admin one), so pinned:false is honoured here and
+// the value does not acquire a fresh lock. It does stay at trust 100, so
+// ai_enrich still cannot revise it — that is inherent to the field already
+// carrying an admin source, and is a separate problem from this one.
+const ADMIN_SOURCE = 'admin:cycle_derive_2026-07-26'
+
 async function main() {
   const apply = process.argv.includes('--apply')
+  const asAdmin = process.argv.includes('--as-admin')
   const db = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -138,7 +153,7 @@ async function main() {
   let applied = 0, rejected = 0, failed = 0
   for (const p of plan) {
     try {
-      const res = await mergeGrantUpdate({ id: p.row.id, fields: p.fields, source: SOURCE, pinned: false, db })
+      const res = await mergeGrantUpdate({ id: p.row.id, fields: p.fields, source: asAdmin ? ADMIN_SOURCE : SOURCE, pinned: false, db })
       if (res.applied.length > 0) applied++
       else { rejected++; if (rejected <= 5) console.error(`  rejected: ${p.row.title.slice(0, 40)} — ${JSON.stringify(res.rejected)}`) }
     } catch (err) {

@@ -146,12 +146,35 @@ export function mergeFieldUpdate(
     return { write: true, value: newValue, prov: newProv }
   }
 
-  // Case 2 — same source rewriting its own value
-  // Owner can update or clear (null) its own value. Same value = idempotent no-op.
+  // Case 2 — the value is not actually changing.
+  //
+  // Source-agnostic on purpose. An unchanged value carries no decision, so
+  // recording one — and, for an admin caller, PINNING it at trust 100 — invents
+  // a human judgement nobody made.
+  //
+  // This is the mechanism behind the catalogue's pinning debt. Grant Manager
+  // sends its whole form state on save, so every field on screen is written,
+  // whether or not the admin looked at it. update-grant then pins all of them
+  // (route.ts:57, an admin session cannot be downgraded). Measured 2026-07-26:
+  // 392 of 720 active rows (54%) carry at least one pinned field, and 53 have
+  // `deadline` pinned to NULL — frozen empty because the form's date box was
+  // empty when something unrelated was saved. CLA Charitable Trust's round
+  // closes tomorrow and its deadline field cannot be populated by anything.
+  //
+  // Each of those was stamped in the same second as up to six other fields,
+  // which is the signature of a form save rather than a per-field decision.
+  //
+  // This mirrors the rule the Review Inbox already follows: confirming that a
+  // machine got it right is not the same as deciding the value must never
+  // improve, so an accept writes nothing and the value keeps its provenance.
+  // Locking a value should require deliberately changing it, not merely
+  // having it on screen while saving something else.
+  if (valuesEqual(currentValue, newValue)) {
+    return { write: false, reason: 'idempotent' }
+  }
+
+  // Case 2b — same source rewriting its own value with something different.
   if (currentProv.source === newProv.source) {
-    if (valuesEqual(currentValue, newValue)) {
-      return { write: false, reason: 'idempotent' }
-    }
     return { write: true, value: newValue, prov: newProv }
   }
 
