@@ -95,6 +95,21 @@ interface SourceStat {
   lastUpserted:  number | null
 }
 
+// Freshness thresholds, derived from the actual crawl cadence.
+//
+// 2026-07-25: these were 30h (healthy) / 72h (stale), which would be right for a
+// daily crawl. crawl-grants runs Monday AND Thursday only (vercel.json), so the
+// longest EXPECTED gap between runs is Thu 06:00 -> Mon 06:00 = 96h. With a 30h
+// window, every source flipped to "Stale"/"Outdated" from roughly Tuesday
+// afternoon onward, which pinned the "🔴 Issues" KPI high for most of the week --
+// guaranteed alarm fatigue on the only at-a-glance health number in the product.
+//
+// Keep these expressed relative to the cadence so they don't drift again if the
+// schedule changes. If crawl-grants moves to daily, set CRAWL_GAP_HOURS to 24.
+const CRAWL_GAP_HOURS   = 96                        // longest expected gap (Thu -> Mon)
+const HEALTHY_MAX_HOURS = CRAWL_GAP_HOURS * 1.25    // 120h — one cycle plus margin
+const STALE_MAX_HOURS   = CRAWL_GAP_HOURS * 2.5     // 240h — missed a full cycle
+
 function statusBadge(stat: SourceStat) {
   if (stat.activeGrants === 0) {
     return { dot: 'bg-coral-pale0', text: 'text-coral-deep', label: 'No grants' }
@@ -103,8 +118,8 @@ function statusBadge(stat: SourceStat) {
     return { dot: 'bg-gray-400', text: 'text-gray-600', label: 'Unknown' }
   }
   const hoursAgo = (Date.now() - new Date(stat.lastSeen).getTime()) / 3_600_000
-  if (hoursAgo < 30) return { dot: 'bg-green-500', text: 'text-green-700', label: 'Healthy' }
-  if (hoursAgo < 72) return { dot: 'bg-amber-500', text: 'text-amber-700', label: 'Stale' }
+  if (hoursAgo < HEALTHY_MAX_HOURS) return { dot: 'bg-green-500', text: 'text-green-700', label: 'Healthy' }
+  if (hoursAgo < STALE_MAX_HOURS)   return { dot: 'bg-amber-500', text: 'text-amber-700', label: 'Stale' }
   return { dot: 'bg-coral-pale0', text: 'text-coral-deep', label: 'Outdated' }
 }
 
@@ -199,8 +214,10 @@ export default async function AdminPage() {
   })
 
   const totalActive   = stats.reduce((n, s) => n + s.activeGrants, 0)
-  const healthyCount  = stats.filter(s => s.activeGrants > 0 && s.lastSeen && (Date.now() - new Date(s.lastSeen).getTime()) < 30 * 3_600_000).length
-  const staleCount    = stats.filter(s => s.activeGrants > 0 && s.lastSeen && (Date.now() - new Date(s.lastSeen).getTime()) >= 30 * 3_600_000).length
+  // Uses the same cadence-derived threshold as statusBadge above, so the KPI
+  // tiles and the per-source badges can never disagree.
+  const healthyCount  = stats.filter(s => s.activeGrants > 0 && s.lastSeen && (Date.now() - new Date(s.lastSeen).getTime()) <  HEALTHY_MAX_HOURS * 3_600_000).length
+  const staleCount    = stats.filter(s => s.activeGrants > 0 && s.lastSeen && (Date.now() - new Date(s.lastSeen).getTime()) >= HEALTHY_MAX_HOURS * 3_600_000).length
   const errorCount    = stats.filter(s => s.activeGrants === 0).length
   const hasCrawlLogs  = crawlLogMap.size > 0
 
