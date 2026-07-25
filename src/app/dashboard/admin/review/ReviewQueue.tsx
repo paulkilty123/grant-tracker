@@ -38,6 +38,8 @@ export type QueueItem = {
   isActive: boolean
   pipelineState: string
   reasons: ReviewReason[]
+  /** 0 = one click from done, 3 = cannot be judged until the page is read. */
+  readiness: number
   diffs: FieldDiff[]
   brief: {
     source: string | null
@@ -70,6 +72,7 @@ export function ReviewQueue({ items }: { items: QueueItem[] }) {
   const toast = useToast()
   const [openId, setOpenId] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
+  const [busyLabel, setBusyLabel] = useState<string | null>(null)
   const [done, setDone] = useState<Set<string>>(new Set())
   const [filter, setFilter] = useState<string | null>(null)
 
@@ -141,6 +144,96 @@ export function ReviewQueue({ items }: { items: QueueItem[] }) {
     toast.success(`${diff.field} reverted`)
     router.refresh()
   }, [patch, router, toast])
+
+  // ── Repair actions ────────────────────────────────────────────────────────
+  // The first version of this page offered only Publish and Reject. For the
+  // rows at the top of the queue — page unreadable, no eligibility, no deadline
+  // — neither is a sane answer: publishing ships a grant nobody can match
+  // against, rejecting throws away a real fund. The actual remedy is almost
+  // always "read the page again", and for a bad apply_url, "fix the link first".
+  // Without these the queue diagnosed problems and offered no treatment.
+
+  const runJob = useCallback(async (
+    id: string,
+    url: string,
+    body: Record<string, unknown>,
+    label: string,
+  ): Promise<boolean> => {
+    setBusyId(id)
+    setBusyLabel(label)
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}))
+        toast.error(`${label} failed: ${j.error ?? `HTTP ${res.status}`}`)
+        return false
+      }
+      // enrich-grant reports fields the trust ladder refused. Surfacing that is
+      // the difference between "nothing happened" and "nothing happened because
+      // an earlier admin decision is pinned".
+      const j = await res.json().catch(() => ({})) as { rejected?: { field: string; reason: string }[] }
+      const pinned = (j.rejected ?? []).filter(r => r.reason === 'pinned').map(r => r.field)
+      if (pinned.length) {
+        toast.error(`${label} ran, but ${pinned.join(', ')} is pinned to an earlier decision and did not change.`)
+      }
+      return true
+    } catch (err) {
+      toast.error(`${label} failed: ${err instanceof Error ? err.message : String(err)}`)
+      return false
+    } finally {
+      setBusyId(null)
+      setBusyLabel(null)
+    }
+  }, [toast])
+
+  const reRead = useCallback(async (item: QueueItem) => {
+    const ok = await runJob(item.id, '/api/admin/enrich-grant', { grantId: item.id }, 'Re-reading the page')
+    if (!ok) return
+    toast.success('Page re-read')
+    router.refresh()
+  }, [runJob, router, toast])
+
+  const reClassify = useCallback(async (item: QueueItem) => {
+    const ok = await runJob(item.id, '/api/admin/classify-grants', {
+      grant_ids:      [item.id],
+      include_review: true,
+      force:          true,
+      // Automated re-tag: an empty array from the model must not wipe good tags.
+      preserve_empty: true,
+    }, 'Re-tagging')
+    if (!ok) return
+    toast.success('Re-tagged')
+    router.refresh()
+  }, [runJob, router, toast])
+
+  const fixLink = useCallback(async (item: QueueItem) => {
+    const next = window.prompt(
+      `Application link for "${item.title}"\n\nThe page could not be read, which is usually a wrong or moved URL. Paste the correct one and it will be re-read straight away.`,
+      item.applyUrl ?? '',
+    )
+    if (!next || !next.trim() || next.trim() === item.applyUrl) return
+
+    setBusyId(item.id)
+    setBusyLabel('Saving the link')
+    // apply_url IS tracked, so this pins — correctly. A URL you typed is a real
+    // decision, unlike the tag values Publish deliberately leaves alone.
+    const saved = await patch(item.id, {
+      apply_url: next.trim(),
+      url_status: 'unchecked',
+      url_last_checked: null,
+      url_quality_score: null,
+      url_quality_issues: [],
+    }, 'Saving the link')
+    setBusyId(null)
+    setBusyLabel(null)
+    if (!saved) return
+    toast.success('Link saved — re-reading')
+    await reRead(item)
+  }, [patch, reRead, toast])
 
   const reject = useCallback(async (item: QueueItem) => {
     const reason = window.prompt(
@@ -218,9 +311,13 @@ export function ReviewQueue({ items }: { items: QueueItem[] }) {
               open={openId === item.id}
               busy={busyId === item.id}
               onToggle={() => setOpenId(openId === item.id ? null : item.id)}
+              busyLabel={busyLabel}
               onPublish={() => publish(item)}
               onReject={() => reject(item)}
               onRevert={(d) => revertField(item, d)}
+              onReRead={() => reRead(item)}
+              onReClassify={() => reClassify(item)}
+              onFixLink={() => fixLink(item)}
             />
           ))}
         </div>
@@ -249,15 +346,20 @@ function Chip({ active, onClick, label, n }: { active: boolean; onClick: () => v
 }
 
 function Row({
-  item, open, busy, onToggle, onPublish, onReject, onRevert,
+  item, open, busy, busyLabel, onToggle, onPublish, onReject, onRevert,
+  onReRead, onReClassify, onFixLink,
 }: {
   item: QueueItem
   open: boolean
   busy: boolean
+  busyLabel: string | null
   onToggle: () => void
   onPublish: () => void
   onReject: () => void
   onRevert: (d: FieldDiff) => void
+  onReRead: () => void
+  onReClassify: () => void
+  onFixLink: () => void
 }) {
   const worst = item.reasons.reduce<string>((acc, r) => {
     if (acc === 'critical' || r.severity === 'critical') return 'critical'
@@ -406,19 +508,32 @@ function Row({
             </div>
 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
-              <button onClick={onPublish} disabled={busy} style={primaryBtn}>
-                {busy ? 'Working…' : item.isActive ? 'Confirm & keep live' : 'Publish'}
+              {/* Repair first. For a row that cannot be judged yet, publishing is
+                  the wrong move and should not be the most prominent button. */}
+              <button onClick={onReRead} disabled={busy} style={item.readiness >= 2 ? primaryBtn : secondaryBtn}>
+                {busy && busyLabel ? `${busyLabel}…` : 'Re-read page'}
               </button>
+              <button onClick={onFixLink} disabled={busy} style={secondaryBtn}>Fix link</button>
+              <button onClick={onReClassify} disabled={busy} style={secondaryBtn}>Re-tag</button>
               {item.applyUrl && (
                 <a href={item.applyUrl} target="_blank" rel="noopener noreferrer" style={secondaryBtn}>
                   Open funder page
                 </a>
               )}
               <span style={{ flex: '1 1 auto' }} />
+              <button onClick={onPublish} disabled={busy} style={item.readiness >= 2 ? secondaryBtn : primaryBtn}>
+                {item.isActive ? 'Confirm & keep live' : 'Publish'}
+              </button>
               <button onClick={onReject} disabled={busy} style={dangerBtn}>
-                Reject &mdash; give reason
+                Reject
               </button>
             </div>
+            {item.readiness >= 3 && (
+              <p style={{ fontSize: 11.5, color: 'var(--color-text-tertiary)', margin: '-6px 0 0' }}>
+                Nothing on this row can be trusted until the page is read, so publishing it would
+                ship values written from memory. Try re-reading, or fix the link first.
+              </p>
+            )}
           </div>
         )}
       </div>

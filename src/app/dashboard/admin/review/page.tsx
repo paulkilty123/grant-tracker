@@ -15,7 +15,8 @@ import { createClient } from '@supabase/supabase-js'
 import {
   deriveReviewReasons,
   extractTagsDiff,
-  compareBySeverity,
+  compareByReadiness,
+  publishReadiness,
   type ReviewRow,
 } from '@/lib/admin/review-reasons'
 import { ReviewQueue, type QueueItem } from './ReviewQueue'
@@ -98,6 +99,7 @@ export default async function ReviewPage() {
       isActive:      r.is_active === true,
       pipelineState: r.pipeline_state,
       reasons:       deriveReviewReasons(r),
+      readiness:     publishReadiness(deriveReviewReasons(r)),
       diffs:         extractTagsDiff(r.field_provenance),
       brief:         summariseBrief(r.funder_brief),
       values: {
@@ -109,7 +111,7 @@ export default async function ReviewPage() {
         sectors:    r.impact_sectors ?? [],
       },
     }))
-    .sort((a, b) => compareBySeverity(a.reasons, b.reasons))
+    .sort((a, b) => compareByReadiness(a.reasons, b.reasons))
 
   return <ReviewQueue items={items} />
 }

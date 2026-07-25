@@ -19,7 +19,8 @@ import { fileURLToPath } from 'node:url'
 import {
   deriveReviewReasons,
   extractTagsDiff,
-  compareBySeverity,
+  compareByReadiness,
+  publishReadiness,
   type ReviewRow,
 } from '../src/lib/admin/review-reasons'
 
@@ -86,12 +87,28 @@ async function main() {
     console.log(`  ${String(n).padStart(5)}  [${sev.padEnd(8)}] ${code}`)
   }
 
-  const sorted = [...scored].sort((a, b) => compareBySeverity(a.rs, b.rs))
+  // Readiness, not severity, is what the Inbox now orders by. Sorting by
+  // severity put the most broken rows first, which is exactly backwards for a
+  // human with twenty minutes: those are the rows that cannot be finished at
+  // all. Readiness 0 rows are one click from live.
+  const READINESS = [
+    'one click from live',
+    'quick judgement needed',
+    'needs a repair first',
+    'unreadable — cannot be judged',
+  ]
+  const byReadiness = [0, 1, 2, 3].map(k => scored.filter(s => publishReadiness(s.rs) === k))
+  console.log('\nreadiness buckets (the Inbox order):')
+  byReadiness.forEach((b, k) => {
+    console.log(`  ${String(b.length).padStart(5)}  ${pct(b.length, rows.length).padStart(4)}  ${k} ${READINESS[k]}`)
+  })
+
+  const sorted = [...scored].sort((a, b) => compareByReadiness(a.rs, b.rs))
   console.log('\ntop of the queue as the Inbox would order it:')
   for (const { r, rs } of sorted.slice(0, 8)) {
     const who = `${(r.funder ?? '').slice(0, 24)}`.padEnd(24)
     const what = String(r.title ?? '').slice(0, 34).padEnd(34)
-    console.log(`  ${who} ${what} ${rs.map(x => x.label).join(' · ').slice(0, 96)}`)
+    console.log(`  ${publishReadiness(rs)}  ${who} ${what} ${rs.map(x => x.label).join(' · ').slice(0, 90)}`)
   }
 
   const withDiff = rows.filter(r => extractTagsDiff(r.field_provenance).length > 0)

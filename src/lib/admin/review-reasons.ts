@@ -112,6 +112,59 @@ export function compareBySeverity(a: ReviewReason[], b: ReviewReason[]): number 
 }
 
 /**
+ * How close is this row to being publishable?  Lower = closer.
+ *
+ * This replaced severity as the queue's sort key, and the reason is worth
+ * recording. Sorting by severity puts the MOST BROKEN rows first — which are
+ * exactly the rows a human can do least about, and which are worth least. The
+ * first thing Paul saw at the top of the queue was a fund whose page could not
+ * be read, with no deadline, no eligibility and no amount: neither Publish nor
+ * Reject is a sane answer there, and the row buried the 29 rows that were one
+ * click from done.
+ *
+ * A review queue should open with the work that pays, not the work that hurts.
+ *
+ *   0  Only "tags changed" — the machine improved something and wants a nod.
+ *      One click and it is finished.
+ *   1  Small stuff: a couple of soft checks, nothing structural.
+ *   2  Fixable: missing eligibility/sectors/amount/deadline, or an unverified
+ *      link. A re-read or a re-classify probably resolves it.
+ *   3  Cannot be judged at all until the page is read: the brief was written
+ *      from the model's memory, or there is no brief. These need a link fix or
+ *      a bulk re-read, and some are simply not real funds.
+ */
+export function publishReadiness(reasons: ReviewReason[]): number {
+  if (reasons.length === 0) return 0
+
+  const codes = new Set(reasons.map(r => r.code))
+
+  // Nothing can be trusted on a row whose source page was never read.
+  if (codes.has('page_unreadable') || codes.has('no_brief') || codes.has('quarantined')) return 3
+
+  const onlyChanged = reasons.every(r => r.severity === 'changed')
+  if (onlyChanged) return 0
+
+  const needsWork =
+    codes.has('eligibility_missing') || codes.has('sectors_missing') ||
+    codes.has('no_amount') || codes.has('no_deadline') ||
+    codes.has('link_unverified') || codes.has('link_dead') ||
+    codes.has('deadline_passed') || codes.has('amount_zero')
+  if (needsWork) return 2
+
+  return 1
+}
+
+/**
+ * Queue order: closest-to-publishable first, then fewest reasons, so the
+ * quickest wins float to the top of each band.
+ */
+export function compareByReadiness(a: ReviewReason[], b: ReviewReason[]): number {
+  const d = publishReadiness(a) - publishReadiness(b)
+  if (d !== 0) return d
+  return a.length - b.length
+}
+
+/**
  * Pull the re-classify diff out of field_provenance.
  *
  * reenrich-stale stores it at field_provenance.pipeline_state.diff as
