@@ -46,6 +46,12 @@ for (const line of readFileSync(resolve(HERE, '..', '.env.local'), 'utf8').split
 }
 
 const SOURCE = 'ai_classifier:structures_jurisdiction:v1'
+// For rows whose eligible_structures is admin-pinned at trust 100, a trust-60
+// write is refused. --override-pinned re-runs those under a named admin batch,
+// matching the existing admin:tagging_fix_2026-06-17 convention. Justified here
+// and NOT in general: "a CIO cannot exist in Scotland" is a legal fact, not a
+// model guess, so pinning it is correct rather than the usual anti-pattern.
+const OVERRIDE_SOURCE = 'admin:charity_form_jurisdiction_2026-07-25'
 
 async function main() {
   const apply = process.argv.includes('--apply')
@@ -68,7 +74,7 @@ async function main() {
   }
   const rows = (data ?? []) as unknown as Row[]
 
-  const changes: Array<{ row: Row; before: string[]; after: string[]; removed: string[] }> = []
+  const changes: Array<{ row: Row; before: string[]; after: string[]; removed: string[]; added: string[] }> = []
   let skippedNoTag = 0
   let skippedWouldEmpty = 0
 
@@ -81,15 +87,51 @@ async function main() {
 
     const { scioAllowed, cioAllowed } = charityFormJurisdiction({ locationTag: tag })
 
-    const drop: string[] = []
-    if (cur.includes('scio') && !scioAllowed) drop.push('scio')
-    if (cur.includes('cio')  && !cioAllowed)  drop.push('cio')
-    if (drop.length === 0) continue
+    // SWAP, don't drop. A CIO and a SCIO are the same thing either side of the
+    // border: the incorporated form of a registered charity. Removing the wrong
+    // one without adding the right one leaves a fund that accepts charities with
+    // no incorporated-charity form at all, which NARROWS eligibility — the very
+    // error this file exists to correct, just pointed the other way.
+    //
+    // The first version of this script did exactly that: it dropped `cio` from 7
+    // Scottish funds (Creative Scotland Open Fund, sportscotland, TNLCF Scotland,
+    // Scottish Land Fund and others) without adding `scio`. This branch repairs
+    // that and prevents a repeat.
+    let after = [...cur]
+    const removed: string[] = []
+    const added: string[] = []
 
-    const after = cur.filter(s => !drop.includes(s))
+    if (after.includes('scio') && !scioAllowed) {
+      after = after.filter(s => s !== 'scio'); removed.push('scio')
+      if (cioAllowed && !after.includes('cio')) { after.push('cio'); added.push('cio') }
+    }
+    if (after.includes('cio') && !cioAllowed) {
+      after = after.filter(s => s !== 'cio'); removed.push('cio')
+      if (scioAllowed && !after.includes('scio')) { after.push('scio'); added.push('scio') }
+    }
+
+    // Repair pass — deliberately narrow. Only rows THIS SCRIPT already narrowed
+    // in an earlier run, identified by its own provenance source. Without that
+    // guard the condition below fires on any charity-accepting fund missing an
+    // incorporated form, which in a dry run reached hundreds of rows (Idlewild
+    // Trust, Variety Club, Historic England). That may well be a defensible
+    // widening, but it is a different decision from "repair what I broke" and
+    // must not ride along on the authorisation for this fix.
+    const narrowedByThisScript =
+      (r.field_provenance?.eligible_structures as Record<string, unknown> | undefined)?.source === SOURCE
+
+    if (narrowedByThisScript && after.includes('registered_charity')) {
+      if (scioAllowed && !after.includes('scio') && !after.includes('cio')) {
+        after.push('scio'); added.push('scio')
+      } else if (cioAllowed && !after.includes('cio') && !after.includes('scio')) {
+        after.push('cio'); added.push('cio')
+      }
+    }
+
+    if (removed.length === 0 && added.length === 0) continue
     if (after.length === 0) { skippedWouldEmpty++; continue }
 
-    changes.push({ row: r, before: cur, after, removed: drop })
+    changes.push({ row: r, before: cur, after, removed, added })
   }
 
   const pinned = changes.filter(c => {
@@ -104,8 +146,11 @@ async function main() {
   console.log(`skipped, removal would empty the array: ${skippedWouldEmpty}\n`)
 
   const tally = new Map<string, number>()
-  for (const c of changes) for (const d of c.removed) tally.set(d, (tally.get(d) ?? 0) + 1)
-  console.log('forms to remove:')
+  for (const c of changes) {
+    for (const d of c.removed) tally.set(`- ${d}`, (tally.get(`- ${d}`) ?? 0) + 1)
+    for (const a of c.added)   tally.set(`+ ${a}`, (tally.get(`+ ${a}`) ?? 0) + 1)
+  }
+  console.log('changes:')
   for (const [k, v] of Array.from(tally.entries()).sort((a, b) => b[1] - a[1])) {
     console.log(`  ${String(v).padStart(4)}  ${k}`)
   }
@@ -119,7 +164,8 @@ async function main() {
 
   console.log('\nsample (first 15):')
   for (const c of changes.slice(0, 15)) {
-    console.log(`  ${(c.row.location_tag ?? '').slice(0, 18).padEnd(18)} ${(c.row.funder ?? '').slice(0, 28).padEnd(28)} − ${c.removed.join(', ')}`)
+    const ops = [...c.removed.map(x => `−${x}`), ...c.added.map(x => `+${x}`)].join(' ')
+    console.log(`  ${(c.row.location_tag ?? '').slice(0, 18).padEnd(18)} ${(c.row.funder ?? '').slice(0, 28).padEnd(28)} ${ops}`)
   }
 
   if (!apply) {
@@ -127,24 +173,27 @@ async function main() {
     return
   }
 
-  let applied = 0, rejected = 0, failed = 0
+  const override = process.argv.includes('--override-pinned')
+  let applied = 0, rejected = 0, failed = 0, overridden = 0
   for (const c of changes) {
+    const isPinned = (c.row.field_provenance?.eligible_structures as Record<string, unknown> | undefined)?.pinned === true
+    const useOverride = override && isPinned
     try {
       const res = await mergeGrantUpdate({
         id: c.row.id,
         fields: { eligible_structures: c.after },
-        source: SOURCE,
-        pinned: false,
+        source: useOverride ? OVERRIDE_SOURCE : SOURCE,
+        pinned: useOverride,
         db,
       })
-      if (res.applied.includes('eligible_structures')) applied++
+      if (res.applied.includes('eligible_structures')) { applied++; if (useOverride) overridden++ }
       else rejected++
     } catch (err) {
       failed++
       console.error(`  failed: ${c.row.id}: ${err instanceof Error ? err.message : err}`)
     }
   }
-  console.log(`\napplied ${applied}, rejected ${rejected}, failed ${failed}\n`)
+  console.log(`\napplied ${applied} (${overridden} via admin override), rejected ${rejected}, failed ${failed}\n`)
 }
 
 main()
