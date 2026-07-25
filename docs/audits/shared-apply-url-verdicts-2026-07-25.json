@@ -1,0 +1,310 @@
+[
+ {
+  "id": "49d410cd-2107-421e-b35b-158793a21c0e",
+  "title": "Hull Community Fund",
+  "verdict": "OWN_PAGE",
+  "url": "https://tworidingscf.org.uk/fund/hull-community-fund/",
+  "evidence": "H1 exactly 'Hull Community Fund'; deadline noon 7 Sep 2026 matches catalogue"
+ },
+ {
+  "id": "14469b5f-f30c-44cd-90f4-8414a4f41dff",
+  "title": "Rusholme Wind Farm Fund",
+  "verdict": "OWN_PAGE",
+  "url": "https://tworidingscf.org.uk/fund/rusholme-wind-farm-fund/",
+  "evidence": "H1 exact; deadline 3 Aug 2026 matches catalogue; only microgrants stream paused"
+ },
+ {
+  "id": "48dcfee3-ece1-48e5-9b65-41c27cd40e54",
+  "title": "Heart of Yorkshire Fund for the Selby District",
+  "verdict": "OWN_PAGE",
+  "url": "https://tworidingscf.org.uk/fund/heart-of-yorkshire-fund/",
+  "evidence": "H1 exact; deadline 10 Aug 2026 matches catalogue"
+ },
+ {
+  "id": "dab46d8f-9841-408e-a862-489dd45493d4",
+  "title": "Edgbaston & Northfield NNS Fund for Older Adults (50+)",
+  "verdict": "OWN_PAGE",
+  "url": "https://www.heartofenglandcf.org/nns/",
+  "evidence": "H1 exact; 50+ stream, distinct from Younger Adults row"
+ },
+ {
+  "id": "45f7e90d-4045-4abb-907c-165d82513c3b",
+  "title": "IM Properties Stratford 46 Community Fund",
+  "verdict": "OWN_PAGE",
+  "url": "https://www.heartofenglandcf.org/im-properties-stratford-46-community-fund/",
+  "evidence": "H1 exact; panels Mar/Oct 2026 + live apply link"
+ },
+ {
+  "id": "8cdb1c33-750e-4c9c-8bb4-77c997ceeefd",
+  "title": "Edgbaston & Northfield NNS Fund for Younger Adults",
+  "verdict": "OWN_PAGE",
+  "url": "https://www.heartofenglandcf.org/nns-younger-adults/",
+  "evidence": "H1 exact; 18-49 stream, genuinely separate from 50+ row"
+ },
+ {
+  "id": "e68c5f52-de13-48fd-88bc-347f749d3035",
+  "title": "Dynamo Digital Inclusion Fund",
+  "verdict": "OWN_PAGE",
+  "url": "https://www.communityfoundation.org.uk/grants/dynamo-digital-inclusion-fund/",
+  "evidence": "H1 exact; max \u00a35000 + closing 10/08/2026 match catalogue"
+ },
+ {
+  "id": "f375d0d1-f7e5-4393-a078-8b3ab3cec3b4",
+  "title": "Community Foundation North East \u2014 Grants",
+  "verdict": "NO_OWN_PAGE",
+  "url": null,
+  "evidence": "This row IS the front door; /grants/ 301-redirects to /apply/. Correct as-is."
+ },
+ {
+  "id": "21268e1b-f517-41a4-ab43-64389f2f193d",
+  "title": "National Churches Trust \u2014 Large Grants",
+  "verdict": "OWN_PAGE",
+  "url": "https://www.nationalchurchestrust.org/get-support/grants/large-grants",
+  "evidence": "Own programme page; up to \u00a350,000; 'Open for new stage one applications', deadline 3 Nov 2026 matches row"
+ },
+ {
+  "id": "c620df67-d051-473e-b6c2-c5d89003b6ec",
+  "title": "National Churches Trust \u2014 Community Mission Grants",
+  "verdict": "CLOSED",
+  "url": null,
+  "evidence": "No NCT programme of this name. Both candidate slugs 404. Describes the retired 2008 Community Grants scheme, now folded into Large Grants. \u00a31k-\u00a320k range matches no current programme."
+ },
+ {
+  "id": "f1fdcd6e-152a-403f-a1ac-f7838fbe9ebc",
+  "title": "sportscotland \u2014 Facilities Investment",
+  "verdict": "OWN_PAGE",
+  "url": "https://sportscotland.org.uk/funding/sport-facilities-fund",
+  "evidence": "Sport Facilities Fund, own page. Deadlines 1 Apr / 1 Sep each year, ~\u00a32m/yr (row deadline currently null)"
+ },
+ {
+  "id": "44207468-39fc-471a-8079-4d17f18da060",
+  "title": "Sportscotland \u2014 Community Sport",
+  "verdict": "NO_OWN_PAGE",
+  "url": null,
+  "evidence": "No such sportscotland fund; /funding/community-sport 404s. Generic umbrella row subsumed by Facilities Investment. Merge or retire."
+ },
+ {
+  "id": "791f1756-4303-431e-b50a-fee89460c633",
+  "title": "Camden Giving \u2014 We Make Camden Kit",
+  "verdict": "OWN_PAGE",
+  "url": "https://www.camdengiving.org.uk/we-make-camden-kit",
+  "evidence": "Hosted on Camden Giving's own domain; seed \u00a32,000 / growth \u00a35,000 match the row"
+ },
+ {
+  "id": "856cbdaf-7e60-4c78-8ad2-e7c0b6fddbd8",
+  "title": "Camden Climate Fund",
+  "verdict": "OWN_PAGE",
+  "url": "https://www.camden.gov.uk/camden-climate-fund",
+  "evidence": "WRONG FUNDER on the row: this is a Camden Council fund, not Camden Giving. Page live (403 to curl = Cloudflare bot challenge, confirmed in a browser). Range \u00a32k-\u00a35k also wrong; four strands up to \u00a350k."
+ },
+ {
+  "id": "ab8dd936-a606-4f74-8b89-583e8e94ae88",
+  "title": "Arts and Science Grants",
+  "verdict": "DUPLICATE_OF:9e29e607-f4aa-488f-a0d0-190d2a21880a",
+  "url": null,
+  "evidence": "Granada runs ONE unnamed scheme. Both rows identical on facts (deadline 2026-10-01, \u00a3500-\u00a310,000). Title invented. Port location_tag 'North West England' before deleting."
+ },
+ {
+  "id": "9e29e607-f4aa-488f-a0d0-190d2a21880a",
+  "title": "Granada Foundation \u2014 Grants",
+  "verdict": "NO_OWN_PAGE",
+  "url": null,
+  "evidence": "Surviving row; /how-to-apply is the only grants page and identifies the single scheme once the dupe goes."
+ },
+ {
+  "id": "5cec571b-26c2-4a22-b200-f2f7c60cad75",
+  "title": "Gannochy Trust \u2014 Scotland Youth Development Grants",
+  "verdict": "NO_OWN_PAGE",
+  "url": null,
+  "evidence": "Genuinely distinct stream (11-21, rest of Scotland) but no per-stream page; /rest-of-scotland/ is 404. DEADLINE BUG: 2026-08-03 is the portal OPEN date; real deadline is 2026-10-02."
+ },
+ {
+  "id": "85f9af1e-b1cb-4796-8a7c-163aabec2037",
+  "title": "Gannochy Trust \u2014 Perth & Kinross Grants",
+  "verdict": "NO_OWN_PAGE",
+  "url": null,
+  "evidence": "Genuinely distinct stream (0-21, core+capital). No dedicated page. Deadline 2026-10-02 correct."
+ },
+ {
+  "id": "e38ac17b-5035-44b4-bfcc-faf1090d13c7",
+  "title": "SWEF Enterprise Fund",
+  "verdict": "NO_OWN_PAGE",
+  "url": null,
+  "evidence": "Real, distinct. EECF uses a legitimate borough front-door model; SWEF not currently listed at all. is_rolling=true is wrong, round is closed."
+ },
+ {
+  "id": "0d90187a-15da-4625-8739-34ae7134aecd",
+  "title": "Well-being Grants for Young People",
+  "verdict": "NO_OWN_PAGE",
+  "url": null,
+  "evidence": "Real, distinct. Only fund-specific artefact is a superseded 2025 PDF (round closed Mar 2025) - deliberately not used. is_rolling=true also wrong."
+ },
+ {
+  "id": "eec8bb3a-d6b0-4806-bf0c-47c40784f747",
+  "title": "Grants for Greater Manchester Charities",
+  "verdict": "DUPLICATE_OF:581fab6f-e73b-4584-82fd-d0ab9f355aed",
+  "url": null,
+  "evidence": "Zochonis runs ONE unnamed programme. No scheme of this name in the funder's wording. Weaker record: amount 0/0 (false \u00a30), sectors empty, url unchecked."
+ },
+ {
+  "id": "581fab6f-e73b-4584-82fd-d0ab9f355aed",
+  "title": "Zochonis Charitable Trust \u2014 Grants",
+  "verdict": "OWN_PAGE",
+  "url": "https://www.zochonischaritabletrust.com/how-to-apply/",
+  "evidence": "Keeper. URL stops being ambiguous once the dupe goes. NOTE source is admin:gap-audit-2026-07-01 = the re-enrich trap."
+ },
+ {
+  "id": "6a57acbc-0c38-45f4-ad35-17a79c059f5b",
+  "title": "Cash for Kids - General Grant",
+  "verdict": "NO_OWN_PAGE",
+  "url": null,
+  "evidence": "No /grants/general/ page (404); General exists only as per-region PDFs. The shared /grants/ hub is genuinely this row's correct page."
+ },
+ {
+  "id": "91737208-0bd3-45c4-8866-ec6256e85a58",
+  "title": "Cash for Kids - Cost of Living Grants",
+  "verdict": "OWN_PAGE",
+  "url": "https://cashforkids.org.uk/grants/cost-of-living/",
+  "evidence": "Distinct named programme, own page + eligibility subpage. Not discontinued. AMOUNT BUG: row says \u00a32,000-\u00a35,000; fund is \u00a350 per child per household."
+ },
+ {
+  "id": "37a8f875-7834-495f-8e14-a0fade147ebf",
+  "title": "Ufi VocTech Trust",
+  "verdict": "OWN_PAGE",
+  "url": "https://ufi.co.uk/grant-funding/",
+  "evidence": "Funder-level hub. '\u00a310k to \u00a3250k' exactly matches the row. Current /apply/ 301s to the homepage."
+ },
+ {
+  "id": "f2a00b69-693f-490d-80e3-51547c177655",
+  "title": "Ufi VocTech Trust \u2014 Seedbed",
+  "verdict": "CLOSED",
+  "url": null,
+  "evidence": "No Ufi fund called 'Seedbed'. Row describes VocTech Seed, retired (301 to VocTech Activate). Activate itself: 'Applications are currently closed', \u00a330k-\u00a360k not \u00a310k-50k."
+ },
+ {
+  "id": "da45f5fc-31ff-4a5d-9fd9-9821c65b46d7",
+  "title": "Allen Lane Foundation \u2014 Older People",
+  "verdict": "OWN_PAGE",
+  "url": "https://allenlane.org.uk/older-people/",
+  "evidence": "One of seven named programmes, own nav-linked page. NOTE stored description is wrong (says arts in care settings; actually befriending/handyman/transport)"
+ },
+ {
+  "id": "6af68514-45b9-4a2c-9fc3-e58402c2eccc",
+  "title": "Allen Lane Foundation",
+  "verdict": "OWN_PAGE",
+  "url": "https://allenlane.org.uk/applying-for-funding/",
+  "evidence": "Foundation-level front door; canonical resolved target of the old /apply"
+ },
+ {
+  "id": "55d3592a-1a6b-4495-9f55-e772f1857d60",
+  "title": "Black Seed VC",
+  "verdict": "OWN_PAGE",
+  "url": "https://www.blackseedvc.co.uk/fund",
+  "evidence": "'Our Fund | Black Seed VC'; \u00a3100k-\u00a3400k. Row to KEEP."
+ },
+ {
+  "id": "c55985ea-2ad1-4214-84ae-420ead940bb0",
+  "title": "Black Seed Investment Fund",
+  "verdict": "DUPLICATE_OF:55d3592a-1a6b-4495-9f55-e772f1857d60",
+  "url": null,
+  "evidence": "Same entity/figures/gate. No fund of this name exists on the site; title invented."
+ },
+ {
+  "id": "583f0378-26e6-4abe-886c-0686bd8b9d2b",
+  "title": "Social Investment Business \u2014 Resilience Fund",
+  "verdict": "NO_OWN_PAGE",
+  "url": null,
+  "evidence": "NO SIB fund by this name. Sitemap has only Energy Resilience Fund (open) and Resilience and Recovery Loan Fund (closed 2021). Row text matches neither. Needs retitle-or-archive."
+ },
+ {
+  "id": "7d46d20f-6ce6-498b-a6f3-77758a2414d7",
+  "title": "Social Investment Business \u2014 Growth Fund",
+  "verdict": "CLOSED",
+  "url": null,
+  "evidence": "Misattributed: Growth Fund was Access's programme (\u00a348.6m, 2016-2023), not SIB's. Closed. No such page on sibgroup.org.uk."
+ },
+ {
+  "id": "473f6c49-7e33-42b3-a2e3-70105208082f",
+  "title": "Football Foundation - Facilities Grants",
+  "verdict": "NO_OWN_PAGE",
+  "url": null,
+  "evidence": "No such programme. Umbrella label over ~18 separately named FF grants, each with its own page. Current URL is the bare homepage; /looking-for-funding (200) would be better but still covers all funds."
+ },
+ {
+  "id": "5ed5ccdf-f551-4f87-ae8a-514f843ac3c2",
+  "title": "Football Foundation - Grass Pitch Maintenance Fund",
+  "verdict": "OWN_PAGE",
+  "url": "https://footballfoundation.org.uk/grant/grass-pitch-maintenance-fund",
+  "evidence": "H1 exactly 'Grass Pitch Maintenance Fund'; six-year tapered grants, open. Distinct from the machinery grant."
+ },
+ {
+  "id": "73f90eb8-c0cb-4cf5-b11e-81d4601f81fa",
+  "title": "BBC Children in Need Small Grants",
+  "verdict": "CLOSED",
+  "url": null,
+  "evidence": "Funder FAQ verbatim: 'Our Small and Main grants programmes closed in 2021.' Slug 404s. Superseded by Core Costs / Project Costs."
+ },
+ {
+  "id": "0d061c73-9285-4445-a242-6425c7a89995",
+  "title": "BBC Children in Need Main Grants",
+  "verdict": "CLOSED",
+  "url": null,
+  "evidence": "Same source: closed in 2021. Slug 404s. Superseded by Core Costs / Project Costs."
+ },
+ {
+  "id": "2c129451-eb69-4670-bbd5-8a3f62ef5726",
+  "title": "Clothworkers \u2014 Small Capital Grants",
+  "verdict": "NO_OWN_PAGE",
+  "url": null,
+  "evidence": "One Open Grants Programme page covers both bands; /small-grants 404s. Legitimate shared page."
+ },
+ {
+  "id": "d679e8d8-0c17-4c9f-aec9-2464bbb2ec9d",
+  "title": "Clothworkers \u2014 Large Capital Grants",
+  "verdict": "NO_OWN_PAGE",
+  "url": null,
+  "evidence": "Same single page. Bands differ materially (one-stage vs two-stage) so not duplicates, but no per-band page exists."
+ },
+ {
+  "id": "550e7273-d37c-4307-8afe-dcf45b2ec5ba",
+  "title": "Horizon Europe \u2014 Cluster 3",
+  "verdict": "OWN_PAGE",
+  "url": "https://research-and-innovation.ec.europa.eu/funding/funding-opportunities/funding-programmes-and-open-calls/horizon-europe/cluster-3-civil-security-society_en",
+  "evidence": "EC child page 'Cluster 3: Civil security for society'"
+ },
+ {
+  "id": "af59412f-f54b-4909-a113-7cc5ae92657f",
+  "title": "Horizon Europe \u2014 Cluster 2",
+  "verdict": "OWN_PAGE",
+  "url": "https://research-and-innovation.ec.europa.eu/funding/funding-opportunities/funding-programmes-and-open-calls/horizon-europe/cluster-2-culture-creativity-and-inclusive-society_en",
+  "evidence": "EC child page 'Cluster 2: Culture, Creativity and Inclusive society'"
+ },
+ {
+  "id": "c95b14e4-f4a1-4fed-aa6b-6bc3fe996d91",
+  "title": "Jack Petchey Achievement Awards",
+  "verdict": "OWN_PAGE",
+  "url": "https://www.jackpetcheyfoundation.org.uk/opportunities/grant-programmes/achievement-awards/",
+  "evidence": "'Achievement Award Scheme'; \u00a3300 per winner, up to \u00a36,400/yr per org"
+ },
+ {
+  "id": "6e7e1ce3-5e49-4bc4-95a2-d0615ee943ef",
+  "title": "Jack Petchey - Educational Visit Grants",
+  "verdict": "OWN_PAGE",
+  "url": "https://www.jackpetcheyfoundation.org.uk/opportunities/grant-programmes/educational-visits/",
+  "evidence": "'Educational Visits and Learning Experiences Grant'; max \u00a31,200/application"
+ },
+ {
+  "id": "1a581b72-7c47-4707-8cd9-4ad4df9f1b59",
+  "title": "Central Fund",
+  "verdict": "NO_OWN_PAGE",
+  "url": null,
+  "evidence": "Suffolk CF general front door; exists only as a block on /current-grants/. No dedicated page (404)."
+ },
+ {
+  "id": "d35b05bd-bbb1-4826-aa8f-6dca2739591b",
+  "title": "Suffolk Giving Fund",
+  "verdict": "OWN_PAGE",
+  "url": "https://suffolkcf.org.uk/grants/suffolk-giving-fund-and-private-funds/",
+  "evidence": "'Suffolk Giving Fund and private funds'; max \u00a33,000, deadline 10 Aug"
+ }
+]
