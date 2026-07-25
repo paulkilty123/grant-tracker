@@ -28,6 +28,7 @@ import {
   FilePenLine,
   BarChart3,
   Lightbulb,
+  Library,
 } from 'lucide-react'
 
 interface Props {
@@ -83,10 +84,16 @@ const MAIN_NAV = [
 // in case anything still links to it; full removal is a follow-up.
 const ADMIN_NAV = [
   // Review queue sits first: it is the only admin surface with work actually
-  // waiting on a human. Grant Manager stays alongside during the transition —
-  // the new queue replaces its Needs Review / Tag Review / Captured tabs, but
-  // its other eight tabs have no home until the Catalogue view exists.
+  // waiting on a human. Catalogue is next, because it answers the other
+  // question — "where is that grant?" — which the queue structurally cannot,
+  // since it only ever holds rows awaiting a decision.
+  //
+  // Grant Manager stays during the transition. Its Needs Review / Tag Review /
+  // Captured tabs are replaced by the queue and its All grants / URL Issues /
+  // By Category tabs by the Catalogue, but Add Funder, Saved for Later and the
+  // bulk validation runners still have no other home.
   { href: '/dashboard/admin/review',       label: 'Review queue',        Icon: Inbox         },
+  { href: '/dashboard/admin/grants',       label: 'Catalogue',           Icon: Library       },
   { href: '/dashboard/admin',              label: 'Grant Health',        Icon: Activity      },
   { href: '/dashboard/admin/urls',         label: 'Grant Manager',       Icon: ClipboardList },
   { href: '/dashboard/admin/quality',      label: 'Tagging Quality',     Icon: BarChart3     },

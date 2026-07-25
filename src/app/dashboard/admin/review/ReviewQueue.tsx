@@ -488,9 +488,14 @@ function Row({
 
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 14px', alignItems: 'baseline', justifyContent: 'space-between' }}>
           <div style={{ minWidth: 0 }}>
-            <div style={{ ...display, fontWeight: 500, fontSize: 15, letterSpacing: '-0.01em', color: 'var(--color-text-primary)' }}>
+            {/* Straight through to the full record. The queue deliberately shows
+                only what is needed to decide; everything else lives on detail. */}
+            <a
+              href={`/dashboard/admin/grants/${item.id}`}
+              style={{ ...display, fontWeight: 500, fontSize: 15, letterSpacing: '-0.01em', color: 'var(--color-text-primary)', textDecoration: 'none' }}
+            >
               {item.title}
-            </div>
+            </a>
             <div style={{ color: 'var(--color-text-secondary)', fontSize: 12.5 }}>{item.funder}</div>
           </div>
           {item.isActive
