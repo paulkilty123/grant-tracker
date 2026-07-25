@@ -18,6 +18,7 @@ import {
   User,
   Activity,
   ClipboardList,
+  Inbox,
   Menu,
   X,
   Users,
@@ -81,6 +82,11 @@ const MAIN_NAV = [
 // The page itself stays accessible at /dashboard/admin/intelligence for now
 // in case anything still links to it; full removal is a follow-up.
 const ADMIN_NAV = [
+  // Review queue sits first: it is the only admin surface with work actually
+  // waiting on a human. Grant Manager stays alongside during the transition —
+  // the new queue replaces its Needs Review / Tag Review / Captured tabs, but
+  // its other eight tabs have no home until the Catalogue view exists.
+  { href: '/dashboard/admin/review',       label: 'Review queue',        Icon: Inbox         },
   { href: '/dashboard/admin',              label: 'Grant Health',        Icon: Activity      },
   { href: '/dashboard/admin/urls',         label: 'Grant Manager',       Icon: ClipboardList },
   { href: '/dashboard/admin/quality',      label: 'Tagging Quality',     Icon: BarChart3     },
