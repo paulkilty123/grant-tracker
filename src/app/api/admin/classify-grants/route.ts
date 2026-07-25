@@ -15,7 +15,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
-import { classifyBatch, validate, ensureExplicitStructures, type GrantInput } from '@/lib/classify'
+import { classifyBatch, validate, buildClassifyPatch, type GrantInput } from '@/lib/classify'
 import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
 import { mergeGrantUpdate } from '@/lib/grant-merge'
 
@@ -63,27 +63,19 @@ async function classifyOnce(supabase: SupabaseClient<any>, limit: number): Promi
     const updates = grantsRaw
       .filter(g => byId[g.id])
       .map(g => {
-        const r = byId[g.id]
-        const patch: Record<string, unknown> = {
-          impact_sectors: r.impact_sectors,
-          funding_type:   r.funding_type,
-          niche_tags:     r.niche_tags,
-        }
-        // Deterministic CIC/structure guard — enforces explicit-eligibility the
-        // model under-applies. Source = who_can_apply + description.
-        const fbLoop = g.funder_brief as Record<string, unknown> | null
-        const srcLoop = `${typeof fbLoop?.who_can_apply === 'string' ? fbLoop.who_can_apply : ''} ${g.description ?? ''}`
-        const structsLoop = ensureExplicitStructures(r.eligible_structures, srcLoop)
-        if (structsLoop.length > 0)             patch.eligible_structures = structsLoop
-        if (r.target_beneficiaries.length > 0)  patch.target_beneficiaries = r.target_beneficiaries
-
-        // v3 — per-field citations stamped into field_provenance by the merger.
-        // Only include citations for fields actually being written.
-        const citations: Record<string, { snippet: string; confidence: 'high' | 'med' | 'low'; reason?: string }> = {}
-        if (r._citations?.impact_sectors)       citations.impact_sectors       = r._citations.impact_sectors
-        if (r._citations?.funding_type)         citations.funding_type         = r._citations.funding_type
-        if (r._citations?.eligible_structures && r.eligible_structures.length > 0)   citations.eligible_structures  = r._citations.eligible_structures
-        if (r._citations?.target_beneficiaries && r.target_beneficiaries.length > 0) citations.target_beneficiaries = r._citations.target_beneficiaries
+        // Shared post-processing (src/lib/classify.ts). Batch mode has no
+        // explicit grant ids, so it is never a human-requested re-classify:
+        // honourEmpty stays false. That is a deliberate narrowing — this mode
+        // previously wrote niche_tags unconditionally, so an empty array from
+        // Haiku cleared them. niche_tags feeds the matcher's specialism check
+        // and excluded_niche_tags veto, and it is NOT in TRACKED_FIELDS, so it
+        // has no trust-ladder protection to fall back on.
+        const { patch, citations } = buildClassifyPatch({
+          result:      byId[g.id],
+          description: g.description as string | null,
+          funderBrief: g.funder_brief as Record<string, unknown> | null,
+          honourEmpty: false,
+        })
 
         return mergeGrantUpdate({
           id:        g.id,
@@ -337,35 +329,25 @@ export async function POST(req: NextRequest) {
       const updates = chunk
         .filter(g => byId[g.id])
         .map(g => {
-          const r = byId[g.id]
-          const patch: Record<string, unknown> = {
-            impact_sectors: r.impact_sectors,
-            funding_type:   r.funding_type,
-            niche_tags:     r.niche_tags,
-          }
-          // Deterministic CIC/structure guard — enforces explicit-eligibility
-          // the model under-applies (source = who_can_apply + description).
-          const fbChunk = g.funder_brief as Record<string, unknown> | null
-          const srcChunk = `${typeof fbChunk?.who_can_apply === 'string' ? fbChunk.who_can_apply : ''} ${g.description ?? ''}`
-          const structsChunk = ensureExplicitStructures(r.eligible_structures, srcChunk)
-
-          // eligible_structures: NEVER write [] — re-classify must not wipe
-          // structures. Haiku is conservative on this field and returns [] for
-          // many funders; honouring empty in ID mode silently wiped structures
-          // (incl. catalogue-wide on automated refreshes, and 3 rows in the
-          // 2026-06-17 smoke test). Clearing structures is a manual admin action,
-          // never an automated classify side-effect.
-          if (structsChunk.length > 0) {
-            patch.eligible_structures = structsChunk
-          }
-          // target_beneficiaries: Haiku returns these reliably, so honour-empty
-          // in explicit-ID mode is retained (a re-classify can legitimately
-          // correct them); automated chains pass preserve_empty to opt out.
+          // Shared post-processing (src/lib/classify.ts). eligible_structures
+          // never honours empty on any path — see buildClassifyPatch for the
+          // catalogue-wide wipe that rule exists to prevent.
+          //
+          // honourEmpty applies to target_beneficiaries and niche_tags: true
+          // only for an explicit-ID re-classify a human asked for, which can
+          // legitimately correct tags down to none. Automated chains pass
+          // preserve_empty and so opt out.
           const honourEmpty = grantIds.length > 0 && !preserveEmpty
-          if (honourEmpty || r.target_beneficiaries.length > 0) {
-            patch.target_beneficiaries = r.target_beneficiaries
-          }
-          return mergeGrantUpdate({ id: g.id, fields: patch, source: PROVENANCE_SOURCE, pinned: false, db: supabase })
+          const { patch, citations } = buildClassifyPatch({
+            result:      byId[g.id],
+            description: g.description as string | null,
+            funderBrief: g.funder_brief as Record<string, unknown> | null,
+            honourEmpty,
+          })
+          return mergeGrantUpdate({
+            id: g.id, fields: patch, source: PROVENANCE_SOURCE, pinned: false, db: supabase,
+            citations: Object.keys(citations).length > 0 ? citations : undefined,
+          })
             .then(() => ({ ok: true as const }))
             .catch(err => { console.error('[classify-grants] write failed:', err); return { ok: false as const } })
         })

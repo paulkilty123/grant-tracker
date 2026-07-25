@@ -584,14 +584,99 @@ export function ensureExplicitStructures(
   return out
 }
 
+// ── Shared post-processing: model result → DB patch ──────────────────────────
+/**
+ * Turns a validated classification into the exact { patch, citations } to hand
+ * mergeGrantUpdate.
+ *
+ * WHY THIS EXISTS
+ *
+ * There were three near-identical copies of this logic that had drifted apart:
+ *   1. classifyUnclassified() below — the path cron/crawl-grants calls directly
+ *   2. api/admin/classify-grants loop mode
+ *   3. api/admin/classify-grants chunk mode
+ *
+ * Copies 2 and 3 ran the ensureExplicitStructures backstop. Copy 1 did NOT — so
+ * rows classified by the twice-weekly crawl (60 per batch x 9 batches x 2 runs =
+ * ~1,080 slots/week) got measurably worse structure tagging than rows classified
+ * by the daily queue chain, purely as an accident of which caller reached them
+ * first. "Eligibility structures not tagged properly / not all tagged" is one of
+ * the three error classes Paul reports hitting most in Needs Review, and this
+ * divergence is a direct cause.
+ *
+ * Copy 1 also silently coerced an empty target_beneficiaries to
+ * ['general_public'], which is the mechanism behind the general_public skew
+ * visible on the tagging-quality dashboard: "we could not tell" was being
+ * recorded as a positive claim about who the fund serves.
+ *
+ * Unified 2026-07-25 by taking the SAFEST behaviour of the three.
+ *
+ * FIELD RULES
+ *
+ * - impact_sectors, funding_type: always written.
+ * - eligible_structures: run through ensureExplicitStructures (add-only
+ *   deterministic backstop), then written ONLY if non-empty. Empty is NEVER
+ *   honoured, on any path. Haiku is conservative here and returns [] for many
+ *   funders; honouring that once wiped structures catalogue-wide. Clearing
+ *   structures stays a manual admin action.
+ * - target_beneficiaries, niche_tags: written if non-empty. Empty is honoured
+ *   only when `honourEmpty` is true, which callers set for an explicit-ID
+ *   re-classify a human asked for. Automated chains leave it false so one Haiku
+ *   miss cannot wipe good tags. No general_public coercion.
+ * - citations: only attached for fields actually being written.
+ */
+export function buildClassifyPatch(input: {
+  result:      ReturnType<typeof validate>
+  description: string | null | undefined
+  funderBrief: Record<string, unknown> | null | undefined
+  /** Honour an empty array as a deliberate clear for beneficiaries / niche_tags. */
+  honourEmpty?: boolean
+}): {
+  patch:     Record<string, unknown>
+  citations: Record<string, ClassificationCitation>
+} {
+  const { result: r, description, funderBrief, honourEmpty = false } = input
+
+  const patch: Record<string, unknown> = {
+    impact_sectors: r.impact_sectors,
+    funding_type:   r.funding_type,
+  }
+
+  // Structure backstop. Source text is who_can_apply + description, matching
+  // what the classify-grants route has always used.
+  const whoCanApply = typeof funderBrief?.who_can_apply === 'string' ? funderBrief.who_can_apply : ''
+  const structureSource = `${whoCanApply} ${description ?? ''}`
+  const structures = ensureExplicitStructures(r.eligible_structures, structureSource)
+  if (structures.length > 0) patch.eligible_structures = structures
+
+  if (honourEmpty || r.target_beneficiaries.length > 0) {
+    patch.target_beneficiaries = r.target_beneficiaries
+  }
+  if (honourEmpty || r.niche_tags.length > 0) {
+    patch.niche_tags = r.niche_tags
+  }
+
+  const citations: Record<string, ClassificationCitation> = {}
+  if (r._citations?.impact_sectors) citations.impact_sectors = r._citations.impact_sectors
+  if (r._citations?.funding_type)   citations.funding_type   = r._citations.funding_type
+  if (r._citations?.eligible_structures && 'eligible_structures' in patch) {
+    citations.eligible_structures = r._citations.eligible_structures
+  }
+  if (r._citations?.target_beneficiaries && 'target_beneficiaries' in patch) {
+    citations.target_beneficiaries = r._citations.target_beneficiaries
+  }
+
+  return { patch, citations }
+}
+
 // ── Classify up to `limit` unclassified active grants ─────────────────────────
 // Returns { classified, failed }. Safe to call with limit=0 (no-op).
 export async function classifyUnclassified(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   supabase: SupabaseClient<any>,
   limit = 60,
-): Promise<{ classified: number; failed: number }> {
-  if (limit <= 0) return { classified: 0, failed: 0 }
+): Promise<{ classified: number; failed: number; allRejected: number }> {
+  if (limit <= 0) return { classified: 0, failed: 0, allRejected: 0 }
 
   // Filter for unclassified at the DB layer — older unclassified rows would
   // otherwise be permanently skipped if the newest `limit*3` rows happen to be
@@ -604,15 +689,21 @@ export async function classifyUnclassified(
     .order('first_seen_at', { ascending: false })
     .limit(limit)
 
-  if (error || !grantsRaw) return { classified: 0, failed: 0 }
+  // A DB error used to be indistinguishable from "nothing to classify" — both
+  // returned zeros silently, so a broken query looked like a clean run.
+  if (error) {
+    console.error('[classifyUnclassified] candidate fetch failed:', error.message)
+    return { classified: 0, failed: 0, allRejected: 0 }
+  }
 
-  const unclassified = grantsRaw
+  const unclassified = grantsRaw ?? []
 
-  if (unclassified.length === 0) return { classified: 0, failed: 0 }
+  if (unclassified.length === 0) return { classified: 0, failed: 0, allRejected: 0 }
 
   const BATCH_SIZE = 20
-  let classified = 0
-  let failed = 0
+  let classified  = 0
+  let failed      = 0
+  let allRejected = 0
 
   for (let i = 0; i < unclassified.length; i += BATCH_SIZE) {
     const batch = unclassified.slice(i, i + BATCH_SIZE)
@@ -637,28 +728,22 @@ export async function classifyUnclassified(
       const updates = batch
         .filter(g => byId[g.id])
         .map(async g => {
-          const r = byId[g.id]
-          const effectiveBeneficiaries = r.target_beneficiaries.length > 0
-            ? r.target_beneficiaries
-            : ['general_public']
-          const patch: Record<string, unknown> = {
-            impact_sectors:       r.impact_sectors,
-            funding_type:         r.funding_type,
-            target_beneficiaries: effectiveBeneficiaries,
-          }
-          if (r.eligible_structures.length > 0) patch.eligible_structures = r.eligible_structures
-          if (r.niche_tags.length > 0)          patch.niche_tags          = r.niche_tags
-
-          // v3 — per-field citations through the merger (Phase A miss: this
-          // path previously did a direct supabase.update bypassing provenance).
-          const citations: Record<string, { snippet: string; confidence: 'high' | 'med' | 'low'; reason?: string }> = {}
-          if (r._citations?.impact_sectors)       citations.impact_sectors       = r._citations.impact_sectors
-          if (r._citations?.funding_type)         citations.funding_type         = r._citations.funding_type
-          if (r._citations?.eligible_structures && r.eligible_structures.length > 0)   citations.eligible_structures  = r._citations.eligible_structures
-          if (r._citations?.target_beneficiaries && effectiveBeneficiaries.length > 0) citations.target_beneficiaries = r._citations.target_beneficiaries
+          // Shared post-processing — same structure backstop and same field
+          // rules the classify-grants route uses. This path used to build its
+          // own patch WITHOUT ensureExplicitStructures, and coerced an empty
+          // target_beneficiaries to ['general_public']. See buildClassifyPatch.
+          //
+          // honourEmpty is false: this is an automated path (cron/crawl-grants),
+          // so a Haiku miss must not wipe existing tags.
+          const { patch, citations } = buildClassifyPatch({
+            result:      byId[g.id],
+            description: g.description as string | null,
+            funderBrief: g.funder_brief as Record<string, unknown> | null,
+            honourEmpty: false,
+          })
 
           try {
-            await mergeGrantUpdate({
+            const res = await mergeGrantUpdate({
               id:        g.id,
               fields:    patch,
               source:    CLASSIFIER_PROVENANCE_SOURCE,
@@ -666,21 +751,37 @@ export async function classifyUnclassified(
               citations: Object.keys(citations).length > 0 ? citations : undefined,
               db:        supabase,
             })
-            return { ok: true as const }
+            // A write can be fully rejected by the trust ladder (e.g. every
+            // field admin-pinned). That is not a failure, but counting it as a
+            // success overstates what the run achieved, so report it separately.
+            if (res.applied.length === 0 && res.rejected.length > 0) {
+              return { ok: true as const, rejected: true as const }
+            }
+            return { ok: true as const, rejected: false as const }
           } catch (err) {
             console.error('[classifyUnclassified] merge failed:', err)
-            return { ok: false as const }
+            return { ok: false as const, rejected: false as const }
           }
         })
 
       const results2 = await Promise.all(updates)
       const errs = results2.filter(r => !r.ok)
-      classified += batch.length - errs.length
-      failed     += errs.length
-    } catch {
+      classified   += batch.length - errs.length
+      failed       += errs.length
+      allRejected  += results2.filter(r => r.ok && r.rejected).length
+    } catch (err) {
+      // Was a bare `catch { failed += batch.length }`. An LLM outage, a
+      // truncated response and a JSON parse failure were all indistinguishable
+      // and completely unlogged, so the classifier could be failing every batch
+      // with nothing to show it but a rising `failed` count nobody reads.
+      console.error('[classifyUnclassified] batch failed:', err instanceof Error ? err.message : err)
       failed += batch.length
     }
   }
 
-  return { classified, failed }
+  if (allRejected > 0) {
+    console.log(`[classifyUnclassified] ${allRejected} row(s) had every field rejected by the trust ladder (likely admin-pinned)`)
+  }
+
+  return { classified, failed, allRejected }
 }
