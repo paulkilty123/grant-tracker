@@ -113,12 +113,20 @@ async function sweepOne(
   }
 
   // Rule 4 — explicit closed status + no future cycle → archive (preserve row)
+  //
+  // 2026-07-25: this used to pass url_status:'dead' to reach the 'archived'
+  // state, because transitionPipelineState only returns 'archived' for
+  // is_active=false + url_status='dead'. But the URL is fine here — it's the
+  // funding round that closed. Asserting 'dead' was a factual lie that also
+  // poisoned reenrich-stale's dead-URL intervention path. Pass pipeline_state
+  // explicitly instead (the merger honours an explicit override) and leave
+  // url_status alone.
   if (openStatus === 'closed') {
     const next = cycle ? nextCycleDate(cycle, todayISO) : null
     if (!next) {
       try {
         await mergeGrantUpdate({
-          id, fields: { is_active: false, url_status: 'dead' },
+          id, fields: { is_active: false, pipeline_state: 'archived' },
           source: PROVENANCE_SOURCE, pinned: false, db,
         })
         return { id, action: 'archived' }
@@ -129,12 +137,22 @@ async function sweepOne(
   }
 
   // Rule 5 — past deadline, no cycle, no rolling → reject with reason
+  //
+  // 2026-07-25: this used a raw .update() that set pipeline_state='rejected'
+  // WITHOUT is_active=false, so a row with a long-past deadline was flagged
+  // rejected while remaining fully visible to users. Now goes through the
+  // merger and deactivates.
   if (deadline && deadline < todayISO) {
     try {
-      await db
-        .from('scraped_grants')
-        .update({ pipeline_state: 'rejected', rejection_reason: 'historical_deadline' })
-        .eq('id', id)
+      await mergeGrantUpdate({
+        id,
+        fields: {
+          is_active:        false,
+          pipeline_state:   'rejected',
+          rejection_reason: 'historical_deadline',
+        },
+        source: PROVENANCE_SOURCE, pinned: false, db,
+      })
       return { id, action: 'rejected', reason: 'historical_deadline' }
     } catch (err) {
       return { id, action: 'rejected', error: err instanceof Error ? err.message : String(err) }
