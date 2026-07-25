@@ -259,8 +259,10 @@ export function ReviewQueue({ items }: { items: QueueItem[] }) {
       <h1 style={{ ...display, fontSize: 25, fontWeight: 500, letterSpacing: '-0.02em', margin: '0 0 5px' }}>
         Review queue
       </h1>
-      <p style={{ color: 'var(--color-text-secondary)', fontSize: 13.5, margin: '0 0 22px', maxWidth: '64ch' }}>
-        Ordered by how much it needs you. Every row says why it stopped and shows the evidence behind it.
+      <p style={{ color: 'var(--color-text-secondary)', fontSize: 13.5, lineHeight: 1.55, margin: '0 0 22px', maxWidth: '70ch' }}>
+        Start at the top. Those are the ones closest to finished, so a few minutes here clears real
+        rows. Each one tells you what it needs and carries the button that does it, so you never
+        have to work out the next step yourself.
       </p>
 
       {/* The honest count. The old screen's header asserted these were not
@@ -345,6 +347,81 @@ function Chip({ active, onClick, label, n }: { active: boolean; onClick: () => v
   )
 }
 
+// Plain English for the field names. The reviewer is deciding about eligibility,
+// not about a column called eligible_structures.
+const FIELD_LABEL: Record<string, string> = {
+  eligible_structures:  'Eligibility',
+  impact_sectors:       'Sectors',
+  target_beneficiaries: 'Who it helps',
+  amount_min:           'Smallest award',
+  amount_max:           'Largest award',
+  deadline:             'Deadline',
+  funder_brief:         'Summary',
+}
+const fieldLabel = (f: string) => FIELD_LABEL[f] ?? f.replace(/_/g, ' ')
+
+type Ask = { line: string; primary: 'publish' | 'reread' | 'fixlink'; label: string }
+
+/**
+ * The one sentence that tells the reviewer what they are being asked, and the
+ * single button that answers it.
+ *
+ * This exists because the first two versions of this page listed what was WRONG
+ * with a row and left the reviewer to work out what to DO about it. "Page
+ * unreadable · Link not verified · No amount" is a diagnosis, and a diagnosis is
+ * not an instruction. Every row now names its own next action.
+ */
+function askFor(item: QueueItem): Ask {
+  const has = (c: string) => item.reasons.some(r => r.code === c)
+  // 141 of 172 rows in this queue are already live, so "Publish" is the wrong
+  // word for most of them. It is a confirmation, not a reveal.
+  const keep = item.isActive ? 'Looks right, keep it live' : 'Looks right, publish it'
+  const reread = 'Re-read the page' as const
+
+  if (has('link_dead')) return {
+    line: 'The application link is dead, so anyone who clicks through lands on nothing. Fix the link, or reject the row.',
+    primary: 'fixlink', label: 'Fix the link',
+  }
+  if (has('page_unreadable') || has('no_brief')) return {
+    line: 'The funder page could not be read, so everything below was written from memory rather than from the page itself.',
+    primary: 'reread', label: reread,
+  }
+  if (has('quarantined')) return {
+    line: 'An earlier check quarantined this row. It needs a fresh read before anything on it can be trusted.',
+    primary: 'reread', label: reread,
+  }
+  if (has('eligibility_missing')) return {
+    line: 'No eligibility is recorded, so this fund currently matches nobody. A re-read usually fills it in.',
+    primary: 'reread', label: reread,
+  }
+  if (has('deadline_passed')) return {
+    line: 'The deadline has passed. Re-read to pick up the next round, or reject it if the fund has closed for good.',
+    primary: 'reread', label: reread,
+  }
+  if (has('amount_pot_suspected')) return {
+    line: 'The amount may be the whole fund rather than what one applicant can ask for. Check the page, then keep or re-read.',
+    primary: 'reread', label: reread,
+  }
+  if (has('no_amount') || has('no_deadline') || has('amount_zero') ||
+      has('sectors_missing') || has('amount_ungrounded') || has('amount_inverted')) return {
+    line: 'Key details are missing or look wrong, so this will match poorly. A re-read is the usual fix.',
+    primary: 'reread', label: reread,
+  }
+  if (has('beneficiaries_generic_only')) return {
+    line: 'Only generic beneficiaries are tagged, which makes the match vague. A re-read often sharpens it.',
+    primary: 'reread', label: reread,
+  }
+  if (has('link_unverified')) return {
+    line: 'The link has not been checked lately. Open it to confirm it still works, then keep the row.',
+    primary: 'publish', label: keep,
+  }
+  if (item.diffs.length > 0) return {
+    line: 'A re-read changed the tagging. Keep the change, or put the old value back.',
+    primary: 'publish', label: keep,
+  }
+  return { line: 'Nothing looks wrong with this one. Give it a glance and keep it.', primary: 'publish', label: keep }
+}
+
 function Row({
   item, open, busy, busyLabel, onToggle, onPublish, onReject, onRevert,
   onReRead, onReClassify, onFixLink,
@@ -368,6 +445,14 @@ function Row({
   }, 'changed')
   const sev = SEV_STYLE[worst] ?? SEV_STYLE.changed
 
+  const ask = askFor(item)
+  const run = ask.primary === 'publish' ? onPublish : ask.primary === 'fixlink' ? onFixLink : onReRead
+  // The ask line already explains the headline problem, and the diff is shown in
+  // full below it, so repeating both as chips is noise.
+  const otherReasons = item.reasons.filter(r => r.code !== 'tags_changed')
+  const shownDiffs = item.diffs.slice(0, 2)
+  const moreDiffs = item.diffs.length - shownDiffs.length
+
   return (
     <article style={{
       background: '#fff', border: '0.5px solid var(--border-subtle)',
@@ -377,40 +462,107 @@ function Row({
       <div style={{ background: sev.edge }} />
       <div style={{ padding: '14px 17px', minWidth: 0 }}>
 
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px 14px', alignItems: 'baseline', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 14px', alignItems: 'baseline', justifyContent: 'space-between' }}>
           <div style={{ minWidth: 0 }}>
-            <button
-              onClick={onToggle}
-              style={{
-                ...display, fontWeight: 500, fontSize: 15, letterSpacing: '-0.01em',
-                background: 'none', border: 0, padding: 0, cursor: 'pointer', textAlign: 'left',
-                color: 'var(--color-text-primary)',
-              }}
-            >
+            <div style={{ ...display, fontWeight: 500, fontSize: 15, letterSpacing: '-0.01em', color: 'var(--color-text-primary)' }}>
               {item.title}
-            </button>
+            </div>
             <div style={{ color: 'var(--color-text-secondary)', fontSize: 12.5 }}>{item.funder}</div>
           </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
-            {item.isActive && <Pill bg="var(--coral-pale)" ink="var(--coral-deep)">Live to users</Pill>}
-            {!item.isActive && <Pill bg="var(--bg-pill-neutral)" ink="var(--color-text-secondary)">Held</Pill>}
-            <Pill bg="var(--cream-1)" ink="var(--color-text-secondary)" mono>{item.pipelineState}</Pill>
-          </div>
+          {item.isActive
+            ? <Pill bg="var(--coral-pale)" ink="var(--coral-deep)">Live to users</Pill>
+            : <Pill bg="var(--bg-pill-neutral)" ink="var(--color-text-secondary)">Not live</Pill>}
         </div>
 
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 11 }}>
-          {item.reasons.map(r => {
-            const s = SEV_STYLE[r.severity] ?? SEV_STYLE.changed
-            return (
-              <span key={r.code} style={{
-                fontSize: 12, borderRadius: 'var(--radius-badge, 8px)', padding: '4px 9px',
-                background: s.bg, color: s.ink, display: 'inline-flex', gap: 6, alignItems: 'baseline',
+        {/* What you are being asked. */}
+        <p style={{ fontSize: 13.5, lineHeight: 1.5, color: 'var(--color-text-primary)', margin: '11px 0 0', maxWidth: '78ch' }}>
+          {ask.line}
+        </p>
+
+        {/* The evidence for that ask, on the face of the card. "a re-read changed
+            1 field" told the reviewer nothing without saying which field. */}
+        {shownDiffs.length > 0 && (
+          <div style={{
+            marginTop: 10, border: '0.5px solid var(--border-subtle)',
+            borderRadius: 'var(--radius-input)', overflow: 'hidden',
+          }}>
+            {shownDiffs.map((d, i) => (
+              <div key={d.field} style={{
+                display: 'flex', flexWrap: 'wrap', gap: '6px 12px', alignItems: 'center',
+                padding: '9px 12px', background: 'var(--cream-1)',
+                borderTop: i === 0 ? undefined : '0.5px solid var(--border-light)',
               }}>
-                <b style={{ ...display, fontWeight: 700, fontSize: 11 }}>{r.label}</b>
-                <span style={{ opacity: 0.9 }}>{r.detail}</span>
-              </span>
-            )
-          })}
+                <span style={{ ...display, fontSize: 11.5, fontWeight: 500, minWidth: 92, color: 'var(--color-text-secondary)' }}>
+                  {fieldLabel(d.field)}
+                </span>
+                <span style={{ fontSize: 12.5, flex: '1 1 220px', display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {d.removed.length > 0 && (
+                    <span style={{ color: 'var(--coral-deep)' }}>
+                      took away <b style={{ fontWeight: 600 }}>{d.removed.join(', ')}</b>
+                    </span>
+                  )}
+                  {d.added.length > 0 && (
+                    <span style={{ color: 'var(--blue-deep)' }}>
+                      added <b style={{ fontWeight: 600 }}>{d.added.join(', ')}</b>
+                    </span>
+                  )}
+                </span>
+                <button onClick={() => onRevert(d)} disabled={busy} style={miniBtn}>
+                  Put it back
+                </button>
+              </div>
+            ))}
+            {moreDiffs > 0 && (
+              <div style={{
+                padding: '7px 12px', fontSize: 11.5, color: 'var(--color-text-tertiary)',
+                background: 'var(--cream-1)', borderTop: '0.5px solid var(--border-light)',
+              }}>
+                and {moreDiffs} more {moreDiffs === 1 ? 'change' : 'changes'} — open the details to see them
+              </div>
+            )}
+          </div>
+        )}
+
+        {otherReasons.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
+            {otherReasons.map(r => {
+              const s = SEV_STYLE[r.severity] ?? SEV_STYLE.changed
+              return (
+                <span key={r.code} style={{
+                  fontSize: 11.5, borderRadius: 'var(--radius-badge, 8px)', padding: '3px 9px',
+                  background: s.bg, color: s.ink, display: 'inline-flex', gap: 6, alignItems: 'baseline',
+                }}>
+                  <b style={{ ...display, fontWeight: 700, fontSize: 10.5 }}>{r.label}</b>
+                  <span style={{ opacity: 0.9 }}>{r.detail}</span>
+                </span>
+              )
+            })}
+          </div>
+        )}
+
+        {/* Always visible. The previous version put every action behind an
+            un-signposted click on the title, so the page read as a list of
+            problems with no way to act on any of them. */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', marginTop: 13 }}>
+          <button onClick={run} disabled={busy} style={primaryBtn}>
+            {busy ? `${busyLabel ?? 'Working'}…` : ask.label}
+          </button>
+          {ask.primary !== 'reread' && (
+            <button onClick={onReRead} disabled={busy} style={secondaryBtn}>Re-read the page</button>
+          )}
+          {ask.primary !== 'fixlink' && (
+            <button onClick={onFixLink} disabled={busy} style={secondaryBtn}>Fix the link</button>
+          )}
+          {item.applyUrl && (
+            <a href={item.applyUrl} target="_blank" rel="noopener noreferrer" style={secondaryBtn}>
+              Open funder page
+            </a>
+          )}
+          <span style={{ flex: '1 1 auto' }} />
+          <button onClick={onToggle} style={ghostBtn} aria-expanded={open}>
+            {open ? 'Hide details' : 'Details'} {open ? '⌃' : '⌄'}
+          </button>
+          <button onClick={onReject} disabled={busy} style={dangerBtn}>Reject</button>
         </div>
 
         {open && (
@@ -420,7 +572,7 @@ function Row({
           }}>
             {item.diffs.length > 0 && (
               <div>
-                <SectionLabel>What the re-read changed</SectionLabel>
+                <SectionLabel>Every change from the last re-read</SectionLabel>
                 <div style={{ border: '0.5px solid var(--border-subtle)', borderRadius: 'var(--radius-input)', overflow: 'hidden' }}>
                   {item.diffs.map((d, i) => (
                     <div key={d.field} style={{
@@ -428,11 +580,11 @@ function Row({
                       padding: '9px 12px', background: '#fff',
                       borderTop: i === 0 ? undefined : '0.5px solid var(--border-light)',
                     }}>
-                      <code style={{ fontSize: 11.5, color: 'var(--color-text-secondary)' }}>{d.field}</code>
+                      <span style={{ ...display, fontSize: 11.5, color: 'var(--color-text-secondary)' }}>{fieldLabel(d.field)}</span>
                       <div style={{ fontSize: 12.5, display: 'flex', flexWrap: 'wrap', gap: 7 }}>
                         {d.removed.length > 0 && (
                           <span style={{ color: 'var(--coral-deep)', fontWeight: 600 }}>
-                            removed: {d.removed.join(', ')}
+                            took away: {d.removed.join(', ')}
                           </span>
                         )}
                         {d.added.length > 0 && (
@@ -446,22 +598,22 @@ function Row({
                         disabled={busy}
                         style={miniBtn}
                       >
-                        Revert
+                        Put it back
                       </button>
                     </div>
                   ))}
                 </div>
                 <p style={{ fontSize: 11.5, color: 'var(--color-text-tertiary)', margin: '7px 0 0' }}>
-                  Publishing accepts these as they stand and writes nothing, so they can still be
-                  improved automatically. Reverting is recorded as your decision and will not be
-                  overwritten.
+                  Keeping these accepts them as they stand and writes nothing, so they can still be
+                  improved automatically later. Putting one back is recorded as your decision and
+                  will not be overwritten.
                 </p>
               </div>
             )}
 
             {item.brief && (
               <div>
-                <SectionLabel>Evidence</SectionLabel>
+                <SectionLabel>Evidence from the funder page</SectionLabel>
                 {item.brief.source === 'knowledge_fallback' && (
                   <p style={{
                     fontSize: 12.5, background: 'var(--coral-pale)', color: 'var(--coral-deep)',
@@ -498,42 +650,23 @@ function Row({
             )}
 
             <div>
-              <SectionLabel>Current values</SectionLabel>
+              <SectionLabel>What is recorded now</SectionLabel>
               <div style={{ fontSize: 12.5, display: 'grid', gap: 4 }}>
-                <Val k="amount">{gbp(item.values.amountMin)} – {gbp(item.values.amountMax)}</Val>
-                <Val k="deadline">{item.values.deadline ?? (item.values.isRolling ? 'Rolling' : '— none —')}</Val>
-                <Val k="eligibility">{item.values.structures.join(', ') || '— none —'}</Val>
-                <Val k="sectors">{item.values.sectors.join(', ') || '— none —'}</Val>
+                <Val k="Amount">{gbp(item.values.amountMin)} to {gbp(item.values.amountMax)}</Val>
+                <Val k="Deadline">{item.values.deadline ?? (item.values.isRolling ? 'Rolling' : 'none')}</Val>
+                <Val k="Eligibility">{item.values.structures.join(', ') || 'none'}</Val>
+                <Val k="Sectors">{item.values.sectors.join(', ') || 'none'}</Val>
               </div>
             </div>
 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
-              {/* Repair first. For a row that cannot be judged yet, publishing is
-                  the wrong move and should not be the most prominent button. */}
-              <button onClick={onReRead} disabled={busy} style={item.readiness >= 2 ? primaryBtn : secondaryBtn}>
-                {busy && busyLabel ? `${busyLabel}…` : 'Re-read page'}
+              <button onClick={onReClassify} disabled={busy} style={secondaryBtn}>
+                Re-tag from the text already stored
               </button>
-              <button onClick={onFixLink} disabled={busy} style={secondaryBtn}>Fix link</button>
-              <button onClick={onReClassify} disabled={busy} style={secondaryBtn}>Re-tag</button>
-              {item.applyUrl && (
-                <a href={item.applyUrl} target="_blank" rel="noopener noreferrer" style={secondaryBtn}>
-                  Open funder page
-                </a>
-              )}
-              <span style={{ flex: '1 1 auto' }} />
-              <button onClick={onPublish} disabled={busy} style={item.readiness >= 2 ? secondaryBtn : primaryBtn}>
-                {item.isActive ? 'Confirm & keep live' : 'Publish'}
-              </button>
-              <button onClick={onReject} disabled={busy} style={dangerBtn}>
-                Reject
-              </button>
+              <span style={{ ...display, fontSize: 11.5, color: 'var(--color-text-tertiary)' }}>
+                Faster than a re-read, but it cannot find anything the stored page does not already say.
+              </span>
             </div>
-            {item.readiness >= 3 && (
-              <p style={{ fontSize: 11.5, color: 'var(--color-text-tertiary)', margin: '-6px 0 0' }}>
-                Nothing on this row can be trusted until the page is read, so publishing it would
-                ship values written from memory. Try re-reading, or fix the link first.
-              </p>
-            )}
           </div>
         )}
       </div>
@@ -583,6 +716,12 @@ const secondaryBtn: React.CSSProperties = {
   borderRadius: 'var(--radius-input)', padding: '8px 16px', cursor: 'pointer',
   border: '0.5px solid var(--border-subtle)', background: '#fff',
   color: 'var(--color-text-primary)', textDecoration: 'none',
+}
+const ghostBtn: React.CSSProperties = {
+  fontFamily: 'var(--font-space-grotesk)', fontSize: 12.5, fontWeight: 500,
+  borderRadius: 'var(--radius-input)', padding: '8px 12px', cursor: 'pointer',
+  border: '0.5px solid transparent', background: 'transparent',
+  color: 'var(--color-text-secondary)',
 }
 const dangerBtn: React.CSSProperties = {
   fontFamily: 'var(--font-space-grotesk)', fontSize: 12.5, fontWeight: 600,
