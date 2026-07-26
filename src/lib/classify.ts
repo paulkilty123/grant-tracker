@@ -830,8 +830,22 @@ export function buildClassifyPatch(input: {
   const { result: r, description, funderBrief, locationTag, honourEmpty = false } = input
 
   const patch: Record<string, unknown> = {
-    impact_sectors: r.impact_sectors,
-    funding_type:   r.funding_type,
+    funding_type: r.funding_type,
+  }
+
+  // impact_sectors was the only one of the three tag arrays written
+  // unconditionally: eligible_structures refuses an empty list (line ~881) and
+  // target_beneficiaries is gated on honourEmpty (line ~886), but sectors went
+  // straight through. A model pass that returned nothing valid — a timeout, a
+  // truncated batch, a taxonomy drift — wiped the row's sectors, and sectors are
+  // the primary matching signal, so the row then matches nobody.
+  //
+  // Only 4 live rows currently sit empty, so this is a latent hole rather than
+  // damage already done. It is the same shape as the structures wipe this file
+  // records at line ~846 ("that once wiped structures catalogue-wide"), and the
+  // fix is the one already applied there: silence never clears a value.
+  if (honourEmpty || r.impact_sectors.length > 0) {
+    patch.impact_sectors = r.impact_sectors
   }
 
   // Structure backstop. Source text is who_can_apply + description, matching

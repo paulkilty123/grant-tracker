@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
 import { stampNewGrant, mergeGrantUpdate } from '@/lib/grant-merge'
+import { VALID_SECTORS } from '@/lib/classify'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
@@ -63,14 +64,19 @@ interface EnrichedGrant {
   summary: string
 }
 
-const IMPACT_SECTORS = [
-  'arts_culture', 'children_families', 'community_development', 'disability',
-  'education_training', 'environment_conservation', 'health_wellbeing',
-  'heritage', 'homelessness_housing', 'human_rights_equality', 'mental_health',
-  'older_people', 'poverty_financial_inclusion', 'social_enterprise_support',
-  'sport_recreation', 'wildlife_biodiversity', 'women_girls', 'young_people',
-  'faith_communities',
-]
+// The catalogue's ONE sector taxonomy, imported rather than restated.
+//
+// This route used to carry its own 19-value list — arts_culture,
+// community_development, social_enterprise_support, poverty_financial_inclusion
+// and so on — which overlapped VALID_SECTORS on only three values. Everything
+// else it wrote was a string the matcher cannot read, so the row matched nobody
+// on sector while looking perfectly well-tagged in the admin UI.
+//
+// Found 2026-07-26: 34 such values across 11 rows, 10 of them tagged ENTIRELY
+// in the foreign vocabulary. None had reached users yet only because the rows
+// sit unpublished behind the review gate. The weekly cron would have kept
+// producing them.
+const IMPACT_SECTORS = Array.from(VALID_SECTORS)
 
 const FUNDER_TYPES = [
   'trust_foundation', 'community_foundation', 'corporate_foundation',
@@ -244,6 +250,8 @@ async function runProcessing(db: SupabaseClient, limit: number) {
       ? { min: enriched.amount_min, max: enriched.amount_max }
       : parseAmountRange(item.amount_range)
 
+    const validSectors = (enriched.impact_sectors ?? []).filter(s => VALID_SECTORS.has(s))
+
     const externalId = `discovery-${titleLower.replace(/[^a-z0-9]+/g, '-').slice(0, 80)}`
 
     const grantRow = {
@@ -259,8 +267,19 @@ async function runProcessing(db: SupabaseClient, limit: number) {
       deadline: enriched.deadline || null,
       is_rolling: enriched.is_rolling ?? false,
       is_local: enriched.is_local ?? false,
-      sectors: enriched.impact_sectors ?? [],
-      impact_sectors: enriched.impact_sectors ?? [],
+      // Validate rather than trust. The prompt now lists the real taxonomy, but
+      // a model that invents a plausible-looking value must not get it into the
+      // column — an unreadable tag is worse than a missing one, because the row
+      // looks tagged and silently matches nobody.
+      sectors: validSectors,
+      impact_sectors: validSectors,
+      // NOTE: this is eligibility_criteria (free-text bullets), NOT
+      // eligible_structures. Deliberate: the model is answering with a third
+      // vocabulary again (charity, cic, school, nhs...) which is neither
+      // VALID_STRUCTURES nor anything the matcher reads. Deriving legal forms is
+      // the classifier's job and it runs over these rows after review, so this
+      // stays as human-readable context rather than being cast to a column that
+      // would then block the classifier's own answer via the trust ladder.
       eligibility_criteria: enriched.eligible_structures ?? [],
       apply_url: item.url.trim(),
       is_active: false, // Requires admin review before going live
