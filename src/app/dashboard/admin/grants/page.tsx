@@ -37,6 +37,25 @@ const display = { fontFamily: 'var(--font-space-grotesk)' } as const
 
 type SP = { q?: string; state?: string; type?: string; visible?: string; page?: string }
 
+/** A view tab. A link, not a button, so the URL stays shareable and the back
+ *  button works — the same reason the search is a GET form. */
+function ViewTab({ href, active, label, n }: { href: string; active: boolean; label: string; n: number }) {
+  return (
+    <a href={`/dashboard/admin/grants${href}`} style={{
+      ...display, fontSize: 12, fontWeight: 500, textDecoration: 'none',
+      background: active ? 'var(--green-deep)' : 'var(--bg-pill-neutral)',
+      color: active ? 'var(--green-pale-2)' : 'var(--color-text-secondary)',
+      border: '0.5px solid transparent', borderRadius: 999,
+      padding: '5px 12px', display: 'inline-flex', alignItems: 'center', gap: 7,
+    }}>
+      {label}
+      <span style={{ fontVariantNumeric: 'tabular-nums', opacity: 0.72, fontSize: 11.5 }}>
+        {n.toLocaleString('en-GB')}
+      </span>
+    </a>
+  )
+}
+
 export default async function CataloguePage({ searchParams }: { searchParams: SP }) {
   const q       = (searchParams.q ?? '').trim()
   const state   = searchParams.state ?? ''
@@ -62,6 +81,25 @@ export default async function CataloguePage({ searchParams }: { searchParams: SP
   if (type)    query = query.eq('funding_type', type)
   if (visible === 'live')   query = query.eq('is_active', true)
   if (visible === 'hidden') query = query.eq('is_active', false)
+
+  // Counts for the view tabs. Built with the same search and filters so a tab's
+  // number always describes what clicking it would actually show — a count that
+  // ignored the active search would send you to an empty page.
+  const countFor = async (vis: 'live' | 'hidden' | null) => {
+    let c = db.from('scraped_grants').select('id', { count: 'exact', head: true })
+    if (q) {
+      const safe = q.replace(/[,()*]/g, ' ').trim()
+      if (safe) c = c.or(`title.ilike.%${safe}%,funder.ilike.%${safe}%,description.ilike.%${safe}%`)
+    }
+    if (state) c = c.eq('pipeline_state', state)
+    if (type)  c = c.eq('funding_type', type)
+    if (vis)   c = c.eq('is_active', vis === 'live')
+    const { count } = await c
+    return count ?? 0
+  }
+  const [allCount, liveCount, hiddenCount] = await Promise.all([
+    countFor(null), countFor('live'), countFor('hidden'),
+  ])
 
   const from = (page - 1) * PAGE_SIZE
   const { data, error, count } = await query
@@ -107,9 +145,26 @@ export default async function CataloguePage({ searchParams }: { searchParams: SP
         lives here.
       </p>
 
+      {/* Whether users can see it, chosen first. This was a third dropdown
+          among three, which made the single most important fact about a row —
+          is anyone looking at this — the easiest one to miss. Counts honour the
+          active search, so switching view keeps your query. */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, alignItems: 'center', marginBottom: 12 }}>
+        <span style={{
+          ...display, fontSize: 10.5, fontWeight: 500, letterSpacing: '0.08em',
+          textTransform: 'uppercase', color: 'var(--color-text-tertiary)', marginRight: 2,
+        }}>Show</span>
+        <ViewTab href={qs({ visible: '', page: '' })}       active={!visible}                 label="Everything"    n={allCount} />
+        <ViewTab href={qs({ visible: 'live', page: '' })}   active={visible === 'live'}       label="Live to users" n={liveCount} />
+        <ViewTab href={qs({ visible: 'hidden', page: '' })} active={visible === 'hidden'}     label="Hidden"        n={hiddenCount} />
+      </div>
+
       {/* GET form, so the URL carries the search and a result is linkable and
           survives a refresh. */}
       <form method="get" style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', marginBottom: 14 }}>
+        {/* Carries the current view through a new search, so searching does not
+            silently drop you back to Everything. */}
+        {visible && <input type="hidden" name="visible" value={visible} />}
         <input
           type="search" name="q" defaultValue={q}
           placeholder="Search title, funder or description"
@@ -121,7 +176,6 @@ export default async function CataloguePage({ searchParams }: { searchParams: SP
         />
         <Select name="state"   value={state}   label="Any state"      options={STATES.map(s => [s, s.replace(/_/g, ' ')])} />
         <Select name="type"    value={type}    label="Any type"       options={TYPES.map(t => [t, t.replace(/_/g, '-')])} />
-        <Select name="visible" value={visible} label="Live or hidden" options={[['live', 'live to users'], ['hidden', 'hidden']]} />
         <button type="submit" style={{
           ...display, fontSize: 12.5, fontWeight: 600, borderRadius: 'var(--radius-input)',
           padding: '9px 18px', cursor: 'pointer', border: '0.5px solid transparent',
