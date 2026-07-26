@@ -58,19 +58,27 @@ interface FTBadge {
   color: string
 }
 
+// Icons/labels are this modal's own, more granular sub-type breakdown (kept
+// as-is); colours are each sub-type's true category (Grant/Programme/
+// Investment/In-Kind) via its type-*-pale/*-deep pair, same grouping as
+// FT_BRAND (grants/[id]/page.tsx) — was an unrelated mix of raw rgba and
+// borrowed semantic/decorative tokens (state-error/state-warning/focus-ring
+// had nothing to do with category identity). diversity_fund/tax-relief
+// aren't part of the 4-category spec so they get the neutral "Other"
+// treatment.
 const FUNDING_TYPE_BADGES: Record<string, FTBadge> = {
-  grant:             { Icon: Award,         label: 'Grant',                   bg: 'rgba(132,204,22,0.12)',  color: 'var(--sage-deep)' },
-  accelerator:       { Icon: Rocket,        label: 'Incubator / Accelerator', bg: 'color-mix(in srgb, var(--terra) 12%, transparent)', color: 'var(--state-error)' },
-  support_programme: { Icon: GraduationCap, label: 'Fellowship / Support',    bg: 'rgba(139,92,246,0.12)', color: 'var(--type-programme)' },
-  programme:         { Icon: GraduationCap, label: 'Support Programme',       bg: 'rgba(139,92,246,0.12)', color: 'var(--type-programme)' },
-  social_investment: { Icon: TrendingUp,    label: 'Social Investment',       bg: 'color-mix(in srgb, var(--terra) 12%, transparent)', color: 'var(--state-error)' },
-  loan:              { Icon: TrendingUp,    label: 'Loan',                    bg: 'color-mix(in srgb, var(--gold-deep) 20%, transparent)', color: 'var(--state-warning)' },
-  equity:            { Icon: TrendingUp,    label: 'Equity',                  bg: 'color-mix(in srgb, var(--gold-deep) 20%, transparent)', color: 'var(--state-warning)' },
-  diversity_fund:    { Icon: Users,         label: 'Diversity Fund',          bg: 'rgba(236,72,153,0.12)', color: 'var(--state-error)' },
-  blended_finance:   { Icon: GitMerge,      label: 'Blended Finance',         bg: 'rgba(132,204,22,0.12)', color: 'var(--sage-deep)' },
-  in_kind:           { Icon: Gift,          label: 'In-Kind & Pro Bono',      bg: 'rgba(99,102,241,0.12)', color: 'var(--focus-ring)' },
-  'in-kind':         { Icon: Gift,          label: 'In-Kind & Pro Bono',      bg: 'rgba(99,102,241,0.12)', color: 'var(--focus-ring)' },
-  'tax-relief':      { Icon: Landmark,      label: 'Tax Relief',              bg: 'rgba(110,110,128,0.10)',color: 'var(--text-muted)' },
+  grant:             { Icon: Award,         label: 'Grant',                   bg: 'var(--type-grant-pale)', color: 'var(--gold-deep)' },
+  accelerator:       { Icon: Rocket,        label: 'Incubator / Accelerator', bg: 'var(--type-programme-pale)', color: 'var(--teal-deep)' },
+  support_programme: { Icon: GraduationCap, label: 'Fellowship / Support',    bg: 'var(--type-programme-pale)', color: 'var(--teal-deep)' },
+  programme:         { Icon: GraduationCap, label: 'Support Programme',       bg: 'var(--type-programme-pale)', color: 'var(--teal-deep)' },
+  social_investment: { Icon: TrendingUp,    label: 'Social Investment',       bg: 'var(--type-investment-pale)', color: 'var(--terra-deep)' },
+  loan:              { Icon: TrendingUp,    label: 'Loan',                    bg: 'var(--type-investment-pale)', color: 'var(--terra-deep)' },
+  equity:            { Icon: TrendingUp,    label: 'Equity',                  bg: 'var(--type-investment-pale)', color: 'var(--terra-deep)' },
+  diversity_fund:    { Icon: Users,         label: 'Diversity Fund',          bg: 'var(--surface-sunken)', color: 'var(--text-muted)' },
+  blended_finance:   { Icon: GitMerge,      label: 'Blended Finance',         bg: 'var(--type-investment-pale)', color: 'var(--terra-deep)' },
+  in_kind:           { Icon: Gift,          label: 'In-Kind & Pro Bono',      bg: 'var(--type-inkind-pale)', color: 'var(--sage-deep)' },
+  'in-kind':         { Icon: Gift,          label: 'In-Kind & Pro Bono',      bg: 'var(--type-inkind-pale)', color: 'var(--sage-deep)' },
+  'tax-relief':      { Icon: Landmark,      label: 'Tax Relief',              bg: 'var(--surface-sunken)', color: 'var(--text-muted)' },
 }
 
 const STRUCTURE_LABELS: Record<string, string> = {

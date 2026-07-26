@@ -90,21 +90,27 @@ export default async function GrantDetailPage({
   const typeColour             = TYPE_COLOURS[funderType] ?? 'bg-gray-50 text-gray-600'
   const lastSeen               = grant.last_seen_at ? String(grant.last_seen_at).split('T')[0] : 'Unknown'
 
-  // Funding type badge — all types including grant
+  // Funding type badge — all types including grant. Icons/labels are this
+  // page's own, more granular sub-type breakdown (kept as-is); colours are
+  // each sub-type's true category (Grant/Programme/Investment/In-Kind) via
+  // its type-*-pale/*-deep pair, same grouping as FT_BRAND (grants/[id]/
+  // page.tsx) — was an unrelated rainbow of raw Tailwind palette colours.
+  // diversity_fund/tax-relief aren't part of the 4-category spec (see
+  // FT_BRAND's own comment) so they get the neutral "Other" treatment.
   type FTBadge = { Icon: React.ComponentType<{ className?: string }>; label: string; cls: string }
   const FUNDING_TYPE_BADGES: Record<string, FTBadge> = {
-    grant:              { Icon: Award,         label: 'Grant',             cls: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
-    accelerator:        { Icon: Rocket,        label: 'Accelerator',       cls: 'bg-orange-50 text-orange-700 border border-orange-200' },
-    support_programme:  { Icon: GraduationCap, label: 'Support Programme', cls: 'bg-blue-pale text-blue-deep border border-blue-mid' },
-    programme:          { Icon: GraduationCap, label: 'Support Programme', cls: 'bg-blue-pale text-blue-deep border border-blue-mid' },
-    social_investment:  { Icon: TrendingUp,    label: 'Social Investment', cls: 'bg-cyan-50 text-cyan-700 border border-cyan-200' },
-    loan:               { Icon: TrendingUp,    label: 'Loan',              cls: 'bg-cyan-50 text-cyan-700 border border-cyan-200' },
-    equity:             { Icon: TrendingUp,    label: 'Equity',            cls: 'bg-cyan-50 text-cyan-700 border border-cyan-200' },
-    diversity_fund:     { Icon: Users,         label: 'Diversity Fund',    cls: 'bg-violet-50 text-violet-700 border border-violet-200' },
-    blended_finance:    { Icon: GitMerge,      label: 'Blended Finance',   cls: 'bg-teal-50 text-teal-700 border border-teal-200' },
-    in_kind:            { Icon: Gift,          label: 'In-Kind Support',   cls: 'bg-amber-pale text-amber-deep border border-amber-mid' },
-    'in-kind':          { Icon: Gift,          label: 'In-Kind Support',   cls: 'bg-amber-pale text-amber-deep border border-amber-mid' },
-    'tax-relief':       { Icon: Landmark,      label: 'Tax Relief',        cls: 'bg-stone-100 text-stone-700 border border-stone-300' },
+    grant:              { Icon: Award,         label: 'Grant',             cls: 'bg-type-grant-pale text-gold-deep border border-type-grant' },
+    accelerator:        { Icon: Rocket,        label: 'Accelerator',       cls: 'bg-type-programme-pale text-teal-deep border border-type-programme' },
+    support_programme:  { Icon: GraduationCap, label: 'Support Programme', cls: 'bg-type-programme-pale text-teal-deep border border-type-programme' },
+    programme:          { Icon: GraduationCap, label: 'Support Programme', cls: 'bg-type-programme-pale text-teal-deep border border-type-programme' },
+    social_investment:  { Icon: TrendingUp,    label: 'Social Investment', cls: 'bg-type-investment-pale text-terra-deep border border-type-investment' },
+    loan:               { Icon: TrendingUp,    label: 'Loan',              cls: 'bg-type-investment-pale text-terra-deep border border-type-investment' },
+    equity:             { Icon: TrendingUp,    label: 'Equity',            cls: 'bg-type-investment-pale text-terra-deep border border-type-investment' },
+    diversity_fund:     { Icon: Users,         label: 'Diversity Fund',    cls: 'bg-surface-sunken text-text-muted border border-border-warm' },
+    blended_finance:    { Icon: GitMerge,      label: 'Blended Finance',   cls: 'bg-type-investment-pale text-terra-deep border border-type-investment' },
+    in_kind:            { Icon: Gift,          label: 'In-Kind Support',   cls: 'bg-type-inkind-pale text-sage-deep border border-type-inkind' },
+    'in-kind':          { Icon: Gift,          label: 'In-Kind Support',   cls: 'bg-type-inkind-pale text-sage-deep border border-type-inkind' },
+    'tax-relief':       { Icon: Landmark,      label: 'Tax Relief',        cls: 'bg-surface-sunken text-text-muted border border-border-warm' },
   }
   const rawFundingType = grant.funding_type ? String(grant.funding_type) : 'grant'
   const fundingTypeBadge: FTBadge = FUNDING_TYPE_BADGES[rawFundingType] ?? FUNDING_TYPE_BADGES['grant']
