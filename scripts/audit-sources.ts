@@ -146,6 +146,33 @@ async function main() {
     })
   }
 
+  // --retire: the sources whose code can go, with their function names.
+  //
+  // Only STATIC DEAD qualifies: a hardcoded literal with zero live rows. Nothing
+  // is lost by deleting it, because there is nothing live to lose, and the row
+  // it re-asserts twice a week is what makes a gap look covered.
+  //
+  // Real scrapers with zero survivors are deliberately NOT listed. They are
+  // broken over funders that matter (Henry Smith, Arts Council, Nationwide,
+  // UnLtd), and deleting them would convert a fixable bug into a silent absence.
+  if (process.argv.includes('--retire')) {
+    const dead = report
+      .filter(r => r.shape === 'static_seed' && r.active === 0)
+      .sort((a, b) => a.source.localeCompare(b.source))
+    console.log(`# ${dead.length} static-dead sources to retire`)
+    for (const r of dead) {
+      console.log(`${r.source}\t${shapes.get(r.source)?.fn ?? '?'}\t${r.total} rows (${r.active} live)`)
+    }
+    const broken = report
+      .filter(r => r.shape !== 'static_seed' && r.shape !== 'not_in_code' && r.active === 0)
+      .sort((a, b) => b.total - a.total)
+    console.log(`\n# ${broken.length} real scrapers with no survivors — FIX or retire, a judgement call`)
+    for (const r of broken) {
+      console.log(`${r.source}\t${shapes.get(r.source)?.fn ?? '?'}\t${r.total} rows, ${r.unresolved} unresolved errors`)
+    }
+    return
+  }
+
   if (process.argv.includes('--csv')) {
     console.log('source,shape,runs_90d,fetched_90d,upserted_90d,errors_90d,rows_total,rows_active,unresolved_errors')
     for (const r of report.sort((a, b) => b.active - a.active)) {

@@ -1021,75 +1021,6 @@ async function crawlCFNI(): Promise<CrawlResult> {
   }
 }
 
-// ── Source 13: Heart of England Community Foundation (West Midlands) ──────────
-// Old .co.uk site has broken TLS; .org migration is a JS-rendered SPA so we
-// can't scrape without a browser-mode fetcher. Static seed of headline funds
-// — HoECF carries the Birmingham & Black Country Communities Fund (formerly
-// run by the standalone bbbcf.org.uk, which has shut down).
-async function crawlHeartOfEnglandCF(): Promise<CrawlResult> {
-  const SOURCE = 'heart_of_england_cf'
-  const BASE   = 'https://www.heartofenglandcf.org'
-  try {
-    return await upsertGrants(SOURCE, [
-      {
-        external_id:          `${SOURCE}_bbbcc_fund`,
-        source:               SOURCE,
-        title:                'Birmingham & Black Country Communities Fund',
-        funder:               'Heart of England Community Foundation',
-        funder_type:          'community_foundation',
-        description:          'Grants up to £3,000 to support people in Birmingham and the Black Country. Funded from a portfolio of endowment funds. Applications must promote health and wellbeing, tackle disadvantage, support local solutions to local needs, or promote community cohesion.',
-        amount_min:           500,
-        amount_max:           3000,
-        deadline:             null,
-        is_rolling:           true,
-        is_local:             true,
-        sectors:              ['community', 'social welfare', 'health', 'diversity'],
-        eligibility_criteria: ['Charity, community group or social enterprise in Birmingham or the Black Country', 'Project addresses one of: health & wellbeing, disadvantage, local solutions, community cohesion'],
-        apply_url:            `${BASE}/birmingham-black-country-communities-fund/`,
-        raw_data:             { note: 'Static seed — migrated from defunct bbbcf.org.uk into HoECF.' } as Record<string, unknown>,
-      },
-      {
-        external_id:          `${SOURCE}_csw_fund`,
-        source:               SOURCE,
-        title:                'Coventry, Solihull & Warwickshire Communities Fund',
-        funder:               'Heart of England Community Foundation',
-        funder_type:          'community_foundation',
-        description:          'Grants up to £3,000 to local charities and community groups working across Coventry, Solihull and Warwickshire. Supports projects that improve community wellbeing, address disadvantage and bring local people together.',
-        amount_min:           500,
-        amount_max:           3000,
-        deadline:             null,
-        is_rolling:           true,
-        is_local:             true,
-        sectors:              ['community', 'social welfare', 'health'],
-        eligibility_criteria: ['Charity, community group or social enterprise in Coventry, Solihull or Warwickshire'],
-        apply_url:            `${BASE}/coventry-solihull-warwickshire-fund/`,
-        raw_data:             { note: 'Static seed.' } as Record<string, unknown>,
-      },
-      {
-        external_id:          `${SOURCE}_im_properties`,
-        source:               SOURCE,
-        title:                'IM Properties Community Fund',
-        funder:               'Heart of England Community Foundation',
-        funder_type:          'community_foundation',
-        description:          'Grants up to £3,000 supporting community projects within IM Properties development areas across the West Midlands. Particular focus on projects benefiting communities near IM Properties commercial sites.',
-        amount_min:           500,
-        amount_max:           3000,
-        deadline:             null,
-        is_rolling:           true,
-        is_local:             true,
-        sectors:              ['community', 'environment', 'youth', 'sport'],
-        eligibility_criteria: ['Charity or community group in West Midlands', 'Project should benefit communities near IM Properties development sites'],
-        apply_url:            `${BASE}/im-properties-stratford-46-community-fund/`,
-        raw_data:             { note: 'Static seed.' } as Record<string, unknown>,
-      },
-      // Community Energy Warwickshire Fund removed 2026-05-09 — no longer
-      // listed on /available-grants/. Existing DB row needs admin deactivation.
-    ])
-  } catch (err) {
-    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
-  }
-}
-
 // ── Source 14: Foundation Scotland ────────────────────────────────────────────
 // Scrapes foundationscotland.org.uk/apply-for-funding/funding-available/
 // Grant cards use class ".card-inner"; title and link are in the h3 > a element.
@@ -1617,59 +1548,6 @@ async function crawlTyneWearCF(): Promise<CrawlResult> {
   } catch (err) {
     return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
   }
-}
-
-// ── Source 24: Norfolk Community Foundation ───────────────────────────────────
-// Scrapes norfolkfoundation.com/funding-support/grants/groups/ — SSR listing.
-// All metadata (max grant, area, deadline) is embedded in the listing page cards.
-// ── Source 25: Suffolk Community Foundation ───────────────────────────────────
-// Scrapes suffolkcf.org.uk/current-grants/ — SSR listing of named funds.
-// Each fund appears as an H2 heading followed by open/closed status text and
-// description. We filter to "Now open" or "Open all year round" only.
-// ── Source 26: Community Foundation Merseyside & Lancashire ───────────────────
-// ── Source 27: BBC Children in Need (hardcoded rolling fund) ──────────────────
-async function crawlBBCChildrenInNeed(): Promise<CrawlResult> {
-  const SOURCE = 'bbc_cin'
-  const URL    = 'https://www.bbcchildreninneed.co.uk/grants/main-grants/'
-
-  const grants: ScrapedGrant[] = [
-    {
-      external_id:          'bbc_cin_main_grants',
-      source:               SOURCE,
-      title:                'BBC Children in Need Main Grants',
-      funder:               'BBC Children in Need',
-      funder_type:          'charity',
-      description:          'Grants of £10,000–£40,000 per year for up to 3 years for organisations working with disadvantaged children and young people (under 18) in the UK. Covers projects tackling poverty, disability, mental health and other challenges. Requires a pre-application discussion with a grants officer.',
-      amount_min:           10000,
-      amount_max:           40000,
-      deadline:             null,
-      is_rolling:           true,
-      is_local:             false,
-      sectors:              ['children & young people', 'social welfare', 'health & wellbeing'],
-      eligibility_criteria: ['UK-registered charity or constituted group', 'Working with under-18s facing disadvantage'],
-      apply_url:            'https://www.bbcchildreninneed.co.uk/grants/',
-      raw_data:             {} as Record<string, unknown>,
-    },
-    {
-      external_id:          'bbc_cin_small_grants',
-      source:               SOURCE,
-      title:                'BBC Children in Need Small Grants',
-      funder:               'BBC Children in Need',
-      funder_type:          'charity',
-      description:          'Grants of £1,000–£10,000 for organisations delivering direct work with children and young people (under 18) facing disadvantage in the UK. Rolling programme with no fixed deadlines.',
-      amount_min:           1000,
-      amount_max:           10000,
-      deadline:             null,
-      is_rolling:           true,
-      is_local:             false,
-      sectors:              ['children & young people', 'social welfare'],
-      eligibility_criteria: ['UK-registered charity or constituted group', 'Working with under-18s facing disadvantage'],
-      apply_url:            'https://www.bbcchildreninneed.co.uk/grants/',
-      raw_data:             {} as Record<string, unknown>,
-    },
-  ]
-
-  return await upsertGrants(SOURCE, grants)
 }
 
 // ── Source 28: Gloucestershire Community Foundation ───────────────────────────
@@ -2497,47 +2375,6 @@ async function crawlNationalChurchesTrust(): Promise<CrawlResult> {
   }
 }
 
-// ── Source 52 — Tudor Trust ────────────────────────────────────────────────────
-// Well-established independent foundation giving around £20 million/year to UK
-// charities. Wide remit: community, welfare, arts, health, environment. Particularly
-// interested in smaller organisations working with marginalised communities.
-// No specific deadlines — applications reviewed on a rolling basis.
-async function crawlTudorTrust(): Promise<CrawlResult> {
-  const SOURCE = 'tudor_trust'
-  try {
-    const grants: ScrapedGrant[] = [{
-      external_id:          `${SOURCE}_main`,
-      source:               SOURCE,
-      title:                'Tudor Trust — General Grants Programme',
-      funder:               'Tudor Trust',
-      funder_type:          'trust_foundation',
-      description:          'Independent foundation giving around £20 million per year to UK charities. ' +
-                            'Wide remit covering welfare, community, arts, health and environment. ' +
-                            'Particularly interested in smaller charities (under £1.5m income) working ' +
-                            'directly with people who are marginalised or facing disadvantage. ' +
-                            'Applications reviewed on a rolling basis throughout the year.',
-      amount_min:           1000,
-      amount_max:           150000,
-      deadline:             null,
-      is_rolling:           true,
-      is_local:             false,
-      sectors:              ['community', 'welfare', 'arts', 'health', 'environment', 'disadvantaged communities'],
-      eligibility_criteria: [
-        'Registered UK charity',
-        'Annual income preferably under £1.5 million',
-        'Working with people facing disadvantage or marginalisation',
-        'Must demonstrate direct, positive change for beneficiaries',
-        'Cannot fund individuals, statutory bodies or overseas projects',
-      ],
-      apply_url:            'https://tudortrust.org.uk/what-we-fund/apply',
-      raw_data:             { note: 'Hardcoded rolling entry — no structured listing page' },
-    }]
-    return await upsertGrants(SOURCE, grants)
-  } catch (err) {
-    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
-  }
-}
-
 // ── Source 53 — Ufi VocTech Trust — REMOVED 2026-07-25 ────────────────────────
 // crawlUfiVocTech was named like a scraper but fetched nothing: it returned one
 // hardcoded object whose own raw_data said "Hardcoded entry — check website for
@@ -2619,414 +2456,6 @@ async function crawlLeedsCF(): Promise<CrawlResult> {
       apply_url:            `${BASE}/open-grants/`,
       raw_data:             { note: 'Hardcoded fallback' } as Record<string, unknown>,
     }])
-  } catch (err) {
-    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
-  }
-}
-
-// ── Source 56 — Essex Community Foundation ────────────────────────────────────
-// essexcf.org.uk — one of the largest CFs in the country, serving Essex and East London.
-// ── Source 57 — Bedfordshire & Luton Community Foundation ─────────────────────
-// blcf.org.uk — serves Bedfordshire and Luton.
-// ── Source 58 — County Durham Community Foundation ────────────────────────────
-// cdcf.org.uk — the main community foundation for County Durham.
-// ── Source 59 — Cumbria Community Foundation ──────────────────────────────────
-// cumbria.community — serves Cumbria (now Cumberland and Westmorland).
-// ── Source 60 — Derbyshire Community Foundation ───────────────────────────────
-// derbyshirecf.org.uk — serves Derbyshire and Derby.
-// ── Source 61 — Staffordshire Community Foundation ────────────────────────────
-// staffscf.org.uk — serves Staffordshire and Stoke-on-Trent.
-// ── Source 62 — Berkshire Community Foundation ────────────────────────────────
-// berkshirecf.org.uk — serves Berkshire and surrounding areas.
-// ── Source 63 — Lloyds Bank Foundation ────────────────────────────────────────
-// lloydsbankfoundation.org.uk — £30m/year to small and medium charities in England & Wales.
-// Focus: transforming lives of disadvantaged people. No structured listing — hardcoded.
-async function crawlLloydsBankFoundation(): Promise<CrawlResult> {
-  const SOURCE = 'lloyds_bank_foundation'
-  try {
-    const grants: ScrapedGrant[] = [
-      {
-        external_id:          `${SOURCE}_enable`,
-        source:               SOURCE,
-        title:                'Lloyds Bank Foundation — Enable Programme',
-        funder:               'Lloyds Bank Foundation',
-        funder_type:          'corporate_foundation',
-        description:          'Funding for small and medium-sized charities (income £25k–£500k) in England and Wales working with people facing complex social issues. Multi-year grants (typically 2–3 years) of up to £75,000 per year, plus development support.',
-        amount_min:           25000,
-        amount_max:           75000,
-        deadline:             null,
-        is_rolling:           false,
-        is_local:             false,
-        sectors:              ['social welfare', 'disadvantaged communities', 'mental health', 'homelessness', 'criminal justice'],
-        eligibility_criteria: [
-          'Registered charity in England or Wales',
-          'Annual income between £25,000 and £500,000',
-          'Working with people facing multiple complex disadvantages',
-          'Minimum 2 years of published accounts',
-          'Must not be primarily a grant-making body',
-        ],
-        apply_url:            'https://www.lloydsbankfoundation.org.uk/our-programmes/',
-        raw_data:             { programme: 'enable' } as Record<string, unknown>,
-      },
-      {
-        external_id:          `${SOURCE}_invest`,
-        source:               SOURCE,
-        title:                'Lloyds Bank Foundation — Invest Programme',
-        funder:               'Lloyds Bank Foundation',
-        funder_type:          'corporate_foundation',
-        description:          'For charities with income of £500,000–£1 million in England and Wales, working with people facing complex disadvantages. Three-year grants of up to £100,000 per year plus intensive development support.',
-        amount_min:           50000,
-        amount_max:           100000,
-        deadline:             null,
-        is_rolling:           false,
-        is_local:             false,
-        sectors:              ['social welfare', 'disadvantaged communities', 'mental health', 'homelessness', 'employment'],
-        eligibility_criteria: [
-          'Registered charity in England or Wales',
-          'Annual income between £500,000 and £1 million',
-          'Working with people facing multiple complex disadvantages',
-          'Minimum 3 years of published accounts',
-        ],
-        apply_url:            'https://www.lloydsbankfoundation.org.uk/our-programmes/',
-        raw_data:             { programme: 'invest' } as Record<string, unknown>,
-      },
-    ]
-    return await upsertGrants(SOURCE, grants)
-  } catch (err) {
-    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
-  }
-}
-
-// ── Source 64 — Power to Change ───────────────────────────────────────────────
-// powertochange.org.uk — supports community businesses across England.
-// Site is JS-rendered; hardcoded rolling entry with key programmes.
-async function crawlPowerToChange(): Promise<CrawlResult> {
-  const SOURCE = 'power_to_change'
-  try {
-    const grants: ScrapedGrant[] = [
-      {
-        external_id:          `${SOURCE}_community_business_fund`,
-        source:               SOURCE,
-        title:                'Power to Change — Community Business Fund',
-        funder:               'Power to Change',
-        funder_type:          'trust_foundation',
-        description:          'Grants and support for community businesses in England — organisations owned and run by local people to benefit their community. Offers grants for growth, resilience and new ventures. Multiple funding strands active throughout the year.',
-        amount_min:           5000,
-        amount_max:           300000,
-        deadline:             null,
-        is_rolling:           true,
-        is_local:             false,
-        sectors:              ['community business', 'social enterprise', 'community', 'economic development'],
-        eligibility_criteria: [
-          'Community business based in England',
-          'Owned or controlled by local community',
-          'Serves the local community and reinvests surpluses locally',
-          'Must demonstrate community accountability',
-        ],
-        apply_url:            'https://www.powertochange.org.uk/get-support/programmes/',
-        raw_data:             { note: 'Hardcoded rolling entry' } as Record<string, unknown>,
-      },
-    ]
-    return await upsertGrants(SOURCE, grants)
-  } catch (err) {
-    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
-  }
-}
-
-// ── Source 65 — The King's Trust ──────────────────────────────────────────────
-// kings-trust.org.uk — (formerly Prince's Trust) supports young people 11–30 in the UK.
-// Hardcoded rolling entry covering core grant programmes.
-async function crawlKingsTrust(): Promise<CrawlResult> {
-  const SOURCE = 'kings_trust'
-  try {
-    const grants: ScrapedGrant[] = [
-      {
-        external_id:          `${SOURCE}_enterprise`,
-        source:               SOURCE,
-        title:                "The King's Trust — Enterprise Programme",
-        funder:               "The King's Trust",
-        funder_type:          'trust_foundation',
-        description:          "Grants and low-interest loans of up to £5,000 for young people aged 18–30 who want to start or grow a business. Includes mentoring and ongoing support. Available throughout the UK.",
-        amount_min:           500,
-        amount_max:           5000,
-        deadline:             null,
-        is_rolling:           true,
-        is_local:             false,
-        sectors:              ['enterprise', 'employment', 'youth'],
-        eligibility_criteria: [
-          'Aged 18–30',
-          'UK resident',
-          'Unemployed or working fewer than 16 hours per week',
-          'Unable to get conventional bank funding',
-        ],
-        apply_url:            'https://www.kings-trust.org.uk/how-we-can-help/enterprise-programme',
-        raw_data:             { programme: 'enterprise' } as Record<string, unknown>,
-      },
-      {
-        external_id:          `${SOURCE}_achieve`,
-        source:               SOURCE,
-        title:                "The King's Trust — Achieve Programme",
-        funder:               "The King's Trust",
-        funder_type:          'trust_foundation',
-        description:          "Grants and development grants for young people aged 11–30 to gain skills, qualifications and confidence. Covers training, education and personal development costs including travel, equipment and course fees.",
-        amount_min:           50,
-        amount_max:           500,
-        deadline:             null,
-        is_rolling:           true,
-        is_local:             false,
-        sectors:              ['youth', 'education', 'employment', 'skills'],
-        eligibility_criteria: [
-          'Aged 11–30',
-          'UK resident',
-          'Facing disadvantage or barriers to opportunity',
-        ],
-        apply_url:            'https://www.kings-trust.org.uk/how-we-can-help/grants',
-        raw_data:             { programme: 'achieve' } as Record<string, unknown>,
-      },
-    ]
-    return await upsertGrants(SOURCE, grants)
-  } catch (err) {
-    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
-  }
-}
-
-// ── Source 66 — Barrow Cadbury Trust ──────────────────────────────────────────
-// barrowcadbury.org.uk — independent foundation focusing on justice and inclusion.
-// Hardcoded: site is primarily narrative, listing not structured.
-async function crawlBarrowCadbury(): Promise<CrawlResult> {
-  const SOURCE = 'barrow_cadbury'
-  try {
-    const grants: ScrapedGrant[] = [
-      {
-        external_id:          `${SOURCE}_justice`,
-        source:               SOURCE,
-        title:                'Barrow Cadbury Trust — Criminal Justice Programme',
-        funder:               'Barrow Cadbury Trust',
-        funder_type:          'trust_foundation',
-        description:          'Funds organisations challenging inequality in the criminal justice system, reducing deaths in custody, improving treatment of remand prisoners, and supporting rehabilitation. Focus on systemic change and influencing policy.',
-        amount_min:           20000,
-        amount_max:           100000,
-        deadline:             null,
-        is_rolling:           true,
-        is_local:             false,
-        sectors:              ['criminal justice', 'social welfare', 'policy & advocacy', 'human rights'],
-        eligibility_criteria: [
-          'UK-based charity or voluntary organisation',
-          'Work must be in England and Wales',
-          'Focus on systemic change or policy influence',
-          'Must have at least one year of accounts',
-        ],
-        apply_url:            'https://barrowcadbury.org.uk/what-we-fund/criminal-justice/',
-        raw_data:             { programme: 'criminal_justice' } as Record<string, unknown>,
-      },
-      {
-        external_id:          `${SOURCE}_migration`,
-        source:               SOURCE,
-        title:                'Barrow Cadbury Trust — Migration & Borders Programme',
-        funder:               'Barrow Cadbury Trust',
-        funder_type:          'trust_foundation',
-        description:          'Supports organisations working on fair treatment of migrants, asylum seekers and refugees in the UK. Funds campaigning, advocacy and direct support for people affected by hostile environment policies.',
-        amount_min:           15000,
-        amount_max:           80000,
-        deadline:             null,
-        is_rolling:           true,
-        is_local:             false,
-        sectors:              ['migration', 'refugees', 'human rights', 'policy & advocacy'],
-        eligibility_criteria: [
-          'UK-registered charity or voluntary organisation',
-          'Work related to migration, borders or asylum in the UK',
-          'Focus on policy change or community empowerment',
-        ],
-        apply_url:            'https://barrowcadbury.org.uk/what-we-fund/migration-borders/',
-        raw_data:             { programme: 'migration' } as Record<string, unknown>,
-      },
-    ]
-    return await upsertGrants(SOURCE, grants)
-  } catch (err) {
-    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
-  }
-}
-
-// ── Source 67 — Joseph Rowntree Foundation ────────────────────────────────────
-// jrf.org.uk — one of the UK's largest independent social change organisations.
-// Primarily a research funder but also runs grant programmes to tackle poverty.
-async function crawlJRF(): Promise<CrawlResult> {
-  const SOURCE = 'jrf'
-  try {
-    const grants: ScrapedGrant[] = [
-      {
-        external_id:          `${SOURCE}_uk_poverty`,
-        source:               SOURCE,
-        title:                'Joseph Rowntree Foundation — Poverty Solutions Fund',
-        funder:               'Joseph Rowntree Foundation',
-        funder_type:          'trust_foundation',
-        description:          'JRF funds research, projects and systemic change initiatives aimed at solving poverty in the UK. Programmes support organisations developing, testing and scaling new approaches to tackling poverty. Check website for current open calls.',
-        amount_min:           50000,
-        amount_max:           500000,
-        deadline:             null,
-        is_rolling:           false,
-        is_local:             false,
-        sectors:              ['poverty reduction', 'social welfare', 'housing', 'employment', 'policy & advocacy'],
-        eligibility_criteria: [
-          'UK-based organisation (charity, social enterprise, or research body)',
-          'Work must address poverty in the UK',
-          'Must demonstrate evidence-based approach',
-          'Ability to share learning publicly',
-        ],
-        apply_url:            'https://www.jrf.org.uk/work-with-us',
-        raw_data:             { note: 'Hardcoded entry — check website for open calls' } as Record<string, unknown>,
-      },
-    ]
-    return await upsertGrants(SOURCE, grants)
-  } catch (err) {
-    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
-  }
-}
-
-// ── Source 68 — Access — The Foundation for Social Investment ─────────────────
-// access-socialinvestment.org.uk — blended finance and dormant-assets-funded
-// programmes for charities and social enterprises. Static seed — listing page
-// is dynamic; we curate the headline programmes by hand.
-async function crawlAccessFoundation(): Promise<CrawlResult> {
-  const SOURCE = 'access_foundation'
-  const BASE   = 'https://access-socialinvestment.org.uk'
-  try {
-    return await upsertGrants(SOURCE, [
-      {
-        external_id:          `${SOURCE}_dormant_assets_2025`,
-        source:               SOURCE,
-        title:                'Access — 2025 Dormant Assets Release',
-        funder:               'Access — The Foundation for Social Investment',
-        funder_type:          'trust_foundation',
-        description:          'Access oversees the allocation of £87.5m of Dormant Assets funding to social investment, working with partners to deliver the Community Enterprise Growth Plan. Funding aims to increase investment in community enterprises and mission-driven businesses, particularly in places affected by long-term economic decline.',
-        amount_min:           50000,
-        amount_max:           1000000,
-        deadline:             null,
-        is_rolling:           true,
-        is_local:             false,
-        sectors:              ['social enterprise', 'social investment', 'community business', 'community wealth'],
-        eligibility_criteria: [
-          'Charity, social enterprise or mission-driven business in England',
-          'Investment-ready or working towards readiness',
-          'Operating in places affected by long-term economic decline (preference)',
-        ],
-        apply_url:            `${BASE}/what-we-do/2025-dormant-assets-release`,
-        raw_data:             { note: 'Static seed — Access manages partner-led funds rather than direct applications.' } as Record<string, unknown>,
-      },
-      {
-        external_id:          `${SOURCE}_connect_fund`,
-        source:               SOURCE,
-        title:                'Access — Connect Fund',
-        funder:               'Access — The Foundation for Social Investment',
-        funder_type:          'trust_foundation',
-        description:          'The Connect Fund supports the social investment market in England — funding intermediaries and infrastructure that help charities and social enterprises become investment ready. Grants to organisations that strengthen the market rather than direct social investments.',
-        amount_min:           10000,
-        amount_max:           250000,
-        deadline:             null,
-        is_rolling:           false,
-        is_local:             false,
-        sectors:              ['social investment', 'capacity building', 'social enterprise'],
-        eligibility_criteria: [
-          'Social investment intermediary, infrastructure body or capacity-building org',
-          'England-based or England-focused activity',
-          'Project must strengthen the social investment ecosystem',
-        ],
-        apply_url:            `${BASE}/what-we-do/programmes-and-funds/connect-fund`,
-        raw_data:             { note: 'Static seed — open in periodic rounds.' } as Record<string, unknown>,
-      },
-    ])
-  } catch (err) {
-    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
-  }
-}
-
-// ── Source 69 — Comic Relief ──────────────────────────────────────────────────
-// comicrelief.com — funds organisations tackling poverty and social injustice in the UK and overseas.
-// Opens periodic themed rounds. Hardcoded core programmes.
-async function crawlComicRelief(): Promise<CrawlResult> {
-  const SOURCE = 'comic_relief'
-  try {
-    const grants: ScrapedGrant[] = [
-      {
-        external_id:          `${SOURCE}_active_communities`,
-        source:               SOURCE,
-        title:                'Comic Relief — Active Communities Fund',
-        funder:               'Comic Relief',
-        funder_type:          'trust_foundation',
-        description:          'Comic Relief funds grassroots organisations in the UK tackling poverty and social injustice. Active Communities Fund supports community-led organisations improving lives in the UK. Check website for current open rounds.',
-        amount_min:           10000,
-        amount_max:           100000,
-        deadline:             null,
-        is_rolling:           false,
-        is_local:             false,
-        sectors:              ['poverty reduction', 'community', 'social welfare', 'youth', 'mental health'],
-        eligibility_criteria: [
-          'UK registered charity or social enterprise',
-          'Community-led organisation based in the UK',
-          'Working with people facing poverty or disadvantage',
-          'Annual income under £1 million for small grants strand',
-        ],
-        apply_url:            'https://www.comicrelief.com/your-impact/our-grants',
-        raw_data:             { programme: 'active_communities' } as Record<string, unknown>,
-      },
-      {
-        external_id:          `${SOURCE}_mental_health`,
-        source:               SOURCE,
-        title:                'Comic Relief — Mental Health Fund (UK)',
-        funder:               'Comic Relief',
-        funder_type:          'trust_foundation',
-        description:          "Comic Relief's mental health funding supports organisations delivering evidence-based mental health support and systemic change. Periodic themed rounds targeting specific populations or issues.",
-        amount_min:           10000,
-        amount_max:           200000,
-        deadline:             null,
-        is_rolling:           false,
-        is_local:             false,
-        sectors:              ['mental health', 'social welfare', 'community', 'youth'],
-        eligibility_criteria: [
-          'Registered UK charity or voluntary organisation',
-          'Delivers or enables mental health support',
-          'Must demonstrate evidence-based approach',
-        ],
-        apply_url:            'https://www.comicrelief.com/your-impact/our-grants',
-        raw_data:             { programme: 'mental_health' } as Record<string, unknown>,
-      },
-    ]
-    return await upsertGrants(SOURCE, grants)
-  } catch (err) {
-    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
-  }
-}
-
-// ── Source 70 — Community Ownership Fund ──────────────────────────────────────
-// Government fund helping communities take over assets at risk of closure.
-// Administered via MHCLG. Hardcoded as fund opens in rounds.
-async function crawlCommunityOwnershipFund(): Promise<CrawlResult> {
-  const SOURCE = 'community_ownership_fund'
-  try {
-    const grants: ScrapedGrant[] = [{
-      external_id:          `${SOURCE}_round`,
-      source:               SOURCE,
-      title:                'Community Ownership Fund',
-      funder:               'Ministry of Housing, Communities & Local Government',
-      funder_type:          'government',
-      description:          'Government fund helping communities across the UK take ownership of assets and amenities at risk of being lost — pubs, sports clubs, theatres, post offices, parks and other valued spaces. Grants of up to £250,000 (up to £1m for sports clubs) available. Check for open funding rounds.',
-      amount_min:           20000,
-      amount_max:           250000,
-      deadline:             null,
-      is_rolling:           false,
-      is_local:             false,
-      sectors:              ['community', 'social enterprise', 'heritage', 'sport', 'arts'],
-      eligibility_criteria: [
-        'Community-owned organisation (e.g. co-operative, community benefit society, development trust)',
-        'UK-wide (England, Scotland, Wales, Northern Ireland)',
-        'Asset must be at risk of closure or loss from community use',
-        'Must provide matched funding (at least equal to the grant amount)',
-        'Community must demonstrate broad support',
-      ],
-      apply_url:            'https://www.gov.uk/guidance/community-ownership-fund',
-      raw_data:             { note: 'Hardcoded rolling entry — check for open rounds' } as Record<string, unknown>,
-    }]
-    return await upsertGrants(SOURCE, grants)
   } catch (err) {
     return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
   }
@@ -3159,34 +2588,6 @@ async function crawlEastEndCF(): Promise<CrawlResult> {
   } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
 }
 
-// ── Source 76 — Birmingham & Black Country Community Foundation ───────────────
-// Standalone bbbcf.org.uk has shut down — funding now runs as a sub-programme
-// of Heart of England CF. Kept as a slim source pointer so the cron stays
-// happy and search still surfaces a "Birmingham & Black Country" hit.
-// (HoECF crawler is the canonical source for the fund itself.)
-async function crawlBirminghamCF(): Promise<CrawlResult> {
-  const SOURCE = 'birmingham_cf'
-  try {
-    return await upsertGrants(SOURCE, [{
-      external_id: `${SOURCE}_redirect_hoecf`,
-      source: SOURCE,
-      title: 'Birmingham & Black Country Communities Fund (managed by Heart of England CF)',
-      funder: 'Heart of England Community Foundation',
-      funder_type: 'community_foundation',
-      description: 'The Birmingham & Black Country Communities Fund is now administered by Heart of England Community Foundation. Grants up to £3,000 for charities, community groups and social enterprises across Birmingham, Sandwell, Dudley, Wolverhampton and Walsall.',
-      amount_min: 500,
-      amount_max: 3000,
-      deadline: null,
-      is_rolling: true,
-      is_local: true,
-      sectors: ['community', 'social welfare', 'diversity', 'youth', 'health'],
-      eligibility_criteria: ['Registered charity, community group or social enterprise in Birmingham or the Black Country'],
-      apply_url: 'https://www.heartofenglandcf.org/birmingham-black-country-communities-fund/',
-      raw_data: { note: 'Redirect — original bbbcf.org.uk domain shut down; fund migrated to HoECF.' } as Record<string, unknown>,
-    }])
-  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
-}
-
 // ── Source 78 — Sport Wales ────────────────────────────────────────────────────
 // sport.wales — national body funding sport and physical activity in Wales.
 async function crawlSportWales(): Promise<CrawlResult> {
@@ -3264,94 +2665,9 @@ async function crawlPilgrimTrust(): Promise<CrawlResult> {
   } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
 }
 
-// ── Source 82 — Rosa — UK Fund for Women & Girls ──────────────────────────────
-// rosauk.org — the only UK fund dedicated to women and girls.
-async function crawlRosaUK(): Promise<CrawlResult> {
-  const SOURCE = 'rosa_uk'
-  try {
-    return await upsertGrants(SOURCE, [
-      { external_id: `${SOURCE}_grow_develop`, source: SOURCE, title: "Rosa — Grow & Develop Fund", funder: "Rosa UK Fund for Women & Girls", funder_type: 'trust_foundation', description: "Grants for small women's organisations to grow their capacity and deliver more impact. Funds core costs, staffing, organisational development and service delivery for groups working with women and girls.", amount_min: 10000, amount_max: 50000, deadline: null, is_rolling: false, is_local: false, sectors: ["women", "gender equality", "social welfare", "community"], eligibility_criteria: ["Organisation primarily focused on women and/or girls", "UK registered charity or community group", "Annual income under £500,000", "At least 50% of beneficiaries are women or girls"], apply_url: 'https://rosauk.org/funds/', raw_data: {} as Record<string, unknown> },
-      { external_id: `${SOURCE}_voices`, source: SOURCE, title: "Rosa — Voices Fund", funder: "Rosa UK Fund for Women & Girls", funder_type: 'trust_foundation', description: "Supports women's organisations to influence policy and public debate, develop advocacy campaigns, and strengthen the voice of women and girls in public life.", amount_min: 5000, amount_max: 30000, deadline: null, is_rolling: false, is_local: false, sectors: ["women", "gender equality", "advocacy", "policy"], eligibility_criteria: ["Women's organisation or group campaigning on women's issues", "UK-based", "Work must aim to influence policy or public discourse"], apply_url: 'https://rosauk.org/funds/', raw_data: {} as Record<string, unknown> },
-    ])
-  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
-}
-
-// ── Source 83 — Co-op Foundation ─────────────────────────────────────────────
-// co-op.co.uk/campaigns/co-op-foundation — builds communities where young people thrive.
-async function crawlCoOpFoundation(): Promise<CrawlResult> {
-  const SOURCE = 'coop_foundation'
-  try {
-    return await upsertGrants(SOURCE, [
-      { external_id: `${SOURCE}_bright_futures`, source: SOURCE, title: 'Co-op Foundation — Bright Futures', funder: 'Co-op Foundation', funder_type: 'corporate_foundation', description: "Co-op Foundation's Bright Futures programme funds co-operative projects led by young people or organisations supporting young people's wellbeing, social action and co-operative development.", amount_min: 1000, amount_max: 30000, deadline: null, is_rolling: false, is_local: false, sectors: ['youth', 'community', 'social action', 'co-operatives', 'wellbeing'], eligibility_criteria: ['UK-based charity or community group', 'Project must involve and benefit young people', 'Co-operative or community ownership element preferred'], apply_url: 'https://www.co-op.co.uk/campaigns/co-op-foundation', raw_data: {} as Record<string, unknown> },
-    ])
-  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
-}
-
 // ══════════════════════════════════════════════════════════════════════════════
 // BATCH 6 SOURCES (06:25) — major national funders + corporate/landfill
 // ══════════════════════════════════════════════════════════════════════════════
-
-// ── Source 84 — Wellcome Trust ────────────────────────────────────────────────
-// wellcome.org — one of the world's largest funders of biomedical research + health.
-async function crawlWellcomeTrust(): Promise<CrawlResult> {
-  const SOURCE = 'wellcome_trust'
-  try {
-    return await upsertGrants(SOURCE, [
-      { external_id: `${SOURCE}_research`, source: SOURCE, title: 'Wellcome Trust — Biomedical Research Grants', funder: 'Wellcome Trust', funder_type: 'trust_foundation', description: "Wellcome funds research to improve human and animal health. Programmes cover basic science, clinical medicine, public health and social science related to health. UK and international. Various schemes from early-career fellowships to large programme grants.", amount_min: 50000, amount_max: 3000000, deadline: null, is_rolling: true, is_local: false, sectors: ['health', 'medical research', 'science', 'public health', 'mental health'], eligibility_criteria: ['Universities, research institutes and NHS trusts worldwide', 'Must be for research with clear potential to benefit human health', 'Early-career through to senior researcher schemes available'], apply_url: 'https://wellcome.org/grant-funding', raw_data: {} as Record<string, unknown> },
-      { external_id: `${SOURCE}_society_culture`, source: SOURCE, title: 'Wellcome Trust — Society & Culture Programme', funder: 'Wellcome Trust', funder_type: 'trust_foundation', description: "Wellcome's humanities and social science programme funds research, public engagement, museums and arts projects exploring the relationship between science, medicine, culture and society. Includes Wellcome Collection grant schemes.", amount_min: 10000, amount_max: 500000, deadline: null, is_rolling: true, is_local: false, sectors: ['health', 'arts', 'culture', 'humanities', 'public engagement', 'museums'], eligibility_criteria: ['UK-based or international organisations', 'Work must explore health, medicine or science from a humanities/arts perspective', 'Public engagement and creative projects welcome'], apply_url: 'https://wellcome.org/grant-funding/public-engagement', raw_data: {} as Record<string, unknown> },
-    ])
-  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
-}
-
-// ── Source 85 — Nesta ─────────────────────────────────────────────────────────
-// nesta.org.uk — innovation foundation, challenge prizes and programme grants.
-async function crawlNesta(): Promise<CrawlResult> {
-  const SOURCE = 'nesta'
-  try {
-    return await upsertGrants(SOURCE, [
-      { external_id: `${SOURCE}_challenge_prizes`, source: SOURCE, title: 'Nesta — Challenge Prizes & Innovation Funds', funder: 'Nesta', funder_type: 'trust_foundation', description: "Nesta runs innovation challenges and programmes that fund organisations developing new solutions to social problems. Topics vary but typically cover health, education, economic inclusion, net zero and democracy. Challenge prizes of £50k–£1m+. Check website for current open challenges.", amount_min: 25000, amount_max: 1000000, deadline: null, is_rolling: false, is_local: false, sectors: ['innovation', 'technology', 'health', 'education', 'environment', 'social impact'], eligibility_criteria: ['Charities, social enterprises and for-profit companies eligible', 'UK-based organisations preferred but international competitions exist', 'Must propose evidence-based or innovative approaches to target problem'], apply_url: 'https://www.nesta.org.uk/funding/', raw_data: {} as Record<string, unknown> },
-    ])
-  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
-}
-
-// ── Source 86 — Dulverton Trust ───────────────────────────────────────────────
-// dulverton.org — independent grant-maker for conservation, peace/disarmament, and welfare.
-async function crawlDulvertonTrust(): Promise<CrawlResult> {
-  const SOURCE = 'dulverton_trust'
-  try {
-    return await upsertGrants(SOURCE, [
-      { external_id: `${SOURCE}_main`, source: SOURCE, title: 'Dulverton Trust — General Grants', funder: 'Dulverton Trust', funder_type: 'trust_foundation', description: "Independent grant-making trust with four main areas: Conservation & Environment (rural, nature, landscape); Peace & Disarmament (conflict prevention, peacebuilding); Education (youth development, leadership); and General Welfare (homelessness, addiction, older people). Grants typically £5,000–£50,000.", amount_min: 5000, amount_max: 50000, deadline: null, is_rolling: true, is_local: false, sectors: ['environment', 'conservation', 'peace', 'education', 'social welfare', 'youth', 'homelessness'], eligibility_criteria: ['UK registered charity', 'Cannot fund individuals, statutory bodies, churches or religious activity', 'Previous grantees must wait 2 years before reapplying', 'Annual income under £5m preferred'], apply_url: 'https://www.dulverton.org/grants/', raw_data: {} as Record<string, unknown> },
-    ])
-  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
-}
-
-// ── Source 87 — Blagrave Trust ────────────────────────────────────────────────
-// blagravetrust.org — supports young people aged 10–25 in SE England.
-async function crawlBlagraveTrust(): Promise<CrawlResult> {
-  const SOURCE = 'blagrave_trust'
-  try {
-    return await upsertGrants(SOURCE, [
-      { external_id: `${SOURCE}_main`, source: SOURCE, title: 'Blagrave Trust — Youth Empowerment Grants', funder: 'Blagrave Trust', funder_type: 'trust_foundation', description: "Blagrave Trust funds organisations that enable young people aged 10–25 in South East England to take control of their lives and make lasting change. Focuses on organisations led by or co-designed with young people. Multi-year grants of £10,000–£50,000 per year.", amount_min: 10000, amount_max: 50000, deadline: null, is_rolling: false, is_local: true, sectors: ['youth', 'empowerment', 'social welfare', 'community'], eligibility_criteria: ['Charities or CICs working with young people aged 10–25', 'Based in or primarily serving South East England', 'Young people must be meaningfully involved in design and delivery', 'Annual income under £2m'], apply_url: 'https://www.blagravetrust.org/apply/', raw_data: {} as Record<string, unknown> },
-    ])
-  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
-}
-
-// ── Source 88 — Rank Foundation ───────────────────────────────────────────────
-// rankfoundation.com (apex host — the www. host 404s). Time to Shine only.
-// The former "_community" seed was a phantom: the Foundation's real small-grants
-// programme is Pebble Grants, which the Board PAUSED in 2025 (to review late 2025),
-// and the seeded apply_url (www…/grants/) was dead and served an image. Removed
-// pending a verified re-add if/when Pebble Grants reopens. Live row eddc2878…
-// deactivated 2026-06-20 (Jack cohort report). Time to Shine path unverified on
-// the apex host — left for the URL validator to confirm.
-async function crawlRankFoundation(): Promise<CrawlResult> {
-  const SOURCE = 'rank_foundation'
-  try {
-    return await upsertGrants(SOURCE, [
-      { external_id: `${SOURCE}_time_to_shine`, source: SOURCE, title: 'Rank Foundation — Time to Shine Leadership Programme', funder: 'Rank Foundation', funder_type: 'trust_foundation', description: "Time to Shine develops emerging leaders from smaller charities and community organisations. Participants receive leadership training, mentoring, a project grant, and peer network access. Priority for those from disadvantaged backgrounds.", amount_min: 5000, amount_max: 15000, deadline: null, is_rolling: false, is_local: false, sectors: ['leadership', 'community', 'social welfare', 'youth', 'capacity building'], eligibility_criteria: ['Emerging leader from a small charity or community organisation (income under £2m)', 'UK-based', 'Applications typically open spring/summer — check website'], apply_url: 'https://rankfoundation.com/time-to-shine/', raw_data: {} as Record<string, unknown> },
-    ])
-  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
-}
 
 // ── Source 89 — Cadent Foundation ────────────────────────────────────────────
 // cadentgas.com/foundation — funds community energy, warm homes and social welfare.
@@ -3431,113 +2747,9 @@ async function crawlSevernTrentFund(): Promise<CrawlResult> {
   } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
 }
 
-// ── Source 91 — Tesco Bags of Help ────────────────────────────────────────────
-// tesco.com/bags-of-help — community grants funded by carrier bag charges.
-async function crawlTescoBagsOfHelp(): Promise<CrawlResult> {
-  const SOURCE = 'tesco_bags_of_help'
-  try {
-    return await upsertGrants(SOURCE, [
-      { external_id: `${SOURCE}_main`, source: SOURCE, title: 'Tesco Bags of Help — Community Grants', funder: 'Tesco / Groundwork', funder_type: 'corporate_foundation', description: "Bags of Help funds local community projects across Great Britain. Projects are voted on by Tesco customers in store. Three projects per region receive grants of £4,000, £2,000 or £1,000. New rounds open regularly — check website.", amount_min: 1000, amount_max: 4000, deadline: null, is_rolling: false, is_local: true, sectors: ['community', 'social welfare', 'environment', 'sport', 'arts'], eligibility_criteria: ['UK registered charity, community group or voluntary organisation', 'Project must benefit the local community', 'Must have a Tesco store nearby to run customer vote', 'Cannot fund individuals or for-profit organisations'], apply_url: 'https://www.tesco.com/bags-of-help', raw_data: {} as Record<string, unknown> },
-    ])
-  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
-}
-
-// ── Source 92 — Veolia Environmental Trust ────────────────────────────────────
-// veolia.co.uk — landfill communities fund for environmental and community projects.
-async function crawlVeoliaEnvTrust(): Promise<CrawlResult> {
-  const SOURCE = 'veolia_environmental_trust'
-  try {
-    return await upsertGrants(SOURCE, [
-      { external_id: `${SOURCE}_main`, source: SOURCE, title: 'Veolia Environmental Trust — Capital Grants', funder: 'Veolia Environmental Trust', funder_type: 'corporate_foundation', description: "Veolia Environmental Trust funds capital projects that protect or improve the natural or built environment, or provide community amenities, within 5 miles of a qualifying Veolia landfill site. Grants of £10,000–£75,000 for parks, nature reserves, community buildings and heritage sites.", amount_min: 10000, amount_max: 75000, deadline: null, is_rolling: false, is_local: true, sectors: ['environment', 'community', 'heritage', 'conservation', 'facilities'], eligibility_criteria: ['Registered charity, parish council or statutory body', 'Project site must be within 5 miles of a qualifying Veolia landfill', 'Capital projects only (not running costs)', 'Environmental or community benefit required'], apply_url: 'https://www.veolia.co.uk/veolia-environmental-trust', raw_data: {} as Record<string, unknown> },
-    ])
-  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
-}
-
-// ── Source 93 — Biffa Award ───────────────────────────────────────────────────
-// biffa-award.org — landfill communities fund managed by the Royal Society of
-// Wildlife Trusts (RSWT). Static seed of the two headline schemes; the .org.uk
-// domain has shut down.
-async function crawlBiffaAward(): Promise<CrawlResult> {
-  const SOURCE = 'biffa_award'
-  const BASE   = 'https://www.biffa-award.org'
-  try {
-    return await upsertGrants(SOURCE, [
-      {
-        external_id:          `${SOURCE}_main_grants`,
-        source:               SOURCE,
-        title:                'Biffa Award — Main Grants Scheme',
-        funder:               'Biffa Award',
-        funder_type:          'corporate_foundation',
-        description:          'Capital grants of £10,000–£75,000 for community buildings, biodiversity and heritage projects within 10 miles of a Biffa operational facility. Total project cost must be under £200,000 incl. VAT. Expressions of Interest accepted at any time. Funded by the Landfill Communities Fund and managed by the Royal Society of Wildlife Trusts.',
-        amount_min:           10000,
-        amount_max:           75000,
-        deadline:             null,
-        is_rolling:           true,
-        is_local:             true,
-        sectors:              ['community', 'environment', 'biodiversity', 'heritage', 'facilities'],
-        eligibility_criteria: ['Within 10 miles of a qualifying Biffa landfill or waste facility', 'Registered charity, CIC, parish council or community group', 'Total project cost under £200,000 incl. VAT', 'Capital project (not running costs)'],
-        apply_url:            `${BASE}/main-grants-scheme/`,
-        raw_data:             { note: 'Static seed.' } as Record<string, unknown>,
-      },
-      {
-        external_id:          `${SOURCE}_partnership_grants`,
-        source:               SOURCE,
-        title:                'Biffa Award — Partnership Grants Scheme',
-        funder:               'Biffa Award',
-        funder_type:          'corporate_foundation',
-        description:          'Larger grants of £250,000–£1,000,000 for transformational community and environmental projects that finish within one year. Current round funds work starting February 2026 and completing by February 2027.',
-        amount_min:           250000,
-        amount_max:           1000000,
-        deadline:             null,
-        is_rolling:           false,
-        is_local:             true,
-        sectors:              ['community', 'environment', 'biodiversity', 'heritage'],
-        eligibility_criteria: ['Within 10 miles of a qualifying Biffa landfill or waste facility', 'Registered charity or community body', 'Project must complete within 12 months of award'],
-        apply_url:            `${BASE}/partnership-grants-scheme/`,
-        raw_data:             { note: 'Static seed.' } as Record<string, unknown>,
-      },
-    ])
-  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
-}
-
-// ── Source 94 — Santander Foundation ─────────────────────────────────────────
-// santanderfoundation.org.uk — financial education and community investment.
-async function crawlSantanderFoundation(): Promise<CrawlResult> {
-  const SOURCE = 'santander_foundation'
-  try {
-    return await upsertGrants(SOURCE, [
-      { external_id: `${SOURCE}_community`, source: SOURCE, title: 'Santander Foundation — Discovery Grants', funder: 'Santander Foundation', funder_type: 'corporate_foundation', description: "Santander Foundation funds financial education and economic empowerment programmes, and community projects supporting vulnerable people. Discovery grants for charities helping people improve their financial skills and resilience.", amount_min: 2000, amount_max: 20000, deadline: null, is_rolling: true, is_local: false, sectors: ['financial inclusion', 'education', 'social welfare', 'community', 'employment'], eligibility_criteria: ['UK registered charity', 'Focus on financial education, digital inclusion or supporting vulnerable people', 'Cannot fund individuals or statutory bodies'], apply_url: 'https://santanderfoundation.org.uk', raw_data: {} as Record<string, unknown> },
-    ])
-  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
-}
-
-// ── Source 95 — Screwfix Foundation ──────────────────────────────────────────
-// screwfixfoundation.com — repairs/builds facilities for people in need across the UK.
-async function crawlScrewfixFoundation(): Promise<CrawlResult> {
-  const SOURCE = 'screwfix_foundation'
-  try {
-    return await upsertGrants(SOURCE, [
-      { external_id: `${SOURCE}_main`, source: SOURCE, title: 'Screwfix Foundation — Building & Repairs Fund', funder: 'Screwfix Foundation', funder_type: 'corporate_foundation', description: "Screwfix Foundation funds charities that fix, repair, maintain and improve properties and facilities for those in need across the UK. Grants of £5,000–£50,000 for building work, refurbishment and equipment. Applications open throughout the year.", amount_min: 5000, amount_max: 50000, deadline: null, is_rolling: true, is_local: false, sectors: ['social welfare', 'community', 'housing', 'disability', 'older people', 'facilities'], eligibility_criteria: ['UK registered charity', 'Project involves building work, renovation or repairs to a facility serving people in need', 'Must evidence need and impact', 'Funding is for capital works, not running costs'], apply_url: 'https://www.screwfixfoundation.com/apply-for-a-grant/', raw_data: {} as Record<string, unknown> },
-    ])
-  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
-}
-
 // ══════════════════════════════════════════════════════════════════════════════
 // BATCH 7 SOURCES (06:30) — innovation, remaining CFs, specialist foundations
 // ══════════════════════════════════════════════════════════════════════════════
-
-// ── Source 96 — Innovate UK ────────────────────────────────────────────────────
-// innovateuk.ukri.org — UK's innovation agency, funding R&D and business innovation.
-async function crawlInnovateUK(): Promise<CrawlResult> {
-  const SOURCE = 'innovate_uk'
-  try {
-    return await upsertGrants(SOURCE, [
-      { external_id: `${SOURCE}_smart`, source: SOURCE, title: 'Innovate UK — Smart Grants', funder: 'Innovate UK', funder_type: 'government', description: 'Innovate UK Smart Grants fund game-changing and disruptive R&D innovations from UK businesses. Open to companies of any size. Projects must be highly innovative, technically challenging, and have strong commercial potential. Grants of £25,000–£500,000 for projects of 6–36 months.', amount_min: 25000, amount_max: 500000, deadline: null, is_rolling: false, is_local: false, sectors: ['innovation', 'technology', 'research & development', 'business'], eligibility_criteria: ['UK-registered business (any size)', 'Project must be highly innovative and technically challenging', 'Must demonstrate commercial potential and route to market', 'Cannot fund purely academic research'], apply_url: 'https://www.ukri.org/councils/innovate-uk/funding-opportunities/', raw_data: {} as Record<string, unknown> },
-      { external_id: `${SOURCE}_edge`, source: SOURCE, title: 'Innovate UK — Edge Growth Vouchers', funder: 'Innovate UK', funder_type: 'government', description: 'Innovate UK Edge provides grants and expert support for high-growth innovative UK businesses. Vouchers and grants help SMEs access specialist advice, develop technologies and scale internationally.', amount_min: 5000, amount_max: 50000, deadline: null, is_rolling: true, is_local: false, sectors: ['innovation', 'technology', 'business', 'scale-up', 'exports'], eligibility_criteria: ['UK SME with high growth potential', 'Demonstrable innovation in product, service or process', 'Turnover under £100m'], apply_url: 'https://www.ukri.org/councils/innovate-uk/', raw_data: {} as Record<string, unknown> },
-      { external_id: `${SOURCE}_ktp`, source: SOURCE, title: 'Innovate UK — Knowledge Transfer Partnerships (KTP)', funder: 'Innovate UK', funder_type: 'government', description: 'KTPs fund partnerships between UK businesses and universities or research organisations to embed specialist knowledge and drive innovation. Grants cover associate salary and project costs. Suitable for SMEs and large companies.', amount_min: 30000, amount_max: 250000, deadline: null, is_rolling: true, is_local: false, sectors: ['innovation', 'technology', 'research & development', 'business', 'education'], eligibility_criteria: ['UK business in partnership with a UK knowledge base (university, research institute, college)', 'Project must transfer knowledge to deliver a specific strategic innovation', 'All business sizes eligible; SMEs get higher grant rates'], apply_url: 'https://www.ukri.org/councils/innovate-uk/guidance-for-applicants/knowledge-transfer-partnerships/', raw_data: {} as Record<string, unknown> },
-    ])
-  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
-}
 
 // ── Source 99 — sportscotland ─────────────────────────────────────────────────
 // sportscotland.org.uk — national agency for sport in Scotland.
@@ -3551,18 +2763,6 @@ async function crawlSportScotland(): Promise<CrawlResult> {
   } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
 }
 
-// ── Source 100 — Foyle Foundation ────────────────────────────────────────────
-// foylefoundation.org.uk — arts, learning and libraries, and small grants.
-async function crawlFoyleFoundation(): Promise<CrawlResult> {
-  const SOURCE = 'foyle_foundation'
-  try {
-    return await upsertGrants(SOURCE, [
-      { external_id: `${SOURCE}_main_grants`, source: SOURCE, title: 'Foyle Foundation — Main Grants', funder: 'Foyle Foundation', funder_type: 'trust_foundation', description: 'Foyle Foundation funds arts and learning projects across the UK, with a particular interest in libraries and literacy. Main grants of £10,000–£50,000 for registered charities. Priority to arts organisations, libraries, heritage, education and literacy.', amount_min: 10000, amount_max: 50000, deadline: null, is_rolling: true, is_local: false, sectors: ['arts', 'education', 'libraries', 'literacy', 'heritage', 'culture'], eligibility_criteria: ['Registered UK charity', 'Annual income over £50,000', 'Work in arts, libraries, literacy, learning or heritage', 'Must not have received a Foyle grant in previous 2 years'], apply_url: 'https://www.foylefoundation.org.uk/how-to-apply/', raw_data: {} as Record<string, unknown> },
-      { external_id: `${SOURCE}_small_grants`, source: SOURCE, title: 'Foyle Foundation — Small Grants', funder: 'Foyle Foundation', funder_type: 'trust_foundation', description: "Foyle Foundation's Small Grants scheme funds smaller charities across the UK for projects in arts, learning, environment and general charitable purposes. Grants of £1,000–£10,000.", amount_min: 1000, amount_max: 10000, deadline: null, is_rolling: true, is_local: false, sectors: ['arts', 'education', 'environment', 'community', 'social welfare'], eligibility_criteria: ['Registered UK charity with annual income under £150,000', 'Cannot fund individuals or statutory bodies'], apply_url: 'https://www.foylefoundation.org.uk/how-to-apply/', raw_data: {} as Record<string, unknown> },
-    ])
-  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
-}
-
 // ── Source 101 — Ernest Cook Trust ───────────────────────────────────────────
 // ernestcooktrust.org.uk — outdoor learning, conservation, and rural skills.
 async function crawlErnestCookTrust(): Promise<CrawlResult> {
@@ -3571,29 +2771,6 @@ async function crawlErnestCookTrust(): Promise<CrawlResult> {
     return await upsertGrants(SOURCE, [
       { external_id: `${SOURCE}_outdoor_learning`, source: SOURCE, title: 'Ernest Cook Trust — Outdoor Learning', funder: 'Ernest Cook Trust', funder_type: 'trust_foundation', description: "Ernest Cook Trust funds outdoor and environmental education projects that connect young people with nature. Supports residential outdoor learning, forest schools, farm visits and conservation skills for children and young people.", amount_min: 5000, amount_max: 50000, deadline: null, is_rolling: true, is_local: false, sectors: ['education', 'environment', 'youth', 'outdoor learning', 'conservation'], eligibility_criteria: ['UK registered charity or school', 'Programme must involve direct outdoor or environmental learning for young people', 'Residential or multi-day programmes preferred', 'Cannot fund building works or equipment only'], apply_url: 'https://www.ernestcooktrust.org.uk/grants/', raw_data: {} as Record<string, unknown> },
       { external_id: `${SOURCE}_rural_skills`, source: SOURCE, title: 'Ernest Cook Trust — Rural Skills & Conservation', funder: 'Ernest Cook Trust', funder_type: 'trust_foundation', description: 'Funds projects that teach traditional rural crafts, land management skills and conservation work. Includes dry stone walling, hedgelaying, woodland management and farm heritage skills.', amount_min: 2000, amount_max: 20000, deadline: null, is_rolling: true, is_local: false, sectors: ['conservation', 'rural', 'heritage', 'skills', 'environment', 'agriculture'], eligibility_criteria: ['UK registered charity or social enterprise', 'Focus on traditional rural or conservation skills', 'Must demonstrate training or educational component'], apply_url: 'https://www.ernestcooktrust.org.uk/grants/', raw_data: {} as Record<string, unknown> },
-    ])
-  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
-}
-
-// ── Source 102 — Coalfields Regeneration Trust ───────────────────────────────
-// coalfields-regen.org.uk — regeneration grants for former coalfield communities.
-async function crawlCoalfieldsRegen(): Promise<CrawlResult> {
-  const SOURCE = 'coalfields_regen'
-  try {
-    return await upsertGrants(SOURCE, [
-      { external_id: `${SOURCE}_main`, source: SOURCE, title: 'Coalfields Regeneration Trust — Community Grants', funder: 'Coalfields Regeneration Trust', funder_type: 'trust_foundation', description: "Supports communities in former coalfield areas of England, Scotland and Wales to tackle poverty, improve health and wellbeing, and build community resilience. Grants for projects that create jobs, develop skills, improve facilities and support community enterprise in coalfield areas.", amount_min: 5000, amount_max: 50000, deadline: null, is_rolling: true, is_local: true, sectors: ['community', 'social welfare', 'employment', 'economic development', 'health'], eligibility_criteria: ['Organisation based in a former coalfield community', 'UK registered charity, community group or social enterprise', 'Project must benefit residents of coalfield areas', 'Check CRT website to confirm your area qualifies'], apply_url: 'https://www.coalfields-regen.org.uk/what-we-do/grants/', raw_data: {} as Record<string, unknown> },
-    ])
-  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
-}
-
-// ── Source 103 — Local Trust / Big Local ─────────────────────────────────────
-// localtrust.org.uk — Big Local and other community-led place-based funding.
-async function crawlLocalTrust(): Promise<CrawlResult> {
-  const SOURCE = 'local_trust'
-  try {
-    return await upsertGrants(SOURCE, [
-      { external_id: `${SOURCE}_big_local`, source: SOURCE, title: 'Local Trust — Big Local', funder: 'Local Trust', funder_type: 'lottery', location_tag: 'England', description: "Big Local brings together funding and support to help communities that don't often get investment. £1 million per area to spend over at least 10 years, decided entirely by local residents. Not currently open to new areas but associated programmes and learning resources are available.", amount_min: 10000, amount_max: 1000000, deadline: null, is_rolling: false, is_local: true, sectors: ['community', 'social welfare', 'economic development', 'place-based'], eligibility_criteria: ['Residents of a Big Local area', 'Must be in an area already selected for Big Local (check map)', 'Decisions made by local Big Local Partnership'], apply_url: 'https://localtrust.org.uk/big-local/', raw_data: {} as Record<string, unknown> },
-      { external_id: `${SOURCE}_place_based_social_action`, source: SOURCE, title: 'Local Trust — Place-Based Social Action Fund', funder: 'Local Trust', funder_type: 'lottery', location_tag: 'England', description: 'Funds organisations and partnerships that are building community power and place-based social action in under-invested communities across England. Focus on communities taking control of their own futures.', amount_min: 25000, amount_max: 150000, deadline: null, is_rolling: false, is_local: true, sectors: ['community', 'social welfare', 'place-based', 'community power', 'social action'], eligibility_criteria: ['Organisations working in under-invested communities in England', 'Must demonstrate community-led approach', 'Check Local Trust website for current open programmes'], apply_url: 'https://localtrust.org.uk/big-local/', raw_data: {} as Record<string, unknown> },
     ])
   } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
 }
@@ -3650,28 +2827,6 @@ async function crawlArmedForcesCovenant(): Promise<CrawlResult> {
   } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
 }
 
-// ── Source 105 — British Gas Energy Trust ────────────────────────────────────
-// britishgasenergytrust.org.uk — tackles energy debt and fuel poverty.
-async function crawlBritishGasEnergyTrust(): Promise<CrawlResult> {
-  const SOURCE = 'british_gas_energy_trust'
-  try {
-    return await upsertGrants(SOURCE, [
-      { external_id: `${SOURCE}_org_grants`, source: SOURCE, title: 'British Gas Energy Trust — Organisation Grants', funder: 'British Gas Energy Trust', funder_type: 'corporate_foundation', description: "Organisation grants fund charities and community groups that help vulnerable people deal with energy debt and fuel poverty across England, Wales and Scotland. Grants for advice services, outreach, case workers and warm homes projects.", amount_min: 10000, amount_max: 150000, deadline: null, is_rolling: false, is_local: false, sectors: ['fuel poverty', 'social welfare', 'energy', 'debt', 'community', 'health'], eligibility_criteria: ['UK registered charity or community group (England, Wales or Scotland)', 'Must support people in fuel poverty or energy debt', 'Organisation must not be an energy company or connected to one'], apply_url: 'https://www.britishgasenergytrust.org.uk/our-grants/organisation-grants/', raw_data: {} as Record<string, unknown> },
-    ])
-  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
-}
-
-// ── Source 106 — People's Postcode Lottery Trust ─────────────────────────────
-// postcodelottery.co.uk/good-causes — funds good causes from lottery proceeds.
-async function crawlPostcodeLotteryTrust(): Promise<CrawlResult> {
-  const SOURCE = 'postcode_lottery_trust'
-  try {
-    return await upsertGrants(SOURCE, [
-      { external_id: `${SOURCE}_postcode_dream`, source: SOURCE, title: "People's Postcode Lottery — Postcode Dream Fund", funder: "People's Postcode Lottery Trust", funder_type: 'lottery', description: "People's Postcode Lottery raises money for good causes across Great Britain. The Postcode Dream Fund supports charities and community projects in areas where lottery players live. Periodic rounds — check website for open applications.", amount_min: 5000, amount_max: 500000, deadline: null, is_rolling: false, is_local: true, sectors: ['community', 'environment', 'social welfare', 'health', 'arts'], eligibility_criteria: ['UK registered charity', 'Project must benefit communities in areas where People\'s Postcode Lottery is played', 'Various sector-specific funds open throughout the year'], apply_url: 'https://www.postcodelottery.co.uk/good-causes/apply', raw_data: {} as Record<string, unknown> },
-    ])
-  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
-}
-
 // ── Source 107 — Architectural Heritage Fund ──────────────────────────────────
 // architecturalartsheritagefund.org.uk — unlocks historic buildings.
 async function crawlArchitecturalHeritageFund(): Promise<CrawlResult> {
@@ -3680,17 +2835,6 @@ async function crawlArchitecturalHeritageFund(): Promise<CrawlResult> {
     return await upsertGrants(SOURCE, [
       { external_id: `${SOURCE}_project_viability`, source: SOURCE, title: 'Architectural Heritage Fund — Project Viability Grants', funder: 'Architectural Heritage Fund', funder_type: 'trust_foundation', description: 'Grants to help community organisations assess whether a threatened historic building can be saved and put to viable community use. Covers feasibility studies, options appraisals and business plans for historic building reuse.', amount_min: 5000, amount_max: 25000, deadline: null, is_rolling: true, is_local: false, sectors: ['heritage', 'community', 'conservation', 'social enterprise'], eligibility_criteria: ['Voluntary or community organisation', 'Historic building must be listed or locally listed and at risk or under-used', 'Organisation must have intention to bring building into community use'], apply_url: 'https://ahfund.org.uk/grants/', raw_data: {} as Record<string, unknown> },
       { external_id: `${SOURCE}_development`, source: SOURCE, title: 'Architectural Heritage Fund — Development Grants', funder: 'Architectural Heritage Fund', funder_type: 'trust_foundation', description: 'Larger capital grants for community organisations to repair, adapt and bring historic buildings back into sustainable community use. Usually follows a viability study. Grants of £25,000–£250,000.', amount_min: 25000, amount_max: 250000, deadline: null, is_rolling: true, is_local: false, sectors: ['heritage', 'community', 'conservation', 'social enterprise', 'facilities'], eligibility_criteria: ['Community organisation with viable plan for historic building', 'Building must be listed or of historic significance', 'Community benefit and financial sustainability required'], apply_url: 'https://ahfund.org.uk/grants/', raw_data: {} as Record<string, unknown> },
-    ])
-  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
-}
-
-// ── Source 108 — Persimmon Building Futures ───────────────────────────────────
-// persimmonhomes.com/persimmon-charitable-foundation — community grants from housebuilder.
-async function crawlPersimmonFoundation(): Promise<CrawlResult> {
-  const SOURCE = 'persimmon_foundation'
-  try {
-    return await upsertGrants(SOURCE, [
-      { external_id: `${SOURCE}_building_futures`, source: SOURCE, title: 'Persimmon Charitable Foundation — Building Futures', funder: 'Persimmon Charitable Foundation', funder_type: 'corporate_foundation', description: "Persimmon's community fund awards grants to local charities and community groups near Persimmon developments. Grants of up to £2,000 per project for groups that need funding for new equipment, facilities and community activities.", amount_min: 500, amount_max: 2000, deadline: null, is_rolling: true, is_local: true, sectors: ['community', 'sport', 'arts', 'social welfare', 'youth'], eligibility_criteria: ['UK registered charity or community group', 'Project must be near a Persimmon development', 'Not-for-profit organisations only'], apply_url: 'https://www.persimmonhomes.com/persimmon-charitable-foundation', raw_data: {} as Record<string, unknown> },
     ])
   } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
 }
@@ -3707,70 +2851,6 @@ async function crawlHistoricEngland(): Promise<CrawlResult> {
     return await upsertGrants(SOURCE, [
       { external_id: `${SOURCE}_listed_places`, source: SOURCE, title: 'Historic England — Listed Places of Worship Grant Scheme', funder: 'Historic England', funder_type: 'government', location_tag: 'England', description: 'Grants to help listed places of worship in England recover VAT costs on approved repair and maintenance work. Administered by the Listed Places of Worship Grant Scheme on behalf of DCMS.', amount_min: 500, amount_max: 100000, deadline: null, is_rolling: true, is_local: true, sectors: ['heritage', 'faith', 'conservation', 'community'], eligibility_criteria: ['Listed place of worship in England', 'Work must be approved repair and maintenance (not new construction)', 'Building must be actively used for worship'], apply_url: 'https://historicengland.org.uk/advice/planning/consents/grants/', raw_data: {} as Record<string, unknown> },
       { external_id: `${SOURCE}_heritage_at_risk`, source: SOURCE, title: 'Historic England — Heritage at Risk Grants', funder: 'Historic England', funder_type: 'government', location_tag: 'England', description: 'Emergency and project grants for heritage assets on the Historic England Heritage at Risk Register. Helps bring endangered listed buildings, scheduled monuments and protected wreck sites back to good condition and viable use.', amount_min: 10000, amount_max: 500000, deadline: null, is_rolling: false, is_local: true, sectors: ['heritage', 'conservation', 'community', 'tourism'], eligibility_criteria: ['Asset must be on the Historic England Heritage at Risk Register', 'Applicant must have control of the asset or owner consent', 'England only'], apply_url: 'https://historicengland.org.uk/advice/heritage-at-risk/', raw_data: {} as Record<string, unknown> },
-    ])
-  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
-}
-
-// ── Source 110 — John Lewis Partnership Foundation ───────────────────────────
-// johnlewispartnership.co.uk/csr/our-commitments/communities/jlp-foundation
-async function crawlJohnLewisFoundation(): Promise<CrawlResult> {
-  const SOURCE = 'john_lewis_foundation'
-  try {
-    return await upsertGrants(SOURCE, [
-      { external_id: `${SOURCE}_main`, source: SOURCE, title: 'John Lewis Partnership Foundation — Community Grants', funder: 'John Lewis Partnership Foundation', funder_type: 'corporate_foundation', description: "John Lewis Partnership Foundation funds charities and community groups that help build stronger, more resilient communities. Focus on skills and employment, financial wellbeing, and community connection. Typically funds projects near John Lewis or Waitrose sites.", amount_min: 5000, amount_max: 50000, deadline: null, is_rolling: false, is_local: true, sectors: ['employment', 'financial inclusion', 'community', 'social welfare', 'skills'], eligibility_criteria: ['UK registered charity or community group', 'Project near a John Lewis or Waitrose location preferred', 'Focus on employment, skills or financial wellbeing'], apply_url: 'https://www.johnlewispartnership.co.uk/csr/our-commitments/communities.html', raw_data: {} as Record<string, unknown> },
-    ])
-  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
-}
-
-// ── Source 111 — Marks & Spencer Foundation ──────────────────────────────────
-async function crawlMAndSFoundation(): Promise<CrawlResult> {
-  const SOURCE = 'marks_spencer_foundation'
-  try {
-    return await upsertGrants(SOURCE, [
-      { external_id: `${SOURCE}_main`, source: SOURCE, title: 'M&S Foundation — Community Grants', funder: 'Marks & Spencer Foundation', funder_type: 'corporate_foundation', description: "M&S Foundation funds charities that help people and communities across the UK. Priority areas include food poverty, mental health, and community resilience. Grants and in-kind support for projects making measurable impact.", amount_min: 5000, amount_max: 100000, deadline: null, is_rolling: false, is_local: false, sectors: ['food poverty', 'mental health', 'community', 'social welfare', 'health'], eligibility_criteria: ['UK registered charity', 'Work must align with M&S Foundation priority areas', 'Evidence-based approach required'], apply_url: 'https://corporate.marksandspencer.com/sustainability/our-people-and-communities', raw_data: {} as Record<string, unknown> },
-    ])
-  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
-}
-
-// ── Source 112 — UK Shared Prosperity Fund ───────────────────────────────────
-// gov.uk/guidance/uk-shared-prosperity-fund — government levelling-up fund.
-async function crawlUKSPF(): Promise<CrawlResult> {
-  const SOURCE = 'uk_spf'
-  try {
-    return await upsertGrants(SOURCE, [
-      { external_id: `${SOURCE}_main`, source: SOURCE, title: 'UK Shared Prosperity Fund', funder: 'Department for Levelling Up, Housing & Communities', funder_type: 'government', description: "The UK Shared Prosperity Fund (UKSPF) is a central pillar of the UK government's levelling up agenda, replacing EU structural funds. £2.6bn for local areas to invest in people and places. Delivered through local Lead Authorities — contact your local council to find out what programmes are available in your area.", amount_min: 5000, amount_max: 500000, deadline: null, is_rolling: false, is_local: true, sectors: ['economic development', 'employment', 'skills', 'community', 'social welfare', 'business'], eligibility_criteria: ['Organisations in eligible UK local authority areas', 'Projects must align with local UKSPF investment plans', 'Contact your local Lead Authority for specific opportunities', 'Charities, community groups, businesses and public bodies eligible depending on strand'], apply_url: 'https://www.gov.uk/guidance/uk-shared-prosperity-fund', raw_data: {} as Record<string, unknown> },
-    ])
-  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
-}
-
-// ── Source 113 — Farming in Protected Landscapes ─────────────────────────────
-// gov.uk/guidance/funding-for-farmers-in-protected-landscapes
-async function crawlFarmingProtectedLandscapes(): Promise<CrawlResult> {
-  const SOURCE = 'farming_protected_landscapes'
-  try {
-    return await upsertGrants(SOURCE, [
-      { external_id: `${SOURCE}_main`, source: SOURCE, title: 'Farming in Protected Landscapes (FiPL)', funder: 'Natural England / DEFRA', funder_type: 'government', description: 'FiPL provides grants to farmers and land managers in National Parks and Areas of Outstanding Natural Beauty (AONBs) across England to take actions that support nature recovery, climate mitigation, scenic beauty and engagement with the landscape. Grants of up to £50,000 per project.', amount_min: 2500, amount_max: 50000, deadline: null, is_rolling: true, is_local: true, sectors: ['environment', 'agriculture', 'conservation', 'rural', 'heritage', 'climate'], eligibility_criteria: ['Farmer or land manager within a National Park or AONB in England', 'Project must benefit nature, climate, scenic quality or wellbeing', 'Apply to your local National Park Authority or AONB'], apply_url: 'https://www.gov.uk/guidance/funding-for-farmers-in-protected-landscapes', raw_data: {} as Record<string, unknown> },
-    ])
-  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
-}
-
-// ── Source 114 — Esmee Fairbairn Collections Fund ────────────────────────────
-// esmee-fairbairn.org.uk/what-we-fund/collections — separate from main Esmee programme.
-async function crawlEsmeeFairbairnCollections(): Promise<CrawlResult> {
-  const SOURCE = 'esmee_fairbairn_collections'
-  try {
-    return await upsertGrants(SOURCE, [
-      { external_id: `${SOURCE}_main`, source: SOURCE, title: 'Esmée Fairbairn Collections Fund', funder: 'Esmée Fairbairn Foundation', funder_type: 'trust_foundation', description: "Dedicated fund for UK museums, galleries and archives to develop and share their collections more widely. Supports digitisation, new interpretations, touring exhibitions, skills development and opening up previously inaccessible collections.", amount_min: 30000, amount_max: 250000, deadline: null, is_rolling: false, is_local: false, sectors: ['museums', 'heritage', 'arts', 'archives', 'culture', 'digital'], eligibility_criteria: ['UK museum, gallery or archive with a public collection', 'Project must develop or share the collection more widely', 'Not for individual projects within a programme already funded by Esmee Fairbairn main fund'], apply_url: 'https://www.esmeefairbairn.org.uk/what-we-fund/collections/', raw_data: {} as Record<string, unknown> },
-    ])
-  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
-}
-
-// ── Source 115 — EDF Energy Community Fund ───────────────────────────────────
-async function crawlEDFEnergyCommunityFund(): Promise<CrawlResult> {
-  const SOURCE = 'edf_community_fund'
-  try {
-    return await upsertGrants(SOURCE, [
-      { external_id: `${SOURCE}_main`, source: SOURCE, title: 'EDF Energy — Community Fund', funder: 'EDF Energy', funder_type: 'corporate_foundation', description: "EDF Energy's community funds support projects near its power stations and renewable energy sites. Grants for local environmental improvements, education, community facilities and social welfare projects.", amount_min: 1000, amount_max: 25000, deadline: null, is_rolling: true, is_local: true, sectors: ['community', 'environment', 'education', 'social welfare', 'energy'], eligibility_criteria: ['Registered charity or community group', 'Project must be near an EDF Energy site', 'Focus on community benefit, environment or education'], apply_url: 'https://www.edfenergy.com/energyfutures/community-fund', raw_data: {} as Record<string, unknown> },
     ])
   } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
 }
@@ -3797,58 +2877,6 @@ async function crawlNHSCharitiesTogether(): Promise<CrawlResult> {
     if (grants.length > 0) return await upsertGrants(SOURCE, grants)
     return await upsertGrants(SOURCE, [
       { external_id: `${SOURCE}_community_grants`, source: SOURCE, title: 'NHS Charities Together — Community Grants', funder: 'NHS Charities Together', funder_type: 'trust_foundation', description: "NHS Charities Together funds projects that improve the wellbeing of NHS patients, staff and volunteers across the UK. Community grants support activities that complement NHS services and promote health and wellbeing in communities.", amount_min: 5000, amount_max: 100000, deadline: null, is_rolling: false, is_local: false, sectors: ['health', 'social welfare', 'mental health', 'wellbeing', 'community'], eligibility_criteria: ['NHS charity or charitable organisation working with NHS', 'Project must improve health, wellbeing or experience of NHS patients, staff or volunteers', 'Must demonstrate NHS partnership or endorsement'], apply_url: `${BASE}/about-us/our-programmes/`, raw_data: { note: 'Hardcoded fallback' } as Record<string, unknown> },
-    ])
-  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
-}
-
-// ── Source 117 — Groundwork UK ───────────────────────────────────────────────
-// groundwork.org.uk — environment and community regeneration federation.
-async function crawlGroundworkUK(): Promise<CrawlResult> {
-  const SOURCE = 'groundwork_uk'
-  try {
-    return await upsertGrants(SOURCE, [
-      { external_id: `${SOURCE}_green_recovery`, source: SOURCE, title: 'Groundwork UK — Green Recovery Challenge Fund', funder: 'Groundwork UK / DEFRA', funder_type: 'trust_foundation', description: "Groundwork UK administers environmental and community grants, including the Green Recovery Challenge Fund supporting nature recovery, green spaces and community environmental projects. Various themed rounds — check website for current open calls.", amount_min: 10000, amount_max: 500000, deadline: null, is_rolling: false, is_local: false, sectors: ['environment', 'community', 'green spaces', 'biodiversity', 'social welfare'], eligibility_criteria: ['UK registered charity or VCSE organisation', 'Projects delivering environmental and community benefits', 'Must demonstrate measurable environmental impact'], apply_url: 'https://www.groundwork.org.uk/what-we-do/funding/', raw_data: {} as Record<string, unknown> },
-    ])
-  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
-}
-
-// ── Source 118 — Aldi UK Stores Foundation ───────────────────────────────────
-async function crawlAldiFoundation(): Promise<CrawlResult> {
-  const SOURCE = 'aldi_foundation'
-  try {
-    return await upsertGrants(SOURCE, [
-      { external_id: `${SOURCE}_main`, source: SOURCE, title: "Aldi UK — Neighbourhood Grant", funder: 'Aldi UK', funder_type: 'corporate_foundation', description: "Aldi's Neighbourhood Grant programme supports local community projects near Aldi stores. Grants of up to £1,000 for community groups, charities and schools. Applications accepted year-round via local store managers.", amount_min: 100, amount_max: 1000, deadline: null, is_rolling: true, is_local: true, sectors: ['community', 'social welfare', 'youth', 'sport', 'arts'], eligibility_criteria: ['Not-for-profit community group, charity or school', 'Project must benefit the local community near an Aldi store', 'Apply through your local Aldi store manager'], apply_url: 'https://www.aldi.co.uk/about-aldi/corporate-responsibility', raw_data: {} as Record<string, unknown> },
-    ])
-  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
-}
-
-// ── Source 119 — Waitrose Community Matters ──────────────────────────────────
-async function crawlWaitroseCommunityMatters(): Promise<CrawlResult> {
-  const SOURCE = 'waitrose_community_matters'
-  try {
-    return await upsertGrants(SOURCE, [
-      { external_id: `${SOURCE}_main`, source: SOURCE, title: 'Waitrose Community Matters', funder: 'Waitrose / John Lewis Partnership', funder_type: 'corporate_foundation', description: "Waitrose Community Matters gives tokens to customers who vote for their chosen local charity. Every month, three local causes share £1,000 per Waitrose branch. Charities must be within the local community of a Waitrose store.", amount_min: 100, amount_max: 1000, deadline: null, is_rolling: true, is_local: true, sectors: ['community', 'social welfare', 'youth', 'health', 'arts'], eligibility_criteria: ['UK registered charity or community group', 'Must be local to a Waitrose store', 'Apply online then Waitrose customers vote'], apply_url: 'https://www.waitrose.com/ecom/content/community-matters', raw_data: {} as Record<string, unknown> },
-    ])
-  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
-}
-
-// ── Source 120 — Teenage Cancer Trust ────────────────────────────────────────
-async function crawlTeenageCancerTrust(): Promise<CrawlResult> {
-  const SOURCE = 'teenage_cancer_trust'
-  try {
-    return await upsertGrants(SOURCE, [
-      { external_id: `${SOURCE}_nursing`, source: SOURCE, title: 'Teenage Cancer Trust — Clinical Nurse Specialist Grants', funder: 'Teenage Cancer Trust', funder_type: 'trust_foundation', description: "Teenage Cancer Trust funds specialist nurses and dedicated units for young people aged 13–24 with cancer in NHS hospitals across the UK. Also supports research, patient support programmes and training for healthcare professionals.", amount_min: 50000, amount_max: 500000, deadline: null, is_rolling: false, is_local: false, sectors: ['health', 'cancer', 'youth', 'medical research', 'NHS'], eligibility_criteria: ['NHS hospitals and cancer centres', 'Must be developing or enhancing specialist teenage and young adult cancer services', 'UK hospitals only'], apply_url: 'https://www.teenagecancertrust.org/get-help/healthcare-professionals/grants/', raw_data: {} as Record<string, unknown> },
-    ])
-  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
-}
-
-// ── Source 121 — Active Travel England ────────────────────────────────────────
-// activetravelengland.gov.uk — walking, cycling and wheeling infrastructure.
-async function crawlActiveTravelEngland(): Promise<CrawlResult> {
-  const SOURCE = 'active_travel_england'
-  try {
-    return await upsertGrants(SOURCE, [
-      { external_id: `${SOURCE}_capability`, source: SOURCE, title: 'Active Travel England — Capability & Ambition Fund', funder: 'Active Travel England', funder_type: 'government', description: 'Active Travel England funds local authorities and organisations to plan and deliver walking, cycling and wheeling infrastructure across England. Schemes range from new cycle paths and school streets to accessibility improvements and behaviour change programmes.', amount_min: 25000, amount_max: 2000000, deadline: null, is_rolling: false, is_local: true, sectors: ['transport', 'active travel', 'health', 'environment', 'community'], eligibility_criteria: ['Local authorities in England', 'Community and charity organisations in partnership with local authorities', 'Projects must improve conditions for walking, cycling or wheeling'], apply_url: 'https://www.activetravelengland.gov.uk/funding', raw_data: {} as Record<string, unknown> },
     ])
   } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
 }
@@ -3910,25 +2938,6 @@ async function crawlUnLtd(): Promise<CrawlResult> {
   } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
 }
 
-// ── Source 122 — School for Social Entrepreneurs (SSE) ───────────────────────
-async function crawlSSEFellowships(): Promise<CrawlResult> {
-  const SOURCE = 'sse_fellowships'
-  try {
-    return await upsertGrants(SOURCE, [
-      {
-        external_id: `${SOURCE}_fellowship`, source: SOURCE,
-        title: 'SSE Fellowship Programme — Learning & Bursary',
-        funder: 'School for Social Entrepreneurs', funder_type: 'competition',
-        description: 'The School for Social Entrepreneurs runs year-long fellowship programmes combining peer learning with bursaries of £2,500–£10,000. Programmes support social entrepreneurs to grow income, impact and resilience. SSE has programmes across England, Scotland, Wales and Ireland, with specialist tracks for health, housing, rural and other themes.',
-        amount_min: 2500, amount_max: 10000, deadline: null, is_rolling: true, is_local: false,
-        sectors: ['social enterprise', 'entrepreneurship', 'education', 'community', 'health'],
-        eligibility_criteria: ['Social entrepreneurs running a social venture', 'Based in the UK or Ireland', 'Venture generating some income (not pre-idea stage)', 'Open to CICs, charities, social enterprises and community businesses'],
-        apply_url: 'https://www.sse.org.uk/programmes/apply-for-a-programme', funding_type: 'accelerator', raw_data: {} as Record<string, unknown>,
-      },
-    ])
-  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
-}
-
 // ── Source 123 — Nesta Challenges ─────────────────────────────────────────────
 async function crawlNestaChallenges(): Promise<CrawlResult> {
   const SOURCE = 'nesta_challenges'
@@ -3965,95 +2974,6 @@ async function crawlNestaChallenges(): Promise<CrawlResult> {
       apply_url: 'https://challengeworks.org/about-challenge-prizes/our-challenge-prizes/', funding_type: 'accelerator', raw_data: {} as Record<string, unknown>,
     }])
     return await upsertGrants(SOURCE, grants.slice(0, 8))
-  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
-}
-
-// ── Source 124 — Nominet Tech for Good ───────────────────────────────────────
-async function crawlNominetTechForGood(): Promise<CrawlResult> {
-  const SOURCE = 'nominet_tech_for_good'
-  try {
-    return await upsertGrants(SOURCE, [{
-      external_id: `${SOURCE}_main`, source: SOURCE,
-      title: 'Nominet — Tech for Good Programme',
-      funder: 'Nominet', funder_type: 'competition',
-      description: 'Nominet funds digital social innovation through its Tech for Good programme, supporting projects that use technology to address social challenges. The programme includes awards, grants and investment for early-stage digital ventures with measurable social impact.',
-      amount_min: 5000, amount_max: 100000, deadline: null, is_rolling: true, is_local: false,
-      sectors: ['technology', 'digital', 'social innovation', 'community', 'education'],
-      eligibility_criteria: ['UK-based organisations and social enterprises', 'Digital or technology-led approaches to social challenges', 'Early-stage to growth-stage ventures welcome'],
-      apply_url: 'https://www.nominet.uk/tech-good/', raw_data: {} as Record<string, unknown>,
-    }])
-  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
-}
-
-// ── Source 125 — Key Fund ─────────────────────────────────────────────────────
-async function crawlKeyFund(): Promise<CrawlResult> {
-  const SOURCE = 'key_fund'
-  try {
-    return await upsertGrants(SOURCE, [
-      {
-        external_id: `${SOURCE}_loan`, source: SOURCE,
-        title: 'Key Fund — Social Investment Loans',
-        funder: 'Key Fund', funder_type: 'loan',
-        description: 'Key Fund is a specialist social investor providing unsecured loans of £2,000–£150,000 to social enterprises, community businesses and charities in the UK. Loans are typically at low or zero interest and are designed to be accessible to organisations that struggle to access mainstream finance. Key Fund specialises in supporting organisations in disadvantaged communities.',
-        amount_min: 2000, amount_max: 150000, deadline: null, is_rolling: true, is_local: false,
-        sectors: ['social enterprise', 'community', 'housing', 'employment', 'health'],
-        eligibility_criteria: ['Social enterprises, CICs, charities and community interest companies', 'UK-based', 'Trading income or clear route to income required', 'Organisations in disadvantaged communities prioritised'],
-        apply_url: 'https://thekeyfund.co.uk/our-funding/', funding_type: 'social_investment', raw_data: {} as Record<string, unknown>,
-      },
-    ])
-  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
-}
-
-// ── Source 126 — Fredericks Foundation ───────────────────────────────────────
-async function crawlFredericksFoundation(): Promise<CrawlResult> {
-  const SOURCE = 'fredericks_foundation'
-  try {
-    return await upsertGrants(SOURCE, [{
-      external_id: `${SOURCE}_microloan`, source: SOURCE,
-      title: 'Fredericks Foundation — Interest-Free Microloans',
-      funder: 'Fredericks Foundation', funder_type: 'loan',
-      description: 'Fredericks Foundation offers interest-free business loans of up to £25,000 to micro-enterprises and social enterprises that cannot access mainstream finance. Loans come with free mentoring and business support. Fredericks specialises in supporting entrepreneurs from disadvantaged backgrounds, including those with poor credit history.',
-      amount_min: 500, amount_max: 25000, deadline: null, is_rolling: true, is_local: false,
-      sectors: ['entrepreneurship', 'social enterprise', 'community', 'employment', 'micro-enterprise'],
-      eligibility_criteria: ['Micro-enterprises and social enterprises', 'Based in England', 'Unable to access mainstream bank finance', 'Entrepreneurs from disadvantaged backgrounds prioritised'],
-      apply_url: 'https://www.fredericksfoundation.org/apply', funding_type: 'social_investment', raw_data: {} as Record<string, unknown>,
-    }])
-  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
-}
-
-// ── Source 127 — Social Investment Business (SIB) ────────────────────────────
-async function crawlSocialInvestmentBusiness(): Promise<CrawlResult> {
-  const SOURCE = 'social_investment_business'
-  try {
-    return await upsertGrants(SOURCE, [
-      {
-        external_id: `${SOURCE}_resilience`, source: SOURCE,
-        title: 'Social Investment Business — Resilience & Recovery Loans',
-        funder: 'Social Investment Business', funder_type: 'loan',
-        description: 'The Social Investment Business provides repayable finance to charities and social enterprises across England. Loan products include emergency resilience loans, growth capital and working capital facilities. SIB prioritises organisations working with disadvantaged communities and underserved groups.',
-        amount_min: 50000, amount_max: 1500000, deadline: null, is_rolling: true, is_local: false,
-        sectors: ['social enterprise', 'charity', 'community', 'health', 'housing', 'employment'],
-        eligibility_criteria: ['Registered charities and social enterprises in England', 'Minimum £250k annual income recommended', 'Clear social mission and evidence of impact'],
-        apply_url: 'https://sibgroup.org.uk/finance/', funding_type: 'social_investment', raw_data: {} as Record<string, unknown>,
-      },
-    ])
-  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
-}
-
-// ── Source 128 — Big Issue Invest ─────────────────────────────────────────────
-async function crawlBigIssueInvest(): Promise<CrawlResult> {
-  const SOURCE = 'big_issue_invest'
-  try {
-    return await upsertGrants(SOURCE, [{
-      external_id: `${SOURCE}_main`, source: SOURCE,
-      title: 'Big Issue Invest — Social Investment',
-      funder: 'Big Issue Invest', funder_type: 'loan',
-      description: 'Big Issue Invest is the social investment arm of the Big Issue Group, providing loans and investment of £20,000–£1.5 million to social enterprises and charities. Funding supports organisations tackling poverty and disadvantage across the UK. Products include social loans, equity and hybrid instruments with patient, flexible terms.',
-      amount_min: 20000, amount_max: 1500000, deadline: null, is_rolling: true, is_local: false,
-      sectors: ['social enterprise', 'poverty', 'housing', 'employment', 'community', 'health'],
-      eligibility_criteria: ['Social enterprises and charities tackling poverty', 'Based in the UK', 'Evidence of trading income or clear revenue model', 'Strong social impact metrics'],
-      apply_url: 'https://www.bigissueinvest.com/apply/', funding_type: 'social_investment', raw_data: {} as Record<string, unknown>,
-    }])
   } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
 }
 
@@ -4113,40 +3033,6 @@ async function crawlSpacehive(): Promise<CrawlResult> {
   } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
 }
 
-// ── Source 131 — Localgiving Match Funding ────────────────────────────────────
-async function crawlLocalgivingMatch(): Promise<CrawlResult> {
-  const SOURCE = 'localgiving_match'
-  try {
-    return await upsertGrants(SOURCE, [{
-      external_id: `${SOURCE}_main`, source: SOURCE,
-      title: 'Localgiving — Charity Match Funding Rounds',
-      funder: 'Localgiving', funder_type: 'crowdfund_match',
-      description: 'Localgiving runs periodic matched crowdfunding rounds where donations to registered charities on the platform are matched by corporate and foundation partners. Rounds typically run for 24–48 hours and match donations up to a set cap (often £250–£2,500 per charity). Localgiving focuses on small, local charities and community groups.',
-      amount_min: 500, amount_max: 10000, deadline: null, is_rolling: false, is_local: false,
-      sectors: ['community', 'charity', 'local', 'health', 'arts', 'environment'],
-      eligibility_criteria: ['Registered charities based in the UK', 'Must have an active Localgiving profile', 'Priority for small charities with income under £1 million'],
-      apply_url: 'https://localgiving.org/information/match-funding', funding_type: 'blended_finance', raw_data: {} as Record<string, unknown>,
-    }])
-  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
-}
-
-// ── Source 132 — Community Shares Unit ────────────────────────────────────────
-async function crawlCommunityShares(): Promise<CrawlResult> {
-  const SOURCE = 'community_shares'
-  try {
-    return await upsertGrants(SOURCE, [{
-      external_id: `${SOURCE}_main`, source: SOURCE,
-      title: 'Community Shares — Booster Fund & Community Share Offers',
-      funder: 'Community Shares Unit', funder_type: 'crowdfund_match',
-      description: 'Community Shares enables community businesses, co-operatives and social enterprises to raise capital by selling withdrawable shares to the public. The Community Shares Booster Fund provides grants of up to £10,000 to help organisations develop and launch share offers. Community share offers typically raise £50,000–£2 million from hundreds of local investors.',
-      amount_min: 10000, amount_max: 2000000, deadline: null, is_rolling: true, is_local: false,
-      sectors: ['community', 'social enterprise', 'co-operative', 'local', 'environment', 'food'],
-      eligibility_criteria: ['Community businesses, co-operatives and social enterprises', 'Based in the UK', 'Booster Fund: must be developing a new community share offer', 'Industrial and provident societies (IPS) or community benefit societies preferred'],
-      apply_url: 'https://communityshares.org.uk/resources/booster-fund', funding_type: 'blended_finance', raw_data: {} as Record<string, unknown>,
-    }])
-  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
-}
-
 // ── Batch definitions ─────────────────────────────────────────────────────────
 // Sources are grouped into 3 batches so each cron invocation handles ~15 sources.
 // Batch 1: core nationals + first CFs
@@ -4158,68 +3044,65 @@ type BatchNum = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
 const BATCH_1_SOURCES = [
   'gov_uk', 'tnlcf', 'ukri', 'gla', 'arts_council',
   'sport_england', 'heritage_fund', 'forever_manchester', 'two_ridings_cf', 'cf_wales',
-  'quartet_cf', 'cf_ni', 'heart_of_england_cf', 'foundation_scotland', 'london_cf',
+  'cf_ni', 'foundation_scotland', 'london_cf',
   'sussex_cf',
 ] as const
 
 const BATCH_2_SOURCES = [
   'asda_foundation', 'aviva_foundation', 'nationwide_foundation',
   'tyne_wear_cf',
-  'bbc_cin',
 ] as const
 
 const BATCH_3_SOURCES = [
   'paul_hamlyn_foundation', 'esmee_fairbairn', 'henry_smith',
   'garfield_weston', 'clothworkers_foundation',
   'jrct', 'peoples_health_trust',
-  'national_churches_trust', 'tudor_trust',
+  'national_churches_trust', 
 ] as const
 
 // Batch 4: new community foundations + major national funders (06:15)
 const BATCH_4_SOURCES = [
   'leeds_cf',
-  'lloyds_bank_foundation', 'power_to_change', 'kings_trust',
-  'barrow_cadbury', 'jrf', 'access_foundation',
-  'comic_relief', 'community_ownership_fund', 'creative_scotland',
+  
+  
+  'creative_scotland',
 ] as const
 
 // Batch 5: more CFs + regional arts/sport bodies (06:20)
 const BATCH_5_SOURCES = [
   'south_yorkshire_cf', 'east_end_cf',
-  'birmingham_cf',
+  
   'sport_wales', 'arts_council_wales',
-  'wolfson_foundation', 'pilgrim_trust', 'rosa_uk', 'coop_foundation',
+  'wolfson_foundation', 'pilgrim_trust', 
 ] as const
 
 // Batch 6: major national funders + corporate/landfill (06:25)
 const BATCH_6_SOURCES = [
-  'wellcome_trust', 'nesta', 'dulverton_trust', 'blagrave_trust',
-  'rank_foundation', 'cadent_foundation', 'severn_trent_fund',
-  'tesco_bags_of_help', 'veolia_environmental_trust', 'biffa_award',
-  'santander_foundation', 'screwfix_foundation',
+  
+  'cadent_foundation', 'severn_trent_fund',
+  
 ] as const
 
 // Batch 7: innovation/lottery + more CFs + specialist national funders (06:30)
 const BATCH_7_SOURCES = [
-  'innovate_uk', 'sport_scotland',
-  'foyle_foundation', 'ernest_cook_trust', 'coalfields_regen', 'local_trust',
-  'armed_forces_covenant', 'british_gas_energy_trust', 'postcode_lottery_trust',
-  'architectural_heritage_fund', 'persimmon_foundation',
+  'sport_scotland',
+  'ernest_cook_trust', 
+  'armed_forces_covenant', 
+  'architectural_heritage_fund', 
 ] as const
 
 // Batch 8: heritage/retail/environment/health national funders (06:35)
 const BATCH_8_SOURCES = [
-  'historic_england', 'john_lewis_foundation', 'marks_spencer_foundation', 'uk_spf',
-  'farming_protected_landscapes', 'esmee_fairbairn_collections', 'edf_community_fund',
-  'nhs_charities_together', 'groundwork_uk', 'aldi_foundation',
-  'waitrose_community_matters', 'teenage_cancer_trust', 'active_travel_england',
+  'historic_england', 
+  
+  'nhs_charities_together', 
 ] as const
 
 // Batch 9: alternative funding routes — competitions, social loans, matched crowdfunding (06:40)
 const BATCH_9_SOURCES = [
-  'unltd', 'sse_fellowships', 'nesta_challenges', 'nominet_tech_for_good',
-  'key_fund', 'fredericks_foundation', 'social_investment_business', 'big_issue_invest',
-  'crowdfunder_match', 'spacehive', 'localgiving_match', 'community_shares',
+  'unltd', 'nesta_challenges', 
+  
+  'crowdfunder_match', 'spacehive', 
 ] as const
 
 // ── Main export ───────────────────────────────────────────────────────────────
@@ -4248,42 +3131,42 @@ export async function crawlAllSources(batch?: BatchNum): Promise<CrawlResult[]> 
   const [
     govUK, tnlcf, ukri, gla, ace,
     sportEngland, heritageFund, foreverMcr, twoRidings, cfWales,
- cfNI, heartOfEngland, foundationScotland, londonCF, sussexCF,
+ cfNI, foundationScotland, londonCF, sussexCF,
     asdaFoundation, avivaFoundation, nationwideFoundation,
     tyneWearCF,
- bbcCiN,
+ 
     paulHamlynFoundation, esmeeFairbairn, henrySmith,
     garfieldWeston, clothworkersFoundation,
     jrct, peoplesHealthTrust,
-    nationalChurchesTrust, tudorTrust,
+    nationalChurchesTrust, 
     // Batch 4
     leedsCF,
-    lloydsBankFoundation, powerToChange, kingsTrust,
-    barrowCadbury, jrf, accessFoundation,
-    comicRelief, communityOwnershipFund, creativeScotland,
+    
+    
+    creativeScotland,
     // Batch 5
     southYorkshireCF, eastEndCF,
-    birminghamCF, sportWales, artsCouncilWales,
-    wolfsonFoundation, pilgrimTrust, rosaUK, coOpFoundation,
+    sportWales, artsCouncilWales,
+    wolfsonFoundation, pilgrimTrust, 
     // Batch 6
-    wellcomeTrust, nesta, dulvertonTrust, blagraveTrust,
-    rankFoundation, cadentFoundation, severnTrentFund,
-    tescoBagsOfHelp, veoliaEnvTrust, biffaAward,
-    santanderFoundation, screwfixFoundation,
+    
+    cadentFoundation, severnTrentFund,
+    
+    
     // Batch 7
-    innovateUK, sportScotland,
-    foyleFoundation, ernestCookTrust, coalfieldsRegen, localTrust,
-    armedForcesCovenant, britishGasEnergyTrust, postcodeLotteryTrust,
-    architecturalHeritageFund, persimmonFoundation,
+    sportScotland,
+    ernestCookTrust, 
+    armedForcesCovenant, 
+    architecturalHeritageFund, 
     // Batch 8
-    historicEngland, johnLewisFoundation, mAndSFoundation, ukSPF,
-    farmingProtectedLandscapes, esmeeFairbairnCollections, edfEnergyCommunityFund,
-    nhsCharitiesTogether, groundworkUK, aldiFoundation,
-    waitroseCommunityMatters, teenageCancerTrust, activeTravelEngland,
+    historicEngland, 
+    
+    nhsCharitiesTogether, 
+    
     // Batch 9
-    unltd, sseFellowships, nestaChallenges, nominetTechForGood,
-    keyFund, fredericksFoundation, socialInvestmentBusiness, bigIssueInvest,
-    crowdfunderMatch, spacehive, localgivingMatch, communityShares,
+    unltd, nestaChallenges, 
+    
+    crowdfunderMatch, spacehive, 
   ] = await Promise.allSettled([
     run('gov_uk',                  crawlGovUK),
     run('tnlcf',                   crawlTNLCF),
@@ -4296,7 +3179,6 @@ export async function crawlAllSources(batch?: BatchNum): Promise<CrawlResult[]> 
     run('two_ridings_cf',          crawlTwoRidingsCF),
     run('cf_wales',                crawlCFWales),
     run('cf_ni',                   crawlCFNI),
-    run('heart_of_england_cf',     crawlHeartOfEnglandCF),
     run('foundation_scotland',     crawlFoundationScotland),
     run('london_cf',               crawlLondonCF),
     run('sussex_cf',               crawlSussexCF),
@@ -4304,7 +3186,6 @@ export async function crawlAllSources(batch?: BatchNum): Promise<CrawlResult[]> 
     run('aviva_foundation',        crawlAvivaFoundation),
     run('nationwide_foundation',   crawlNationwideFoundation),
     run('tyne_wear_cf',            crawlTyneWearCF),
-    run('bbc_cin',                 crawlBBCChildrenInNeed),
     run('paul_hamlyn_foundation',  crawlPaulHamlynFoundation),
     run('esmee_fairbairn',         crawlEsmeeFairbairn),
     run('henry_smith',             crawlHenrySmithFoundation),
@@ -4313,80 +3194,32 @@ export async function crawlAllSources(batch?: BatchNum): Promise<CrawlResult[]> 
     run('jrct',                    crawlJRCT),
     run('peoples_health_trust',    crawlPeoplesHealthTrust),
     run('national_churches_trust', crawlNationalChurchesTrust),
-    run('tudor_trust',             crawlTudorTrust),
     // Batch 4
     run('leeds_cf',                crawlLeedsCF),
-    run('lloyds_bank_foundation',  crawlLloydsBankFoundation),
-    run('power_to_change',         crawlPowerToChange),
-    run('kings_trust',             crawlKingsTrust),
-    run('barrow_cadbury',          crawlBarrowCadbury),
-    run('jrf',                     crawlJRF),
-    run('access_foundation',       crawlAccessFoundation),
-    run('comic_relief',            crawlComicRelief),
-    run('community_ownership_fund', crawlCommunityOwnershipFund),
     run('creative_scotland',       crawlCreativeScotland),
     // Batch 5
     run('south_yorkshire_cf',      crawlSouthYorkshireCF),
     run('east_end_cf',             crawlEastEndCF),
-    run('birmingham_cf',           crawlBirminghamCF),
     run('sport_wales',             crawlSportWales),
     run('arts_council_wales',      crawlArtsCouncilWales),
     run('wolfson_foundation',      crawlWolfsonFoundation),
     run('pilgrim_trust',           crawlPilgrimTrust),
-    run('rosa_uk',                 crawlRosaUK),
-    run('coop_foundation',         crawlCoOpFoundation),
     // Batch 6
-    run('wellcome_trust',          crawlWellcomeTrust),
-    run('nesta',                   crawlNesta),
-    run('dulverton_trust',         crawlDulvertonTrust),
-    run('blagrave_trust',          crawlBlagraveTrust),
-    run('rank_foundation',         crawlRankFoundation),
     run('cadent_foundation',       crawlCadentFoundation),
     run('severn_trent_fund',       crawlSevernTrentFund),
-    run('tesco_bags_of_help',      crawlTescoBagsOfHelp),
-    run('veolia_environmental_trust', crawlVeoliaEnvTrust),
-    run('biffa_award',             crawlBiffaAward),
-    run('santander_foundation',    crawlSantanderFoundation),
-    run('screwfix_foundation',     crawlScrewfixFoundation),
     // Batch 7
-    run('innovate_uk',                  crawlInnovateUK),
     run('sport_scotland',               crawlSportScotland),
-    run('foyle_foundation',             crawlFoyleFoundation),
     run('ernest_cook_trust',            crawlErnestCookTrust),
-    run('coalfields_regen',             crawlCoalfieldsRegen),
-    run('local_trust',                  crawlLocalTrust),
     run('armed_forces_covenant',        crawlArmedForcesCovenant),
-    run('british_gas_energy_trust',     crawlBritishGasEnergyTrust),
-    run('postcode_lottery_trust',       crawlPostcodeLotteryTrust),
     run('architectural_heritage_fund',  crawlArchitecturalHeritageFund),
-    run('persimmon_foundation',         crawlPersimmonFoundation),
     // Batch 8
     run('historic_england',             crawlHistoricEngland),
-    run('john_lewis_foundation',        crawlJohnLewisFoundation),
-    run('marks_spencer_foundation',     crawlMAndSFoundation),
-    run('uk_spf',                       crawlUKSPF),
-    run('farming_protected_landscapes', crawlFarmingProtectedLandscapes),
-    run('esmee_fairbairn_collections',  crawlEsmeeFairbairnCollections),
-    run('edf_community_fund',           crawlEDFEnergyCommunityFund),
     run('nhs_charities_together',       crawlNHSCharitiesTogether),
-    run('groundwork_uk',                crawlGroundworkUK),
-    run('aldi_foundation',              crawlAldiFoundation),
-    run('waitrose_community_matters',   crawlWaitroseCommunityMatters),
-    run('teenage_cancer_trust',         crawlTeenageCancerTrust),
-    run('active_travel_england',        crawlActiveTravelEngland),
     // Batch 9
     run('unltd',                        crawlUnLtd),
-    run('sse_fellowships',              crawlSSEFellowships),
     run('nesta_challenges',             crawlNestaChallenges),
-    run('nominet_tech_for_good',        crawlNominetTechForGood),
-    run('key_fund',                     crawlKeyFund),
-    run('fredericks_foundation',        crawlFredericksFoundation),
-    run('social_investment_business',   crawlSocialInvestmentBusiness),
-    run('big_issue_invest',             crawlBigIssueInvest),
     run('crowdfunder_match',            crawlCrowdfunderMatch),
     run('spacehive',                    crawlSpacehive),
-    run('localgiving_match',            crawlLocalgivingMatch),
-    run('community_shares',             crawlCommunityShares),
   ])
 
   const fallback = (source: string) => ({ source, fetched: 0, upserted: 0, error: 'Promise rejected' })
@@ -4403,7 +3236,6 @@ export async function crawlAllSources(batch?: BatchNum): Promise<CrawlResult[]> 
     twoRidings.status             === 'fulfilled' ? twoRidings.value             : fallback('two_ridings_cf'),
     cfWales.status                === 'fulfilled' ? cfWales.value                : fallback('cf_wales'),
     cfNI.status                   === 'fulfilled' ? cfNI.value                   : fallback('cf_ni'),
-    heartOfEngland.status         === 'fulfilled' ? heartOfEngland.value         : fallback('heart_of_england_cf'),
     foundationScotland.status     === 'fulfilled' ? foundationScotland.value     : fallback('foundation_scotland'),
     londonCF.status               === 'fulfilled' ? londonCF.value               : fallback('london_cf'),
     sussexCF.status               === 'fulfilled' ? sussexCF.value               : fallback('sussex_cf'),
@@ -4411,7 +3243,6 @@ export async function crawlAllSources(batch?: BatchNum): Promise<CrawlResult[]> 
     avivaFoundation.status        === 'fulfilled' ? avivaFoundation.value        : fallback('aviva_foundation'),
     nationwideFoundation.status   === 'fulfilled' ? nationwideFoundation.value   : fallback('nationwide_foundation'),
     tyneWearCF.status             === 'fulfilled' ? tyneWearCF.value             : fallback('tyne_wear_cf'),
-    bbcCiN.status                 === 'fulfilled' ? bbcCiN.value                 : fallback('bbc_cin'),
     paulHamlynFoundation.status   === 'fulfilled' ? paulHamlynFoundation.value   : fallback('paul_hamlyn_foundation'),
     esmeeFairbairn.status         === 'fulfilled' ? esmeeFairbairn.value         : fallback('esmee_fairbairn'),
     henrySmith.status             === 'fulfilled' ? henrySmith.value             : fallback('henry_smith'),
@@ -4420,80 +3251,32 @@ export async function crawlAllSources(batch?: BatchNum): Promise<CrawlResult[]> 
     jrct.status                   === 'fulfilled' ? jrct.value                   : fallback('jrct'),
     peoplesHealthTrust.status     === 'fulfilled' ? peoplesHealthTrust.value     : fallback('peoples_health_trust'),
     nationalChurchesTrust.status  === 'fulfilled' ? nationalChurchesTrust.value  : fallback('national_churches_trust'),
-    tudorTrust.status             === 'fulfilled' ? tudorTrust.value             : fallback('tudor_trust'),
     // Batch 4
     leedsCF.status                === 'fulfilled' ? leedsCF.value                : fallback('leeds_cf'),
-    lloydsBankFoundation.status   === 'fulfilled' ? lloydsBankFoundation.value   : fallback('lloyds_bank_foundation'),
-    powerToChange.status          === 'fulfilled' ? powerToChange.value          : fallback('power_to_change'),
-    kingsTrust.status             === 'fulfilled' ? kingsTrust.value             : fallback('kings_trust'),
-    barrowCadbury.status          === 'fulfilled' ? barrowCadbury.value          : fallback('barrow_cadbury'),
-    jrf.status                    === 'fulfilled' ? jrf.value                    : fallback('jrf'),
-    accessFoundation.status       === 'fulfilled' ? accessFoundation.value       : fallback('access_foundation'),
-    comicRelief.status            === 'fulfilled' ? comicRelief.value            : fallback('comic_relief'),
-    communityOwnershipFund.status === 'fulfilled' ? communityOwnershipFund.value : fallback('community_ownership_fund'),
     creativeScotland.status       === 'fulfilled' ? creativeScotland.value       : fallback('creative_scotland'),
     // Batch 5
     southYorkshireCF.status       === 'fulfilled' ? southYorkshireCF.value       : fallback('south_yorkshire_cf'),
     eastEndCF.status              === 'fulfilled' ? eastEndCF.value              : fallback('east_end_cf'),
-    birminghamCF.status           === 'fulfilled' ? birminghamCF.value           : fallback('birmingham_cf'),
     sportWales.status             === 'fulfilled' ? sportWales.value             : fallback('sport_wales'),
     artsCouncilWales.status       === 'fulfilled' ? artsCouncilWales.value       : fallback('arts_council_wales'),
     wolfsonFoundation.status      === 'fulfilled' ? wolfsonFoundation.value      : fallback('wolfson_foundation'),
     pilgrimTrust.status           === 'fulfilled' ? pilgrimTrust.value           : fallback('pilgrim_trust'),
-    rosaUK.status                 === 'fulfilled' ? rosaUK.value                 : fallback('rosa_uk'),
-    coOpFoundation.status         === 'fulfilled' ? coOpFoundation.value         : fallback('coop_foundation'),
     // Batch 6
-    wellcomeTrust.status          === 'fulfilled' ? wellcomeTrust.value          : fallback('wellcome_trust'),
-    nesta.status                  === 'fulfilled' ? nesta.value                  : fallback('nesta'),
-    dulvertonTrust.status         === 'fulfilled' ? dulvertonTrust.value         : fallback('dulverton_trust'),
-    blagraveTrust.status          === 'fulfilled' ? blagraveTrust.value          : fallback('blagrave_trust'),
-    rankFoundation.status         === 'fulfilled' ? rankFoundation.value         : fallback('rank_foundation'),
     cadentFoundation.status       === 'fulfilled' ? cadentFoundation.value       : fallback('cadent_foundation'),
     severnTrentFund.status        === 'fulfilled' ? severnTrentFund.value        : fallback('severn_trent_fund'),
-    tescoBagsOfHelp.status        === 'fulfilled' ? tescoBagsOfHelp.value        : fallback('tesco_bags_of_help'),
-    veoliaEnvTrust.status         === 'fulfilled' ? veoliaEnvTrust.value         : fallback('veolia_environmental_trust'),
-    biffaAward.status             === 'fulfilled' ? biffaAward.value             : fallback('biffa_award'),
-    santanderFoundation.status    === 'fulfilled' ? santanderFoundation.value    : fallback('santander_foundation'),
-    screwfixFoundation.status     === 'fulfilled' ? screwfixFoundation.value     : fallback('screwfix_foundation'),
     // Batch 7
-    innovateUK.status                 === 'fulfilled' ? innovateUK.value                 : fallback('innovate_uk'),
     sportScotland.status              === 'fulfilled' ? sportScotland.value              : fallback('sport_scotland'),
-    foyleFoundation.status            === 'fulfilled' ? foyleFoundation.value            : fallback('foyle_foundation'),
     ernestCookTrust.status            === 'fulfilled' ? ernestCookTrust.value            : fallback('ernest_cook_trust'),
-    coalfieldsRegen.status            === 'fulfilled' ? coalfieldsRegen.value            : fallback('coalfields_regen'),
-    localTrust.status                 === 'fulfilled' ? localTrust.value                 : fallback('local_trust'),
     armedForcesCovenant.status        === 'fulfilled' ? armedForcesCovenant.value        : fallback('armed_forces_covenant'),
-    britishGasEnergyTrust.status      === 'fulfilled' ? britishGasEnergyTrust.value      : fallback('british_gas_energy_trust'),
-    postcodeLotteryTrust.status       === 'fulfilled' ? postcodeLotteryTrust.value       : fallback('postcode_lottery_trust'),
     architecturalHeritageFund.status  === 'fulfilled' ? architecturalHeritageFund.value  : fallback('architectural_heritage_fund'),
-    persimmonFoundation.status        === 'fulfilled' ? persimmonFoundation.value        : fallback('persimmon_foundation'),
     // Batch 8
     historicEngland.status            === 'fulfilled' ? historicEngland.value            : fallback('historic_england'),
-    johnLewisFoundation.status        === 'fulfilled' ? johnLewisFoundation.value        : fallback('john_lewis_foundation'),
-    mAndSFoundation.status            === 'fulfilled' ? mAndSFoundation.value            : fallback('marks_spencer_foundation'),
-    ukSPF.status                      === 'fulfilled' ? ukSPF.value                      : fallback('uk_spf'),
-    farmingProtectedLandscapes.status === 'fulfilled' ? farmingProtectedLandscapes.value : fallback('farming_protected_landscapes'),
-    esmeeFairbairnCollections.status  === 'fulfilled' ? esmeeFairbairnCollections.value  : fallback('esmee_fairbairn_collections'),
-    edfEnergyCommunityFund.status     === 'fulfilled' ? edfEnergyCommunityFund.value     : fallback('edf_community_fund'),
     nhsCharitiesTogether.status       === 'fulfilled' ? nhsCharitiesTogether.value       : fallback('nhs_charities_together'),
-    groundworkUK.status               === 'fulfilled' ? groundworkUK.value               : fallback('groundwork_uk'),
-    aldiFoundation.status             === 'fulfilled' ? aldiFoundation.value             : fallback('aldi_foundation'),
-    waitroseCommunityMatters.status   === 'fulfilled' ? waitroseCommunityMatters.value   : fallback('waitrose_community_matters'),
-    teenageCancerTrust.status         === 'fulfilled' ? teenageCancerTrust.value         : fallback('teenage_cancer_trust'),
-    activeTravelEngland.status        === 'fulfilled' ? activeTravelEngland.value        : fallback('active_travel_england'),
     // Batch 9
     unltd.status                      === 'fulfilled' ? unltd.value                      : fallback('unltd'),
-    sseFellowships.status             === 'fulfilled' ? sseFellowships.value             : fallback('sse_fellowships'),
     nestaChallenges.status            === 'fulfilled' ? nestaChallenges.value            : fallback('nesta_challenges'),
-    nominetTechForGood.status         === 'fulfilled' ? nominetTechForGood.value         : fallback('nominet_tech_for_good'),
-    keyFund.status                    === 'fulfilled' ? keyFund.value                    : fallback('key_fund'),
-    fredericksFoundation.status       === 'fulfilled' ? fredericksFoundation.value       : fallback('fredericks_foundation'),
-    socialInvestmentBusiness.status   === 'fulfilled' ? socialInvestmentBusiness.value   : fallback('social_investment_business'),
-    bigIssueInvest.status             === 'fulfilled' ? bigIssueInvest.value             : fallback('big_issue_invest'),
     crowdfunderMatch.status           === 'fulfilled' ? crowdfunderMatch.value           : fallback('crowdfunder_match'),
     spacehive.status                  === 'fulfilled' ? spacehive.value                  : fallback('spacehive'),
-    localgivingMatch.status           === 'fulfilled' ? localgivingMatch.value           : fallback('localgiving_match'),
-    communityShares.status            === 'fulfilled' ? communityShares.value            : fallback('community_shares'),
   ]
 
   // ── Persist run to crawl_logs (best-effort, don't fail if table missing) ─
