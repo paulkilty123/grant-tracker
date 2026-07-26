@@ -122,18 +122,28 @@ export const PIPELINE_STAGES = [
   { id: 'declined',    label: 'Declined',    emoji: '✗',  colour: 'coral'        },
 ] as const
 
-export const STAGE_COLOURS: Record<PipelineStage, string> = {
-  identified: 'border-[rgba(0,0,0,0.10)] text-text-muted',
-  applying:   'border-green-mid text-green-text-deep',
-  submitted:  'border-green-pale-3 text-green-deep',
-  won:        'border-green-mid text-green-deep',
-  declined:   'border-coral-mid text-coral-deep',
+/**
+ * Canonical pipeline-stage colour source. Two ladders, both intentional (not
+ * a duplication of each other): STAGE_CHIP is the saturated small-pill tone
+ * used for badges/chips; STAGE_SURFACE_BG is the paler tone the same stages
+ * use as a large-area background (Kanban columns, tile fills), where the
+ * chip ladder would be too saturated to read text against comfortably.
+ * Previously six call sites each hand-copied one of these two ladders
+ * independently — consolidated here 2026-07-26; see
+ * docs/shoots-token-migration-handoff-2026-07-26.md.
+ */
+export const STAGE_CHIP: Record<PipelineStage, { bg: string; text: string }> = {
+  identified: { bg: '#F5F1E8' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour, consolidated source, not yet mapped to a semantic token (primitives pass) */, text: '#5F5E5A' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour, consolidated source, not yet mapped to a semantic token (primitives pass) */ },
+  applying:   { bg: '#EAF3DE' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour, consolidated source, not yet mapped to a semantic token (primitives pass) */, text: '#3B6D11' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour, consolidated source, not yet mapped to a semantic token (primitives pass) */ },
+  submitted:  { bg: '#C0DD97' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour, consolidated source, not yet mapped to a semantic token (primitives pass) */, text: '#173404' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour, consolidated source, not yet mapped to a semantic token (primitives pass) */ },
+  won:        { bg: '#639922' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour, consolidated source, not yet mapped to a semantic token (primitives pass) */, text: '#ffffff' },
+  declined:   { bg: '#FAECE7' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour, consolidated source, not yet mapped to a semantic token (primitives pass) */, text: '#993C1D' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour, consolidated source, not yet mapped to a semantic token (primitives pass) */ },
 }
 
-export const STAGE_BG: Record<PipelineStage, string> = {
-  identified: 'bg-surface-page-1',
-  applying:   'bg-green-pale-2',
-  submitted:  'bg-green-pale-3',
-  won:        'bg-green-mid',
-  declined:   'bg-coral-pale',
+export const STAGE_SURFACE_BG: Record<PipelineStage, string> = {
+  identified: '#F5F1E8' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour, consolidated source, not yet mapped to a semantic token (primitives pass) */,
+  applying:   '#F1F7E4' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour, consolidated source, not yet mapped to a semantic token (primitives pass) */,
+  submitted:  '#DFEDCC' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour, consolidated source, not yet mapped to a semantic token (primitives pass) */,
+  won:        '#EAF3DE' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour, consolidated source, not yet mapped to a semantic token (primitives pass) */,
+  declined:   '#FAECE7' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour, consolidated source, not yet mapped to a semantic token (primitives pass) */,
 }

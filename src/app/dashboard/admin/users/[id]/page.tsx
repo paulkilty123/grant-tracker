@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { ArrowLeft, ExternalLink } from 'lucide-react'
+import { STAGE_CHIP } from '@/lib/utils'
 
 interface Org {
   id: string
@@ -76,14 +77,6 @@ interface Detail {
   pipeline: PipelineItem[]
   saved: SavedRow[]
   interactions_summary: Record<string, number>
-}
-
-const STAGE_COLOURS: Record<string, { bg: string; text: string }> = {
-  identified: { bg: '#F5F1E8' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, text: '#5F5E5A' },
-  applying:   { bg: '#EAF3DE' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, text: '#3B6D11' },
-  submitted:  { bg: '#C0DD97' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, text: '#173404' },
-  won:        { bg: '#639922' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, text: '#ffffff' },
-  declined:   { bg: '#FAECE7' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, text: '#993C1D' },
 }
 
 function fmtDate(iso: string | null | undefined): string {
@@ -222,7 +215,7 @@ export default function AdminUserDetailPage() {
                 </thead>
                 <tbody className="divide-y divide-warm/40">
                   {pipeline.map(p => {
-                    const stage = STAGE_COLOURS[p.stage] ?? { bg: '#F5F1E8' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, text: '#5F5E5A' }
+                    const stage = STAGE_CHIP[p.stage as keyof typeof STAGE_CHIP] ?? STAGE_CHIP.identified
                     return (
                       <tr key={p.id} className="hover:bg-warm/20 transition-colors">
                         <td className="px-4 py-3">

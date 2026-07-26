@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
-import { getDeadlineAlerts, formatCurrency } from '@/lib/utils'
+import { getDeadlineAlerts, formatCurrency, STAGE_CHIP } from '@/lib/utils'
 import type { PipelineItem, Organisation } from '@/types'
 import { Award, TrendingUp, Users, Rocket, GraduationCap, Gift, ArrowRight, CalendarDays, Check, Sparkles, Bookmark, ListChecks, UserPlus, FilePenLine, Lightbulb, CircleCheck } from 'lucide-react'
 import { computeMatchScore, MATCH_TIER } from '@/lib/matching'
@@ -341,11 +341,11 @@ export default async function DashboardPage() {
   // Break to coral at Declined is intentional per spec: not the next rung
   // up, a different kind of outcome.
   const stageData = [
-    { id: 'identified', label: 'Identified', bg: '#F5F1E8' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, labelCol: '#5F5E5A',            valCol: '#2C2C2A',            countCol: '#5F5E5A' },
-    { id: 'applying',   label: 'Applying',   bg: '#EAF3DE' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, labelCol: '#3F6814',            valCol: '#173404',            countCol: '#3F6814' },
-    { id: 'submitted',  label: 'Submitted',  bg: '#C0DD97' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, labelCol: '#3F6814',            valCol: '#173404',            countCol: '#3F6814' },
-    { id: 'won',        label: 'Won',        bg: '#639922' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, labelCol: 'color-mix(in srgb, var(--surface-page) 78%, transparent)', valCol: '#FAF7F2',        countCol: 'color-mix(in srgb, var(--surface-page) 78%, transparent)' },
-    { id: 'declined',   label: 'Declined',   bg: '#FAECE7' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, labelCol: '#993C1D',            valCol: '#993C1D',            countCol: '#993C1D' },
+    { id: 'identified', label: 'Identified', bg: STAGE_CHIP.identified.bg, labelCol: '#5F5E5A',            valCol: '#2C2C2A',            countCol: '#5F5E5A' }, // eslint-disable-line no-restricted-syntax -- pipeline-stage colour, not yet mapped to a semantic token (primitives pass)
+    { id: 'applying',   label: 'Applying',   bg: STAGE_CHIP.applying.bg,   labelCol: '#3F6814',            valCol: '#173404',            countCol: '#3F6814' }, // eslint-disable-line no-restricted-syntax -- pipeline-stage colour, not yet mapped to a semantic token (primitives pass)
+    { id: 'submitted',  label: 'Submitted',  bg: STAGE_CHIP.submitted.bg,  labelCol: '#3F6814',            valCol: '#173404',            countCol: '#3F6814' }, // eslint-disable-line no-restricted-syntax -- pipeline-stage colour, not yet mapped to a semantic token (primitives pass)
+    { id: 'won',        label: 'Won',        bg: STAGE_CHIP.won.bg,        labelCol: 'color-mix(in srgb, var(--surface-page) 78%, transparent)', valCol: '#FAF7F2',        countCol: 'color-mix(in srgb, var(--surface-page) 78%, transparent)' }, // eslint-disable-line no-restricted-syntax -- pipeline-stage colour, not yet mapped to a semantic token (primitives pass)
+    { id: 'declined',   label: 'Declined',   bg: STAGE_CHIP.declined.bg,   labelCol: '#993C1D',            valCol: '#993C1D',            countCol: '#993C1D' }, // eslint-disable-line no-restricted-syntax -- pipeline-stage colour, not yet mapped to a semantic token (primitives pass)
   ]
   const stageValues = stageData.map(s => ({
     ...s,

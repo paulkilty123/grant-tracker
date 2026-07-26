@@ -11,21 +11,15 @@ import Link from 'next/link'
 import type { PlanStatePayload } from '@/lib/agent/tools/plan'
 import type { GetPipelinePayload } from '@/lib/agent/tools/pipeline'
 import { STAGE_WEIGHTS } from '@/lib/agent/context'
+import { PIPELINE_STAGES, STAGE_CHIP } from '@/lib/utils'
 import { MIX_CHARACTERS } from '@/lib/agent/tools/mix'
 import { grotesk, gbp, fmtDate, COLOR, SectionLabel, InfoDot, AmberPill, mixColor, cap } from './ui'
 import CompanionOpenLink from './CompanionOpenLink'
 
 type ActivePlan = Extract<PlanStatePayload, { has_goal: true }>
 
-// Pipeline stage palette (design system, locked)
-const STAGE_STYLE: Record<string, { bg: string; color: string; label: string }> = {
-  identified: { bg: '#F5F1E8' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, color: '#5F5E5A', label: 'Identified' },
-  applying: { bg: '#EAF3DE' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, color: '#3B6D11', label: 'Applying' },
-  submitted: { bg: '#C0DD97' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, color: '#173404', label: 'Submitted' },
-  won: { bg: '#639922' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, color: '#fff', label: 'Won' },
-  declined: { bg: '#FAECE7' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, color: '#993C1D', label: 'Declined' },
-}
 const STAGE_ORDER = ['identified', 'applying', 'submitted', 'won', 'declined']
+const stageLabel = (id: string) => PIPELINE_STAGES.find(p => p.id === id)?.label ?? id
 
 const dayDiff = (fromIso: string, toIso: string) =>
   Math.round((new Date(`${toIso.slice(0, 10)}T00:00:00Z`).getTime() - new Date(`${fromIso.slice(0, 10)}T00:00:00Z`).getTime()) / 86_400_000)
@@ -220,12 +214,12 @@ export default function PlanView({ plan, pipeline, planRead = null }: {
       <SectionLabel className="mt-8">Pipeline by stage</SectionLabel>
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-2">
         {byStage.map(({ stage, count, value }) => {
-          const s = STAGE_STYLE[stage]
+          const s = STAGE_CHIP[stage as keyof typeof STAGE_CHIP] ?? STAGE_CHIP.identified
           return (
             <div key={stage} className="rounded-xl p-3" style={{ background: s.bg }}>
-              <div className="text-[11px] uppercase tracking-wide" style={{ color: s.color }}>{s.label}</div>
-              <div className="text-lg font-bold mt-0.5" style={{ ...grotesk, color: s.color }}>{gbp(value)}</div>
-              <div className="text-[11px]" style={{ color: s.color }}>{count} item{count === 1 ? '' : 's'}</div>
+              <div className="text-[11px] uppercase tracking-wide" style={{ color: s.text }}>{stageLabel(stage)}</div>
+              <div className="text-lg font-bold mt-0.5" style={{ ...grotesk, color: s.text }}>{gbp(value)}</div>
+              <div className="text-[11px]" style={{ color: s.text }}>{count} item{count === 1 ? '' : 's'}</div>
             </div>
           )
         })}
@@ -277,12 +271,12 @@ export default function PlanView({ plan, pipeline, planRead = null }: {
             <ul className="mt-3 space-y-1.5">
               {plotted.map(i => {
                 const urgent = dayDiff(todayIso, String(i.deadline)) <= 7
-                const s = STAGE_STYLE[i.stage] ?? STAGE_STYLE.identified
+                const s = STAGE_CHIP[i.stage as keyof typeof STAGE_CHIP] ?? STAGE_CHIP.identified
                 return (
                   <li key={i.pipeline_item_id} className="text-[13px] flex flex-wrap items-baseline gap-x-2" style={{ color: COLOR.ink }}>
                     <span className="text-xs tabular-nums" style={{ color: urgent ? 'var(--terra)' : COLOR.faint }}>{fmtDate(i.deadline)}</span>
                     <span>{i.grant_name}</span>
-                    <span className="text-[11px] px-2 py-0.5" style={{ background: s.bg, color: s.color, borderRadius: 999 }}>{s.label}</span>
+                    <span className="text-[11px] px-2 py-0.5" style={{ background: s.bg, color: s.text, borderRadius: 999 }}>{stageLabel(i.stage)}</span>
                     {i.amount_requested != null && <span className="text-xs" style={{ color: COLOR.mid }}>{gbp(i.amount_requested)}</span>}
                   </li>
                 )

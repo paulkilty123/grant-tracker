@@ -14,18 +14,10 @@ import { getOrganisationByOwner } from '@/lib/organisations'
 import { setDismissSnooze, removeInteraction } from '@/lib/interactions'
 import { emitClientEvent } from '@/lib/events/client'
 import { track } from '@/lib/analytics'
-import { PIPELINE_STAGES, formatDeadline, formatRange, cn } from '@/lib/utils'
+import { PIPELINE_STAGES, formatDeadline, formatRange, cn, STAGE_SURFACE_BG } from '@/lib/utils'
 import type { PipelineItem, PipelineStage, Organisation } from '@/types'
 import { Sparkles, Loader2, Link, ArrowRight, Calendar, AlarmClock, X as XIcon, GripVertical, StickyNote, User as UserIcon, BarChart3, Star } from 'lucide-react'
 import { PipelineModal, STAGE_ICONS, getWritingStage } from '@/components/PipelineModal'
-
-const STAGE_BG_HEX: Record<string, string> = {
-  identified: '#F5F1E8' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */,
-  applying:   '#F1F7E4' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */,
-  submitted:  '#DFEDCC' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */,
-  won:        '#EAF3DE' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */,
-  declined:   '#FAECE7' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */,
-}
 
 const STAGE_VOCAB: Record<string, string> = {
   identified: 'potential',
@@ -839,7 +831,7 @@ export default function PipelinePage() {
               key={stage.id}
               className="pipeline-col"
               style={{
-                background: STAGE_BG_HEX[stage.id],
+                background: STAGE_SURFACE_BG[stage.id],
                 ...(stage.id === 'won' ? { borderTop: '3px solid #8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, paddingTop: 13 } : {}),
               }}
               onDragOver={onColDragOver}
@@ -853,7 +845,7 @@ export default function PipelinePage() {
                   position: 'sticky',
                   top: 0,
                   zIndex: 1,
-                  background: STAGE_BG_HEX[stage.id],
+                  background: STAGE_SURFACE_BG[stage.id],
                   paddingTop: 6,
                   // Negative margins to bleed the sticky header to the column
                   // padding edge while stuck, so the column bg under the

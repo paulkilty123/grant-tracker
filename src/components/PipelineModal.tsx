@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import NextLink from 'next/link'
-import { PIPELINE_STAGES, formatRange } from '@/lib/utils'
+import { PIPELINE_STAGES, formatRange, STAGE_SURFACE_BG } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import type { PipelineItem, PipelineStage } from '@/types'
 import {
@@ -276,11 +276,11 @@ export function PipelineModal({
               {PIPELINE_STAGES.map(s => {
                 const isActive = localStage === s.id
                 const tones: Record<string, { bg: string; text: string; restBorder: string; activeBorder: string }> = {
-                  identified: { bg: '#F5F1E8' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, text: '#5F5E5A', restBorder: 'rgba(0,0,0,0.08)', activeBorder: '#8A8986' },
-                  applying:   { bg: '#F1F7E4' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, text: '#3B6D11', restBorder: 'rgba(57,109,17,0.20)', activeBorder: '#3B6D11' },
-                  submitted:  { bg: '#DFEDCC' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, text: '#3B6D11', restBorder: 'rgba(57,109,17,0.20)', activeBorder: '#3B6D11' },
-                  won:        { bg: '#EAF3DE' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, text: '#3B6D11', restBorder: 'rgba(57,109,17,0.20)', activeBorder: '#8ECB3C' },
-                  declined:   { bg: '#FAECE7' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, text: '#993C1D', restBorder: 'color-mix(in srgb, var(--state-error) 20%, transparent)', activeBorder: '#993C1D' },
+                  identified: { bg: STAGE_SURFACE_BG.identified, text: '#5F5E5A', restBorder: 'rgba(0,0,0,0.08)', activeBorder: '#8A8986' }, // eslint-disable-line no-restricted-syntax -- pipeline-stage colour, not yet mapped to a semantic token (primitives pass)
+                  applying:   { bg: STAGE_SURFACE_BG.applying,   text: '#3B6D11', restBorder: 'rgba(57,109,17,0.20)', activeBorder: '#3B6D11' }, // eslint-disable-line no-restricted-syntax -- pipeline-stage colour, not yet mapped to a semantic token (primitives pass)
+                  submitted:  { bg: STAGE_SURFACE_BG.submitted,  text: '#3B6D11', restBorder: 'rgba(57,109,17,0.20)', activeBorder: '#3B6D11' }, // eslint-disable-line no-restricted-syntax -- pipeline-stage colour, not yet mapped to a semantic token (primitives pass)
+                  won:        { bg: STAGE_SURFACE_BG.won,        text: '#3B6D11', restBorder: 'rgba(57,109,17,0.20)', activeBorder: '#8ECB3C' }, // eslint-disable-line no-restricted-syntax -- pipeline-stage colour (not yet mapped) + RETIRED lime activeBorder, both left for the primitives pass
+                  declined:   { bg: STAGE_SURFACE_BG.declined,   text: '#993C1D', restBorder: 'color-mix(in srgb, var(--state-error) 20%, transparent)', activeBorder: '#993C1D' }, // eslint-disable-line no-restricted-syntax -- pipeline-stage colour, not yet mapped to a semantic token (primitives pass)
                 }
                 const tone = tones[s.id]
                 return (

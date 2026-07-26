@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { CalendarClock, CalendarCheck, ExternalLink, ArrowRight, Calendar, CalendarDays, AlarmClock, ChevronDown, ChevronUp, Send, ChevronLeft, ChevronRight, Info, Plus, X as XIcon, Check, Landmark, Rocket, TrendingUp, Gift, Pencil, CheckCircle2, Users, MapPin, Star, DollarSign, Lightbulb, AlertTriangle, type LucideIcon } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { getDeadlineAlerts, formatDeadline, formatRange, PIPELINE_STAGES } from '@/lib/utils'
+import { getDeadlineAlerts, formatDeadline, formatRange, PIPELINE_STAGES, STAGE_CHIP } from '@/lib/utils'
 import { updatePipelineStage, updatePipelineItem, createPipelineItem, deletePipelineItem } from '@/lib/pipeline'
 import { PipelineModal } from '@/components/PipelineModal'
 import { recordInteraction } from '@/lib/interactions'
@@ -556,20 +556,12 @@ function DatePickerInput({ value, onChange, popoverSide = 'right' }: { value: st
 }
 
 // ── Shared pill helpers ───────────────────────────────────────────────────────
-const STAGE_STYLE: Record<string, { bg: string; color: string }> = {
-  identified: { bg: '#F5F1E8' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, color: '#5F5E5A' },
-  applying:   { bg: '#EAF3DE' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, color: '#3B6D11' },
-  submitted:  { bg: '#C0DD97' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, color: '#173404' },
-  won:        { bg: '#639922' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, color: '#fff'    },
-  declined:   { bg: '#FAECE7' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, color: '#993C1D' },
-}
-
 function StageChip({ stage }: { stage: string }) {
   const s  = PIPELINE_STAGES.find(p => p.id === stage)
-  const st = STAGE_STYLE[stage] ?? { bg: '#F5F1E8' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, color: '#5F5E5A' }
+  const st = STAGE_CHIP[stage as keyof typeof STAGE_CHIP] ?? STAGE_CHIP.identified
   return (
     <span style={{ fontSize: 11, padding: '2px 7px', borderRadius: 999, fontWeight: 500,
-      whiteSpace: 'nowrap', background: st.bg, color: st.color, flexShrink: 0 }}>
+      whiteSpace: 'nowrap', background: st.bg, color: st.text, flexShrink: 0 }}>
       {s?.label ?? stage}
     </span>
   )
