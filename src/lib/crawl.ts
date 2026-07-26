@@ -1931,17 +1931,40 @@ function parseDeadline(raw: unknown): string | null {
   return iso
 }
 
+/**
+ * Heading text that is a closing-date label rather than a programme name.
+ *
+ * covenantfund.org.uk renders "CLOSING DATE: 23 Sep 2026" as an <h2> directly
+ * above the programme's own <h2>, so any scraper taking the first heading gets
+ * the date. Matched at the START of the string so a real title merely
+ * containing the word "deadline" is unaffected.
+ */
+const CLOSING_LABEL_RE = /^\s*(closing\s+date|closes|deadline|apply\s+by)\b/i
+
 // Parses "14 May 2026 4:00pm UK time" → "2026-05-14"
 function parseUKRIDate(str: string): string | null {
   if (!str) return null
   const match = str.match(/(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})/)
   if (!match) return null
-  const d = new Date(`${match[2]} ${match[1]} ${match[3]}`)
-  if (isNaN(d.getTime())) return null
+
+  // Built in UTC on purpose. `new Date("Sep 23 2026")` produces LOCAL midnight,
+  // and toISOString() then converts to UTC — so under BST (UTC+1) every deadline
+  // came back a day early: "23 Sep 2026" parsed as 2026-09-22. Vercel runs UTC
+  // so production was unaffected, which is exactly why it survived: it is
+  // invisible in prod and wrong on every developer machine in summer.
+  const month = MONTHS.indexOf(match[2].slice(0, 3).toLowerCase())
+  if (month < 0) return null
+  const day  = Number(match[1])
+  const year = Number(match[3])
+  const d = new Date(Date.UTC(year, month, day))
+  if (isNaN(d.getTime()) || d.getUTCDate() !== day) return null
+
   const iso = d.toISOString().split('T')[0]
   if (iso < todayISO()) return null
   return iso
 }
+
+const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
 
 // ── Misc helpers ──────────────────────────────────────────────────────────────
 function slugify(url: string): string {
@@ -3585,14 +3608,39 @@ async function crawlArmedForcesCovenant(): Promise<CrawlResult> {
     const root  = parseHTML(html)
     const grants: ScrapedGrant[] = []
     for (const card of root.querySelectorAll('article, .programme, .grant, .card')) {
-      const titleEl = card.querySelector('h2 a, h3 a, h2, h3')
-      const title   = titleEl?.text?.trim()
-      if (!title || title.length < 5) continue
-      const href = card.querySelector('a')?.getAttribute('href') ?? ''
+      // The page renders each programme as a PAIR of headings, closing date
+      // first:
+      //     <h2>CLOSING DATE: 23 Sep 2026</h2>
+      //     <h2>AF3: Supporting Partners programme</h2>
+      //
+      // querySelector returns the first match in document order, so the old
+      // code took the date label as the title. Four rows reached the catalogue
+      // literally titled "CLOSING DATE: 15 Jul 2026", with deadline NULL — the
+      // one field the heading actually gave us was the one thrown away.
+      const headings = card.querySelectorAll('h2, h3')
+      let title:    string | undefined
+      let deadline: string | null = null
+      for (const h of headings) {
+        const t = h.text?.trim()
+        if (!t) continue
+        if (CLOSING_LABEL_RE.test(t)) {
+          // "CLOSING DATE: 23 Sep 2026" — a date, never a title.
+          deadline ??= parseUKRIDate(t)
+          continue
+        }
+        if (!title && t.length >= 5) title = t
+      }
+      if (!title) continue
+
+      // Prefer the link on the title heading; the first anchor in the card can
+      // belong to the closing-date block.
+      const titleHeading = headings.find(h => h.text?.trim() === title)
+      const href = titleHeading?.querySelector('a')?.getAttribute('href')
+                ?? card.querySelector('a')?.getAttribute('href') ?? ''
       const url  = href.startsWith('http') ? href : `${BASE}${href}`
       const desc = card.querySelector('p')?.text?.trim() ?? ''
       const { min, max } = parseAmountRange(desc + ' ' + title)
-      grants.push({ external_id: `armed_forces_covenant_${slugify(href || title)}`, source: SOURCE, title, funder: 'Armed Forces Covenant Fund Trust', funder_type: 'government', description: desc || 'Grant from Armed Forces Covenant Fund Trust.', amount_min: min, amount_max: max, deadline: null, is_rolling: false, is_local: false, sectors: ['armed forces', 'veterans', 'social welfare', 'community'], eligibility_criteria: ['Organisations supporting the Armed Forces community'], apply_url: url || null, raw_data: { title, href } as Record<string, unknown> })
+      grants.push({ external_id: `armed_forces_covenant_${slugify(href || title)}`, source: SOURCE, title, funder: 'Armed Forces Covenant Fund Trust', funder_type: 'government', description: desc || 'Grant from Armed Forces Covenant Fund Trust.', amount_min: min, amount_max: max, deadline, is_rolling: false, is_local: false, sectors: ['armed forces', 'veterans', 'social welfare', 'community'], eligibility_criteria: ['Organisations supporting the Armed Forces community'], apply_url: url || null, raw_data: { title, href } as Record<string, unknown> })
     }
     if (grants.length > 0) return await upsertGrants(SOURCE, grants)
     return await upsertGrants(SOURCE, [

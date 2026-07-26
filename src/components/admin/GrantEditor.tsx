@@ -105,7 +105,13 @@ const STRUCTURE_OPTIONS: { value: string; label: string }[] = [
   { value: 'ltd_shares',              label: 'Ltd by Shares' },
   { value: 'cooperative',             label: 'Co-op / CBS' },
   { value: 'unincorporated',          label: 'Unincorporated' },
-  { value: 'sole_trader',             label: 'Sole Trader / Individual' },
+  // Was one chip labelled "Sole Trader / Individual". Those are different
+  // applicants: a sole trader is a business, an individual is a person. The
+  // single chip is how a fund for clinicians and midwives came to be tagged as
+  // though charities could win it. Tagging `individual` ALONE caps the row out
+  // of every ranked surface for organisations (INDIVIDUAL_ONLY_SCORE_CAP).
+  { value: 'sole_trader',             label: 'Sole Trader' },
+  { value: 'individual',              label: 'Individual (a person)' },
   { value: 'llp',                     label: 'LLP' },
 ]
 

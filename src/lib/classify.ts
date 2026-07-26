@@ -27,7 +27,14 @@ export const VALID_STRUCTURES = new Set([
   'cic_guarantee', 'cic_shares', 'cio', 'scio', 'registered_charity',
   'ltd_guarantee', 'ltd_shares', 'llp', 'cooperative',
   'unincorporated', 'sole_trader', 'not_registered',
+  // A private person. Grant-side only — see LegalStructure in types/index.ts.
+  'individual',
 ])
+
+// Individual-applicant structures live beside LegalStructure in types/index.ts,
+// so the classifier and the matcher cannot disagree about what counts as a
+// person. Re-exported here because this file is the taxonomy's front door.
+export { INDIVIDUAL_APPLICANT_STRUCTURES } from './structures'
 
 export const VALID_BENEFICIARIES = new Set([
   'children', 'young_people', 'older_people', 'families',
@@ -252,7 +259,13 @@ Return [] when the source does not name specific legal structures.
 
 Valid values: cic_guarantee, cic_shares, cio, registered_charity,
               ltd_guarantee, ltd_shares, llp, cooperative,
-              unincorporated, sole_trader, not_registered
+              unincorporated, sole_trader, not_registered, individual
+
+"individual" means the APPLICANT IS A PERSON, not an organisation — a
+researcher, clinician, artist or student applying in their own name. When a
+fund is for individuals, return ["individual"] ALONE and add no organisational
+form: those funds are hidden from organisations, and one stray charity tag
+puts a personal grant in front of every charity in the catalogue.
 
 DEFAULT BIAS: TIGHT.
 When uncertain whether a type is included, EXCLUDE it. Only tag a structure
@@ -306,7 +319,8 @@ Common mappings (apply only after the hard rules above):
 "Ltd companies / limited companies"                 → ["ltd_guarantee","ltd_shares"]
 "co-operatives / community benefit societies / CBS" → ["cooperative"]
 "Innovate UK / UKRI / SBRI / R&D grants"            → ["ltd_guarantee","ltd_shares","cic_guarantee","cic_shares"]
-"individuals / sole traders / freelancers"          → ["sole_trader","unincorporated"]
+"individuals applying in their own name (researchers, artists, students)" → ["individual"]
+"sole traders / freelancers / self-employed businesses" → ["sole_trader"]
 "constituted and unconstituted groups (explicit)"   → ["registered_charity","cio","cic_guarantee","ltd_guarantee","cooperative","unincorporated","not_registered"]
 "open to all / organisations / no restriction stated / silent on structure" → []
 

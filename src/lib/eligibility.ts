@@ -394,7 +394,10 @@ const STRUCTURE_TOKEN_MAP: Record<string, string[]> = {
   llp:                ['llp', 'partnership'],
   cooperative:        ['coop', 'cooperative', 'community_benefit_society'],
   unincorporated:     ['unincorporated', 'community_group', 'voluntary_group'],
-  sole_trader:        ['sole_trader', 'individual'],
+  sole_trader:        ['sole_trader'],
+  // Deliberately shares NO token with any organisational form, so an
+  // individual-only fund can never satisfy an organisation's eligibility.
+  individual:         ['individual'],
   not_registered:     ['not_registered', 'idea_stage'],
 }
 
@@ -422,6 +425,7 @@ function labelStructure(s: LegalStructure): string {
     unincorporated:     'Unincorporated',
     sole_trader:        'Sole trader',
     not_registered:     'Not registered',
+    individual:         'Individual (a person, not an organisation)',
   }
   return labels[s]
 }
