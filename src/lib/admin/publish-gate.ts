@@ -78,6 +78,11 @@ const POLICY: Record<ReviewReasonCode, 'block' | 'info'> = {
   amount_ungrounded:    'block',  // £ figure with no matching wording on the page
   eligibility_missing:  'block',  // see note 1 in the header — over-matches, does not hide
   tags_changed:         'block',  // ONLY at critical severity — see isBlocking()
+  // The funder says the applicant must be a business, producer, employer or
+  // academic researcher. Not a gap and not a tagging fault: the fund is real,
+  // correctly described, and cannot be won by anyone this catalogue serves.
+  // Publishing it spends a user's attention on something they cannot apply for.
+  applicant_not_social_sector: 'block',
 
   // ── Incomplete but honest: absence renders as absence ──
   no_amount:                  'info',

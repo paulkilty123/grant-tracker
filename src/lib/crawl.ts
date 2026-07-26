@@ -2,41 +2,38 @@
 // Grant crawler — fetches live, open grant opportunities from UK sources
 // and stores them in the scraped_grants Supabase table.
 //
-// Sources:
-//   1.  GOV.UK Find a Grant             (www.find-government-grants.service.gov.uk)
-//   2.  National Lottery Community Fund  (www.tnlcommunityfund.org.uk)
-//   3.  UKRI live opportunity calls      (www.ukri.org/opportunity/)
-//   4.  GLA / City Hall London           (www.london.gov.uk/programmes-strategies/search-funding)
-//   5.  Arts Council England             (www.artscouncil.org.uk/our-open-funds)
-//   6.  Sport England                    (www.sportengland.org/funding-and-campaigns/our-funding)
-//   7.  National Lottery Heritage Fund   (www.heritagefund.org.uk/funding)
-//   8.  Forever Manchester               (forevermanchester.com/funding)
-//   9.  Two Ridings Community Foundation (tworidingscf.org.uk/apply-for-funding)
-//  10.  Community Foundation Wales       (communityfoundationwales.org.uk/grants)
-//  11.  Quartet Community Foundation     (quartetcf.org.uk/apply-for-funding/apply-for-a-grant)
-//  12.  Community Foundation NI          (communityfoundationni.org/achieving-impact/available-grants)
-//  13.  Heart of England CF              (heartofenglandcf.co.uk/grants)
-//  14.  Foundation Scotland              (foundationscotland.org.uk/apply-for-funding/funding-available)
-//  15.  London Community Foundation      (londoncf.org.uk — grants sitemap)
-//  16.  Sussex Community Foundation      (sussexcommunityfoundation.org/grants/how-to-apply)
-//  17.  Community Foundation for Surrey  (cfsurrey.org.uk/apply)
-//  18.  Hants & IoW Community Foundation (hiwcf.org.uk/grants-for-groups)
-//  19.  Oxfordshire Community Foundation (oxfordshire.org/ocfgrants)
-//  20.  Asda Foundation                  (asdafoundation.org/our-grants)
-//  21.  Aviva Foundation                 (avivafoundation.org.uk)
-//  22.  Nationwide Foundation            (nationwidefoundation.org.uk/our-programmes)
-//  23.  Community Foundation Tyne & Wear (communityfoundation.org.uk/apply)
-//  24.  Norfolk Community Foundation     (norfolkfoundation.com/funding-support/grants/groups)
-//  25.  Suffolk Community Foundation     (suffolkcf.org.uk/current-grants)
-//  26.  Community Foundation Merseyside  (cfmerseyside.org.uk/our-grants)
-//  27.  BBC Children in Need             (bbcchildreninneed.co.uk/grants — hardcoded rolling)
-//  28.  Gloucestershire Community Foundation (gloucestershirecf.org.uk/grants)
-//  29.  Heart of Bucks Community Foundation  (heartofbucks.org/apply-for-a-grant)
-//  30.  LLR Community Foundation             (llrcommunityfoundation.org.uk/our-grants/apply-for-a-grant)
-//  31.  MK Community Foundation              (mkcommunityfoundation.co.uk/apply-for-a-grant — hardcoded tiers)
-//  32.  Community Foundation for Lancashire  (lancsfoundation.org.uk/our-grants?grant-category=open)
-//  33.  Cambridgeshire Community Foundation  (cambscf.org.uk/funds)
-//  34.  Hertfordshire Community Foundation   (hertscf.org.uk/grant-making)
+// THE SOURCE LIST IS NOT DUPLICATED HERE ON PURPOSE.
+//
+// This header used to enumerate 34 named sources. By 2026-07-26 the file held
+// 96, fourteen of the listed ones had been deleted, and it still advertised
+// funders that had not run in months. A hand-maintained list next to the code
+// it describes will always drift, and a stale list is worse than none: it is
+// read as coverage.
+//
+//     npx tsx scripts/audit-sources.ts
+//
+// prints what actually exists — which sources fetch, what they yield, and how
+// many of their rows are live today — from crawl_logs and the catalogue rather
+// than from a comment.
+//
+// ── Adding or removing a source ──────────────────────────────────────────────
+// A source is wired through FIVE places, and two of them are POSITIONAL: the
+// destructured variable list and the run() array are matched by index through
+// Promise.allSettled. Remove a run() without its variable and every later
+// result silently lands on the wrong source, with no error anywhere.
+//
+//   1. async function crawlX()      the scraper itself
+//   2. the destructured variable    ── positionally matched to (3)
+//   3. run('source', crawlX)        ── positionally matched to (2)
+//   4. the results-assembly line    x.status === 'fulfilled' ? x.value : fallback('source')
+//   5. BATCH_N_SOURCES              which cron batch runs it
+//
+// ── What a source is worth ───────────────────────────────────────────────────
+// 50 sources were retired on 2026-07-26: every one a hardcoded literal with
+// ZERO live rows, re-asserted twice a week. Because a re-assert refreshes
+// last_seen_at, each looked maintained forever while covering a gap it did not
+// fill. If a new source cannot put live rows in the catalogue, it is not a
+// source — it is a comment with a cron slot.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { createClient }  from '@supabase/supabase-js'
@@ -460,88 +457,6 @@ async function crawlTNLCF(): Promise<CrawlResult> {
         location_tag:         deriveLocationTag(location),
         raw_data:             { title, location, amountStr, status } as Record<string, unknown>,
       })
-    }
-
-    return await upsertGrants(SOURCE, grants)
-  } catch (err) {
-    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
-  }
-}
-
-// ── Source 3: UKRI live opportunity calls ─────────────────────────────────────
-// Scrapes ukri.org/opportunity/ — live open funding calls from UKRI councils.
-// WordPress custom post type, paginated at /opportunity/page/N/.
-async function crawlUKRI(): Promise<CrawlResult> {
-  const SOURCE = 'ukri'
-  const BASE   = 'https://www.ukri.org/opportunity'
-
-  try {
-    const html1  = await fetchHtml(`${BASE}/`)
-    const root1  = parseHTML(html1)
-
-    // Find total page count — extract number from href (e.g. /opportunity/page/12/)
-    // because the link text is "Page\n12" with a hidden span, making parseInt unreliable
-    const pageNums = root1
-      .querySelectorAll('.page-numbers a')
-      .map(a => { const m = (a.getAttribute('href') ?? '').match(/\/page\/(\d+)\//); return m ? parseInt(m[1]) : NaN })
-      .filter(n => !isNaN(n))
-    const lastPage = Math.max(...pageNums, 1)
-
-    // Fetch remaining pages in parallel
-    const rest = await Promise.allSettled(
-      Array.from({ length: lastPage - 1 }, (_, i) =>
-        fetchHtml(`${BASE}/page/${i + 2}/`).then(h => parseHTML(h))
-      )
-    )
-
-    const allRoots = [root1, ...rest.flatMap(r => r.status === 'fulfilled' ? [r.value] : [])]
-    const grants: ScrapedGrant[] = []
-
-    for (const root of allRoots) {
-      for (const card of root.querySelectorAll('div.opportunity')) {
-        const titleEl = card.querySelector('.entry-header a, h2 a, h3 a')
-        const title   = titleEl?.text?.trim()
-        const url     = titleEl?.getAttribute('href') ?? ''
-        if (!title) continue
-
-        const desc = card.querySelector('.entry-content')?.text?.trim() ?? ''
-
-        // Parse DL key→value metadata
-        const dts  = card.querySelectorAll('dt')
-        const dds  = card.querySelectorAll('dd')
-        const meta: Record<string, string> = {}
-        dts.forEach((dt, i) => {
-          const key = dt.text.trim().replace(/:$/, '')
-          meta[key] = dds[i]?.text?.trim() ?? ''
-        })
-
-        const status    = meta['Opportunity status'] ?? ''
-        // Skip past/closed opportunities
-        if (/closed/i.test(status)) continue
-
-        const funder    = meta['Funders'] ?? 'UKRI'
-        const maxAward  = parsePoundAmount(meta['Maximum award'] ?? '')
-        const totalFund = parsePoundAmount(meta['Total fund'] ?? '')
-        const closing   = parseUKRIDate(meta['Closing date'] ?? '')
-
-        grants.push({
-          external_id:          `ukri_${slugify(url)}`,
-          source:               SOURCE,
-          title,
-          funder,
-          funder_type:          'government',
-          description:          desc,
-          amount_min:           null,
-          amount_max:           maxAward ?? totalFund,
-          deadline:             closing,
-          is_rolling:           false,
-          is_local:             false,
-          sectors:              [],
-          eligibility_criteria: status ? [`Status: ${status}`] : [],
-          apply_url:            url || null,
-          raw_data:             meta as Record<string, unknown>,
-        })
-      }
     }
 
     return await upsertGrants(SOURCE, grants)
@@ -3042,7 +2957,7 @@ async function crawlSpacehive(): Promise<CrawlResult> {
 type BatchNum = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
 
 const BATCH_1_SOURCES = [
-  'gov_uk', 'tnlcf', 'ukri', 'gla', 'arts_council',
+  'gov_uk', 'tnlcf', 'gla', 'arts_council',
   'sport_england', 'heritage_fund', 'forever_manchester', 'two_ridings_cf', 'cf_wales',
   'cf_ni', 'foundation_scotland', 'london_cf',
   'sussex_cf',
@@ -3080,7 +2995,6 @@ const BATCH_5_SOURCES = [
 const BATCH_6_SOURCES = [
   
   'cadent_foundation', 'severn_trent_fund',
-  
 ] as const
 
 // Batch 7: innovation/lottery + more CFs + specialist national funders (06:30)
@@ -3129,7 +3043,7 @@ export async function crawlAllSources(batch?: BatchNum): Promise<CrawlResult[]> 
   }
 
   const [
-    govUK, tnlcf, ukri, gla, ace,
+    govUK, tnlcf, gla, ace,
     sportEngland, heritageFund, foreverMcr, twoRidings, cfWales,
  cfNI, foundationScotland, londonCF, sussexCF,
     asdaFoundation, avivaFoundation, nationwideFoundation,
@@ -3170,7 +3084,6 @@ export async function crawlAllSources(batch?: BatchNum): Promise<CrawlResult[]> 
   ] = await Promise.allSettled([
     run('gov_uk',                  crawlGovUK),
     run('tnlcf',                   crawlTNLCF),
-    run('ukri',                    crawlUKRI),
     run('gla',                     crawlGLA),
     run('arts_council',            crawlArtsCouncil),
     run('sport_england',           crawlSportEngland),
@@ -3227,7 +3140,6 @@ export async function crawlAllSources(batch?: BatchNum): Promise<CrawlResult[]> 
   const results = [
     govUK.status                  === 'fulfilled' ? govUK.value                  : fallback('gov_uk'),
     tnlcf.status                  === 'fulfilled' ? tnlcf.value                  : fallback('tnlcf'),
-    ukri.status                   === 'fulfilled' ? ukri.value                   : fallback('ukri'),
     gla.status                    === 'fulfilled' ? gla.value                    : fallback('gla'),
     ace.status                    === 'fulfilled' ? ace.value                    : fallback('arts_council'),
     sportEngland.status           === 'fulfilled' ? sportEngland.value           : fallback('sport_england'),
