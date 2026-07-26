@@ -3,6 +3,7 @@
 
 import { SupabaseClient } from '@supabase/supabase-js'
 import { mergeGrantUpdate } from './grant-merge'
+import { structuresFromVocabulary, vocabularyPromptTable } from './eligibility-vocabulary'
 
 // Stamped by classifyUnclassified (cron path). Keep in sync with the route's
 // CLASSIFIER_VERSION in src/app/api/admin/classify-grants/route.ts.
@@ -306,26 +307,34 @@ HARD RULES — apply before consulting the mapping table:
    via wording like "any organisation", "any incorporated organisation",
    "all legal structures", or by listing ≥5 distinct categories itself.
 
-Common mappings (apply only after the hard rules above):
+WHAT "SILENT" MEANS — read this before returning [].
+Funders almost never write "company limited by guarantee". They write
+"not-for-profit organisations", "community groups", "VCSOs", "the third
+sector". That is NOT silence. It is the funder describing who may apply in
+ordinary English, and it carries the legal forms listed below.
+
+Silence is a page that never addresses who may apply at all. A page that names
+the sector in everyday words HAS answered the question, and returning [] there
+throws away the answer — which hides the fund from the CIC or co-op that could
+have won it.
+
+EVERYDAY PHRASING → LEGAL FORMS (apply only after the hard rules above):
+${vocabularyPromptTable()}
+
+Other mappings:
 "registered charities only / charities only / charity status required"
                                                     → ["registered_charity", "cio"]
-"registered charities and community organisations"  → ["registered_charity","cio","ltd_guarantee"]
-"registered charities and social enterprises"       → ["registered_charity","cio","cic_guarantee","ltd_guarantee"]
-"CICs / Community Interest Companies"               → ["cic_guarantee", "cic_shares"]
-"registered charities and CICs" / "charities, CICs and community groups"
-                                                    → ["registered_charity","cio","cic_guarantee","cic_shares"] (add "unincorporated" only if "community groups" or "constituted groups" is explicit)
-"social enterprises (broad / open to CICs and Ltds)" → ["cic_guarantee","cic_shares","ltd_guarantee","cooperative"]
 "any incorporated organisation"                     → ["cic_guarantee","cic_shares","cio","registered_charity","ltd_guarantee","ltd_shares","llp","cooperative"]
-"Ltd companies / limited companies"                 → ["ltd_guarantee","ltd_shares"]
-"co-operatives / community benefit societies / CBS" → ["cooperative"]
 "Innovate UK / UKRI / SBRI / R&D grants"            → ["ltd_guarantee","ltd_shares","cic_guarantee","cic_shares"]
 "individuals applying in their own name (researchers, artists, students)" → ["individual"]
-"sole traders / freelancers / self-employed businesses" → ["sole_trader"]
 "constituted and unconstituted groups (explicit)"   → ["registered_charity","cio","cic_guarantee","ltd_guarantee","cooperative","unincorporated","not_registered"]
-"open to all / organisations / no restriction stated / silent on structure" → []
+"no restriction stated / never addresses who may apply" → []
 
-If the source is silent on legal structure, the correct answer is [], not a
-guessed list. An empty array is normal and expected for most grants.
+Combine freely: "registered charities and social enterprises" is the charity
+mapping plus the social-enterprise row, not a separate rule.
+
+An empty array remains the right answer when the source genuinely never says
+who may apply. Do not guess from funder type or sector.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 NICHE TAGS — optional sub-sector specialism within the broad impact sector.
@@ -661,51 +670,32 @@ export function ensureExplicitStructures(
 
   // Any exclusion or hedge near structure eligibility → leave the model's call
   // untouched. Mirrors the false-positive phrasings caught in manual review.
-  const negativeCue = /cannot apply|can.?t apply|not eligible|are excluded|(?:not|except|excluding|no)\s+(?:companies?\s+or\s+)?cics?\b|charit(?:y|ies)\s+only|only\s+registered\s+charit|should\s+(?:verify|check)|verify[^.]*eligib|no information|not\s+(?:detailed|specified|stated|clear)|\bunclear\b|\blikely\b|\binfer|though specific/
-  if (negativeCue.test(text)) return structures
+  const negativeCue = /cannot apply|can.?t apply|not eligible|are excluded|(?:not|except|excluding|no)\s+(?:companies?\s+or\s+)?cics?\b|should\s+(?:verify|check)|verify[^.]*eligib|no information|not\s+(?:detailed|specified|stated|clear)|\bunclear\b|\blikely\b|\binfer|though specific/
+  // Charity restrictions come from CHARITY_ONLY_RE, not from a second copy of
+  // the same phrasings kept here. This function used to carry its own partial
+  // pair ("charities only", "only registered charities") and so missed the two
+  // branches CHARITY_ONLY_RE has and it did not — "must be a registered charity"
+  // and "charity status required". Duchy of Lancaster and the Postcode Dream
+  // Fund both say the former and both were being widened to CIC and co-op on
+  // 2026-07-26 as a result. One regex, both callers, no drift.
+  if (negativeCue.test(text) || CHARITY_ONLY_RE.test(text)) return structures
 
   const out = [...structures]
   const add = (s: string) => { if (VALID_STRUCTURES.has(s) && !out.includes(s)) out.push(s) }
 
-  if (/\bcics?\b|community interest comp/.test(text)) { add('cic_guarantee'); add('cic_shares') }
-  // "social enterprise" is broader than CIC — the prompt's own hard rule
-  // (see ELIGIBLE STRUCTURES rule 1) requires ltd_guarantee alongside both
-  // CIC variants for this phrase specifically. Found live: the model was
-  // tagging cic_guarantee/cic_shares correctly but dropping ltd_guarantee,
-  // and this backstop had the identical gap instead of catching it.
-  if (/social enterprise/.test(text)) {
-    add('cic_guarantee'); add('cic_shares'); add('ltd_guarantee')
-    // A co-operative / community benefit society IS a social-enterprise form, and
-    // the prompt's own mapping table says so ("social enterprises (broad)" ->
-    // cic_guarantee, cic_shares, ltd_guarantee, cooperative). The deterministic
-    // backstop was missing it, which is why `cooperative` was the single
-    // most-removed value in the catalogue (31 of 152 removals).
-    add('cooperative')
-  }
-
-  // ── Umbrella terms -> legal forms ──────────────────────────────────────────
-  // These mappings already existed in the CLASSIFIER PROMPT, where they steer
-  // the model. They did not exist here, in the deterministic backstop that is
-  // supposed to guarantee the floor — so when the model's output drifted, there
-  // was nothing to catch it. Same shape as every other bug in this file: the
-  // rule was written where it was first needed and never promoted to the shared
-  // path.
+  // ── Everyday funder phrasing -> legal forms ────────────────────────────────
+  // The table lives in eligibility-vocabulary.ts and is rendered into the
+  // CLASSIFIER PROMPT from the same constant, so the model's mapping and this
+  // deterministic backstop cannot drift apart. That drift is the single most
+  // repeated bug in this file: a rule written where it was first needed and
+  // never promoted to the shared path, three times over, each time letting a
+  // model wobble through unchecked.
   //
-  // Measured 2026-07-25: of 45 queue rows still missing a structure a re-classify
-  // had removed, 35 contained one of these umbrella phrases in their own text.
-  // The evidence was sitting in the row the whole time and nothing read it.
+  // Measured 2026-07-26 on the 22 rows a re-read had narrowed and nobody could
+  // settle: 10 stated who could apply in exactly this register and we read
+  // nothing from them. Only 1 needed a page we did not already hold.
+  for (const s of structuresFromVocabulary(text).adds) add(s)
 
-  // "Community group" is the ordinary English for an unincorporated association,
-  // and funders use it constantly. The prompt maps it (add "unincorporated" when
-  // "community groups" or "constituted groups" is explicit); this did not.
-  if (/\bcommunity (?:group|organisation|association)s?\b/.test(text)) add('unincorporated')
-
-  // "Voluntary organisation", "not-for-profit", "VCS/VCSE" all normally admit a
-  // company limited by guarantee — the standard non-profit company form. The
-  // prompt maps "registered charities and community organisations" -> +ltd_guarantee.
-  if (/\bnot[- ]for[- ]profit\b|\bnon[- ]profit\b|\bvoluntary (?:organisation|sector|group)s?\b|\bvcse?\b/.test(text)) {
-    add('ltd_guarantee')
-  }
   // Explicit-breadth phrasing. When a funder states it does NOT restrict by legal
   // form, the correct answer is the full incorporated set, not the CIC pair.
   //
@@ -737,21 +727,8 @@ export function ensureExplicitStructures(
   // edge where the model returns [] for a "charities and CICs" grant, so we
   // don't end up CIC-only and wrongly exclude charities.
   // registered_charity is jurisdiction-neutral (CCEW, OSCR and CCNI all issue
-  // one), so it is always safe. The incorporated forms are gated above.
-  // "Constituted community group" IS the unincorporated form, and funders name it
-  // constantly. Groundwork's own applicant list reads "Registered UK Charities,
-  // Charitable Incorporated Organisations, Companies Limited by Guarantee,
-  // Not-for-Profit Registered Community Interest Companies, Constituted Community
-  // Groups, or Voluntary Sector Organisations" — and its ONLY exclusion is
-  // "Unconstituted organisations", i.e. groups with no governing document.
-  //
-  // Those two words differ by one prefix and mean opposite things, and the
-  // classifier was reading the exclusion of UNconstituted groups as a reason to
-  // drop `unincorporated` from CONSTITUTED ones. The negative lookbehind is the
-  // whole point of this rule.
-  if (/(?<!un)constituted\s+(?:community\s+|voluntary\s+|local\s+)?(?:group|organisation|association)/.test(text)) {
-    add('unincorporated')
-  }
+  // one), so it is always safe. cio/scio are gated by geography above, which is
+  // also why no vocabulary entry may add them.
   if (/\bcharit/.test(text)) {
     add('registered_charity')
     if (cioAllowed)  add('cio')
@@ -768,7 +745,24 @@ export function ensureExplicitStructures(
  * script (which undoes the old ones) cannot disagree — one rule, both
  * directions, same reasoning as charityFormJurisdiction().
  */
-export const CHARITY_ONLY_RE = /\b(?:registered\s+)?charit(?:y|ies)\s+only\b|\bonly\s+(?:registered\s+)?charit(?:y|ies)\b|\bmust\s+be\s+a\s+registered\s+charity\b|\bcharity\s+(?:status|number)\s+(?:is\s+)?(?:required|essential|mandatory)\b/i
+// The lookahead on the "must be a registered charity" branch is load-bearing.
+// Funders open a LIST with that exact phrase — Somerset Community Foundation's
+// HPC fund reads "You must be a registered charity, CIC, community group, or
+// social enterprise" — and without it the branch reads a four-form invitation
+// as a charity-only restriction, which is the exact inversion of what the page
+// says. Charity forms are deliberately absent from the alternation: "must be a
+// registered charity or CIO" IS charity-restricted and must still fire.
+const LIST_CONTINUES = /(?!\s*(?:,|\bor\b|\band\b)\s*(?:an?\s+)?(?:cics?\b|community interest|social enterprise|co-?op|community (?:group|organisation)|voluntary|not[- ]for[- ]profit|compan))/i
+
+export const CHARITY_ONLY_RE = new RegExp(
+  [
+    /\b(?:registered\s+)?charit(?:y|ies)\s+only\b/.source,
+    /\bonly\s+(?:registered\s+)?charit(?:y|ies)\b/.source,
+    /\bmust\s+be\s+a\s+registered\s+charity\b/.source + LIST_CONTINUES.source,
+    /\bcharity\s+(?:status|number)\s+(?:is\s+)?(?:required|essential|mandatory)\b/.source,
+  ].join('|'),
+  'i',
+)
 
 /** Decided by geography, not by the model — see charityFormJurisdiction(). */
 export const JURISDICTION_MANAGED = new Set(['cio', 'scio'])
@@ -836,8 +830,22 @@ export function buildClassifyPatch(input: {
   const { result: r, description, funderBrief, locationTag, honourEmpty = false } = input
 
   const patch: Record<string, unknown> = {
-    impact_sectors: r.impact_sectors,
-    funding_type:   r.funding_type,
+    funding_type: r.funding_type,
+  }
+
+  // impact_sectors was the only one of the three tag arrays written
+  // unconditionally: eligible_structures refuses an empty list (line ~881) and
+  // target_beneficiaries is gated on honourEmpty (line ~886), but sectors went
+  // straight through. A model pass that returned nothing valid — a timeout, a
+  // truncated batch, a taxonomy drift — wiped the row's sectors, and sectors are
+  // the primary matching signal, so the row then matches nobody.
+  //
+  // Only 4 live rows currently sit empty, so this is a latent hole rather than
+  // damage already done. It is the same shape as the structures wipe this file
+  // records at line ~846 ("that once wiped structures catalogue-wide"), and the
+  // fix is the one already applied there: silence never clears a value.
+  if (honourEmpty || r.impact_sectors.length > 0) {
+    patch.impact_sectors = r.impact_sectors
   }
 
   // Structure backstop. Source text is who_can_apply + description, matching
