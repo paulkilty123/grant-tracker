@@ -25,7 +25,7 @@
 // improve it. That is what makes the review queue shrink over time instead of
 // calcifying.
 
-import { useMemo, useState, useCallback } from 'react'
+import { Fragment, useMemo, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useToast } from '@/components/ui/Toast'
 import type { ReviewReason, FieldDiff } from '@/lib/admin/review-reasons'
@@ -42,6 +42,15 @@ export type QueueItem = {
   reasons: ReviewReason[]
   /** 0 = one click from done, 3 = cannot be judged until the page is read. */
   readiness: number
+  /**
+   * What the auto-publish gate decided.
+   *   'attention' — visible to users AND carrying a reason they could be
+   *                 misled by. Nothing is retracted automatically, so these
+   *                 need a human first.
+   *   'hold'      — carrying such a reason but not visible.
+   *   'publish'   — nothing blocking; the gate can take this one itself.
+   */
+  gateOutcome: 'publish' | 'hold' | 'attention'
   diffs: FieldDiff[]
   brief: {
     source: string | null
@@ -94,6 +103,7 @@ export function ReviewQueue({ items }: { items: QueueItem[] }) {
 
   const shown = filter ? live.filter(i => i.reasons.some(r => r.code === filter)) : live
   const liveToUsers = live.filter(i => i.isActive).length
+  const attentionCount = shown.filter(i => i.gateOutcome === 'attention').length
 
   /** Single place every write goes through, so a failure can never look like success. */
   const patch = useCallback(async (
@@ -304,6 +314,17 @@ export function ReviewQueue({ items }: { items: QueueItem[] }) {
               {liveToUsers} of these {live.length} are already visible to users.
             </strong>{' '}
             Publishing confirms what people can see rather than revealing it for the first time.
+            {attentionCount > 0 && (
+              <>
+                {' '}
+                <strong style={{ ...display, fontWeight: 700 }}>
+                  {attentionCount} of them state something a user could be misled by.
+                </strong>{' '}
+                Those are listed first. Nothing has been taken down automatically, because
+                most were flagged for showing a fund to fewer organisations than it accepts,
+                and hiding it entirely would be the bigger error.
+              </>
+            )}
           </span>
         </div>
       )}
@@ -330,25 +351,68 @@ export function ReviewQueue({ items }: { items: QueueItem[] }) {
         </p>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-          {shown.map(item => (
-            <Row
-              key={item.id}
-              item={item}
-              open={openId === item.id}
-              busy={busyId === item.id}
-              onToggle={() => setOpenId(openId === item.id ? null : item.id)}
-              busyLabel={busyLabel}
-              onPublish={() => publish(item)}
-              onReject={() => reject(item)}
-              onRevert={(d) => revertField(item, d)}
-              onReRead={() => reRead(item)}
-              onReClassify={() => reClassify(item)}
-              onFixLink={() => fixLink(item)}
-            />
+          {shown.map((item, i) => (
+            <Fragment key={item.id}>
+              {/* Band headings, drawn where the list changes character rather
+                  than as a count in a corner. The first band is live and wrong;
+                  everything after it is invisible to users, so the cost of
+                  leaving it is a delay rather than a person misled. */}
+              {i === 0 && item.gateOutcome === 'attention' && (
+                <BandHeading
+                  label="Live to users, and wrong"
+                  detail="People can see these now. Fixing one changes what they see today."
+                />
+              )}
+              {i > 0 && shown[i - 1].gateOutcome === 'attention' && item.gateOutcome !== 'attention' && (
+                <BandHeading
+                  label="Not visible to users"
+                  detail="Nobody can see these yet, so nothing here is misleading anyone. Closest to finished first."
+                />
+              )}
+              <Row
+                item={item}
+                open={openId === item.id}
+                busy={busyId === item.id}
+                onToggle={() => setOpenId(openId === item.id ? null : item.id)}
+                busyLabel={busyLabel}
+                onPublish={() => publish(item)}
+                onReject={() => reject(item)}
+                onRevert={(d) => revertField(item, d)}
+                onReRead={() => reRead(item)}
+                onReClassify={() => reClassify(item)}
+                onFixLink={() => fixLink(item)}
+              />
+            </Fragment>
           ))}
         </div>
       )}
     </main>
+  )
+}
+
+/**
+ * Divides the list where its character changes.
+ *
+ * The queue used to be one undifferentiated run sorted by how nearly finished
+ * each row was, which quietly equated "quick to close" with "worth doing".
+ * A row nobody can see is a delay; a row everybody can see that states
+ * something wrong is a person being misled. Those deserve to look different.
+ */
+function BandHeading({ label, detail }: { label: string; detail: string }) {
+  return (
+    <div style={{
+      display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: 9,
+      marginTop: 6, marginBottom: 1, paddingBottom: 7,
+      borderBottom: '0.5px solid var(--border-subtle)',
+    }}>
+      <span style={{
+        ...display, fontSize: 10.5, fontWeight: 500, letterSpacing: '0.08em',
+        textTransform: 'uppercase', color: 'var(--color-text-tertiary)',
+      }}>{label}</span>
+      <span style={{ fontSize: 12.5, color: 'var(--color-text-secondary)', lineHeight: 1.4 }}>
+        {detail}
+      </span>
+    </div>
   )
 }
 

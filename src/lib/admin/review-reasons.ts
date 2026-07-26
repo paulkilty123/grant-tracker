@@ -28,6 +28,42 @@ const STALE_AFTER_DAYS = 90
 /** Below this, url-validator's quality score means "probably the wrong page". */
 const URL_QUALITY_SUSPECT = 60
 
+// ── Who is this fund actually for? ───────────────────────────────────────────
+//
+// GOV.UK and UKRI publish alongside genuine community funding a large volume of
+// business R&D, academic research and industry calls. Measured 2026-07-26: of
+// UKRI's 198 rows, 148 read as research and 7 as community; its three live rows
+// were automotive R&D, connectivity tech and MRC medical research. UKRI was
+// retired on that evidence. gov_uk is roughly half and half and worth keeping,
+// so the irrelevant half needs catching.
+//
+// TWO SIGNALS THAT LOOK RIGHT AND ARE NOT:
+//
+//   eligible_structures — DRIVE35 (automotive R&D) and the MRC awards both carry
+//     the FULL charity set: registered_charity, cio, both CIC forms, cooperative,
+//     unincorporated. Government pages state broad eligibility, so the classifier
+//     tags them as charity-eligible. A "for-profit structures only" rule catches
+//     2 of the 9 irrelevant rows and misses precisely the worst ones.
+//
+//   impact_sectors — the MRC award is tagged health + tech + social_innovation
+//     with a tech_for_good niche. It reads MORE relevant than Youth Matters Fund.
+//
+// The signal that does discriminate is the funder's own words about who may
+// apply: "Researchers based at MRC eligible research organisations" against
+// "Charitable, benevolent or philanthropic organisations". Tested against all 22
+// live gov_uk/ukri rows: 9 of 9 irrelevant flagged, 13 of 13 relevant passed,
+// no false positives.
+
+/** Applicant is explicitly a business, producer, employer or academic researcher. */
+const COMMERCIAL_ONLY_RE = /\b(businesses?|companies|producers|employers|distributors|sales agents|traders)\b[^.]{0,60}\bonly\b|\bonly\b[^.]{0,60}\b(businesses?|companies|producers|employers|distributors)\b|must be a[^.]{0,40}\bbusiness\b|\bresearchers based at\b|\bscreen content businesses\b|\b(film )?distributors and production companies\b|\bindependent uk producers\b/i
+
+/** Any mention that the social sector is welcome. Checked FIRST — a fund open to
+ *  businesses AND charities is a fund our audience can win. */
+const SOCIAL_SECTOR_RE = /not[- ]for[- ]profit|non[- ]?profit|charit(y|ies|able)|voluntary|community group|community interest|social enterprise|civil society|philanthropic|benevolent|third sector|\bcio\b|\bcics?\b/i
+
+/** "Any organisation of any size" — open, therefore not exclusionary. */
+const OPEN_TO_ALL_RE = /any organisation of any size|organisations of any size or type|all organisation types|any size or type/i
+
 export type ReviewSeverity =
   /** Wrong or unusable data that is likely misleading a user right now. */
   | 'critical'
@@ -57,6 +93,7 @@ export type ReviewReasonCode =
   | 'beneficiaries_generic_only'
   | 'stale_enrichment'
   | 'quarantined'
+  | 'applicant_not_social_sector'
 
 export type ReviewReason = {
   code:     ReviewReasonCode
@@ -242,6 +279,24 @@ export function deriveReviewReasons(row: ReviewRow, todayISO?: string): ReviewRe
       code: 'page_unreadable', severity: 'critical',
       label: 'Page unreadable',
       detail: 'the funder’s page could not be read, so this was written from memory with amounts and dates dropped',
+    })
+  }
+
+  // ── Who the fund is for ──────────────────────────────────────────────────
+  // Ordered so that any mention of the social sector wins: a fund open to
+  // businesses AND charities is one our audience can win, and a false positive
+  // here hides a real fund from everyone, which is the more expensive error.
+  const whoCanApply = typeof brief?.who_can_apply === 'string' ? brief.who_can_apply : ''
+  if (
+    whoCanApply &&
+    !SOCIAL_SECTOR_RE.test(whoCanApply) &&
+    !OPEN_TO_ALL_RE.test(whoCanApply) &&
+    COMMERCIAL_ONLY_RE.test(whoCanApply)
+  ) {
+    reasons.push({
+      code: 'applicant_not_social_sector', severity: 'critical',
+      label: 'Not for charities or social enterprises',
+      detail: 'the funder states the applicant must be a business, producer, employer or academic researcher',
     })
   }
 

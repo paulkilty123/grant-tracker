@@ -11,15 +11,15 @@
 // shared deriveReviewReasons(), the same function the auto-publish gate will
 // use to decide what never needs to reach a human at all.
 
-import { createClient } from '@supabase/supabase-js'
 import {
   deriveReviewReasons,
   extractTagsDiff,
   compareByReadiness,
-  publishReadiness,
   type ReviewRow,
 } from '@/lib/admin/review-reasons'
+import { gateDecision } from '@/lib/admin/publish-gate'
 import { ReviewQueue, type QueueItem } from './ReviewQueue'
+import { getAdminDb } from '@/lib/admin/admin-db'
 
 export const dynamic = 'force-dynamic'
 
@@ -37,15 +37,8 @@ const COLS = [
   'last_seen_at',
 ].join(', ')
 
-function getAdminClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  )
-}
-
 export default async function ReviewPage() {
-  const db = getAdminClient()
+  const db = getAdminDb()
 
   const { data, error } = await db
     .from('scraped_grants')
@@ -114,7 +107,13 @@ export default async function ReviewPage() {
   }
 
   const items: QueueItem[] = rows
-    .map(r => ({
+    .map(r => {
+      // Derived once and threaded through. It was computed twice per row here,
+      // and deriveReviewReasons walks the brief, the provenance diff and the
+      // flags each time.
+      const reasons = deriveReviewReasons(r)
+      const gate    = gateDecision(r, reasons)
+      return {
       id:            r.id,
       title:         r.title,
       funder:        r.funder ?? '',
@@ -122,8 +121,12 @@ export default async function ReviewPage() {
       linkSharedWith: sharedWith(r.apply_url ?? null),
       isActive:      r.is_active === true,
       pipelineState: r.pipeline_state,
-      reasons:       deriveReviewReasons(r),
-      readiness:     publishReadiness(deriveReviewReasons(r)),
+      reasons,
+      readiness:     gate.readiness,
+      // 'attention' = already visible to users AND carrying a reason a user
+      // could be misled by. Those sort above everything else, because every
+      // hour they sit here is an hour somebody can act on bad data.
+      gateOutcome:   gate.outcome,
       diffs:         extractTagsDiff(r.field_provenance),
       brief:         summariseBrief(r.funder_brief),
       values: {
@@ -134,8 +137,14 @@ export default async function ReviewPage() {
         structures: r.eligible_structures ?? [],
         sectors:    r.impact_sectors ?? [],
       },
-    }))
-    .sort((a, b) => compareByReadiness(a.reasons, b.reasons))
+      }
+    })
+    // Attention first, then readiness within each band. Readiness alone put a
+    // row nobody can see above a row everybody can see that states something
+    // wrong, purely because the invisible one was easier to finish.
+    .sort((a, b) =>
+      Number(b.gateOutcome === 'attention') - Number(a.gateOutcome === 'attention') ||
+      compareByReadiness(a.reasons, b.reasons))
 
   return <ReviewQueue items={items} />
 }

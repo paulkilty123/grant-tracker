@@ -231,6 +231,65 @@ export async function GET(req: NextRequest) {
     }, startedAt + TIME_BUDGET_MS)
   }
 
+  // ── 2c. Review-queue pass — break the link_unverified deadlock ────────────
+  // Rows awaiting review are is_active=false, so pass 1 (is_active=true) never
+  // reached them, and pass 2b only takes rows already marked dead. A withheld
+  // row with url_status='unchecked' was therefore reachable by NEITHER pass:
+  // it was held because its link was unverified, and nothing would ever verify
+  // it while it was held. Measured 2026-07-26: 27 of the 31 genuinely withheld
+  // rows sat in that state.
+  //
+  // This mattered more once the auto-publish gate existed. A gate must never
+  // block on a signal no job is able to produce — that is not caution, it is a
+  // permanent hold wearing caution's clothing. link_unverified is classified as
+  // informational partly for that reason; this pass is the other half of the
+  // fix, so the signal becomes real rather than merely non-blocking.
+  //
+  // Bounded and last, so it can only consume budget the catalogue passes left.
+  let queueChecked = 0
+  const queueDead: { id: string; title: string }[] = []
+
+  if (Date.now() < startedAt + TIME_BUDGET_MS) {
+    const { data: queueRows } = await supabase
+      .from('scraped_grants')
+      .select('id, title, apply_url, funder')
+      .eq('is_active', false)
+      .in('pipeline_state', ['captured', 'enriched', 'tagged', 'tagged_awaiting_review'])
+      .neq('url_status', 'dead')          // 2b owns those; never resurrect admin hides
+      .not('apply_url', 'is', null)
+      .order('url_last_checked', { ascending: true, nullsFirst: true })
+      .limit(RECOVERY_LIMIT)
+
+    await inBatches(queueRows ?? [], 10, async (grant) => {
+      const result = await deepCheckUrl(
+        grant.apply_url as string,
+        (grant.funder as string) ?? '',
+        (grant.title as string) ?? '',
+      )
+      queueChecked++
+
+      // Record the verdict only. Deliberately NOT deactivating a dead queue row
+      // here: these rows are already invisible to users, so there is nothing to
+      // protect anyone from, and archiving one would remove a human's chance to
+      // fix a merely-wrong URL. The gate reads url_status and will hold it.
+      await mergeGrantUpdate({
+        id:     grant.id,
+        source: PROVENANCE_SOURCE,
+        db:     supabase,
+        fields: {
+          url_status:         result.status === 'dead' ? 'dead' : 'ok',
+          url_last_checked:   ranAt,
+          url_quality_score:  result.qualityScore,
+          url_quality_issues: result.issues,
+        },
+      })
+
+      if (result.status === 'dead') {
+        queueDead.push({ id: grant.id, title: grant.title as string })
+      }
+    }, startedAt + TIME_BUDGET_MS)
+  }
+
   // ── 3. Check SEED_GRANTS URLs ─────────────────────────────────────────────
   const seedWithUrl = SEED_GRANTS.filter(g => g.applyUrl)
   const deadSeedGrants: { id: string; title: string; funder: string; url: string }[] = []
@@ -266,6 +325,11 @@ export async function GET(req: NextRequest) {
       checked:   recoveryChecked,
       recovered: recovered.length,
       grants:    recovered,
+    },
+    reviewQueue: {
+      checked: queueChecked,
+      dead:    queueDead.length,
+      grants:  queueDead,
     },
     seed: {
       checked: seedWithUrl.length - seedRun.skipped,

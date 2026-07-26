@@ -1,4 +1,5 @@
 import type { GrantOpportunity, Organisation, LegalStructure, BeneficiaryGroup } from '@/types'
+import { INDIVIDUAL_APPLICANT_STRUCTURES } from './structures'
 import { runEligibilityChecks } from './eligibility'
 import type { EligibilityStatus as EligibilityStatusFromEngine, EligibilityIssue } from './eligibility'
 import { extractIncomeGate } from './extract-income-gate'
@@ -584,12 +585,43 @@ function normalizeStructureTokens(s: string): string[] {
               'not_registered', 'unregistered_group']
     case 'sole_trader':
       return ['sole_trader']
+    // A private person. Returns ONLY its own token on purpose: it must not
+    // overlap with any organisational form, or an individual-only fund would
+    // satisfy an organisation's eligibility check by the back door.
+    case 'individual':
+      return ['individual']
     case 'llp':
     case 'partnership':
       return ['llp', 'partnership']
     default:
       return [sl]
   }
+}
+
+/**
+ * Ceiling for a fund only individuals can apply for, scored against an
+ * organisation.
+ *
+ * Below every ranked surface's threshold — Find Funding's "other matches" floor
+ * is 60, the deadlines page filters at 55, and the size-floor cap is already 35
+ * — so the fund never surfaces in a list, while still being reachable by direct
+ * browse. That is the same de-rank-don't-disappear contract the hard structure
+ * gate follows with its floor of 1.
+ */
+const INDIVIDUAL_ONLY_SCORE_CAP = 5
+
+/**
+ * Is the applicant a person rather than an organisation?
+ *
+ * Currently always false in practice: every organisation in the database holds
+ * an organisational form, and `individual` is deliberately not offered on the
+ * profile or onboarding forms. It is written as a real check rather than a
+ * hardcoded `false` so that the day individuals can sign up, the eligibility
+ * side already behaves, instead of silently hiding every fund meant for them.
+ */
+function orgIsIndividual(org: Organisation): boolean {
+  const s = (org.legal_structure ?? '').toLowerCase().trim()
+  return s !== '' && INDIVIDUAL_APPLICANT_STRUCTURES.has(s)
 }
 
 /**
@@ -624,6 +656,7 @@ function structureLabel(s: LegalStructure): string {
     unincorporated:     'unincorporated association',
     sole_trader:        'sole trader',
     not_registered:     'unregistered org',
+    individual:         'individual',
   }
   return labels[s] ?? s
 }
@@ -1565,6 +1598,31 @@ export function computeMatchScore(
   // strong the location/sector match is, a structure mismatch is a deal-breaker.
   if (structureMismatch) {
     score = Math.min(score, 45)
+  }
+
+  // ── Individual-applicant funds ─────────────────────────────────────────────
+  // A fund whose eligibility is drawn ENTIRELY from individual-applicant
+  // structures cannot be won by an organisation, so a 45 cap is not enough:
+  // 45 still ranks it above plenty of genuine matches and it keeps appearing.
+  //
+  // Wellbeing of Women's research grants go to "clinicians, midwives, nurses,
+  // academics". Asked to classify that, the model proposed registered_charity,
+  // cio, scio and both CIC forms — a personal research grant offered to every
+  // charity in the catalogue. Structure mismatch alone treated it as a maybe.
+  //
+  // This is deliberately a CAP, not a filter. matching.ts's standing rule is
+  // that a row is de-ranked rather than made to disappear (see the floor of 1
+  // on the hard gate above), so the fund stays browsable and auditable while
+  // sitting below every ranked surface's threshold.
+  const grantStructures = grant.eligibleStructures ?? []
+  const individualOnly =
+    grantStructures.length > 0 &&
+    grantStructures.every(s => INDIVIDUAL_APPLICANT_STRUCTURES.has(s.toLowerCase().trim()))
+  if (individualOnly && !orgIsIndividual(org)) {
+    score = Math.min(score, INDIVIDUAL_ONLY_SCORE_CAP)
+    if (!reasons.some(r => /individual/i.test(r))) {
+      reasons.push('This fund is for individuals applying in their own name, not organisations')
+    }
   }
 
   // Cap total score when grant size is materially below the org's stated

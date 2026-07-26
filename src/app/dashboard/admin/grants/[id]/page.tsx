@@ -13,14 +13,14 @@
 
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { createClient } from '@supabase/supabase-js'
 import { deriveReviewReasons, extractTagsDiff, type ReviewRow } from '@/lib/admin/review-reasons'
 import { GrantDetail } from './GrantDetail'
+import { getAdminDb } from '@/lib/admin/admin-db'
 
 export const dynamic = 'force-dynamic'
 
 export default async function GrantDetailPage({ params }: { params: { id: string } }) {
-  const db = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+  const db = getAdminDb()
 
   const { data, error } = await db
     .from('scraped_grants')

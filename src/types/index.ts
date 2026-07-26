@@ -16,6 +16,19 @@ export type LegalStructure =
   | 'unincorporated'       // Unincorporated association / community group
   | 'sole_trader'          // Sole trader
   | 'not_registered'       // Not yet registered / idea stage
+  // A private person, not an organisation. GRANT-SIDE ONLY: it describes a fund
+  // whose applicant is an individual (a researcher, an artist, a student). It is
+  // deliberately NOT offered as an organisation's own structure on the profile
+  // or onboarding forms, because Grant Tracker serves organisations — every one
+  // of the 32 orgs in the database holds an organisational form.
+  // Kept distinct from sole_trader, which is a person trading as a business and
+  // can legitimately hold organisational eligibility.
+  | 'individual'
+
+// Runtime values for this taxonomy live in src/lib/structures.ts, NOT here:
+// src/types/index.js is a stale tracked artefact that shadows this file at
+// runtime, so an exported const resolves to undefined while tsc stays clean.
+
 
 /** Backward-compatible alias — kept for existing data */
 export type OrgType =

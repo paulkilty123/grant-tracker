@@ -50,10 +50,43 @@ async function main() {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   )
 
-  const { data, error } = await db
+  // Scope. Default is the live catalogue, which is what this script was written
+  // for. `--recoverable` points it at the inactive rows whose link still
+  // resolves: the 2026-07-26 triage found 40 of those carry no eligibility at
+  // all, which is the single largest mechanical bucket blocking reactivation.
+  // They are unreachable from the default scope precisely because they are off,
+  // which is the same shape as the validator deadlock — a row held back for a
+  // defect that nothing in scope was able to repair.
+  const recoverable = process.argv.includes('--recoverable')
+
+  // `--empty-only` restricts to rows carrying NO eligibility at all.
+  //
+  // Those are a different proposition from widening a row that already has
+  // structures. An empty eligible_structures does not hide a row: matching.ts
+  // only applies the hard structure gate when the array is non-empty, so an
+  // untagged fund falls through to soft matching and is shown to organisations
+  // that cannot apply. Filling it in is therefore a correctness fix, not an
+  // enrichment nicety, and it is what the publish gate blocks on.
+  const emptyOnly = process.argv.includes('--empty-only')
+
+  // `--skip <id,id>` — rows a human has looked at and ruled out.
+  //
+  // Used for funds whose applicant is an INDIVIDUAL rather than an organisation
+  // (Wellbeing of Women's research grants go to "clinicians, midwives, nurses,
+  // academics"). Giving those eligible_structures would let the publish gate
+  // clear them and show a personal research grant to charities, which is worse
+  // than leaving them untagged and held.
+  const skipArg  = process.argv.indexOf('--skip')
+  const skipIds  = new Set(skipArg > -1 ? (process.argv[skipArg + 1] ?? '').split(',').map(s => s.trim()).filter(Boolean) : [])
+
+  let query = db
     .from('scraped_grants')
     .select('id, title, funder, description, location_tag, eligible_structures, funder_brief, field_provenance')
-    .eq('is_active', true)
+  query = recoverable
+    ? query.eq('is_active', false).eq('url_status', 'ok').is('rejection_reason', null)
+    : query.eq('is_active', true)
+
+  const { data, error } = await query
   if (error) { console.error('query failed:', error.message); process.exit(1) }
 
   type Row = {
@@ -70,6 +103,8 @@ async function main() {
 
   for (const r of rows) {
     const current = r.eligible_structures ?? []
+    if (emptyOnly && current.length > 0) continue
+    if (skipIds.has(r.id)) continue
     const who = typeof r.funder_brief?.who_can_apply === 'string' ? r.funder_brief.who_can_apply : ''
     const src = `${who} ${r.description ?? ''}`.trim()
     if (!src) continue
@@ -86,7 +121,7 @@ async function main() {
     return p?.pinned === true
   })
 
-  console.log(`\nactive rows scanned: ${rows.length}`)
+  console.log(`\n${recoverable ? "recoverable inactive" : "active"} rows scanned: ${rows.length}`)
   console.log(`rows the backstop would widen: ${changes.length}`)
   console.log(`  of which admin-pinned (write will be rejected): ${pinned.length}\n`)
 

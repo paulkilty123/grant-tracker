@@ -25,3 +25,25 @@ export const DEFAULT_QUERIES: Record<DiscoveryFundingType, string[]> = {
     'charity incubator accelerator UK open applications cohort 2026',
   ],
 }
+
+/**
+ * Funders whose own sites block us, so a web search is the only route in.
+ *
+ * artscouncil.org.uk and london.gov.uk return 403 to every non-browser fetch and
+ * their scrapers were retired on 2026-07-26; arts.wales blocks its archived
+ * funding path. Passed as the search tool's `allowed_domains` so a routine sweep
+ * still covers them.
+ *
+ * This is the sanctioned route, not a workaround. Arts Council's robots.txt says
+ * "Content-Signal: search=yes, use=reference" with "Allow: /" — a reference
+ * directory is a permitted use. A web search reads search-engine results, never
+ * their WAF-protected pages, which is why this is appropriate where a reader
+ * proxy would not have been (they separately disallow rendering crawlers).
+ */
+export const BLOCKED_FUNDER_DOMAINS = ['artscouncil.org.uk', 'london.gov.uk', 'arts.wales']
+
+/** One targeted query per blocked funder, for the routine sweep. */
+export const BLOCKED_FUNDER_QUERIES: { query: string; domains: string[] }[] = [
+  { query: 'Arts Council England open funds for organisations apply now', domains: ['artscouncil.org.uk'] },
+  { query: 'Greater London Authority funding programmes open for applications community organisations', domains: ['london.gov.uk'] },
+]

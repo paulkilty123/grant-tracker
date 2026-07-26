@@ -27,7 +27,14 @@ export const VALID_STRUCTURES = new Set([
   'cic_guarantee', 'cic_shares', 'cio', 'scio', 'registered_charity',
   'ltd_guarantee', 'ltd_shares', 'llp', 'cooperative',
   'unincorporated', 'sole_trader', 'not_registered',
+  // A private person. Grant-side only — see LegalStructure in types/index.ts.
+  'individual',
 ])
+
+// Individual-applicant structures live beside LegalStructure in types/index.ts,
+// so the classifier and the matcher cannot disagree about what counts as a
+// person. Re-exported here because this file is the taxonomy's front door.
+export { INDIVIDUAL_APPLICANT_STRUCTURES } from './structures'
 
 export const VALID_BENEFICIARIES = new Set([
   'children', 'young_people', 'older_people', 'families',
@@ -252,7 +259,13 @@ Return [] when the source does not name specific legal structures.
 
 Valid values: cic_guarantee, cic_shares, cio, registered_charity,
               ltd_guarantee, ltd_shares, llp, cooperative,
-              unincorporated, sole_trader, not_registered
+              unincorporated, sole_trader, not_registered, individual
+
+"individual" means the APPLICANT IS A PERSON, not an organisation — a
+researcher, clinician, artist or student applying in their own name. When a
+fund is for individuals, return ["individual"] ALONE and add no organisational
+form: those funds are hidden from organisations, and one stray charity tag
+puts a personal grant in front of every charity in the catalogue.
 
 DEFAULT BIAS: TIGHT.
 When uncertain whether a type is included, EXCLUDE it. Only tag a structure
@@ -306,7 +319,8 @@ Common mappings (apply only after the hard rules above):
 "Ltd companies / limited companies"                 → ["ltd_guarantee","ltd_shares"]
 "co-operatives / community benefit societies / CBS" → ["cooperative"]
 "Innovate UK / UKRI / SBRI / R&D grants"            → ["ltd_guarantee","ltd_shares","cic_guarantee","cic_shares"]
-"individuals / sole traders / freelancers"          → ["sole_trader","unincorporated"]
+"individuals applying in their own name (researchers, artists, students)" → ["individual"]
+"sole traders / freelancers / self-employed businesses" → ["sole_trader"]
 "constituted and unconstituted groups (explicit)"   → ["registered_charity","cio","cic_guarantee","ltd_guarantee","cooperative","unincorporated","not_registered"]
 "open to all / organisations / no restriction stated / silent on structure" → []
 
@@ -575,16 +589,38 @@ export function charityFormJurisdiction(opts: {
   locationTag?: string | null
   text?: string | null
 }): { scioAllowed: boolean; cioAllowed: boolean } {
-  const tag   = (opts.locationTag ?? '').trim().toLowerCase()
-  const scope = tag !== '' ? tag : (opts.text ?? '').toLowerCase()
+  const UK_WIDE   = /\buk\b|united kingdom|nationwide|\bbritain\b|\bbritish\b|\bgb\b|global/
+  const SCOTLAND  = /\bscotland\b|\bscottish\b/
+  const ENG_WALES = /\bengland\b|\benglish\b|\bwales\b|\bwelsh\b/
 
-  const ukWide            = /\buk\b|united kingdom|nationwide|\bbritain\b|\bbritish\b|\bgb\b|global/.test(scope)
-  const namesScotland     = /\bscotland\b|\bscottish\b/.test(scope)
-  const namesEnglandWales = /\bengland\b|\benglish\b|\bwales\b|\bwelsh\b/.test(scope)
+  const tag   = (opts.locationTag ?? '').trim().toLowerCase()
+  const body  = (opts.text ?? '').toLowerCase()
+  const scope = tag !== '' ? tag : body
+
+  const ukWide            = UK_WIDE.test(scope)
+  const namesScotland     = SCOTLAND.test(scope)
+  const namesEnglandWales = ENG_WALES.test(scope)
+
+  // A location_tag of "UK" is a weak inference; the fund's own words are not.
+  // When the tag reads UK-wide but the text names England/Wales and never
+  // mentions Scotland, the text wins for SCIO.
+  //
+  // Found 2026-07-26: Lloyds Bank Foundation FOR ENGLAND AND WALES carries
+  // location_tag='UK' while its own who_can_apply says "operating in England
+  // and Wales". Because the tag suppressed the text entirely, the add path
+  // computed scioAllowed and a dry run proposed adding scio to 53 rows. 32 rows
+  // catalogue-wide carry this contradiction.
+  //
+  // This only ever REMOVES scio, and only where the fund's own text rules
+  // Scotland out. That is the same direction as scripts/fix-scio-jurisdiction.ts
+  // and the same principle stated below: showing a fund to an organisation that
+  // cannot legally apply wastes an applicant's time, which is the most expensive
+  // error this catalogue can make.
+  const textRulesOutScotland = tag !== '' && ukWide && ENG_WALES.test(body) && !SCOTLAND.test(body)
 
   return {
     // Scotland must be POSITIVELY in scope — silence is not permission.
-    scioAllowed: ukWide || namesScotland,
+    scioAllowed: (ukWide || namesScotland) && !textRulesOutScotland,
     // England/Wales form: allowed unless the fund is Scotland-only.
     cioAllowed:  ukWide || namesEnglandWales || !namesScotland,
   }
