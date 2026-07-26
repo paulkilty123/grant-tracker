@@ -242,7 +242,7 @@ export default function Sidebar({ org, userEmail, companionSurface = false }: Pr
           item list overflows; min-h-0 is required for the overflow to engage. */}
       <div
         className="flex-1 min-h-0 overflow-y-auto"
-        style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(245,241,232,0.18) transparent' }}
+        style={{ scrollbarWidth: 'thin', scrollbarColor: 'color-mix(in srgb, var(--surface-sunken) 18%, transparent) transparent' }}
       >
         {/* Dashboard — Briefing (+ Plan) replaces it for Companion-surface users */}
         <div className="mt-1">
@@ -306,18 +306,18 @@ export default function Sidebar({ org, userEmail, companionSurface = false }: Pr
         className="flex items-center gap-2.5 px-3 py-[9px] text-[15px] font-medium"
         style={{
           borderRadius: 8,
-          color: 'rgba(151,196,89,0.8)',
+          color: 'color-mix(in srgb, var(--sage) 80%, transparent)',
           background: 'transparent',
           fontFamily: 'var(--font-space-grotesk)',
           textDecoration: 'none',
         }}
         onMouseEnter={e => {
           e.currentTarget.style.background = SB.hover
-          e.currentTarget.style.color = 'rgba(151,196,89,1)'
+          e.currentTarget.style.color = 'var(--sage)'
         }}
         onMouseLeave={e => {
           e.currentTarget.style.background = 'transparent'
-          e.currentTarget.style.color = 'rgba(151,196,89,0.8)'
+          e.currentTarget.style.color = 'color-mix(in srgb, var(--sage) 80%, transparent)'
         }}
       >
         <MessageSquare style={{ width: 15, height: 15, color: 'inherit', flexShrink: 0 }} />

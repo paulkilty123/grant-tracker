@@ -865,7 +865,7 @@ export default function ApplicationWorkspacePage() {
     const menu: React.CSSProperties = {
       position: 'absolute', top: '100%', right: 0, zIndex: 60, marginTop: 4, minWidth: 230,
       background: T.white, border: `1px solid ${T.borderStrong}`, borderRadius: 10,
-      boxShadow: '0 10px 32px rgba(26,46,43,0.14)', overflow: 'hidden', padding: '4px 0',
+      boxShadow: '0 10px 32px color-mix(in srgb, var(--text-body) 14%, transparent)', overflow: 'hidden', padding: '4px 0',
     }
     return (
       <div style={{ display: 'flex', gap: 8, flexShrink: 0, alignItems: 'center' }}>
@@ -967,7 +967,7 @@ export default function ApplicationWorkspacePage() {
         <div style={{
           position: 'sticky', top: 8, zIndex: 40,
           background: T.white, border: `1px solid ${T.borderHairline}`, borderRadius: 12,
-          padding: '9px 16px', marginBottom: 12, boxShadow: '0 6px 24px rgba(26,46,43,0.10)',
+          padding: '9px 16px', marginBottom: 12, boxShadow: '0 6px 24px color-mix(in srgb, var(--text-body) 10%, transparent)',
           display: 'flex', alignItems: 'center', gap: 12,
         }}>
           <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 14, color: T.textPrimary, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -1074,7 +1074,7 @@ export default function ApplicationWorkspacePage() {
               </span>
               <button onClick={() => runGate(app.id)} style={{
                 fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.amberText,
-                background: 'transparent', border: `1px solid rgba(133,79,11,0.35)`,
+                background: 'transparent', border: `1px solid color-mix(in srgb, var(--state-warning) 35%, transparent)`,
                 padding: '6px 13px', borderRadius: 8, cursor: 'pointer',
               }}>
                 Try again
@@ -1082,7 +1082,7 @@ export default function ApplicationWorkspacePage() {
             </div>
           )}
           {gate && blockers.length > 0 && (
-            <div style={{ background: T.coralBg, border: `1px solid rgba(216,90,48,0.25)`, borderRadius: 12, padding: '16px 20px' }}>
+            <div style={{ background: T.coralBg, border: `1px solid color-mix(in srgb, var(--terra) 25%, transparent)`, borderRadius: 12, padding: '16px 20px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                 <AlertTriangle size={16} color={T.coral} />
                 <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 14.5, color: T.coralText }}>
@@ -1092,7 +1092,7 @@ export default function ApplicationWorkspacePage() {
               <ul style={{ margin: '0 0 12px', paddingLeft: 20 }}>
                 {blockers.map((b, i) => (
                   <li key={i} style={{ fontFamily: BODY, fontSize: 13.5, color: T.coralText, lineHeight: 1.6 }}>
-                    {b.message} <span style={{ fontFamily: UI, fontSize: 11, color: 'rgba(153,60,29,0.7)' }}>(from the verified catalogue entry)</span>
+                    {b.message} <span style={{ fontFamily: UI, fontSize: 11, color: 'color-mix(in srgb, var(--state-error) 70%, transparent)' }}>(from the verified catalogue entry)</span>
                   </li>
                 ))}
               </ul>
@@ -1103,7 +1103,7 @@ export default function ApplicationWorkspacePage() {
                   </span>
                   <button onClick={proceedAnyway} disabled={proceeding} style={{
                     fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.coralText,
-                    background: 'transparent', border: `1px solid rgba(153,60,29,0.35)`,
+                    background: 'transparent', border: `1px solid color-mix(in srgb, var(--state-error) 35%, transparent)`,
                     padding: '6px 12px', borderRadius: 8,
                     cursor: proceeding ? 'wait' : 'pointer', opacity: proceeding ? 0.6 : 1,
                   }}>
@@ -1305,7 +1305,7 @@ export default function ApplicationWorkspacePage() {
             </button>
           </div>
           {guidelinesViewOpen && (
-            <div style={{ borderTop: '1px solid rgba(59,109,17,0.15)', padding: '12px 18px', maxHeight: 260, overflowY: 'auto' }}>
+            <div style={{ borderTop: '1px solid color-mix(in srgb, var(--state-success) 15%, transparent)', padding: '12px 18px', maxHeight: 260, overflowY: 'auto' }}>
               <p style={{ fontFamily: BODY, fontSize: 12.5, color: T.textPrimary, margin: 0, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
                 {app.supplied_guidelines}
               </p>
@@ -1437,7 +1437,7 @@ export default function ApplicationWorkspacePage() {
           onClick={() => setBankingFor(null)}
         >
           <div
-            style={{ background: T.white, borderRadius: 12, padding: '22px 24px', width: '100%', maxWidth: 460, boxShadow: '0 16px 64px rgba(26,46,43,0.18)' }}
+            style={{ background: T.white, borderRadius: 12, padding: '22px 24px', width: '100%', maxWidth: 460, boxShadow: '0 16px 64px color-mix(in srgb, var(--text-body) 18%, transparent)' }}
             onClick={e => e.stopPropagation()}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
@@ -1476,7 +1476,7 @@ export default function ApplicationWorkspacePage() {
           <div
             style={{
               background: T.white, borderRadius: 12, padding: '22px 24px', width: '100%', maxWidth: 640,
-              maxHeight: '86vh', overflowY: 'auto', boxShadow: '0 16px 64px rgba(26,46,43,0.18)',
+              maxHeight: '86vh', overflowY: 'auto', boxShadow: '0 16px 64px color-mix(in srgb, var(--text-body) 18%, transparent)',
             }}
             onClick={e => e.stopPropagation()}
           >
@@ -1587,7 +1587,7 @@ export default function ApplicationWorkspacePage() {
           <div
             style={{
               background: T.white, borderRadius: 12, padding: '22px 24px', width: '100%', maxWidth: 640,
-              maxHeight: '86vh', overflowY: 'auto', boxShadow: '0 16px 64px rgba(26,46,43,0.18)',
+              maxHeight: '86vh', overflowY: 'auto', boxShadow: '0 16px 64px color-mix(in srgb, var(--text-body) 18%, transparent)',
             }}
             onClick={e => e.stopPropagation()}
           >
@@ -1677,7 +1677,7 @@ export default function ApplicationWorkspacePage() {
         <div style={{
           position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
           background: T.greenDeep, color: 'var(--state-success-pale)', fontFamily: UI, fontWeight: 500, fontSize: 13.5,
-          padding: '11px 20px', borderRadius: 10, zIndex: 60, boxShadow: '0 8px 32px rgba(23,52,4,0.3)',
+          padding: '11px 20px', borderRadius: 10, zIndex: 60, boxShadow: '0 8px 32px color-mix(in srgb, var(--deep) 30%, transparent)',
         }}>
           {toast}
         </div>
@@ -1936,7 +1936,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
                   style={{
                     fontFamily: UI, fontWeight: 600, fontSize: 11.5, padding: '4px 11px', borderRadius: 999,
                     background: expandedStep === i ? T.paleGreen : T.softGreen,
-                    color: T.stateSuccess, border: `1px solid ${expandedStep === i ? 'rgba(59,109,17,0.3)' : T.borderHairline}`,
+                    color: T.stateSuccess, border: `1px solid ${expandedStep === i ? 'color-mix(in srgb, var(--state-success) 30%, transparent)' : T.borderHairline}`,
                     cursor: 'pointer',
                   }}
                 >
@@ -1987,7 +1987,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
                     onClick={() => setPreview(p => !p)}
                     style={{
                       fontFamily: UI, fontWeight: 600, fontSize: 11.5, color: preview ? T.stateSuccess : T.textSecondary,
-                      background: preview ? T.paleGreen : 'transparent', border: `1px solid ${preview ? 'rgba(59,109,17,0.3)' : T.borderStrong}`,
+                      background: preview ? T.paleGreen : 'transparent', border: `1px solid ${preview ? 'color-mix(in srgb, var(--state-success) 30%, transparent)' : T.borderStrong}`,
                       borderRadius: 8, padding: '4px 10px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5,
                     }}
                   >

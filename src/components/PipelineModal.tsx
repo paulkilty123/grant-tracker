@@ -280,7 +280,7 @@ export function PipelineModal({
                   applying:   { bg: '#F1F7E4' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, text: '#3B6D11', restBorder: 'rgba(57,109,17,0.20)', activeBorder: '#3B6D11' },
                   submitted:  { bg: '#DFEDCC' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, text: '#3B6D11', restBorder: 'rgba(57,109,17,0.20)', activeBorder: '#3B6D11' },
                   won:        { bg: '#EAF3DE' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, text: '#3B6D11', restBorder: 'rgba(57,109,17,0.20)', activeBorder: '#8ECB3C' },
-                  declined:   { bg: '#FAECE7' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, text: '#993C1D', restBorder: 'rgba(153,60,29,0.20)', activeBorder: '#993C1D' },
+                  declined:   { bg: '#FAECE7' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, text: '#993C1D', restBorder: 'color-mix(in srgb, var(--state-error) 20%, transparent)', activeBorder: '#993C1D' },
                 }
                 const tone = tones[s.id]
                 return (

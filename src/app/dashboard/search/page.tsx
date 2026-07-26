@@ -504,7 +504,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
   const overflowCount  = allSectors.length - visibleSectors.length
 
   return (
-    <div className="bg-white mb-3 overflow-hidden" style={{ borderRadius: 14, border: '0.5px solid rgba(0,0,0,0.1)', boxShadow: '0 1px 3px rgba(23,52,4,0.04), 0 4px 12px rgba(23,52,4,0.04)', transition: 'box-shadow 0.15s ease, transform 0.15s ease' }} onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 2px 5px rgba(23,52,4,0.05), 0 8px 20px rgba(23,52,4,0.06)'; e.currentTarget.style.transform = 'translateY(-1px)' }} onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 1px 3px rgba(23,52,4,0.04), 0 4px 12px rgba(23,52,4,0.04)'; e.currentTarget.style.transform = 'translateY(0)' }}>
+    <div className="bg-white mb-3 overflow-hidden" style={{ borderRadius: 14, border: '0.5px solid rgba(0,0,0,0.1)', boxShadow: '0 1px 3px color-mix(in srgb, var(--deep) 4%, transparent), 0 4px 12px color-mix(in srgb, var(--deep) 4%, transparent)', transition: 'box-shadow 0.15s ease, transform 0.15s ease' }} onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 2px 5px color-mix(in srgb, var(--deep) 5%, transparent), 0 8px 20px color-mix(in srgb, var(--deep) 6%, transparent)'; e.currentTarget.style.transform = 'translateY(-1px)' }} onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 1px 3px color-mix(in srgb, var(--deep) 4%, transparent), 0 4px 12px color-mix(in srgb, var(--deep) 4%, transparent)'; e.currentTarget.style.transform = 'translateY(0)' }}>
 
       {/* ── Card body ── */}
       <div style={{ padding: isMobile ? '12px 14px' : '18px 22px' }}>
@@ -930,7 +930,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
             aria-hidden="true"
             style={{
               width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
-              border: '0.5px solid rgba(99,153,34,0.40)',
+              border: '0.5px solid color-mix(in srgb, var(--sage-deep) 40%, transparent)',
               background: 'transparent',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               color: insightsExpanded ? 'var(--state-success)' : 'var(--deep)',
@@ -1046,7 +1046,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
 
                   {/* Exclusions callout — full-width amber */}
                   {brief.exclusions && (
-                    <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', padding: '16px 22px', background: 'var(--state-warning-pale)', borderTop: '0.5px solid rgba(186,117,23,0.2)' }}>
+                    <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', padding: '16px 22px', background: 'var(--state-warning-pale)', borderTop: '0.5px solid color-mix(in srgb, var(--gold-deep) 20%, transparent)' }}>
                       <div style={{ width: 26, height: 26, borderRadius: 7, background: 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                         <AlertTriangle style={{ width: 13, height: 13, color: 'var(--state-warning)' }} />
                       </div>
@@ -2742,7 +2742,7 @@ export default function SearchPage() {
                 className="flex-1 min-w-[160px] flex flex-row items-center gap-3 px-4 py-3.5 rounded-xl transition-colors outline-none"
                 style={isActive ? {
                   background: tab.id === 'grant' ? 'var(--state-success-pale)' : tab.id === 'programme' ? 'var(--state-error-pale)' : tab.id === 'investment' ? 'var(--state-info-pale)' : 'var(--state-warning-pale)',
-                  border: `1px solid ${tab.id === 'grant' ? 'rgba(99,153,34,0.35)' : tab.id === 'programme' ? 'color-mix(in srgb, var(--state-error) 30%, transparent)' : tab.id === 'investment' ? 'color-mix(in srgb, var(--state-info) 30%, transparent)' : 'color-mix(in srgb, var(--state-warning) 30%, transparent)'}`,
+                  border: `1px solid ${tab.id === 'grant' ? 'color-mix(in srgb, var(--sage-deep) 35%, transparent)' : tab.id === 'programme' ? 'color-mix(in srgb, var(--state-error) 30%, transparent)' : tab.id === 'investment' ? 'color-mix(in srgb, var(--state-info) 30%, transparent)' : 'color-mix(in srgb, var(--state-warning) 30%, transparent)'}`,
                 } : {
                   background: 'var(--surface-card)',
                   border: '1px solid var(--border-warm)',
@@ -2981,7 +2981,7 @@ export default function SearchPage() {
           (() => {
             // Detection priority: B (search) → C (filters) → A (category empty)
             const emptyCardStyle: React.CSSProperties = {
-              background: 'var(--surface-card)', borderRadius: 14, border: '0.5px solid rgba(0,0,0,0.06)', boxShadow: '0 1px 3px rgba(23,52,4,0.04), 0 4px 12px rgba(23,52,4,0.04)', transition: 'box-shadow 0.15s ease, transform 0.15s ease',
+              background: 'var(--surface-card)', borderRadius: 14, border: '0.5px solid rgba(0,0,0,0.06)', boxShadow: '0 1px 3px color-mix(in srgb, var(--deep) 4%, transparent), 0 4px 12px color-mix(in srgb, var(--deep) 4%, transparent)', transition: 'box-shadow 0.15s ease, transform 0.15s ease',
               padding: '48px 40px', textAlign: 'center' as const,
             }
             const tabEmptyCfg: Record<string, { bg: string; color: string; icon: React.ReactNode }> = {
@@ -3421,7 +3421,7 @@ export default function SearchPage() {
                     </button>
                     <button
                       onClick={() => setAppliedFlow(prev => prev ? { ...prev, step: 'declined-reasons' } : prev)}
-                      style={{ textAlign: 'left', padding: '12px 16px', borderRadius: 10, border: '1px solid rgba(216,90,48,0.4)', background: 'var(--state-error-pale)', cursor: 'pointer', fontSize: 14, fontFamily: 'var(--font-dm-sans)', color: 'var(--state-error)' }}
+                      style={{ textAlign: 'left', padding: '12px 16px', borderRadius: 10, border: '1px solid color-mix(in srgb, var(--terra) 40%, transparent)', background: 'var(--state-error-pale)', cursor: 'pointer', fontSize: 14, fontFamily: 'var(--font-dm-sans)', color: 'var(--state-error)' }}
                     >
                       <strong>Declined</strong>
                       <div style={{ fontSize: 12, color: 'var(--state-error)', marginTop: 2 }}>Tell me what didn&apos;t work (helps train your matches)</div>
@@ -3468,7 +3468,7 @@ export default function SearchPage() {
                       onChange={e => setAppliedFlow(prev => prev ? { ...prev, freeText: e.target.value } : prev)}
                       placeholder="Tell us more..."
                       rows={2}
-                      style={{ width: '100%', boxSizing: 'border-box', border: '0.5px solid rgba(99,153,34,0.3)', borderRadius: 10, padding: '10px 14px', fontFamily: 'var(--font-dm-sans)', fontSize: 13, color: 'var(--text-body)', resize: 'vertical', lineHeight: 1.5, outline: 'none', marginBottom: 14 }}
+                      style={{ width: '100%', boxSizing: 'border-box', border: '0.5px solid color-mix(in srgb, var(--sage-deep) 30%, transparent)', borderRadius: 10, padding: '10px 14px', fontFamily: 'var(--font-dm-sans)', fontSize: 13, color: 'var(--text-body)', resize: 'vertical', lineHeight: 1.5, outline: 'none', marginBottom: 14 }}
                     />
                   )}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>

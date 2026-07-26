@@ -74,7 +74,7 @@ export function IssueKeyForm({ tosVersion, tosStatus }: Props) {
   if (issued) {
     return (
       <div className="space-y-5">
-        <div className="rounded-xl border p-5" style={{ background: 'var(--state-success-pale)', borderColor: 'rgba(99,153,34,0.30)' }}>
+        <div className="rounded-xl border p-5" style={{ background: 'var(--state-success-pale)', borderColor: 'color-mix(in srgb, var(--sage-deep) 30%, transparent)' }}>
           <div className="flex items-center gap-2 mb-3">
             <Check className="w-5 h-5" style={{ color: 'var(--state-success)' }} />
             <p className="text-sm font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
@@ -84,7 +84,7 @@ export function IssueKeyForm({ tosVersion, tosStatus }: Props) {
           <p className="text-xs mb-4" style={{ color: 'var(--state-success)' }}>
             This is the only time you&apos;ll see the full key. Copy it somewhere safe (a password manager is good) before leaving this page.
           </p>
-          <div className="bg-white border rounded-md p-3 flex items-center gap-3" style={{ borderColor: 'rgba(99,153,34,0.30)' }}>
+          <div className="bg-white border rounded-md p-3 flex items-center gap-3" style={{ borderColor: 'color-mix(in srgb, var(--sage-deep) 30%, transparent)' }}>
             <code className="flex-1 text-xs break-all" style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>
               {issued.api_key}
             </code>
@@ -99,7 +99,7 @@ export function IssueKeyForm({ tosVersion, tosStatus }: Props) {
           </div>
         </div>
 
-        <div className="rounded-xl border border-warm p-5 bg-white text-sm" style={{ boxShadow: '0 2px 16px rgba(26,46,43,0.04)' }}>
+        <div className="rounded-xl border border-warm p-5 bg-white text-sm" style={{ boxShadow: '0 2px 16px color-mix(in srgb, var(--text-body) 4%, transparent)' }}>
           <p className="font-semibold mb-2 text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
             Using your key
           </p>

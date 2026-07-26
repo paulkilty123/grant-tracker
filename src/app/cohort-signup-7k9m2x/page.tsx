@@ -200,7 +200,7 @@ export default function CohortSignupPage() {
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div style={{ background: 'var(--surface-page)', minHeight: '100vh', fontFamily: BODY, color: 'var(--text-body)' }}>
-      <nav style={{ background: 'white', borderBottom: '0.5px solid rgba(23,52,4,0.08)', padding: '18px 0' }}>
+      <nav style={{ background: 'white', borderBottom: '0.5px solid color-mix(in srgb, var(--deep) 8%, transparent)', padding: '18px 0' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}>
             <LogoMark size={30} />
@@ -212,7 +212,7 @@ function Shell({ children }: { children: React.ReactNode }) {
         </div>
       </nav>
       <div style={{ maxWidth: 520, margin: '0 auto', padding: '64px 24px 48px' }}>
-        <div style={{ background: 'white', borderRadius: 16, padding: '40px 36px', boxShadow: '0 2px 24px rgba(23,52,4,0.06)', border: '0.5px solid rgba(23,52,4,0.06)' }}>
+        <div style={{ background: 'white', borderRadius: 16, padding: '40px 36px', boxShadow: '0 2px 24px color-mix(in srgb, var(--deep) 6%, transparent)', border: '0.5px solid color-mix(in srgb, var(--deep) 6%, transparent)' }}>
           {children}
         </div>
       </div>

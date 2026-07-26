@@ -155,7 +155,7 @@ export default function AdminUserDetailPage() {
           { label: 'Liked',           value: interactions_summary.liked    ?? 0 },
           { label: 'Dismissed',       value: interactions_summary.dismissed ?? 0 },
         ].map(kpi => (
-          <div key={kpi.label} className="bg-white rounded-xl p-5 shadow-card text-center" style={{ border: '0.5px solid rgba(23,52,4,0.08)' }}>
+          <div key={kpi.label} className="bg-white rounded-xl p-5 shadow-card text-center" style={{ border: '0.5px solid color-mix(in srgb, var(--deep) 8%, transparent)' }}>
             <p className="font-display text-3xl font-bold text-forest">{kpi.value}</p>
             <p className="text-xs text-mid mt-1">{kpi.label}</p>
           </div>
@@ -166,7 +166,7 @@ export default function AdminUserDetailPage() {
       <section className="mb-8">
         <h3 className="font-display text-lg font-bold text-charcoal mb-3">Organisation profile</h3>
         {org ? (
-          <div className="bg-white rounded-xl p-5 shadow-card" style={{ border: '0.5px solid rgba(23,52,4,0.08)' }}>
+          <div className="bg-white rounded-xl p-5 shadow-card" style={{ border: '0.5px solid color-mix(in srgb, var(--deep) 8%, transparent)' }}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm">
               <Field label="Name"               value={org.name} />
               <Field label="Legal structure"    value={org.legal_structure} />
@@ -193,7 +193,7 @@ export default function AdminUserDetailPage() {
             )}
           </div>
         ) : (
-          <div className="bg-white rounded-xl p-8 shadow-card text-center text-mid italic" style={{ border: '0.5px solid rgba(23,52,4,0.08)' }}>
+          <div className="bg-white rounded-xl p-8 shadow-card text-center text-mid italic" style={{ border: '0.5px solid color-mix(in srgb, var(--deep) 8%, transparent)' }}>
             No organisation row yet — user hasn't started the onboarding wizard.
           </div>
         )}
@@ -203,11 +203,11 @@ export default function AdminUserDetailPage() {
       <section className="mb-8">
         <h3 className="font-display text-lg font-bold text-charcoal mb-3">Pipeline ({pipeline.length})</h3>
         {pipeline.length === 0 ? (
-          <div className="bg-white rounded-xl p-8 shadow-card text-center text-mid italic" style={{ border: '0.5px solid rgba(23,52,4,0.08)' }}>
+          <div className="bg-white rounded-xl p-8 shadow-card text-center text-mid italic" style={{ border: '0.5px solid color-mix(in srgb, var(--deep) 8%, transparent)' }}>
             No grants in pipeline yet.
           </div>
         ) : (
-          <div className="bg-white rounded-xl shadow-card overflow-hidden" style={{ border: '0.5px solid rgba(23,52,4,0.08)' }}>
+          <div className="bg-white rounded-xl shadow-card overflow-hidden" style={{ border: '0.5px solid color-mix(in srgb, var(--deep) 8%, transparent)' }}>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -261,11 +261,11 @@ export default function AdminUserDetailPage() {
       <section className="mb-8">
         <h3 className="font-display text-lg font-bold text-charcoal mb-3">Saved grants ({saved.length})</h3>
         {saved.length === 0 ? (
-          <div className="bg-white rounded-xl p-8 shadow-card text-center text-mid italic" style={{ border: '0.5px solid rgba(23,52,4,0.08)' }}>
+          <div className="bg-white rounded-xl p-8 shadow-card text-center text-mid italic" style={{ border: '0.5px solid color-mix(in srgb, var(--deep) 8%, transparent)' }}>
             No saved grants.
           </div>
         ) : (
-          <div className="bg-white rounded-xl shadow-card overflow-hidden" style={{ border: '0.5px solid rgba(23,52,4,0.08)' }}>
+          <div className="bg-white rounded-xl shadow-card overflow-hidden" style={{ border: '0.5px solid color-mix(in srgb, var(--deep) 8%, transparent)' }}>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>

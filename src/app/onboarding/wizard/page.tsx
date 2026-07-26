@@ -1152,7 +1152,7 @@ function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual }: {
             background: 'transparent', border: 'none', color: hov ? T.textPrimary : T.textSecondary,
             fontFamily: 'var(--font-dm-sans)', fontSize: 13, cursor: 'pointer',
             textDecoration: 'underline',
-            textDecorationColor: 'rgba(95,94,90,0.3)',
+            textDecorationColor: 'color-mix(in srgb, var(--text-muted) 30%, transparent)',
             textUnderlineOffset: 3,
             padding: '8px 12px',
           }}
@@ -1270,8 +1270,8 @@ function ReviewField({ label, value, fieldState: fState, isConfirmed, isEditing,
 
   const bg = effective === 'confident' ? T.greenCream
            : effective === 'uncertain' ? T.amberBgSoft : T.pageBg
-  const borderColor = effective === 'confident' ? 'rgba(99,153,34,0.2)'
-                    : effective === 'uncertain' ? 'rgba(186,117,23,0.2)' : T.borderLight
+  const borderColor = effective === 'confident' ? 'color-mix(in srgb, var(--sage-deep) 20%, transparent)'
+                    : effective === 'uncertain' ? 'color-mix(in srgb, var(--gold-deep) 20%, transparent)' : T.borderLight
   const borderStyle = fState === 'missing' && !isConfirmed ? 'dashed' : 'solid'
 
   const iconBg  = effective === 'confident' ? T.greenMid
@@ -1678,7 +1678,7 @@ function StepSectors({ impactSectors, nicheTags, excludedNicheTags, toggleSector
       {impactSectors.includes('mental_health') && impactSectors.includes('health') && (
         <div style={{
           background: T.amberBgSoft,
-          border: `0.5px solid rgba(186,117,23,0.25)`,
+          border: `0.5px solid color-mix(in srgb, var(--gold-deep) 25%, transparent)`,
           borderRadius: 8,
           padding: '10px 14px',
           marginBottom: 20,
@@ -1709,7 +1709,7 @@ function StepSectors({ impactSectors, nicheTags, excludedNicheTags, toggleSector
             color: T.textPrimary,
             marginBottom: 14,
             padding: '10px 12px',
-            background: 'rgba(255,255,255,0.75)',
+            background: 'color-mix(in srgb, var(--surface-card) 75%, transparent)',
             borderLeft: '3px solid var(--sage-deep)',
             borderRadius: 4,
             lineHeight: 1.5,

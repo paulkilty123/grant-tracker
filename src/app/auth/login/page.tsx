@@ -97,7 +97,7 @@ function LoginForm() {
     <div style={{ background: 'var(--surface-page)', minHeight: '100vh', fontFamily: BODY, color: 'var(--text-body)' }}>
 
       {/* NAV */}
-      <nav style={{ background: 'white', borderBottom: '0.5px solid rgba(23,52,4,0.08)', padding: '18px 0' }}>
+      <nav style={{ background: 'white', borderBottom: '0.5px solid color-mix(in srgb, var(--deep) 8%, transparent)', padding: '18px 0' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}>
             <LogoMark size={30} />
@@ -112,7 +112,7 @@ function LoginForm() {
       <div style={{ maxWidth: 460, margin: '0 auto', padding: '64px 24px 48px' }}>
 
         {/* Card */}
-        <div style={{ background: 'white', borderRadius: 16, padding: '40px 36px', boxShadow: '0 2px 24px rgba(23,52,4,0.06)', border: '0.5px solid rgba(23,52,4,0.06)' }}>
+        <div style={{ background: 'white', borderRadius: 16, padding: '40px 36px', boxShadow: '0 2px 24px color-mix(in srgb, var(--deep) 6%, transparent)', border: '0.5px solid color-mix(in srgb, var(--deep) 6%, transparent)' }}>
           <h1 style={{ fontFamily: UI, fontWeight: 500, fontSize: 28, lineHeight: 1.15, letterSpacing: '-0.02em', color: 'var(--text-body)', marginBottom: 6 }}>
             Welcome back
           </h1>

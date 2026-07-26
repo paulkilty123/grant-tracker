@@ -591,7 +591,7 @@ function OrgSwitcher({ orgs, activeOrgId, onSwitch }: {
           <div style={{
             position: 'absolute', top: 'calc(100% + 8px)', left: 0, minWidth: 280,
             background: T.white, border: `1px solid ${T.borderStrong}`, borderRadius: 10,
-            boxShadow: '0 6px 20px rgba(23,52,4,0.08)', padding: 6, zIndex: 20,
+            boxShadow: '0 6px 20px color-mix(in srgb, var(--deep) 8%, transparent)', padding: 6, zIndex: 20,
           }}>
             {orgs.map(o => (
               <div
@@ -676,7 +676,7 @@ function CompletionMeter({ org, onJumpToCard }: { org: Organisation; onJumpToCar
             : 'Click a missing field to complete it.'}
         </span>
       </div>
-      <div style={{ height: 6, background: 'rgba(23,52,4,0.06)', borderRadius: 3, overflow: 'hidden', marginBottom: missing.length > 0 ? 14 : 0 }}>
+      <div style={{ height: 6, background: 'color-mix(in srgb, var(--deep) 6%, transparent)', borderRadius: 3, overflow: 'hidden', marginBottom: missing.length > 0 ? 14 : 0 }}>
         <div style={{ height: '100%', width: `${pct}%`, background: variant.border, borderRadius: 3, transition: 'width 0.4s ease' }} />
       </div>
       {missing.length > 0 && (
@@ -882,7 +882,7 @@ function CardShell({ title, badge, isEditing, onEdit, editDisabled, children, fo
     <section id={cardId} style={{
       background: T.white, border: `1px solid ${borderColor}`,
       borderRadius: 12, overflow: 'hidden',
-      boxShadow: isEditing ? '0 0 0 3px rgba(23,52,4,0.05)' : hasIncomplete ? '0 0 0 3px color-mix(in srgb, var(--terra) 6%, transparent)' : 'none',
+      boxShadow: isEditing ? '0 0 0 3px color-mix(in srgb, var(--deep) 5%, transparent)' : hasIncomplete ? '0 0 0 3px color-mix(in srgb, var(--terra) 6%, transparent)' : 'none',
       transition: 'border-color 0.15s, box-shadow 0.15s',
     }}>
       {/* Header */}
@@ -1332,7 +1332,7 @@ function FocusCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
                 color: T.textPrimary,
                 marginBottom: 14,
                 padding: '10px 12px',
-                background: 'rgba(255,255,255,0.75)',
+                background: 'color-mix(in srgb, var(--surface-card) 75%, transparent)',
                 borderLeft: '3px solid var(--sage-deep)',
                 borderRadius: 4,
                 lineHeight: 1.5,
@@ -1840,7 +1840,7 @@ function StoryCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
       background: hasMission ? T.white : 'linear-gradient(135deg, var(--surface-page) 0%, var(--surface-sunken) 100%)',
       border: `1px solid ${storyBorder}`,
       borderRadius: 12, overflow: 'hidden',
-      boxShadow: editing ? '0 0 0 3px rgba(23,52,4,0.05)' : (!hasMission && hasIncomplete) ? '0 0 0 3px color-mix(in srgb, var(--terra) 6%, transparent)' : 'none',
+      boxShadow: editing ? '0 0 0 3px color-mix(in srgb, var(--deep) 5%, transparent)' : (!hasMission && hasIncomplete) ? '0 0 0 3px color-mix(in srgb, var(--terra) 6%, transparent)' : 'none',
       transition: 'border-color 0.15s, box-shadow 0.15s',
     }}>
       {/* Header */}

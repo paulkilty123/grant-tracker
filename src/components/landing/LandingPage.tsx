@@ -83,7 +83,7 @@ const stats = [
 
 /* ─── Mockups ─── */
 const SearchMockup = () => (
-  <div className="bg-white border border-warm/80 p-5" style={{ boxShadow: '0 4px 24px rgba(26,46,43,0.08)' }}>
+  <div className="bg-white border border-warm/80 p-5" style={{ boxShadow: '0 4px 24px color-mix(in srgb, var(--text-body) 8%, transparent)' }}>
     <div className="flex items-center gap-2 mb-4">
       <div className="w-7 h-7 rounded-full bg-warm flex items-center justify-center flex-shrink-0">
         <Search className="w-3.5 h-3.5 text-mid" />
@@ -129,7 +129,7 @@ const SearchMockup = () => (
 )
 
 const PipelineMockup = () => (
-  <div className="bg-white border border-warm/80 p-5" style={{ boxShadow: '0 4px 24px rgba(26,46,43,0.08)' }}>
+  <div className="bg-white border border-warm/80 p-5" style={{ boxShadow: '0 4px 24px color-mix(in srgb, var(--text-body) 8%, transparent)' }}>
     <div className="flex items-center gap-2 mb-3">
       <div className="w-7 h-7 rounded-full bg-coral/15 flex items-center justify-center flex-shrink-0">
         <ArrowRight className="w-3.5 h-3.5 text-coral" />
@@ -170,7 +170,7 @@ const PipelineMockup = () => (
 )
 
 const DashboardMockup = () => (
-  <div className="bg-white border border-warm/80 p-5" style={{ boxShadow: '0 4px 24px rgba(26,46,43,0.08)' }}>
+  <div className="bg-white border border-warm/80 p-5" style={{ boxShadow: '0 4px 24px color-mix(in srgb, var(--text-body) 8%, transparent)' }}>
     <div className="flex items-center gap-2 mb-4">
       <div className="w-7 h-7 rounded-full bg-warm flex items-center justify-center flex-shrink-0">
         <LayoutGrid className="w-3.5 h-3.5 text-mid" />
@@ -499,7 +499,7 @@ export default function LandingPage() {
                   key={grant.id}
                   {...fadeInView(i * 0.06)}
                   className="bg-surface-page border border-warm/80 p-5 flex flex-col"
-                  style={{ boxShadow: '0 2px 12px rgba(26,46,43,0.06)' }}
+                  style={{ boxShadow: '0 2px 12px color-mix(in srgb, var(--text-body) 6%, transparent)' }}
                 >
                   {/* Funder + amount */}
                   <div className="flex items-start justify-between gap-3 mb-3">
@@ -665,14 +665,14 @@ export default function LandingPage() {
                 badge: 'Skills, space, time', badgeColor: 'var(--state-warning)', badgeBg: 'var(--state-warning-pale)',
                 title: 'In-kind support',
                 desc: 'Mentoring, training and workspace. Often overlooked, high value, especially at an early stage.',
-                Icon: HeartHandshake, iconColor: 'var(--state-warning)', iconBg: 'var(--state-warning-pale)', decoBg: 'rgba(250,199,117,0.10)',
+                Icon: HeartHandshake, iconColor: 'var(--state-warning)', iconBg: 'var(--state-warning-pale)', decoBg: 'color-mix(in srgb, var(--gold) 10%, transparent)',
               },
             ] as const).map((card, i) => (
               <motion.div
                 key={card.title}
                 {...fadeInView(i * 0.07)}
                 className="relative bg-white rounded-3xl group"
-                style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.05)', border: '0.5px solid rgba(23,52,4,0.08)', padding: 18, overflow: 'hidden' }}
+                style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.05)', border: '0.5px solid color-mix(in srgb, var(--deep) 8%, transparent)', padding: 18, overflow: 'hidden' }}
               >
                 {/* Soft decorative circle behind icon */}
                 <div
@@ -909,7 +909,7 @@ export default function LandingPage() {
                 <p style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 'clamp(48px, 5vw, 64px)', color: 'var(--deep)', letterSpacing: '-0.03em', lineHeight: 1, marginBottom: 12 }}>£8bn+</p>
                 <p style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 11.5, color: 'var(--deep)', fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', opacity: 0.8 }}>Awarded by UK trusts &amp; foundations annually</p>
               </div>
-              <div style={{ background: 'rgba(255,255,255,0.08)', border: '0.5px solid rgba(142,203,60,0.2)', borderRadius: 14, padding: '32px 32px 30px', marginBottom: 28 }}>
+              <div style={{ background: 'color-mix(in srgb, var(--surface-card) 8%, transparent)', border: '0.5px solid rgba(142,203,60,0.2)', borderRadius: 14, padding: '32px 32px 30px', marginBottom: 28 }}>
                 <p style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 19, color: 'white', letterSpacing: '-0.01em', marginBottom: 14 }}>Filtered for you.</p>
                 <p style={{ fontSize: 14.5, color: 'var(--sage-pale)', lineHeight: 1.65 }}>
                   There are thousands of UK funders, but only a fraction fit your organisation. {brand.name} filters by your legal structure, sector, location and stage, so you only see what you can actually apply for.
@@ -965,7 +965,7 @@ export default function LandingPage() {
                 key={card.title}
                 {...fadeInView(i * 0.08)}
                 className="flex items-start gap-4 p-6 bg-white rounded-2xl"
-                style={{ border: '0.5px solid rgba(23,52,4,0.08)', boxShadow: '0 1px 6px rgba(23,52,4,0.04)' }}
+                style={{ border: '0.5px solid color-mix(in srgb, var(--deep) 8%, transparent)', boxShadow: '0 1px 6px color-mix(in srgb, var(--deep) 4%, transparent)' }}
               >
                 {/* Icon in rounded square */}
                 <div
@@ -1058,7 +1058,7 @@ export default function LandingPage() {
       <section id="cohort" className="py-20 md:py-28" style={{ background: 'var(--surface-page)' }}>
         <div className="mx-auto max-w-6xl px-6">
           <motion.div {...fadeInView(0)}>
-            <div style={{ background: 'white', borderRadius: 14, padding: '64px 48px', textAlign: 'center', boxShadow: '0 2px 12px rgba(0,0,0,0.04)', border: '0.5px solid rgba(23,52,4,0.06)' }}>
+            <div style={{ background: 'white', borderRadius: 14, padding: '64px 48px', textAlign: 'center', boxShadow: '0 2px 12px rgba(0,0,0,0.04)', border: '0.5px solid color-mix(in srgb, var(--deep) 6%, transparent)' }}>
               <div className="inline-flex items-center bg-state-info-pale text-state-info px-4 py-2.5 rounded-full mb-6">
                 <p className="font-bold text-xs tracking-wide uppercase">Founding cohort, applications open</p>
               </div>
@@ -1151,7 +1151,7 @@ export default function LandingPage() {
       {/* FOOTER */}
       <footer className="px-6 py-8" style={{ background: 'var(--text-body)' }}>
         <div className="mx-auto max-w-6xl">
-          <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between" style={{ paddingBottom: '20px', borderBottom: '0.5px solid rgba(192,221,151,0.15)', marginBottom: '20px' }}>
+          <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between" style={{ paddingBottom: '20px', borderBottom: '0.5px solid color-mix(in srgb, var(--sage-pale) 15%, transparent)', marginBottom: '20px' }}>
             <a href="/" className="flex items-center gap-1.5 no-underline">
               <LogoMark size={22} variant="onInk" />
               <span className="text-lg font-bold" style={{ fontFamily: 'var(--font-space-grotesk)', color: 'var(--surface-card)', letterSpacing: '-0.02em' }}>{brand.name}</span>

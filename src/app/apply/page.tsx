@@ -18,7 +18,7 @@ export default function ApplyPage() {
     <div style={{ background: 'var(--surface-page)', minHeight: '100vh', fontFamily: BODY, color: 'var(--text-body)' }}>
 
       {/* NAV */}
-      <nav style={{ background: 'white', borderBottom: '0.5px solid rgba(23,52,4,0.08)', padding: '18px 0' }}>
+      <nav style={{ background: 'white', borderBottom: '0.5px solid color-mix(in srgb, var(--deep) 8%, transparent)', padding: '18px 0' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}>
             <LogoMark size={30} />
@@ -177,7 +177,7 @@ export default function ApplyPage() {
             <p style={{ fontSize: 16, color: 'var(--text-body)', lineHeight: 1.65, marginBottom: 20 }}>
               That&apos;s the whole deal. If you&apos;re willing to give that, I&apos;d love to have you in the cohort.
             </p>
-            <p style={{ fontSize: 14.5, color: 'var(--text-muted)', lineHeight: 1.6, borderTop: '0.5px solid rgba(23,52,4,0.12)', paddingTop: 16 }}>
+            <p style={{ fontSize: 14.5, color: 'var(--text-muted)', lineHeight: 1.6, borderTop: '0.5px solid color-mix(in srgb, var(--deep) 12%, transparent)', paddingTop: 16 }}>
               One condition: cohort benefits, including the founding rate, depend on staying active and staying in touch. If you go quiet for six months, cohort status lapses and you move to standard pricing. Not as a penalty, just to keep the cohort what it&apos;s meant to be: a working group, not a free tier.
             </p>
           </div>
@@ -185,7 +185,7 @@ export default function ApplyPage() {
 
         {/* APPLICATION FORM */}
         <section style={{ padding: '0 0 56px' }}>
-          <div style={{ background: 'white', border: '0.5px solid rgba(23,52,4,0.08)', borderRadius: 14, padding: '40px 36px' }}>
+          <div style={{ background: 'white', border: '0.5px solid color-mix(in srgb, var(--deep) 8%, transparent)', borderRadius: 14, padding: '40px 36px' }}>
             <h2 style={{ fontFamily: UI, fontWeight: 500, fontSize: 28, lineHeight: 1.15, letterSpacing: '-0.02em', color: 'var(--text-body)', marginBottom: 12 }}>
               Apply to <span style={{ color: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ }}>join.</span>
             </h2>
@@ -261,7 +261,7 @@ export default function ApplyPage() {
               a: 'Yes. Your organisation data stays private to your account. Cohort members are never shared with funders, other organisations, or third parties without explicit permission.',
             },
           ].map((item, i, arr) => (
-            <div key={i} style={{ padding: '20px 0', borderTop: '0.5px solid rgba(23,52,4,0.08)', ...(i === arr.length - 1 ? { borderBottom: '0.5px solid rgba(23,52,4,0.08)' } : {}) }}>
+            <div key={i} style={{ padding: '20px 0', borderTop: '0.5px solid color-mix(in srgb, var(--deep) 8%, transparent)', ...(i === arr.length - 1 ? { borderBottom: '0.5px solid color-mix(in srgb, var(--deep) 8%, transparent)' } : {}) }}>
               <p style={{ fontFamily: UI, fontWeight: 500, fontSize: 16, color: 'var(--text-body)', marginBottom: 8, letterSpacing: '-0.005em', lineHeight: 1.5 }}>{item.q}</p>
               <p style={{ fontSize: 15, color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: 0 }}>{item.a}</p>
             </div>
@@ -273,7 +273,7 @@ export default function ApplyPage() {
       {/* FOOTER */}
       <footer style={{ background: 'var(--text-body)', padding: '32px 40px 28px' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 20, borderBottom: '0.5px solid rgba(192,221,151,0.15)', marginBottom: 20, flexWrap: 'wrap', gap: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 20, borderBottom: '0.5px solid color-mix(in srgb, var(--sage-pale) 15%, transparent)', marginBottom: 20, flexWrap: 'wrap', gap: 16 }}>
             <span style={{ fontFamily: UI, fontWeight: 500, fontSize: 18, color: 'white', letterSpacing: '-0.02em' }}>{brand.name}</span>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 22, fontFamily: UI, fontSize: 12.5, color: 'var(--sage)', fontWeight: 500 }}>
               <Link href="/#how" style={{ color: 'inherit', textDecoration: 'none' }}>How it works</Link>

@@ -109,7 +109,7 @@ export default function AdminUsersPage() {
           { label: 'Last 7 days',     value: signupsWeek,    colour: 'text-forest' },
           { label: 'Onboarded',       value: `${onboardedCount}/${rows.length}`, colour: 'text-sage-deep' },
         ].map(kpi => (
-          <div key={kpi.label} className="bg-white rounded-xl p-5 shadow-card text-center" style={{ border: '0.5px solid rgba(23,52,4,0.08)' }}>
+          <div key={kpi.label} className="bg-white rounded-xl p-5 shadow-card text-center" style={{ border: '0.5px solid color-mix(in srgb, var(--deep) 8%, transparent)' }}>
             <p className={`font-display text-3xl font-bold ${kpi.colour}`}>{kpi.value}</p>
             <p className="text-xs text-mid mt-1">{kpi.label}</p>
           </div>
@@ -148,7 +148,7 @@ export default function AdminUsersPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl shadow-card overflow-hidden" style={{ border: '0.5px solid rgba(23,52,4,0.08)' }}>
+      <div className="bg-white rounded-xl shadow-card overflow-hidden" style={{ border: '0.5px solid color-mix(in srgb, var(--deep) 8%, transparent)' }}>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>

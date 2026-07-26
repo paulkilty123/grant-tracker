@@ -151,7 +151,7 @@ export function MatchFeedbackBlock({ grantId, userId, matchScore, compact = fals
   }
 
   const divider: React.CSSProperties = {
-    borderTop: '0.5px solid rgba(99,153,34,0.2)',
+    borderTop: '0.5px solid color-mix(in srgb, var(--sage-deep) 20%, transparent)',
     marginTop: 12,
     paddingTop: 12,
   }
@@ -181,7 +181,7 @@ export function MatchFeedbackBlock({ grantId, userId, matchScore, compact = fals
     borderRadius: 18, padding: '6px 14px 6px 11px', cursor: 'pointer',
     display: 'inline-flex', alignItems: 'center', gap: 6,
     fontFamily: 'var(--font-space-grotesk)', fontSize: 12.5, fontWeight: 500,
-    border: '0.5px solid rgba(99,153,34,0.3)', background: 'white', color: 'var(--state-success)',
+    border: '0.5px solid color-mix(in srgb, var(--sage-deep) 30%, transparent)', background: 'white', color: 'var(--state-success)',
   }
 
   // ── Saved flash microcopy ──────────────────────────────────────────────
@@ -231,13 +231,13 @@ export function MatchFeedbackBlock({ grantId, userId, matchScore, compact = fals
         <div style={{ display: 'flex', gap: 6 }}>
           <button
             onClick={() => handleDirectionTap('up')}
-            style={{ ...btnBase, background: isUp ? '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ : 'white', border: isUp ? '0.5px solid #8ECB3C' : '0.5px solid rgba(99,153,34,0.3)', color: isUp ? 'var(--deep)' : 'var(--state-success)' }}
+            style={{ ...btnBase, background: isUp ? '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ : 'white', border: isUp ? '0.5px solid #8ECB3C' : '0.5px solid color-mix(in srgb, var(--sage-deep) 30%, transparent)', color: isUp ? 'var(--deep)' : 'var(--state-success)' }}
           >
             <ThumbUp /> Good match
           </button>
           <button
             onClick={() => handleDirectionTap('down')}
-            style={{ ...btnBase, background: !isUp ? 'var(--state-error-pale)' : 'white', border: !isUp ? '0.5px solid var(--terra)' : '0.5px solid rgba(99,153,34,0.3)', color: !isUp ? 'var(--state-error)' : 'var(--state-success)' }}
+            style={{ ...btnBase, background: !isUp ? 'var(--state-error-pale)' : 'white', border: !isUp ? '0.5px solid var(--terra)' : '0.5px solid color-mix(in srgb, var(--sage-deep) 30%, transparent)', color: !isUp ? 'var(--state-error)' : 'var(--state-success)' }}
           >
             <ThumbDown /> Not for us
           </button>
@@ -250,7 +250,7 @@ export function MatchFeedbackBlock({ grantId, userId, matchScore, compact = fals
         </div>
       )}
 
-      <div style={{ marginTop: 12, paddingTop: 12, borderTop: '0.5px solid rgba(99,153,34,0.2)' }}>
+      <div style={{ marginTop: 12, paddingTop: 12, borderTop: '0.5px solid color-mix(in srgb, var(--sage-deep) 20%, transparent)' }}>
         <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 12.5, color: 'var(--state-success)', fontWeight: 500, marginBottom: 10 }}>
           Tap any that apply
         </div>
@@ -290,7 +290,7 @@ export function MatchFeedbackBlock({ grantId, userId, matchScore, compact = fals
               rows={2}
               style={{
                 width: '100%', boxSizing: 'border-box',
-                border: '0.5px solid rgba(99,153,34,0.3)', borderRadius: 10,
+                border: '0.5px solid color-mix(in srgb, var(--sage-deep) 30%, transparent)', borderRadius: 10,
                 padding: '10px 14px', fontFamily: 'var(--font-dm-sans)', fontSize: 13,
                 color: 'var(--text-body)', background: 'white', resize: 'vertical',
                 lineHeight: 1.5, outline: 'none',

@@ -134,7 +134,7 @@ function DangerButton({ children, onClick }: { children: React.ReactNode; onClic
         fontFamily: UI, fontWeight: 500, fontSize: 13.5,
         background: hov ? T.coralBg : 'transparent',
         color: T.coralStrong,
-        border: `1px solid ${hov ? T.coralStrong : 'rgba(216,90,48,0.3)'}`,
+        border: `1px solid ${hov ? T.coralStrong : 'color-mix(in srgb, var(--terra) 30%, transparent)'}`,
         padding: '8px 16px', borderRadius: 8, cursor: 'pointer', flexShrink: 0,
         transition: 'all 0.15s ease',
       }}
@@ -170,7 +170,7 @@ function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void 
 function Modal({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   return (
     <div
-      style={{ position: 'fixed', inset: 0, background: 'rgba(23,52,4,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: 20 }}
+      style={{ position: 'fixed', inset: 0, background: 'color-mix(in srgb, var(--deep) 35%, transparent)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: 20 }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
       <div style={{ background: T.white, borderRadius: 14, padding: '28px 32px', width: '100%', maxWidth: 420, boxShadow: '0 8px 40px rgba(0,0,0,0.15)' }}>
@@ -618,7 +618,7 @@ export default function AccountPage() {
             label={
               <div style={{ display: 'flex', alignItems: 'center', gap: 0, flexWrap: 'wrap', rowGap: 4 }}>
                 <span>Two-factor auth</span>
-                <span style={{ display: 'inline-block', marginLeft: 8, fontFamily: UI, fontWeight: 500, fontSize: 11, color: T.amberText, background: T.amberBg, border: '1px solid rgba(133,79,11,0.2)', padding: '2px 8px', borderRadius: 10 }}>Recommended</span>
+                <span style={{ display: 'inline-block', marginLeft: 8, fontFamily: UI, fontWeight: 500, fontSize: 11, color: T.amberText, background: T.amberBg, border: '1px solid color-mix(in srgb, var(--state-warning) 20%, transparent)', padding: '2px 8px', borderRadius: 10 }}>Recommended</span>
               </div>
             }
             action={<Toggle on={twoFA} onChange={handleToggle2FA} />}
@@ -636,7 +636,7 @@ export default function AccountPage() {
       {/* ── Billing ── */}
       <section style={{ marginBottom: 36 }}>
         <SectionHeader title="Billing" desc="Your plan and payment details." />
-        <div style={{ background: T.cream, border: '1px solid rgba(23,52,4,0.10)', borderRadius: 12, padding: '22px 26px', display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+        <div style={{ background: T.cream, border: '1px solid color-mix(in srgb, var(--deep) 10%, transparent)', borderRadius: 12, padding: '22px 26px', display: 'flex', gap: 16, alignItems: 'flex-start' }}>
           <div style={{ width: 40, height: 40, background: T.white, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.greenDeep, flexShrink: 0 }}>
             <Star size={18} strokeWidth={2} />
           </div>

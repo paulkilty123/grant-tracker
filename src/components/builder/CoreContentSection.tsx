@@ -41,7 +41,7 @@ function inputStyle(): React.CSSProperties {
   return {
     fontFamily: BODY, fontSize: 14, color: T.textPrimary,
     width: '100%', padding: '9px 12px', borderRadius: 8,
-    border: `1px solid rgba(23,52,4,0.16)`, background: T.white, outline: 'none',
+    border: `1px solid color-mix(in srgb, var(--deep) 16%, transparent)`, background: T.white, outline: 'none',
   }
 }
 

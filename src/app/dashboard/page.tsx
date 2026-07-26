@@ -344,7 +344,7 @@ export default async function DashboardPage() {
     { id: 'identified', label: 'Identified', bg: '#F5F1E8' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, labelCol: '#5F5E5A',            valCol: '#2C2C2A',            countCol: '#5F5E5A' },
     { id: 'applying',   label: 'Applying',   bg: '#EAF3DE' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, labelCol: '#3F6814',            valCol: '#173404',            countCol: '#3F6814' },
     { id: 'submitted',  label: 'Submitted',  bg: '#C0DD97' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, labelCol: '#3F6814',            valCol: '#173404',            countCol: '#3F6814' },
-    { id: 'won',        label: 'Won',        bg: '#639922' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, labelCol: 'rgba(250,247,242,0.78)', valCol: '#FAF7F2',        countCol: 'rgba(250,247,242,0.78)' },
+    { id: 'won',        label: 'Won',        bg: '#639922' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, labelCol: 'color-mix(in srgb, var(--surface-page) 78%, transparent)', valCol: '#FAF7F2',        countCol: 'color-mix(in srgb, var(--surface-page) 78%, transparent)' },
     { id: 'declined',   label: 'Declined',   bg: '#FAECE7' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, labelCol: '#993C1D',            valCol: '#993C1D',            countCol: '#993C1D' },
   ]
   const stageValues = stageData.map(s => ({
@@ -509,7 +509,7 @@ export default async function DashboardPage() {
           <h3 className="text-xl font-bold text-charcoal mb-4" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
             Getting started
           </h3>
-          <div className="bg-white rounded-xl border border-warm overflow-hidden" style={{ boxShadow: '0 2px 16px rgba(26,46,43,0.04)' }}>
+          <div className="bg-white rounded-xl border border-warm overflow-hidden" style={{ boxShadow: '0 2px 16px color-mix(in srgb, var(--text-body) 4%, transparent)' }}>
             {/* 1. Complete profile — done if onboarded, active otherwise */}
             <div className="flex items-center gap-4 p-5 border-b border-warm" style={profileComplete ? undefined : { background: 'var(--state-success-pale)' }}>
               {profileComplete ? (
@@ -777,7 +777,7 @@ export default async function DashboardPage() {
               const mono = (a.funder || a.title).trim().split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase() || '?'
               const pct = a.total > 0 ? Math.round((a.answered / a.total) * 100) : 0
               return (
-                <a key={a.id} href={`/dashboard/applications/${a.id}`} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 0', borderBottom: i < arr.length - 1 ? '1px solid rgba(23,52,4,0.06)' : 'none', textDecoration: 'none' }}>
+                <a key={a.id} href={`/dashboard/applications/${a.id}`} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 0', borderBottom: i < arr.length - 1 ? '1px solid color-mix(in srgb, var(--deep) 6%, transparent)' : 'none', textDecoration: 'none' }}>
                   <span style={{ width: 40, height: 40, borderRadius: 11, background: 'var(--state-success-pale)', color: 'var(--state-success)', fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{mono}</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 15, fontWeight: 500, color: 'var(--text-body)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.title}</div>
@@ -803,7 +803,7 @@ export default async function DashboardPage() {
             {workProjects.length === 0 ? (
               <p className="text-mid" style={{ fontSize: 13.5, lineHeight: 1.55, marginBottom: 12 }}>Describe a project to match more funders than your organisation profile alone.</p>
             ) : workProjects.slice(0, 4).map((p, i, arr) => (
-              <a key={p.id} href={`/dashboard/projects/${p.id}`} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 0', borderBottom: i < arr.length - 1 ? '1px solid rgba(23,52,4,0.06)' : 'none', textDecoration: 'none' }}>
+              <a key={p.id} href={`/dashboard/projects/${p.id}`} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 0', borderBottom: i < arr.length - 1 ? '1px solid color-mix(in srgb, var(--deep) 6%, transparent)' : 'none', textDecoration: 'none' }}>
                 <span style={{ width: 40, height: 40, borderRadius: 11, background: 'var(--state-success-pale)', color: 'var(--state-success)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Lightbulb size={19} /></span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 15, fontWeight: 500, color: 'var(--text-body)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
@@ -1076,7 +1076,7 @@ export default async function DashboardPage() {
               return (
                 <a href="/dashboard/search"
                   className="flex flex-col items-center justify-center text-center gap-2 rounded-xl px-6 py-10 hover:bg-surface-sunken transition-colors"
-                  style={{ background: 'var(--surface-page)', border: '1.5px dashed rgba(99,153,34,0.35)', minHeight: 160 }}>
+                  style={{ background: 'var(--surface-page)', border: '1.5px dashed color-mix(in srgb, var(--sage-deep) 35%, transparent)', minHeight: 160 }}>
                   <p className="text-base font-semibold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
                     Nothing in your pipeline yet
                   </p>
@@ -1172,7 +1172,7 @@ export default async function DashboardPage() {
                   const pillLabel = d < 0 ? 'Overdue' : d === 0 ? 'Today' : d === 1 ? 'Tomorrow' : `${d}d`
                   const pillCls = isUrgent
                     ? 'bg-state-error-pale text-state-error'
-                    : 'bg-transparent text-text-muted border border-[rgba(23,52,4,0.20)]'
+                    : 'bg-transparent text-text-muted border border-[color-mix(in srgb, var(--deep) 20%, transparent)]'
                   const dayCol   = isUrgent ? 'var(--state-error)' : 'var(--text-body)'
                   const monthCol = isUrgent ? 'var(--state-error)' : 'var(--text-muted)'
                   return (

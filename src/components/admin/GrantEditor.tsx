@@ -725,7 +725,7 @@ export function GrantEditor(props: GrantEditorProps) {
           style={{
             borderColor:     sourcesOpen ? 'var(--deep)'                  : 'var(--border-warm)',
             color:           sourcesOpen ? 'var(--deep)'                  : 'var(--text-muted)',
-            backgroundColor: sourcesOpen ? 'rgba(31,92,82,0.08)'      : 'white',
+            backgroundColor: sourcesOpen ? 'color-mix(in srgb, var(--surface-inverse) 8%, transparent)'      : 'white',
           }}
         >
           <BookOpen className="w-3 h-3" />

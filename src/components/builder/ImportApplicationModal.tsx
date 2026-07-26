@@ -78,7 +78,7 @@ export default function ImportApplicationModal({ orgId, onClose, onImported }: {
       <div
         style={{
           background: T.white, borderRadius: 12, padding: '22px 24px', width: '100%', maxWidth: 640,
-          maxHeight: '86vh', overflowY: 'auto', boxShadow: '0 16px 64px rgba(26,46,43,0.18)',
+          maxHeight: '86vh', overflowY: 'auto', boxShadow: '0 16px 64px color-mix(in srgb, var(--text-body) 18%, transparent)',
         }}
         onClick={e => e.stopPropagation()}
       >

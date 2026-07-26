@@ -47,7 +47,7 @@ export default async function MCPKeysPage() {
 
   return (
     <div style={{ background: 'var(--surface-page)', minHeight: '100vh', fontFamily: 'var(--font-plus-jakarta, Plus Jakarta Sans, sans-serif)', color: 'var(--text-body)' }}>
-      <nav style={{ background: 'white', borderBottom: '0.5px solid rgba(23,52,4,0.08)', padding: '18px 0' }}>
+      <nav style={{ background: 'white', borderBottom: '0.5px solid color-mix(in srgb, var(--deep) 8%, transparent)', padding: '18px 0' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/mcp" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}>
             <LogoMark size={28} />
@@ -109,7 +109,7 @@ export default async function MCPKeysPage() {
                 <h2 className="text-xs font-bold uppercase tracking-wider text-mid mb-3" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
                   Active ({active.length})
                 </h2>
-                <div className="bg-white rounded-xl border border-warm overflow-hidden" style={{ boxShadow: '0 2px 16px rgba(26,46,43,0.04)' }}>
+                <div className="bg-white rounded-xl border border-warm overflow-hidden" style={{ boxShadow: '0 2px 16px color-mix(in srgb, var(--text-body) 4%, transparent)' }}>
                   {active.map((k, i) => (
                     <KeyRow key={k.id} k={k} isLast={i === active.length - 1} />
                   ))}

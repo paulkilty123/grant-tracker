@@ -128,7 +128,7 @@ export default async function AuthorizePage({
 
 function PortalNav() {
   return (
-    <nav style={{ background: 'white', borderBottom: '0.5px solid rgba(23,52,4,0.08)', padding: '18px 0' }}>
+    <nav style={{ background: 'white', borderBottom: '0.5px solid color-mix(in srgb, var(--deep) 8%, transparent)', padding: '18px 0' }}>
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Link href="/mcp" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}>
           <LogoMark size={28} />
@@ -155,7 +155,7 @@ function ErrorScreen({ error, description }: { error: string; description: strin
     <div style={{ background: 'var(--surface-page)', minHeight: '100vh', fontFamily: 'var(--font-plus-jakarta, Plus Jakarta Sans, sans-serif)', color: 'var(--text-body)' }}>
       <PortalNav />
       <main style={{ maxWidth: 560, margin: '0 auto', padding: '64px 32px' }}>
-        <div className="rounded-xl p-8" style={{ background: 'white', border: '0.5px solid rgba(23,52,4,0.08)', boxShadow: '0 2px 16px color-mix(in srgb, var(--text-body) 4%, transparent)' }}>
+        <div className="rounded-xl p-8" style={{ background: 'white', border: '0.5px solid color-mix(in srgb, var(--deep) 8%, transparent)', boxShadow: '0 2px 16px color-mix(in srgb, var(--text-body) 4%, transparent)' }}>
           <div className="text-[11px] font-bold uppercase tracking-wider mb-2" style={{ fontFamily: 'var(--font-space-grotesk)', color: 'var(--state-error)' }}>
             Authorization request rejected
           </div>
@@ -205,7 +205,7 @@ function ConsentScreen({
     <div style={{ background: 'var(--surface-page)', minHeight: '100vh', fontFamily: 'var(--font-plus-jakarta, Plus Jakarta Sans, sans-serif)', color: 'var(--text-body)' }}>
       <PortalNav />
       <main style={{ maxWidth: 560, margin: '0 auto', padding: '48px 32px' }}>
-        <div className="rounded-xl p-8" style={{ background: 'white', border: '0.5px solid rgba(23,52,4,0.08)', boxShadow: '0 2px 16px color-mix(in srgb, var(--text-body) 4%, transparent)' }}>
+        <div className="rounded-xl p-8" style={{ background: 'white', border: '0.5px solid color-mix(in srgb, var(--deep) 8%, transparent)', boxShadow: '0 2px 16px color-mix(in srgb, var(--text-body) 4%, transparent)' }}>
           <div className="text-[11px] font-bold uppercase tracking-wider mb-2" style={{ fontFamily: 'var(--font-space-grotesk)', color: 'var(--text-muted)' }}>
             Authorize connection
           </div>

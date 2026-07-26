@@ -30,7 +30,7 @@ export default function ClearProfileButton() {
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-card p-5 mb-7" style={{ border: '0.5px solid rgba(23,52,4,0.08)' }}>
+    <div className="bg-white rounded-xl shadow-card p-5 mb-7" style={{ border: '0.5px solid color-mix(in srgb, var(--deep) 8%, transparent)' }}>
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h3 className="font-display text-base font-bold text-charcoal">Clear my profile</h3>

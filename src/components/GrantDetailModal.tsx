@@ -60,12 +60,12 @@ interface FTBadge {
 
 const FUNDING_TYPE_BADGES: Record<string, FTBadge> = {
   grant:             { Icon: Award,         label: 'Grant',                   bg: 'rgba(132,204,22,0.12)',  color: 'var(--sage-deep)' },
-  accelerator:       { Icon: Rocket,        label: 'Incubator / Accelerator', bg: 'rgba(255,112,67,0.12)', color: 'var(--state-error)' },
+  accelerator:       { Icon: Rocket,        label: 'Incubator / Accelerator', bg: 'color-mix(in srgb, var(--terra) 12%, transparent)', color: 'var(--state-error)' },
   support_programme: { Icon: GraduationCap, label: 'Fellowship / Support',    bg: 'rgba(139,92,246,0.12)', color: 'var(--type-programme)' },
   programme:         { Icon: GraduationCap, label: 'Support Programme',       bg: 'rgba(139,92,246,0.12)', color: 'var(--type-programme)' },
-  social_investment: { Icon: TrendingUp,    label: 'Social Investment',       bg: 'rgba(255,112,67,0.12)', color: 'var(--state-error)' },
-  loan:              { Icon: TrendingUp,    label: 'Loan',                    bg: 'rgba(255,183,77,0.20)', color: 'var(--state-warning)' },
-  equity:            { Icon: TrendingUp,    label: 'Equity',                  bg: 'rgba(255,183,77,0.20)', color: 'var(--state-warning)' },
+  social_investment: { Icon: TrendingUp,    label: 'Social Investment',       bg: 'color-mix(in srgb, var(--terra) 12%, transparent)', color: 'var(--state-error)' },
+  loan:              { Icon: TrendingUp,    label: 'Loan',                    bg: 'color-mix(in srgb, var(--gold-deep) 20%, transparent)', color: 'var(--state-warning)' },
+  equity:            { Icon: TrendingUp,    label: 'Equity',                  bg: 'color-mix(in srgb, var(--gold-deep) 20%, transparent)', color: 'var(--state-warning)' },
   diversity_fund:    { Icon: Users,         label: 'Diversity Fund',          bg: 'rgba(236,72,153,0.12)', color: 'var(--state-error)' },
   blended_finance:   { Icon: GitMerge,      label: 'Blended Finance',         bg: 'rgba(132,204,22,0.12)', color: 'var(--sage-deep)' },
   in_kind:           { Icon: Gift,          label: 'In-Kind & Pro Bono',      bg: 'rgba(99,102,241,0.12)', color: 'var(--focus-ring)' },
@@ -198,7 +198,7 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
       <div
         className="fixed inset-0 z-40 transition-opacity duration-300"
         style={{
-          background: 'rgba(28,28,46,0.30)',
+          background: 'color-mix(in srgb, var(--text-body) 30%, transparent)',
           opacity: isOpen ? 1 : 0,
           pointerEvents: isOpen ? 'auto' : 'none',
         }}
@@ -211,7 +211,7 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
         style={{
           transform: isOpen ? 'translateX(0)' : 'translateX(100%)',
           transition: 'transform 0.28s cubic-bezier(0.4, 0, 0.2, 1)',
-          boxShadow: '-8px 0 48px rgba(28,28,46,0.18)',
+          boxShadow: '-8px 0 48px color-mix(in srgb, var(--text-body) 18%, transparent)',
         }}
       >
         {/* Top bar */}
@@ -407,7 +407,7 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
                         <span
                           key={s}
                           className="text-[11px] font-semibold px-2.5 py-1"
-                          style={{ backgroundColor: 'rgba(255,183,77,0.20)', color: 'var(--state-warning)', borderRadius: 9999 }}
+                          style={{ backgroundColor: 'color-mix(in srgb, var(--gold-deep) 20%, transparent)', color: 'var(--state-warning)', borderRadius: 9999 }}
                         >
                           {IMPACT_SECTOR_LABELS[s.toLowerCase()] ?? s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
                         </span>
@@ -425,7 +425,7 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
                         <span
                           key={s}
                           className="text-[11px] font-semibold px-2.5 py-1"
-                          style={{ backgroundColor: 'rgba(255,183,77,0.20)', color: 'var(--state-warning)', borderRadius: 9999 }}
+                          style={{ backgroundColor: 'color-mix(in srgb, var(--gold-deep) 20%, transparent)', color: 'var(--state-warning)', borderRadius: 9999 }}
                         >
                           {s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
                         </span>

@@ -49,7 +49,7 @@ function HowItWorks({ withCta }: { withCta?: boolean }) {
                 {i + 1}
               </span>
               {i < HOW_IT_WORKS_STEPS.length - 1 && (
-                <span style={{ flex: 1, height: 2, background: 'rgba(23,52,4,0.12)', marginLeft: 10, borderRadius: 2 }} />
+                <span style={{ flex: 1, height: 2, background: 'color-mix(in srgb, var(--deep) 12%, transparent)', marginLeft: 10, borderRadius: 2 }} />
               )}
             </div>
             <p style={{ fontFamily: UI, fontWeight: 600, fontSize: 14.5, color: T.textPrimary, margin: '0 0 4px' }}>{s.title}</p>

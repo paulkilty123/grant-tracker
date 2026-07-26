@@ -77,7 +77,7 @@ const inputStyle: React.CSSProperties = {
   fontSize: 14.5,
   color: 'var(--text-body)',
   background: 'var(--surface-page)',
-  border: '1px solid rgba(23,52,4,0.14)',
+  border: '1px solid color-mix(in srgb, var(--deep) 14%, transparent)',
   borderRadius: 8,
   padding: '10px 12px',
   width: '100%',
@@ -364,7 +364,7 @@ export default function FeedbackPage() {
                 : sub.message
 
               return (
-                <div key={sub.id} style={{ padding: i === 0 ? '0 0 12px' : '12px 0', borderBottom: i < submissions.length - 1 ? '1px solid rgba(23,52,4,0.08)' : 'none' }}>
+                <div key={sub.id} style={{ padding: i === 0 ? '0 0 12px' : '12px 0', borderBottom: i < submissions.length - 1 ? '1px solid color-mix(in srgb, var(--deep) 8%, transparent)' : 'none' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 5 }}>
                     <span style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 11.5, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 5 }}>
                       <Icon size={11} style={{ opacity: 0.7 }} />

@@ -70,7 +70,7 @@ function ResetPasswordContent() {
     <div style={{ background: 'var(--surface-page)', minHeight: '100vh', fontFamily: BODY, color: 'var(--text-body)' }}>
 
       {/* NAV */}
-      <nav style={{ background: 'white', borderBottom: '0.5px solid rgba(23,52,4,0.08)', padding: '18px 0' }}>
+      <nav style={{ background: 'white', borderBottom: '0.5px solid color-mix(in srgb, var(--deep) 8%, transparent)', padding: '18px 0' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}>
             <LogoMark size={30} />
@@ -84,7 +84,7 @@ function ResetPasswordContent() {
 
       <div style={{ maxWidth: 460, margin: '0 auto', padding: '64px 24px 48px' }}>
 
-        <div style={{ background: 'white', borderRadius: 16, padding: '40px 36px', boxShadow: '0 2px 24px rgba(23,52,4,0.06)', border: '0.5px solid rgba(23,52,4,0.06)' }}>
+        <div style={{ background: 'white', borderRadius: 16, padding: '40px 36px', boxShadow: '0 2px 24px color-mix(in srgb, var(--deep) 6%, transparent)', border: '0.5px solid color-mix(in srgb, var(--deep) 6%, transparent)' }}>
           {exchanging ? (
             <p style={{ fontFamily: BODY, fontSize: 14, color: 'var(--text-muted)', textAlign: 'center', padding: '12px 0' }}>Verifying reset link...</p>
           ) : done ? (
@@ -189,7 +189,7 @@ function ResetPasswordContent() {
           )}
 
           {!done && !exchanging && !(error && !password) && (
-            <div style={{ marginTop: 24, paddingTop: 20, borderTop: '0.5px solid rgba(23,52,4,0.08)', textAlign: 'center' }}>
+            <div style={{ marginTop: 24, paddingTop: 20, borderTop: '0.5px solid color-mix(in srgb, var(--deep) 8%, transparent)', textAlign: 'center' }}>
               <Link href="/auth/login" style={{ fontFamily: UI, fontSize: 13, color: 'var(--text-muted)', textDecoration: 'none' }}>
                 Back to sign in
               </Link>

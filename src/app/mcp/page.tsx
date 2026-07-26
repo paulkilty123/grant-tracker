@@ -9,7 +9,7 @@ import { brand } from '@/config/brand'
 export default function MCPLandingPage() {
   return (
     <div style={{ background: 'var(--surface-page)', minHeight: '100vh', fontFamily: 'var(--font-plus-jakarta, Plus Jakarta Sans, sans-serif)', color: 'var(--text-body)' }}>
-      <nav style={{ background: 'white', borderBottom: '0.5px solid rgba(23,52,4,0.08)', padding: '18px 0' }}>
+      <nav style={{ background: 'white', borderBottom: '0.5px solid color-mix(in srgb, var(--deep) 8%, transparent)', padding: '18px 0' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}>
             <LogoMark size={28} />
@@ -103,7 +103,7 @@ export default function MCPLandingPage() {
           </ul>
         </section>
 
-        <div style={{ borderTop: '0.5px solid rgba(23,52,4,0.08)', paddingTop: 24, fontSize: 13, color: 'var(--text-subtle)', lineHeight: 1.6 }}>
+        <div style={{ borderTop: '0.5px solid color-mix(in srgb, var(--deep) 8%, transparent)', paddingTop: 24, fontSize: 13, color: 'var(--text-subtle)', lineHeight: 1.6 }}>
           The MCP is read-only. Saving opportunities, deadline alerts, pipeline tracking, and personalised matching against your organisation&apos;s profile all happen in the <Link href="/" style={{ color: 'var(--state-success)', fontWeight: 600, textDecoration: 'none' }}>{brand.name} web app</Link>.
         </div>
       </main>
@@ -113,7 +113,7 @@ export default function MCPLandingPage() {
 
 function Feature({ icon, title, body }: { icon: React.ReactNode; title: string; body: string }) {
   return (
-    <div style={{ background: 'white', border: '0.5px solid rgba(23,52,4,0.10)', borderRadius: 12, padding: 18, boxShadow: '0 2px 16px color-mix(in srgb, var(--text-body) 4%, transparent)' }}>
+    <div style={{ background: 'white', border: '0.5px solid color-mix(in srgb, var(--deep) 10%, transparent)', borderRadius: 12, padding: 18, boxShadow: '0 2px 16px color-mix(in srgb, var(--text-body) 4%, transparent)' }}>
       <div style={{ color: 'var(--state-success)', marginBottom: 8 }}>{icon}</div>
       <p style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, fontSize: 14, color: 'var(--text-body)', marginBottom: 4 }}>
         {title}

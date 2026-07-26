@@ -17,7 +17,7 @@ export default async function MCPTermsPage() {
 
   return (
     <div style={{ background: 'var(--surface-page)', minHeight: '100vh', fontFamily: 'var(--font-plus-jakarta, Plus Jakarta Sans, sans-serif)', color: 'var(--text-body)' }}>
-      <nav style={{ background: 'white', borderBottom: '0.5px solid rgba(23,52,4,0.08)', padding: '18px 0' }}>
+      <nav style={{ background: 'white', borderBottom: '0.5px solid color-mix(in srgb, var(--deep) 8%, transparent)', padding: '18px 0' }}>
         <div style={{ maxWidth: 760, margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}>
             <LogoMark size={28} />
@@ -121,7 +121,7 @@ function renderMarkdown(body: string): React.ReactNode[] {
     }
     if (line === '---') {
       flushParagraph(); flushList(); flushBlockquote()
-      out.push(<hr key={key++} style={{ border: 0, borderTop: '0.5px solid rgba(23,52,4,0.12)', margin: '32px 0' }} />)
+      out.push(<hr key={key++} style={{ border: 0, borderTop: '0.5px solid color-mix(in srgb, var(--deep) 12%, transparent)', margin: '32px 0' }} />)
       continue
     }
     if (inList || inBlockquote) {

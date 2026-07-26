@@ -378,7 +378,7 @@ function AddModal({
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div
         className="bg-white w-full max-w-lg rounded-lg overflow-hidden flex flex-col"
-        style={{ boxShadow: '0 16px 64px rgba(26,46,43,0.18)', maxHeight: '90vh' }}
+        style={{ boxShadow: '0 16px 64px color-mix(in srgb, var(--text-body) 18%, transparent)', maxHeight: '90vh' }}
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}

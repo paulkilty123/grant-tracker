@@ -141,11 +141,11 @@ function AddDeadlineModal({ orgId, userId, onClose, onSaved }: {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-5"
-      style={{ background: 'rgba(23,52,4,0.40)' }}
+      style={{ background: 'color-mix(in srgb, var(--deep) 40%, transparent)' }}
       onClick={onClose}>
       <div className="w-full flex flex-col"
         style={{ maxWidth: 480, background: 'var(--surface-card)', borderRadius: 16, overflow: 'hidden',
-          boxShadow: '0 20px 60px rgba(23,52,4,0.25)',
+          boxShadow: '0 20px 60px color-mix(in srgb, var(--deep) 25%, transparent)',
           maxHeight: 'calc(100vh - 60px)' }}
         onClick={e => e.stopPropagation()}>
 
@@ -349,10 +349,10 @@ function EditDeadlineModal({ item, onClose, onSaved }: {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-5"
-      style={{ background: 'rgba(23,52,4,0.40)' }}
+      style={{ background: 'color-mix(in srgb, var(--deep) 40%, transparent)' }}
       onClick={onClose}>
       <div style={{ width: '100%', maxWidth: 400, background: 'var(--surface-card)', borderRadius: 16, overflow: 'hidden',
-        boxShadow: '0 20px 60px rgba(23,52,4,0.25)' }}
+        boxShadow: '0 20px 60px color-mix(in srgb, var(--deep) 25%, transparent)' }}
         onClick={e => e.stopPropagation()}>
         {/* Header */}
         <div style={{ padding: '20px 22px 16px', borderBottom: '0.5px solid rgba(0,0,0,0.08)',
@@ -420,10 +420,10 @@ function DayAlertsSheet({ alerts, onSelect, onClose }: {
     : d
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-5"
-      style={{ background: 'rgba(23,52,4,0.40)' }}
+      style={{ background: 'color-mix(in srgb, var(--deep) 40%, transparent)' }}
       onClick={onClose}>
       <div style={{ width: '100%', maxWidth: 380, background: 'var(--surface-card)', borderRadius: 14, overflow: 'hidden',
-        boxShadow: '0 16px 48px rgba(23,52,4,0.22)' }}
+        boxShadow: '0 16px 48px color-mix(in srgb, var(--deep) 22%, transparent)' }}
         onClick={e => e.stopPropagation()}>
         <div style={{ padding: '16px 18px 12px', borderBottom: '0.5px solid rgba(0,0,0,0.08)',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -666,11 +666,11 @@ function GrantPreviewModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-5"
-      style={{ background: 'rgba(23,52,4,0.40)', overflowY: 'auto' }}
+      style={{ background: 'color-mix(in srgb, var(--deep) 40%, transparent)', overflowY: 'auto' }}
       onClick={onClose}>
       <div style={{ width: '100%', maxWidth: 640, maxHeight: '90vh', background: 'var(--surface-card)', borderRadius: 16,
         overflow: 'hidden', display: 'flex', flexDirection: 'column',
-        boxShadow: '0 20px 60px rgba(23,52,4,0.25)' }}
+        boxShadow: '0 20px 60px color-mix(in srgb, var(--deep) 25%, transparent)' }}
         onClick={e => e.stopPropagation()}>
 
         {/* Header */}
@@ -848,7 +848,7 @@ function GrantPreviewModal({
                       </div>
                       {brief.exclusions && (
                         <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start',
-                          padding: '16px 22px', background: 'var(--state-warning-pale)', borderTop: '0.5px solid rgba(186,117,23,0.2)' }}>
+                          padding: '16px 22px', background: 'var(--state-warning-pale)', borderTop: '0.5px solid color-mix(in srgb, var(--gold-deep) 20%, transparent)' }}>
                           <div style={{ width: 26, height: 26, borderRadius: 7, background: 'var(--gold)',
                             display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                             <AlertTriangle size={13} style={{ color: 'var(--state-warning)' }} />
@@ -1347,7 +1347,7 @@ export default function DeadlinesPage() {
     // Countdown pill colours
     const ctBg     = bucket === 'week'  ? 'var(--state-error-pale)' : bucket === 'month' ? 'var(--surface-page)' : 'var(--surface-page)'
     const ctColor  = bucket === 'week'  ? 'var(--state-error)' : bucket === 'month' ? 'var(--sage-deep)' : 'var(--text-muted)'
-    const ctBorder = bucket === 'later' ? '1px solid rgba(23,52,4,0.08)' : 'none'
+    const ctBorder = bucket === 'later' ? '1px solid color-mix(in srgb, var(--deep) 8%, transparent)' : 'none'
 
     // Body data
     let title = '', funder = '', amtStr = '', fundingType = 'grant'
@@ -1555,8 +1555,8 @@ export default function DeadlinesPage() {
 
           {/* This week */}
           {thisWeek.length > 0 && (
-            <div style={{ background: 'var(--surface-card)', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '16px 22px', borderBottom: '1px solid rgba(23,52,4,0.08)' }}>
+            <div style={{ background: 'var(--surface-card)', border: '1px solid color-mix(in srgb, var(--deep) 8%, transparent)', borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '16px 22px', borderBottom: '1px solid color-mix(in srgb, var(--deep) 8%, transparent)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <span style={{ fontFamily: UI_FONT, fontWeight: 600, fontSize: 15, color: 'var(--text-body)', letterSpacing: '-0.01em' }}>This week</span>
                   <span style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 12, color: 'var(--state-error)', background: 'var(--state-error-pale)', padding: '3px 9px', borderRadius: 10 }}>{thisWeek.length}</span>
@@ -1570,8 +1570,8 @@ export default function DeadlinesPage() {
 
           {/* Next 6 weeks */}
           {nextSixWeeks.length > 0 && (
-            <div style={{ background: 'var(--surface-card)', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '16px 22px', borderBottom: '1px solid rgba(23,52,4,0.08)' }}>
+            <div style={{ background: 'var(--surface-card)', border: '1px solid color-mix(in srgb, var(--deep) 8%, transparent)', borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '16px 22px', borderBottom: '1px solid color-mix(in srgb, var(--deep) 8%, transparent)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <span style={{ fontFamily: UI_FONT, fontWeight: 600, fontSize: 15, color: 'var(--text-body)', letterSpacing: '-0.01em' }}>Next 6 weeks</span>
                   <span style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 12, color: 'var(--text-subtle)', background: 'var(--surface-page)', padding: '3px 9px', borderRadius: 10 }}>{nextSixWeeks.length}</span>
@@ -1585,7 +1585,7 @@ export default function DeadlinesPage() {
 
           {/* Empty state */}
           {displayedScheduled.length === 0 && (
-            <div style={{ background: 'var(--surface-card)', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 12, padding: '32px 22px', textAlign: 'center', marginBottom: 16 }}>
+            <div style={{ background: 'var(--surface-card)', border: '1px solid color-mix(in srgb, var(--deep) 8%, transparent)', borderRadius: 12, padding: '32px 22px', textAlign: 'center', marginBottom: 16 }}>
               <p style={{ fontFamily: BODY_FONT, color: 'var(--text-subtle)', fontSize: 14, margin: 0 }}>
                 {dayFilter ? `No deadlines on ${dateLabel(dayFilter)}.` : 'No scheduled deadlines yet. Add one to get started.'}
               </p>
@@ -1595,8 +1595,8 @@ export default function DeadlinesPage() {
 
           {/* Needs a deadline */}
           {needsDeadlineAll.length > 0 && (
-            <div style={{ background: 'var(--surface-card)', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '16px 22px', borderBottom: '1px solid rgba(23,52,4,0.08)', background: 'var(--surface-page)' }}>
+            <div style={{ background: 'var(--surface-card)', border: '1px solid color-mix(in srgb, var(--deep) 8%, transparent)', borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '16px 22px', borderBottom: '1px solid color-mix(in srgb, var(--deep) 8%, transparent)', background: 'var(--surface-page)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <span style={{ fontFamily: UI_FONT, fontWeight: 600, fontSize: 15, color: 'var(--text-body)', letterSpacing: '-0.01em' }}>Needs a deadline</span>
                   <span style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 12, color: 'var(--text-subtle)', background: 'var(--surface-pill)', padding: '3px 9px', borderRadius: 10 }}>{needsDeadlineAll.length}</span>
@@ -1615,7 +1615,7 @@ export default function DeadlinesPage() {
                       return (
                         <div key={item.id} style={{
                           display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 12, alignItems: 'center',
-                          padding: '12px 22px', borderBottom: isLast ? 'none' : '1px solid rgba(23,52,4,0.06)',
+                          padding: '12px 22px', borderBottom: isLast ? 'none' : '1px solid color-mix(in srgb, var(--deep) 6%, transparent)',
                         }}
                           onMouseEnter={e => { e.currentTarget.style.background = 'var(--surface-page)' }}
                           onMouseLeave={e => { e.currentTarget.style.background = '' }}>
@@ -1711,7 +1711,7 @@ export default function DeadlinesPage() {
         <aside style={{ display: 'flex', flexDirection: 'column', gap: 16, position: 'sticky', top: 24 }} className="deadlines-sidebar">
 
           {/* Calendar */}
-          <div style={{ background: 'var(--surface-card)', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 12, padding: '18px 20px' }}>
+          <div style={{ background: 'var(--surface-card)', border: '1px solid color-mix(in srgb, var(--deep) 8%, transparent)', borderRadius: 12, padding: '18px 20px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
               <span style={{ fontFamily: UI_FONT, fontWeight: 600, fontSize: 14, color: 'var(--text-body)' }}>Calendar</span>
               <span style={{ fontFamily: UI_FONT, fontSize: 11.5, color: 'var(--text-subtle)', fontWeight: 500 }}>{MONTH_NAMES[calMonth]} {calYear}</span>
@@ -1774,7 +1774,7 @@ export default function DeadlinesPage() {
 
             {/* Day filter strip */}
             {dayFilter && (
-              <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(23,52,4,0.08)',
+              <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid color-mix(in srgb, var(--deep) 8%, transparent)',
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                 <span style={{ fontFamily: BODY_FONT, fontSize: 12.5, color: 'var(--text-muted)' }}>
                   Filtered to <strong style={{ color: 'var(--text-body)', fontFamily: UI_FONT }}>{dateLabel(dayFilter)}</strong>{' '}
@@ -1789,7 +1789,7 @@ export default function DeadlinesPage() {
             )}
 
             {/* Legend */}
-            <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid rgba(23,52,4,0.08)',
+            <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid color-mix(in srgb, var(--deep) 8%, transparent)',
               display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 12px' }}>
               {[
                 { bg: 'var(--state-error-pale)', label: 'Urgent (≤7d)' },
@@ -1807,7 +1807,7 @@ export default function DeadlinesPage() {
           </div>
 
           {/* Sources filter */}
-          <div style={{ background: 'var(--surface-card)', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 12, padding: '18px 20px' }}>
+          <div style={{ background: 'var(--surface-card)', border: '1px solid color-mix(in srgb, var(--deep) 8%, transparent)', borderRadius: 12, padding: '18px 20px' }}>
             <div style={{ fontFamily: UI_FONT, fontWeight: 600, fontSize: 14, color: 'var(--text-body)', marginBottom: 14 }}>
               Show deadlines from
             </div>

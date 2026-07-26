@@ -6,7 +6,7 @@ import { COLOR, grotesk } from '@/components/briefing/ui'
 export default function NewThreadModal({ onClose, onCreate }: { onClose: () => void; onCreate: (focusLabel: string) => void }) {
   const [label, setLabel] = useState('')
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-5" style={{ background: 'rgba(44,44,42,0.35)' }} onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-5" style={{ background: 'color-mix(in srgb, var(--text-body) 35%, transparent)' }} onClick={onClose}>
       <div
         style={{ width: '100%', maxWidth: 380, background: 'var(--surface-card)', borderRadius: 14, overflow: 'hidden' }}
         onClick={e => e.stopPropagation()}

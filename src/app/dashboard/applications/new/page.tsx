@@ -350,7 +350,7 @@ export default function NewApplicationPage() {
                   <div style={{
                     position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 20, marginTop: 4,
                     background: T.white, border: `1px solid ${T.borderStrong}`, borderRadius: 10,
-                    boxShadow: '0 10px 32px rgba(26,46,43,0.12)', overflow: 'hidden',
+                    boxShadow: '0 10px 32px color-mix(in srgb, var(--text-body) 12%, transparent)', overflow: 'hidden',
                   }}>
                     {oppResults.map(r => (
                       <button
