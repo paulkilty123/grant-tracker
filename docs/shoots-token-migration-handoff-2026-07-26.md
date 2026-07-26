@@ -21,9 +21,9 @@ Branch: `shoots/design-tokens` (not merged to `main`, no deploy). ~56 commits, o
 
 ## State right now
 
-- `tsc --noEmit` clean, `next lint` clean, both token sets still fully coexisting (nothing old removed).
-- **`npm run lint:colors` currently exits 1 — 154 findings.** These are pre-existing raw rgba/rgb/hsl values that exactly match a known token (the ~20 non-adjacent ones from the audit, plus others this more exhaustive scan turned up that the manual proximity check didn't specifically enumerate). Building the check was the ask; it hasn't been used to clear the backlog yet, and isn't wired into any CI gate.
-- Branch has **not** been pushed before this session — check `git push` status before assuming it's backed up.
+- `tsc --noEmit` clean, `next lint` clean, `npm run lint:colors` clean (0 findings), both token sets still fully coexisting (nothing old removed).
+- **2026-07-26 follow-up (`4ee8c93`): the 154 `lint:colors` findings are cleared.** A codemod reused `check-functional-colors.mjs`'s own token lookup (so the conversion can't drift from what the checker considers a match) and replaced every flagged `rgba()`/`hsla()` literal with `color-mix(in srgb, var(--token) N%, transparent)`, or a plain `var(--token)` where alpha was 1 (fully opaque — a 100% color-mix would be redundant). This is a value-preserving conversion for tokens whose current hex is unchanged, and a deliberate continuation of the rebrand repaint for tokens like `deep` whose current value already differs from the old hex it replaces elsewhere in the sweep — consistent with what shipped everywhere else, not a new decision. `npm run lint:colors` is not yet wired into CI as a blocking check.
+- Branch is pushed (`origin/shoots/design-tokens`).
 - Not merged to `main`. Per this repo's standing discipline, `main` only moves on Paul's explicit go, through the deploy gate (regression suites, accent check, free-surface fingerprint, named rollback).
 
 ## Deliberately NOT done (primitives-pass work, flagged not fixed)
@@ -31,8 +31,8 @@ Branch: `shoots/design-tokens` (not merged to `main`, no deploy). ~56 commits, o
 - **6-way pipeline-stage colour duplication** (`STAGE_STYLE` in `deadlines/page.tsx` and `briefing/PlanView.tsx`, `STAGE_BG_HEX` in `pipeline/page.tsx`, `tones` in `PipelineModal.tsx`, `stageData` in `dashboard/page.tsx`, `STAGE_COLOURS` in `admin/users/[id]/page.tsx`) — explicitly told to leave alone.
 - **`FT_BRAND`** (`grants/[id]/page.tsx`) and similar funding-type badge objects elsewhere in the app have the exact same category-vs-state conflation `TAB_INACTIVE_STYLES` had (bg/text on `state-success`/`state-error`/`state-info`/`state-warning` pale/solid pairs, only the dot on the true `type-*` token) — **not fixed**, only the one occurrence explicitly named was in scope this session.
 - **`gold-deep` vs `state-warning`** consolidation candidate — visually close, kept deliberately separate (one decorative, one semantic), noted in `tailwind.config.ts` as a primitives-pass candidate.
-- The 154 `lint:colors` findings above.
 - Full WCAG contrast pass on `gold-deep`/`teal-deep`/`terra-deep`/`sage-deep` as text/icon colours.
+- Wiring `npm run lint:colors` into a CI/pre-push gate so the backlog can't silently regrow.
 
 ## Key files if you're picking this back up
 
