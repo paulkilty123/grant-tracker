@@ -465,147 +465,6 @@ async function crawlTNLCF(): Promise<CrawlResult> {
   }
 }
 
-// ── Source 4: GLA / City Hall London ──────────────────────────────────────────
-// Scrapes london.gov.uk/programmes-strategies/search-funding
-// Cards are <li><div class="resource_teaser card">; metadata in .resource_details
-// with <h4> labels and .field__item values.
-async function crawlGLA(): Promise<CrawlResult> {
-  const SOURCE = 'gla'
-  const URL    = 'https://www.london.gov.uk/programmes-strategies/search-funding'
-
-  try {
-    // london.gov.uk returns 403 to generic bots — use a realistic browser UA
-    const glaRes = await fetch(URL, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'en-GB,en;q=0.9',
-        'Referer': 'https://www.google.com/',
-      },
-      signal: AbortSignal.timeout(20_000),
-    })
-    if (!glaRes.ok) throw new Error(`${URL} returned ${glaRes.status}`)
-    const html  = await glaRes.text()
-    const root  = parseHTML(html)
-    // Each grant card has class resource_teaser (among others)
-    const cards = root.querySelectorAll('.resource_teaser')
-    const grants: ScrapedGrant[] = []
-
-    for (const card of cards) {
-      // Title lives in h3 > .field--name-title .field__item  (data-search-highlight attr)
-      const title = card.querySelector('.field--name-title .field__item')?.text?.trim()
-                 ?? card.querySelector('h3 .field__item')?.text?.trim()
-      if (!title) continue
-
-      // Build metadata map: h4 label → .field__item value(s) from .resource_details
-      const meta: Record<string, string[]> = {}
-      for (const field of card.querySelectorAll('.resource_details .field')) {
-        const label  = field.querySelector('h4')?.text?.trim().replace(/:$/, '') ?? ''
-        if (!label) continue
-        const values = field.querySelectorAll('.field__item').map(el => el.text.trim()).filter(Boolean)
-        if (values.length) meta[label] = values
-      }
-
-      const summary   = meta['Summary']?.[0]                    ?? ''
-      const amountRaw = meta['How much you can apply for']?.[0]  ?? ''
-      const who       = meta['Who can apply']                    ?? []
-      const theme     = meta['Theme']?.[0]                       ?? ''
-      const closing   = meta['Closing date']?.[0]                ?? ''
-
-      // Detail URL: the <a> link inside the card
-      const href = card.querySelector('a')?.getAttribute('href') ?? ''
-      const url  = href.startsWith('http') ? href : `https://www.london.gov.uk${href}`
-      const slug = href.split('/').filter(Boolean).pop() ?? slugify(title)
-
-      const { min, max } = parseAmountRange(amountRaw)
-
-      grants.push({
-        external_id:          `gla_${slug}`,
-        source:               SOURCE,
-        title,
-        funder:               'Greater London Authority',
-        funder_type:          'government',
-        description:          summary,
-        amount_min:           min,
-        amount_max:           max,
-        deadline:             parseUKRIDate(closing),
-        is_rolling:           !closing,
-        is_local:             true,
-        sectors:              theme ? [theme] : [],
-        eligibility_criteria: who,
-        apply_url:            url || null,
-        raw_data:             { title, amountRaw, who, closing, theme } as Record<string, unknown>,
-      })
-    }
-
-    return await upsertGrants(SOURCE, grants)
-  } catch (err) {
-    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
-  }
-}
-
-// ── Source 5: Arts Council England open funds ─────────────────────────────────
-// Scrapes artscouncil.org.uk/our-open-funds
-// Open funds are in the first .page-section that contains h2 "Our open funds".
-// Each fund is a div.card__body with h3.card-heading > a (title/link) and a <p> (desc).
-async function crawlArtsCouncil(): Promise<CrawlResult> {
-  const SOURCE = 'arts_council'
-  const BASE   = 'https://www.artscouncil.org.uk'
-  const URL    = `${BASE}/our-open-funds`
-
-  try {
-    const html = await fetchHtml(URL)
-    const root = parseHTML(html)
-
-    // Find the section labelled "Our open funds" (not "Recently closed funds")
-    let openSection = null
-    for (const section of root.querySelectorAll('.page-section')) {
-      const h2 = section.querySelector('h2')?.text?.trim() ?? ''
-      if (/our open funds/i.test(h2)) { openSection = section; break }
-    }
-    // Fallback: scan all card__body if sections not found
-    const searchRoot = openSection ?? root
-
-    const grants: ScrapedGrant[] = []
-
-    for (const card of searchRoot.querySelectorAll('.card__body')) {
-      const linkEl = card.querySelector('.card-heading a')
-      const title  = linkEl?.text?.trim()
-      if (!title) continue
-
-      const href = linkEl?.getAttribute('href') ?? ''
-      const url  = href.startsWith('http') ? href : `${BASE}${href}`
-      const slug = href.split('/').filter(Boolean).pop() ?? slugify(title)
-
-      // Description: <p> inside the card body
-      const desc = card.querySelector('p')?.text?.trim() ?? ''
-
-      grants.push({
-        external_id:          `ace_${slug}`,
-        source:               SOURCE,
-        title,
-        funder:               'Arts Council England',
-        funder_type:          'lottery',
-        description:          desc,
-        amount_min:           null,
-        amount_max:           null,
-        deadline:             null,
-        is_rolling:           true,
-        is_local:             false,
-        sectors:              ['arts', 'culture', 'heritage'],
-        eligibility_criteria: [],
-        location_tag:         'England',
-        apply_url:            url || null,
-        raw_data:             { title, href, desc } as Record<string, unknown>,
-      })
-    }
-
-    return await upsertGrants(SOURCE, grants)
-  } catch (err) {
-    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
-  }
-}
-
 // ── Source 8: Forever Manchester (Greater Manchester) ─────────────────────────
 // Scrapes forevermanchester.com/funding/
 // Open funds are in .text-side wrappers under the "Funds open for applications"
@@ -3000,7 +2859,7 @@ async function crawlSpacehive(): Promise<CrawlResult> {
 type BatchNum = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
 
 const BATCH_1_SOURCES = [
-  'gov_uk', 'tnlcf', 'gla', 'arts_council',
+  'gov_uk', 'tnlcf', 
   'sport_england', 'heritage_fund', 'forever_manchester', 'two_ridings_cf', 'cf_wales',
   'cf_ni', 'foundation_scotland', 'london_cf',
   'sussex_cf',
@@ -3086,7 +2945,7 @@ export async function crawlAllSources(batch?: BatchNum): Promise<CrawlResult[]> 
   }
 
   const [
-    govUK, tnlcf, gla, ace,
+    govUK, tnlcf, 
     sportEngland, heritageFund, foreverMcr, twoRidings, cfWales,
  cfNI, foundationScotland, londonCF, sussexCF,
     asdaFoundation, avivaFoundation, nationwideFoundation,
@@ -3127,8 +2986,6 @@ export async function crawlAllSources(batch?: BatchNum): Promise<CrawlResult[]> 
   ] = await Promise.allSettled([
     run('gov_uk',                  crawlGovUK),
     run('tnlcf',                   crawlTNLCF),
-    run('gla',                     crawlGLA),
-    run('arts_council',            crawlArtsCouncil),
     run('sport_england',           crawlSportEngland),
     run('heritage_fund',           crawlHeritageFund),
     run('forever_manchester',      crawlForeverManchester),
@@ -3183,8 +3040,6 @@ export async function crawlAllSources(batch?: BatchNum): Promise<CrawlResult[]> 
   const results = [
     govUK.status                  === 'fulfilled' ? govUK.value                  : fallback('gov_uk'),
     tnlcf.status                  === 'fulfilled' ? tnlcf.value                  : fallback('tnlcf'),
-    gla.status                    === 'fulfilled' ? gla.value                    : fallback('gla'),
-    ace.status                    === 'fulfilled' ? ace.value                    : fallback('arts_council'),
     sportEngland.status           === 'fulfilled' ? sportEngland.value           : fallback('sport_england'),
     heritageFund.status           === 'fulfilled' ? heritageFund.value           : fallback('heritage_fund'),
     foreverMcr.status             === 'fulfilled' ? foreverMcr.value             : fallback('forever_manchester'),
