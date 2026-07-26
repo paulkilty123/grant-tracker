@@ -31,12 +31,25 @@ export const maxDuration = 270
 // entire point is to search would be self-defeating. max_tokens is raised to
 // cover thinking + search results + the JSON payload.
 const MODEL      = 'claude-sonnet-5'
-const MAX_TOKENS = 16000
+// 16000 gave the model room to deliberate for ~280s, past Vercel's 270s function
+// cap. The JSON payload is ~3k tokens; the rest was thinking headroom nobody
+// asked for.
+const MAX_TOKENS = 8000
 // 'high' drove 29 tool calls and a 200-240s round trip — right at the abort
 // limit, so runs started failing intermittently. On Sonnet 5, 'medium' is
 // roughly Sonnet 4.6 at 'high', i.e. parity with what this route used before,
 // at a fraction of the wall time. Raise it only if result quality drops.
-const EFFORT     = 'medium'
+// 'medium' ran 280s on a targeted sweep. 'low' is the biggest single lever on
+// both wall time and cost, and the targeted prompt already names the funder, so
+// there is little for extra deliberation to discover.
+const EFFORT     = 'low'
+// 4 was too tight: the model hit max_uses_exceeded 11 times and returned
+// nothing. 8 is affordable now because response_inclusion:'excluded' dropped
+// input tokens from 65k to 6.6k on a measured run — the raw search blocks, not
+// the searches, were the dominant cost.
+const MAX_SEARCHES = 6
+// 20260318 adds response_inclusion; falls back to 20260209 if unsupported.
+const SEARCH_TOOL: string = 'web_search_20260318'
 
 
 const ADMIN_EMAIL = 'paulkilty1@gmail.com'
@@ -80,6 +93,121 @@ type SearchOutcome =
  * produced needed a human review queue. Searching means the model reads current
  * search results instead of remembering.
  */
+
+type StreamResult = {
+  blocks: ContentBlock[]
+  stopReason: string | null
+  usage: { input: number; output: number; cacheRead: number; cacheWrite: number; webSearchRequests: number }
+  httpError?: number
+  errorBody?: string
+}
+
+/**
+ * One streamed Messages request.
+ *
+ * STREAMING IS THE POINT, not a nicety. The non-streaming version read the whole
+ * response in one go and hit its own 240s abort repeatedly — the same query took
+ * 91s once and then blew past 240s three times running. A search-heavy turn
+ * produces output slowly, and a single read with no bytes arriving is exactly
+ * what an HTTP read timeout kills. Streaming keeps bytes flowing, so the request
+ * lives as long as the work does rather than as long as one silent gap.
+ *
+ * Blocks are rebuilt whole (not just text) because a `pause_turn` resume has to
+ * send the assistant turn back unchanged, search results included.
+ */
+async function streamMessage(
+  messages: Array<{ role: string; content: unknown }>,
+  targeted: boolean,
+  allowedDomains?: string[],
+): Promise<StreamResult> {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': ANTHROPIC_API_KEY!,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model: MODEL,
+      max_tokens: MAX_TOKENS,
+      system: targeted ? TARGETED_SYSTEM_PROMPT : SYSTEM_PROMPT,
+      thinking: { type: 'adaptive' },
+      output_config: { effort: EFFORT },
+      stream: true,
+      tools: [{
+        type: SEARCH_TOOL,
+        name: 'web_search',
+        max_uses: MAX_SEARCHES,
+        user_location: { type: 'approximate', country: 'GB' },
+        // Drop the raw search blocks from the response. We only want the JSON;
+        // echoing search content back costs output tokens for nothing.
+        ...(SEARCH_TOOL === 'web_search_20260318' ? { response_inclusion: 'excluded' } : {}),
+      }],
+      messages,
+    }),
+  })
+
+  const out: StreamResult = {
+    blocks: [], stopReason: null,
+    usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, webSearchRequests: 0 },
+  }
+  if (!res.ok) { out.httpError = res.status; out.errorBody = (await res.text()).slice(0, 300); return out }
+  if (!res.body) { out.httpError = 500; out.errorBody = 'no response body'; return out }
+
+  const reader = res.body.getReader()
+  const decoder = new TextDecoder()
+  let buf = ''
+
+  for (;;) {
+    const { done, value } = await reader.read()
+    if (done) break
+    buf += decoder.decode(value, { stream: true })
+
+    // SSE frames are separated by a blank line; a frame can straddle chunks, so
+    // only complete frames are consumed and the remainder stays buffered.
+    let sep: number
+    while ((sep = buf.indexOf('\n\n')) !== -1) {
+      const frame = buf.slice(0, sep)
+      buf = buf.slice(sep + 2)
+      const line = frame.split('\n').find(l => l.startsWith('data:'))
+      if (!line) continue
+      let ev: Record<string, unknown>
+      try { ev = JSON.parse(line.slice(5).trim()) } catch { continue }
+
+      switch (ev.type) {
+        case 'message_start': {
+          const u = (ev.message as { usage?: Record<string, number> } | undefined)?.usage
+          out.usage.input      += u?.input_tokens ?? 0
+          out.usage.cacheRead  += u?.cache_read_input_tokens ?? 0
+          out.usage.cacheWrite += u?.cache_creation_input_tokens ?? 0
+          break
+        }
+        case 'content_block_start':
+          out.blocks[ev.index as number] = { ...(ev.content_block as ContentBlock) }
+          break
+        case 'content_block_delta': {
+          const d = ev.delta as { type?: string; text?: string }
+          if (d?.type === 'text_delta') {
+            const b = out.blocks[ev.index as number]
+            if (b) b.text = (b.text ?? '') + (d.text ?? '')
+          }
+          break
+        }
+        case 'message_delta': {
+          const d = ev.delta as { stop_reason?: string } | undefined
+          if (d?.stop_reason) out.stopReason = d.stop_reason
+          const u = ev.usage as { output_tokens?: number; server_tool_use?: { web_search_requests?: number } } | undefined
+          out.usage.output += u?.output_tokens ?? 0
+          out.usage.webSearchRequests += u?.server_tool_use?.web_search_requests ?? 0
+          break
+        }
+      }
+    }
+  }
+  out.blocks = out.blocks.filter(Boolean)
+  return out
+}
+
 async function searchForOpportunities(query: string, fundingType: FundingType, allowedDomains?: string[]): Promise<SearchOutcome> {
   const targeted = !!allowedDomains?.length
   const messages: Array<{ role: string; content: unknown }> = [
@@ -101,67 +229,36 @@ async function searchForOpportunities(query: string, fundingType: FundingType, a
   // tool loop hits its iteration limit. That is NOT the final answer: re-send
   // with the assistant turn appended and the server resumes where it left off.
   // Treating a pause as the result would silently return a half-finished search.
-  const MAX_ROUNDS = 4
+  const MAX_ROUNDS = 2
   for (let round = 1; round <= MAX_ROUNDS; round++) {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY!,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        max_tokens: MAX_TOKENS,
-        system: targeted ? TARGETED_SYSTEM_PROMPT : SYSTEM_PROMPT,
-        thinking: { type: 'adaptive' },
-        output_config: { effort: EFFORT },
-        tools: [{
-          type: 'web_search_20260209',
-          name: 'web_search',
-          max_uses: 8,    // 6 hit max_uses_exceeded; 12 was slower without being better
-          user_location: { type: 'approximate', country: 'GB' },
-          // NOT allowed_domains. Pinning the search to a single host made
-          // results so sparse that the model searched 29 times and the round
-          // trip ran past 240s, aborting. The targeted PROMPT keeps it on the
-          // funder; the search itself is left free to find that funder's pages
-          // wherever they are indexed, which is both faster and higher-recall.
-        }],
-        messages,
-      }),
-      signal: AbortSignal.timeout(240_000),
-    })
-
-    if (!res.ok) {
-      const errText = await res.text()
-      return { error: `Claude API error ${res.status}`, detail: errText.slice(0, 200) }
+    let stream: StreamResult
+    try {
+      stream = await streamMessage(messages, targeted, allowedDomains)
+    } catch (e) {
+      return { error: 'Claude request failed', detail: e instanceof Error ? e.message : String(e) }
     }
+    if (stream.httpError) return { error: `Claude API error ${stream.httpError}`, detail: stream.errorBody }
 
-    const data = await res.json() as ClaudeResponse
-    const blocks = data.content ?? []
-
-    // web_search failures come back as HTTP 200 with an error OBJECT where a
-    // success carries an ARRAY of results. Branch on the shape before using it,
-    // or a rate-limited search reads as "no results found".
+    const blocks = stream.blocks
     for (const b of blocks) {
-      if (b.type === 'server_tool_use') { searches++; continue }
       if (b.type !== 'web_search_tool_result') continue
       if (Array.isArray(b.content)) { resultCount += b.content.length; continue }
       const code = (b.content as { error_code?: string } | null)?.error_code
       if (code) searchErrors.push(code)
     }
+    searches      += blocks.filter(b => b.type === 'server_tool_use').length
+    usage.input   += stream.usage.input
+    usage.output  += stream.usage.output
+    usage.cacheRead  += stream.usage.cacheRead
+    usage.cacheWrite += stream.usage.cacheWrite
+    billedSearches   += stream.usage.webSearchRequests
 
-    usage.input      += data.usage?.input_tokens ?? 0
-    usage.output     += data.usage?.output_tokens ?? 0
-    usage.cacheRead  += data.usage?.cache_read_input_tokens ?? 0
-    usage.cacheWrite += data.usage?.cache_creation_input_tokens ?? 0
-    // The API's own count of billable searches — more reliable than counting
-    // server_tool_use blocks, which also include dynamic-filtering code runs.
-    billedSearches += data.usage?.server_tool_use?.web_search_requests ?? 0
+    if (stream.stopReason === 'max_tokens') truncated = true
 
-    if (data.stop_reason === 'max_tokens') truncated = true
-
-    if (data.stop_reason === 'pause_turn' && round < MAX_ROUNDS) {
+    if (stream.stopReason === 'pause_turn' && round < MAX_ROUNDS) {
+      // Resume: send the assistant turn back unchanged. Reconstructed from the
+      // stream, which is why streamMessage rebuilds whole blocks rather than
+      // only accumulating text.
       messages.push({ role: 'assistant', content: blocks })
       continue
     }
@@ -233,7 +330,7 @@ function buildTargetedPrompt(query: string, domains: string[]): string {
 
 Context for the search: "${query}"
 
-Return 5-15 programmes. For each:
+Return up to 8 programmes. For each:
 {
   "funder_name": "The funder's own name",
   "title": "The specific programme or fund name",
