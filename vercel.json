@@ -39,6 +39,6 @@
 
     { "path": "/api/cron/verify-cf-funds",          "schedule": "0 8 * * 1,4" },
 
-    { "path": "/api/cron/discover-sweep",           "schedule": "30 8 * * *" }
+    { "path": "/api/cron/discover-sweep",           "schedule": "30 8 * * 2" }
   ]
 }
