@@ -86,12 +86,20 @@ export function ReviewQueue({ items }: { items: QueueItem[] }) {
   const [busyLabel, setBusyLabel] = useState<string | null>(null)
   const [done, setDone] = useState<Set<string>>(new Set())
   const [filter, setFilter] = useState<string | null>(null)
+  // Which rows to show, by whether users can currently see them.
+  //   'hidden' is what the old Grant Manager called Needs Review: rows not yet
+  //   in front of anyone, where a decision is genuinely pending.
+  //   'live' is the opposite and the more urgent half — those are in front of
+  //   users right now, so anything wrong with them is wrong in public.
+  const [view, setView] = useState<'all' | 'live' | 'hidden'>('all')
 
   const live = useMemo(() => items.filter(i => !done.has(i.id)), [items, done])
 
+  const byView = view === 'all' ? live : live.filter(i => (view === 'live' ? i.isActive : !i.isActive))
+
   const counts = useMemo(() => {
     const m = new Map<string, { label: string; n: number }>()
-    for (const i of live) {
+    for (const i of byView) {
       for (const r of i.reasons) {
         const cur = m.get(r.code) ?? { label: r.label.replace(/\d+/g, 'N'), n: 0 }
         cur.n++
@@ -99,10 +107,11 @@ export function ReviewQueue({ items }: { items: QueueItem[] }) {
       }
     }
     return Array.from(m.entries()).sort((a, b) => b[1].n - a[1].n)
-  }, [live])
+  }, [byView])
 
-  const shown = filter ? live.filter(i => i.reasons.some(r => r.code === filter)) : live
+  const shown = filter ? byView.filter(i => i.reasons.some(r => r.code === filter)) : byView
   const liveToUsers = live.filter(i => i.isActive).length
+  const notLiveCount = live.length - liveToUsers
   const attentionCount = shown.filter(i => i.gateOutcome === 'attention').length
 
   /** Single place every write goes through, so a failure can never look like success. */
@@ -301,7 +310,9 @@ export function ReviewQueue({ items }: { items: QueueItem[] }) {
 
       {/* The honest count. The old screen's header asserted these were not
           visible to users while its query never filtered on that. */}
-      {liveToUsers > 0 && (
+      {/* Hidden only when you are looking at rows nobody can see — telling you
+          how many are visible while you filter to the invisible ones is noise. */}
+      {liveToUsers > 0 && view !== 'hidden' && (
         <div style={{
           display: 'flex', gap: 11, alignItems: 'flex-start',
           background: 'var(--coral-pale)', color: 'var(--coral-deep)',
@@ -329,6 +340,21 @@ export function ReviewQueue({ items }: { items: QueueItem[] }) {
         </div>
       )}
 
+      {/* Whether users can see it, chosen first — it changes what the reason
+          counts below even mean. "Not live yet" is the old Needs Review. */}
+      <div style={{
+        display: 'flex', flexWrap: 'wrap', gap: 7, alignItems: 'center',
+        paddingBottom: 12, marginBottom: 10,
+      }}>
+        <span style={{
+          ...display, fontSize: 10.5, fontWeight: 500, letterSpacing: '0.08em',
+          textTransform: 'uppercase', color: 'var(--color-text-tertiary)', marginRight: 2,
+        }}>Show</span>
+        <Chip active={view === 'all'}    onClick={() => { setView('all'); setFilter(null) }}    label="Everything"   n={live.length} />
+        <Chip active={view === 'live'}   onClick={() => { setView('live'); setFilter(null) }}   label="Live to users" n={liveToUsers} />
+        <Chip active={view === 'hidden'} onClick={() => { setView('hidden'); setFilter(null) }} label="Not live yet"  n={notLiveCount} />
+      </div>
+
       <div style={{
         display: 'flex', flexWrap: 'wrap', gap: 7, alignItems: 'center',
         paddingBottom: 12, borderBottom: '0.5px solid var(--border-subtle)', marginBottom: 16,
@@ -337,7 +363,7 @@ export function ReviewQueue({ items }: { items: QueueItem[] }) {
           ...display, fontSize: 10.5, fontWeight: 500, letterSpacing: '0.08em',
           textTransform: 'uppercase', color: 'var(--color-text-tertiary)', marginRight: 2,
         }}>Why held</span>
-        <Chip active={filter === null} onClick={() => setFilter(null)} label="All" n={live.length} />
+        <Chip active={filter === null} onClick={() => setFilter(null)} label="All" n={byView.length} />
         {counts.map(([code, { label, n }]) => (
           <Chip key={code} active={filter === code} onClick={() => setFilter(code)} label={label} n={n} />
         ))}
