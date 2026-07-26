@@ -26,11 +26,13 @@ const TYPE_DOT: Record<string, string> = {
 const TYPE_LABEL: Record<string, string> = {
   grant: 'Grant', programme: 'Programme', investment: 'Investment', in_kind: 'In-Kind',
 }
+// Category identity, not app state — type-*-pale/*-deep pair (same fix as
+// search/page.tsx's TAB_INACTIVE_STYLES), not the semantic state-* tokens.
 const TYPE_BG: Record<string, string> = {
-  grant: 'var(--state-success-pale)', programme: 'var(--state-error-pale)', investment: 'var(--state-info-pale)', in_kind: 'var(--state-warning-pale)',
+  grant: 'var(--type-grant-pale)', programme: 'var(--type-programme-pale)', investment: 'var(--type-investment-pale)', in_kind: 'var(--type-inkind-pale)',
 }
 const TYPE_TEXT: Record<string, string> = {
-  grant: 'var(--state-success)', programme: 'var(--state-error)', investment: 'var(--state-info)', in_kind: 'var(--state-warning)',
+  grant: 'var(--gold-deep)', programme: 'var(--teal-deep)', investment: 'var(--terra-deep)', in_kind: 'var(--sage-deep)',
 }
 
 // Pipeline items don't carry funding_type directly — default to 'grant' until

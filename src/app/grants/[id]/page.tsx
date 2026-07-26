@@ -39,17 +39,21 @@ const FUNDER_LABELS: Record<string, string> = {
 
 // Funding-type chip — brand palette per CLAUDE.md spec table.
 // Out-of-spec values (accelerator, diversity_fund, etc.) collapse to 'Other'.
+// bg/text use each category's own type-*-pale/​*-deep pair (category identity),
+// not the semantic state-* tokens — dot already did this correctly; bg/text
+// were borrowing state-success/error/info/warning, the same conflation fixed
+// in search/page.tsx's TAB_INACTIVE_STYLES.
 const FT_BRAND: Record<string, { bg: string; text: string; dot: string; label: string }> = {
-  grant:             { bg: 'var(--state-success-pale)', text: 'var(--state-success)', dot: 'var(--sage)', label: 'Grant' },
-  programme:         { bg: 'var(--state-error-pale)', text: 'var(--state-error)', dot: 'var(--type-programme)', label: 'Programme' },
-  support_programme: { bg: 'var(--state-error-pale)', text: 'var(--state-error)', dot: 'var(--type-programme)', label: 'Programme' },
-  accelerator:       { bg: 'var(--state-error-pale)', text: 'var(--state-error)', dot: 'var(--type-programme)', label: 'Programme' },
-  social_investment: { bg: 'var(--state-info-pale)', text: 'var(--state-info)', dot: 'var(--type-investment)', label: 'Investment' },
-  loan:              { bg: 'var(--state-info-pale)', text: 'var(--state-info)', dot: 'var(--type-investment)', label: 'Investment' },
-  equity:            { bg: 'var(--state-info-pale)', text: 'var(--state-info)', dot: 'var(--type-investment)', label: 'Investment' },
-  blended_finance:   { bg: 'var(--state-info-pale)', text: 'var(--state-info)', dot: 'var(--type-investment)', label: 'Investment' },
-  in_kind:           { bg: 'var(--state-warning-pale)', text: 'var(--state-warning)', dot: 'var(--type-inkind)', label: 'In-Kind' },
-  'in-kind':         { bg: 'var(--state-warning-pale)', text: 'var(--state-warning)', dot: 'var(--type-inkind)', label: 'In-Kind' },
+  grant:             { bg: 'var(--type-grant-pale)', text: 'var(--gold-deep)', dot: 'var(--sage)', label: 'Grant' },
+  programme:         { bg: 'var(--type-programme-pale)', text: 'var(--teal-deep)', dot: 'var(--type-programme)', label: 'Programme' },
+  support_programme: { bg: 'var(--type-programme-pale)', text: 'var(--teal-deep)', dot: 'var(--type-programme)', label: 'Programme' },
+  accelerator:       { bg: 'var(--type-programme-pale)', text: 'var(--teal-deep)', dot: 'var(--type-programme)', label: 'Programme' },
+  social_investment: { bg: 'var(--type-investment-pale)', text: 'var(--terra-deep)', dot: 'var(--type-investment)', label: 'Investment' },
+  loan:              { bg: 'var(--type-investment-pale)', text: 'var(--terra-deep)', dot: 'var(--type-investment)', label: 'Investment' },
+  equity:            { bg: 'var(--type-investment-pale)', text: 'var(--terra-deep)', dot: 'var(--type-investment)', label: 'Investment' },
+  blended_finance:   { bg: 'var(--type-investment-pale)', text: 'var(--terra-deep)', dot: 'var(--type-investment)', label: 'Investment' },
+  in_kind:           { bg: 'var(--type-inkind-pale)', text: 'var(--sage-deep)', dot: 'var(--type-inkind)', label: 'In-Kind' },
+  'in-kind':         { bg: 'var(--type-inkind-pale)', text: 'var(--sage-deep)', dot: 'var(--type-inkind)', label: 'In-Kind' },
 }
 const FT_OTHER = { bg: 'var(--surface-sunken)', text: 'var(--text-muted)', dot: 'var(--text-subtle)', label: 'Other' }
 

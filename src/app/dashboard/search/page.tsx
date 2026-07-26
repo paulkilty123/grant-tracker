@@ -2385,26 +2385,6 @@ export default function SearchPage() {
     in_kind:    'Non-cash support: software credits, ad grants, free workspace, pro bono legal advice and expert services.',
   }
 
-  const TAB_ACTIVE_STYLES: Record<string, { bg: string; border: string; text: string; count: string }> = {
-    grant:      { bg: 'var(--state-success-pale)', border: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, text: 'var(--deep)', count: 'var(--sage-deep)' },
-    programme:  { bg: 'var(--state-error-pale)', border: 'var(--state-error)', text: 'var(--state-error)', count: 'var(--state-error)' },
-    investment: { bg: 'var(--state-info-pale)', border: 'var(--state-info)', text: 'var(--state-info)', count: 'var(--state-info)' },
-    in_kind:    { bg: 'var(--state-warning-pale)', border: 'var(--state-warning)', text: 'var(--state-warning)', count: 'var(--state-warning)' },
-  }
-
-  // Realigned to the funding-type family (not semantic state tokens — icon/count
-  // here signal WHICH CATEGORY this tab is, not an app state, so borrowing
-  // state-error/state-info/state-warning was the same category-vs-state
-  // confusion fixed elsewhere in this pass). gold-deep/teal-deep/terra-deep/
-  // sage-deep are each the darkened, text-safe sibling of that type's own
-  // accent (type-grant/type-programme/type-investment/type-inkind).
-  const TAB_INACTIVE_STYLES: Record<string, { bg: string; iconColor: string; countColor: string }> = {
-    grant:      { bg: 'var(--type-grant-pale)', iconColor: 'var(--gold-deep)', countColor: 'var(--gold-deep)' },
-    programme:  { bg: 'var(--type-programme-pale)', iconColor: 'var(--teal-deep)', countColor: 'var(--teal-deep)' },
-    investment: { bg: 'var(--type-investment-pale)', iconColor: 'var(--terra-deep)', countColor: 'var(--terra-deep)' },
-    in_kind:    { bg: 'var(--type-inkind-pale)', iconColor: 'var(--sage-deep)', countColor: 'var(--sage-deep)' },
-  }
-
   const CATEGORY_TABS = [
     {
       id:    'all'        as const,
@@ -2728,21 +2708,24 @@ export default function SearchPage() {
         <div className="flex gap-2 mb-5 overflow-x-auto -mx-1 px-1">
           {TYPE_TABS.map(tab => {
             const isActive = activeTab === tab.id
-            // Active badge: light sage bg + dark icon (matches categorical inactive tint logic)
+            // Category identity, not app state — type-*-pale/*-deep pair per
+            // category (same fix as the removed TAB_INACTIVE_STYLES), not the
+            // semantic state-* tokens. Active badge: light sage bg + dark icon
+            // (matches categorical inactive tint logic)
             const badgeBg = isActive
               ? (tab.id === 'grant' ? 'var(--sage-pale)' : tab.id === 'programme' ? 'var(--border-warm)' : tab.id === 'investment' ? 'var(--sky)' : 'var(--border-warm)')
-              : (tab.id === 'grant' ? 'var(--type-inkind-pale)' : tab.id === 'programme' ? 'var(--state-error-pale)' : tab.id === 'investment' ? 'var(--state-info-pale)' : 'var(--state-warning-pale)')
+              : (tab.id === 'grant' ? 'var(--type-grant-pale)' : tab.id === 'programme' ? 'var(--type-programme-pale)' : tab.id === 'investment' ? 'var(--type-investment-pale)' : 'var(--type-inkind-pale)')
             const badgeColor = isActive
-              ? (tab.id === 'grant' ? 'var(--deep)' : tab.id === 'programme' ? 'var(--state-error)' : tab.id === 'investment' ? 'var(--state-info)' : 'var(--state-warning)')
-              : (tab.id === 'grant' ? 'var(--state-success)' : tab.id === 'programme' ? 'var(--state-error)' : tab.id === 'investment' ? 'var(--state-info)' : 'var(--state-warning)')
+              ? (tab.id === 'grant' ? 'var(--deep)' : tab.id === 'programme' ? 'var(--teal-deep)' : tab.id === 'investment' ? 'var(--terra-deep)' : 'var(--sage-deep)')
+              : (tab.id === 'grant' ? 'var(--gold-deep)' : tab.id === 'programme' ? 'var(--teal-deep)' : tab.id === 'investment' ? 'var(--terra-deep)' : 'var(--sage-deep)')
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className="flex-1 min-w-[160px] flex flex-row items-center gap-3 px-4 py-3.5 rounded-xl transition-colors outline-none"
                 style={isActive ? {
-                  background: tab.id === 'grant' ? 'var(--state-success-pale)' : tab.id === 'programme' ? 'var(--state-error-pale)' : tab.id === 'investment' ? 'var(--state-info-pale)' : 'var(--state-warning-pale)',
-                  border: `1px solid ${tab.id === 'grant' ? 'color-mix(in srgb, var(--sage-deep) 35%, transparent)' : tab.id === 'programme' ? 'color-mix(in srgb, var(--state-error) 30%, transparent)' : tab.id === 'investment' ? 'color-mix(in srgb, var(--state-info) 30%, transparent)' : 'color-mix(in srgb, var(--state-warning) 30%, transparent)'}`,
+                  background: tab.id === 'grant' ? 'var(--type-grant-pale)' : tab.id === 'programme' ? 'var(--type-programme-pale)' : tab.id === 'investment' ? 'var(--type-investment-pale)' : 'var(--type-inkind-pale)',
+                  border: `1px solid ${tab.id === 'grant' ? 'color-mix(in srgb, var(--sage-deep) 35%, transparent)' : tab.id === 'programme' ? 'color-mix(in srgb, var(--teal-deep) 30%, transparent)' : tab.id === 'investment' ? 'color-mix(in srgb, var(--terra-deep) 30%, transparent)' : 'color-mix(in srgb, var(--sage-deep) 30%, transparent)'}`,
                 } : {
                   background: 'var(--surface-card)',
                   border: '1px solid var(--border-warm)',
@@ -2756,14 +2739,14 @@ export default function SearchPage() {
                 <div className="flex flex-col items-start gap-0.5 min-w-0">
                   <span className="text-sm font-semibold leading-tight"
                     style={{ color: isActive
-                      ? (tab.id === 'grant' ? 'var(--deep)' : tab.id === 'programme' ? 'var(--text-body)' : tab.id === 'investment' ? 'var(--state-info)' : 'var(--state-warning)')
+                      ? (tab.id === 'grant' ? 'var(--deep)' : tab.id === 'programme' ? 'var(--text-body)' : tab.id === 'investment' ? 'var(--terra-deep)' : 'var(--sage-deep)')
                       : 'var(--text-body)' }}>
                     {tab.label}
                   </span>
                   {tab.count > 0 && (
                     <span className="text-xs font-medium leading-none"
                       style={{ color: isActive
-                        ? (tab.id === 'grant' ? 'var(--sage-deep)' : tab.id === 'programme' ? 'var(--state-error)' : tab.id === 'investment' ? 'var(--state-info)' : 'var(--state-warning)')
+                        ? (tab.id === 'grant' ? 'var(--sage-deep)' : tab.id === 'programme' ? 'var(--teal-deep)' : tab.id === 'investment' ? 'var(--terra-deep)' : 'var(--sage-deep)')
                         : 'var(--text-subtle)' }}>
                       {tab.count} {profileFilterOn
                         ? 'matches'
