@@ -42,6 +42,23 @@ export const maxDuration = 270
  */
 const MAX_QUERIES = 5
 
+/**
+ * Measured wall-clock per query, used to decide what still fits.
+ *
+ * A TARGETED sweep of one named funder runs ~34s. A GENERAL thematic query runs
+ * ~246s, because it is asked for 10-14 opportunities and output tokens are what
+ * take the time (2,943 vs 11,864 on measured runs).
+ *
+ * This matters more than cost. Vercel kills the function at 270s, so a general
+ * query started after the two blocked-funder queries would reach 314s and be
+ * killed mid-write. The old check only looked at ELAPSED time, so it happily
+ * started a 246s query at the 68s mark.
+ */
+const EST_MS = { targeted: 60_000, general: 260_000 }
+
+/** Stop launching with enough headroom to return a clean summary under the 270s cap. */
+const BUDGET_MS = 235_000
+
 type QuerySpec = { query: string; fundingType: DiscoveryFundingType; domains?: string[] }
 
 /**
@@ -93,9 +110,22 @@ export async function GET(req: NextRequest) {
     })
   }
 
-  const base = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '')
+  // Base URL for the self-call, most-specific first.
+  //
+  // NEXT_PUBLIC_SITE_URL was not set in production, so the first armed run
+  // returned "NEXT_PUBLIC_SITE_URL is not set" and would have failed silently
+  // every Tuesday. It is set now, but a cron that dies on one missing env var
+  // is too brittle for unattended weekly work, so there are fallbacks.
+  //
+  // The www form matters: an apex -> www redirect STRIPS the Authorization
+  // header, so a self-call to the apex arrives unauthenticated and 401s.
+  const base =
+    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') ||
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : '') ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '') ||
+    req.nextUrl.origin
   if (!base) {
-    return NextResponse.json({ error: 'NEXT_PUBLIC_SITE_URL is not set' }, { status: 500 })
+    return NextResponse.json({ error: 'Could not resolve a base URL for the self-call' }, { status: 500 })
   }
 
   const start = Date.now()
@@ -105,10 +135,19 @@ export async function GET(req: NextRequest) {
   const results: Array<Record<string, unknown>> = []
   let queued = 0, failed = 0, ran = 0
 
+  const skipped: Array<{ query: string; reason: string }> = []
+
   for (const spec of queue) {
-    // Stop before starting a query that cannot finish inside the budget, rather
-    // than being killed mid-request and losing the count of what was done.
-    if (Date.now() - start > 200_000) break
+    // Look AHEAD, not just back. Checking elapsed time alone is what let a 246s
+    // general query start at the 68s mark and blow past the function cap.
+    const est = spec.domains?.length ? EST_MS.targeted : EST_MS.general
+    if (Date.now() - start + est > BUDGET_MS) {
+      skipped.push({
+        query: spec.query,
+        reason: `needs ~${Math.round(est / 1000)}s, only ~${Math.round((BUDGET_MS - (Date.now() - start)) / 1000)}s of budget left`,
+      })
+      continue
+    }
     ran++
 
     try {
@@ -143,8 +182,11 @@ export async function GET(req: NextRequest) {
     armed,
     queriesPlanned: queue.length,
     queriesRun: ran,
-    // Never let a truncated sweep read as a complete one.
+    // Never let a truncated sweep read as a complete one. `skipped` names each
+    // query that did not fit and why, so a sweep that ran two of five is
+    // visibly that, not a quiet success.
     stoppedEarly: ran < queue.length,
+    skipped,
     queued,
     failed,
     elapsedMs: Date.now() - start,
