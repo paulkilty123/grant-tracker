@@ -61,10 +61,16 @@ type ContentBlock = {
 type ClaudeResponse = {
   content?: ContentBlock[]
   stop_reason?: string
+  usage?: {
+    input_tokens?: number; output_tokens?: number
+    cache_read_input_tokens?: number; cache_creation_input_tokens?: number
+    server_tool_use?: { web_search_requests?: number }
+  }
 }
 type SearchOutcome =
   | { error: string; detail?: string }
-  | { text: string; truncated: boolean; searchErrors: string[]; rounds: number; searches: number; resultCount: number }
+  | { text: string; truncated: boolean; searchErrors: string[]; rounds: number; searches: number; resultCount: number
+      usage: { input: number; output: number; cacheRead: number; cacheWrite: number }; billedSearches: number }
 
 /**
  * Run one discovery query with live web search.
@@ -86,6 +92,10 @@ async function searchForOpportunities(query: string, fundingType: FundingType, a
   // output and is the whole failure this tool was added to fix.
   let searches = 0
   let resultCount = 0
+  // Real token usage, accumulated across rounds. Reported so the cost of a
+  // sweep is a measured number rather than an estimate.
+  const usage = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }
+  let billedSearches = 0
 
   // A server-side search turn can stop with stop_reason 'pause_turn' when the
   // tool loop hits its iteration limit. That is NOT the final answer: re-send
@@ -141,6 +151,14 @@ async function searchForOpportunities(query: string, fundingType: FundingType, a
       if (code) searchErrors.push(code)
     }
 
+    usage.input      += data.usage?.input_tokens ?? 0
+    usage.output     += data.usage?.output_tokens ?? 0
+    usage.cacheRead  += data.usage?.cache_read_input_tokens ?? 0
+    usage.cacheWrite += data.usage?.cache_creation_input_tokens ?? 0
+    // The API's own count of billable searches — more reliable than counting
+    // server_tool_use blocks, which also include dynamic-filtering code runs.
+    billedSearches += data.usage?.server_tool_use?.web_search_requests ?? 0
+
     if (data.stop_reason === 'max_tokens') truncated = true
 
     if (data.stop_reason === 'pause_turn' && round < MAX_ROUNDS) {
@@ -149,7 +167,7 @@ async function searchForOpportunities(query: string, fundingType: FundingType, a
     }
 
     const text = blocks.filter(b => b.type === 'text').map(b => b.text ?? '').join('')
-    return { text, truncated, searchErrors, rounds: round, searches, resultCount }
+    return { text, truncated, searchErrors, rounds: round, searches, resultCount, usage, billedSearches }
   }
 
   return { error: `Search did not settle within ${MAX_ROUNDS} rounds`, detail: 'stop_reason stayed pause_turn' }
@@ -321,7 +339,7 @@ export async function POST(req: NextRequest) {
 
     if (results.length === 0) {
       return NextResponse.json({ ok: true, queued: 0, found: 0, skipped: [], query, fundingType,
-        search: { searches: search.searches, resultCount: search.resultCount, rounds: search.rounds, errors: search.searchErrors } })
+        search: { searches: search.searches, billedSearches: search.billedSearches, resultCount: search.resultCount, rounds: search.rounds, errors: search.searchErrors, usage: search.usage } })
     }
 
     // Deduplicate against scraped_grants and discovery_queue
@@ -374,7 +392,7 @@ export async function POST(req: NextRequest) {
 
     console.log(`[discover-grants] "${query}": found ${results.length}, queued ${queued}`)
     return NextResponse.json({ ok: true, queued, found: results.length, skipped, query, fundingType,
-      search: { searches: search.searches, resultCount: search.resultCount, rounds: search.rounds, errors: search.searchErrors } })
+      search: { searches: search.searches, billedSearches: search.billedSearches, resultCount: search.resultCount, rounds: search.rounds, errors: search.searchErrors, usage: search.usage } })
 
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
