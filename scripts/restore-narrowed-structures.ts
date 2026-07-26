@@ -130,6 +130,12 @@ async function main() {
 
   const plan: Array<{ row: Row; before: string[]; after: string[]; restored: string[] }> = []
   let skippedCharityOnly = 0, skippedJurisdictionOnly = 0, skippedNothingMissing = 0, skippedNoEvidence = 0, skippedVerified = 0
+  // Rows whose eligibility is SETTLED: the removal was right, already put back,
+  // or belongs to the jurisdiction rule. Nothing further to decide — they are
+  // only still in the queue because a diff exists, and they will re-flag every
+  // week until something clears them. `--ids` prints them so they can be
+  // confirmed in bulk.
+  const settled: Array<{ id: string; funder: string; why: string }> = []
 
   for (const r of rows) {
     const d = extractTagsDiff(r.field_provenance).find(x => x.field === 'eligible_structures')
@@ -137,15 +143,27 @@ async function main() {
 
     const live = r.eligible_structures ?? []
     const candidates = d.removed.filter(v => !live.includes(v))
-    if (candidates.length === 0) { skippedNothingMissing++; continue }
+    if (candidates.length === 0) {
+      skippedNothingMissing++
+      settled.push({ id: r.id, funder: r.funder ?? '', why: 'already restored' })
+      continue
+    }
 
     // Never undo a jurisdiction correction.
     const restorable = candidates.filter(v => !JURISDICTION_MANAGED.has(v))
-    if (restorable.length === 0) { skippedJurisdictionOnly++; continue }
+    if (restorable.length === 0) {
+      skippedJurisdictionOnly++
+      settled.push({ id: r.id, funder: r.funder ?? '', why: 'only cio/scio removed — jurisdiction rule owns it' })
+      continue
+    }
 
     const who = typeof r.funder_brief?.who_can_apply === 'string' ? r.funder_brief.who_can_apply : ''
     const text = `${who} ${r.description ?? ''}`
-    if (CHARITY_ONLY_RE.test(text)) { skippedCharityOnly++; continue }
+    if (CHARITY_ONLY_RE.test(text)) {
+      skippedCharityOnly++
+      settled.push({ id: r.id, funder: r.funder ?? '', why: 'funder text restricts to charities — removal correct' })
+      continue
+    }
 
     // Positive evidence from the row's own text, via the same backstop the
     // classifier runs. Seeded with [] so we get only what the TEXT supports,
@@ -161,6 +179,12 @@ async function main() {
     if (evidenced.length === 0) { skippedNoEvidence++; continue }
 
     plan.push({ row: r, before: live, after: [...live, ...evidenced], restored: evidenced })
+  }
+
+  if (process.argv.includes('--ids')) {
+    console.log(`\nSETTLED — nothing left to decide (${settled.length}):`)
+    for (const x of settled) console.log(`${x.id}\t${x.funder.slice(0, 34).padEnd(34)}\t${x.why}`)
+    return
   }
 
   console.log(`\nscope: ${all ? 'whole live catalogue' : 'review queue'} — ${rows.length} rows scanned`)
