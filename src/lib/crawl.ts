@@ -2536,24 +2536,67 @@ async function crawlArtsCouncilWales(): Promise<CrawlResult> {
   const SOURCE = 'arts_council_wales'
   const BASE   = 'https://arts.wales'
   try {
-    const html  = await fetchHtml(`${BASE}/funding/`)
-    const root  = parseHTML(html)
-    const grants: ScrapedGrant[] = []
-    for (const card of root.querySelectorAll('article, .fund, .grant, .card, .funding-item')) {
-      const titleEl = card.querySelector('h2 a, h3 a, h2, h3')
-      const title   = titleEl?.text?.trim()
-      if (!title || title.length < 5) continue
-      const href = card.querySelector('a')?.getAttribute('href') ?? ''
-      const url  = href.startsWith('http') ? href : `${BASE}${href}`
-      const desc = card.querySelector('p')?.text?.trim() ?? ''
-      const { min, max } = parseAmountRange(desc + ' ' + title)
-      grants.push({ external_id: `arts_council_wales_${slugify(href || title)}`, source: SOURCE, title, funder: 'Arts Council of Wales', funder_type: 'government', description: desc || 'Funding from Arts Council of Wales.', amount_min: min, amount_max: max, deadline: null, is_rolling: true, is_local: true, sectors: ['arts', 'culture', 'creative industries'], eligibility_criteria: ['Artists and arts organisations based in Wales'], apply_url: url || null, raw_data: { title, href } as Record<string, unknown> })
+    // NOTE THE MISSING TRAILING SLASH. `${BASE}/funding/` 301s to
+    // /funding-archived, which returns 403 — so every run since the site was
+    // reorganised failed with "returned 403" and logged fetched: 0. 38 identical
+    // errors accumulated in crawl_errors, which nothing reads. The scraper was
+    // never broken in the way it appeared; it was asking for a page that had
+    // moved, and the redirect target refuses robots.
+    const html = await fetchHtml(`${BASE}/funding`)
+    const root = parseHTML(html)
+
+    // Arts Wales lists its funds in the site NAVIGATION, not in content cards,
+    // so there is nothing for an `article`/`.card` selector to find — which is
+    // why the old selector list would have yielded zero even on a 200.
+    // A fund is a two-level path: /funding/<section>/<fund>. One level
+    // (/funding/individuals, /funding/help-and-support) is a section index.
+    const seen = new Map<string, { title: string; section: string }>()
+    for (const a of root.querySelectorAll('a[href]')) {
+      const href = (a.getAttribute('href') ?? '').split(/[?#]/)[0].replace(/\/$/, '')
+      const m = href.match(/^\/funding\/([^/]+)\/([^/]+)$/)
+      if (!m) continue
+      const title = a.text?.trim() ?? ''
+      if (title.length < 3) continue
+      if (!seen.has(href)) seen.set(href, { title, section: m[1] })
     }
-    if (grants.length > 0) return await upsertGrants(SOURCE, grants)
-    return await upsertGrants(SOURCE, [
-      { external_id: `${SOURCE}_individuals`, source: SOURCE, title: 'Arts Council of Wales — Grants for Individuals', funder: 'Arts Council of Wales', funder_type: 'government', description: 'Arts Council of Wales funds individual artists, creative practitioners and arts organisations across Wales to develop their practice and reach new audiences. Grants of £300–£30,000.', amount_min: 300, amount_max: 30000, deadline: null, is_rolling: true, is_local: true, sectors: ['arts', 'culture', 'creative industries', 'heritage'], eligibility_criteria: ['Individual artists based in Wales', 'Project must take place in or benefit Wales'], apply_url: `${BASE}/funding/individuals/`, raw_data: {} as Record<string, unknown> },
-      { external_id: `${SOURCE}_organisations`, source: SOURCE, title: 'Arts Council of Wales — Grants for Organisations', funder: 'Arts Council of Wales', funder_type: 'government', description: 'Project grants for arts organisations, companies and collectives in Wales. Funds productions, events, residencies and community arts activities. Grants of £1,000–£150,000.', amount_min: 1000, amount_max: 150000, deadline: null, is_rolling: true, is_local: true, sectors: ['arts', 'culture', 'heritage', 'creative industries'], eligibility_criteria: ['Arts organisation based in Wales', 'Must benefit audiences or participants in Wales'], apply_url: `${BASE}/funding/organisations/`, raw_data: {} as Record<string, unknown> },
-    ])
+
+    // What the section says about who may apply. Stated as eligibility TEXT, not
+    // as structures: ScrapedGrant carries no eligible_structures and should not,
+    // because deriving legal forms is the classifier's job reading the page.
+    // Saying "individual artists" here is what lets it reach `individual` rather
+    // than tagging a personal bursary as open to charities.
+    const ELIGIBILITY: Record<string, string> = {
+      individuals:        'Individual artists and creative practitioners based in Wales',
+      organisations:      'Arts organisations based in Wales',
+      'creative-learning': 'Schools, arts organisations and practitioners delivering creative learning in Wales',
+      international:      'Artists and arts organisations in Wales working internationally',
+    }
+
+    const grants: ScrapedGrant[] = Array.from(seen.entries()).map(([href, { title, section }]) => ({
+      external_id: `arts_council_wales_${slugify(href)}`,
+      source: SOURCE,
+      title: `Arts Council of Wales — ${title}`,
+      funder: 'Arts Council of Wales',
+      funder_type: 'government',
+      description: `${title}: funding from Arts Council of Wales. ${ELIGIBILITY[section] ?? 'Applicants based in Wales'}.`,
+      amount_min: null,
+      amount_max: null,
+      deadline: null,
+      is_rolling: false,
+      is_local: true,
+      sectors: ['arts', 'culture', 'creative industries'],
+      eligibility_criteria: [ELIGIBILITY[section] ?? 'Applicants based in Wales'],
+      apply_url: `${BASE}${href}`,
+      location_tag: 'Wales',
+      raw_data: { title, href, section } as Record<string, unknown>,
+    }))
+
+    // No hardcoded fallback. The previous one upserted two invented rows whose
+    // apply_urls (/funding/organisations/) do not exist, and reported
+    // `upserted: 2` — a healthy-looking result that masked a total failure for
+    // 38 consecutive runs. An empty result now reports as empty, which is the
+    // only way a future breakage becomes visible.
+    return await upsertGrants(SOURCE, grants)
   } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
 }
 
