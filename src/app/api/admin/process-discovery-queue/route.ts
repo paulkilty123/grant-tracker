@@ -7,7 +7,7 @@
 // Auth: ADMIN_SECRET bearer token or authenticated admin session
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
 import { stampNewGrant, mergeGrantUpdate } from '@/lib/grant-merge'
 
@@ -18,7 +18,13 @@ const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY!
 const PROVENANCE_SOURCE = 'discovery:gemini'
 
 async function isAuthorised(req: NextRequest): Promise<boolean> {
-  if (isAdminBearerToken(req.headers.get('authorization'))) return true
+  const header = req.headers.get('authorization')
+  // Checked explicitly. ADMIN_SECRET and CRON_SECRET currently hold the same
+  // value, so relying on isAdminBearerToken to let the cron through would work
+  // by coincidence and break the day they are rotated apart.
+  const cronSecret = process.env.CRON_SECRET
+  if (cronSecret && header === `Bearer ${cronSecret}`) return true
+  if (isAdminBearerToken(header)) return true
   const auth = await requireAdmin()
   return auth.ok
 }
@@ -73,7 +79,9 @@ const FUNDER_TYPES = [
   'crowdfund_match', 'other',
 ]
 
-async function enrichQueueItem(item: QueueItem): Promise<EnrichedGrant | null> {
+type EnrichOutcome = { ok: true; data: EnrichedGrant } | { ok: false; reason: string }
+
+async function enrichQueueItem(item: QueueItem): Promise<EnrichOutcome> {
   const prompt = `You are a UK grant database assistant. Classify and enrich this funding opportunity.
 
 Title: ${item.title}
@@ -107,25 +115,46 @@ Return a single JSON object (no markdown) with exactly these fields:
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 1000,
+        // Was 1000 for an eleven-field answer, with stop_reason never checked.
+        // A truncated reply fails JSON.parse, the item is dropped, and the run
+        // reports success — the same silent-failure shape found four other
+        // places in this codebase today.
+        max_tokens: 2000,
         messages: [{ role: 'user', content: prompt }],
       }),
       signal: AbortSignal.timeout(20_000),
     })
 
     if (!res.ok) {
-      const err = await res.text()
+      const err = (await res.text()).slice(0, 200)
       console.error(`[process-queue] Claude error for "${item.title}":`, err)
-      return null
+      return { ok: false, reason: `Claude HTTP ${res.status}: ${err}` }
     }
 
-    const data = await res.json() as { content: Array<{ type: string; text: string }> }
+    const data = await res.json() as {
+      content: Array<{ type: string; text: string }>
+      stop_reason?: string
+    }
+
+    // A cut-off answer is not a small answer. Say so, rather than letting
+    // JSON.parse fail into a generic "enrichment failed".
+    if (data.stop_reason === 'max_tokens') {
+      return { ok: false, reason: 'Answer hit max_tokens before it finished — raise max_tokens' }
+    }
+
     const text = data.content?.[0]?.text ?? ''
+    if (!text.trim()) return { ok: false, reason: 'Claude returned no text' }
+
     const cleaned = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
-    return JSON.parse(cleaned) as EnrichedGrant
+    try {
+      return { ok: true, data: JSON.parse(cleaned) as EnrichedGrant }
+    } catch {
+      return { ok: false, reason: `Could not parse the reply as JSON: ${cleaned.slice(0, 120)}` }
+    }
   } catch (e) {
-    console.error(`[process-queue] Failed to enrich "${item.title}":`, e)
-    return null
+    const reason = e instanceof Error ? e.message : String(e)
+    console.error(`[process-queue] Failed to enrich "${item.title}":`, reason)
+    return { ok: false, reason }
   }
 }
 
@@ -141,10 +170,18 @@ export async function POST(req: NextRequest) {
   if (!await isAuthorised(req)) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
   }
+  const { limit = 10 } = await req.json().catch(() => ({})) as { limit?: number }
+  return runProcessing(getAdminClient(), limit)
+}
 
-  const { limit = 10 } = await req.json() as { limit?: number }
-  const db = getAdminClient()
-
+/**
+ * Process up to `limit` pending queue items.
+ *
+ * Shared by the manual POST and the scheduled GET so the two cannot drift —
+ * a scheduled path that behaved differently from the button is exactly how the
+ * April run half-finished without anyone noticing.
+ */
+async function runProcessing(db: SupabaseClient, limit: number) {
   // Fetch pending items
   const { data: pendingItems, error: fetchErr } = await db
     .from('discovery_queue')
@@ -166,8 +203,8 @@ export async function POST(req: NextRequest) {
     .from('scraped_grants')
     .select('apply_url, title')
     .limit(3000)
-  const existingUrls = new Set((existingGrants ?? []).map(g => (g.apply_url ?? '').toLowerCase().trim()))
-  const existingTitles = new Set((existingGrants ?? []).map(g => (g.title ?? '').toLowerCase().trim()))
+  const existingUrls = new Set((existingGrants ?? []).map((g: { apply_url?: string | null }) => (g.apply_url ?? '').toLowerCase().trim()))
+  const existingTitles = new Set((existingGrants ?? []).map((g: { title?: string | null }) => (g.title ?? '').toLowerCase().trim()))
 
   const results: { id: string; title: string; status: 'imported' | 'duplicate' | 'failed'; reason?: string }[] = []
 
@@ -188,13 +225,19 @@ export async function POST(req: NextRequest) {
     }
 
     // Enrich via Claude
-    const enriched = await enrichQueueItem(item)
+    const outcome = await enrichQueueItem(item)
 
-    if (!enriched) {
-      await db.from('discovery_queue').update({ status: 'pending', notes: 'Enrichment failed — will retry' }).eq('id', item.id)
-      results.push({ id: item.id, title: item.title, status: 'failed', reason: 'Claude enrichment failed' })
+    if (!outcome.ok) {
+      // Record WHY on the queue row, not just "failed". Left pending so it
+      // retries, but with the reason visible — an item that fails the same way
+      // every week should be findable, not silently re-attempted forever.
+      await db.from('discovery_queue')
+        .update({ status: 'pending', notes: `Enrichment failed ${new Date().toISOString().slice(0, 10)}: ${outcome.reason}`.slice(0, 500) })
+        .eq('id', item.id)
+      results.push({ id: item.id, title: item.title, status: 'failed', reason: outcome.reason })
       continue
     }
+    const enriched = outcome.data
 
     // Fall back to raw amount_range parsing if Claude didn't parse amounts
     const amounts = enriched.amount_min || enriched.amount_max
@@ -282,7 +325,34 @@ export async function POST(req: NextRequest) {
 }
 
 // GET — return queue stats
+/**
+ * GET serves two jobs, chosen by ?run=true.
+ *
+ * Without it: queue stats, which is what this endpoint has always returned.
+ * With it: process the queue — this is the scheduled path, because Vercel crons
+ * issue GET and the work already lived in POST.
+ *
+ * Scheduled runs additionally need PROCESS_DISCOVERY_ENABLED=true, so wiring
+ * the schedule and letting it write are two separate decisions, matching the
+ * publish gate and the discovery sweep.
+ */
 export async function GET(req: NextRequest) {
+  if (req.nextUrl.searchParams.get('run') === 'true') {
+    if (!await isAuthorised(req)) {
+      return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+    }
+    if (process.env.PROCESS_DISCOVERY_ENABLED !== 'true') {
+      return NextResponse.json({
+        ok: true, skipped: true,
+        reason: 'Not armed. Set PROCESS_DISCOVERY_ENABLED=true to let the scheduled run write.',
+      })
+    }
+    return runProcessing(getAdminClient(), 10)
+  }
+  return statsResponse(req)
+}
+
+async function statsResponse(req: NextRequest) {
   if (!await isAuthorised(req)) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
   }
