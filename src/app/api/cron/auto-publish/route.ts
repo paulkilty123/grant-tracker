@@ -14,15 +14,22 @@
 //     anon against a table whose only RLS policy is public SELECT. PostgREST
 //     accepts the write, RLS matches zero rows, and NO ERROR IS RETURNED. Both
 //     jobs have reported success with non-zero counts while changing nothing,
-//     for their entire existence. Verify any change here the same way: look for
-//     `system:auto_publish` in field_provenance, not at the response body.
+//     for their entire existence.
 //
-//  2. WRITES AS `system:auto_publish` (trust 50), NEVER `admin:`. An admin:
-//     source lands at trust 100 and permanently outranks ai_enrich (60), so the
-//     field can never be improved by a future AI pass. A gate that stamped
-//     admin: would fossilise the catalogue at machine-judgement quality while
-//     looking like progress — automation that compounds versus automation that
-//     locks. This is the single most important line in the file.
+//     HOW TO VERIFY A RUN, precisely: this route writes only `is_active`, which
+//     is NOT in TRACKED_FIELDS, so mergeGrantUpdate takes its untracked path and
+//     stamps NOTHING into field_provenance. Looking for `system:auto_publish`
+//     there will show zero rows and read as a silent failure when the run in
+//     fact worked. The real evidence is `pipeline_state = 'published'` on the
+//     decided rows, cross-referenced with publish_gate_decisions.applied.
+//
+//  2. WRITES AS `system:auto_publish` (trust 50), NEVER `admin:`. Today that
+//     source only feeds transitionPipelineState, since is_active carries no
+//     provenance (see above). It is still stated explicitly because the moment
+//     this gate writes a tracked field, an admin: source would land at trust 100,
+//     permanently outrank ai_enrich (60), and fossilise the field against every
+//     future AI pass — automation that locks rather than compounds. The default
+//     must already be right when that day comes.
 //
 //  3. READS mergeGrantUpdate's `rejected` ARRAY. classify-grants, fill-amounts,
 //     fill-deadlines, sweep, audit-eligibility and bulk-reenrich all discard it
@@ -82,15 +89,35 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // Dry run is the DEFAULT. Writing requires saying so.
+  // Dry run is the DEFAULT. Writing requires saying so, by one of two routes:
   //
-  // ?apply=true opts a single run into writing. A scheduled cron additionally
-  // needs AUTO_PUBLISH_ENABLED=true, so wiring the schedule and arming the gate
-  // are two separate decisions — the schedule can be deployed and observed for
-  // a week before it is allowed to touch anything.
+  //   ?apply=true                  a manual run, human present
+  //   AUTO_PUBLISH_ENABLED=true    arms the SCHEDULED run
+  //
+  // The query string is the discriminator between manual and scheduled, NOT the
+  // secret. `vercel.json` invokes a fixed, parameterless path, so a scheduled
+  // run can never send ?apply=true; a manual caller always can. That matters
+  // because ADMIN_SECRET and CRON_SECRET currently hold the SAME VALUE, which
+  // makes `isCronCaller` win for every bearer-token caller and leaves the
+  // "manual admin trigger" branch unreachable. The sibling routes that gate on
+  // that distinction (reenrich-stale documents manual triggers as bypassing its
+  // cron-enabled gate) do not actually behave as their comments claim while the
+  // two secrets match. This route therefore does not rely on the distinction.
   const wantsApply = req.nextUrl.searchParams.get('apply') === 'true'
   const armed      = process.env.AUTO_PUBLISH_ENABLED === 'true'
-  const dryRun     = !wantsApply || (isCronCaller && !armed)
+  const dryRun     = !(wantsApply || armed)
+
+  // Canary cap: apply at most N publishes this run.
+  //
+  // Paired with the already-live-first ordering below, `?apply=true&limit=3`
+  // exercises the entire write path — merger, trust ladder, state transition,
+  // RLS — while changing nothing any user can see, because those rows are
+  // already visible and is_active is already true. That matters here more than
+  // usual: the two crons this route is modelled on reported success for their
+  // whole existence while RLS silently rejected every write, and the only way
+  // to know the difference is to make a real write and then go and look at it.
+  const limitParam = Number(req.nextUrl.searchParams.get('limit'))
+  const applyLimit = Number.isFinite(limitParam) && limitParam > 0 ? limitParam : Infinity
 
   const db = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -115,10 +142,13 @@ export async function GET(req: NextRequest) {
   }
 
   const rows = (data ?? []) as unknown as Row[]
-  const decisions: Array<{ row: Row; decision: GateDecision }> = rows.map(row => ({
-    row,
-    decision: gateDecision(row, deriveReviewReasons(row)),
-  }))
+  const decisions: Array<{ row: Row; decision: GateDecision }> = rows
+    .map(row => ({ row, decision: gateDecision(row, deriveReviewReasons(row)) }))
+    // Already-live publishes first, so a capped canary run touches only rows
+    // whose visibility is not actually changing. Without this the cap would
+    // take an arbitrary slice and the first live run could expose new rows
+    // before the write path had been shown to work.
+    .sort((a, b) => Number(b.decision.wasLive) - Number(a.decision.wasLive))
 
   const toPublish = decisions.filter(d => d.decision.outcome === 'publish')
   const attention = decisions.filter(d => d.decision.outcome === 'attention')
@@ -132,7 +162,8 @@ export async function GET(req: NextRequest) {
     let applied  = false
     let rejected: string[] = []
 
-    if (decision.outcome === 'publish' && !dryRun) {
+    const withinCap = published.length < applyLimit
+    if (decision.outcome === 'publish' && !dryRun && withinCap) {
       try {
         // is_active is untracked, so this goes through mergeGrantUpdate's
         // untracked path, which still computes the pipeline_state transition —
@@ -172,7 +203,12 @@ export async function GET(req: NextRequest) {
       applied,
       rejected_fields:     rejected,
       policy_version:      GATE_POLICY_VERSION,
-      dry_run:             dryRun,
+      // A publish deferred by the canary cap had no write ATTEMPTED, so it is
+      // recorded as a dry decision. Recording it as a live run with
+      // applied=false would be indistinguishable from a write the trust ladder
+      // refused, and would quietly corrupt the calibration data this table
+      // exists to provide.
+      dry_run:             dryRun || (decision.outcome === 'publish' && !withinCap),
     })
   }
 
@@ -197,6 +233,11 @@ export async function GET(req: NextRequest) {
       alreadyVisible: toPublish.filter(d => d.decision.wasLive).length,
     },
     written: dryRun ? 0 : published.length,
+    // Never let a cap pass as full coverage. Every silent truncation this audit
+    // found — the 12-row queue, the unrotated watchlist, the .limit(N)-then-
+    // filter checks — read as "we covered everything" when it had not.
+    deferredByCap: dryRun ? 0 : Math.max(0, toPublish.length - published.length - failed.length),
+    applyLimit: Number.isFinite(applyLimit) ? applyLimit : null,
     failed,
     auditError,
     attentionRows: attention.slice(0, 20).map(d => ({
