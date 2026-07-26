@@ -11,7 +11,6 @@
 // shared deriveReviewReasons(), the same function the auto-publish gate will
 // use to decide what never needs to reach a human at all.
 
-import { createClient } from '@supabase/supabase-js'
 import {
   deriveReviewReasons,
   extractTagsDiff,
@@ -20,6 +19,7 @@ import {
 } from '@/lib/admin/review-reasons'
 import { gateDecision } from '@/lib/admin/publish-gate'
 import { ReviewQueue, type QueueItem } from './ReviewQueue'
+import { getAdminDb } from '@/lib/admin/admin-db'
 
 export const dynamic = 'force-dynamic'
 
@@ -37,15 +37,8 @@ const COLS = [
   'last_seen_at',
 ].join(', ')
 
-function getAdminClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  )
-}
-
 export default async function ReviewPage() {
-  const db = getAdminClient()
+  const db = getAdminDb()
 
   const { data, error } = await db
     .from('scraped_grants')

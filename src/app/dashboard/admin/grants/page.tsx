@@ -15,8 +15,8 @@
 // Auth comes from src/app/dashboard/admin/layout.tsx (requireAdmin).
 
 import Link from 'next/link'
-import { createClient } from '@supabase/supabase-js'
 import { deriveReviewReasons, publishReadiness, type ReviewRow } from '@/lib/admin/review-reasons'
+import { getAdminDb } from '@/lib/admin/admin-db'
 
 export const dynamic = 'force-dynamic'
 
@@ -44,7 +44,7 @@ export default async function CataloguePage({ searchParams }: { searchParams: SP
   const visible = searchParams.visible ?? ''
   const page    = Math.max(1, Number(searchParams.page ?? '1') || 1)
 
-  const db = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+  const db = getAdminDb()
 
   // count: 'exact' so the page can state the true total. Grant Manager capped
   // every tab with a bare .limit() and said nothing when it truncated, so

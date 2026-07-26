@@ -119,9 +119,32 @@ export async function GET(req: NextRequest) {
   const limitParam = Number(req.nextUrl.searchParams.get('limit'))
   const applyLimit = Number.isFinite(limitParam) && limitParam > 0 ? limitParam : Infinity
 
+  // `cache: 'no-store'` is not optional here.
+  //
+  // supabase-js issues its queries through global fetch, which Next.js patches
+  // and caches. Observed 2026-07-26: after a run published 73 rows and drained
+  // the queue from 125 to 52, the very next invocation still read 125 and
+  // re-published 3 rows it had already published minutes earlier. The response
+  // looked entirely healthy — right shape, plausible counts, no error — which is
+  // the failure mode this whole route exists to guard against, arriving through
+  // the read path instead of the write path.
+  //
+  // `export const dynamic = 'force-dynamic'` does NOT cover this: it governs
+  // route rendering, not the fetch cache inside a client library.
+  //
+  // A gate acting on a stale snapshot would publish rows a human had just
+  // rejected and miss rows added since. Correctness here depends on reading
+  // the queue as it is at this instant.
   const db = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    {
+      auth: { persistSession: false },
+      global: {
+        fetch: (input: RequestInfo | URL, init?: RequestInit) =>
+          fetch(input, { ...init, cache: 'no-store' }),
+      },
+    },
   )
 
   const { data, error } = await db
