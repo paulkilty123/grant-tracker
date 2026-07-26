@@ -137,9 +137,12 @@
     --sage:  #9BCA9D;
     --sky:   #ABCBEE;
     /* Text-on-pale siblings for teal/terra, same relationship as gold/gold-deep
-       above. See tailwind.config.ts for the full contrast-numbers note. */
-    --teal-deep:  #40929C;
-    --terra-deep: #D36645;
+       above. Darkened 2026-07-26 to clear 4.5:1 text-AA against their own
+       -pale companion (were 3.16:1). See tailwind.config.ts for the full
+       contrast-numbers note, including why gold-deep/sage-deep — the other
+       two tokens in this family — were deliberately NOT darkened here. */
+    --teal-deep:  #33757D;
+    --terra-deep: #B54B2B;
 
     /* Funding types (category colours, always paired with a label) */
     --type-grant:           #EBCE78;

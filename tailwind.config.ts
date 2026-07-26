@@ -129,16 +129,35 @@ const config: Config = {
         // darkened, text-safe variant of the same hue) — added for
         // TAB_INACTIVE_STYLES (search/page.tsx), the first occurrence that
         // needed an icon/count colour in the *category's own family* instead
-        // of borrowing a semantic state token. Contrast on their own pale
-        // token: teal-deep/type-programme-pale 3.16:1, terra-deep/
-        // type-investment-pale 3.16:1 — in the same tier as the existing
-        // gold-deep/type-grant-pale (3.24:1) and sage-deep/type-inkind-pale
-        // (3.01:1) pairs, not full 4.5:1 text-AA. Consistent with the
-        // existing gold-deep precedent rather than an improvement on it;
-        // worth a real accessibility pass across all four in the primitives
-        // pass, not solved here.
-        'teal-deep':  '#40929C',
-        'terra-deep': '#D36645',
+        // of borrowing a semantic state token.
+        //
+        // 2026-07-26 contrast pass (the one flagged as owed above): all four
+        // -deep tokens in this family originally sat at 3.0-3.24:1 against
+        // their own -pale companion — enough for non-text UI (icons, the dot,
+        // borders: WCAG 1.4.11, 3:1) but short of 4.5:1 text-AA (WCAG 1.4.3)
+        // for the small (11-14px) labels/counts some call sites render in
+        // this colour. teal-deep and terra-deep are darkened in place here
+        // (were #40929C/#D36645, 3.16:1 each; now 4.61:1/4.55:1 vs
+        // type-programme-pale/type-investment-pale, hue and saturation
+        // unchanged — only lightness reduced) because both are single-purpose:
+        // every consumer is this exact text-on-pale role, so no other
+        // rendered surface changes.
+        //
+        // gold-deep and sage-deep were NOT darkened, deliberately: both are
+        // long-standing, widely-reused tokens (15 and 37 consuming files
+        // respectively) including several *solid-fill* buttons and toggles
+        // (e.g. ThreeSixtyGivingPanel, FillAmountsPanel, admin nav hovers) —
+        // darkening the shared swatch would visibly darken those unrelated
+        // surfaces too, well outside this pass's scope. Fixing their
+        // text-on-pale use (gold-deep/type-grant-pale 3.24:1, sage-deep/
+        // type-inkind-pale 3.01:1 — FT_BRAND, deadlines/page.tsx's
+        // TYPE_TEXT, search/page.tsx's funding-type tab labels/counts) needs
+        // two new dedicated tokens instead (a text-safe gold sibling and a
+        // text-safe sage sibling, analogous to teal-deep/terra-deep
+        // themselves), then repointing just those call sites — a real
+        // token-design decision, not made unilaterally here.
+        'teal-deep':  '#33757D',
+        'terra-deep': '#B54B2B',
 
         // Funding types (category colours, always paired with a label)
         'type-grant':           '#EBCE78',
