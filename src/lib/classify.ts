@@ -575,16 +575,38 @@ export function charityFormJurisdiction(opts: {
   locationTag?: string | null
   text?: string | null
 }): { scioAllowed: boolean; cioAllowed: boolean } {
-  const tag   = (opts.locationTag ?? '').trim().toLowerCase()
-  const scope = tag !== '' ? tag : (opts.text ?? '').toLowerCase()
+  const UK_WIDE   = /\buk\b|united kingdom|nationwide|\bbritain\b|\bbritish\b|\bgb\b|global/
+  const SCOTLAND  = /\bscotland\b|\bscottish\b/
+  const ENG_WALES = /\bengland\b|\benglish\b|\bwales\b|\bwelsh\b/
 
-  const ukWide            = /\buk\b|united kingdom|nationwide|\bbritain\b|\bbritish\b|\bgb\b|global/.test(scope)
-  const namesScotland     = /\bscotland\b|\bscottish\b/.test(scope)
-  const namesEnglandWales = /\bengland\b|\benglish\b|\bwales\b|\bwelsh\b/.test(scope)
+  const tag   = (opts.locationTag ?? '').trim().toLowerCase()
+  const body  = (opts.text ?? '').toLowerCase()
+  const scope = tag !== '' ? tag : body
+
+  const ukWide            = UK_WIDE.test(scope)
+  const namesScotland     = SCOTLAND.test(scope)
+  const namesEnglandWales = ENG_WALES.test(scope)
+
+  // A location_tag of "UK" is a weak inference; the fund's own words are not.
+  // When the tag reads UK-wide but the text names England/Wales and never
+  // mentions Scotland, the text wins for SCIO.
+  //
+  // Found 2026-07-26: Lloyds Bank Foundation FOR ENGLAND AND WALES carries
+  // location_tag='UK' while its own who_can_apply says "operating in England
+  // and Wales". Because the tag suppressed the text entirely, the add path
+  // computed scioAllowed and a dry run proposed adding scio to 53 rows. 32 rows
+  // catalogue-wide carry this contradiction.
+  //
+  // This only ever REMOVES scio, and only where the fund's own text rules
+  // Scotland out. That is the same direction as scripts/fix-scio-jurisdiction.ts
+  // and the same principle stated below: showing a fund to an organisation that
+  // cannot legally apply wastes an applicant's time, which is the most expensive
+  // error this catalogue can make.
+  const textRulesOutScotland = tag !== '' && ukWide && ENG_WALES.test(body) && !SCOTLAND.test(body)
 
   return {
     // Scotland must be POSITIVELY in scope — silence is not permission.
-    scioAllowed: ukWide || namesScotland,
+    scioAllowed: (ukWide || namesScotland) && !textRulesOutScotland,
     // England/Wales form: allowed unless the fund is Scotland-only.
     cioAllowed:  ukWide || namesEnglandWales || !namesScotland,
   }
