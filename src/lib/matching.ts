@@ -1359,11 +1359,18 @@ export function computeMatchScore(
   }
   // If either side has no data, score stays at neutral (5)
 
-// ── 4. Grant size (informational only — always neutral) ──────
-  // Grant size is not used as a ranking signal: orgs typically want the
-  // largest grant available, so penalising large grants distorts relevance.
-  // Amounts still appear in the UI breakdown for reference only.
-  const grantSizeScore = 10
+// ── 4. Grant size ────────────────────────────────────────────
+  // Neutral by default. Being LARGE is not itself a mark against a grant —
+  // organisations do want the biggest award they can get, and the original
+  // comment here was right about that.
+  //
+  // But this was a hardcoded 10 and the UI renders it to users as
+  // "Grant size 10/10" on EVERY grant in the catalogue, including ones wildly
+  // out of scale for the organisation reading it. That is a fabricated signal:
+  // it looks assessed and never was. Set properly below, once the floor and
+  // ceiling checks have run.
+  let grantSizeScore = 10
+  let grantSizeLabel = 'Grant size'
 
   // ── 4a. Grant size — hard floor (below-target exclusion) ────────────────
   // If the org has stated a minimum target and the grant's maximum payout is
@@ -1422,6 +1429,16 @@ export function computeMatchScore(
     reasons.push(
       `Smallest award here is £${grant.amountMin.toLocaleString('en-GB')} — large relative to your annual income, funders rarely award this proportion`,
     )
+  }
+
+  // Now the dimension can say something true. Both directions are a genuine
+  // size problem and the user should see WHICH, rather than a permanent 10/10.
+  if (sizeFloorTriggered) {
+    grantSizeScore = 2
+    grantSizeLabel = 'Grant size — below your minimum'
+  } else if (sizeCeilingTriggered) {
+    grantSizeScore = 2
+    grantSizeLabel = 'Grant size — large for your income'
   }
 
     // ── 5. Funder type preference + funding type affinity (max 15) ────────
@@ -1982,7 +1999,7 @@ export function computeMatchScore(
       location:      { score: wLocation,     max: W.location,     label: 'Location' },
       themes:        { score: wThemes,       max: themesMax,      label: 'Themes & work' },
       beneficiaries: { score: wBeneficiary,  max: beneficiaryMax, label: 'Beneficiaries' },
-      grantSize:     { score: grantSizeScore, max: 10,            label: 'Grant size' },
+      grantSize:     { score: grantSizeScore, max: 10,            label: grantSizeLabel },
       funderType:    { score: wFunderType,   max: W.funderType,   label: 'Funder type' },
       eligibility:   { score: wEligibility,  max: W.eligibility,  label: 'Eligibility' },
     },
