@@ -267,24 +267,93 @@ const LONDON_BOROUGHS = [
  * Takes precedence over the legacy is_local boolean (which is inconsistent
  * in ~16% of the catalogue).
  */
+export type UKNation = 'england' | 'scotland' | 'wales' | 'ni'
+
+/** A segment that names one UK nation. */
+const NATION_SEGMENT: Record<string, UKNation[]> = {
+  'england': ['england'], 'english': ['england'],
+  'scotland': ['scotland'], 'scottish': ['scotland'],
+  'wales': ['wales'], 'welsh': ['wales'], 'cymru': ['wales'],
+  'northern ireland': ['ni'], 'ni': ['ni'],
+  'great britain': ['england', 'scotland', 'wales'], 'britain': ['england', 'scotland', 'wales'],
+  'gb': ['england', 'scotland', 'wales'],
+  'uk': ['england', 'scotland', 'wales', 'ni'], 'united kingdom': ['england', 'scotland', 'wales', 'ni'],
+}
+
+/**
+ * Places outside the UK that appear appended to a UK nation list. They neither
+ * add nor remove a UK nation, but their presence must not make the whole tag
+ * unparseable — "England & Wales, plus East Africa" is still England & Wales
+ * as far as a UK applicant is concerned.
+ */
+const NON_UK_SEGMENT = /^(republic of )?ireland$|^isle of man$|^channel islands$|^guernsey$|^jersey$|^east africa$|^africa$|^europe$|^international$|^worldwide$|^global$/
+
+/**
+ * Parse a tag that names UK nations rather than a region.
+ *
+ * Returns null unless EVERY segment is either a nation or a recognised non-UK
+ * place. That strictness is the safety property: "North East England & Glasgow"
+ * mentions two nations but is regional, and reading it as "open to all England
+ * and all Scotland" would surface a Newcastle fund to every English charity.
+ * Anything unrecognised falls through to the existing regional handling.
+ */
+function parseNationTag(t: string): UKNation[] | null {
+  const segments = t.split(/\s*(?:,|&|\/|\+|\band\b|\bplus\b)\s*/).map(s => s.trim()).filter(Boolean)
+  // A single segment can still name several nations — "Great Britain" is three.
+  // Single segments that name exactly ONE nation are left to the exact-match
+  // branch above, so this only ever adds breadth the caller did not already have.
+  if (segments.length < 2) {
+    const solo = NATION_SEGMENT[segments[0] ?? '']
+    return solo && solo.length > 1 ? solo : null
+  }
+  const nations = new Set<UKNation>()
+  for (const seg of segments) {
+    const mapped = NATION_SEGMENT[seg]
+    if (mapped) { for (const n of mapped) nations.add(n); continue }
+    if (NON_UK_SEGMENT.test(seg)) continue
+    return null  // a sub-national place — this is a regional tag, not a nation list
+  }
+  return nations.size > 0 ? Array.from(nations) : null
+}
+
 function classifyLocationTag(tag: string | null | undefined): {
-  kind: 'national' | 'england' | 'scotland' | 'wales' | 'ni' | 'regional' | 'multi' | 'unknown'
+  kind: 'national' | 'england' | 'scotland' | 'wales' | 'ni' | 'nations' | 'regional' | 'multi' | 'unknown'
   label: string
+  /** Which UK nations the tag admits. Set for every nation-scoped kind. */
+  nations?: UKNation[]
 } {
   if (!tag) return { kind: 'unknown', label: '' }
   const t = tag.trim().toLowerCase()
   if (t === '' || t === 'uk' || t === 'national' || t === 'united kingdom') {
     return { kind: 'national', label: 'UK' }
   }
-  if (t === 'england')                                         return { kind: 'england',  label: 'England' }
-  if (t === 'scotland')                                        return { kind: 'scotland', label: 'Scotland' }
-  if (t === 'wales')                                           return { kind: 'wales',    label: 'Wales' }
-  if (t === 'northern ireland' || t === 'ni')                  return { kind: 'ni',       label: 'Northern Ireland' }
+  if (t === 'england')                                         return { kind: 'england',  label: 'England',          nations: ['england'] }
+  if (t === 'scotland')                                        return { kind: 'scotland', label: 'Scotland',         nations: ['scotland'] }
+  if (t === 'wales')                                           return { kind: 'wales',    label: 'Wales',            nations: ['wales'] }
+  if (t === 'northern ireland' || t === 'ni')                  return { kind: 'ni',       label: 'Northern Ireland', nations: ['ni'] }
   if (t === 'international')                                   return { kind: 'national', label: 'International' }
   // Sentinel for grants that fund a set of specific, non-contiguous areas
   // (utility networks, infrastructure corridors, pre-set delivery areas).
   // No single region tag is correct — neither penalise nor over-reward.
   if (t === 'selected areas' || t === 'multiple areas')        return { kind: 'multi',     label: 'Selected areas' }
+
+  // Multi-nation tags. These were previously falling through to `regional`,
+  // where the org's location was string-matched against the tag itself — so
+  // "England & Wales" was compared to "Greater Manchester", missed, and was
+  // treated as a grant for somebody else's region. For a local org that means a
+  // hard cap of 15%, well below the weak-match band.
+  //
+  // Found 2026-07-28 on Mustard Tree (Manchester homelessness charity): Lloyds
+  // Bank Foundation FOR ENGLAND AND WALES — one of the largest funders of small
+  // charities in the country, and its "Good Place to Live: New Beginnings Fund"
+  // targets exactly this org — scored 15% and ranked 152nd. Its raw dimension
+  // sum was 58; the cap did the rest.
+  const nations = parseNationTag(t)
+  if (nations) {
+    if (nations.length === 4) return { kind: 'national', label: 'UK' }
+    return { kind: 'nations', label: tag.trim(), nations }
+  }
+
   return { kind: 'regional', label: tag.trim() }
 }
 
@@ -421,16 +490,22 @@ export function grantInGeoSelection(locationTag: string | null | undefined, sele
   if (c.kind === 'national' || c.kind === 'unknown' || c.kind === 'multi') return true
   const tag = (locationTag ?? '').toLowerCase()
   const mentions = (...kw: string[]) => kw.some(k => tag.includes(k))
+  // A nation-scoped tag answers the four nation selections from its parsed
+  // list. Substring matching cannot: it has no way to let one tag satisfy two
+  // different selections, and "Great Britain" contains none of the nation words
+  // it actually covers. For single-nation tags the list holds exactly the one
+  // nation, so every existing verdict is unchanged.
+  const n = c.nations
   switch (selection) {
     case 'uk':               return false  // only genuinely-national grants match (returned above)
-    case 'scotland':         return c.kind === 'scotland' || mentions('scotland', 'scottish')
-    case 'wales':            return c.kind === 'wales'    || mentions('wales', 'welsh', 'cymru')
-    case 'northern_ireland': return c.kind === 'ni'       || mentions('northern ireland')
+    case 'scotland':         return n ? n.includes('scotland') : mentions('scotland', 'scottish')
+    case 'wales':            return n ? n.includes('wales')    : mentions('wales', 'welsh', 'cymru')
+    case 'northern_ireland': return n ? n.includes('ni')       : mentions('northern ireland')
     case 'london':           return mentions('london')
     case 'england':
-      return c.kind === 'england'
-        || mentions('england', 'london')
-        || (c.kind === 'regional' && !mentions('scotland', 'scottish', 'wales', 'welsh', 'cymru', 'northern ireland'))
+      return n ? n.includes('england')
+        : mentions('england', 'london')
+          || (c.kind === 'regional' && !mentions('scotland', 'scottish', 'wales', 'welsh', 'cymru', 'northern ireland'))
     case 'regional':         return c.kind === 'regional'
     default:                 return false
   }
@@ -736,13 +811,15 @@ export function computeMatchScore(
       locationScore = 10
       reasons.push('Funds specific areas — check eligibility in Grant insights')
     } else if (tagClass.kind === 'england' || tagClass.kind === 'scotland' ||
-               tagClass.kind === 'wales'   || tagClass.kind === 'ni') {
+               tagClass.kind === 'wales'   || tagClass.kind === 'ni'      ||
+               tagClass.kind === 'nations') {
       // Nation-restricted grant. Match against the org's inferred country.
-      const nationOk =
-        (tagClass.kind === 'england'  && orgInEngland)  ||
-        (tagClass.kind === 'scotland' && orgInScotland) ||
-        (tagClass.kind === 'wales'    && orgInWales)    ||
-        (tagClass.kind === 'ni'       && orgInNI)
+      // Driven off tagClass.nations rather than the kind, so a tag naming more
+      // than one nation ("England & Wales") admits an org in ANY of them
+      // instead of being compared, as a string, to the org's town.
+      const orgNation: UKNation =
+        orgInScotland ? 'scotland' : orgInWales ? 'wales' : orgInNI ? 'ni' : 'england'
+      const nationOk = (tagClass.nations ?? []).includes(orgNation)
       if (nationOk) {
         locationScore = 18
         reasons.push(`${tagClass.label} — open to ${org.primary_location ? org.primary_location.split(',')[0].trim() : 'your area'}`)
