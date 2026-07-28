@@ -852,6 +852,25 @@ export function buildClassifyPatch(input: {
   // damage already done. It is the same shape as the structures wipe this file
   // records at line ~846 ("that once wiped structures catalogue-wide"), and the
   // fix is the one already applied there: silence never clears a value.
+  // NO SECTOR BACKSTOP HERE — deliberately, and the reason is worth keeping.
+  //
+  // The same vocabulary technique that works for eligible_structures and
+  // target_beneficiaries is actively HARMFUL for impact_sectors, because the
+  // themes dimension scores PROPORTIONAL overlap, not hit count. Adding a real
+  // but peripheral sector to a grant therefore lowers its score against every
+  // org that does not share it. Measured live 2026-07-28 before reverting:
+  //
+  //   Selco Community Heroes  + justice -> themes 36/50 -> 26/50, score 76 -> 66
+  //   Lloyds "New Beginnings" + health  -> themes 18/35 -> 15/35, score 72 -> 69
+  //
+  // Both additions were CORRECT readings of the funder's own text. They still
+  // made the matches worse. Breadth helps a hard gate and hurts a proportional
+  // score, and impact_sectors is used as both.
+  //
+  // The classifier prompt's own "when in doubt, INCLUDE the sector" guidance
+  // has the same problem and is worth revisiting, but that is a scoring-model
+  // question, not something a backstop can paper over. src/lib/sector-vocabulary.ts
+  // is retained, unwired, with the evidence.
   if (honourEmpty || r.impact_sectors.length > 0) {
     patch.impact_sectors = r.impact_sectors
   }
