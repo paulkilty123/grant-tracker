@@ -4,6 +4,7 @@
 import { SupabaseClient } from '@supabase/supabase-js'
 import { mergeGrantUpdate } from './grant-merge'
 import { structuresFromVocabulary, vocabularyPromptTable } from './eligibility-vocabulary'
+import { ensureExplicitBeneficiaries } from './beneficiary-vocabulary'
 
 // Stamped by classifyUnclassified (cron path). Keep in sync with the route's
 // CLASSIFIER_VERSION in src/app/api/admin/classify-grants/route.ts.
@@ -812,6 +813,13 @@ export function buildClassifyPatch(input: {
   result:      ReturnType<typeof validate>
   description: string | null | undefined
   funderBrief: Record<string, unknown> | null | undefined
+  /**
+   * The row's title. Feeds the beneficiary backstop only — funds routinely
+   * announce their group in their name ("National Homelessness Property Fund")
+   * while the description never repeats it. Optional so existing callers keep
+   * working; pass it where you have it.
+   */
+  title?:      string | null
   /** Row's location_tag — gates the jurisdiction-specific charity forms. */
   locationTag?: string | null
   /** Honour an empty array as a deliberate clear for beneficiaries / niche_tags. */
@@ -894,8 +902,33 @@ export function buildClassifyPatch(input: {
 
   if (structures.length > 0) patch.eligible_structures = structures
 
-  if (honourEmpty || r.target_beneficiaries.length > 0) {
-    patch.target_beneficiaries = r.target_beneficiaries
+  // Beneficiary backstop — the sibling of ensureExplicitStructures above.
+  //
+  // target_beneficiaries had no deterministic floor, so a group the funder
+  // names outright was dropped whenever the model's attention landed elsewhere,
+  // with nothing to catch it. Measured 2026-07-28: 40 live rows named
+  // homelessness in their own text and only 19 carried the tag. Sir Jules Thorn
+  // lists "youth/education, older people, disability, health, homelessness" as
+  // its areas; Resonance's fund is titled "National Homelessness Property
+  // Fund". A Manchester homelessness charity could see none of them.
+  //
+  // Wired in HERE, not left to the backfill script, because the classifier
+  // rewrites this field wholesale at equal trust — so a backfill alone would be
+  // silently reverted by the next classify run over the same row.
+  //
+  // Add-only, and only where the source names the group. It reads the same
+  // text the structures backstop does, plus the title, since funds like
+  // Resonance's announce the group in their name.
+  const beneficiarySource = [
+    input.title ?? '',
+    description ?? '',
+    typeof funderBrief?.what_they_fund === 'string' ? funderBrief.what_they_fund : '',
+    whoCanApply,
+  ].join('. ')
+  const beneficiaries = ensureExplicitBeneficiaries(r.target_beneficiaries, beneficiarySource)
+
+  if (honourEmpty || beneficiaries.length > 0) {
+    patch.target_beneficiaries = beneficiaries
   }
   if (honourEmpty || r.niche_tags.length > 0) {
     patch.niche_tags = r.niche_tags
