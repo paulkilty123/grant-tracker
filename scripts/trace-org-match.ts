@@ -107,9 +107,35 @@ async function main() {
     console.log(`${h.funder} — ${h.title}\n   ${where}${h.detail ? `\n   ${h.detail}` : ''}`)
   }
 
+  // `general_public` is a near-universal tag, so an overlap on it alone is not
+  // evidence of anything — a clean-energy innovation prize and a homelessness
+  // charity both "serve the general public". Splitting on that is the whole
+  // question: a SPECIFIC beneficiary overlap is real evidence the sector gate
+  // got it wrong, and a general_public-only overlap is not.
+  const GENERIC = new Set(['general_public'])
   const benefBlocked = traced.filter(t => t.verdict.includes('beneficiaries MATCH'))
+  const specific = benefBlocked.filter(t => t.benefs.some(b => benefSet.has(b) && !GENERIC.has(b)))
   console.log(`\n${'─'.repeat(60)}`)
-  console.log(`Gated on sector DESPITE matching this org's beneficiaries: ${benefBlocked.length}`)
+  console.log(`Gated on sector despite ANY beneficiary overlap : ${benefBlocked.length}`)
+  console.log(`  ...of which the overlap is general_public only: ${benefBlocked.length - specific.length}  (correctly dropped)`)
+  console.log(`  ...of which a SPECIFIC group overlaps         : ${specific.length}  (arguably wrong to drop)\n`)
+  // What would rescuing them actually surface? Score them anyway. If the
+  // out-of-area ones land low the rescue is safe — the location cap already
+  // buries them — and only the genuinely relevant ones rise.
+  const rescued = specific.map(s => {
+    const row = (rows ?? []).find(r => (r as Record<string, unknown>).title === s.title)
+    if (!row) return { ...s, wouldScore: 0 }
+    const g = normaliseScrapedGrant(row as Record<string, unknown>)
+    return { ...s, wouldScore: computeMatchScore(g, typedOrg).score }
+  }).sort((a, b) => b.wouldScore - a.wouldScore)
+
+  const band = (lo: number, hi: number) => rescued.filter(r => r.wouldScore >= lo && r.wouldScore < hi).length
+  console.log(`If rescued, they would score:  >=70: ${band(70, 101)}   55-69: ${band(55, 70)}   40-54: ${band(40, 55)}   <40: ${band(0, 40)}`)
+  console.log(`(the dashboard shows >=55; anything below is invisible anyway)\n`)
+  for (const s of rescued.slice(0, 22)) {
+    const overlap = s.benefs.filter(b => benefSet.has(b) && !GENERIC.has(b))
+    console.log(`  ${String(s.wouldScore).padStart(3)}%  ${(s.funder ?? '').slice(0, 36).padEnd(36)} ${overlap.join(', ').padEnd(32)} [${s.sectors.join(',')}]`)
+  }
 }
 
 main().catch(e => { console.error(e); process.exit(1) })
