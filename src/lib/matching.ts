@@ -752,8 +752,42 @@ export interface FeedbackSignals {
  *  change these defaults without an eval-backed decision (see the F8 harness). */
 export interface MatchWeights {
   location: number; themesGrant: number; beneficiaryGrant: number; funderType: number; eligibility: number
+  /**
+   * How much of the sector score comes from "what fraction of the GRANT's remit
+   * does the org cover?" versus "does the grant match what the ORG most cares
+   * about?". The remainder goes to the org side.
+   *
+   * At 0.7 a broad funder is heavily penalised: A B Charitable Trust funds five
+   * areas, a homelessness charity does one of them, and the fund scores 44% and
+   * never reaches the user — even though that one overlap is exactly right and
+   * the fund explicitly names homeless people as beneficiaries.
+   *
+   * That question is also the wrong way round for an applicant. What matters is
+   * "does this funder do something I do", not "do I do everything this funder
+   * does". Exposed as a weight so the answer comes from the feedback data
+   * rather than from an opinion — see scripts/eval-sector-coverage-weights.ts.
+   *
+   * Optional so existing callers that build their own weights object (the F8
+   * scoring harness does) keep compiling and keep today's behaviour.
+   */
+  sectorGrantShare?: number
+  /**
+   * Capacity ceiling: flag a grant whose SMALLEST award exceeds this multiple
+   * of the org's annual income. 0 disables it. See section 4b — funders do not
+   * award several times an applicant's turnover, whatever the thematic fit.
+   */
+  sizeCeilingRatio?: number
 }
-export const DEFAULT_MATCH_WEIGHTS: MatchWeights = { location: 15, themesGrant: 35, beneficiaryGrant: 20, funderType: 8, eligibility: 12 }
+export const DEFAULT_MATCH_WEIGHTS: MatchWeights = {
+  location: 15, themesGrant: 35, beneficiaryGrant: 20, funderType: 8, eligibility: 12,
+  sectorGrantShare: 0.7,
+  // 1.0 chosen by eval against 451 real user judgements, not by intuition.
+  // Separation between liked and rejected grants 10.6 -> 11.8, rejected grants
+  // reaching the dashboard 43% -> 40%, with liked grants held at 67% — no loss
+  // of good matches. 0.5 (the fundraising rule of thumb, and what the F8
+  // harness assumed) was measurably WORSE: recall fell to 63%.
+  sizeCeilingRatio: 1.0,
+}
 
 export function computeMatchScore(
   grant: GrantOpportunity,
@@ -957,7 +991,8 @@ export function computeMatchScore(
 
     const grantCoverage = weightedGrantTotal > 0 ? grantIntersection / weightedGrantTotal : 0
     const orgCoverage   = weightedOrgTotal   > 0 ? orgIntersection   / weightedOrgTotal   : 0
-    const coverage      = 0.7 * grantCoverage + 0.3 * orgCoverage
+    const grantShare    = W.sectorGrantShare ?? 0.7
+    const coverage      = grantShare * grantCoverage + (1 - grantShare) * orgCoverage
 
     themesScore = hits > 0 ? Math.max(3, Math.round(coverage * 20)) : 3
 
@@ -1354,6 +1389,41 @@ export function computeMatchScore(
     )
   }
 
+  // ── 4b. Grant size — capacity ceiling (too big for this organisation) ───
+  // The floor above asks "is this grant smaller than the org WANTS?". This asks
+  // the question the funder asks: "would we award this much to an organisation
+  // this size?" Funders essentially never do — a grant worth several times an
+  // applicant's annual turnover fails at assessment on financial capacity,
+  // whatever the thematic fit.
+  //
+  // Found in the feedback data 2026-07-28. eligibility_issue is the single
+  // biggest rejection reason (185 of 373 down-votes), and the pattern is stark:
+  //   BankAbility UK CIC, income under £10,000
+  //     -> Friends Provident "Realising a New Economy", up to £250,000  shown at 98%
+  //     -> Nationwide "Decent Affordable Homes", minimum £100,000       shown at 69%
+  //
+  // The dimension above is a hardcoded 10/10 and has never looked at this. Its
+  // comment reasons that "orgs typically want the largest grant available",
+  // which is true and beside the point: the constraint is what a funder will
+  // award, not what an applicant would like.
+  //
+  // Uses amount_min — the SMALLEST award on offer. If even that is out of
+  // proportion, the fund is not realistically open to this organisation.
+  // Ratio is a weight so the threshold comes from the eval, not an opinion.
+  const capacityRatio = W.sizeCeilingRatio ?? 0
+  const orgIncomeMid  = INCOME_MIDPOINTS[org.annual_income_band ?? ''] ?? null
+  let sizeCeilingTriggered = false
+  if (
+    capacityRatio > 0 && orgIncomeMid !== null &&
+    typeof grant.amountMin === 'number' && grant.amountMin > 0 &&
+    grant.amountMin > orgIncomeMid * capacityRatio
+  ) {
+    sizeCeilingTriggered = true
+    reasons.push(
+      `Smallest award here is £${grant.amountMin.toLocaleString('en-GB')} — large relative to your annual income, funders rarely award this proportion`,
+    )
+  }
+
     // ── 5. Funder type preference + funding type affinity (max 15) ────────
   let funderTypeScore = 8 // neutral base
 
@@ -1706,6 +1776,11 @@ export function computeMatchScore(
   // minimum target. Below the 60% "Other matches" floor, so won't surface in
   // newsletter top/other or in dashboard top matches; still browsable.
   if (sizeFloorTriggered) {
+    score = Math.min(score, SIZE_FLOOR_SCORE_CAP)
+  }
+  if (sizeCeilingTriggered) {
+    // Same cap as the floor: still browsable in Find Funding, never presented
+    // as something worth this organisation's time.
     score = Math.min(score, SIZE_FLOOR_SCORE_CAP)
   }
 
