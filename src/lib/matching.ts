@@ -547,6 +547,12 @@ function parseIncomeCapFromText(text: string): number | null {
     /(?:annual\s+)?(?:income|turnover|budget)\s+(?:of\s+)?(?:under|below|less\s+than|not\s+exceeding|no\s+more\s+than)\s+(£[\d,.km]+)/i,
     /(?:under|below|less\s+than|not\s+exceeding)\s+(£[\d,.km]+)\s+(?:annual\s+)?(?:income|turnover)/i,
     /income\s+cap[:\s]+(£[\d,.km]+)/i,
+    // "under an upper threshold of £1.5 million" — how A B Charitable Trust
+    // words it, and none of the three patterns above caught it.
+    /(?:upper\s+)?(?:threshold|limit|ceiling)\s+of\s+(£[\d,.km]+)/i,
+    // "income must be between £150,000 and £1.5 million" — a band, where the
+    // upper bound is the cap that matters.
+    /(?:income|turnover)\s+(?:must\s+be\s+)?between\s+£[\d,.km]+\s+and\s+(£[\d,.km]+)/i,
   ]
   for (const re of patterns) {
     const m = text.match(re)
@@ -1533,6 +1539,27 @@ export function computeMatchScore(
   let structureMismatch = false
   const eligibilityText = grant.eligibilityCriteria.join(' ').toLowerCase()
 
+  // The funder brief's who_can_apply, used for the INCOME CAP parse only.
+  //
+  // who_can_apply is where the funder's real eligibility prose lives — it is
+  // what the enricher writes and what desk research populates — so an income
+  // cap stated there was invisible to the engine that exists to read exactly
+  // that. Found 2026-07-29: A B Charitable Trust caps applicants at £1.5m.
+  // Recording it on the row changed nothing, because the parser was reading
+  // eligibility_criteria alone. A £2.1m charity was still shown the fund.
+  //
+  // DELIBERATELY NOT fed into the structure keyword matching below, which was
+  // the first attempt. Brief prose mentions charities, CICs and social
+  // enterprises in passing constantly, so it fired those keywords on grants
+  // that do not actually restrict by form. Measured on the 451-judgement
+  // feedback set: separation fell 11.8 -> 11.7 and rejected grants reaching the
+  // dashboard rose 40% -> 41%. Scoped to the cap parse, the regression goes
+  // away and the cap still lands.
+  const briefEligibilityText = typeof (grant as unknown as { funderBrief?: { who_can_apply?: unknown } })
+    .funderBrief?.who_can_apply === 'string'
+    ? String((grant as unknown as { funderBrief: { who_can_apply: string } }).funderBrief.who_can_apply).toLowerCase()
+    : ''
+
   if (eligibilityText) {
     const charityKeywords  = ['registered charity', 'charity only', 'charitable', 'registered with charity']
     const cicKeywords      = ['cic', 'community interest company']
@@ -1657,7 +1684,7 @@ export function computeMatchScore(
       }
     }
 
-    const incomeCap = parseIncomeCapFromText(eligibilityText)
+    const incomeCap = parseIncomeCapFromText(`${eligibilityText} ${briefEligibilityText}`)
     if (incomeCap !== null && org.annual_income_band) {
       if (!orgIncomeWithinCap(org.annual_income_band, incomeCap)) {
         eligibilityScore = Math.max(1, eligibilityScore - 6)
