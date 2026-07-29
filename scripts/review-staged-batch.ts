@@ -29,7 +29,7 @@ type Row = {
   impact_sectors: string[] | null; target_beneficiaries: string[] | null
   eligible_structures: string[] | null
   description: string | null
-  funder_brief: { who_can_apply?: unknown } | null
+  funder_brief: Record<string, unknown> | null
 }
 
 async function probe(url: string): Promise<string> {
@@ -49,7 +49,7 @@ async function main() {
   const { data, error } = await db
     .from('scraped_grants')
     .select('id, funder, title, apply_url, amount_min, amount_max, deadline, next_open_date, is_rolling, location_tag, funding_type, impact_sectors, target_beneficiaries, eligible_structures, description, funder_brief')
-    .eq('source', source).eq('is_active', false)
+    .eq('source', source)
     .order('deadline', { nullsFirst: false })
   if (error) throw new Error(error.message)
   const rows = (data ?? []) as unknown as Row[]
@@ -58,7 +58,7 @@ async function main() {
   const blockers: string[] = []
   const warnings: string[] = []
 
-  console.log(`\nreviewing ${rows.length} staged rows from source='${source}'\n`)
+  console.log(`\nreviewing ${rows.length} rows from source='${source}'\n`)
   console.log(`status  deadline    funder / title`)
   console.log('─'.repeat(92))
 
@@ -66,9 +66,16 @@ async function main() {
     const code = r.apply_url ? await probe(r.apply_url) : 'NO URL'
     const issues: string[] = []
 
-    // BLOCKERS — do not publish
+    // BLOCKERS — do not publish.
+    //
+    // 'fail' and 'timeout' MUST be here. They were not, and on 2026-07-29 that
+    // let Greater Manchester Mayor's Charity through with a dead domain
+    // (gmmayorscharity.org — the real one is .org.uk) while this script
+    // reported "zero blockers". A connection failure is not a neutral result:
+    // if we cannot reach the page, we cannot publish it. Silence is not success.
+    const UNREACHABLE = ['404', '410', 'DNS', 'fail', 'timeout', '0', '500', '502', '503']
     if (!r.apply_url) issues.push('BLOCK: no apply_url')
-    else if (['404', '410', 'DNS'].includes(code)) issues.push(`BLOCK: link ${code}`)
+    else if (UNREACHABLE.includes(code)) issues.push(`BLOCK: cannot reach the page (${code})`)
     if (r.deadline && r.deadline < today) issues.push(`BLOCK: deadline ${r.deadline} already passed`)
     if (!r.funder) issues.push('BLOCK: no funder name')
 
@@ -86,6 +93,16 @@ async function main() {
       issues.push('warn: conditional gate in the prose — check it survives to the published row')
     }
     if (/income|threshold|expenditure|turnover/i.test(who)) issues.push('info: income cap recorded')
+
+    // BRIEF DEPTH. This check was missing, and its absence is why 27 rows were
+    // published with a three-field brief on 2026-07-29: the review confirmed a
+    // brief EXISTED and never asked whether it was any good. A real enrichment
+    // produces ~14 fields; the "Grant insights" panel reads priorities,
+    // typical_award, exclusions and decision_timeline, so a row without them
+    // ships with that panel empty.
+    const briefFields = r.funder_brief ? Object.keys(r.funder_brief).length : 0
+    if (briefFields === 0) issues.push('BLOCK: no funder_brief at all')
+    else if (briefFields < 8) issues.push(`BLOCK: brief has only ${briefFields} fields — enrich before publishing`)
 
     const hasBlock = issues.some(i => i.startsWith('BLOCK'))
     if (hasBlock) blockers.push(`${r.funder} — ${r.title}`)

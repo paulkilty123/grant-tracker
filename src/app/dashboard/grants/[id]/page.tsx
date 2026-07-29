@@ -1,6 +1,6 @@
 import React from 'react'
 import { createClient } from '@/lib/supabase/server'
-import { formatRange } from '@/lib/utils'
+import { formatRange, formatNextOpen } from '@/lib/utils'
 import { notFound } from 'next/navigation'
 import ViewTracker from '@/components/ViewTracker'
 import AddToPipelineButton from './AddToPipelineButton'
@@ -209,7 +209,7 @@ export default async function GrantDetailPage({
         {grant.next_open_date && (
           <div className="mb-4">
             <span className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 border border-blue-200 text-xs font-semibold px-3 py-1.5 rounded-lg">
-              <Bell className="w-3.5 h-3.5" />Opens {String(grant.next_open_date)}
+              <Bell className="w-3.5 h-3.5" />{formatNextOpen(String(grant.next_open_date)) ?? String(grant.next_open_date)}
             </span>
           </div>
         )}

@@ -7,7 +7,7 @@ import {
   TrendingUp, Users, GitMerge, Gift, Landmark, ExternalLink,
   PlusCircle,
 } from 'lucide-react'
-import { formatRange } from '@/lib/utils'
+import { formatRange, formatNextOpen } from '@/lib/utils'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -290,7 +290,7 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
                         className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1"
                         style={{ backgroundColor: 'rgba(59,130,246,0.10)', color: '#1D4ED8', borderRadius: 9999 }}
                       >
-                        <Bell className="w-3 h-3" />Opens {grant.next_open_date}
+                        <Bell className="w-3 h-3" />{formatNextOpen(grant.next_open_date) ?? grant.next_open_date}
                       </span>
                     )}
                   </div>

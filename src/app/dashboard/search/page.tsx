@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Search, ChevronDown, Layers, DollarSign, Rocket, Building2, SlidersHorizontal, MapPin, Users, GraduationCap, TrendingUp, GitMerge, Gift, Landmark, CalendarDays, RefreshCw, Bookmark, PlusCircle, Activity, Target, Star, CheckCircle2, XCircle, Lightbulb, AlertTriangle, Sparkles, ExternalLink, ClipboardList, EyeOff } from 'lucide-react'
 import { SEED_GRANTS } from '@/lib/grants'
-import { formatRange } from '@/lib/utils'
+import { formatRange, formatNextOpen } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { createPipelineItem, deletePipelineItem, updatePipelineStage } from '@/lib/pipeline'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
@@ -457,8 +457,12 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
   // Three-state rendering: a fixed deadline, "Opens [next round]" when the
   // grant is currently between rounds (nextOpenDate set + not rolling +
   // no deadline), or "Rolling" as the fallback when always-open.
+  // formatNextOpen returns a COMPLETE phrase — "Opens Sep 2026" or "Closed —
+  // check funder" — so nothing here may add its own "Opens" prefix. Doing so
+  // produced "Opens Closed — no reopening date announced as at July 2026" on
+  // Greater Manchester Mayor's Charity, 2026-07-30.
   const deadlineDisplay = (!grant.isRolling && !grant.deadline && grant.nextOpenDate)
-    ? `Opens ${grant.nextOpenDate}`
+    ? (formatNextOpen(grant.nextOpenDate) ?? 'Check funder')
     : grant.isRolling || !grant.deadline
       ? 'Rolling'
       : (() => {
