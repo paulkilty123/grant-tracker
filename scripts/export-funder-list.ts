@@ -1,3 +1,6 @@
+// Dump every distinct funder name in the catalogue, pipe-separated, for dedup
+// checks during desk research. stdout is the list; stderr is the count.
+//   npx tsx scripts/export-funder-list.ts > /tmp/funders.txt
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync } from 'fs'
 import path from 'path'
