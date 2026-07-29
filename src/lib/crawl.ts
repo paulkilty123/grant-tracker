@@ -2486,6 +2486,185 @@ async function crawlPilgrimTrust(): Promise<CrawlResult> {
 // BATCH 6 SOURCES (06:25) — major national funders + corporate/landfill
 // ══════════════════════════════════════════════════════════════════════════════
 
+// ── Homeless Link — sector funding aggregator ─────────────────────────────────
+// homeless.org.uk/what-we-do/grants-and-investment/current-funding-opportunities
+//
+// AN AGGREGATOR, NOT A FUNDER. Every other source here is a funder publishing
+// its own programmes; this one is the homelessness sector's membership body
+// listing funds it has been told about. That difference drives the whole design:
+//
+//   - `funder` must be the ACTUAL funder (Henry Smith, LNER, Lloyds), never
+//     "Homeless Link". Getting that wrong would create a phantom funder with a
+//     dozen unrelated programmes hanging off it.
+//   - `apply_url` is resolved from the detail page's first external link, so
+//     the row points at the funder's own page rather than a news post about it.
+//   - amounts and deadlines are deliberately NOT parsed from the listing text.
+//     Its headlines quote programme totals ("£8 million in homelessness
+//     prevention"), which is the pot, not the grant. Reading those as
+//     amount_max is precisely the pool-vs-per-grant error the amount extractor
+//     already guards against. Enrichment reads the funder's real page instead.
+//
+// The page carries its own disclaimer: "Whilst we try our hardest to ensure the
+// information is up to date we cannot guarantee this, and anyone interested in
+// applying for grants should always check directly with the funder." Recorded
+// in raw_data so a reviewer knows the provenance is second-hand.
+//
+// Found 2026-07-29 while researching homelessness coverage: it listed four funds
+// the catalogue did not hold, and it is maintained — the newest item was five
+// days old.
+async function crawlHomelessLink(): Promise<CrawlResult> {
+  const SOURCE = 'homeless_link'
+  const ORIGIN = 'https://homeless.org.uk'
+  // NOT named URL: this function calls `new URL(...)` to read a host, and a
+  // local const URL shadows the global constructor. Every other scraper here
+  // uses `const URL` safely because none of them construct one.
+  const LISTING_URL = `${ORIGIN}/what-we-do/grants-and-investment/current-funding-opportunities/`
+  const MAX_DETAIL_FETCHES = 20
+
+  /** Social, analytics and document-viewer links are never the funder's page. */
+  const NOT_A_FUNDER_LINK = /twitter\.com|x\.com|linkedin\.com|facebook\.com|youtube\.com|instagram\.com|google\.com|googletagmanager|officeapps\.live\.com|in-form\.org\.uk|dsc\.org\.uk|mailto:/i
+
+  /**
+   * Name the funder from the headline, or return null and let review do it.
+   *
+   * PRECISE OR NOTHING, on purpose. Only two patterns are trustworthy here:
+   * "... via X" / "... by X", and a trailing "(X)". A leading-capitals
+   * heuristic and a URL-host fallback were both tried against the live page on
+   * 2026-07-29 and produced "Practical", "Women", "Funding" and "LNER Customer"
+   * as funder names. A wrong funder name is worse than none: it invents a
+   * phantom funder in the catalogue and unrelated programmes then collect under
+   * it. Null is honest, and these rows land in Needs Review anyway, where the
+   * enricher reads the funder's own page and can fill it in properly.
+   */
+  function deriveFunder(title: string): string | null {
+    const viaBy = title.match(/\b(?:via|by|from)\s+((?:The\s+)?[A-Z][\w'&.-]*(?:\s+[A-Z][\w'&.-]*){0,4})/)
+    if (viaBy) {
+      const name = viaBy[1].replace(/[-–—:,.]+$/, '').trim()
+      // "by Lloyds Bank Foundation- £8 million" — strip a trailing amount clause.
+      return name.replace(/\s+£.*$/, '').trim() || null
+    }
+    const paren = title.match(/\(([^)]{3,60})\)/)
+    if (paren) return paren[1].trim()
+    return null
+  }
+
+  /** Aggregator links carry campaign tracking; it is noise and it breaks dedup. */
+  function stripTracking(u: string): string {
+    try {
+      const parsed = new URL(u)
+      for (const k of Array.from(parsed.searchParams.keys())) {
+        if (/^(utm_|mc_|fbclid|gclid|ref$)/i.test(k)) parsed.searchParams.delete(k)
+      }
+      return parsed.toString().replace(/\?$/, '')
+    } catch { return u }
+  }
+
+  try {
+    // Every fund here also exists on the funder's own site, and several are
+    // already in the catalogue from other sources or desk research. Without
+    // this check the aggregator silently duplicates them under a second
+    // external_id — Henry Smith's Welcome for Newcomers was staged by hand the
+    // same day this scraper was written. Matched on apply_url host+path, which
+    // survives the tracking parameters stripped below.
+    const existingUrls = new Set<string>()
+    {
+      const db = adminClient()
+      for (let from = 0; ; from += 1000) {
+        const { data } = await db.from('scraped_grants').select('apply_url').range(from, from + 999)
+        for (const r of data ?? []) {
+          if (!r.apply_url) continue
+          try {
+            const u = new URL(String(r.apply_url))
+            existingUrls.add((u.host.replace(/^www\./, '') + u.pathname).replace(/\/$/, '').toLowerCase())
+          } catch { /* unparseable stored url — nothing to match on */ }
+        }
+        if (!data || data.length < 1000) break
+      }
+    }
+    const urlKey = (u: string) => {
+      try {
+        const p = new URL(u)
+        return (p.host.replace(/^www\./, '') + p.pathname).replace(/\/$/, '').toLowerCase()
+      } catch { return u.toLowerCase() }
+    }
+
+    const root  = parseHTML(await fetchHtml(LISTING_URL))
+    const cards = root.querySelectorAll('li.news-item.card')
+    const grants: ScrapedGrant[] = []
+    let detailFetches = 0
+    let skippedExisting = 0
+
+    for (const card of cards) {
+      const link = card.querySelector('a.card__link')
+      const href = link?.getAttribute('href') ?? ''
+      const title = (card.querySelector('.news-item__title')?.text ?? link?.getAttribute('aria-label') ?? '')
+        .replace(/&amp;/g, '&').trim()
+      if (!href || !title) continue
+
+      const blurb    = (card.querySelector('.news-item__blurb')?.text ?? '').replace(/&amp;/g, '&').trim()
+      const postedOn = (card.querySelector('time.news-item__date')?.text ?? '').trim()
+      const newsUrl  = href.startsWith('http') ? href : `${ORIGIN}${href}`
+      const slug     = href.replace(/\/$/, '').split('/').pop() ?? ''
+
+      // Resolve the funder's own page from the detail post. Sequential and
+      // capped — this is somebody else's site and we visit it twice a week.
+      let applyUrl: string | null = null
+      if (detailFetches < MAX_DETAIL_FETCHES) {
+        detailFetches++
+        try {
+          const detail = parseHTML(await fetchHtml(newsUrl))
+          const body = detail.querySelector('main') ?? detail
+          for (const a of body.querySelectorAll('a[href]')) {
+            const u = a.getAttribute('href') ?? ''
+            if (!u.startsWith('http') || u.includes('homeless.org.uk')) continue
+            if (NOT_A_FUNDER_LINK.test(u)) continue
+            applyUrl = stripTracking(u)
+            break
+          }
+        } catch { /* detail unavailable — fall back to the news post below */ }
+      }
+
+      if (applyUrl && existingUrls.has(urlKey(applyUrl))) { skippedExisting++; continue }
+
+      const funder = deriveFunder(title)
+
+      grants.push({
+        external_id:          `homeless_link_${slug}`,
+        source:               SOURCE,
+        title:                title.slice(0, 300),
+        funder,
+        funder_type:          null,
+        description:          [blurb, `Listed by Homeless Link on ${postedOn || 'an unstated date'}.`]
+                                .filter(Boolean).join(' ').slice(0, 800),
+        // Left null on purpose — see the amounts note in the header comment.
+        amount_min:           null,
+        amount_max:           null,
+        deadline:             null,
+        is_rolling:           false,
+        is_local:             false,
+        sectors:              ['housing'],
+        eligibility_criteria: [],
+        apply_url:            applyUrl ?? newsUrl,
+        raw_data: {
+          aggregator:            'homeless_link',
+          homeless_link_url:     newsUrl,
+          listed_on:             postedOn || null,
+          funder_url_resolved:   applyUrl !== null,
+          aggregator_disclaimer: 'Homeless Link states it cannot guarantee this information is up to date and that applicants should always check directly with the funder.',
+        },
+      })
+    }
+
+    const result = await upsertGrants(SOURCE, grants)
+    if (skippedExisting > 0) {
+      console.log(`[${SOURCE}] skipped ${skippedExisting} already in the catalogue by apply_url`)
+    }
+    return result
+  } catch (err) {
+    return { source: SOURCE, fetched: 0, upserted: 0, error: String(err) }
+  }
+}
+
 // ── Source 89 — Cadent Foundation ────────────────────────────────────────────
 // cadentgas.com/foundation — funds community energy, warm homes and social welfare.
 async function crawlCadentFoundation(): Promise<CrawlResult> {
@@ -2897,6 +3076,7 @@ const BATCH_5_SOURCES = [
 const BATCH_6_SOURCES = [
   
   'cadent_foundation', 'severn_trent_fund',
+  'homeless_link',
 ] as const
 
 // Batch 7: innovation/lottery + more CFs + specialist national funders (06:30)
@@ -2966,7 +3146,7 @@ export async function crawlAllSources(batch?: BatchNum): Promise<CrawlResult[]> 
     wolfsonFoundation, pilgrimTrust, 
     // Batch 6
     
-    cadentFoundation, severnTrentFund,
+    cadentFoundation, severnTrentFund, homelessLink,
     
     
     // Batch 7
@@ -3020,6 +3200,7 @@ export async function crawlAllSources(batch?: BatchNum): Promise<CrawlResult[]> 
     // Batch 6
     run('cadent_foundation',       crawlCadentFoundation),
     run('severn_trent_fund',       crawlSevernTrentFund),
+    run('homeless_link',           crawlHomelessLink),
     // Batch 7
     run('sport_scotland',               crawlSportScotland),
     run('ernest_cook_trust',            crawlErnestCookTrust),
@@ -3073,6 +3254,7 @@ export async function crawlAllSources(batch?: BatchNum): Promise<CrawlResult[]> 
     pilgrimTrust.status           === 'fulfilled' ? pilgrimTrust.value           : fallback('pilgrim_trust'),
     // Batch 6
     cadentFoundation.status       === 'fulfilled' ? cadentFoundation.value       : fallback('cadent_foundation'),
+    homelessLink.status           === 'fulfilled' ? homelessLink.value           : fallback('homeless_link'),
     severnTrentFund.status        === 'fulfilled' ? severnTrentFund.value        : fallback('severn_trent_fund'),
     // Batch 7
     sportScotland.status              === 'fulfilled' ? sportScotland.value              : fallback('sport_scotland'),
