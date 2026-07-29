@@ -28,6 +28,8 @@ export const dynamic = 'force-dynamic'
 // transition.
 const QUEUE_STATES = ['captured', 'enriched', 'tagged', 'tagged_awaiting_review']
 
+import { needsEnrichment, STUB_BRIEF_SOURCES } from '@/lib/funder-brief'
+
 const COLS = [
   'id', 'title', 'funder', 'apply_url', 'is_active', 'pipeline_state',
   'url_status', 'url_quality_score',
@@ -47,6 +49,24 @@ export default async function ReviewPage() {
     .not('saved_for_later', 'is', 'true')
     .order('last_seen_at', { ascending: false })
     .limit(500)
+
+  // PUBLISHED rows whose brief is a STUB. They are not "awaiting review" so they
+  // never appeared here, and the only route to enrich one was the old Grant
+  // Manager — which is the gap this closes.
+  //
+  // Filtered in SQL on funder_brief->>source, which PostgREST handles reliably
+  // for a top-level key. Deliberately NOT an .or() across nested JSONB keys:
+  // that is unreliable and the URLs page had to fall back to client-side
+  // filtering for exactly that reason. A published row missing who_can_apply
+  // entirely is a different problem and is left to the bulk enrich.
+  const { data: stubData } = await db
+    .from('scraped_grants')
+    .select(COLS)
+    .eq('pipeline_state', 'published')
+    .in('funder_brief->>source', STUB_BRIEF_SOURCES as unknown as string[])
+    .not('saved_for_later', 'is', 'true')
+    .order('last_seen_at', { ascending: false })
+    .limit(300)
 
   // A failed query must never render as an empty queue. The old page
   // destructured the error away and showed "No grants pending review — all
@@ -106,7 +126,12 @@ export default async function ReviewPage() {
     return k ? Math.max(0, (urlCount.get(k) ?? 1) - 1) : 0
   }
 
-  const items: QueueItem[] = rows
+  // Merge, de-duplicating by id in case a state ever overlaps.
+  const seenIds = new Set<string>()
+  const allRows = [...rows, ...((stubData ?? []) as unknown as typeof rows)]
+    .filter(r => { if (seenIds.has(r.id)) return false; seenIds.add(r.id); return true })
+
+  const items: QueueItem[] = allRows
     .map(r => {
       // Derived once and threaded through. It was computed twice per row here,
       // and deriveReviewReasons walks the brief, the provenance diff and the
@@ -129,6 +154,8 @@ export default async function ReviewPage() {
       gateOutcome:   gate.outcome,
       diffs:         extractTagsDiff(r.field_provenance),
       brief:         summariseBrief(r.funder_brief),
+      // Drives the "Needs enrichment" view — a stub brief, or none at all.
+      needsEnrichment: needsEnrichment(r.funder_brief as Record<string, unknown> | null),
       values: {
         amountMin:  r.amount_min ?? null,
         amountMax:  r.amount_max ?? null,

@@ -31,6 +31,8 @@ import { useToast } from '@/components/ui/Toast'
 import type { ReviewReason, FieldDiff } from '@/lib/admin/review-reasons'
 
 export type QueueItem = {
+  /** Brief is a stub (or absent) — drives the "Needs enrichment" view. */
+  needsEnrichment?: boolean
   id: string
   title: string
   funder: string
@@ -91,11 +93,17 @@ export function ReviewQueue({ items }: { items: QueueItem[] }) {
   //   in front of anyone, where a decision is genuinely pending.
   //   'live' is the opposite and the more urgent half — those are in front of
   //   users right now, so anything wrong with them is wrong in public.
-  const [view, setView] = useState<'all' | 'live' | 'hidden'>('all')
+  const [view, setView] = useState<'all' | 'live' | 'hidden' | 'unenriched'>('all')
 
   const live = useMemo(() => items.filter(i => !done.has(i.id)), [items, done])
 
-  const byView = view === 'all' ? live : live.filter(i => (view === 'live' ? i.isActive : !i.isActive))
+  // 'unenriched' cuts across live/hidden: a published row with a stub brief is
+  // the case that had no home before — it is not awaiting review, so it never
+  // appeared here, and the only way to enrich it was the old Grant Manager.
+  const byView =
+    view === 'all'        ? live
+    : view === 'unenriched' ? live.filter(i => i.needsEnrichment)
+    : live.filter(i => (view === 'live' ? i.isActive : !i.isActive))
 
   const counts = useMemo(() => {
     const m = new Map<string, { label: string; n: number }>()
@@ -112,6 +120,7 @@ export function ReviewQueue({ items }: { items: QueueItem[] }) {
   const shown = filter ? byView.filter(i => i.reasons.some(r => r.code === filter)) : byView
   const liveToUsers = live.filter(i => i.isActive).length
   const notLiveCount = live.length - liveToUsers
+  const unenrichedCount = live.filter(i => i.needsEnrichment).length
   const attentionCount = shown.filter(i => i.gateOutcome === 'attention').length
 
   /** Single place every write goes through, so a failure can never look like success. */
@@ -353,6 +362,11 @@ export function ReviewQueue({ items }: { items: QueueItem[] }) {
         <Chip active={view === 'all'}    onClick={() => { setView('all'); setFilter(null) }}    label="Everything"   n={live.length} />
         <Chip active={view === 'live'}   onClick={() => { setView('live'); setFilter(null) }}   label="Live to users" n={liveToUsers} />
         <Chip active={view === 'hidden'} onClick={() => { setView('hidden'); setFilter(null) }} label="Not live yet"  n={notLiveCount} />
+        {/* Cuts across the other three. A published row with a stub brief is not
+            "awaiting review", so it never appeared in this queue at all and the
+            only way to enrich it was the old Grant Manager. Use "Re-read the
+            page" on these — it runs enrich then classify, in that order. */}
+        <Chip active={view === 'unenriched'} onClick={() => { setView('unenriched'); setFilter(null) }} label="Needs enrichment" n={unenrichedCount} />
       </div>
 
       <div style={{
