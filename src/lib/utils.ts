@@ -85,6 +85,65 @@ export function formatDeadline(deadline: string | null): string {
   return format(date, 'do MMMM yyyy')
 }
 
+/**
+ * Short card label for a fund that is shut but expected back.
+ *
+ * `next_open_date` is free text and ranges from "September 2026" to 313
+ * characters of prose, so it cannot go on a card raw. Returns a compact label,
+ * or null when there is nothing to say.
+ *
+ * WHY THIS EXISTS: a row with no deadline and is_rolling=false rendered NOTHING
+ * in the card's deadline slot. Greater Manchester Mayor's Charity was published
+ * as a watch-list row on 2026-07-29, scored 81% for a Manchester homelessness
+ * charity, and sat at #2 looking entirely live — the reopening note only
+ * appeared if you opened the detail view. A closed fund with a blank timing
+ * field reads as an open one.
+ *
+ * THE PAST-DATE GUARD IS THE POINT. Several of these strings OPEN with a month
+ * that has already gone: "April–May 2026 round closed (decisions by end of
+ * July). Next round timing not yet announced". Taking the first date would
+ * print "Opens Apr 2026" on a fund whose April round is over. So a date is only
+ * used when it is genuinely in the future; otherwise the label falls back to
+ * saying the fund is closed, which is the one thing we always know.
+ */
+export function formatNextOpen(nextOpenDate: string | null | undefined): string | null {
+  const raw = (nextOpenDate ?? '').trim()
+  if (!raw) return null
+
+  const MONTHS = ['january', 'february', 'march', 'april', 'may', 'june',
+    'july', 'august', 'september', 'october', 'november', 'december']
+  const SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+  // "1 September 2026" / "September 2026"
+  const m = raw.match(new RegExp(`(?:(\\d{1,2})\\s+)?(${MONTHS.join('|')})\\s+(\\d{4})`, 'i'))
+  if (m) {
+    const day   = m[1] ? parseInt(m[1], 10) : 1
+    const month = MONTHS.indexOf(m[2].toLowerCase())
+    const year  = parseInt(m[3], 10)
+    const when  = new Date(year, month, day)
+    // Only trust it if it has not already passed — see the guard note above.
+    if (when.getTime() > Date.now()) {
+      return m[1] ? `Opens ${day} ${SHORT[month]} ${year}` : `Opens ${SHORT[month]} ${year}`
+    }
+  }
+
+  // "Not before 2027", and bare future years.
+  const notBefore = raw.match(/not before\s+(\d{4})/i)
+  if (notBefore && parseInt(notBefore[1], 10) >= new Date().getFullYear()) {
+    return `Opens ${notBefore[1]} at the earliest`
+  }
+
+  // Season without a year — "Late November / early December".
+  const season = raw.match(/\b(?:late|early|mid)[- ](january|february|march|april|may|june|july|august|september|october|november|december)/i)
+  if (season) {
+    const idx = MONTHS.indexOf(season[1].toLowerCase())
+    return `Opens around ${SHORT[idx]}`
+  }
+
+  // Nothing datable. Say the true thing rather than nothing.
+  return 'Closed — check funder'
+}
+
 export function getDeadlineAlerts(items: PipelineItem[]): DeadlineAlert[] {
   const activeStages: PipelineStage[] = ['identified', 'applying', 'submitted']
   return items

@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
-import { getDeadlineAlerts, formatCurrency } from '@/lib/utils'
+import { getDeadlineAlerts, formatCurrency, formatNextOpen } from '@/lib/utils'
 import type { PipelineItem, Organisation } from '@/types'
 import { Award, TrendingUp, Users, Rocket, GraduationCap, Gift, ArrowRight, CalendarDays, Check, Sparkles, Bookmark, ListChecks, UserPlus, FilePenLine, Lightbulb, CircleCheck } from 'lucide-react'
 import { computeMatchScore, MATCH_TIER } from '@/lib/matching'
@@ -1000,6 +1000,16 @@ export default async function DashboardPage() {
                       else txt = dueDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
                       const urgent = daysLeft <= 30
                       deadlineNode = <span style={{ color: urgent ? '#993C1D' : '#5F5E5A', fontWeight: urgent ? 600 : 400 }}>{txt}</span>
+                    }
+                  }
+                  // Closed but expected back. Without this the slot rendered
+                  // blank, and a shut fund is indistinguishable from an open one
+                  // — GM Mayor's Charity sat at #2 for a Manchester homelessness
+                  // charity looking entirely live.
+                  if (!deadlineNode) {
+                    const reopens = formatNextOpen(m.grant.nextOpenDate)
+                    if (reopens) {
+                      deadlineNode = <span style={{ color: '#8A8986' }}>{reopens}</span>
                     }
                   }
 
