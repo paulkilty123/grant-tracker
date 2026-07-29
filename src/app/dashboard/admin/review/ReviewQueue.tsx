@@ -765,6 +765,15 @@ function Row({
                     Amounts and dates were deliberately dropped.
                   </p>
                 )}
+                {item.brief.source === 'desk_research' && (
+                  <p style={{
+                    fontSize: 12.5, background: 'var(--cream)', color: 'var(--mid)',
+                    borderRadius: 'var(--radius-input)', padding: '9px 12px', margin: '0 0 9px',
+                  }}>
+                    Desk research, not a full enrichment. Priorities, typical award, exclusions
+                    and decision timeline are still missing. Re-enrich to complete it.
+                  </p>
+                )}
                 {(['who_can_apply', 'typical_award', 'eligible_structures'] as const).map(k => {
                   const c = item.brief?.citations[k]
                   if (!c) return null

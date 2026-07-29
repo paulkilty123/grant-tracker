@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { needsEnrichment } from '@/lib/funder-brief'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Sparkles, ExternalLink, RefreshCw, CheckCircle, Clock, AlertTriangle, Zap, PlusCircle, X, BookOpen, Link, Search, Pencil, Check, Brain } from 'lucide-react'
@@ -158,15 +159,15 @@ export default function FunderIntelligencePage() {
   }
 
   const enrichAll = async () => {
-    // Skip grants that already have AI-enriched text fields (what_they_fund or priorities).
-    // Grants with only 360Giving award_history data (but no AI text) should still be enriched.
-    // knowledge_fallback briefs are treated as un-enriched — they have content
-    // populated from Claude's general knowledge (not from the funder's actual page),
-    // so re-running enrichment can upgrade them to live_fetch if the URL is now reachable.
-    const hasAiContent = (fb: Record<string, unknown> | null) =>
-      fb && fb.source !== 'knowledge_fallback' &&
-      (fb.what_they_fund || fb.priorities || fb.focuses_on || fb.strong_application)
-    const unenriched = grants.filter(g => !hasAiContent(g.funder_brief as Record<string, unknown> | null) && enrichStatus[g.id] !== 'done')
+    // needsEnrichment() owns this rule — see src/lib/funder-brief.ts.
+    //
+    // The previous test was "has what_they_fund or priorities", which skipped
+    // any brief with content. That silently excluded the 27 desk-researched rows
+    // added 2026-07-29: they carry what_they_fund and who_can_apply and nothing
+    // else, so they read as enriched here while the "Grant insights" panel they
+    // feed was near-empty. 360Giving-only rows with no AI text are still caught,
+    // because they have no who_can_apply.
+    const unenriched = grants.filter(g => needsEnrichment(g.funder_brief as Record<string, unknown> | null) && enrichStatus[g.id] !== 'done')
     if (unenriched.length === 0) return
     setBulkRunning(true)
     setBulkProgress({ done: 0, total: unenriched.length })

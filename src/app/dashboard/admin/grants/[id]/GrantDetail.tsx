@@ -237,6 +237,14 @@ export function GrantDetail({ row, reasons, diffs }: {
                   everything below as unverified until a re-read succeeds.
                 </div>
               )}
+              {brief.source === 'desk_research' && (
+                <div style={{ fontSize: 12.5, background: 'var(--cream)', color: 'var(--mid)', borderRadius: 'var(--radius-input)', padding: '10px 13px', marginBottom: 12 }}>
+                  <b style={{ ...display }}>Desk research, not a full enrichment.</b>{' '}
+                  Who can apply and what they fund were read from the funder&rsquo;s page by hand.
+                  Priorities, typical award, exclusions and decision timeline are still missing.
+                  Re-enrich to complete it.
+                </div>
+              )}
               {BRIEF_FIELDS.map(([key, label]) => {
                 const v = str(brief[key])
                 if (!v) return null

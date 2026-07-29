@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { needsEnrichment } from '@/lib/funder-brief'
 import {
   RefreshCw, ExternalLink, Pencil, Check, X,
   AlertTriangle, CheckCircle, Clock, Database, Trash2, Mail, Search,
@@ -2825,12 +2826,11 @@ export default function UrlAdminPage() {
     // time. Re-running enrichment may now succeed against the live URL and
     // upgrade source='knowledge_fallback' → 'live_fetch'. Mirrors the
     // hasAiContent logic on the Intelligence page.
-    const targets = (rawData ?? []).filter(g => {
-      const fb = g.funder_brief as Record<string, unknown> | null
-      if (!fb) return true
-      if (fb.source === 'knowledge_fallback') return true
-      return !fb.who_can_apply
-    })
+    // needsEnrichment() owns this rule — see src/lib/funder-brief.ts. It used to
+    // be inlined here and in three other places, and adding a second stub kind
+    // (desk_research) meant every copy had to change or a row would read
+    // enriched on one screen and unenriched on another.
+    const targets = (rawData ?? []).filter(g => needsEnrichment(g.funder_brief as Record<string, unknown> | null))
 
     if (targets.length === 0) {
       setBulkEnrichLog([scope === 'review'

@@ -37,3 +37,45 @@ export function syncLocationFields(
     if (v === 'false') updatePayload.is_local = false
   }
 }
+
+// ── Is a brief a real enrichment, or a stub standing in for one? ──────────────
+//
+// WHY THIS IS ONE PREDICATE AND NOT FOUR INLINE CHECKS
+// "Has content but isn't really enriched" was tested in four places — the bulk
+// enrich filter on the URLs page, hasAiContent on the Intelligence page, and the
+// warning badges on GrantDetail and ReviewQueue — each with its own
+// `source === 'knowledge_fallback'` comparison. Adding a second stub kind meant
+// editing all four, and missing one meant a row that reads enriched on one
+// screen and unenriched on another. That is the drift this codebase keeps paying
+// for, so the rule lives here once.
+
+/** Brief sources that carry content but are NOT a completed enrichment. */
+export const STUB_BRIEF_SOURCES = ['knowledge_fallback', 'desk_research'] as const
+
+/**
+ * True when the row still needs a real enrichment pass.
+ *
+ * `knowledge_fallback` — the live page could not be fetched, so the model wrote
+ *   the brief from training memory. Content, but not evidence.
+ * `desk_research` — hand-written who_can_apply and what_they_fund taken from the
+ *   funder's page. Accurate as far as it goes, but three fields where a real
+ *   enrichment produces fourteen: no priorities, no typical award, no exclusions,
+ *   no decision timeline. The "Grant insights" panel reads those.
+ *
+ * Found 2026-07-29: 27 desk-researched rows were invisible to the bulk enrich
+ * queue, because its test for "unenriched" is `!brief.who_can_apply` — and
+ * who_can_apply is exactly the field desk research fills. Populating it to feed
+ * the eligibility backstop had the side effect of hiding the row from the thing
+ * that would have completed it.
+ */
+export function needsEnrichment(brief: Record<string, unknown> | null | undefined): boolean {
+  if (!brief) return true
+  if (typeof brief.source === 'string' && (STUB_BRIEF_SOURCES as readonly string[]).includes(brief.source)) return true
+  return !brief.who_can_apply
+}
+
+/** True when the brief exists but is a stub — for the UI warning badges. */
+export function isStubBrief(brief: Record<string, unknown> | null | undefined): boolean {
+  if (!brief) return false
+  return typeof brief.source === 'string' && (STUB_BRIEF_SOURCES as readonly string[]).includes(brief.source)
+}
