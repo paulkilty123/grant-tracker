@@ -100,9 +100,18 @@ async function main() {
     // produces ~14 fields; the "Grant insights" panel reads priorities,
     // typical_award, exclusions and decision_timeline, so a row without them
     // ships with that panel empty.
-    const briefFields = r.funder_brief ? Object.keys(r.funder_brief).length : 0
-    if (briefFields === 0) issues.push('BLOCK: no funder_brief at all')
-    else if (briefFields < 8) issues.push(`BLOCK: brief has only ${briefFields} fields — enrich before publishing`)
+    // COUNT CONTENT, NOT KEYS. The first version of this counted Object.keys
+    // and passed 16 rows whose sixteen fields were every one an empty string —
+    // including Edward Holt Trust, whose apply_url pointed at a form-confirmation
+    // page so the enricher had nothing to read. A key with "" in it is not a
+    // populated brief, and counting keys is how you convince yourself otherwise.
+    const brief = r.funder_brief ?? {}
+    const populated = Object.values(brief).filter(v => String(v ?? '').trim().length > 0).length
+    const core = ['who_can_apply', 'what_they_fund']
+      .filter(k => String((brief as Record<string, unknown>)[k] ?? '').trim().length > 0).length
+    if (populated === 0) issues.push('BLOCK: funder_brief is empty or absent')
+    else if (core < 2) issues.push('BLOCK: brief has no who_can_apply / what_they_fund content — the apply_url is probably the wrong page')
+    else if (populated < 8) issues.push(`BLOCK: only ${populated} brief fields have content — enrich before publishing`)
 
     const hasBlock = issues.some(i => i.startsWith('BLOCK'))
     if (hasBlock) blockers.push(`${r.funder} — ${r.title}`)

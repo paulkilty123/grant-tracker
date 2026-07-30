@@ -1828,6 +1828,30 @@ export function computeMatchScore(
     score = Math.min(score, SIZE_FLOOR_SCORE_CAP)
   }
 
+  // ── Closed funds must not outrank open ones ─────────────────────────────
+  // A fund that is shut is not a match today, however well it fits. Greater
+  // Manchester Mayor's Charity is the case: every programme closed, no
+  // reopening date, and it ranked SECOND for a Manchester homelessness charity
+  // at 74% — above funds she could actually apply to. Thematic fit was doing
+  // all the work and availability none.
+  //
+  // The signal is the same one the card shows: no deadline, not rolling, but a
+  // next_open_date recorded. That combination only exists on a row somebody
+  // deliberately catalogued as a watch-list item.
+  //
+  // Capped rather than hidden, on purpose. Knowing GM Mayor's Charity exists and
+  // funds exactly your work is genuinely useful to a Manchester homelessness
+  // charity — it just belongs below everything open, not at the top. 35 is the
+  // same cap the size floor and ceiling use: browsable in Find Funding, never
+  // presented as actionable.
+  const grantAnyClosed = grant as unknown as { nextOpenDate?: string | null }
+  const isClosedWatchListed =
+    !grant.deadline && !grant.isRolling && !!grantAnyClosed.nextOpenDate
+  if (isClosedWatchListed) {
+    score = Math.min(score, SIZE_FLOOR_SCORE_CAP)
+    reasons.push('Closed to applications — listed so you can watch for the next round')
+  }
+
   // Cap total score when the grant's niche tags overlap with the org's
   // EXPLICIT exclusion list. Devi feedback 2026-05-28: an arts org may want
   // "creative" sector but explicitly NOT music or performing arts. Hard floor
