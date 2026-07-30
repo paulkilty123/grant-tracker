@@ -9,6 +9,7 @@
 //
 // Re-fetches every URL live. Read-only.
 import { createClient } from '@supabase/supabase-js'
+import { assessPage, describeHealth } from '../src/lib/page-health'
 import { readFileSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -32,13 +33,16 @@ type Row = {
   funder_brief: Record<string, unknown> | null
 }
 
-async function probe(url: string): Promise<string> {
+async function probe(url: string): Promise<{ code: string; body: string; finalUrl: string }> {
   try {
     const r = await fetch(url, { headers: { 'User-Agent': UA, Accept: 'text/html' }, redirect: 'follow', signal: AbortSignal.timeout(20_000) })
-    return String(r.status)
+    // The body is needed, not just the status: a parked domain answers 200 on
+    // every path, so the code alone cannot tell a real site from a placeholder.
+    return { code: String(r.status), body: r.ok ? await r.text() : '', finalUrl: r.url || url }
   } catch (e) {
     const m = (e as Error).message ?? ''
-    return /ENOTFOUND|getaddrinfo/i.test(m) ? 'DNS' : /timeout|abort/i.test(m) ? 'timeout' : 'fail'
+    const code = /ENOTFOUND|getaddrinfo/i.test(m) ? 'DNS' : /timeout|abort/i.test(m) ? 'timeout' : 'fail'
+    return { code, body: '', finalUrl: url }
   }
 }
 
@@ -63,7 +67,8 @@ async function main() {
   console.log('─'.repeat(92))
 
   for (const r of rows) {
-    const code = r.apply_url ? await probe(r.apply_url) : 'NO URL'
+    const probed = r.apply_url ? await probe(r.apply_url) : { code: 'NO URL', body: '', finalUrl: '' }
+    const code = probed.code
     const issues: string[] = []
 
     // BLOCKERS — do not publish.
@@ -76,6 +81,15 @@ async function main() {
     const UNREACHABLE = ['404', '410', 'DNS', 'fail', 'timeout', '0', '500', '502', '503']
     if (!r.apply_url) issues.push('BLOCK: no apply_url')
     else if (UNREACHABLE.includes(code)) issues.push(`BLOCK: cannot reach the page (${code})`)
+    else if (code === '200') {
+      // A 200 is weaker evidence than it looks — see src/lib/page-health.ts.
+      const { health, visibleChars } = assessPage(probed.body, probed.finalUrl)
+      if (health === 'parked' || health === 'soft404' || health === 'empty') {
+        issues.push(`BLOCK: ${describeHealth(health, visibleChars)}`)
+      } else if (health === 'too_thin') {
+        issues.push(`warn: ${describeHealth(health, visibleChars)}`)
+      }
+    }
     if (r.deadline && r.deadline < today) issues.push(`BLOCK: deadline ${r.deadline} already passed`)
     if (!r.funder) issues.push('BLOCK: no funder name')
 

@@ -18,6 +18,7 @@
 // PROPOSES ONLY. Writes nothing. A heuristic reading of page text is evidence
 // for a human, not authority to republish.
 import { createClient } from '@supabase/supabase-js'
+import { assessPage, describeHealth } from '../src/lib/page-health'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -52,7 +53,7 @@ type Row = {
   source: string; deadline: string | null; pipeline_state: string
 }
 
-type Verdict = 'LIKELY OPEN' | 'OPENS LATER' | 'LIKELY CLOSED' | 'UNCLEAR' | 'SOFT 404' | 'BOT-WALLED' | 'DEAD' | 'UNREACHABLE'
+type Verdict = 'LIKELY OPEN' | 'OPENS LATER' | 'LIKELY CLOSED' | 'UNCLEAR' | 'PARKED' | 'SOFT 404' | 'BOT-WALLED' | 'DEAD' | 'UNREACHABLE'
 
 async function probe(url: string): Promise<{ code: number; body: string; note: string }> {
   try {
@@ -78,11 +79,17 @@ function classify(code: number, body: string, note: string): { verdict: Verdict;
   if ([403, 406, 429].includes(code)) return { verdict: 'BOT-WALLED', evidence: `HTTP ${code} — page is probably fine, we cannot read it` }
   if (code !== 200) return { verdict: 'UNREACHABLE', evidence: `HTTP ${code}` }
 
+  // Judge the page BEFORE reading it for open/closed language. A parked domain
+  // answers 200 on every path, so probing /grants, /apply and /funding all
+  // "succeed" against a site that does not exist — boothcharities.org passed
+  // three separate checks that way.
+  const { health, visibleChars } = assessPage(body)
+  if (health === 'parked')   return { verdict: 'PARKED',   evidence: describeHealth(health, visibleChars) }
+  if (health === 'soft404')  return { verdict: 'SOFT 404', evidence: describeHealth(health, visibleChars) }
+  if (health === 'too_thin' || health === 'empty') {
+    return { verdict: 'UNCLEAR', evidence: describeHealth(health, visibleChars) }
+  }
   const text = strip(body)
-  if (text.length < 400) return { verdict: 'UNCLEAR', evidence: `only ${text.length} chars of text — likely JS-rendered` }
-  // A 200 that is really a not-found page. Checked FIRST: such pages often also
-  // carry site-wide "how to apply" nav links that would otherwise read as open.
-  if (SOFT_404_RE.test(text.slice(0, 3000))) return { verdict: 'SOFT 404', evidence: sentenceAround(text, SOFT_404_RE) }
   const closed = CLOSED_RE.test(text)
   const open   = OPEN_RE.test(text)
   // Closed wins a tie: "applications are closed, see how to apply next year"
@@ -135,7 +142,7 @@ async function main() {
   }
 
   const by = (v: Verdict) => results.filter(r => r.verdict === v)
-  const order: Verdict[] = ['LIKELY OPEN', 'OPENS LATER', 'BOT-WALLED', 'UNCLEAR', 'LIKELY CLOSED', 'SOFT 404', 'DEAD', 'UNREACHABLE']
+  const order: Verdict[] = ['LIKELY OPEN', 'OPENS LATER', 'BOT-WALLED', 'UNCLEAR', 'LIKELY CLOSED', 'PARKED', 'SOFT 404', 'DEAD', 'UNREACHABLE']
 
   console.log(`\n${'─'.repeat(76)}`)
   for (const v of order) {
