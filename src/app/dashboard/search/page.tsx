@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { Search, ChevronDown, Layers, DollarSign, Rocket, Building2, SlidersHorizontal, MapPin, Users, GraduationCap, TrendingUp, GitMerge, Gift, Landmark, CalendarDays, RefreshCw, Bookmark, PlusCircle, Activity, Target, Star, CheckCircle2, XCircle, Lightbulb, AlertTriangle, Sparkles, ExternalLink, ClipboardList, EyeOff } from 'lucide-react'
 import { SEED_GRANTS } from '@/lib/grants'
 import { formatRange, formatNextOpen } from '@/lib/utils'
+import { SHOW_NEW_THIS_WEEK_BADGE, NEW_THIS_WEEK_DAYS } from '@/lib/ui-flags'
 import { createClient } from '@/lib/supabase/client'
 import { createPipelineItem, deletePipelineItem, updatePipelineStage } from '@/lib/pipeline'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
@@ -291,9 +292,14 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
   const isApplied    = interactions.has('applied')
 
 
-  // "New this week" badge — show if added within last 7 days
-  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-  const isNewThisWeek = !!grant.dateAdded && grant.dateAdded >= sevenDaysAgo
+  // "New this week" badge — OFF by default, behind SHOW_NEW_THIS_WEEK_BADGE.
+  // Flip NEXT_PUBLIC_SHOW_NEW_THIS_WEEK=true in Vercel to bring it back; the
+  // reasoning for defaulting it off is in src/lib/ui-flags.ts.
+  const isNewThisWeek = SHOW_NEW_THIS_WEEK_BADGE && (() => {
+    const cutoff = new Date(Date.now() - NEW_THIS_WEEK_DAYS * 24 * 60 * 60 * 1000)
+      .toISOString().split('T')[0]
+    return !!grant.dateAdded && grant.dateAdded >= cutoff
+  })()
 
   // Classify the entry so users know what they're looking at
   const entryType: 'live' | 'rolling' | 'profile' =
