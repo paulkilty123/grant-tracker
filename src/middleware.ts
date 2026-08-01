@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { retiredOriginTarget } from '@/lib/mcp-retired-origin'
 
 export async function middleware(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl
@@ -7,6 +8,20 @@ export async function middleware(request: NextRequest) {
   // ── Early exits: handle Supabase auth redirects before touching the session ──
   // These must run BEFORE supabase.auth.getUser() so a slow/failed Supabase
   // call cannot prevent the redirect from firing.
+
+  // Retired MCP origin → canonical origin. First of the early exits: a machine
+  // client calling the MCP endpoint has no session to refresh, and the redirect
+  // must hold even if Supabase is unreachable. Inert until MCP_RETIRED_HOSTS is
+  // set at cutover.
+  const retiredTarget = retiredOriginTarget(
+    request.headers.get('host'),
+    pathname,
+    request.nextUrl.search,
+  )
+  if (retiredTarget) {
+    // 308 preserves method and body, so a POSTed JSON-RPC call survives.
+    return NextResponse.redirect(retiredTarget, 308)
+  }
 
   // Supabase sometimes falls back to the Site URL (/) instead of /auth/callback.
   // Forward the code straight to the Route Handler which CAN set session cookies.

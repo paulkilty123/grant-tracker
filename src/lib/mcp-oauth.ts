@@ -196,6 +196,18 @@ export interface RegisterClientInput {
   software_version?:          string
 }
 
+/**
+ * Does a stored credential belong to the issuer currently running?
+ *
+ * NULL fails. A NULL can only arise from old code writing between the 046
+ * migration and its deploy; treating it as a match would let a credential
+ * survive a cutover it was meant to die in, and the cost of rejecting it is
+ * one re-registration. Fail closed.
+ */
+function issuerMatches(storedIssuer: string | null | undefined): boolean {
+  return storedIssuer === OAUTH_ISSUER
+}
+
 export async function countActiveClientsByIp(ip: string): Promise<number> {
   const sb = oauthServiceClient()
   const { count, error } = await sb
@@ -232,6 +244,9 @@ export async function registerClient(input: RegisterClientInput, ip: string): Pr
     registered_by_ip:           ip,
     client_secret_expires_at:   secretExpirySec ? new Date(secretExpirySec * 1000).toISOString() : null,
     expires_at:                 unusedExpiryISO,
+    // Bind the registration to the issuer minting it, so an issuer change
+    // retires it deterministically rather than silently carrying it over.
+    issuer:                     OAUTH_ISSUER,
   })
   if (error) throw new Error(`registerClient: ${error.message}`)
 
@@ -255,11 +270,17 @@ export async function getClient(clientId: string): Promise<RegisteredClient | nu
   const sb = oauthServiceClient()
   const { data, error } = await sb
     .from('oauth_clients')
-    .select('client_id, client_name, redirect_uris, grant_types, response_types, scope, token_endpoint_auth_method, software_id, software_version, client_id_issued_at, client_secret_expires_at, status')
+    .select('client_id, client_name, redirect_uris, grant_types, response_types, scope, token_endpoint_auth_method, software_id, software_version, client_id_issued_at, client_secret_expires_at, status, issuer')
     .eq('client_id', clientId)
     .maybeSingle()
   if (error) throw new Error(`getClient: ${error.message}`)
   if (!data || data.status !== 'active') return null
+  // A registration minted under a different issuer is not ours to honour.
+  // Returning null (rather than a distinct error) makes it indistinguishable
+  // from an unknown client_id, which is what it now effectively is — and the
+  // callers already handle that path correctly, bouncing the client back into
+  // registration rather than leaking that the record exists.
+  if (!issuerMatches(data.issuer)) return null
   return {
     client_id:                  data.client_id,
     client_id_issued_at:        Math.floor(new Date(data.client_id_issued_at).getTime() / 1000),
@@ -572,6 +593,9 @@ export async function issueTokens(args: {
     resource:           args.resource,
     access_expires_at,
     refresh_expires_at,
+    // Bound to the minting issuer — see issuerMatches(). A live session does
+    // not straddle a cutover.
+    issuer:             OAUTH_ISSUER,
   })
   if (error) throw new Error(`issueTokens: ${error.message}`)
   return { access_token: raw_access, refresh_token: raw_refresh, expires_in: ACCESS_TOKEN_LIFETIME_SEC, scope: args.scope }
@@ -599,7 +623,7 @@ export async function consumeRefreshToken(args: {
     .update({ revoked_at: new Date().toISOString() })
     .eq('refresh_token_hash', refresh_hash)
     .is('revoked_at', null)
-    .select('client_id, user_id, scope, resource, refresh_expires_at')
+    .select('client_id, user_id, scope, resource, refresh_expires_at, issuer')
     .maybeSingle()
 
   if (rotErr) {
@@ -607,6 +631,13 @@ export async function consumeRefreshToken(args: {
   }
   if (!rotated) {
     return { ok: false, err: { error: 'invalid_grant', description: 'Refresh token is invalid or has been revoked.' } }
+  }
+  // Issuer check sits after the rotation update, which is deliberate: the old
+  // row is already revoked by the time we get here, so a refresh token minted
+  // under a retired issuer is spent rather than left reusable. It cannot be
+  // exchanged, and it cannot be retried.
+  if (!issuerMatches(rotated.issuer)) {
+    return { ok: false, err: { error: 'invalid_grant', description: 'Refresh token was issued under a previous issuer. Re-authorise.' } }
   }
   if (rotated.refresh_expires_at && new Date(rotated.refresh_expires_at).getTime() < Date.now()) {
     return { ok: false, err: { error: 'invalid_grant', description: 'Refresh token has expired.' } }
@@ -659,12 +690,16 @@ export async function resolveAccessToken(raw: string): Promise<ResolvedAccessTok
   const hash = hashSecret(raw)
   const { data } = await sb
     .from('oauth_tokens')
-    .select('user_id, scope, resource, client_id, access_expires_at, revoked_at')
+    .select('user_id, scope, resource, client_id, access_expires_at, revoked_at, issuer')
     .eq('access_token_hash', hash)
     .maybeSingle()
   if (!data) return null
   if (data.revoked_at) return null
   if (new Date(data.access_expires_at).getTime() < Date.now()) return null
+  // Minted under a different issuer — treat exactly as an unknown token. The
+  // MCP route turns this into a 401 + WWW-Authenticate, which is precisely the
+  // signal a client needs to re-run discovery against the new issuer.
+  if (!issuerMatches(data.issuer)) return null
   // Fire-and-forget last_used_at
   sb.from('oauth_tokens')
     .update({ last_used_at: new Date().toISOString() })
