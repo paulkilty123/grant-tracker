@@ -102,6 +102,14 @@ All changes confined to `mcp-oauth.ts` per the audit:
 - [ ] The issuer change invalidates existing tokens/registrations. Acceptable:
       Paul is the only user. Verify his reconnection works post-deploy; no
       migration shims.
+- [ ] **Old-origin retirement (decided 1 Aug).** At cutover, every MCP surface
+      on granttracker.co.uk 308s to its shootsfunding equivalent — the MCP
+      endpoint itself and both `.well-known` documents. granttracker stops
+      being an MCP identity entirely rather than serving metadata that
+      declares a different resource (which would mirror the pre-cutover
+      mismatch onto the old host). Gated on the same env flip as the issuer
+      change, so identity moves in one step and there is never a window where
+      the two hosts disagree about who the resource is.
 
 ## Phase 4 — tiers, limits, and the free/paid line (Opus 5, xhigh) — diff review required
 
