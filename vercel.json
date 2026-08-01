@@ -6,6 +6,7 @@
 
     { "path": "/api/cron/reenrich-stale",          "schedule": "30 3 * * *" },
     { "path": "/api/cron/process-pipeline-queue",  "schedule": "30 7 * * *" },
+    { "path": "/api/cron/auto-publish",            "schedule": "0 9 * * *" },
 
     { "path": "/api/cron/crawl-grants?batch=1",    "schedule": "0 6 * * 1" },
     { "path": "/api/cron/crawl-grants?batch=2",    "schedule": "5 6 * * 1" },
