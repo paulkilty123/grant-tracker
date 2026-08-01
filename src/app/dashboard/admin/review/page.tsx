@@ -31,7 +31,10 @@ const QUEUE_STATES = ['captured', 'enriched', 'tagged', 'tagged_awaiting_review'
 import { needsEnrichment, STUB_BRIEF_SOURCES } from '@/lib/funder-brief'
 
 const COLS = [
-  'id', 'title', 'funder', 'apply_url', 'is_active', 'pipeline_state',
+  // external_id is what the PUBLIC grant API keys on (grants-normalise sets
+  // id = external_id ?? id), so the user-preview modal has to fetch by it to
+  // land on the same record a user would see.
+  'id', 'external_id', 'title', 'funder', 'apply_url', 'is_active', 'pipeline_state',
   'url_status', 'url_quality_score',
   'amount_min', 'amount_max', 'deadline', 'is_rolling', 'next_open_date', 'deadline_cycle',
   'eligible_structures', 'impact_sectors', 'target_beneficiaries',
@@ -99,6 +102,7 @@ export default async function ReviewPage() {
     title: string
     funder: string | null
     apply_url: string | null
+    external_id: string | null
     pipeline_state: string
     funder_brief: Record<string, unknown> | null
   }>
@@ -140,6 +144,7 @@ export default async function ReviewPage() {
       const gate    = gateDecision(r, reasons)
       return {
       id:            r.id,
+      externalId:    r.external_id ?? null,
       title:         r.title,
       funder:        r.funder ?? '',
       applyUrl:      r.apply_url ?? null,

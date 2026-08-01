@@ -28,12 +28,15 @@
 import { Fragment, useMemo, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useToast } from '@/components/ui/Toast'
+import GrantDetailModal from '@/components/GrantDetailModal'
 import type { ReviewReason, FieldDiff } from '@/lib/admin/review-reasons'
 
 export type QueueItem = {
   /** Brief is a stub (or absent) — drives the "Needs enrichment" view. */
   needsEnrichment?: boolean
   id: string
+  /** What the public grant API keys on. Null for catalogue-seeded rows, where id is used. */
+  externalId: string | null
   title: string
   funder: string
   applyUrl: string | null
@@ -95,7 +98,19 @@ export function ReviewQueue({ items }: { items: QueueItem[] }) {
   //   users right now, so anything wrong with them is wrong in public.
   const [view, setView] = useState<'all' | 'live' | 'hidden' | 'unenriched'>('all')
 
-  const live = useMemo(() => items.filter(i => !done.has(i.id)), [items, done])
+  const liveAll = useMemo(() => items.filter(i => !done.has(i.id)), [items, done])
+
+  // Search exists because the queue had no way to reach a NAMED row. Every
+  // filter here is by category — which view, which reason — so arriving with
+  // "fix the Card Factory row" meant going to Catalogue, searching, and coming
+  // back. Applied before every count below, so a chip's number always describes
+  // what clicking it would actually show, the same rule Catalogue follows.
+  const [q, setQ] = useState('')
+  const live = useMemo(() => {
+    const needle = q.trim().toLowerCase()
+    if (!needle) return liveAll
+    return liveAll.filter(i => `${i.title} ${i.funder}`.toLowerCase().includes(needle))
+  }, [liveAll, q])
 
   // 'unenriched' cuts across live/hidden: a published row with a stub brief is
   // the case that had no home before — it is not awaiting review, so it never
@@ -367,6 +382,29 @@ export function ReviewQueue({ items }: { items: QueueItem[] }) {
             only way to enrich it was the old Grant Manager. Use "Re-read the
             page" on these — it runs enrich then classify, in that order. */}
         <Chip active={view === 'unenriched'} onClick={() => { setView('unenriched'); setFilter(null) }} label="Needs enrichment" n={unenrichedCount} />
+
+        <span style={{ flex: '1 1 auto' }} />
+        <input
+          value={q}
+          onChange={e => { setQ(e.target.value); setFilter(null) }}
+          placeholder="Find a title or funder"
+          aria-label="Search the queue by title or funder"
+          style={{
+            ...display, fontSize: 13, padding: '5px 10px', minWidth: 200,
+            border: '0.5px solid var(--border-subtle)', borderRadius: 8,
+            background: 'var(--color-surface)', color: 'var(--color-text-primary)',
+          }}
+        />
+        {q.trim() !== '' && (
+          <button
+            onClick={() => setQ('')}
+            style={{
+              ...display, fontSize: 12.5, padding: '5px 9px', borderRadius: 8, cursor: 'pointer',
+              border: '0.5px solid var(--border-subtle)', background: 'transparent',
+              color: 'var(--color-text-secondary)',
+            }}
+          >Clear</button>
+        )}
       </div>
 
       <div style={{
@@ -385,9 +423,11 @@ export function ReviewQueue({ items }: { items: QueueItem[] }) {
 
       {shown.length === 0 ? (
         <p style={{ color: 'var(--color-text-secondary)', fontSize: 14 }}>
-          {live.length === 0
-            ? 'Nothing waiting. The queue is genuinely empty.'
-            : 'No rows match that filter.'}
+          {q.trim() !== '' && liveAll.length > 0
+            ? `Nothing in the queue matches “${q.trim()}”. It may be published already — Catalogue searches every row, whatever its state.`
+            : live.length === 0
+              ? 'Nothing waiting. The queue is genuinely empty.'
+              : 'No rows match that filter.'}
         </p>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
@@ -566,6 +606,7 @@ function Row({
   onReClassify: () => void
   onFixLink: () => void
 }) {
+  const [preview, setPreview] = useState(false)
   const worst = item.reasons.reduce<string>((acc, r) => {
     if (acc === 'critical' || r.severity === 'critical') return 'critical'
     if (acc === 'check' || r.severity === 'check') return 'check'
@@ -704,6 +745,13 @@ function Row({
               Open funder page
             </a>
           )}
+          {/* The genuine user-facing component against the genuine public API,
+              the same way the Grant detail page does it. Deciding "is this good
+              enough to show someone" without being able to see what they get
+              meant leaving the queue for the detail page on every row. */}
+          <button onClick={() => setPreview(true)} disabled={busy} style={secondaryBtn}>
+            See what a user sees
+          </button>
           {item.linkSharedWith > 0 && (
             <span style={{
               fontSize: 11.5, lineHeight: 1.4, color: 'var(--amber-deep)', background: 'var(--amber-pale)',
@@ -835,6 +883,15 @@ function Row({
           </div>
         )}
       </div>
+
+      {/* Keyed on external_id first: grants-normalise sets id = external_id ?? id,
+          so a scraper row fetched by its UUID would 404 against the public API. */}
+      {preview && (
+        <GrantDetailModal
+          grantId={item.externalId ?? item.id}
+          onClose={() => setPreview(false)}
+        />
+      )}
     </article>
   )
 }
