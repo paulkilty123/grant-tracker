@@ -9,12 +9,29 @@ for review before merging.
 Read-only reference: the 30 July audit (mcp-server-audit-2026-07-30.md) is the map
 for everything below. File paths and line numbers cited there.
 
-## Placeholders — confirm with Paul before phase 1
+## Placeholders — RESOLVED 2026-08-01
 
-- [ ] Final host for the new endpoint: assumed `https://www.shootsfunding.co.uk/api/mcp/v1/mcp`
-      (confirm www vs apex, and that the Vercel redirect behaves the same as on
-      granttracker.co.uk, where the www subdomain is required)
-- [ ] New contact address: assumed `hello@shootsfunding.co.uk`
+- [x] Final host: `https://www.shootsfunding.co.uk/api/mcp/v1/mcp`, **www-canonical**.
+      Verified 1 Aug: domain registered (Nominet: registrant details pending
+      validation, i.e. fresh), apex and www both resolve to Vercel, apex returns
+      **308** to `https://www.shootsfunding.co.uk/`, www serves 200. Same
+      behaviour as granttracker.co.uk — address www directly for bearer traffic,
+      since a cross-host redirect drops the `Authorization` header.
+- [x] Contact address: `hello@shootsfunding.co.uk` — **decided, not yet live.**
+      Mail is not set up as of 1 Aug. `MCP_CONTACT_EMAIL` therefore stays on
+      `hello@granttracker.co.uk` until mail works; it is a separate env var from
+      the origins precisely so the two can move independently.
+
+> **Live state note (1 Aug).** shootsfunding.co.uk is already attached to the
+> same Vercel project, so `https://www.shootsfunding.co.uk/api/mcp/v1/mcp`
+> answers *today* — but every protocol surface it returns still declares
+> granttracker.co.uk (401 `resource_metadata`, and the discovery document's
+> own `resource` field). Under RFC 9728 that is a resource-identifier mismatch:
+> a client connecting via shootsfunding discovers a resource identity of
+> granttracker. Impact is nil while the domain is unadvertised, but **do not
+> point a reviewer or test client at the shootsfunding endpoint before the
+> cutover env flip.** After the flip the mismatch mirrors onto granttracker,
+> so decide then whether that host keeps serving MCP or 308s across.
 
 ## Hard constraints — apply to every phase
 
