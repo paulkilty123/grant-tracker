@@ -69,6 +69,25 @@ export interface EventPayloads {
     channel?: string
     auth_state?: string
   }
+  /** Emitted by the MCP route once per authenticated request, BEFORE tool
+   *  dispatch — deliberately earlier than mcp_tool_called, which only fires for
+   *  calls that reach a tool handler. This server speaks the 2025-era protocol;
+   *  a 2026-07-28 client would be rejected before any tool ran, so tool-level
+   *  capture structurally cannot see one.
+   *
+   *  This is the migration-timing signal (decision 1 Aug 2026): the spec
+   *  migration stays deferred until `protocol_era` starts showing 'modern'.
+   *  Emitted only for authenticated, rate-limited callers — unauthenticated
+   *  requests 401 before the rate limiter, so capturing them would let anonymous
+   *  traffic amplify into unbounded DB writes. OAuth is protocol-agnostic, so a
+   *  modern client still lands here once it holds a token. */
+  mcp_request_received: {
+    /** Raw MCP-Protocol-Version request header, or null when absent. */
+    protocol_version: string | null
+    /** 'modern' (>= 2026-07-28) | 'legacy' (known 2024/2025 revision) | 'absent' | 'unrecognised'. */
+    protocol_era: string
+    auth_state: string
+  }
   /** Emitted by every goal-agent tool — the demand-intelligence signal: what an
    *  org asked of the strategist, from which surface (the event's surface
    *  column). Distinct from mcp_tool_called (the raw MCP JSON-RPC transport log);
@@ -207,6 +226,7 @@ export const EVENT_TYPES = [
   'pipeline_starred',
   'pipeline_stage_changed',
   'mcp_tool_called',
+  'mcp_request_received',
   'agent_tool_called',
   'agent_turn_completed',
   'mix_fallback_fired',
@@ -246,6 +266,7 @@ const REQUIRED_KEYS: Record<EventType, Record<string, Kind>> = {
   pipeline_starred:            { pipeline_item_id: 'string', starred: 'boolean' },
   pipeline_stage_changed:      { opportunity_id: 'nullable-string', pipeline_item_id: 'string', from_stage: 'string', to_stage: 'string' },
   mcp_tool_called:             { tool_name: 'string', arguments: 'object', result_count: 'nullable-number', duration_ms: 'number' },
+  mcp_request_received:        { protocol_version: 'nullable-string', protocol_era: 'string', auth_state: 'string' },
   agent_tool_called:           { tool_name: 'string', result_count: 'nullable-number', degraded: 'boolean' },
   agent_turn_completed:        { turn_kind: 'string', model: 'string', input_tokens: 'number', output_tokens: 'number', cost_estimate_microgbp: 'number', duration_ms: 'number', tool_names: 'string[]', loop_iterations: 'number' },
   mix_fallback_fired:          { categories: 'string[]', rulebook_version: 'string' },

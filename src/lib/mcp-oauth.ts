@@ -380,12 +380,24 @@ export async function validateAuthorizeRequest(input: AuthorizeRequestInput): Pr
 /**
  * Build an absolute redirect URL that carries OAuth params on the query
  * string. Preserves any pre-existing query the client put on its redirect_uri.
+ *
+ * Always stamps the RFC 9207 `iss` parameter. The spec (2026-07-28) makes this
+ * a SHOULD for authorization servers and a MUST for clients — a client that
+ * validates `iss` against its recorded issuer needs us to send it, and one that
+ * ignores it is unaffected, so this is safe to emit unconditionally. It goes on
+ * every authorization response, success and error alike, per RFC 9207 §2:
+ * an attacker-injected error bounce is exactly the mix-up case it defends.
+ *
+ * Centralised here rather than at the four call sites so no future response
+ * path can forget it. `iss` is set last and overwrites any caller-supplied
+ * value — the issuer identity is ours to assert, never a caller's to spoof.
  */
 export function buildRedirect(redirect_uri: string, params: Record<string, string | null | undefined>): string {
   const u = new URL(redirect_uri)
   for (const [k, v] of Object.entries(params)) {
     if (v != null && v !== '') u.searchParams.set(k, v)
   }
+  u.searchParams.set('iss', OAUTH_ISSUER)
   return u.toString()
 }
 

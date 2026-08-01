@@ -57,6 +57,7 @@ import {
   MCP_ATTRIBUTION, MCP_BRAND_NAME, MCP_SERVER_SLUG, MCP_CONTACT_EMAIL,
   MCP_PUBLIC_ORIGIN, MCP_APP_HOST,
 } from '@/lib/mcp-brand'
+import { classifyProtocolEra } from '@/lib/mcp-protocol-era'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -842,6 +843,21 @@ async function handle(req: NextRequest): Promise<Response> {
       headers: { 'Retry-After': String(retrySeconds) },
     })
   }
+
+  // Protocol-era capture. Placed after the rate limiter so it inherits both the
+  // auth gate and the throttle — an unauthenticated flood 401s above and never
+  // reaches here, so this cannot become a write-amplification path. Awaited but
+  // internally guarded: emitEvent never throws into the request path.
+  const protocolVersion = req.headers.get('mcp-protocol-version')
+  await emitEvent(
+    { surface: 'mcp', orgId: authCtx.orgId ?? null, userId: authCtx.oauth?.user_id ?? null },
+    'mcp_request_received',
+    {
+      protocol_version: protocolVersion,
+      protocol_era: classifyProtocolEra(protocolVersion),
+      auth_state: authCtx.state,
+    },
+  )
 
   // Resolve org + tier at the boundary — OAuth path only. API-key callers keep
   // the existing free surface with no extra query. Companion tier routes to the
