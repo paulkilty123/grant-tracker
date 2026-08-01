@@ -29,7 +29,7 @@ import { AsyncLocalStorage } from 'async_hooks'
 import { z } from 'zod'
 import { createClient } from '@supabase/supabase-js'
 import { validateMCPRequest, type MCPAuthContext } from '@/lib/mcp-middleware'
-import { enforceRateLimits, consumeFreeSearchQuota, isPaidTier } from '@/lib/mcp-rate-limit'
+import { enforceRateLimits, consumeFreeSearchQuota, isPaidTier, type SearchQuotaResult } from '@/lib/mcp-rate-limit'
 import {
   getMCPTaxonomy,
   getAllMCPTaxonomies,
@@ -521,8 +521,10 @@ function buildHandler(surface: HandlerSurface) {
         // Exhaustion is a normal tool response, not an error: the model should
         // relay it to the user as information, and an isError result would
         // instead read as a fault and invite a retry loop.
+        let freeQuota: SearchQuotaResult | null = null
         if (!isPaidTier(auth?.tier)) {
           const quota = await consumeFreeSearchQuota(freeQuotaSubject(auth))
+          freeQuota = quota
           if (!quota.allowed) {
             return {
               content: [{ type: 'text', text: JSON.stringify({
@@ -594,6 +596,21 @@ function buildHandler(surface: HandlerSurface) {
             : getUpgradeNote('search_funding_and_support', 'standard'),
           attribution: ATTRIBUTION,
           rate_limit_status: rateLimitStatusForContext(auth),
+          // Hard constraint 4: a restriction is declared, never silent. A free
+          // caller learning about the allowance only at the moment it runs out
+          // IS silent, so the remaining count rides on every free search.
+          // Omitted entirely when unenforced (no Upstash), because reporting
+          // "0 used" during a fail-open outage would be a lie.
+          ...(freeQuota?.enforced
+            ? {
+                search_quota: {
+                  searches_used: freeQuota.used,
+                  monthly_limit: freeQuota.limit,
+                  searches_remaining: Math.max(0, freeQuota.limit - freeQuota.used),
+                  resets_on: freeQuota.resets_on,
+                },
+              }
+            : {}),
         }
         if (isZero && zero_result_diagnostic) {
           body.zero_result_diagnostic = zero_result_diagnostic
