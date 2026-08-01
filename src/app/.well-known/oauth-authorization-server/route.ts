@@ -23,6 +23,10 @@ export async function GET() {
     token_endpoint_auth_methods_supported:   ['none'],
     revocation_endpoint_auth_methods_supported: ['none'],
     service_documentation:                   `${OAUTH_ISSUER}/mcp`,
+    // RFC 9207 §3. buildRedirect() stamps `iss` on every authorization
+    // response, so advertise it — a client that validates the parameter needs
+    // to know it is authoritative here rather than optional.
+    authorization_response_iss_parameter_supported: true,
   }
   return NextResponse.json(metadata, {
     headers: {

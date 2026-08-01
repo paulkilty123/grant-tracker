@@ -21,6 +21,7 @@ import {
   type ValidatedAuthorizeParams,
 } from '@/lib/mcp-oauth'
 import LogoMark from '@/components/icons/LogoMark'
+import { MCP_PUBLIC_ORIGIN } from '@/lib/mcp-brand'
 
 export const dynamic = 'force-dynamic'
 
@@ -86,7 +87,10 @@ async function decideAction(formData: FormData) {
 }
 
 function buildAuthorizeUrl(p: AuthorizeSearchParams): string {
-  const u = new URL('/oauth/authorize', 'https://www.granttracker.co.uk')
+  // Origin is only a parsing base — the return value is stripped to
+  // pathname+search below — but it reads from config so no stray literal
+  // survives a domain move.
+  const u = new URL('/oauth/authorize', MCP_PUBLIC_ORIGIN)
   for (const [k, v] of Object.entries(p)) {
     if (v != null && v !== '') u.searchParams.set(k, v)
   }
