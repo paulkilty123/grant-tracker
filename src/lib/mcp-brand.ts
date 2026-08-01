@@ -69,6 +69,41 @@ export const MCP_CONTACT_EMAIL = readString('MCP_CONTACT_EMAIL', 'hello@granttra
 /** Bare host of MCP_APP_ORIGIN, for prose such as "<host>/mcp". */
 export const MCP_APP_HOST = new URL(MCP_APP_ORIGIN).host
 
+/** Bare host of MCP_PUBLIC_ORIGIN — the canonical protocol host. */
+export const MCP_PUBLIC_HOST = new URL(MCP_PUBLIC_ORIGIN).host
+
+/**
+ * Hosts that used to carry the MCP identity and must now redirect to the
+ * canonical origin. Comma-separated hosts or origins; empty by default, so
+ * this is inert until the cutover explicitly sets it.
+ *
+ * An explicit list rather than "anything that isn't canonical" on purpose:
+ * the negative rule would also catch Vercel preview hostnames and localhost,
+ * silently redirecting every preview deployment's MCP surface to production.
+ *
+ * The canonical host is filtered out defensively — listing it would otherwise
+ * redirect the live origin to itself, which is an infinite loop that only
+ * shows up in production.
+ */
+export const MCP_RETIRED_HOSTS: ReadonlySet<string> = (() => {
+  const raw = process.env.MCP_RETIRED_HOSTS?.trim()
+  if (!raw) return new Set<string>()
+  const hosts = raw
+    .split(',')
+    .map(entry => entry.trim())
+    .filter(Boolean)
+    .map(entry => {
+      // Accept either a bare host or a full origin.
+      try {
+        return new URL(entry.includes('://') ? entry : `https://${entry}`).host
+      } catch {
+        throw new Error(`MCP_RETIRED_HOSTS contains an unparseable entry: ${JSON.stringify(entry)}`)
+      }
+    })
+    .filter(host => host !== MCP_PUBLIC_HOST)
+  return new Set(hosts)
+})()
+
 /** The MCP endpoint itself — the OAuth protected-resource identifier. */
 export const MCP_RESOURCE_URL = `${MCP_PUBLIC_ORIGIN}/api/mcp/v1/mcp`
 
