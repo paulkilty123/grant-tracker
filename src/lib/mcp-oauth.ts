@@ -13,13 +13,16 @@ import { Ratelimit } from '@upstash/ratelimit'
 import { Redis } from '@upstash/redis'
 import { createHash, randomBytes, randomUUID } from 'node:crypto'
 import { createClient } from '@supabase/supabase-js'
+import { MCP_PUBLIC_ORIGIN, MCP_RESOURCE_URL } from './mcp-brand'
 
 // ──────────────────────────────────────────────────────────────────────────
 // Constants
 // ──────────────────────────────────────────────────────────────────────────
 
-export const OAUTH_ISSUER = 'https://www.granttracker.co.uk'
-export const OAUTH_RESOURCE = 'https://www.granttracker.co.uk/api/mcp/v1/mcp'
+// Origin comes from mcp-brand (MCP_PUBLIC_ORIGIN); these two constants drive
+// both .well-known discovery documents, so a domain move flips here only.
+export const OAUTH_ISSUER = MCP_PUBLIC_ORIGIN
+export const OAUTH_RESOURCE = MCP_RESOURCE_URL
 export const OAUTH_SCOPES_SUPPORTED = ['read'] as const
 export const OAUTH_ACCESS_TOKEN_PREFIX = 'gt_oat_'
 export const OAUTH_REFRESH_TOKEN_PREFIX = 'gt_ort_'

@@ -10,6 +10,8 @@
 // (funder_tips, how_to_apply, strong_application, decision_timeline) are
 // not in any MCP-side return shape.
 
+import { MCP_APP_ORIGIN, MCP_BRAND_NAME } from './mcp-brand'
+
 // ──────────────────────────────────────────────────────────────────────────
 // Raw inputs (DB row shapes)
 // ──────────────────────────────────────────────────────────────────────────
@@ -240,7 +242,9 @@ export interface AdapterContext {
   base_url?: string
 }
 
-const DEFAULT_BASE_URL = 'https://granttracker.co.uk'
+// Identifier names below (buildGrantTrackerUrl, grant_tracker_url) are
+// wire-format and deliberately fixed; only the origin they emit is config.
+const DEFAULT_BASE_URL = MCP_APP_ORIGIN
 const DEFAULT_CAMPAIGN = 'v1_launch'
 
 function utmQuery(ctx: AdapterContext): string {
@@ -1003,7 +1007,7 @@ export function toMCPOpportunityDetail(
     metadata: {
       last_updated: row.last_seen_at ?? '',
       data_freshness: row.url_status === 'ok' ? 'verified' : 'unverified',
-      source: row.source ?? 'Grant Tracker catalogue',
+      source: row.source ?? `${MCP_BRAND_NAME} catalogue`,
     },
     links: {
       funder_url: row.apply_url ?? '',

@@ -12,6 +12,7 @@
 // that emits an empty upgrade_note).
 
 import notes from '@/config/upgrade-notes.json'
+import { applyBrandTokens } from '@/lib/mcp-brand'
 
 type RawNotes = typeof notes
 type ToolKey = keyof RawNotes['tools']
@@ -42,11 +43,16 @@ function validateOnLoad(): void {
 }
 validateOnLoad()
 
+// Brand tokens ({{brand}}, {{app_host}}, {{app_origin}}) are substituted on
+// read, so the copy in upgrade-notes.json stays brand-agnostic and a rebrand
+// remains a single env flip in lib/mcp-brand.ts.
 export function getUpgradeNote(tool: ToolKey, variant: string = 'standard'): string | null {
   const block = notes.tools[tool] as Record<string, string | null> | undefined
-  return block?.[variant] ?? null
+  const raw = block?.[variant]
+  return raw ? applyBrandTokens(raw) : null
 }
 
 export function getErrorVariantNote(variant: keyof RawNotes['error_variants']): string | null {
-  return notes.error_variants[variant] ?? null
+  const raw = notes.error_variants[variant]
+  return raw ? applyBrandTokens(raw) : null
 }

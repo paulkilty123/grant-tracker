@@ -5,6 +5,7 @@
 
 import { NextResponse } from 'next/server'
 import { OAUTH_ISSUER, OAUTH_RESOURCE, OAUTH_SCOPES_SUPPORTED } from '@/lib/mcp-oauth'
+import { MCP_BRAND_NAME } from '@/lib/mcp-brand'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,7 +14,7 @@ export async function GET() {
     resource:                OAUTH_RESOURCE,
     authorization_servers:   [OAUTH_ISSUER],
     scopes_supported:        OAUTH_SCOPES_SUPPORTED,
-    resource_name:           'Grant Tracker MCP',
+    resource_name:           `${MCP_BRAND_NAME} MCP`,
     resource_documentation:  `${OAUTH_ISSUER}/mcp`,
     bearer_methods_supported: ['header'],
   }
