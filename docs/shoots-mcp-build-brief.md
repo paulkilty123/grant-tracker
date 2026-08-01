@@ -193,6 +193,23 @@ With a fresh Claude account that has never seen the connector:
 - [ ] Older-protocol client still connects (backward compat)
 - [ ] `rg` acceptance check from phase 1 passes on the deployed build
 
+## Post-cutover cleanup (after the September flip, not before)
+
+- [ ] **Tighten `oauth_clients.issuer` / `oauth_tokens.issuer` to NOT NULL.**
+      Migration 046 left them nullable deliberately — NOT NULL would have broken
+      whichever of {schema, code} landed second on the phase 3 deploy. The
+      guarantee is held in code meanwhile (`issuerMatches()` fails on NULL).
+      Safe to tighten once a `count(*) filter (where issuer is null)` returns 0
+      on both tables and the deploy has settled. Verified 0 at apply time.
+- [ ] **Drop the retired-origin redirect once the old domain is retired for
+      real**, or keep it indefinitely if granttracker.co.uk stays registered as
+      a courtesy redirect. Decision, not a task.
+- [ ] **Phase 2 spec migration** — deferred, not cancelled. Trigger: the
+      `mcp_request_received` events showing `protocol_era = 'modern'`, or the
+      v2 package line reaching a soak we judge reasonable. Query:
+      `select payload->>'protocol_era', count(*) from events
+       where event_type = 'mcp_request_received' group by 1;`
+
 ## Explicitly out of scope for this pass
 
 CIMD migration; ChatGPT/Gemini/Perplexity testing and submissions; the app

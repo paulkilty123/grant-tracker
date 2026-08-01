@@ -48,7 +48,7 @@ import { emitEvent } from '@/lib/events/emit'
 import { getUpgradeNote, getErrorVariantNote } from '@/lib/mcp-upgrade-notes'
 import { resolveOrgAndTier } from '@/lib/mcp-entitlement'
 import {
-  addToPipeline, updatePipelineItem, getPlanState, getBriefing,
+  addToPipeline, updatePipelineItem, getPipeline, getPlanState, getBriefing,
   assessOpportunityAgainstPlan, getFundingGoal, setFundingGoal,
   recommendMix, updateGoalPurposes, PURPOSE_CATEGORIES,
   TOOL_REGISTRY, EntitlementError, AuthorshipError, SetupSurfaceError, type ToolContext,
@@ -200,12 +200,17 @@ function companionError(code: string, message: string) {
 // Build ToolContext from the request's auth store, run the tool, and serialise
 // its ToolResult (data + provenance) to MCP content. Envelope errors map to
 // generic, client-safe messages — nothing about org internals leaks.
-async function runCompanion(
+async function runAgentTool(
   run: (ctx: ToolContext) => Promise<{ tool: string; surface: string; data: unknown; provenance: unknown }>,
 ) {
   const auth = authStore.getStore()
-  if (!auth?.orgId || auth.tier !== 'companion') {
-    return companionError('forbidden', `Adviser tools require an Adviser-tier ${MCP_BRAND_NAME} account linked to this connection.`)
+  // Establishes only that we have a resolved org and tier. PER-TOOL entitlement
+  // is not decided here — it belongs to TIER_TOOLS in tools/entitlement.ts, and
+  // the defineTool envelope enforces it on every call. Duplicating the policy
+  // here is how the two copies would drift; a tool reachable on one tier and
+  // not another is expressed by which handler registers it, plus that check.
+  if (!auth?.orgId || !auth.tier) {
+    return companionError('forbidden', `This tool requires a ${MCP_BRAND_NAME} account linked to this connection.`)
   }
   const ctx: ToolContext = { orgId: auth.orgId, surface: 'mcp', tier: auth.tier, userId: auth.oauth?.user_id ?? null }
   try {
@@ -249,13 +254,58 @@ const PURPOSE_ITEM = z.object({
 
 type McpServerArg = Parameters<Parameters<typeof createMcpHandler>[0]>[0]
 
-function registerCompanionTools(server: McpServerArg) {
+// Pipeline tools — Apply tier and above. These are the three the TIER_TOOLS
+// map has always granted Apply; until now nothing registered them on a handler
+// Apply could reach, so the entitlement existed on paper only.
+function registerPipelineTools(server: McpServerArg) {
+  server.tool(
+    'get_pipeline',
+    COMPANION_DESC['get_pipeline'],
+    {},
+    { title: 'Pipeline', readOnlyHint: true },
+    async () => runAgentTool(ctx => getPipeline(ctx, {})),
+  )
+
+  server.tool(
+    'add_to_pipeline',
+    COMPANION_DESC['add_to_pipeline'],
+    {
+      grant_name:       z.string().describe('Name of the opportunity to track.'),
+      funder_name:      z.string().optional().describe('Funder / provider name.'),
+      opportunity_id:   z.string().optional().describe('Catalogue id, if this came from a search result.'),
+      stage:            STAGE.optional().describe('Pipeline stage; defaults to "identified".'),
+      amount_requested: z.number().optional().describe('Amount to request, in GBP.'),
+      deadline:         z.string().optional().describe('Application deadline, ISO date.'),
+      grant_url:        z.string().optional().describe('Funder application URL.'),
+    },
+    { title: 'Add to pipeline' },
+    async (p) => runAgentTool(ctx => addToPipeline(ctx, p)),
+  )
+
+  server.tool(
+    'update_pipeline_item',
+    COMPANION_DESC['update_pipeline_item'],
+    {
+      pipeline_item_id: z.string().describe('Id of the pipeline item to update.'),
+      stage:            STAGE.optional().describe('New stage. Moving to won/declined records the outcome.'),
+      amount_requested: z.number().optional().describe('Updated amount, in GBP.'),
+      deadline:         z.string().optional().describe('Updated deadline, ISO date.'),
+      outcome_date:     z.string().optional().describe('Date the outcome was decided, ISO date.'),
+      outcome_notes:    z.string().optional().describe('Short outcome note (a note, not application prose).'),
+    },
+    { title: 'Update pipeline item' },
+    async (p) => runAgentTool(ctx => updatePipelineItem(ctx, p)),
+  )
+}
+
+// Goal-agent tools — Adviser (companion) tier only.
+function registerGoalAgentTools(server: McpServerArg) {
   server.tool(
     'get_funding_goal',
     COMPANION_DESC['get_funding_goal'],
     {},
     { title: 'Funding goal', readOnlyHint: true },
-    async () => runCompanion(ctx => getFundingGoal(ctx, {})),
+    async () => runAgentTool(ctx => getFundingGoal(ctx, {})),
   )
 
   server.tool(
@@ -272,7 +322,7 @@ function registerCompanionTools(server: McpServerArg) {
       secured_amount: z.number().optional().describe('Override secured-to-date; omit to derive from pipeline items already won.'),
     },
     { title: 'Set funding goal' },
-    async (p) => runCompanion(ctx => setFundingGoal(ctx, p)),
+    async (p) => runAgentTool(ctx => setFundingGoal(ctx, p)),
   )
 
   server.tool(
@@ -280,7 +330,7 @@ function registerCompanionTools(server: McpServerArg) {
     COMPANION_DESC['recommend_mix'],
     { purposes: z.array(PURPOSE_ITEM).optional().describe("The purpose split to derive from (during setup, before the goal exists). Omit to use the active goal's stored purposes.") },
     { title: 'Recommend funding mix', readOnlyHint: true },
-    async (p) => runCompanion(ctx => recommendMix(ctx, p)),
+    async (p) => runAgentTool(ctx => recommendMix(ctx, p)),
   )
 
   server.tool(
@@ -298,7 +348,7 @@ function registerCompanionTools(server: McpServerArg) {
       retire: z.array(z.string()).optional().describe('purpose_ids to retire (kept as history; nothing is deleted).'),
     },
     { title: 'Update goal purposes' },
-    async (p) => runCompanion(ctx => updateGoalPurposes(ctx, p)),
+    async (p) => runAgentTool(ctx => updateGoalPurposes(ctx, p)),
   )
 
   server.tool(
@@ -306,7 +356,7 @@ function registerCompanionTools(server: McpServerArg) {
     COMPANION_DESC['get_plan_state'],
     {},
     { title: 'Plan state', readOnlyHint: true },
-    async () => runCompanion(ctx => getPlanState(ctx, {})),
+    async () => runAgentTool(ctx => getPlanState(ctx, {})),
   )
 
   server.tool(
@@ -314,7 +364,7 @@ function registerCompanionTools(server: McpServerArg) {
     COMPANION_DESC['get_briefing'],
     { since: z.string().optional().describe('Optional ISO timestamp; returns what changed in the pipeline since then.') },
     { title: 'Funding briefing', readOnlyHint: true },
-    async (p) => runCompanion(ctx => getBriefing(ctx, p)),
+    async (p) => runAgentTool(ctx => getBriefing(ctx, p)),
   )
 
   server.tool(
@@ -322,42 +372,14 @@ function registerCompanionTools(server: McpServerArg) {
     COMPANION_DESC['assess_opportunity_against_plan'],
     { opportunity_id: z.string().describe('Catalogue opportunity id (UUID or external id), e.g. from a search result.') },
     { title: 'Assess opportunity', readOnlyHint: true },
-    async (p) => runCompanion(ctx => assessOpportunityAgainstPlan(ctx, p)),
-  )
-
-  server.tool(
-    'add_to_pipeline',
-    COMPANION_DESC['add_to_pipeline'],
-    {
-      grant_name:       z.string().describe('Name of the opportunity to track.'),
-      funder_name:      z.string().optional().describe('Funder / provider name.'),
-      opportunity_id:   z.string().optional().describe('Catalogue id, if this came from a search result.'),
-      stage:            STAGE.optional().describe('Pipeline stage; defaults to "identified".'),
-      amount_requested: z.number().optional().describe('Amount to request, in GBP.'),
-      deadline:         z.string().optional().describe('Application deadline, ISO date.'),
-      grant_url:        z.string().optional().describe('Funder application URL.'),
-    },
-    { title: 'Add to pipeline' },
-    async (p) => runCompanion(ctx => addToPipeline(ctx, p)),
-  )
-
-  server.tool(
-    'update_pipeline_item',
-    COMPANION_DESC['update_pipeline_item'],
-    {
-      pipeline_item_id: z.string().describe('Id of the pipeline item to update.'),
-      stage:            STAGE.optional().describe('New stage. Moving to won/declined records the outcome.'),
-      amount_requested: z.number().optional().describe('Updated amount, in GBP.'),
-      deadline:         z.string().optional().describe('Updated deadline, ISO date.'),
-      outcome_date:     z.string().optional().describe('Date the outcome was decided, ISO date.'),
-      outcome_notes:    z.string().optional().describe('Short outcome note (a note, not application prose).'),
-    },
-    { title: 'Update pipeline item' },
-    async (p) => runCompanion(ctx => updatePipelineItem(ctx, p)),
+    async (p) => runAgentTool(ctx => assessOpportunityAgainstPlan(ctx, p)),
   )
 }
 
-function buildHandler(includeCompanion: boolean) {
+/** Which bundle of tools a handler exposes. Mirrors the tier ladder. */
+type HandlerSurface = 'free' | 'apply' | 'companion'
+
+function buildHandler(surface: HandlerSurface) {
   return createMcpHandler(
   (server) => {
     // Capture layer: intercept tool registration so every handler — current
@@ -740,9 +762,13 @@ function buildHandler(includeCompanion: boolean) {
       },
     )
 
-    // Goal-agent tools — present only on the companion handler, so free/apply
-    // and API-key callers see the exact same 5-tool list as before.
-    if (includeCompanion) registerCompanionTools(server)
+    // Tier ladder. Free keeps exactly the five catalogue tools; Apply adds the
+    // three pipeline tools; Adviser adds the goal-agent tools on top. Because
+    // tools/list is built from what each handler registers, the advertised tool
+    // list is the entitlement — a caller is never shown a tool it would be
+    // refused for calling.
+    if (surface === 'apply' || surface === 'companion') registerPipelineTools(server)
+    if (surface === 'companion') registerGoalAgentTools(server)
   },
   // Server options — mcp-handler extends the SDK's ServerOptions with serverInfo
   { serverInfo: MCP_SERVER_INFO },
@@ -751,12 +777,23 @@ function buildHandler(includeCompanion: boolean) {
   )
 }
 
-// Two handlers built once at module load. The free handler is byte-identical to
-// the previous single handler (same 5 tools, same serverInfo); the companion
-// handler adds the 7 goal-agent tools. handle() routes to one based on the
-// resolved tier, so existing (free / apply / API-key) callers are unaffected.
-const freeHandler = buildHandler(false)
-const companionHandler = buildHandler(true)
+// Three handlers built once at module load, one per rung of the tier ladder.
+// Free is unchanged: the same five catalogue tools and serverInfo it has always
+// had. Apply now adds the three pipeline tools TIER_TOOLS always granted it but
+// which no reachable handler registered. Adviser adds the goal-agent tools.
+// handle() picks one from the resolved tier.
+const freeHandler = buildHandler('free')
+const applyHandler = buildHandler('apply')
+const companionHandler = buildHandler('companion')
+
+// API-key callers have no resolved tier (tier resolution is OAuth-only), so
+// they fall through to free — unchanged behaviour, and the reason an API key
+// cannot reach a paid tool no matter who issued it.
+function handlerForTier(tier: MCPAuthContext['tier']) {
+  if (tier === 'companion') return companionHandler
+  if (tier === 'apply') return applyHandler
+  return freeHandler
+}
 
 // ──────────────────────────────────────────────────────────────────────────
 // Route handlers
@@ -868,7 +905,7 @@ async function handle(req: NextRequest): Promise<Response> {
     authCtx.orgName = resolved.orgName
     authCtx.tier = resolved.tier
   }
-  const handler = authCtx.tier === 'companion' ? companionHandler : freeHandler
+  const handler = handlerForTier(authCtx.tier)
   return authStore.run(authCtx, () => handler(req))
 }
 
