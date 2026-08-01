@@ -33,3 +33,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# MCP tier test fixture tokens — disposable credentials, never committed
+.mcp-test-fixtures.json
