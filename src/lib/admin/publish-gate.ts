@@ -83,6 +83,13 @@ const POLICY: Record<ReviewReasonCode, 'block' | 'info'> = {
   // correctly described, and cannot be won by anyone this catalogue serves.
   // Publishing it spends a user's attention on something they cannot apply for.
   applicant_not_social_sector: 'block',
+  // The structured twin of the code above. `eligible_structures = ['individual']`
+  // is the funder's own answer that no organisation can apply, so publishing it
+  // spends a user's attention on something they are structurally barred from.
+  applicant_individual_only: 'block',
+  // A deadline years out is a programme lifetime shown in the "apply by" slot.
+  // Wrong, not missing: it tells a user they have time they may not have.
+  deadline_implausible: 'block',
 
   // ── Incomplete but honest: absence renders as absence ──
   no_amount:                  'info',

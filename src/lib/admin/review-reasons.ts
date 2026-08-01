@@ -28,6 +28,27 @@ const STALE_AFTER_DAYS = 90
 /** Below this, url-validator's quality score means "probably the wrong page". */
 const URL_QUALITY_SUSPECT = 60
 
+/**
+ * Past this, a stored `deadline` is a programme end date, not a closing date.
+ *
+ * Calibrated against the live catalogue rather than picked: every row in the
+ * active-or-queued population with a deadline beyond 12 months was a programme
+ * lifetime — four BFI UK Global Screen Fund rows running to 2029, the DWP Youth
+ * Jobs Grant scheme end in 2028, Hackney's Crisis and Resilience Fund at
+ * 2029-03-31, and HS2's community fund at 2035-03-31. Eight candidates, eight
+ * genuinely wrong, no false positives. Showing one of these as "apply by" tells
+ * a user they have years when the current round may already have closed, which
+ * is wrong rather than merely incomplete, so it blocks.
+ */
+const DEADLINE_HORIZON_MONTHS = 12
+
+/** `today` plus n months, as YYYY-MM-DD. Pure, so todayISO stays injectable. */
+function horizonISO(todayISO: string, months: number): string {
+  const d = new Date(`${todayISO}T00:00:00Z`)
+  d.setUTCMonth(d.getUTCMonth() + months)
+  return d.toISOString().slice(0, 10)
+}
+
 // ── Who is this fund actually for? ───────────────────────────────────────────
 //
 // GOV.UK and UKRI publish alongside genuine community funding a large volume of
@@ -94,6 +115,8 @@ export type ReviewReasonCode =
   | 'stale_enrichment'
   | 'quarantined'
   | 'applicant_not_social_sector'
+  | 'applicant_individual_only'
+  | 'deadline_implausible'
 
 export type ReviewReason = {
   code:     ReviewReasonCode
@@ -186,7 +209,8 @@ export function publishReadiness(reasons: ReviewReason[]): number {
     codes.has('eligibility_missing') || codes.has('sectors_missing') ||
     codes.has('no_amount') || codes.has('no_deadline') ||
     codes.has('link_unverified') || codes.has('link_dead') ||
-    codes.has('deadline_passed') || codes.has('amount_zero')
+    codes.has('deadline_passed') || codes.has('deadline_implausible') ||
+    codes.has('amount_zero')
   if (needsWork) return 2
 
   return 1
@@ -300,6 +324,25 @@ export function deriveReviewReasons(row: ReviewRow, todayISO?: string): ReviewRe
     })
   }
 
+  // The structured answer to the same question, and a far better one than the
+  // prose above. `eligible_structures = ['individual']` says outright that no
+  // organisation can apply, and it was sitting unread next to a regex guessing
+  // at who_can_apply. Seven such rows cleared the gate on the 01 Aug dry run —
+  // six Arts Council of Wales artist bursaries and one community foundation
+  // row — because their wording ("Individual artists and creative
+  // professionals") contains no commercial noun and no charity noun, so
+  // COMMERCIAL_ONLY_RE could not fire and SOCIAL_SECTOR_RE could not save them.
+  //
+  // Only an exclusively-individual list blocks. ['individual','registered_charity']
+  // is a fund an organisation can win, and hiding it would be the expensive error.
+  if (row.eligible_structures?.length === 1 && row.eligible_structures[0] === 'individual') {
+    reasons.push({
+      code: 'applicant_individual_only', severity: 'critical',
+      label: 'Only individuals can apply',
+      detail: 'the only eligible structure recorded is “individual”, so no organisation using this can apply',
+    })
+  }
+
   // ── Link health ──────────────────────────────────────────────────────────
   if (row.url_status === 'dead') {
     reasons.push({
@@ -374,6 +417,12 @@ export function deriveReviewReasons(row: ReviewRow, todayISO?: string): ReviewRe
       code: 'deadline_passed', severity: 'critical',
       label: 'Deadline passed',
       detail: `closed on ${row.deadline} and no next round is recorded`,
+    })
+  } else if (row.deadline && row.deadline > horizonISO(today, DEADLINE_HORIZON_MONTHS)) {
+    reasons.push({
+      code: 'deadline_implausible', severity: 'critical',
+      label: 'Date is not an application deadline',
+      detail: `${row.deadline} is more than ${DEADLINE_HORIZON_MONTHS} months away, which is a programme end date rather than a closing date`,
     })
   } else if (!row.is_rolling && !row.deadline && !row.next_open_date) {
     reasons.push({
