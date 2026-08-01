@@ -18,6 +18,7 @@
     }
   },
   "error_variants": {
-    "rate_limit_exceeded": "This rate limit applies to MCP usage. Browsing the catalogue, saving opportunities to a pipeline, and tracking deadlines via the {{brand}} web app at {{app_host}} is uncapped and may be a useful fallback when MCP-driven workflows hit limits. Higher API tiers may be introduced as MCP usage patterns develop."
+    "rate_limit_exceeded": "This rate limit applies to MCP usage. Browsing the catalogue, saving opportunities to a pipeline, and tracking deadlines via the {{brand}} web app at {{app_host}} is uncapped and may be a useful fallback when MCP-driven workflows hit limits. Higher API tiers may be introduced as MCP usage patterns develop.",
+    "search_quota_reached": "Searching in the {{brand}} app at {{app_host}} is not capped, and a paid plan lifts the limit on this connection too. Nothing else on this connection is affected — opportunity detail, funder intelligence and the taxonomies all still work."
   }
 }
