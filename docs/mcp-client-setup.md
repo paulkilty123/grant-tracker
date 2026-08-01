@@ -1,105 +1,144 @@
-# Grant Tracker MCP — Client Setup
+# Grant Tracker MCP — client setup
 
-How to connect Claude, ChatGPT, and Gemini to the Grant Tracker MCP server.
+How to connect an MCP client to the Grant Tracker MCP server.
 
 **Server URL:** `https://www.granttracker.co.uk/api/mcp/v1/mcp`
 
-**Transport:** Streamable HTTP (JSON-RPC over POST). All five tools (`health_check`, `get_taxonomy`, `search_funding_and_support`, `get_opportunity_detail`, `get_provider_intelligence`) share this single endpoint.
+> The `www.` subdomain is required. The apex 307-redirects to `www.`, and a
+> redirect strips the `Authorization` header — so a client that follows the
+> redirect loses its credentials and sees a 401 loop. Address `www.` directly.
 
-**Authentication:** API key in `Authorization: Bearer <key>` header. Generate at https://granttracker.co.uk/mcp.
+**Transport:** Streamable HTTP, JSON-RPC over **POST**. `GET` and `DELETE`
+return 405. The server is stateless: no session is established and no
+`Mcp-Session-Id` is issued, so every POST is self-contained.
+
+**Authentication:** OAuth 2.0 with Dynamic Client Registration (RFC 7591) and
+PKCE (S256 required). There is **no anonymous access** — every unauthenticated
+request returns 401 with a `WWW-Authenticate` challenge pointing at the
+protected-resource metadata. That 401 is deliberate: it's what triggers OAuth
+discovery in connector-style clients.
+
+> Origins and brand strings are environment-driven (`src/lib/mcp-brand.ts`).
+> If the deployment's `MCP_PUBLIC_ORIGIN` / `MCP_APP_ORIGIN` differ from the
+> defaults above, substitute accordingly.
 
 ---
 
-## Quick health check (any client / curl)
+## Connecting a client
 
-Before configuring a real client, verify the server with a JSON-RPC `initialize` call:
+Most MCP clients that support remote servers with OAuth need only the server
+URL. The flow is automatic:
+
+1. Client POSTs to the server without credentials → **401** plus
+   `WWW-Authenticate: Bearer realm="grant-tracker-mcp", resource_metadata="…"`
+2. Client fetches `/.well-known/oauth-protected-resource` → learns the
+   authorization server
+3. Client fetches `/.well-known/oauth-authorization-server` → learns the
+   `registration_endpoint`, `authorization_endpoint`, `token_endpoint`
+4. Client self-registers via DCR at `/oauth/register` (public client,
+   `token_endpoint_auth_method: none`)
+5. User is sent to `/oauth/authorize`, signs in, approves the consent screen
+6. Client exchanges the authorization code (with `code_verifier`) for an
+   access token at `/oauth/token`
+7. Subsequent calls carry `Authorization: Bearer gt_oat_…`
+
+Access tokens last 1 hour; refresh tokens last 30 days and rotate on use.
+Revocation is available at `/oauth/revoke` (RFC 7009).
+
+**Redirect URIs:** any public `https` URI is accepted at registration.
+`http`, loopback, and private/link-local addresses are rejected in production.
+There is no per-vendor allowlist — the server is client-agnostic.
+
+---
+
+## Verifying the server responds
+
+The unauthenticated 401 is itself the useful health signal — it proves the
+endpoint is live and advertising OAuth correctly:
 
 ```bash
-curl -s -X POST https://www.granttracker.co.uk/api/mcp/v1/mcp \
+curl -s -i -X POST https://www.granttracker.co.uk/api/mcp/v1/mcp \
   -H "Content-Type: application/json" \
   -H "Accept: application/json, text/event-stream" \
-  -H "Authorization: Bearer gt_mcp_..." \
-  -d '{
-    "jsonrpc": "2.0",
-    "id": 1,
-    "method": "initialize",
-    "params": {
-      "protocolVersion": "2024-11-05",
-      "capabilities": {},
-      "clientInfo": { "name": "manual-test", "version": "0.1" }
-    }
-  }'
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{
+        "protocolVersion":"2025-06-18","capabilities":{},
+        "clientInfo":{"name":"manual-test","version":"0.1"}}}'
 ```
 
-Expected response: `serverInfo: { name: "grant-tracker-mcp", version: "1.0.0" }` and capabilities listing `tools: { listChanged: true }`.
+Expect `HTTP/2 401`, a `WWW-Authenticate` header naming the resource metadata
+URL, and a JSON body with `error.code: "auth_required"`.
 
----
+Both discovery documents can be fetched without credentials:
 
-## Claude Desktop
-
-Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows). Add an `mcpServers` entry:
-
-```json
-{
-  "mcpServers": {
-    "grant-tracker": {
-      "url": "https://www.granttracker.co.uk/api/mcp/v1/mcp",
-      "transport": "streamable-http",
-      "headers": {
-        "Authorization": "Bearer gt_mcp_..."
-      }
-    }
-  }
-}
+```bash
+curl -s https://www.granttracker.co.uk/.well-known/oauth-protected-resource
+curl -s https://www.granttracker.co.uk/.well-known/oauth-authorization-server
 ```
 
-Restart Claude Desktop. The five tools should appear in the tools menu (hammer icon). Quick test prompt:
-
-> *"Use the Grant Tracker MCP to find me some open grants for community work."*
-
-Claude should chain `get_taxonomy` → `search_funding_and_support` and surface results with `grant_tracker_url` links.
+With a valid token, `initialize` returns
+`serverInfo: { name: "grant-tracker-mcp", version: "1.4.0" }` and capabilities
+listing `tools: { listChanged: true }`.
 
 ---
 
-## ChatGPT Apps
+## What a connected client sees
 
-ChatGPT's MCP-app support is rolling out via the Apps directory. While that submission lands, ChatGPT users with custom GPT / Actions can wire up via OpenAPI shim or direct HTTP calls; the MCP protocol is what the directory listing will use.
+Five catalogue tools are available to every authenticated caller:
 
-For directory submission: see `https://platform.openai.com/docs/apps` for the latest schema. The relevant fields are server URL, transport (`streamable-http`), authentication scheme (`bearer`), and a short user-facing description of the tools.
+| Tool | Purpose |
+|---|---|
+| `health_check` | Server status and catalogue freshness |
+| `get_taxonomy` | Controlled vocabularies for filter values |
+| `search_funding_and_support` | Search the catalogue with structured filters |
+| `get_opportunity_detail` | Full detail on one opportunity |
+| `get_provider_intelligence` | Funder priorities and active opportunities |
+
+Accounts on the Adviser tier additionally see the goal-agent tools
+(funding goal, plan state, briefing, opportunity assessment, pipeline writes)
+when connected over OAuth. `tools/list` reflects the caller's tier.
 
 ---
 
-## Gemini
+## Rate limits
 
-Two paths:
+Enforced per credential and per IP, before any tool runs:
 
-**Gemini CLI:** configure via the CLI's MCP server registration (check `gemini --help mcp` for the current command). Pattern is the same as Claude Desktop — URL + headers.
+| Limit | Window | Cap |
+|---|---|---|
+| Per credential | 1 hour | 100 |
+| Per credential | 1 day | 1000 |
+| Per IP | 1 hour | 5000 |
 
-**API / SDK:** invoke MCP from a Gemini-powered application via the Google AI SDK's tool-use interface. Point at the same URL and pass the same headers.
-
----
-
-## Test plan (manual smoke after first connection)
-
-Once any client is connected, walk through these to confirm end-to-end works:
-
-1. **Health** — ask the agent to call `health_check`. Should return `status: "ok"` and a catalogue size around 575+.
-2. **Taxonomy** — *"What sector taxonomies does Grant Tracker use?"* — agent calls `get_taxonomy({taxonomy: "sectors"})`, surfaces 14 sectors.
-3. **Search** — *"Find me open grants for community work in Scotland."* — agent calls `search_funding_and_support({funding_type: ["grant"], sector: ["community"], region: ["scotland"]})`. Expect ≥1 result with `match_quality.signals` populated.
-4. **Drill into one** — *"Tell me more about the first result."* — agent calls `get_opportunity_detail` with the `opportunity_id` from step 3.
-5. **Funder context** — *"What else does that funder offer?"* — agent calls `get_provider_intelligence({opportunity_id: ...})`. Response should list `active_opportunities.by_type` counts.
-6. **Zero-result honesty** — *"Find mental-health programmes in Yorkshire."* — agent should return zero with `zero_result_diagnostic` and offer `adjacent_suggestions`.
-7. **Rate-limit observability** — agent's responses should all include a `rate_limit_status` field with `remaining_hour`, `remaining_day`, and `reset_at_hour`. `remaining_hour` is a sliding-window estimate and can vary by ±1 between calls; see spec §6.4.
+Responses carry `rate_limit_status` with `remaining_hour`, `remaining_day` and
+`reset_at_hour`. `remaining_hour` is a sliding-window estimate and is not
+strictly monotonic between calls — pace against `reset_at_hour`, not against
+the remaining count. See spec §6.4.
 
 ---
 
 ## Troubleshooting
 
-- **401 with `auth_required`** → API key missing or invalid. Anonymous traffic is allowed at 10/hr per IP for trial.
-- **429 with `Retry-After`** → rate-limit hit. Either wait, or use a different key. `details.which_limit` tells you which counter blocked (`key_hourly`, `key_daily`, `anon_hourly`, `ip_hourly`).
-- **Tools don't appear in the client** → confirm the client supports Streamable HTTP transport (not SSE-only). MCP SDK version 1.26+ on the client side.
-- **CORS errors on browser-based clients** → MCP isn't designed for browser-direct use; it's server-side. Use a backend proxy if calling from a browser.
-- **"Server not found"** → check the URL has `https://` and the `www.` subdomain. `granttracker.co.uk` 307-redirects to `www.`; some clients don't follow redirects on POST.
+- **401 `auth_required`** → no valid credential. There is no anonymous tier;
+  complete the OAuth flow. If a client loops on 401, check it is addressing
+  `www.` directly and not following a redirect that drops the header.
+- **429 with `Retry-After`** → rate-limited. `details.which_limit` names the
+  counter that blocked (`key_hourly`, `key_daily`, `ip_hourly`).
+- **405** → the request used `GET` or `DELETE`. Only `POST` is served.
+- **Tools don't appear** → confirm the client speaks Streamable HTTP rather
+  than the legacy HTTP+SSE transport; the `/sse` and `/message` endpoints are
+  not served.
+- **CORS errors from a browser** → MCP here is server-side only. Use a backend
+  proxy if calling from a browser context.
+
+---
+
+## Legacy bearer keys
+
+Static `gt_mcp_…` keys are still validated at the protocol layer, but the
+self-serve issuance route is orphaned (the `/mcp/keys/new` sign-in path
+dead-ends) and is not the supported way to connect. Existing keys continue to
+work and are always served the five free catalogue tools regardless of the
+owning account's tier. New integrations should use OAuth.
 
 ---
 
@@ -107,4 +146,5 @@ Once any client is connected, walk through these to confirm end-to-end works:
 
 - Full spec: [`docs/mcp-spec-v1.md`](./mcp-spec-v1.md)
 - One-page summary: [`docs/mcp-spec-v1-at-a-glance.md`](./mcp-spec-v1-at-a-glance.md)
+- Server audit (30 Jul 2026): [`docs/mcp-server-audit-2026-07-30.md`](./mcp-server-audit-2026-07-30.md)
 - ToS: [`docs/legal/mcp-tos.md`](./legal/mcp-tos.md)

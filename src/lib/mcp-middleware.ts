@@ -7,7 +7,7 @@
 // URL building. Rate-limit enforcement is wired in at step 3 (Redis); this
 // module provides the auth context that step 3 will gate on.
 
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { hashApiKey, type ApiKeyRecord } from './mcp-auth'
 import {
@@ -139,26 +139,7 @@ export async function validateMCPRequest(req: NextRequest): Promise<MCPAuthConte
   return { state: 'authenticated', key, oauth: null, ip, utm_source: key.utm_source }
 }
 
-/**
- * Standard error response for auth failures. Spec §5.4 + §6.2.
- */
-export function authRequiredResponse(state: MCPAuthState): NextResponse {
-  const messages: Record<MCPAuthState, string> = {
-    authenticated: 'No error',
-    anonymous:     'Anonymous request limit reached. Get a free API key at granttracker.co.uk/mcp to continue.',
-    invalid:       'API key not recognised. Check the value or request a new key at granttracker.co.uk/mcp.',
-    revoked:       'API key has been revoked. Contact hello@granttracker.co.uk if you believe this is in error.',
-  }
-  return NextResponse.json({
-    error: {
-      code: 'auth_required',
-      message: messages[state],
-    },
-    attribution: {
-      source: 'Grant Tracker',
-      source_url: 'https://granttracker.co.uk',
-      data_provenance: 'UK funding catalogue maintained by Grant Tracker',
-      license: 'Free to surface to end users with attribution',
-    },
-  }, { status: 401 })
-}
+// authRequiredResponse() removed 2026-08-01: it had no callers anywhere in the
+// tree (the live 401 path is unauthorisedResponse() in the MCP route), and it
+// carried a second, silently diverging copy of the attribution block and the
+// auth error copy. Deleted rather than migrated — see the 30 July audit.
