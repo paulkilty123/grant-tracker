@@ -1,8 +1,12 @@
 -- 045 — Audit trail for the auto-publish gate.
 --
--- NOT YET APPLIED TO PROD. Purely additive (one new table), no change to any
--- existing table, but it is DDL — apply deliberately, not as a deploy side
--- effect.
+-- APPLIED TO PROD. Confirmed 2026-08-01: the table exists and holds live gate
+-- decisions. This header said "NOT YET APPLIED" long after it had been, which
+-- is the wrong direction for a DDL note to be wrong in — it is what someone
+-- reads immediately before deciding to run it again.
+--
+-- Purely additive (one new table), no change to any existing table, but it is
+-- DDL — apply deliberately, not as a deploy side effect.
 --
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Why this table exists

@@ -192,6 +192,15 @@ With a fresh Claude account that has never seen the connector:
 - [ ] Disconnect, reconnect: revocation enforced, re-auth clean
 - [ ] Older-protocol client still connects (backward compat)
 - [ ] `rg` acceptance check from phase 1 passes on the deployed build
+- [ ] **The free monthly search quota's 75/76 boundary.** Carried over from
+      phase 4b, which could not verify it: Upstash credentials live only in
+      Vercel, so `consumeFreeSearchQuota` reports `enforced:false` locally and
+      allows every call. It also cannot be exercised in a single sitting,
+      because the 50/hour free ceiling caps an hour below the monthly
+      allowance — so this needs either the credentials locally or a deliberate
+      burn against production spanning two hours. Until it is checked, "75 per
+      month" is an untested promise, and it fails OPEN, so the failure mode is
+      unmetered free search rather than a blocked user.
 
 ## Post-cutover cleanup (after the September flip, not before)
 

@@ -15,7 +15,16 @@ The July audit found a pipeline that reported success while writing nothing, and
 3. **Three new admin surfaces replaced a 5,400-line, 12-tab page.** Review queue (decide), Catalogue (find anything), Grant detail (see the evidence). The old Grant Manager survives only for the jobs the new surfaces do not cover yet.
 4. **Reviewing no longer damages the machine.** Accepting a row writes only `is_active` and `pipeline_state`, neither of which is a tracked field, so nothing gets pinned to trust 100 and everything stays improvable by future AI passes.
 
-**The one thing not switched on:** the auto-publish gate is fully built, tested against prod, and inert. No cron entry, and `AUTO_PUBLISH_ENABLED` is not set in the Vercel production environment. It last ran, by hand, on 26 July.
+**Status of the gate, updated end of 1 August:** armed. Two detectors were added
+after a dry run showed roughly 16 of the 38 rows it would newly expose had a
+defect; a 5-row canary confirmed the write path; the branch is merged, the cron
+runs daily at 09:00, and `AUTO_PUBLISH_ENABLED` is set. See §5 and §10.
+
+**Platform constraint that governs all of this: the account is Vercel Hobby, not
+Pro.** Verified against the Vercel API on 1 August, both personal and team.
+Cron schedules must be daily or less frequent; a sub-daily entry fails silently
+and has previously blocked every deploy. The 25 July scope doc asserts Pro and
+builds its throughput phase on it — that phase is retracted in place.
 
 ---
 
@@ -140,6 +149,22 @@ Two rules that matter in practice:
 | `applicant_not_social_sector` | real fund, correctly described, but no one this catalogue serves can win it |
 | `tags_changed` | **only at `critical`**, meaning a re-read narrowed eligibility |
 
+Two more were added on 1 August, after dry-running the gate against the live
+queue showed that roughly 16 of the 38 rows it would newly expose had a defect:
+
+| Code | Why it blocks |
+|---|---|
+| `applicant_individual_only` | `eligible_structures` is exactly `['individual']`. The type definition in `src/types/index.ts` already made the argument: `individual` is grant-side only and every organisation in the database holds an organisational form, so such a list says no user can apply. A mixed list does not block. Six rows. |
+| `deadline_implausible` | A deadline more than 12 months out. Calibrated, not picked: all 8 rows in the active-or-queued population beyond 12 months were programme lifetimes (four BFI screen funds to 2029, DWP Youth Jobs to 2028, HS2 to 2035). Five rows. |
+
+**A third rule was specified and deliberately not built.** A flat `amount_max`
+ceiling would have blocked 35 rows, most of them correct: Triodos business loans
+at £20m, Innovate UK innovation loans at £5m, and a Heritage Fund row whose own
+title reads "£250,000 to £10million". A threshold cannot separate a whole-pot
+figure from a genuinely large fund; grounding evidence can, which is what
+`amount_ungrounded` already does. The cost of declining is that pot-as-max
+errors still need a better detector.
+
 **Informational (10)** — incomplete but honest, absence renders as absence:
 `no_amount`, `no_deadline`, `sectors_missing`, `beneficiaries_generic_only`, `amount_zero`, `amount_under_stated`, `multi_round_uncaptured`, `link_unverified`, `stale_dates`, `stale_enrichment`.
 
@@ -157,11 +182,23 @@ blocking && not visible      → hold
 
 The third outcome exists because most of the queue was already live to users, so "hold" protected nobody. And of the live-and-blocking rows, most block because a re-read *narrowed* eligibility: narrowing hides a fund from some orgs, deactivating hides it from all. Retraction would be the bigger error.
 
-### Status: built, proven, not switched on
+### Status: armed, 1 August
 
-- `AUTO_PUBLISH_ENABLED` is **not set** in Vercel production. Default is dry run.
-- **No `vercel.json` cron entry.** Even if armed, nothing would call it.
+- `AUTO_PUBLISH_ENABLED=true` in Vercel production.
+- Cron entry `{ "path": "/api/cron/auto-publish", "schedule": "0 9 * * *" }` — daily 09:00 UTC, 90 minutes after `process-pipeline-queue`, so a row enriched that morning is gated the same day. Daily because the account is Hobby.
 - Writes as `system:auto_publish` (trust 50), never `admin:`, so auto-published rows stay improvable.
+
+**Canary, 1 August.** `?apply=true&limit=5` against production. The route sorts
+already-live rows first specifically so a capped run exercises the merger, the
+trust ladder, the state transition and RLS while changing nothing a user sees.
+Result: `written: 5`, `failed: []`, `publish_gate_decisions.applied` 76 → 81,
+all five `was_live`, `rejected_fields` empty on all five, and `live_to_users`
+736 before and 736 after.
+
+**Split at the point of arming** (queue 130, after the detector work and five
+hand-fixes): publish 58 (28 newly visible, 30 already live), attention 32,
+hold 40. Hold is led by `eligibility_missing` (15), `link_dead` (8),
+`applicant_individual_only` (6) and `deadline_implausible` (5).
 - **Verify a run** with `pipeline_state='published'` plus `publish_gate_decisions.applied`. Do *not* grep `field_provenance` for `system:auto_publish`: the gate writes only `is_active`, which is untracked, so it stamps nothing there and a working run looks like a silent failure.
 
 > Doc drift: `supabase/migrations/045_publish_gate_decisions.sql` still says "NOT YET APPLIED TO PROD" in its header. It **is** applied; the table holds 864 rows. Worth correcting so nobody re-applies it.
@@ -178,6 +215,8 @@ The decide surface. Loads the four queue states plus a second feed of published-
 
 - **Views:** `Everything` / `Live to users` / `Not live yet` / `Needs enrichment`, each counted.
 - **Why held:** a second chip row, one chip per reason code present, counted.
+- **Search** (added 1 August): every other filter here is by category, so reaching a *named* row meant going to Catalogue and back. Applied before every count, so a chip's number still describes what clicking it would show. An empty result says the row may be published already and points at Catalogue, rather than implying it does not exist.
+- **See what a user sees** (added 1 August): mounts the same real public modal against the same real public API the Grant detail page uses, keyed on `external_id ?? id`. Deciding "is this good enough to show someone" previously meant opening the detail page for every row.
 - **Banner:** states plainly how many of the rows are already visible to users, so you know whether you are revealing something or confirming it.
 - **Bands:** "Live to users, and wrong" first, then "Not visible to users", each sorted closest-to-finished first.
 - **Every row carries one sentence and the button that answers it.** For example a dead link reads "The application link is dead, so anyone who clicks through lands on nothing", with a `Fix the link` button. The primary button says "Looks right, keep it live" when the row is already live and "Looks right, publish it" when it is not.
@@ -224,7 +263,7 @@ Also in the nav: Grant Health (per-source crawl health, thresholds recalibrated 
 
 **Decisions for Paul:**
 
-1. **Arm the publish gate.** Set `AUTO_PUBLISH_ENABLED=true` and add a `vercel.json` cron entry. Canary first with `?apply=true&limit=N`: the gate sorts already-live rows first, so a small run exercises the write path without changing anything a user sees. It has not been run since 26 July, so the first useful step is a dry run against the current 133-row queue to see the publish/attention/hold split today.
+1. ~~**Arm the publish gate.**~~ **Done 1 August.** See §5.
 2. **The 137-row dead zone.** `published` and `is_active=false`: invisible to users *and* to every admin queue, reachable only by SQL. It was 112 in July, so it is still growing. The backfill was scoped but never run.
 3. **The 9 mirror rows:** `archived` and `is_active=true`, live to users while flagged archived.
 4. **376 rows still carry a pin.** The cause is fixed but the artefacts block AI improvement on those fields. Needs a decision on whether to strip non-reviewed pins in bulk.
@@ -235,11 +274,23 @@ Also in the nav: Grant Health (per-source crawl health, thresholds recalibrated 
 - `pipeline_state` values `enriched` and `between_rounds_scheduled` are never written by any code path, yet `enriched` appears in every queue predicate.
 - `ADMIN_SECRET` and `CRON_SECRET` hold the same value, which makes the "manual admin trigger bypasses the cron gate" branch unreachable for bearer callers. `auto-publish` and `discover-sweep` work around it with a query-string discriminator.
 
-**Doc drift to correct:**
+**Doc drift — corrected 1 August:**
 
-- Migration 045's "NOT YET APPLIED TO PROD" header (it is applied).
+- ~~Migration 045's "NOT YET APPLIED TO PROD" header~~ — fixed; it is applied and the header now says so.
+- ~~`CLAUDE.md` pricing~~ — fixed to Match £12/month, Apply £18/month, monthly and annual billing only. The old "£65/6 months, £115/year" was stale, and there is no 6-month term.
+- ~~The scope doc's "you are on Pro"~~ — retracted in place, along with its `*/10` recommendation.
+
+**Doc drift still open:**
+
 - `CLAUDE.md` still says `scraped_grants` is ~300 rows (1,802) and that 360Giving import is deferred post-beta (it shipped).
 - Header comments in `validate-urls` ("every Monday") and `check-watchlist` ("every Wednesday") disagree with `vercel.json` (both Sun + Wed).
+
+**Still wrong in the queue, known and unfixed** (the gate does not catch these,
+and they are the honest residue of the 1 August pass):
+
+- Pot-as-max amounts with no grounding evidence, e.g. a £3.62m and a £7m figure both since fixed by hand, but the class remains undetected.
+- `COMMERCIAL_ONLY_RE` reads prose and needs wording like "businesses **only**", so "Employers operating in Great Britain" and "UK sales agents" slip through.
+- Nothing cross-checks the brief against the tags. One row's brief said "CICs cannot lead applications" while its tags listed both CIC types as eligible.
 
 ---
 

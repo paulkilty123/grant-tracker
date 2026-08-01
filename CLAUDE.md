@@ -6,7 +6,13 @@ Next.js 14 App Router + Supabase + Tailwind CSS, deployed on Vercel via GitHub a
 - **Live site:** https://granttracker.co.uk/
 - **Repo:** https://github.com/paulkilty123/grant-tracker
 - **Supabase project ID:** yrndczlqjqtfgissleev
-- **Pricing:** £65/6 months, £115/year (beta: invitation-only)
+- **Pricing:** Match £12/month, Apply £18/month. Monthly and annual billing only.
+  (The old "£65/6 months, £115/year" was stale — there is no 6-month term. Phase 5
+  MCP upgrade copy should quote these figures.)
+- **Vercel plan: Hobby.** Verified against the Vercel API 2026-08-01, both the
+  personal account and the team. Cron schedules must be **daily or less
+  frequent** — a sub-daily entry fails silently and has previously blocked every
+  deploy. Do not add `*/N` cron schedules.
 
 ---
 
