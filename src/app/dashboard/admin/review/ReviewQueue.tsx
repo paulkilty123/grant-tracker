@@ -34,6 +34,10 @@ import type { ReviewReason, FieldDiff } from '@/lib/admin/review-reasons'
 export type QueueItem = {
   /** Brief is a stub (or absent) — drives the "Needs enrichment" view. */
   needsEnrichment?: boolean
+  /** ISO timestamp the auto-publish gate published this, if it did, within 7 days. */
+  autoPublishedAt?: string | null
+  /** True when the gate's decision exposed it, rather than confirming what was already live. */
+  autoPublishNewlyVisible?: boolean
   id: string
   /** What the public grant API keys on. Null for catalogue-seeded rows, where id is used. */
   externalId: string | null
@@ -96,7 +100,10 @@ export function ReviewQueue({ items }: { items: QueueItem[] }) {
   //   in front of anyone, where a decision is genuinely pending.
   //   'live' is the opposite and the more urgent half — those are in front of
   //   users right now, so anything wrong with them is wrong in public.
-  const [view, setView] = useState<'all' | 'live' | 'hidden' | 'unenriched'>('all')
+  //   'autopublished' is the odd one out: not work, but the record of what the
+  //   gate did without asking. Those rows are published and live, so they are
+  //   in none of the queue states and disappear from every other view here.
+  const [view, setView] = useState<'all' | 'live' | 'hidden' | 'unenriched' | 'autopublished'>('all')
 
   const liveAll = useMemo(() => items.filter(i => !done.has(i.id)), [items, done])
 
@@ -112,13 +119,28 @@ export function ReviewQueue({ items }: { items: QueueItem[] }) {
     return liveAll.filter(i => `${i.title} ${i.funder}`.toLowerCase().includes(needle))
   }, [liveAll, q])
 
+  // Gate-published rows are a receipt, not a task, so they are held out of the
+  // working views entirely. Counting them under "Everything" would inflate the
+  // queue with rows that need nothing.
+  const pending = useMemo(() => live.filter(i => !i.autoPublishedAt), [live])
+  const autoPub = useMemo(
+    () => live.filter(i => i.autoPublishedAt)
+      // Newly-exposed first: those are the ones where the gate changed what a
+      // user can see, rather than catching admin state up to what was already live.
+      .sort((a, b) =>
+        Number(b.autoPublishNewlyVisible) - Number(a.autoPublishNewlyVisible) ||
+        String(b.autoPublishedAt).localeCompare(String(a.autoPublishedAt))),
+    [live],
+  )
+
   // 'unenriched' cuts across live/hidden: a published row with a stub brief is
   // the case that had no home before — it is not awaiting review, so it never
   // appeared here, and the only way to enrich it was the old Grant Manager.
   const byView =
-    view === 'all'        ? live
-    : view === 'unenriched' ? live.filter(i => i.needsEnrichment)
-    : live.filter(i => (view === 'live' ? i.isActive : !i.isActive))
+    view === 'autopublished' ? autoPub
+    : view === 'all'        ? pending
+    : view === 'unenriched' ? pending.filter(i => i.needsEnrichment)
+    : pending.filter(i => (view === 'live' ? i.isActive : !i.isActive))
 
   const counts = useMemo(() => {
     const m = new Map<string, { label: string; n: number }>()
@@ -133,9 +155,11 @@ export function ReviewQueue({ items }: { items: QueueItem[] }) {
   }, [byView])
 
   const shown = filter ? byView.filter(i => i.reasons.some(r => r.code === filter)) : byView
-  const liveToUsers = live.filter(i => i.isActive).length
-  const notLiveCount = live.length - liveToUsers
-  const unenrichedCount = live.filter(i => i.needsEnrichment).length
+  const liveToUsers = pending.filter(i => i.isActive).length
+  const notLiveCount = pending.length - liveToUsers
+  const unenrichedCount = pending.filter(i => i.needsEnrichment).length
+  const autoPubCount = autoPub.length
+  const autoPubNewCount = autoPub.filter(i => i.autoPublishNewlyVisible).length
   const attentionCount = shown.filter(i => i.gateOutcome === 'attention').length
 
   /** Single place every write goes through, so a failure can never look like success. */
@@ -336,7 +360,7 @@ export function ReviewQueue({ items }: { items: QueueItem[] }) {
           visible to users while its query never filtered on that. */}
       {/* Hidden only when you are looking at rows nobody can see — telling you
           how many are visible while you filter to the invisible ones is noise. */}
-      {liveToUsers > 0 && view !== 'hidden' && (
+      {liveToUsers > 0 && view !== 'hidden' && view !== 'autopublished' && (
         <div style={{
           display: 'flex', gap: 11, alignItems: 'flex-start',
           background: 'var(--coral-pale)', color: 'var(--coral-deep)',
@@ -346,7 +370,7 @@ export function ReviewQueue({ items }: { items: QueueItem[] }) {
           <span style={{ ...display, fontWeight: 700 }}>!</span>
           <span>
             <strong style={{ ...display, fontWeight: 700 }}>
-              {liveToUsers} of these {live.length} are already visible to users.
+              {liveToUsers} of these {pending.length} are already visible to users.
             </strong>{' '}
             Publishing confirms what people can see rather than revealing it for the first time.
             {attentionCount > 0 && (
@@ -364,6 +388,35 @@ export function ReviewQueue({ items }: { items: QueueItem[] }) {
         </div>
       )}
 
+      {/* The receipt view says plainly which of these the gate EXPOSED, because
+          that is the only number here with a user-visible consequence. */}
+      {view === 'autopublished' && (
+        <div style={{
+          display: 'flex', gap: 11, alignItems: 'flex-start',
+          background: 'var(--color-surface-sunken, var(--pale-green, #F1F7E4))',
+          color: 'var(--color-text-primary)',
+          borderRadius: 'var(--radius-card)', padding: '13px 16px',
+          marginBottom: 22, fontSize: 13, lineHeight: 1.45,
+        }}>
+          <span>
+            {autoPubCount === 0 ? (
+              <>The gate has published nothing in the last 7 days. That is a real answer, not a
+              missing feature: it publishes only rows carrying no blocking reason.</>
+            ) : (
+              <>
+                <strong style={{ ...display, fontWeight: 700 }}>
+                  The gate published {autoPubCount} {autoPubCount === 1 ? 'row' : 'rows'} in the
+                  last 7 days, {autoPubNewCount} of which nobody could see before.
+                </strong>{' '}
+                Those {autoPubNewCount === 1 ? 'is' : 'are'} listed first. The rest were already
+                live and the gate only brought their recorded state up to date, so they changed
+                nothing for users. Everything here can still be corrected or hidden from the row.
+              </>
+            )}
+          </span>
+        </div>
+      )}
+
       {/* Whether users can see it, chosen first — it changes what the reason
           counts below even mean. "Not live yet" is the old Needs Review. */}
       <div style={{
@@ -374,7 +427,7 @@ export function ReviewQueue({ items }: { items: QueueItem[] }) {
           ...display, fontSize: 10.5, fontWeight: 500, letterSpacing: '0.08em',
           textTransform: 'uppercase', color: 'var(--color-text-tertiary)', marginRight: 2,
         }}>Show</span>
-        <Chip active={view === 'all'}    onClick={() => { setView('all'); setFilter(null) }}    label="Everything"   n={live.length} />
+        <Chip active={view === 'all'}    onClick={() => { setView('all'); setFilter(null) }}    label="Everything"   n={pending.length} />
         <Chip active={view === 'live'}   onClick={() => { setView('live'); setFilter(null) }}   label="Live to users" n={liveToUsers} />
         <Chip active={view === 'hidden'} onClick={() => { setView('hidden'); setFilter(null) }} label="Not live yet"  n={notLiveCount} />
         {/* Cuts across the other three. A published row with a stub brief is not
@@ -382,6 +435,10 @@ export function ReviewQueue({ items }: { items: QueueItem[] }) {
             only way to enrich it was the old Grant Manager. Use "Re-read the
             page" on these — it runs enrich then classify, in that order. */}
         <Chip active={view === 'unenriched'} onClick={() => { setView('unenriched'); setFilter(null) }} label="Needs enrichment" n={unenrichedCount} />
+        {/* The record of what ran without you. Zero is a legitimate answer, so
+            the chip stays visible at zero rather than vanishing — an absent chip
+            reads as "not built", which is how the gate stayed invisible before. */}
+        <Chip active={view === 'autopublished'} onClick={() => { setView('autopublished'); setFilter(null) }} label="Published without you" n={autoPubCount} />
 
         <span style={{ flex: '1 1 auto' }} />
         <input
@@ -407,27 +464,34 @@ export function ReviewQueue({ items }: { items: QueueItem[] }) {
         )}
       </div>
 
-      <div style={{
-        display: 'flex', flexWrap: 'wrap', gap: 7, alignItems: 'center',
-        paddingBottom: 12, borderBottom: '0.5px solid var(--border-subtle)', marginBottom: 16,
-      }}>
-        <span style={{
-          ...display, fontSize: 10.5, fontWeight: 500, letterSpacing: '0.08em',
-          textTransform: 'uppercase', color: 'var(--color-text-tertiary)', marginRight: 2,
-        }}>Why held</span>
-        <Chip active={filter === null} onClick={() => setFilter(null)} label="All" n={byView.length} />
-        {counts.map(([code, { label, n }]) => (
-          <Chip key={code} active={filter === code} onClick={() => setFilter(code)} label={label} n={n} />
-        ))}
-      </div>
+      {/* "Why held" is a question about work. Nothing in the receipt view is
+          held — the gate published it precisely because nothing blocked it —
+          so the row would read as an empty or misleading filter. */}
+      {view !== 'autopublished' && (
+        <div style={{
+          display: 'flex', flexWrap: 'wrap', gap: 7, alignItems: 'center',
+          paddingBottom: 12, borderBottom: '0.5px solid var(--border-subtle)', marginBottom: 16,
+        }}>
+          <span style={{
+            ...display, fontSize: 10.5, fontWeight: 500, letterSpacing: '0.08em',
+            textTransform: 'uppercase', color: 'var(--color-text-tertiary)', marginRight: 2,
+          }}>Why held</span>
+          <Chip active={filter === null} onClick={() => setFilter(null)} label="All" n={byView.length} />
+          {counts.map(([code, { label, n }]) => (
+            <Chip key={code} active={filter === code} onClick={() => setFilter(code)} label={label} n={n} />
+          ))}
+        </div>
+      )}
 
       {shown.length === 0 ? (
         <p style={{ color: 'var(--color-text-secondary)', fontSize: 14 }}>
           {q.trim() !== '' && liveAll.length > 0
             ? `Nothing in the queue matches “${q.trim()}”. It may be published already — Catalogue searches every row, whatever its state.`
-            : live.length === 0
-              ? 'Nothing waiting. The queue is genuinely empty.'
-              : 'No rows match that filter.'}
+            : view === 'autopublished'
+              ? 'The gate has published nothing in the last 7 days.'
+              : pending.length === 0
+                ? 'Nothing waiting. The queue is genuinely empty.'
+                : 'No rows match that filter.'}
         </p>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
@@ -437,16 +501,31 @@ export function ReviewQueue({ items }: { items: QueueItem[] }) {
                   than as a count in a corner. The first band is live and wrong;
                   everything after it is invisible to users, so the cost of
                   leaving it is a delay rather than a person misled. */}
-              {i === 0 && item.gateOutcome === 'attention' && (
+              {view !== 'autopublished' && i === 0 && item.gateOutcome === 'attention' && (
                 <BandHeading
                   label="Live to users, and wrong"
                   detail="People can see these now. Fixing one changes what they see today."
                 />
               )}
-              {i > 0 && shown[i - 1].gateOutcome === 'attention' && item.gateOutcome !== 'attention' && (
+              {view !== 'autopublished' && i > 0 && shown[i - 1].gateOutcome === 'attention' && item.gateOutcome !== 'attention' && (
                 <BandHeading
                   label="Not visible to users"
                   detail="Nobody can see these yet, so nothing here is misleading anyone. Closest to finished first."
+                />
+              )}
+              {/* The receipt view splits on the only distinction that matters
+                  there: did this change what a user can see, or not. */}
+              {view === 'autopublished' && i === 0 && item.autoPublishNewlyVisible && (
+                <BandHeading
+                  label="Newly visible — nobody could see these before"
+                  detail="The gate exposed these. If one is wrong, it is wrong in public now."
+                />
+              )}
+              {view === 'autopublished' && item.autoPublishNewlyVisible !== true &&
+               (i === 0 || shown[i - 1].autoPublishNewlyVisible === true) && (
+                <BandHeading
+                  label="Already live — state caught up only"
+                  detail="These were visible before the gate ran. Nothing changed for users."
                 />
               )}
               <Row
@@ -643,6 +722,11 @@ function Row({
             </a>
             <div style={{ color: 'var(--color-text-secondary)', fontSize: 12.5 }}>{item.funder}</div>
           </div>
+          {item.autoPublishedAt && (
+            <Pill bg="var(--bg-pill-neutral)" ink="var(--color-text-secondary)">
+              Gate published {new Date(item.autoPublishedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+            </Pill>
+          )}
           {item.isActive
             ? <Pill bg="var(--coral-pale)" ink="var(--coral-deep)">Live to users</Pill>
             : <Pill bg="var(--bg-pill-neutral)" ink="var(--color-text-secondary)">Not live</Pill>}

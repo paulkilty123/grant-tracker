@@ -105,7 +105,22 @@ export async function GET(req: NextRequest) {
   // two secrets match. This route therefore does not rely on the distinction.
   const wantsApply = req.nextUrl.searchParams.get('apply') === 'true'
   const armed      = process.env.AUTO_PUBLISH_ENABLED === 'true'
-  const dryRun     = !(wantsApply || armed)
+
+  // `?dryRun=true` forces a dry run, and OVERRIDES both of the above.
+  //
+  // Until this existed there was no way to ask an armed production route what
+  // it would do. Once AUTO_PUBLISH_ENABLED is set, `armed` alone makes dryRun
+  // false, so every call — including a bare parameterless GET — publishes. That
+  // left the only safe verification at the deployment level (is the env var
+  // present, is the cron registered) and made "what would run tonight?"
+  // unanswerable without running it. A gate whose behaviour cannot be inspected
+  // without triggering it is the same class of problem as a cron that reports
+  // success while writing nothing: the state is unobservable.
+  //
+  // Deliberately wins over `?apply=true` as well. If a caller sends both, the
+  // contradictory request resolves to the harmless reading.
+  const forcedDryRun = req.nextUrl.searchParams.get('dryRun') === 'true'
+  const dryRun       = forcedDryRun || !(wantsApply || armed)
 
   // Canary cap: apply at most N publishes this run.
   //

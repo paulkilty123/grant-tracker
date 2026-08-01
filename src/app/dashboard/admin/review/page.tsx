@@ -71,6 +71,39 @@ export default async function ReviewPage() {
     .order('last_seen_at', { ascending: false })
     .limit(300)
 
+  // WHAT THE GATE PUBLISHED WITHOUT YOU, last 7 days.
+  //
+  // These rows are `published` + `is_active`, so they are in none of the queue
+  // states and drop out of this page entirely the moment the gate flips them.
+  // Nothing else finds them either: Grant Manager's "Recently activated" keys
+  // on `first_seen_at`, which is when a row was first SCRAPED, so a row first
+  // seen months ago and published this morning does not appear there. Catalogue
+  // shows them shuffled in with every other live row.
+  //
+  // So the gate was writing a full decision record — outcome, blocking codes,
+  // was_live, applied — that nothing rendered. That is the same failure this
+  // whole surface exists to fix, arriving one step later, at publish instead of
+  // at review.
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+  const { data: gateRows } = await db
+    .from('publish_gate_decisions')
+    .select('grant_id, decided_at, was_live')
+    .eq('applied', true)
+    .gte('decided_at', sevenDaysAgo)
+    .order('decided_at', { ascending: false })
+    .limit(300)
+
+  const gatePublishedAt = new Map<string, { at: string; wasLive: boolean }>()
+  for (const r of (gateRows ?? []) as { grant_id: string; decided_at: string; was_live: boolean }[]) {
+    // Keep the most recent decision per grant; the query is already sorted.
+    if (!gatePublishedAt.has(r.grant_id)) gatePublishedAt.set(r.grant_id, { at: r.decided_at, wasLive: r.was_live })
+  }
+
+  const gateIds = Array.from(gatePublishedAt.keys())
+  const { data: gateGrants } = gateIds.length
+    ? await db.from('scraped_grants').select(COLS).in('id', gateIds)
+    : { data: [] as unknown[] }
+
   // A failed query must never render as an empty queue. The old page
   // destructured the error away and showed "No grants pending review — all
   // clear!" when it had simply failed to read the queue.
@@ -131,9 +164,17 @@ export default async function ReviewPage() {
   }
 
   // Merge, de-duplicating by id in case a state ever overlaps.
+  //
+  // Gate-published rows come LAST on purpose. If a row the gate published has
+  // since come back into the queue — reenrich-stale flips a changed row to
+  // tagged_awaiting_review — then it needs a decision more than it needs a
+  // receipt, so the queue copy wins and it shows as work rather than as record.
   const seenIds = new Set<string>()
-  const allRows = [...rows, ...((stubData ?? []) as unknown as typeof rows)]
-    .filter(r => { if (seenIds.has(r.id)) return false; seenIds.add(r.id); return true })
+  const allRows = [
+    ...rows,
+    ...((stubData ?? []) as unknown as typeof rows),
+    ...((gateGrants ?? []) as unknown as typeof rows),
+  ].filter(r => { if (seenIds.has(r.id)) return false; seenIds.add(r.id); return true })
 
   const items: QueueItem[] = allRows
     .map(r => {
@@ -161,6 +202,18 @@ export default async function ReviewPage() {
       brief:         summariseBrief(r.funder_brief),
       // Drives the "Needs enrichment" view — a stub brief, or none at all.
       needsEnrichment: needsEnrichment(r.funder_brief as Record<string, unknown> | null),
+      // Set only for rows the gate itself published in the last 7 days, and
+      // only when they are not also back in the queue for another reason.
+      // `gatePublishedAt` is empty for every row the gate did not publish, so it
+      // is the discriminator. The state test is what demotes a gate-published
+      // row that has since come BACK into the queue: it is work again, not a
+      // receipt, and it should appear in the working views rather than here.
+      autoPublishedAt: QUEUE_STATES.includes(r.pipeline_state)
+        ? null
+        : gatePublishedAt.get(r.id)?.at ?? null,
+      /** Was it invisible before the gate published it? Distinguishes a genuine
+       *  exposure from the gate merely catching admin state up to reality. */
+      autoPublishNewlyVisible: gatePublishedAt.get(r.id)?.wasLive === false,
       values: {
         amountMin:  r.amount_min ?? null,
         amountMax:  r.amount_max ?? null,
