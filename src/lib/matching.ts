@@ -1540,17 +1540,39 @@ export function computeMatchScore(
   // 165 already-tagged rows above 458 identical-quality untagged ones.
   const spendPrefsRaw = org.spend_restriction_preferences ?? []
   const spendPrefs = spendPrefsRaw.length === SPEND_RESTRICTION_VALUES.length ? [] : spendPrefsRaw
-  if (grant.spendRestriction && spendPrefs.length > 0) {
-    if (spendPrefs.includes(grant.spendRestriction)) {
+
+  // Translate the org's stated need into the grant's two fields.
+  //
+  //   capital       does this fund cover capital costs at all?
+  //   restricted    revenue money tied to a project
+  //   unrestricted  revenue money they can spend as they see fit
+  //
+  // A fund that covers BOTH capital and revenue satisfies a capital need and a
+  // revenue need simultaneously — which is the whole reason spend_types is an
+  // array. 57 of 623 live grants are in that position, and the previous
+  // single-value model answered wrongly for every one of them.
+  const grantTypes = grant.spendTypes ?? []
+  const meetsNeed = (need: string): boolean | null => {
+    if (need === 'capital') return grantTypes.length ? grantTypes.includes('capital') : null
+    if (!grantTypes.includes('revenue')) return grantTypes.length ? false : null
+    if (!grant.spendRestriction) return null   // covers revenue, but purpose unstated
+    return grant.spendRestriction === need
+  }
+
+  if (spendPrefs.length > 0) {
+    const verdicts = spendPrefs.map(meetsNeed)
+    // Silence still scores nothing: an all-null read means the funder never
+    // said, which is not evidence of a mismatch.
+    if (verdicts.some(v => v === true)) {
       funderTypeScore = Math.min(15, funderTypeScore + 5)
-      if (grant.spendRestriction === 'unrestricted') {
-        reasons.push(`Unrestricted funding — spend it where ${org.name} needs it`)
-      } else if (grant.spendRestriction === 'capital') {
+      if (spendPrefs.includes('capital') && grantTypes.includes('capital')) {
         reasons.push('Capital funding — covers equipment and one-off costs')
+      } else if (grant.spendRestriction === 'unrestricted') {
+        reasons.push(`Unrestricted funding — spend it where ${org.name} needs it`)
       } else {
         reasons.push('Project funding, which is what you said you need')
       }
-    } else {
+    } else if (verdicts.every(v => v === false)) {
       funderTypeScore = Math.max(0, funderTypeScore - 2)
     }
   }

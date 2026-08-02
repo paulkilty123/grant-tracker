@@ -113,7 +113,22 @@ export type FundingType =
  * is_rolling (set to !deadline by several scrapers, so a parse failure became a
  * promise the fund never closes).
  */
-export type SpendRestriction = 'restricted' | 'unrestricted' | 'capital'
+/** What KIND of cost the money covers. Orthogonal to SpendRestriction. */
+export type SpendType = 'capital' | 'revenue'
+
+/** How tied to a purpose the money is. Says nothing about what kind of cost. */
+export type SpendRestriction = 'restricted' | 'unrestricted'
+
+/**
+ * What an ORG says it needs — the three choices the wizard offers.
+ *
+ * Deliberately not the same vocabulary as the grant side. A grant answers two
+ * questions (what kind of cost, how tied to a purpose); a user picking
+ * "Capital" is expressing one need, and does not care whether the capital pot
+ * happens to be restricted. The matcher translates; the values are unchanged
+ * from migration 047 so no org data has to move.
+ */
+export type SpendNeed = 'restricted' | 'unrestricted' | 'capital'
 
 export type FundingSubtype =
   // grant sub-types
@@ -213,7 +228,7 @@ export interface Organisation {
   /** Preferred funding sub-types — e.g. ['unrestricted','small_grant']. */
   funding_subtype_preferences: FundingSubtype[]
   /** Which spend restrictions the org wants. Empty = no preference stated. */
-  spend_restriction_preferences: SpendRestriction[]
+  spend_restriction_preferences: SpendNeed[]
   // impact fields
   people_per_year: number | null
   volunteers: number | null
@@ -274,6 +289,8 @@ export interface GrantOpportunity {
   fundingSubtype?: FundingSubtype | null
   /** What the money may be spent on. NULL = the funder page does not say. */
   spendRestriction?: SpendRestriction | null
+  /** {capital}, {revenue}, or both. 57 of 623 live grants fund both. */
+  spendTypes?: SpendType[] | null
   description: string
   amountMin: number
   amountMax: number

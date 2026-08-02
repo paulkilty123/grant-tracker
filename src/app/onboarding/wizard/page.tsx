@@ -10,7 +10,7 @@ import { getOrganisationByOwner, createOrganisation, updateOrganisation, writeAc
 import { track } from '@/lib/analytics'
 import { computeMatchScore } from '@/lib/matching'
 import { normaliseScrapedGrant } from '@/lib/grants-normalise'
-import type { LegalStructure, ImpactSector, BeneficiaryGroup, FundingType, SpendRestriction } from '@/types'
+import type { LegalStructure, ImpactSector, BeneficiaryGroup, FundingType, SpendNeed } from '@/types'
 import Button from '@/components/ui/Button'
 import LogoMark from '@/components/icons/LogoMark'
 
@@ -122,7 +122,7 @@ const BENEFICIARY_GROUPS: { value: BeneficiaryGroup; label: string }[] = [
 // preference, which is why the one org that ever had sub-type values (all four
 // of them) produced no usable signal. Empty means "no preference", and the
 // matcher skips the dimension entirely rather than penalising anything.
-const SPEND_RESTRICTIONS: { value: SpendRestriction; label: string; desc: string }[] = [
+const SPEND_RESTRICTIONS: { value: SpendNeed; label: string; desc: string }[] = [
   { value: 'restricted',   label: 'Project funding',  desc: 'For a specific project or activity' },
   { value: 'unrestricted', label: 'Core / running costs', desc: 'Salaries, overheads, spend as you see fit' },
   { value: 'capital',      label: 'Capital',          desc: 'Equipment, building work, one-off costs' },
@@ -196,7 +196,7 @@ interface WizardState {
   minGrantTarget:   string   // raw digit string, formatted on display
   maxGrantTarget:   string
   fundingTypes:     FundingType[]
-  spendRestrictions: SpendRestriction[]
+  spendRestrictions: SpendNeed[]
   nicheTags:        string[]
   excludedNicheTags: string[]
 }
@@ -638,7 +638,7 @@ export default function OnboardingWizardPage() {
           // Store raw digits; fmtThousands() formats on display
           minGrantTarget:   org.min_grant_target != null ? String(org.min_grant_target) : '',
           maxGrantTarget:   org.max_grant_target != null ? String(org.max_grant_target) : '',
-          spendRestrictions: (org.spend_restriction_preferences as SpendRestriction[]) ?? [],
+          spendRestrictions: (org.spend_restriction_preferences as SpendNeed[]) ?? [],
           fundingTypes:     (org.funding_type_preferences as FundingType[])?.length
                               ? (org.funding_type_preferences as FundingType[])
                               : ['grant', 'programme', 'investment', 'in_kind'],
@@ -826,7 +826,7 @@ export default function OnboardingWizardPage() {
       return { ...prev, excludedNicheTags: prev.excludedNicheTags.filter(t => t !== tag) }
     })
   }
-  function toggleSpendRestriction(r: SpendRestriction) {
+  function toggleSpendNeed(r: SpendNeed) {
     setState(prev => ({
       ...prev,
       spendRestrictions: prev.spendRestrictions.includes(r)
@@ -1098,7 +1098,7 @@ export default function OnboardingWizardPage() {
           state={state}
           update={update}
           toggleFundingType={toggleFundingType}
-          toggleSpendRestriction={toggleSpendRestriction}
+          toggleSpendNeed={toggleSpendNeed}
           saving={saving}
           saveError={saveError}
           canContinue={locationValid}
@@ -1889,11 +1889,11 @@ function StepBeneficiaries({ beneficiaryGroups, toggleBeneficiary, makePrimaryBe
    Step 4 — Location, size, funding types
    ═══════════════════════════════════════════════ */
 
-function StepLocation({ state, update, toggleFundingType, toggleSpendRestriction, saving, saveError, canContinue, onBack, onFinish }: {
+function StepLocation({ state, update, toggleFundingType, toggleSpendNeed, saving, saveError, canContinue, onBack, onFinish }: {
   state: WizardState
   update: <K extends keyof WizardState>(k: K, v: WizardState[K]) => void
   toggleFundingType: (t: FundingType) => void
-  toggleSpendRestriction: (r: SpendRestriction) => void
+  toggleSpendNeed: (r: SpendNeed) => void
   saving: boolean; saveError: string | null; canContinue: boolean
   onBack: () => void; onFinish: () => void
 }) {
@@ -1970,7 +1970,7 @@ function StepLocation({ state, update, toggleFundingType, toggleSpendRestriction
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginTop: 4 }}>
             {SPEND_RESTRICTIONS.map(r => {
               const active = state.spendRestrictions.includes(r.value)
-              return <FundingTypeChip key={r.value} label={r.label} desc={r.desc} active={active} onClick={() => toggleSpendRestriction(r.value)} />
+              return <FundingTypeChip key={r.value} label={r.label} desc={r.desc} active={active} onClick={() => toggleSpendNeed(r.value)} />
             })}
           </div>
         </Field>
