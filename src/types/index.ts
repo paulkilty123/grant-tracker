@@ -99,6 +99,22 @@ export type FundingType =
   | 'in_kind'      // non-cash: software credits, ad grants, workspace, pro bono
 
 /** Optional sub-classification of funding_type */
+/**
+ * What the money may be spent on — a different question from FundingSubtype,
+ * which describes the shape of the product (small grant, emergency, loan).
+ *
+ * Kept separate because one slot cannot answer both: 46 live grants hold
+ * `small_grant` or `emergency` in funding_subtype, which is true and useful and
+ * tells you nothing about whether the money is restricted.
+ *
+ * NULL is a real and common answer, meaning the funder page does not say. It is
+ * deliberately NOT collapsed into 'restricted' — defaulting would make an unread
+ * page indistinguishable from a stated restriction, which is the mistake behind
+ * is_rolling (set to !deadline by several scrapers, so a parse failure became a
+ * promise the fund never closes).
+ */
+export type SpendRestriction = 'restricted' | 'unrestricted' | 'capital'
+
 export type FundingSubtype =
   // grant sub-types
   | 'unrestricted'
@@ -196,6 +212,8 @@ export interface Organisation {
   funding_type_preferences: FundingType[]
   /** Preferred funding sub-types — e.g. ['unrestricted','small_grant']. */
   funding_subtype_preferences: FundingSubtype[]
+  /** Which spend restrictions the org wants. Empty = no preference stated. */
+  spend_restriction_preferences: SpendRestriction[]
   // impact fields
   people_per_year: number | null
   volunteers: number | null
@@ -254,6 +272,8 @@ export interface GrantOpportunity {
   fundingType?: FundingType
   /** Optional sub-classification (e.g. loan/equity under investment) */
   fundingSubtype?: FundingSubtype | null
+  /** What the money may be spent on. NULL = the funder page does not say. */
+  spendRestriction?: SpendRestriction | null
   description: string
   amountMin: number
   amountMax: number

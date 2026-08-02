@@ -81,6 +81,7 @@ function makeOrg(overrides: Partial<Organisation>): Organisation {
     funder_type_preferences: [],
     funding_type_preferences: [],
     funding_subtype_preferences: [],
+    spend_restriction_preferences: [],
     people_per_year: 200,
     volunteers: 10,
     years_operating: 5,

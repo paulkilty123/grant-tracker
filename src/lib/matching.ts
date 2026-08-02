@@ -1513,6 +1513,35 @@ export function computeMatchScore(
     }
   }
 
+  // ── Spend restriction affinity ──────────────────────────────────────────
+  //
+  // What the money may be spent on, scored separately from the sub-type above
+  // because they answer different questions. An org needing equipment money is
+  // filtering for `capital`, and a fund tagged `small_grant` in the sub-type
+  // column tells them nothing either way.
+  //
+  // Both sides must be present to score. A null restriction means the funder
+  // page never said, and an empty preference list means the org never chose —
+  // neither is evidence of a mismatch, so silence scores nothing rather than
+  // penalising. That matters while the catalogue is still mostly untagged:
+  // detection has not run yet, so most grants carry null here and must not be
+  // pushed down for it.
+  const spendPrefs = org.spend_restriction_preferences ?? []
+  if (grant.spendRestriction && spendPrefs.length > 0) {
+    if (spendPrefs.includes(grant.spendRestriction)) {
+      funderTypeScore = Math.min(15, funderTypeScore + 5)
+      if (grant.spendRestriction === 'unrestricted') {
+        reasons.push(`Unrestricted funding — spend it where ${org.name} needs it`)
+      } else if (grant.spendRestriction === 'capital') {
+        reasons.push('Capital funding — covers equipment and one-off costs')
+      } else {
+        reasons.push('Project funding, which is what you said you need')
+      }
+    } else {
+      funderTypeScore = Math.max(0, funderTypeScore - 2)
+    }
+  }
+
   // ── 6. Eligibility / org type (max 15) ────────────────────────────────
   // Prefer the modern legal_structure field; fall back to legacy org_type.
   // CIO is a charity structure, so treat it as charity-like for scoring.

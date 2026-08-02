@@ -10,7 +10,7 @@ import { getOrganisationByOwner, createOrganisation, updateOrganisation, writeAc
 import { track } from '@/lib/analytics'
 import { computeMatchScore } from '@/lib/matching'
 import { normaliseScrapedGrant } from '@/lib/grants-normalise'
-import type { LegalStructure, ImpactSector, BeneficiaryGroup, FundingType } from '@/types'
+import type { LegalStructure, ImpactSector, BeneficiaryGroup, FundingType, SpendRestriction } from '@/types'
 import Button from '@/components/ui/Button'
 import LogoMark from '@/components/icons/LogoMark'
 
@@ -118,6 +118,16 @@ const BENEFICIARY_GROUPS: { value: BeneficiaryGroup; label: string }[] = [
 
 // Funding types: label + short desc only — NO per-type colours.
 // The chip uses the same neutral→selected style as sector chips.
+// Deliberately NOT defaulted to all three. Selecting everything expresses no
+// preference, which is why the one org that ever had sub-type values (all four
+// of them) produced no usable signal. Empty means "no preference", and the
+// matcher skips the dimension entirely rather than penalising anything.
+const SPEND_RESTRICTIONS: { value: SpendRestriction; label: string; desc: string }[] = [
+  { value: 'restricted',   label: 'Project funding',  desc: 'For a specific project or activity' },
+  { value: 'unrestricted', label: 'Core funding',     desc: 'Salaries, overheads, spend as you see fit' },
+  { value: 'capital',      label: 'Capital',          desc: 'Equipment, building work, one-off costs' },
+]
+
 const FUNDING_TYPES: { value: FundingType; label: string; desc: string }[] = [
   { value: 'grant',      label: 'Grants & awards',           desc: 'Non-repayable cash funding' },
   { value: 'programme',  label: 'Programmes & accelerators', desc: 'Structured support + cash' },
@@ -186,6 +196,7 @@ interface WizardState {
   minGrantTarget:   string   // raw digit string, formatted on display
   maxGrantTarget:   string
   fundingTypes:     FundingType[]
+  spendRestrictions: SpendRestriction[]
   nicheTags:        string[]
   excludedNicheTags: string[]
 }
@@ -196,6 +207,7 @@ const EMPTY_STATE: WizardState = {
   impactSectors: [], beneficiaryGroups: [],
   minGrantTarget: '', maxGrantTarget: '',
   fundingTypes: ['grant', 'programme', 'investment', 'in_kind'],
+  spendRestrictions: [],
   nicheTags: [],
   excludedNicheTags: [],
 }
@@ -626,6 +638,7 @@ export default function OnboardingWizardPage() {
           // Store raw digits; fmtThousands() formats on display
           minGrantTarget:   org.min_grant_target != null ? String(org.min_grant_target) : '',
           maxGrantTarget:   org.max_grant_target != null ? String(org.max_grant_target) : '',
+          spendRestrictions: (org.spend_restriction_preferences as SpendRestriction[]) ?? [],
           fundingTypes:     (org.funding_type_preferences as FundingType[])?.length
                               ? (org.funding_type_preferences as FundingType[])
                               : ['grant', 'programme', 'investment', 'in_kind'],
@@ -813,6 +826,15 @@ export default function OnboardingWizardPage() {
       return { ...prev, excludedNicheTags: prev.excludedNicheTags.filter(t => t !== tag) }
     })
   }
+  function toggleSpendRestriction(r: SpendRestriction) {
+    setState(prev => ({
+      ...prev,
+      spendRestrictions: prev.spendRestrictions.includes(r)
+        ? prev.spendRestrictions.filter(x => x !== r)
+        : [...prev.spendRestrictions, r],
+    }))
+  }
+
   function toggleFundingType(t: FundingType) {
     setState(prev => ({
       ...prev,
@@ -864,6 +886,7 @@ export default function OnboardingWizardPage() {
         funder_type_preferences:      [],
         funding_type_preferences:     state.fundingTypes,
         funding_subtype_preferences:  [],
+        spend_restriction_preferences: state.spendRestrictions,
         has_asset_lock:               eligibilityFlags.has_asset_lock,
         years_trading:                null,
         owner_id:                     userId,
@@ -1075,6 +1098,7 @@ export default function OnboardingWizardPage() {
           state={state}
           update={update}
           toggleFundingType={toggleFundingType}
+          toggleSpendRestriction={toggleSpendRestriction}
           saving={saving}
           saveError={saveError}
           canContinue={locationValid}
@@ -1865,10 +1889,11 @@ function StepBeneficiaries({ beneficiaryGroups, toggleBeneficiary, makePrimaryBe
    Step 4 — Location, size, funding types
    ═══════════════════════════════════════════════ */
 
-function StepLocation({ state, update, toggleFundingType, saving, saveError, canContinue, onBack, onFinish }: {
+function StepLocation({ state, update, toggleFundingType, toggleSpendRestriction, saving, saveError, canContinue, onBack, onFinish }: {
   state: WizardState
   update: <K extends keyof WizardState>(k: K, v: WizardState[K]) => void
   toggleFundingType: (t: FundingType) => void
+  toggleSpendRestriction: (r: SpendRestriction) => void
   saving: boolean; saveError: string | null; canContinue: boolean
   onBack: () => void; onFinish: () => void
 }) {
@@ -1934,6 +1959,18 @@ function StepLocation({ state, update, toggleFundingType, saving, saveError, can
             {FUNDING_TYPES.map(t => {
               const active = state.fundingTypes.includes(t.value)
               return <FundingTypeChip key={t.value} label={t.label} desc={t.desc} active={active} onClick={() => toggleFundingType(t.value)} />
+            })}
+          </div>
+        </Field>
+
+        {/* What the money can be spent on — a different question from the type
+            of funding, and the one small charities most often get caught by.
+            Optional: leaving it blank means no preference, not "wants nothing". */}
+        <Field label="What do you need the money for?" help="Optional. Leave blank if you're open to any of these.">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginTop: 4 }}>
+            {SPEND_RESTRICTIONS.map(r => {
+              const active = state.spendRestrictions.includes(r.value)
+              return <FundingTypeChip key={r.value} label={r.label} desc={r.desc} active={active} onClick={() => toggleSpendRestriction(r.value)} />
             })}
           </div>
         </Field>
