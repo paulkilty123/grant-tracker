@@ -314,7 +314,7 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
                     <p className="text-[10px] font-bold text-[#5F5E5A] uppercase tracking-wider mb-1">Deadline</p>
                     {grant.is_rolling ? (
                       <p className="text-sm font-semibold flex items-center gap-1.5 mt-0.5" style={{ color: '#639922' }}>
-                        <RefreshCw className="w-3.5 h-3.5" />Always open
+                        <RefreshCw className="w-3.5 h-3.5" />Rolling
                       </p>
                     ) : grant.deadline ? (
                       <p className={`text-sm font-semibold flex items-center gap-1.5 mt-0.5 ${deadlinePassed ? 'text-coral-saturated' : 'text-[#1C1C2E]'}`}>

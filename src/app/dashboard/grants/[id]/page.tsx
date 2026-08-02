@@ -202,7 +202,7 @@ export default async function GrantDetailPage({
             <p className="text-[10px] text-light uppercase tracking-wider font-semibold mb-1">Deadline</p>
             <p className={`text-sm font-semibold mt-1 inline-flex items-center gap-1.5 ${deadlineColour}`}>
               {grant.is_rolling
-                ? <><RefreshCw className="w-3.5 h-3.5" />Rolling — apply any time</>
+                ? <><RefreshCw className="w-3.5 h-3.5" />Rolling, apply any time</>
                 : grant.deadline
                   ? deadlinePassed
                     ? <><AlertTriangle className="w-3.5 h-3.5" />Deadline passed ({String(grant.deadline)})</>
