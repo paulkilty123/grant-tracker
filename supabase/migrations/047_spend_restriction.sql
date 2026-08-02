@@ -1,6 +1,7 @@
 -- 047 — spend_restriction: what the money can be spent on.
 --
--- NOT YET APPLIED TO PROD. Additive only (one nullable column plus one array
+-- APPLIED TO PROD 2026-08-02. Verified: both columns present, 234 rows
+-- backfilled (170 live), none missed. Additive only (one nullable column plus one array
 -- column on organisations, no change to existing data) — but it is DDL, so
 -- apply deliberately, not as a deploy side effect.
 --
