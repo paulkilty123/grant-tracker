@@ -29,7 +29,7 @@ import { AsyncLocalStorage } from 'async_hooks'
 import { z } from 'zod'
 import { createClient } from '@supabase/supabase-js'
 import { validateMCPRequest, type MCPAuthContext } from '@/lib/mcp-middleware'
-import { enforceRateLimits } from '@/lib/mcp-rate-limit'
+import { enforceRateLimits, consumeFreeSearchQuota, isPaidTier, type SearchQuotaResult } from '@/lib/mcp-rate-limit'
 import {
   getMCPTaxonomy,
   getAllMCPTaxonomies,
@@ -81,6 +81,21 @@ function rateLimitStatusForContext(ctx: MCPAuthContext | undefined) {
     return { remaining_hour: 100, remaining_day: 1000, reset_at_hour }
   }
   return { remaining_hour: 10, remaining_day: null, reset_at_hour }
+}
+
+/**
+ * What the free search allowance is counted against.
+ *
+ * Organisation first, because the quota is a commercial line: minting a fresh
+ * token or re-registering a client must not hand out a new allowance. API-key
+ * callers have no resolved org (tier resolution is OAuth-only), so they fall
+ * back to their key hash — still bounded, just per-key rather than per-org.
+ */
+function freeQuotaSubject(auth: MCPAuthContext | undefined): string {
+  if (auth?.orgId) return `org:${auth.orgId}`
+  if (auth?.key) return `key:${auth.key.key_hash}`
+  if (auth?.oauth) return `user:${auth.oauth.user_id}`
+  return 'unknown'
 }
 
 function serviceClient() {
@@ -501,6 +516,36 @@ function buildHandler(surface: HandlerSurface) {
           offset:                  raw.offset,
         }
 
+        // Free-tier monthly allowance. Consumed BEFORE the search runs, so an
+        // exhausted caller costs a Redis INCR rather than a catalogue query.
+        // Exhaustion is a normal tool response, not an error: the model should
+        // relay it to the user as information, and an isError result would
+        // instead read as a fault and invite a retry loop.
+        let freeQuota: SearchQuotaResult | null = null
+        if (!isPaidTier(auth?.tier)) {
+          const quota = await consumeFreeSearchQuota(freeQuotaSubject(auth))
+          freeQuota = quota
+          if (!quota.allowed) {
+            return {
+              content: [{ type: 'text', text: JSON.stringify({
+                quota_reached: {
+                  // In this branch the allowance is spent by definition, so
+                  // report the limit rather than the raw counter — the counter
+                  // keeps climbing on refused calls and would otherwise say
+                  // something like "76 of 75 used".
+                  searches_used: quota.limit,
+                  monthly_limit: quota.limit,
+                  resets_on: quota.resets_on,
+                },
+                message: `This connection has used its ${quota.limit} free searches for this calendar month. The allowance resets on ${quota.resets_on}.`,
+                upgrade_note: getErrorVariantNote('search_quota_reached'),
+                attribution: ATTRIBUTION,
+                rate_limit_status: rateLimitStatusForContext(auth),
+              }) }],
+            }
+          }
+        }
+
         let searchResults
         try {
           searchResults = await executeMCPSearch(params, ctx)
@@ -551,6 +596,21 @@ function buildHandler(surface: HandlerSurface) {
             : getUpgradeNote('search_funding_and_support', 'standard'),
           attribution: ATTRIBUTION,
           rate_limit_status: rateLimitStatusForContext(auth),
+          // Hard constraint 4: a restriction is declared, never silent. A free
+          // caller learning about the allowance only at the moment it runs out
+          // IS silent, so the remaining count rides on every free search.
+          // Omitted entirely when unenforced (no Upstash), because reporting
+          // "0 used" during a fail-open outage would be a lie.
+          ...(freeQuota?.enforced
+            ? {
+                search_quota: {
+                  searches_used: freeQuota.used,
+                  monthly_limit: freeQuota.limit,
+                  searches_remaining: Math.max(0, freeQuota.limit - freeQuota.used),
+                  resets_on: freeQuota.resets_on,
+                },
+              }
+            : {}),
         }
         if (isZero && zero_result_diagnostic) {
           body.zero_result_diagnostic = zero_result_diagnostic
@@ -844,6 +904,18 @@ async function handle(req: NextRequest): Promise<Response> {
   if (authCtx.state === 'invalid')   return unauthorisedResponse('invalid_token')
   if (authCtx.state === 'revoked')   return unauthorisedResponse('revoked_token')
 
+  // Resolve org + tier BEFORE the rate limiter. This ordering is the whole
+  // prerequisite for tier-aware limits: the hourly ceiling and the free search
+  // quota both key off ctx.tier, and until this moved above enforcement, tier
+  // was always undefined at limit time and every caller was metered the same.
+  // API-key callers have no OAuth identity and stay untiered, hence free.
+  if (authCtx.oauth) {
+    const resolved = await resolveOrgAndTier(authCtx.oauth.user_id)
+    authCtx.orgId = resolved.orgId
+    authCtx.orgName = resolved.orgName
+    authCtx.tier = resolved.tier
+  }
+
   // Rate-limit enforcement (spec §6.3 + §6.4). Returns live remaining
   // counts that tool handlers surface in rate_limit_status. When blocked,
   // returns spec §5.4 rate_limit_exceeded error with Retry-After header.
@@ -855,7 +927,7 @@ async function handle(req: NextRequest): Promise<Response> {
     const which: string = rl.which_limit ?? 'unknown'
     const message = (() => {
       if (which === 'key_hourly') {
-        return `Hourly rate limit reached on this API key. Retry after ${retrySeconds} seconds.`
+        return `Hourly rate limit reached on this connection. Retry after ${retrySeconds} seconds.`
       }
       if (which === 'key_daily') {
         return `Daily rate limit reached on this API key. Retry after ${retrySeconds} seconds.`
@@ -884,7 +956,8 @@ async function handle(req: NextRequest): Promise<Response> {
   // Protocol-era capture. Placed after the rate limiter so it inherits both the
   // auth gate and the throttle — an unauthenticated flood 401s above and never
   // reaches here, so this cannot become a write-amplification path. Awaited but
-  // internally guarded: emitEvent never throws into the request path.
+  // internally guarded: emitEvent never throws into the request path. Now sits
+  // after tier resolution too, so the event carries a real org rather than null.
   const protocolVersion = req.headers.get('mcp-protocol-version')
   await emitEvent(
     { surface: 'mcp', orgId: authCtx.orgId ?? null, userId: authCtx.oauth?.user_id ?? null },
@@ -896,15 +969,6 @@ async function handle(req: NextRequest): Promise<Response> {
     },
   )
 
-  // Resolve org + tier at the boundary — OAuth path only. API-key callers keep
-  // the existing free surface with no extra query. Companion tier routes to the
-  // companion handler; everyone else gets the byte-identical free handler.
-  if (authCtx.oauth) {
-    const resolved = await resolveOrgAndTier(authCtx.oauth.user_id)
-    authCtx.orgId = resolved.orgId
-    authCtx.orgName = resolved.orgName
-    authCtx.tier = resolved.tier
-  }
   const handler = handlerForTier(authCtx.tier)
   return authStore.run(authCtx, () => handler(req))
 }

@@ -27,9 +27,52 @@ import type { MCPAuthContext } from './mcp-middleware'
 // ──────────────────────────────────────────────────────────────────────────
 
 interface Limiters {
-  keyHourly: Ratelimit
-  keyDaily:  Ratelimit
-  ipHourly:  Ratelimit
+  keyHourly:     Ratelimit
+  keyHourlyFree: Ratelimit
+  keyDaily:      Ratelimit
+  ipHourly:      Ratelimit
+  /** Raw client, for the calendar-month search quota (not a sliding window). */
+  redis:         Redis
+}
+
+// ── Limits ─────────────────────────────────────────────────────────────────
+// Abuse ceilings, per credential. The paid ceiling and the daily/IP ceilings
+// are unchanged from before the tier split; only free is new.
+const HOURLY_LIMIT_PAID = 100
+const HOURLY_LIMIT_FREE = 50
+const DAILY_LIMIT       = 1000
+const IP_HOURLY_LIMIT   = 5000
+
+/**
+ * Free-tier search allowance per calendar month. Distinct in kind from the
+ * ceilings above: those exist to stop abuse, this one is the commercial line.
+ * Exhausting it is a normal, declared outcome rather than an error.
+ *
+ * Overridable via FREE_SEARCH_QUOTA so a preview deployment can drive the
+ * boundary at a small number with byte-identical code. The 50/hour ceiling puts
+ * 75 out of reach inside a single hour, so the production value cannot be
+ * exhausted in one sitting. Production leaves this unset.
+ *
+ * Validated rather than coerced. A non-numeric override would become NaN, and
+ * every NaN comparison is false, so `used <= limit` would never hold and the
+ * quota would refuse everything; a zero would refuse everything too. Both look
+ * "configured" from the outside, so fail loudly at load instead.
+ */
+function readFreeSearchQuota(): number {
+  const raw = process.env.FREE_SEARCH_QUOTA?.trim()
+  if (!raw) return 75
+  const n = Number(raw)
+  if (!Number.isInteger(n) || n < 1) {
+    throw new Error(`FREE_SEARCH_QUOTA must be a positive integer, got ${JSON.stringify(raw)}`)
+  }
+  return n
+}
+
+export const FREE_SEARCH_QUOTA_PER_MONTH = readFreeSearchQuota()
+
+/** Paid rungs of the ladder. `internal` is never assigned externally. */
+export function isPaidTier(tier: MCPAuthContext['tier']): boolean {
+  return tier === 'apply' || tier === 'companion' || tier === 'internal'
 }
 
 let cachedLimiters: Limiters | null = null
@@ -61,22 +104,33 @@ function initLimiters(): Limiters | null {
   cachedLimiters = {
     keyHourly: new Ratelimit({
       redis,
-      limiter: Ratelimit.slidingWindow(100, '1 h'),
+      limiter: Ratelimit.slidingWindow(HOURLY_LIMIT_PAID, '1 h'),
       prefix:  'mcp:key:hr',
+      analytics: false,
+    }),
+    // Separate prefix, not just a different limit on the same one: sharing a
+    // prefix would reinterpret one set of stored counts under two different
+    // ceilings. Keeping the paid prefix untouched also means existing paid
+    // callers' buckets survive this deploy unchanged.
+    keyHourlyFree: new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(HOURLY_LIMIT_FREE, '1 h'),
+      prefix:  'mcp:key:hr:free',
       analytics: false,
     }),
     keyDaily: new Ratelimit({
       redis,
-      limiter: Ratelimit.slidingWindow(1000, '1 d'),
+      limiter: Ratelimit.slidingWindow(DAILY_LIMIT, '1 d'),
       prefix:  'mcp:key:d',
       analytics: false,
     }),
     ipHourly: new Ratelimit({
       redis,
-      limiter: Ratelimit.slidingWindow(5000, '1 h'),
+      limiter: Ratelimit.slidingWindow(IP_HOURLY_LIMIT, '1 h'),
       prefix:  'mcp:ip:hr',
       analytics: false,
     }),
+    redis,
   }
   return cachedLimiters
 }
@@ -105,10 +159,16 @@ export interface RateLimitResult {
   enforced:     boolean        // false when running in dev fallback (no Upstash)
 }
 
-// Static maxima from spec §6.3 — used in the dev-fallback path so the
-// response shape stays stable when Upstash isn't configured.
-function staticStatus(): RateLimitStatus {
-  return { remaining_hour: 100, remaining_day: 1000, reset_at_hour: Date.now() + 3_600_000 }
+// Static maxima used in the dev-fallback path so the response shape stays
+// stable when Upstash isn't configured. Reports the ceiling the caller's own
+// tier would have had, so a dev-mode response is not misleading about which
+// rung it is on.
+function staticStatus(tier: MCPAuthContext['tier']): RateLimitStatus {
+  return {
+    remaining_hour: isPaidTier(tier) ? HOURLY_LIMIT_PAID : HOURLY_LIMIT_FREE,
+    remaining_day: DAILY_LIMIT,
+    reset_at_hour: Date.now() + 3_600_000,
+  }
 }
 
 function retryAfterSeconds(reset: number): number {
@@ -127,7 +187,7 @@ export async function enforceRateLimits(ctx: MCPAuthContext): Promise<RateLimitR
   if (!limiters) {
     return {
       allowed: true,
-      status: staticStatus(),
+      status: staticStatus(ctx.tier),
       retry_after: null,
       which_limit: null,
       enforced: false,
@@ -143,8 +203,13 @@ export async function enforceRateLimits(ctx: MCPAuthContext): Promise<RateLimitR
     ? ctx.key.key_hash
     : `oauth:${ctx.oauth!.client_id}:${ctx.oauth!.user_id}`
 
+  // Tier decides the hourly ceiling. This is why enforcement now runs AFTER
+  // tier resolution in the route: before the move, ctx.tier was always
+  // undefined here and every caller would have been metered as free.
+  const hourly = isPaidTier(ctx.tier) ? limiters.keyHourly : limiters.keyHourlyFree
+
   const [kh, kd, ih] = await Promise.all([
-    limiters.keyHourly.limit(id),
+    hourly.limit(id),
     limiters.keyDaily.limit(id),
     limiters.ipHourly.limit(ip),
   ])
@@ -156,6 +221,98 @@ export async function enforceRateLimits(ctx: MCPAuthContext): Promise<RateLimitR
   if (!kd.success) return { allowed: false, status, retry_after: retryAfterSeconds(kd.reset), which_limit: 'key_daily',  enforced: true }
   if (!ih.success) return { allowed: false, status, retry_after: retryAfterSeconds(ih.reset), which_limit: 'ip_hourly',  enforced: true }
   return { allowed: true, status, retry_after: null, which_limit: null, enforced: true }
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Free-tier search quota — calendar month, not a rolling window
+//
+// Deliberately NOT an @upstash/ratelimit limiter. Those are sliding windows;
+// this is a plain counter keyed by calendar month, because "75 searches this
+// month, resets on the 1st" is a promise a user can hold in their head, and a
+// sliding window is not. It is also why the reset date can be stated exactly
+// in the response rather than approximated.
+//
+// Keyed by ORGANISATION, not by credential: the quota is a commercial line, so
+// re-registering a client or minting a fresh token must not reset it. API-key
+// callers have no resolved org (tier resolution is OAuth-only), so they fall
+// back to their credential id — still bounded, just per-key.
+//
+// Fails OPEN, consistent with the MCP ceilings: an Upstash outage lets free
+// searches through rather than blocking them. Worth noting that this one has
+// commercial rather than purely abuse consequences — see the deploy notes.
+// ──────────────────────────────────────────────────────────────────────────
+
+export interface SearchQuotaResult {
+  allowed:   boolean
+  used:      number
+  limit:     number
+  /** ISO date the allowance resets — the 1st of next month, UTC. */
+  resets_on: string
+  enforced:  boolean
+}
+
+/** UTC year-month, e.g. "2026-08". Month boundaries are UTC, not local. */
+function currentQuotaPeriod(now: Date): string {
+  return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`
+}
+
+function nextMonthStart(now: Date): string {
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1)).toISOString().slice(0, 10)
+}
+
+/**
+ * Count one free-tier search against the current calendar month.
+ *
+ * Increments first and compares after, so the check and the count are a single
+ * atomic Redis operation — a check-then-increment pair would let concurrent
+ * calls both observe 74 and both proceed.
+ */
+export async function consumeFreeSearchQuota(subject: string): Promise<SearchQuotaResult> {
+  const now = new Date()
+  const resets_on = nextMonthStart(now)
+  const limiters = initLimiters()
+
+  if (!limiters) {
+    return { allowed: true, used: 0, limit: FREE_SEARCH_QUOTA_PER_MONTH, resets_on, enforced: false }
+  }
+
+  const key = `mcp:quota:search:${currentQuotaPeriod(now)}:${subject}`
+  try {
+    const used = await limiters.redis.incr(key)
+    if (used === 1) {
+      // First call of the month: expire a little past the month's length so the
+      // key cannot outlive its period, and cannot vanish inside it either.
+      await limiters.redis.expire(key, 40 * 24 * 60 * 60)
+    }
+    return {
+      allowed: used <= FREE_SEARCH_QUOTA_PER_MONTH,
+      used,
+      limit: FREE_SEARCH_QUOTA_PER_MONTH,
+      resets_on,
+      enforced: true,
+    }
+  } catch (err) {
+    // Fail open, same posture as the ceilings above.
+    console.error('[rate-limit] search quota check failed, allowing:', err)
+    return { allowed: true, used: 0, limit: FREE_SEARCH_QUOTA_PER_MONTH, resets_on, enforced: false }
+  }
+}
+
+/** Read the month's usage without consuming any. */
+export async function peekFreeSearchQuota(subject: string): Promise<SearchQuotaResult> {
+  const now = new Date()
+  const resets_on = nextMonthStart(now)
+  const limiters = initLimiters()
+  if (!limiters) {
+    return { allowed: true, used: 0, limit: FREE_SEARCH_QUOTA_PER_MONTH, resets_on, enforced: false }
+  }
+  try {
+    const raw = await limiters.redis.get<number | string | null>(`mcp:quota:search:${currentQuotaPeriod(now)}:${subject}`)
+    const used = raw == null ? 0 : Number(raw)
+    return { allowed: used < FREE_SEARCH_QUOTA_PER_MONTH, used, limit: FREE_SEARCH_QUOTA_PER_MONTH, resets_on, enforced: true }
+  } catch {
+    return { allowed: true, used: 0, limit: FREE_SEARCH_QUOTA_PER_MONTH, resets_on, enforced: false }
+  }
 }
 
 // ──────────────────────────────────────────────────────────────────────────
