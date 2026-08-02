@@ -47,8 +47,28 @@ const IP_HOURLY_LIMIT   = 5000
  * Free-tier search allowance per calendar month. Distinct in kind from the
  * ceilings above: those exist to stop abuse, this one is the commercial line.
  * Exhausting it is a normal, declared outcome rather than an error.
+ *
+ * Overridable via FREE_SEARCH_QUOTA so a preview deployment can drive the
+ * boundary at a small number with byte-identical code. The 50/hour ceiling puts
+ * 75 out of reach inside a single hour, so the production value cannot be
+ * exhausted in one sitting. Production leaves this unset.
+ *
+ * Validated rather than coerced. A non-numeric override would become NaN, and
+ * every NaN comparison is false, so `used <= limit` would never hold and the
+ * quota would refuse everything; a zero would refuse everything too. Both look
+ * "configured" from the outside, so fail loudly at load instead.
  */
-export const FREE_SEARCH_QUOTA_PER_MONTH = 75
+function readFreeSearchQuota(): number {
+  const raw = process.env.FREE_SEARCH_QUOTA?.trim()
+  if (!raw) return 75
+  const n = Number(raw)
+  if (!Number.isInteger(n) || n < 1) {
+    throw new Error(`FREE_SEARCH_QUOTA must be a positive integer, got ${JSON.stringify(raw)}`)
+  }
+  return n
+}
+
+export const FREE_SEARCH_QUOTA_PER_MONTH = readFreeSearchQuota()
 
 /** Paid rungs of the ladder. `internal` is never assigned externally. */
 export function isPaidTier(tier: MCPAuthContext['tier']): boolean {
