@@ -196,3 +196,36 @@ export const STAGE_BG: Record<PipelineStage, string> = {
   won:        'bg-green-mid',
   declined:   'bg-coral-pale',
 }
+
+/**
+ * The label for a grant's location pill.
+ *
+ * Both the public detail page and GrantDetailModal rendered the literal string
+ * "Local" off `is_local`, ignoring `location_tag` entirely — so a Suffolk
+ * Community Foundation fund whose row holds location_tag "Suffolk" and
+ * geographic_focus "Suffolk only." told the user only that it was, somewhere,
+ * local. All 290 live local rows carry a named place, so the useful word was
+ * present on every one of them and shown on none.
+ *
+ * Returns null when there is nothing worth showing, so callers can omit the
+ * pill rather than render an empty one.
+ */
+export function locationLabel(
+  isLocal: boolean | null | undefined,
+  locationTag: string | null | undefined,
+): string | null {
+  const place = typeof locationTag === 'string' ? locationTag.trim() : ''
+
+  // "UK" on a UK grant tracker discriminates nothing, and it is the tag on 326
+  // of the 466 live non-local rows — rendering it would add a pill to most of
+  // the catalogue that tells the reader precisely nothing. Every other value
+  // earns its space: England (34), Scotland (21), Wales (12), London (7),
+  // Sussex (4), Global (9). Exact match only, so "UK & Ireland" and
+  // "England & Wales" still render.
+  if (/^(uk|united kingdom|uk-wide|nationwide)$/i.test(place)) {
+    return isLocal ? 'Local' : null
+  }
+
+  if (place) return place
+  return isLocal ? 'Local' : null
+}

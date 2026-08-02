@@ -1,6 +1,6 @@
 import React from 'react'
 import { createClient } from '@/lib/supabase/server'
-import { formatRange, formatNextOpen } from '@/lib/utils'
+import { formatRange, formatNextOpen, locationLabel } from '@/lib/utils'
 import { notFound } from 'next/navigation'
 import ViewTracker from '@/components/ViewTracker'
 import AddToPipelineButton from './AddToPipelineButton'
@@ -90,6 +90,8 @@ export default async function GrantDetailPage({
   const typeLabel              = FUNDER_LABELS[funderType] ?? funderType.replace(/_/g, ' ')
   const typeColour             = TYPE_COLOURS[funderType] ?? 'bg-gray-50 text-gray-600'
   const lastSeen               = grant.last_seen_at ? String(grant.last_seen_at).split('T')[0] : 'Unknown'
+  // The named place ("Suffolk"), not the word "Local" — see locationLabel.
+  const placeLabel = locationLabel(grant.is_local as boolean | null, grant.location_tag as string | null)
   // Brief first, scraped description only as fallback — see leadParagraph.
   const lead = leadParagraph(
     grant.funder_brief as Record<string, unknown> | null,
@@ -173,9 +175,9 @@ export default async function GrantDetailPage({
               <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${typeColour}`}>
                 {typeLabel}
               </span>
-              {grant.is_local && (
+              {placeLabel && (
                 <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-green-50 text-green-700">
-                  <MapPin className="w-3 h-3" />Local
+                  <MapPin className="w-3 h-3" />{placeLabel}
                 </span>
               )}
               <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${fundingTypeBadge.cls}`}>

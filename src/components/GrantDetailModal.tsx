@@ -7,7 +7,7 @@ import {
   TrendingUp, Users, GitMerge, Gift, Landmark, ExternalLink,
   PlusCircle,
 } from 'lucide-react'
-import { formatRange, formatNextOpen } from '@/lib/utils'
+import { formatRange, formatNextOpen, locationLabel } from '@/lib/utils'
 import { FunderBrief, briefHasContent, leadParagraph } from '@/components/FunderBrief'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -27,6 +27,7 @@ interface ScrapedGrant {
   deadline: string | null
   is_rolling: boolean | null
   is_local: boolean | null
+  location_tag: string | null
   sectors: string[] | null
   impact_sectors: string[] | null
   eligibility_criteria: string[] | null
@@ -282,12 +283,12 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
                       <ftBadge.Icon className="w-3 h-3" />
                       {ftBadge.label}
                     </span>
-                    {grant.is_local && (
+                    {locationLabel(grant.is_local, grant.location_tag) && (
                       <span
                         className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1"
                         style={{ backgroundColor: 'rgba(186,230,253,0.55)', color: '#0C447C', borderRadius: 9999 }}
                       >
-                        <MapPin className="w-3 h-3" />Local
+                        <MapPin className="w-3 h-3" />{locationLabel(grant.is_local, grant.location_tag)}
                       </span>
                     )}
                     {grant.next_open_date && (
