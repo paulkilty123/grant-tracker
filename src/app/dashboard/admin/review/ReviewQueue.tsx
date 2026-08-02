@@ -87,7 +87,7 @@ const SEV_STYLE: Record<string, { bg: string; ink: string; edge: string }> = {
 const display = { fontFamily: 'var(--font-space-grotesk)' } as const
 const gbp = (n: number | null) => (n === null ? '—' : `£${n.toLocaleString('en-GB')}`)
 
-export function ReviewQueue({ items }: { items: QueueItem[] }) {
+export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; gateWindowStart?: string }) {
   const router = useRouter()
   const toast = useToast()
   const [openId, setOpenId] = useState<string | null>(null)
@@ -160,6 +160,17 @@ export function ReviewQueue({ items }: { items: QueueItem[] }) {
   const unenrichedCount = pending.filter(i => i.needsEnrichment).length
   const autoPubCount = autoPub.length
   const autoPubNewCount = autoPub.filter(i => i.autoPublishNewlyVisible).length
+
+  // Name the window's start date rather than saying "last 7 days".
+  //
+  // The count reads 77 on a morning when the run published 28, because the
+  // window reaches back over the previous run. A relative phrase invites you to
+  // read the number as "today", and a number that contradicts what you just
+  // watched happen is worse than no number. Computed from a server-supplied
+  // timestamp so it cannot drift between render passes.
+  const windowPhrase = gateWindowStart
+    ? `since ${new Date(gateWindowStart).toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })}`
+    : 'in the last 7 days'
   const attentionCount = shown.filter(i => i.gateOutcome === 'attention').length
 
   /** Single place every write goes through, so a failure can never look like success. */
@@ -400,17 +411,19 @@ export function ReviewQueue({ items }: { items: QueueItem[] }) {
         }}>
           <span>
             {autoPubCount === 0 ? (
-              <>The gate has published nothing in the last 7 days. That is a real answer, not a
+              <>The gate has published nothing {windowPhrase}. That is a real answer, not a
               missing feature: it publishes only rows carrying no blocking reason.</>
             ) : (
               <>
                 <strong style={{ ...display, fontWeight: 700 }}>
-                  The gate published {autoPubCount} {autoPubCount === 1 ? 'row' : 'rows'} in the
-                  last 7 days, {autoPubNewCount} of which nobody could see before.
+                  The gate published {autoPubCount} {autoPubCount === 1 ? 'row' : 'rows'}{' '}
+                  {windowPhrase}, {autoPubNewCount} of which nobody could see before.
                 </strong>{' '}
                 Those {autoPubNewCount === 1 ? 'is' : 'are'} listed first. The rest were already
                 live and the gate only brought their recorded state up to date, so they changed
                 nothing for users. Everything here can still be corrected or hidden from the row.
+                {' '}This is a rolling 7-day window, not just today, so it includes every run in
+                that period rather than only the most recent one.
               </>
             )}
           </span>
@@ -488,7 +501,7 @@ export function ReviewQueue({ items }: { items: QueueItem[] }) {
           {q.trim() !== '' && liveAll.length > 0
             ? `Nothing in the queue matches “${q.trim()}”. It may be published already — Catalogue searches every row, whatever its state.`
             : view === 'autopublished'
-              ? 'The gate has published nothing in the last 7 days.'
+              ? `The gate has published nothing ${windowPhrase}.`
               : pending.length === 0
                 ? 'Nothing waiting. The queue is genuinely empty.'
                 : 'No rows match that filter.'}

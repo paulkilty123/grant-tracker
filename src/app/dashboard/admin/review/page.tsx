@@ -231,7 +231,7 @@ export default async function ReviewPage() {
       Number(b.gateOutcome === 'attention') - Number(a.gateOutcome === 'attention') ||
       compareByReadiness(a.reasons, b.reasons))
 
-  return <ReviewQueue items={items} />
+  return <ReviewQueue items={items} gateWindowStart={sevenDaysAgo} />
 }
 
 /**
