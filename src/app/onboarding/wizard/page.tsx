@@ -124,7 +124,7 @@ const BENEFICIARY_GROUPS: { value: BeneficiaryGroup; label: string }[] = [
 // matcher skips the dimension entirely rather than penalising anything.
 const SPEND_RESTRICTIONS: { value: SpendRestriction; label: string; desc: string }[] = [
   { value: 'restricted',   label: 'Project funding',  desc: 'For a specific project or activity' },
-  { value: 'unrestricted', label: 'Core funding',     desc: 'Salaries, overheads, spend as you see fit' },
+  { value: 'unrestricted', label: 'Core / running costs', desc: 'Salaries, overheads, spend as you see fit' },
   { value: 'capital',      label: 'Capital',          desc: 'Equipment, building work, one-off costs' },
 ]
 

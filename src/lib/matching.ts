@@ -4,6 +4,10 @@ import { runEligibilityChecks } from './eligibility'
 import type { EligibilityStatus as EligibilityStatusFromEngine, EligibilityIssue } from './eligibility'
 import { extractIncomeGate } from './extract-income-gate'
 
+/** The full SpendRestriction vocabulary. Used to detect "all selected", which
+ *  carries the same meaning as "none selected": no preference expressed. */
+const SPEND_RESTRICTION_VALUES = ['restricted', 'unrestricted', 'capital'] as const
+
 export interface MatchBreakdown {
   location:      { score: number; max: number; label: string }
   themes:        { score: number; max: number; label: string }
@@ -1513,6 +1517,7 @@ export function computeMatchScore(
     }
   }
 
+  // (SPEND_RESTRICTION_VALUES is module-level, see top of file)
   // ── Spend restriction affinity ──────────────────────────────────────────
   //
   // What the money may be spent on, scored separately from the sub-type above
@@ -1526,7 +1531,15 @@ export function computeMatchScore(
   // penalising. That matters while the catalogue is still mostly untagged:
   // detection has not run yet, so most grants carry null here and must not be
   // pushed down for it.
-  const spendPrefs = org.spend_restriction_preferences ?? []
+  //
+  // SELECTING ALL THREE IS THE SAME AS SELECTING NONE, and is treated as such.
+  // Most users will tick everything and filter later, which is a reasonable way
+  // to behave — but scoring it literally would give +5 to every TAGGED grant
+  // and nothing to untagged ones, rewarding our own data completeness rather
+  // than fit. With detection not yet run, that would systematically float the
+  // 165 already-tagged rows above 458 identical-quality untagged ones.
+  const spendPrefsRaw = org.spend_restriction_preferences ?? []
+  const spendPrefs = spendPrefsRaw.length === SPEND_RESTRICTION_VALUES.length ? [] : spendPrefsRaw
   if (grant.spendRestriction && spendPrefs.length > 0) {
     if (spendPrefs.includes(grant.spendRestriction)) {
       funderTypeScore = Math.min(15, funderTypeScore + 5)
