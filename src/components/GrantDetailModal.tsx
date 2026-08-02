@@ -7,7 +7,8 @@ import {
   TrendingUp, Users, GitMerge, Gift, Landmark, ExternalLink,
   PlusCircle,
 } from 'lucide-react'
-import { formatRange, formatNextOpen } from '@/lib/utils'
+import { formatRange, formatNextOpen, locationLabel } from '@/lib/utils'
+import { FunderBrief, briefHasContent, leadParagraph } from '@/components/FunderBrief'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -19,11 +20,14 @@ interface ScrapedGrant {
   funder_type: string | null
   funding_type: string | null
   description: string | null
+  /** Already stripped to the public fields by /api/grant-detail. */
+  funder_brief: Record<string, unknown> | null
   amount_min: number | null
   amount_max: number | null
   deadline: string | null
   is_rolling: boolean | null
   is_local: boolean | null
+  location_tag: string | null
   sectors: string[] | null
   impact_sectors: string[] | null
   eligibility_criteria: string[] | null
@@ -191,6 +195,8 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
   const structures    = Array.isArray(grant?.eligible_structures)  ? grant!.eligible_structures  : []
   const sectors       = Array.isArray(grant?.sectors)              ? grant!.sectors              : []
   const deadlinePassed = !grant?.is_rolling && grant?.deadline && new Date(grant.deadline) < new Date()
+  // Brief first, scraped description only as fallback — see leadParagraph.
+  const lead = leadParagraph(grant?.funder_brief, grant?.description)
 
   return (
     <>
@@ -277,12 +283,12 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
                       <ftBadge.Icon className="w-3 h-3" />
                       {ftBadge.label}
                     </span>
-                    {grant.is_local && (
+                    {locationLabel(grant.is_local, grant.location_tag) && (
                       <span
                         className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1"
                         style={{ backgroundColor: 'rgba(186,230,253,0.55)', color: '#0C447C', borderRadius: 9999 }}
                       >
-                        <MapPin className="w-3 h-3" />Local
+                        <MapPin className="w-3 h-3" />{locationLabel(grant.is_local, grant.location_tag)}
                       </span>
                     )}
                     {grant.next_open_date && (
@@ -308,7 +314,7 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
                     <p className="text-[10px] font-bold text-[#5F5E5A] uppercase tracking-wider mb-1">Deadline</p>
                     {grant.is_rolling ? (
                       <p className="text-sm font-semibold flex items-center gap-1.5 mt-0.5" style={{ color: '#639922' }}>
-                        <RefreshCw className="w-3.5 h-3.5" />Always open
+                        <RefreshCw className="w-3.5 h-3.5" />Rolling
                       </p>
                     ) : grant.deadline ? (
                       <p className={`text-sm font-semibold flex items-center gap-1.5 mt-0.5 ${deadlinePassed ? 'text-coral-saturated' : 'text-[#1C1C2E]'}`}>
@@ -352,11 +358,24 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
               {/* ── Content sections ── */}
               <div className="px-4 py-4 space-y-3">
 
-                {/* Description */}
-                <div className="bg-white border border-[#E8E0D1] px-5 py-4" style={{ borderRadius: 16 }}>
-                  <p className="text-[10px] font-bold text-[#5F5E5A] uppercase tracking-wider mb-2">About this grant</p>
-                  <p className="text-sm text-[#444] leading-relaxed whitespace-pre-line">{grant.description}</p>
-                </div>
+                {/* About + the enriched brief. The brief leads; `description` is
+                    only the fallback, because that column is where the scraped
+                    stubs live ("Grant from X.", "…- deadline soon"). */}
+                {(lead || briefHasContent(grant.funder_brief)) && (
+                  <div className="bg-white border border-[#E8E0D1] px-5 py-4" style={{ borderRadius: 16 }}>
+                    {lead && (
+                      <>
+                        <p className="text-[10px] font-bold text-[#5F5E5A] uppercase tracking-wider mb-2">About this grant</p>
+                        <p className="text-sm text-[#444] leading-relaxed whitespace-pre-line">{lead}</p>
+                      </>
+                    )}
+                    {briefHasContent(grant.funder_brief) && (
+                      <div className={lead ? 'mt-4 pt-4 border-t border-[#E8E0D1]' : ''}>
+                        <FunderBrief brief={grant.funder_brief} variant="modal" />
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Eligibility criteria */}
                 {eligibility.length > 0 && (

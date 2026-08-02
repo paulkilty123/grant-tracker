@@ -1,7 +1,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import { formatRange } from '@/lib/utils'
+import { formatRange, locationLabel } from '@/lib/utils'
 import { notFound } from 'next/navigation'
 import LogoMark from '@/components/icons/LogoMark'
 import {
@@ -215,12 +215,12 @@ export default async function PublicGrantPage({
                 >
                   {typeLabel}
                 </span>
-                {grant.is_local && (
+                {locationLabel(grant.is_local, grant.location_tag) && (
                   <span
                     className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full"
                     style={{ background: '#F1F7E4', color: '#3B6D11', fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}
                   >
-                    <MapPin className="w-3 h-3" />Local
+                    <MapPin className="w-3 h-3" />{locationLabel(grant.is_local, grant.location_tag)}
                   </span>
                 )}
                 {/* Funding-type — brand-palette chip with dot indicator */}
@@ -263,7 +263,7 @@ export default async function PublicGrantPage({
                 }}
               >
                 {grant.is_rolling
-                  ? <><RefreshCw className="w-3.5 h-3.5" />Rolling — apply any time</>
+                  ? <><RefreshCw className="w-3.5 h-3.5" />Rolling, apply any time</>
                   : deadlineHuman
                     ? deadlinePassed
                       ? <><AlertTriangle className="w-3.5 h-3.5" />Deadline passed ({deadlineHuman})</>

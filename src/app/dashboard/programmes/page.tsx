@@ -79,7 +79,7 @@ function ProgrammeCard({ prog, onViewDetail, onAddToPipeline }: {
   // Deadline display
   let deadlineDisplay: { text: string; style: React.CSSProperties } | null = null
   if (prog.is_rolling) {
-    deadlineDisplay = { text: 'Always open', style: { color: '#639922' } }
+    deadlineDisplay = { text: 'Rolling', style: { color: '#639922' } }
   } else if (prog.deadline) {
     const parts = prog.deadline.split('-').map(Number)
     if (parts.length === 3 && !parts.some(isNaN)) {
