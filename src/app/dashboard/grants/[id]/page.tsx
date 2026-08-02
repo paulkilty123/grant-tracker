@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation'
 import ViewTracker from '@/components/ViewTracker'
 import AddToPipelineButton from './AddToPipelineButton'
 import FlagGrantButton from './FlagGrantButton'
+import { FunderBrief, briefHasContent, leadParagraph } from '@/components/FunderBrief'
 import {
   Award, Rocket, GraduationCap, TrendingUp, Users, GitMerge, Gift, Landmark,
   MapPin, Bell, RefreshCw, Calendar, AlertTriangle, CheckCircle, ShieldAlert,
@@ -89,6 +90,11 @@ export default async function GrantDetailPage({
   const typeLabel              = FUNDER_LABELS[funderType] ?? funderType.replace(/_/g, ' ')
   const typeColour             = TYPE_COLOURS[funderType] ?? 'bg-gray-50 text-gray-600'
   const lastSeen               = grant.last_seen_at ? String(grant.last_seen_at).split('T')[0] : 'Unknown'
+  // Brief first, scraped description only as fallback — see leadParagraph.
+  const lead = leadParagraph(
+    grant.funder_brief as Record<string, unknown> | null,
+    grant.description as string | null,
+  )
 
   // Funding type badge — all types including grant
   type FTBadge = { Icon: React.ComponentType<{ className?: string }>; label: string; cls: string }
@@ -214,11 +220,24 @@ export default async function GrantDetailPage({
           </div>
         )}
 
-        {/* Description */}
-        <div className="mb-5">
-          <h2 className="text-xs font-semibold text-light uppercase tracking-wider mb-2.5">About this grant</h2>
-          <p className="text-mid leading-relaxed whitespace-pre-line">{grant.description}</p>
-        </div>
+        {/* About + the enriched brief, from the same component the modal uses so
+            the two cannot drift. The brief leads; `description` is the fallback,
+            because that column holds the scraped stubs. */}
+        {(lead || briefHasContent(grant.funder_brief)) && (
+          <div className="mb-5">
+            {lead && (
+              <>
+                <h2 className="text-xs font-semibold text-light uppercase tracking-wider mb-2.5">About this grant</h2>
+                <p className="text-mid leading-relaxed whitespace-pre-line">{lead}</p>
+              </>
+            )}
+            {briefHasContent(grant.funder_brief) && (
+              <div className={lead ? 'mt-5' : ''}>
+                <FunderBrief brief={grant.funder_brief} variant="page" />
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Eligibility */}
         {eligibility.length > 0 && (

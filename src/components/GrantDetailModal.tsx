@@ -8,6 +8,7 @@ import {
   PlusCircle,
 } from 'lucide-react'
 import { formatRange, formatNextOpen } from '@/lib/utils'
+import { FunderBrief, briefHasContent, leadParagraph } from '@/components/FunderBrief'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -19,6 +20,8 @@ interface ScrapedGrant {
   funder_type: string | null
   funding_type: string | null
   description: string | null
+  /** Already stripped to the public fields by /api/grant-detail. */
+  funder_brief: Record<string, unknown> | null
   amount_min: number | null
   amount_max: number | null
   deadline: string | null
@@ -191,6 +194,8 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
   const structures    = Array.isArray(grant?.eligible_structures)  ? grant!.eligible_structures  : []
   const sectors       = Array.isArray(grant?.sectors)              ? grant!.sectors              : []
   const deadlinePassed = !grant?.is_rolling && grant?.deadline && new Date(grant.deadline) < new Date()
+  // Brief first, scraped description only as fallback — see leadParagraph.
+  const lead = leadParagraph(grant?.funder_brief, grant?.description)
 
   return (
     <>
@@ -352,11 +357,24 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
               {/* ── Content sections ── */}
               <div className="px-4 py-4 space-y-3">
 
-                {/* Description */}
-                <div className="bg-white border border-[#E8E0D1] px-5 py-4" style={{ borderRadius: 16 }}>
-                  <p className="text-[10px] font-bold text-[#5F5E5A] uppercase tracking-wider mb-2">About this grant</p>
-                  <p className="text-sm text-[#444] leading-relaxed whitespace-pre-line">{grant.description}</p>
-                </div>
+                {/* About + the enriched brief. The brief leads; `description` is
+                    only the fallback, because that column is where the scraped
+                    stubs live ("Grant from X.", "…- deadline soon"). */}
+                {(lead || briefHasContent(grant.funder_brief)) && (
+                  <div className="bg-white border border-[#E8E0D1] px-5 py-4" style={{ borderRadius: 16 }}>
+                    {lead && (
+                      <>
+                        <p className="text-[10px] font-bold text-[#5F5E5A] uppercase tracking-wider mb-2">About this grant</p>
+                        <p className="text-sm text-[#444] leading-relaxed whitespace-pre-line">{lead}</p>
+                      </>
+                    )}
+                    {briefHasContent(grant.funder_brief) && (
+                      <div className={lead ? 'mt-4 pt-4 border-t border-[#E8E0D1]' : ''}>
+                        <FunderBrief brief={grant.funder_brief} variant="modal" />
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Eligibility criteria */}
                 {eligibility.length > 0 && (
