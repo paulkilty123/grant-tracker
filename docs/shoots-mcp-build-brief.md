@@ -202,7 +202,13 @@ With a fresh Claude account that has never seen the connector:
       month" is an untested promise, and it fails OPEN, so the failure mode is
       unmetered free search rather than a blocked user.
 
-## Post-cutover cleanup (after the September flip, not before)
+## Post-cutover cleanup (after the cutover flip, not before)
+
+> **Cutover timing (corrected 2026-08-03).** The MCP cutover flip happens in
+> **August, pre-submission**, once phases 5 and 6 land — not September. Phase 7's
+> smoke test is gated on that flip, because the reviewer journey has to run
+> against the identity that will actually be submitted. Everything below waits
+> until after it.
 
 - [ ] **Tighten `oauth_clients.issuer` / `oauth_tokens.issuer` to NOT NULL.**
       Migration 046 left them nullable deliberately — NOT NULL would have broken
