@@ -229,7 +229,42 @@ export interface MCPProviderIntelligence {
   links: {
     funder_url: string | null
   }
+  /**
+   * Present only when the payload was shaped. Hard constraint 4: a restriction
+   * is declared, never silent — a caller must be able to tell that fields were
+   * withheld rather than absent from the data.
+   */
+  response_shaping?: {
+    form: 'summary' | 'full'
+    omitted_fields: string[]
+    opportunity_ids_truncated?: { returned: number; total: number }
+    note: string
+  }
 }
+
+export interface ProviderIntelligenceOptions {
+  /** Summary form withholds depth fields. Eligibility is never withheld. */
+  summary?: boolean
+  /** Hard cap on opportunity_ids for every tier — the list was unbounded. */
+  maxOpportunityIds?: number
+}
+
+/**
+ * Depth fields withheld from the summary form.
+ *
+ * `priorities` and `enriched_data` only. Deliberately NOT `who_can_apply` or
+ * `exclusions`: both are eligibility, and hard constraint 4 keeps eligibility
+ * full length for every tier. Withholding exclusions in particular could let a
+ * free caller apply somewhere they are explicitly barred from, which is a
+ * worse outcome than any commercial gain from withholding it.
+ *
+ * Fields are omitted whole rather than truncated — the restriction is one of
+ * quantity, not quality, so no sentence is ever cut mid-thought.
+ */
+const SUMMARY_OMITTED_FIELDS = ['priorities', 'enriched_data'] as const
+
+/** Default ceiling on opportunity_ids, applied to every tier. */
+export const PROVIDER_OPPORTUNITY_ID_CAP = 50
 
 // ──────────────────────────────────────────────────────────────────────────
 // Context + URL builders
@@ -1027,6 +1062,7 @@ export interface ProviderIntelligenceInputs {
 
 export function toMCPProviderIntelligence(
   inputs: ProviderIntelligenceInputs,
+  options: ProviderIntelligenceOptions = {},
 ): MCPProviderIntelligence {
   const { provider_name, representative_brief, funder_row, active_opportunities } = inputs
   const brief = projectFunderBriefForMCP(representative_brief)
@@ -1062,6 +1098,14 @@ export function toMCPProviderIntelligence(
     if (UUID_RE.test(o.id)) opportunity_ids.push(o.id)
   }
 
+  // Cap the id list for EVERY tier. It was previously unbounded, so a provider
+  // with many active dated funds under one name returned an arbitrarily long
+  // array. by_type and count stay whole, so the caller still sees the true
+  // scale even when the id list is trimmed.
+  const idCap = options.maxOpportunityIds ?? PROVIDER_OPPORTUNITY_ID_CAP
+  const totalIds = opportunity_ids.length
+  const cappedIds = totalIds > idCap ? opportunity_ids.slice(0, idCap) : opportunity_ids
+
   const result: MCPProviderIntelligence = {
     provider: {
       name: funder_row?.name ?? provider_name,
@@ -1079,7 +1123,7 @@ export function toMCPProviderIntelligence(
     active_opportunities: {
       count: active_opportunities.length,
       by_type,
-      opportunity_ids,
+      opportunity_ids: cappedIds,
     },
     links: {
       // Q3(b): grant_tracker_url dropped from provider-intelligence output.
@@ -1089,7 +1133,28 @@ export function toMCPProviderIntelligence(
     },
   }
 
-  if (data_richness === 'enriched' && funder_row) {
+  const omitted: string[] = []
+  if (options.summary) {
+    // Whole-field omission, not truncation. priorities is depth; eligibility
+    // (who_can_apply, exclusions) stays regardless of tier.
+    result.priorities = ''
+    omitted.push(...SUMMARY_OMITTED_FIELDS)
+  }
+
+  if (options.summary || totalIds > idCap) {
+    result.response_shaping = {
+      form: options.summary ? 'summary' : 'full',
+      omitted_fields: omitted,
+      ...(totalIds > idCap
+        ? { opportunity_ids_truncated: { returned: cappedIds.length, total: totalIds } }
+        : {}),
+      note: options.summary
+        ? 'Summary form. Funder priorities and enriched profile data are withheld on this plan; eligibility and exclusions are complete. Counts reflect the full set.'
+        : `Opportunity id list truncated to ${idCap}; count and by_type reflect the full set.`,
+    }
+  }
+
+  if (!options.summary && data_richness === 'enriched' && funder_row) {
     // NOTE: funder_row.notes is DELIBERATELY NOT projected into enriched_data.
     // The notes column contains curated editorial commentary (e.g. "Sunset
     // 2024: pivoted from grant-making to advocacy") which is closer in

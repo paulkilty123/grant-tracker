@@ -240,6 +240,14 @@ Deferred post-beta:
 3. **Minimal changes.** Fix the stated problem. Don't refactor surrounding code unless asked.
 4. **Verify on live site** after every merge/push to `main` (~1 min Vercel deploy).
 5. **No border-radius: 0** anywhere — rounded corners are a hard design rule.
+6. **Eligibility is never a paid feature.** `who_can_apply` and `exclusions`
+   stay complete on every tier, on every surface, including the free MCP tier.
+   Tier differences are quantity (fewer results, fewer depth fields, whole
+   fields omitted rather than truncated) and are always declared in the
+   response. Withholding exclusions could send someone to apply where they are
+   explicitly barred — a worse outcome than any conversion gain, and it damages
+   trust in the catalogue rather than in the paywall. **Settled 2026-08-03; do
+   not re-litigate.** See `docs/shoots-mcp-build-brief.md` hard constraint 4.
 
 ---
 
