@@ -387,6 +387,7 @@ ${combinedContent ? `\n${combinedContent}` : ''}
 Write a structured "funder brief" as JSON. Rules:
 - Write directly for a grant-seeker — practical, plain English, no jargon
 - NEVER reference "the source", "the website", "the page", or your own uncertainty in field values
+- These words are read by an applicant deciding whether to apply, and they cannot see what you were given. Write as though describing the funder from full knowledge of them. Never mention the material you are reading from, in ANY wording — not "excerpt", "extract", "text", "content", "information provided", or any synonym. "Priorities are not detailed in this excerpt" tells the applicant nothing about the funder and exposes our own plumbing; either state the priorities or omit the field
 - Each field should be 1–3 sentences max
 - If information is not explicitly stated, make a reasonable inference from context (e.g. if a funder supports "charities and community groups", infer the likely structures). Do not explain the inference — just state the conclusion naturally
 - If a field is genuinely impossible to infer, use null — do not write placeholder text explaining what is unknown

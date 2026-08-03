@@ -4,6 +4,10 @@ import { runEligibilityChecks } from './eligibility'
 import type { EligibilityStatus as EligibilityStatusFromEngine, EligibilityIssue } from './eligibility'
 import { extractIncomeGate } from './extract-income-gate'
 
+/** The full SpendRestriction vocabulary. Used to detect "all selected", which
+ *  carries the same meaning as "none selected": no preference expressed. */
+const SPEND_RESTRICTION_VALUES = ['restricted', 'unrestricted', 'capital'] as const
+
 export interface MatchBreakdown {
   location:      { score: number; max: number; label: string }
   themes:        { score: number; max: number; label: string }
@@ -1509,6 +1513,44 @@ export function computeMatchScore(
     } else {
       // User set preferences but this sub-type isn't one — mild penalty.
       // Keep lighter than the fundingType miss to avoid compounding.
+      funderTypeScore = Math.max(0, funderTypeScore - 2)
+    }
+  }
+
+  // (SPEND_RESTRICTION_VALUES is module-level, see top of file)
+  // ── Spend restriction affinity ──────────────────────────────────────────
+  //
+  // What the money may be spent on, scored separately from the sub-type above
+  // because they answer different questions. An org needing equipment money is
+  // filtering for `capital`, and a fund tagged `small_grant` in the sub-type
+  // column tells them nothing either way.
+  //
+  // Both sides must be present to score. A null restriction means the funder
+  // page never said, and an empty preference list means the org never chose —
+  // neither is evidence of a mismatch, so silence scores nothing rather than
+  // penalising. That matters while the catalogue is still mostly untagged:
+  // detection has not run yet, so most grants carry null here and must not be
+  // pushed down for it.
+  //
+  // SELECTING ALL THREE IS THE SAME AS SELECTING NONE, and is treated as such.
+  // Most users will tick everything and filter later, which is a reasonable way
+  // to behave — but scoring it literally would give +5 to every TAGGED grant
+  // and nothing to untagged ones, rewarding our own data completeness rather
+  // than fit. With detection not yet run, that would systematically float the
+  // 165 already-tagged rows above 458 identical-quality untagged ones.
+  const spendPrefsRaw = org.spend_restriction_preferences ?? []
+  const spendPrefs = spendPrefsRaw.length === SPEND_RESTRICTION_VALUES.length ? [] : spendPrefsRaw
+  if (grant.spendRestriction && spendPrefs.length > 0) {
+    if (spendPrefs.includes(grant.spendRestriction)) {
+      funderTypeScore = Math.min(15, funderTypeScore + 5)
+      if (grant.spendRestriction === 'unrestricted') {
+        reasons.push(`Unrestricted funding — spend it where ${org.name} needs it`)
+      } else if (grant.spendRestriction === 'capital') {
+        reasons.push('Capital funding — covers equipment and one-off costs')
+      } else {
+        reasons.push('Project funding, which is what you said you need')
+      }
+    } else {
       funderTypeScore = Math.max(0, funderTypeScore - 2)
     }
   }

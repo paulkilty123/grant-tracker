@@ -58,6 +58,7 @@ export async function POST() {
     funder_type_preferences:      [],
     funding_type_preferences:     [],
     funding_subtype_preferences:  [],
+    spend_restriction_preferences: [],
     people_per_year:              null,
     volunteers:                   null,
     years_operating:              null,

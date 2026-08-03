@@ -46,6 +46,7 @@ export const TRACKED_FIELDS = [
   'si_interest_rate_percent', // feeds eligibility.ts charity_repayable_finance
   'si_security_required',     // feeds eligibility.ts si_security_vs_asset_lock
   'si_instrument_type',       // instrument kind (informational)
+  'spend_restriction',        // restricted | unrestricted | capital — matcher input, tracked BEFORE anything writes to it
 ] as const
 
 export type TrackedField = typeof TRACKED_FIELDS[number]
