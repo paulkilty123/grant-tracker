@@ -119,12 +119,43 @@ export const MCP_ATTRIBUTION = {
 } as const
 
 /**
- * Token substitution for copy held in config/upgrade-notes.json.
- * Placeholders: {{brand}}, {{app_host}}, {{app_origin}}.
+ * Where upgrade copy sends someone to see plans and prices.
+ *
+ * Points at the app root today because **there is no /pricing route** — public
+ * routes are /, /apply, /privacy, /terms, /mcp, /mcp/terms, /grants/*. Copy
+ * linking to /pricing would hand an AI client a 404 to read out. Set
+ * MCP_PRICING_URL (or repoint this default) the moment that page exists.
  */
-export function applyBrandTokens(text: string): string {
-  return text
+export const MCP_PRICING_URL = readString('MCP_PRICING_URL', MCP_APP_ORIGIN)
+
+/**
+ * Token substitution for copy held in config/upgrade-notes.json.
+ *
+ * Config tokens: {{brand}}, {{app_host}}, {{app_origin}}, {{pricing_url}}.
+ * Runtime tokens are passed per call — {{total_matching}}, {{resets_on}},
+ * {{monthly_limit}} — so a figure in copy is always the one the response
+ * actually carries and cannot drift from it. That matters for the quota note
+ * in particular: the limit is env-overridable, so hardcoding "75" in config
+ * would make the copy lie the moment FREE_SEARCH_QUOTA is set.
+ */
+export function applyBrandTokens(text: string, runtime: Record<string, string | number> = {}): string {
+  let out = text
     .replaceAll('{{brand}}', MCP_BRAND_NAME)
     .replaceAll('{{app_host}}', MCP_APP_HOST)
     .replaceAll('{{app_origin}}', MCP_APP_ORIGIN)
+    .replaceAll('{{pricing_url}}', MCP_PRICING_URL)
+
+  for (const [key, value] of Object.entries(runtime)) {
+    out = out.replaceAll(`{{${key}}}`, String(value))
+  }
+
+  // Fail loud on anything left unresolved. A stray token would otherwise reach
+  // a model verbatim and be read to a user as literal "{{total_matching}}" —
+  // worse than a clipped sentence, and silent, because nothing else checks.
+  const unresolved = out.match(/\{\{[a-z_]+\}\}/g)
+  if (unresolved) {
+    console.error(`[mcp-brand] unresolved copy tokens: ${unresolved.join(', ')}`)
+    out = out.replace(/\s*\{\{[a-z_]+\}\}/g, '').replace(/\s{2,}/g, ' ').trim()
+  }
+  return out
 }

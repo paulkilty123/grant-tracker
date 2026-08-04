@@ -555,7 +555,10 @@ function buildHandler(surface: HandlerSurface) {
                   resets_on: quota.resets_on,
                 },
                 message: `This connection has used its ${quota.limit} free searches for this calendar month. The allowance resets on ${quota.resets_on}.`,
-                upgrade_note: getErrorVariantNote('search_quota_reached'),
+                upgrade_note: getErrorVariantNote('search_quota_reached', {
+                  monthly_limit: quota.limit,
+                  resets_on: quota.resets_on,
+                }),
                 attribution: ATTRIBUTION,
                 rate_limit_status: rateLimitStatusForContext(auth),
               }) }],
@@ -610,7 +613,14 @@ function buildHandler(surface: HandlerSurface) {
           },
           upgrade_note: isZero
             ? getUpgradeNote('search_funding_and_support', 'zero_result')
-            : getUpgradeNote('search_funding_and_support', 'standard'),
+            : (!paidCaller && (requestedLimit ?? 20) > FREE_SEARCH_RESULT_CAP)
+              // The capped variant states the true total beside the 10 shown,
+              // so the restriction is disclosed with the number it applies to
+              // rather than in the abstract.
+              ? getUpgradeNote('search_funding_and_support', 'capped', {
+                  total_matching: searchResults.total_matching,
+                })
+              : getUpgradeNote('search_funding_and_support', 'standard'),
           attribution: ATTRIBUTION,
           rate_limit_status: rateLimitStatusForContext(auth),
           // Hard constraint 4: a restriction is declared, never silent. A free
@@ -842,7 +852,11 @@ function buildHandler(surface: HandlerSurface) {
           active_opportunities: active_opps,
         }, { summary: !isPaidTier(auth?.tier) })
 
-        const upgrade_variant = intelligence.provider.data_richness === 'enriched' ? 'enriched' : 'basic'
+        // Free callers get the summary note, which names what the summary form
+        // withheld. Paid callers get the depth note keyed on data richness.
+        const upgrade_variant = !isPaidTier(auth?.tier)
+          ? 'summary'
+          : intelligence.provider.data_richness === 'enriched' ? 'enriched' : 'basic'
         const body = {
           ...intelligence,
           attribution: ATTRIBUTION,
