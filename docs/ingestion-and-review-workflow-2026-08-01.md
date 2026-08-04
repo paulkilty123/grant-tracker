@@ -300,4 +300,4 @@ and they are the honest residue of the 1 August pass):
 
 **Now:** rows arrive carrying reasons, the evidence is on screen so a decision does not mean opening the funder's site, and accepting a row costs the machine nothing.
 
-**Still missing (Phase 5):** the weekly digest. Nothing reports catalogue health; you still find out by asking. `golden-queries` results, `crawl_errors`, and gate throughput all terminate in logs.
+**Still missing (Phase 5):** the weekly digest, and the Pipeline page — see `docs/pipeline-page-scope.md`, which now carries token/cost capture in v1 because no ingestion job records `response.usage` today. Nothing reports catalogue health; you still find out by asking. `golden-queries` results, `crawl_errors`, and gate throughput all terminate in logs.
