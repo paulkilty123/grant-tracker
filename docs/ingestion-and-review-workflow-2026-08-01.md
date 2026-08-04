@@ -20,11 +20,11 @@ after a dry run showed roughly 16 of the 38 rows it would newly expose had a
 defect; a 5-row canary confirmed the write path; the branch is merged, the cron
 runs daily at 09:00, and `AUTO_PUBLISH_ENABLED` is set. See §5 and §10.
 
-**Platform constraint that governs all of this: the account is Vercel Hobby, not
-Pro.** Verified against the Vercel API on 1 August, both personal and team.
-Cron schedules must be daily or less frequent; a sub-daily entry fails silently
-and has previously blocked every deploy. The 25 July scope doc asserts Pro and
-builds its throughput phase on it — that phase is retracted in place.
+**Platform note: the team moved to Vercel Pro on 2026-08-04.** Everything below
+was written under Hobby, where cron schedules had to be daily or less frequent.
+That constraint is gone, so the July scope doc's throughput phase is live again.
+**The schedules in this document are still the Hobby-era ones** — nothing has
+been re-cadenced yet.
 
 ---
 
@@ -185,7 +185,7 @@ The third outcome exists because most of the queue was already live to users, so
 ### Status: armed, 1 August
 
 - `AUTO_PUBLISH_ENABLED=true` in Vercel production.
-- Cron entry `{ "path": "/api/cron/auto-publish", "schedule": "0 9 * * *" }` — daily 09:00 UTC, 90 minutes after `process-pipeline-queue`, so a row enriched that morning is gated the same day. Daily because the account is Hobby.
+- Cron entry `{ "path": "/api/cron/auto-publish", "schedule": "0 9 * * *" }` — daily 09:00 UTC, 90 minutes after `process-pipeline-queue`, so a row enriched that morning is gated the same day. Daily because the account was Hobby when this shipped; Pro now permits more often.
 - Writes as `system:auto_publish` (trust 50), never `admin:`, so auto-published rows stay improvable.
 
 **Canary, 1 August.** `?apply=true&limit=5` against production. The route sorts
