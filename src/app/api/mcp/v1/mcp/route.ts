@@ -533,6 +533,17 @@ function buildHandler(surface: HandlerSurface) {
           params.limit = Math.min(params.limit ?? FREE_SEARCH_RESULT_CAP, FREE_SEARCH_RESULT_CAP)
         }
 
+        // Did the cap actually take something away? Only when the caller ASKED
+        // for more than the free page size. A caller who specifies no limit
+        // gets the free tier's own default of 10 and is not short-changed, so
+        // there is nothing to declare.
+        //
+        // The distinction matters more than it looks: comparing against the
+        // schema default of 20 instead would fire the cap notice on every
+        // default free search, which both cries wolf and starves the one slot
+        // where an upgrade line is genuinely the most useful thing to say.
+        const capBit = !paidCaller && requestedLimit !== undefined && requestedLimit > FREE_SEARCH_RESULT_CAP
+
         // Free-tier monthly allowance. Consumed BEFORE the search runs, so an
         // exhausted caller costs a Redis INCR rather than a catalogue query.
         // Exhaustion is a normal tool response, not an error: the model should
@@ -611,16 +622,31 @@ function buildHandler(surface: HandlerSurface) {
             filters_applied,
             result_quality: searchResults.result_quality,
           },
+          // ONE note per response, never two, never zero. Ordered by how much
+          // the caller needs it, most situational first:
+          //
+          //   1. zero_result  — nothing was found, so explain why. This
+          //      outranks the Apply pitch deliberately: offering to sell
+          //      pipeline tracking to someone who just found nothing reads as
+          //      tone-deaf, and the diagnostic is the useful thing to say.
+          //   2. capped       — free, and the cap actually bit. States the
+          //      true total beside the ten shown, so the restriction is
+          //      disclosed with the number it applies to.
+          //   3. pipeline     — free, unrestricted response. The one slot
+          //      where an upgrade line is the most useful thing left to say.
+          //   4. standard     — paid callers, who already have pipeline.
+          //
+          // The quota wall is not in this chain: it returns earlier, carrying
+          // its own single note, which is what keeps "never two" true.
           upgrade_note: isZero
             ? getUpgradeNote('search_funding_and_support', 'zero_result')
-            : (!paidCaller && (requestedLimit ?? 20) > FREE_SEARCH_RESULT_CAP)
-              // The capped variant states the true total beside the 10 shown,
-              // so the restriction is disclosed with the number it applies to
-              // rather than in the abstract.
+            : capBit
               ? getUpgradeNote('search_funding_and_support', 'capped', {
                   total_matching: searchResults.total_matching,
                 })
-              : getUpgradeNote('search_funding_and_support', 'standard'),
+              : !paidCaller
+                ? getUpgradeNote('search_funding_and_support', 'pipeline_available')
+                : getUpgradeNote('search_funding_and_support', 'standard'),
           attribution: ATTRIBUTION,
           rate_limit_status: rateLimitStatusForContext(auth),
           // Hard constraint 4: a restriction is declared, never silent. A free
@@ -641,7 +667,7 @@ function buildHandler(surface: HandlerSurface) {
           // Declared only when the cap actually bit — i.e. the caller asked for
           // more than the free page size. Announcing a cap on a request for 5
           // results would be noise, not disclosure.
-          ...(!paidCaller && (requestedLimit ?? 20) > FREE_SEARCH_RESULT_CAP
+          ...(capBit
             ? {
                 result_cap: {
                   applied: FREE_SEARCH_RESULT_CAP,
