@@ -21,9 +21,9 @@ type ToolKey = keyof RawNotes['tools']
 // is implemented in steps 7-8. The loader fails fast if any required slot
 // is null/missing — prevents shipping a tool with an empty upgrade_note.
 const REQUIRED: Record<ToolKey, string[]> = {
-  search_funding_and_support: ['standard', 'zero_result'],
+  search_funding_and_support: ['standard', 'zero_result', 'capped', 'pipeline_available'],
   get_opportunity_detail:     ['standard'],
-  get_provider_intelligence:  ['enriched', 'basic'],
+  get_provider_intelligence:  ['enriched', 'basic', 'summary'],
   get_taxonomy:               ['standard'],
 }
 
@@ -43,16 +43,25 @@ function validateOnLoad(): void {
 }
 validateOnLoad()
 
-// Brand tokens ({{brand}}, {{app_host}}, {{app_origin}}) are substituted on
-// read, so the copy in upgrade-notes.json stays brand-agnostic and a rebrand
-// remains a single env flip in lib/mcp-brand.ts.
-export function getUpgradeNote(tool: ToolKey, variant: string = 'standard'): string | null {
+// Config tokens are substituted on read so the copy stays brand-agnostic and a
+// rebrand remains a single env flip. `runtime` carries per-response values
+// ({{total_matching}}, {{resets_on}}, {{monthly_limit}}) from the call site, so
+// a figure in copy is the figure the response carries rather than a second
+// copy of it that can drift.
+export function getUpgradeNote(
+  tool: ToolKey,
+  variant: string = 'standard',
+  runtime: Record<string, string | number> = {},
+): string | null {
   const block = notes.tools[tool] as Record<string, string | null> | undefined
   const raw = block?.[variant]
-  return raw ? applyBrandTokens(raw) : null
+  return raw ? applyBrandTokens(raw, runtime) : null
 }
 
-export function getErrorVariantNote(variant: keyof RawNotes['error_variants']): string | null {
+export function getErrorVariantNote(
+  variant: keyof RawNotes['error_variants'],
+  runtime: Record<string, string | number> = {},
+): string | null {
   const raw = notes.error_variants[variant]
-  return raw ? applyBrandTokens(raw) : null
+  return raw ? applyBrandTokens(raw, runtime) : null
 }
