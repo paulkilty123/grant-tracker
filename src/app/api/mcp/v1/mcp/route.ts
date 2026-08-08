@@ -68,6 +68,13 @@ const authStore = new AsyncLocalStorage<MCPAuthContext>()
 
 const ATTRIBUTION = MCP_ATTRIBUTION
 
+/**
+ * Results per search call on the free plan. A page-size cap, not a reach cap:
+ * offset still pages the whole set and total_matching always states the true
+ * size. Paid tiers keep the schema ceiling of 50.
+ */
+const FREE_SEARCH_RESULT_CAP = 10
+
 // Reads live rate-limit status from the auth context if step 3 populated
 // it, otherwise falls back to the static maxima from spec §6.3. The fallback
 // is used in two cases: (a) Upstash env vars missing locally (dev), or
@@ -516,6 +523,27 @@ function buildHandler(surface: HandlerSurface) {
           offset:                  raw.offset,
         }
 
+        // Free tier: at most FREE_SEARCH_RESULT_CAP results per call. A cap on
+        // page size, not on reach — offset still pages through the whole result
+        // set, and total_matching always states the true size, so nothing is
+        // hidden. Paid tiers keep the existing ceiling of 50.
+        const paidCaller = isPaidTier(auth?.tier)
+        const requestedLimit = params.limit
+        if (!paidCaller) {
+          params.limit = Math.min(params.limit ?? FREE_SEARCH_RESULT_CAP, FREE_SEARCH_RESULT_CAP)
+        }
+
+        // Did the cap actually take something away? Only when the caller ASKED
+        // for more than the free page size. A caller who specifies no limit
+        // gets the free tier's own default of 10 and is not short-changed, so
+        // there is nothing to declare.
+        //
+        // The distinction matters more than it looks: comparing against the
+        // schema default of 20 instead would fire the cap notice on every
+        // default free search, which both cries wolf and starves the one slot
+        // where an upgrade line is genuinely the most useful thing to say.
+        const capBit = !paidCaller && requestedLimit !== undefined && requestedLimit > FREE_SEARCH_RESULT_CAP
+
         // Free-tier monthly allowance. Consumed BEFORE the search runs, so an
         // exhausted caller costs a Redis INCR rather than a catalogue query.
         // Exhaustion is a normal tool response, not an error: the model should
@@ -538,7 +566,10 @@ function buildHandler(surface: HandlerSurface) {
                   resets_on: quota.resets_on,
                 },
                 message: `This connection has used its ${quota.limit} free searches for this calendar month. The allowance resets on ${quota.resets_on}.`,
-                upgrade_note: getErrorVariantNote('search_quota_reached'),
+                upgrade_note: getErrorVariantNote('search_quota_reached', {
+                  monthly_limit: quota.limit,
+                  resets_on: quota.resets_on,
+                }),
                 attribution: ATTRIBUTION,
                 rate_limit_status: rateLimitStatusForContext(auth),
               }) }],
@@ -591,9 +622,31 @@ function buildHandler(surface: HandlerSurface) {
             filters_applied,
             result_quality: searchResults.result_quality,
           },
+          // ONE note per response, never two, never zero. Ordered by how much
+          // the caller needs it, most situational first:
+          //
+          //   1. zero_result  — nothing was found, so explain why. This
+          //      outranks the Apply pitch deliberately: offering to sell
+          //      pipeline tracking to someone who just found nothing reads as
+          //      tone-deaf, and the diagnostic is the useful thing to say.
+          //   2. capped       — free, and the cap actually bit. States the
+          //      true total beside the ten shown, so the restriction is
+          //      disclosed with the number it applies to.
+          //   3. pipeline     — free, unrestricted response. The one slot
+          //      where an upgrade line is the most useful thing left to say.
+          //   4. standard     — paid callers, who already have pipeline.
+          //
+          // The quota wall is not in this chain: it returns earlier, carrying
+          // its own single note, which is what keeps "never two" true.
           upgrade_note: isZero
             ? getUpgradeNote('search_funding_and_support', 'zero_result')
-            : getUpgradeNote('search_funding_and_support', 'standard'),
+            : capBit
+              ? getUpgradeNote('search_funding_and_support', 'capped', {
+                  total_matching: searchResults.total_matching,
+                })
+              : !paidCaller
+                ? getUpgradeNote('search_funding_and_support', 'pipeline_available')
+                : getUpgradeNote('search_funding_and_support', 'standard'),
           attribution: ATTRIBUTION,
           rate_limit_status: rateLimitStatusForContext(auth),
           // Hard constraint 4: a restriction is declared, never silent. A free
@@ -608,6 +661,18 @@ function buildHandler(surface: HandlerSurface) {
                   monthly_limit: freeQuota.limit,
                   searches_remaining: Math.max(0, freeQuota.limit - freeQuota.used),
                   resets_on: freeQuota.resets_on,
+                },
+              }
+            : {}),
+          // Declared only when the cap actually bit — i.e. the caller asked for
+          // more than the free page size. Announcing a cap on a request for 5
+          // results would be noise, not disclosure.
+          ...(capBit
+            ? {
+                result_cap: {
+                  applied: FREE_SEARCH_RESULT_CAP,
+                  requested: requestedLimit,
+                  note: `Free plan returns up to ${FREE_SEARCH_RESULT_CAP} results per call, ranked strongest first. total_matching is the full count; use offset to page through the rest.`,
                 },
               }
             : {}),
@@ -802,14 +867,22 @@ function buildHandler(surface: HandlerSurface) {
           (f.short_name && f.short_name.toLowerCase() === lower)
         ) ?? null
 
+        // Free callers get the summary form; Apply and Adviser get full depth.
+        // The id cap inside the adapter applies to every tier regardless — it
+        // closes an unbounded list, which is a correctness fix rather than a
+        // commercial one.
         const intelligence = toMCPProviderIntelligence({
           provider_name: resolved_name,
           representative_brief,
           funder_row,
           active_opportunities: active_opps,
-        })
+        }, { summary: !isPaidTier(auth?.tier) })
 
-        const upgrade_variant = intelligence.provider.data_richness === 'enriched' ? 'enriched' : 'basic'
+        // Free callers get the summary note, which names what the summary form
+        // withheld. Paid callers get the depth note keyed on data richness.
+        const upgrade_variant = !isPaidTier(auth?.tier)
+          ? 'summary'
+          : intelligence.provider.data_richness === 'enriched' ? 'enriched' : 'basic'
         const body = {
           ...intelligence,
           attribution: ATTRIBUTION,

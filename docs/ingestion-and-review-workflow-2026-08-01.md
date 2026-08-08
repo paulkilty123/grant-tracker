@@ -20,11 +20,11 @@ after a dry run showed roughly 16 of the 38 rows it would newly expose had a
 defect; a 5-row canary confirmed the write path; the branch is merged, the cron
 runs daily at 09:00, and `AUTO_PUBLISH_ENABLED` is set. See §5 and §10.
 
-**Platform constraint that governs all of this: the account is Vercel Hobby, not
-Pro.** Verified against the Vercel API on 1 August, both personal and team.
-Cron schedules must be daily or less frequent; a sub-daily entry fails silently
-and has previously blocked every deploy. The 25 July scope doc asserts Pro and
-builds its throughput phase on it — that phase is retracted in place.
+**Platform note: the team moved to Vercel Pro on 2026-08-04.** Everything below
+was written under Hobby, where cron schedules had to be daily or less frequent.
+That constraint is gone, so the July scope doc's throughput phase is live again.
+**The schedules in this document are still the Hobby-era ones** — nothing has
+been re-cadenced yet.
 
 ---
 
@@ -120,6 +120,43 @@ Every tracked write goes through `mergeGrantUpdate()`. 28 tracked fields; `is_ac
 | `seed:` / `discovery:` | 25 |
 | unrecognised | 10 |
 
+### Which shelf does a write belong on?
+
+**Equal trust wins, and that is the point.** `mergeFieldUpdate` rejects only on
+*strictly* lower trust, so `ai_classifier:v3` (60) can overwrite
+`ai_enrich:v2` (60). That is not a hole to be closed — it is what lets a better
+AI pass improve on an earlier one without a human in the loop. Close it and the
+catalogue can only ever be corrected by hand.
+
+The consequence is a rule about where a write belongs, not about the ladder:
+
+**A one-off write at `ai_*` trust is TRANSIENT BY DESIGN.** It holds until the
+next same-tier pass disagrees, which may be tonight. That is correct for a value
+the machine should be free to improve. It is wrong for anything that must
+survive, and the failure is silent — the value simply reverts and nothing
+records that it did.
+
+Anything that must persist goes on one of two other shelves:
+
+| Shelf | For | Mechanism |
+|---|---|---|
+| **A pin** | Human decisions | `admin:` source, trust 100. Costs improvability: pinned fields are frozen against every future AI pass, which is the doom loop, so spend it only on values a person actually decided. |
+| **A write-boundary derivation** | Deterministic facts | Applied inside `mergeGrantUpdate` on every write, so no source can strip it. Costs nothing in improvability, because it re-derives rather than freezes. |
+
+**Worked example, 8 August.** 273 rows were backfilled with `scio` at
+`ai_enrich:structure_equivalents:v1` (60). `classify-grants` writes at 60 too, so
+that night's run would have stripped all 273 — the original Wee Grants bug at
+273× scale, overnight, with no trace. The fix was not to harden the ladder but to
+move the rule to the write boundary (`src/lib/structure-equivalents.ts`), where
+the classifier can return whatever it likes and the derivation reapplies before
+the merge decision.
+
+The test to apply before any bulk write: **if the next classifier pass disagrees
+with this value, should it win?** Yes → `ai_*` is right. No, because a human
+decided → pin it. No, because it is a fact that can be re-derived → derivation.
+
+Revisit the equal-trust rule only if a case appears that fits none of the three.
+
 Two rules that matter in practice:
 
 - **Amounts write at `ai_extract` (50), above `scraper` (40)**, so they survive the twice-weekly crawl. `admin/fill-amounts` writes at `ai_detect` (30) and is therefore erased every crawl.
@@ -185,7 +222,7 @@ The third outcome exists because most of the queue was already live to users, so
 ### Status: armed, 1 August
 
 - `AUTO_PUBLISH_ENABLED=true` in Vercel production.
-- Cron entry `{ "path": "/api/cron/auto-publish", "schedule": "0 9 * * *" }` — daily 09:00 UTC, 90 minutes after `process-pipeline-queue`, so a row enriched that morning is gated the same day. Daily because the account is Hobby.
+- Cron entry `{ "path": "/api/cron/auto-publish", "schedule": "0 9 * * *" }` — daily 09:00 UTC, 90 minutes after `process-pipeline-queue`, so a row enriched that morning is gated the same day. Daily because the account was Hobby when this shipped; Pro now permits more often.
 - Writes as `system:auto_publish` (trust 50), never `admin:`, so auto-published rows stay improvable.
 
 **Canary, 1 August.** `?apply=true&limit=5` against production. The route sorts
@@ -300,4 +337,4 @@ and they are the honest residue of the 1 August pass):
 
 **Now:** rows arrive carrying reasons, the evidence is on screen so a decision does not mean opening the funder's site, and accepting a row costs the machine nothing.
 
-**Still missing (Phase 5):** the weekly digest. Nothing reports catalogue health; you still find out by asking. `golden-queries` results, `crawl_errors`, and gate throughput all terminate in logs.
+**Still missing (Phase 5):** the weekly digest, and the Pipeline page — see `docs/pipeline-page-scope.md`, which now carries token/cost capture in v1 because no ingestion job records `response.usage` today. Nothing reports catalogue health; you still find out by asking. `golden-queries` results, `crawl_errors`, and gate throughput all terminate in logs.

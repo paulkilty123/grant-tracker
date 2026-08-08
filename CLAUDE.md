@@ -9,10 +9,17 @@ Next.js 14 App Router + Supabase + Tailwind CSS, deployed on Vercel via GitHub a
 - **Pricing:** Match £12/month, Apply £18/month. Monthly and annual billing only.
   (The old "£65/6 months, £115/year" was stale — there is no 6-month term. Phase 5
   MCP upgrade copy should quote these figures.)
-- **Vercel plan: Hobby.** Verified against the Vercel API 2026-08-01, both the
-  personal account and the team. Cron schedules must be **daily or less
-  frequent** — a sub-daily entry fails silently and has previously blocked every
-  deploy. Do not add `*/N` cron schedules.
+- **Vercel plan: Pro** (team `paulkilty1-3944s-projects`). Verified against the
+  Vercel API 2026-08-04. Sub-daily cron schedules (`*/N`) are now permitted.
+  Note the API reports the PERSONAL account as `hobby` and the TEAM as `pro`;
+  the project lives under the team, so the team plan governs. A check that
+  queries only `/v2/user` reports Hobby and is wrong.
+  > Was Hobby until 2026-08-04, and every cron entry in `vercel.json` is still
+  > daily-or-weekly as a result. `process-pipeline-queue` in particular was
+  > designed for a 5-minute cadence and runs once a day — see the July scope
+  > doc's Phase 1, which is un-retracted now that the platform allows it.
+  > Raising it is a real change in enrichment volume and LLM spend, so treat it
+  > as its own piece of work with a canary, not a config tidy.
 
 ---
 
@@ -240,6 +247,14 @@ Deferred post-beta:
 3. **Minimal changes.** Fix the stated problem. Don't refactor surrounding code unless asked.
 4. **Verify on live site** after every merge/push to `main` (~1 min Vercel deploy).
 5. **No border-radius: 0** anywhere — rounded corners are a hard design rule.
+6. **Eligibility is never a paid feature.** `who_can_apply` and `exclusions`
+   stay complete on every tier, on every surface, including the free MCP tier.
+   Tier differences are quantity (fewer results, fewer depth fields, whole
+   fields omitted rather than truncated) and are always declared in the
+   response. Withholding exclusions could send someone to apply where they are
+   explicitly barred — a worse outcome than any conversion gain, and it damages
+   trust in the catalogue rather than in the paywall. **Settled 2026-08-03; do
+   not re-litigate.** See `docs/shoots-mcp-build-brief.md` hard constraint 4.
 
 ---
 

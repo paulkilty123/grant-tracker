@@ -22,6 +22,11 @@ Worse: every admin-session save stamps `admin:<email>` with `pinned: true` on **
 
 **3. Throughput is pinned at Hobby-tier settings on what is now a Pro account.** `process-pipeline-queue` was built for a 5-minute cadence (`BATCH_LIMIT = 12`, header comment claims "~140 rows/hour"). `vercel.json` schedules it `30 7 * * *` — once daily. Effective: **12 rows/day against a design of 3,456/day, a 288× throttle.** A 300-row scraper burst takes 25 days to drain.
 
+> **SUPERSEDED 2026-08-04 — the account is now Pro, and this section's original
+> claim is correct again.** The correction below was accurate when written (the
+> team really was on Hobby on 1 August) and is kept for the reasoning, but the
+> Phase 1 recommendation it retracts is live again. See CLAUDE.md.
+>
 > **CORRECTION, 2026-08-01: the account is Hobby, not Pro.** Checked against the
 > Vercel API — both the personal account and the team report plan `hobby`. The
 > inference above ("37 cron entries and 270-300s functions, so it is on Pro")
@@ -346,13 +351,19 @@ Nothing here adds capability. It makes existing capability real.
 
 ### Phase 1 — Turn up throughput you already pay for (about 1 day)
 
-> **RETRACTED 2026-08-01 — the premise is false. The account is Hobby.** Every
+> **UN-RETRACTED 2026-08-04 — the team upgraded to Pro, so this phase is live
+> again as originally written.** The 1 August retraction below was correct at the
+> time and is kept for the record. `process-pipeline-queue` has since had
+> `BATCH_LIMIT` raised 12 → 24, so the daily run now does 24/day rather than 12;
+> the cadence change is still the larger lever and is still unmade.
+>
+> **RETRACTED 2026-08-01 — the premise was false at the time. The account was Hobby.** Every
 > `*/N` schedule below would fail silently and can block all deploys. On Hobby
 > the levers are batch size and additional daily slots. `process-pipeline-queue`
 > has since had `BATCH_LIMIT` raised 12 → 24; going further means a second daily
 > cron entry, not a shorter interval.
 
-- ~~`process-pipeline-queue`: daily → `*/10`. **12/day → ~1,700/day.** Single biggest unblock; makes backlog drain a non-issue and unthrottles CF fund verification.~~ **Unsafe on Hobby.**
+- `process-pipeline-queue`: daily → `*/10`. **24/day → ~3,400/day.** Single biggest unblock; makes backlog drain a non-issue and unthrottles CF fund verification. **Viable again on Pro (2026-08-04); not yet done.**
 - `reenrich-stale`: `BATCH_LIMIT` 6 → ~20, and/or run twice daily, so the 90-day cycle actually completes inside 90 days.
 - `check-watchlist`: add `ORDER BY last_checked ASC NULLS FIRST` plus a cursor so coverage rotates. Currently half the list has never been checked.
 - `validate-urls`: weekly → 2-3×/week.
@@ -482,7 +493,7 @@ Two structural questions the review should answer, not just a visual pass:
 ## 9. Docs drift to correct
 
 - `CLAUDE.md`: "`scraped_grants` — ~300 rows" → **1,729**. "360Giving import — deferred post-beta" → **shipped and runnable**. Current-priorities section predates GA.
-- ~~`docs/architecture-overview.md:37`: "On Vercel Hobby — daily-or-less crons only" → almost certainly **Pro** now (37 cron entries, 270-300s functions).~~ **This entry was itself the error.** `architecture-overview.md` was correct: the account is Hobby and daily-or-less is the real constraint. Verified against the Vercel API 2026-08-01. Leave that line alone.
+- ~~`docs/architecture-overview.md:37`: "On Vercel Hobby — daily-or-less crons only" → almost certainly **Pro** now (37 cron entries, 270-300s functions).~~ **Twice wrong, now resolved.** On 1 August this entry was itself the error — the account really was Hobby, and `architecture-overview.md` was correct. On 4 August the team upgraded to Pro, so the original entry's instinct was right after all and `architecture-overview.md` was stale again — corrected to Pro on 4 August in the same pass.
 - `docs/strategy/deadline-accuracy-redesign.md:10`: "gated, `REENRICH_CRON_ENABLED=false`" → **is set to true in prod**.
 - `crawl.ts:1-39` header: lists 34 sources, 14 deleted; the file has 97, mostly static.
 - `crawl-grants/route.ts:1-8`: "split across 3 batches / ~15 sources" → **9 batches, 97 sources**.
