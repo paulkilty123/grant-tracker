@@ -229,3 +229,30 @@ export function locationLabel(
   if (place) return place
   return isLocal ? 'Local' : null
 }
+
+
+/**
+ * The label for a grant's spend pill: what the money may be spent on.
+ *
+ * Reads the two orthogonal columns and says the useful thing, not the schema.
+ * A user needing equipment money is scanning for the word "Capital"; nobody is
+ * scanning for "restricted", which is jargon for the common case and carries no
+ * signal — so a plain restricted revenue grant gets NO pill at all, on the same
+ * principle that suppresses the "UK" location pill. Silence where every row
+ * would say the same thing.
+ *
+ * Returns null when there is nothing worth showing.
+ */
+export function spendLabel(
+  spendTypes: string[] | null | undefined,
+  spendRestriction: string | null | undefined,
+): string | null {
+  const types = Array.isArray(spendTypes) ? spendTypes : []
+  const capital = types.includes('capital')
+  const unrestricted = spendRestriction === 'unrestricted'
+
+  if (capital && unrestricted) return 'Capital or core costs'
+  if (capital)                 return types.includes('revenue') ? 'Capital or running costs' : 'Capital only'
+  if (unrestricted)            return 'Core costs'
+  return null   // restricted revenue, or nothing recorded — no signal worth a pill
+}

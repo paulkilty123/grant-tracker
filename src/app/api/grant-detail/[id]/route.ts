@@ -20,6 +20,7 @@ const PUBLIC_COLUMNS = [
   'id', 'external_id', 'title', 'funder', 'funder_type', 'funding_type',
   'description', 'amount_min', 'amount_max', 'deadline', 'is_rolling',
   'next_open_date', 'is_local', 'location_tag',
+  'spend_types', 'spend_restriction',
   'sectors', 'impact_sectors', 'target_beneficiaries',
   'eligibility_criteria', 'eligible_structures',
   'apply_url', 'source', 'last_seen_at', 'is_active',

@@ -7,7 +7,7 @@ import {
   TrendingUp, Users, GitMerge, Gift, Landmark, ExternalLink,
   PlusCircle,
 } from 'lucide-react'
-import { formatRange, formatNextOpen, locationLabel } from '@/lib/utils'
+import { formatRange, formatNextOpen, locationLabel, spendLabel } from '@/lib/utils'
 import { FunderBrief, briefHasContent, leadParagraph } from '@/components/FunderBrief'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -28,6 +28,8 @@ interface ScrapedGrant {
   is_rolling: boolean | null
   is_local: boolean | null
   location_tag: string | null
+  spend_types: string[] | null
+  spend_restriction: string | null
   sectors: string[] | null
   impact_sectors: string[] | null
   eligibility_criteria: string[] | null
@@ -283,6 +285,14 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
                       <ftBadge.Icon className="w-3 h-3" />
                       {ftBadge.label}
                     </span>
+                    {spendLabel(grant.spend_types, grant.spend_restriction) && (
+                      <span
+                        className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1"
+                        style={{ backgroundColor: 'rgba(255,183,77,0.20)', color: '#854F0B', borderRadius: 9999 }}
+                      >
+                        {spendLabel(grant.spend_types, grant.spend_restriction)}
+                      </span>
+                    )}
                     {locationLabel(grant.is_local, grant.location_tag) && (
                       <span
                         className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1"
