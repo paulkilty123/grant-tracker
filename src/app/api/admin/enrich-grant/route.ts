@@ -413,6 +413,40 @@ Do not fabricate snippets. If you can't find supporting text, use "low" with rea
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DEADLINE CYCLE — extract when cycle language is present
 
+SPEND — two INDEPENDENT questions about the money. Both are top-level fields.
+
+\`_spend_types\` — what KIND of cost does it cover? Array, any of:
+   "capital"   equipment, building work, vehicles, one-off physical items
+   "revenue"   day-to-day running: staff, delivery, activities, overheads
+Return BOTH when the funder covers both — "supports Capital and Revenue
+applications" is exactly that, and roughly a quarter of funds do.
+
+\`_spend_restriction\` — how tied to a purpose is the REVENUE money?
+   "restricted"    tied to a specific project or programme
+   "unrestricted"  core costs, salaries, "spend as you see fit"
+
+These are ORTHOGONAL. Capital money for a named project is
+["capital"] + "restricted". An unrestricted pot usable for anything is
+["capital","revenue"] + "unrestricted". Do not let one answer drive the other.
+
+THE TRAP: "capital" appearing in what the funder EXCLUDES means they REFUSE
+capital — the opposite of the capital tag. Read what the funder is claiming, not
+which words appear. A fund covering equipment but excluding building works still
+has "capital": it covers some capital costs, which is what someone needing
+equipment money is filtering for.
+
+CONFIDENT "the page does not say" IS A REAL ANSWER: return null (for
+_spend_restriction) or [] (for _spend_types). Do not default to "restricted"
+because it is the common case — a guess and a reading must stay distinguishable.
+
+IF YOU ARE NOT CONFIDENT, OMIT THE FIELD ENTIRELY. Omission means abstain: the
+existing value is preserved. Writing null would destroy a good prior answer to
+record your uncertainty, which is the more expensive error. Null is reserved for
+a confident "the page does not say"; silence is for "I could not tell".
+
+Add \`_spend_types\` / \`_spend_restriction\` entries to \`_citations\` with the
+verbatim phrase whenever you populate either.
+
 If the source mentions a recurring cycle of application deadlines (e.g. "two deadlines per year in May and October", "three Board meetings — applications close 8 May, 31 August, 11 December", "annual round closing 30 November"), populate the top-level \`_deadline_cycle\` field as an array:
 
 [
@@ -668,6 +702,26 @@ NOTE: _deadline_cycle and its _citations entry are ONLY present when a recurring
       (s.url ?? '').trim().length > 5 || (s.text ?? '').trim().length > 50
     )
     if (sourcesToSave.length > 0) updatePayload.grant_sources = sourcesToSave
+  }
+
+  // Spend axes: promoted out of the brief blob into their own columns, the same
+  // way _deadline_cycle is. OMISSION IS ABSTAIN — a field the model left out is
+  // never written, so a confident earlier answer survives an uncertain re-read.
+  // Only an explicit null / [] clears, and that means "the page does not say".
+  {
+    const rawTypes = (brief as Record<string, unknown>)?._spend_types
+    const rawRestr = (brief as Record<string, unknown>)?._spend_restriction
+    if (rawTypes !== undefined) {
+      updatePayload.spend_types = Array.isArray(rawTypes)
+        ? Array.from(new Set(rawTypes.filter(t => t === 'capital' || t === 'revenue'))).sort()
+        : null
+    }
+    if (rawRestr !== undefined) {
+      updatePayload.spend_restriction =
+        rawRestr === 'restricted' || rawRestr === 'unrestricted' ? rawRestr : null
+    }
+    delete (brief as Record<string, unknown>)._spend_types
+    delete (brief as Record<string, unknown>)._spend_restriction
   }
 
   try {
