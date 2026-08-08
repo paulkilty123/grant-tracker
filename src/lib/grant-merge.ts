@@ -14,6 +14,7 @@
 // See docs in CLAUDE.md / Phase A draft for the trust ladder and merger rule.
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { deriveEquivalentStructures } from '@/lib/structure-equivalents'
 
 // ── Tracked fields ────────────────────────────────────────────────────────────
 
@@ -285,7 +286,14 @@ export async function mergeGrantUpdate(opts: MergeGrantOptions): Promise<MergeGr
   // pipeline_state is always selected so the auto-transition below can decide
   // if the row's state should change as a side effect of this write.
   const trackedCols = Object.keys(trackedFields)
-  const selectCols  = [...trackedCols, 'field_provenance', 'pipeline_state'].join(', ')
+  // location_tag / funder_brief are pulled even when untouched: the structure
+  // equivalence derivation below needs the row's geography to decide whether a
+  // SCIO or CIO is implied, and geography is usually NOT part of this write.
+  const needsGeo    = trackedCols.includes('eligible_structures')
+  const selectCols  = Array.from(new Set([
+    ...trackedCols, 'field_provenance', 'pipeline_state',
+    ...(needsGeo ? ['location_tag', 'funder_brief'] : []),
+  ])).join(', ')
   const { data: current, error: fetchErr } = await db
     .from('scraped_grants')
     .select(selectCols)
@@ -304,6 +312,29 @@ export async function mergeGrantUpdate(opts: MergeGrantOptions): Promise<MergeGr
   const applied:  string[] = [...Object.keys(untrackedFields)]
   const rejected: MergeGrantResult['rejected'] = []
   let anyTrackedWritten = false
+
+  // Expand implicit charity-form equivalents BEFORE the merge decision, so the
+  // derived value is what gets compared, written and stamped. Running it after
+  // would either re-trigger a second write or be silently discarded when the
+  // merger judged the undecorated value idempotent.
+  //
+  // A funder saying "open to registered charities" has accepted SCIOs in
+  // Scotland and CIOs in England & Wales; the classifier reads literally and
+  // drops the form it did not see spelled out. Wee Grants lost `scio` that way
+  // on a re-read and went invisible to its core audience.
+  if (trackedFields.eligible_structures !== undefined) {
+    const brief = currentRow.funder_brief as Record<string, unknown> | null
+    const geo = [
+      currentRow.location_tag,
+      brief?.geographic_focus,
+    ].filter(Boolean).join(' ')
+    const eligText = [brief?.who_can_apply, brief?.exclusions].filter(Boolean).join(' ')
+    trackedFields.eligible_structures = deriveEquivalentStructures(
+      trackedFields.eligible_structures as string[] | null,
+      geo,
+      eligText,
+    )
+  }
 
   for (const [field, newValue] of Object.entries(trackedFields)) {
     // Per-field provenance so each tracked field can carry its own citation.
