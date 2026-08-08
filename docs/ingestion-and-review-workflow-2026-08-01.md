@@ -120,6 +120,43 @@ Every tracked write goes through `mergeGrantUpdate()`. 28 tracked fields; `is_ac
 | `seed:` / `discovery:` | 25 |
 | unrecognised | 10 |
 
+### Which shelf does a write belong on?
+
+**Equal trust wins, and that is the point.** `mergeFieldUpdate` rejects only on
+*strictly* lower trust, so `ai_classifier:v3` (60) can overwrite
+`ai_enrich:v2` (60). That is not a hole to be closed — it is what lets a better
+AI pass improve on an earlier one without a human in the loop. Close it and the
+catalogue can only ever be corrected by hand.
+
+The consequence is a rule about where a write belongs, not about the ladder:
+
+**A one-off write at `ai_*` trust is TRANSIENT BY DESIGN.** It holds until the
+next same-tier pass disagrees, which may be tonight. That is correct for a value
+the machine should be free to improve. It is wrong for anything that must
+survive, and the failure is silent — the value simply reverts and nothing
+records that it did.
+
+Anything that must persist goes on one of two other shelves:
+
+| Shelf | For | Mechanism |
+|---|---|---|
+| **A pin** | Human decisions | `admin:` source, trust 100. Costs improvability: pinned fields are frozen against every future AI pass, which is the doom loop, so spend it only on values a person actually decided. |
+| **A write-boundary derivation** | Deterministic facts | Applied inside `mergeGrantUpdate` on every write, so no source can strip it. Costs nothing in improvability, because it re-derives rather than freezes. |
+
+**Worked example, 8 August.** 273 rows were backfilled with `scio` at
+`ai_enrich:structure_equivalents:v1` (60). `classify-grants` writes at 60 too, so
+that night's run would have stripped all 273 — the original Wee Grants bug at
+273× scale, overnight, with no trace. The fix was not to harden the ladder but to
+move the rule to the write boundary (`src/lib/structure-equivalents.ts`), where
+the classifier can return whatever it likes and the derivation reapplies before
+the merge decision.
+
+The test to apply before any bulk write: **if the next classifier pass disagrees
+with this value, should it win?** Yes → `ai_*` is right. No, because a human
+decided → pin it. No, because it is a fact that can be re-derived → derivation.
+
+Revisit the equal-trust rule only if a case appears that fits none of the three.
+
 Two rules that matter in practice:
 
 - **Amounts write at `ai_extract` (50), above `scraper` (40)**, so they survive the twice-weekly crawl. `admin/fill-amounts` writes at `ai_detect` (30) and is therefore erased every crawl.
