@@ -1,0 +1,66 @@
+/* Shoots palette, scoped to the OAuth connect flow.
+   ============================================================
+   A deliberate island (phase 6, 2026-08-08). The Shoots token migration lives
+   on shoots/design-tokens and is not merged; it is deferred to September prep
+   as its own workstream. This flow needs the new palette now, so the tokens it
+   uses are declared here under a scope class.
+
+   Names and values are copied VERBATIM from the canonical :root block on
+   shoots/design-tokens. That is the point: when the migration lands and
+   declares them globally, this block becomes redundant rather than
+   conflicting, and deleting it is a no-op. Do not "improve" a value here — a
+   divergence would silently outlive the migration, because the scoped block
+   wins over :root by specificity.
+
+   Scoped rather than global so nothing outside the connect flow is restyled by
+   a page that happens to import this file.
+
+   On the rgba() literals below: they are canonical. The border tokens are
+   defined as rgba in the source block, so reproducing them is what keeps this
+   file a faithful copy. The house rule against rgba is about not introducing
+   NEW ones in component code, and no component in this flow does; every colour
+   below is consumed through var().
+   ============================================================ */
+
+.shoots-auth {
+  /* Surfaces */
+  --surface-page:    #FBF9F4;
+  --surface-card:    #FFFFFF;
+  --surface-sunken:  #F6F1E7;
+  --surface-inverse: #1D3C3E;
+
+  /* Text */
+  --text-heading:     #1D3C3E;
+  --text-body:        #2E2E2E;
+  --text-muted:       #5F6B64;
+  --text-subtle:      #8A978F;
+  --text-on-dark:     #F6F1E7;
+  --text-on-dark-mut: #B8C7C2;
+
+  /* Borders and focus. Hairlines, not shadows. */
+  --border-hairline: rgba(29,60,62,0.10);
+  --border-mid:      rgba(29,60,62,0.15);
+  --border-strong:   rgba(29,60,62,0.25);
+  --focus-ring:      #4EAAB4;
+
+  /* Brand and action */
+  --deep:  #1D3C3E;
+  --cream: #F6F1E7;
+  --terra: #D67558;
+  --teal:  #4EAAB4;
+
+  /* Deep hover. Not in the canonical block because no deep-filled button
+     existed to need it; see ConnectButton. Named so the migration can adopt
+     it wholesale if it adds the variant. */
+  --deep-hover: #16302F;
+
+  background: var(--surface-page);
+  color: var(--text-body);
+}
+
+/* Focus visibility, since the flow is keyboard-reachable and the default ring
+   is invisible against cream. */
+.shoots-auth :focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}

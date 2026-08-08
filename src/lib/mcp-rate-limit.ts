@@ -394,6 +394,24 @@ export async function enforceInferenceRateLimit(opts: {
   }
 }
 
+/**
+ * Per-IP ceiling on account creation in the MCP connect flow.
+ *
+ * The signup path uses the service role to create confirmed accounts, which
+ * bypasses Supabase's own signup protections, so this is the only thing
+ * standing between the endpoint and scripted account creation.
+ *
+ * Rides on the inference limiter deliberately, not the MCP one: this fails
+ * CLOSED. The MCP limiters fail open because their surface is already bounded
+ * by bearer auth and the cost of over-blocking is a throttled agent. Here an
+ * Upstash outage would mean unbounded unauthenticated account creation against
+ * a path with no other brake, so refusing to sign anyone up is the safe
+ * direction. Signup is unavailable for the duration; nothing else is affected.
+ */
+export function enforceSignupRateLimit(ip: string): Promise<InferenceRateLimitResult> {
+  return enforceInferenceRateLimit({ scope: 'mcpsignup', identifier: `ip:${ip || 'unknown'}`, perHour: 5, perDay: 20 })
+}
+
 // Back-compat wrapper — the ai-search route calls this. 30/h, 150/day per user.
 export type AiSearchRateLimitResult = InferenceRateLimitResult
 export function enforceAiSearchRateLimit(userId: string): Promise<InferenceRateLimitResult> {
