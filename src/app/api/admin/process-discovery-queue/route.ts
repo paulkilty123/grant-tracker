@@ -11,6 +11,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
 import { stampNewGrant, mergeGrantUpdate } from '@/lib/grant-merge'
 import { VALID_SECTORS } from '@/lib/classify'
+import { recordRun, type UsageTally } from '@/lib/admin/cron-runs'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
@@ -87,7 +88,9 @@ const FUNDER_TYPES = [
 
 type EnrichOutcome = { ok: true; data: EnrichedGrant } | { ok: false; reason: string }
 
-async function enrichQueueItem(item: QueueItem): Promise<EnrichOutcome> {
+const ENRICH_MODEL = 'claude-haiku-4-5-20251001'
+
+async function enrichQueueItem(item: QueueItem, usage?: UsageTally): Promise<EnrichOutcome> {
   const prompt = `You are a UK grant database assistant. Classify and enrich this funding opportunity.
 
 Title: ${item.title}
@@ -120,7 +123,7 @@ Return a single JSON object (no markdown) with exactly these fields:
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
+        model: ENRICH_MODEL,
         // Was 1000 for an eleven-field answer, with stop_reason never checked.
         // A truncated reply fails JSON.parse, the item is dropped, and the run
         // reports success — the same silent-failure shape found four other
@@ -140,7 +143,12 @@ Return a single JSON object (no markdown) with exactly these fields:
     const data = await res.json() as {
       content: Array<{ type: string; text: string }>
       stop_reason?: string
+      usage?: { input_tokens?: number; output_tokens?: number }
     }
+
+    // Count the tokens before judging the answer — a truncated reply was still
+    // paid for, and a run whose cost is invisible is a run nobody can size.
+    usage?.add(ENRICH_MODEL, data.usage)
 
     // A cut-off answer is not a small answer. Say so, rather than letting
     // JSON.parse fail into a generic "enrichment failed".
@@ -177,7 +185,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
   }
   const { limit = 10 } = await req.json().catch(() => ({})) as { limit?: number }
-  return runProcessing(getAdminClient(), limit)
+  const { status, body } = await runProcessing(getAdminClient(), limit)
+  return NextResponse.json(body, { status })
 }
 
 /**
@@ -186,8 +195,16 @@ export async function POST(req: NextRequest) {
  * Shared by the manual POST and the scheduled GET so the two cannot drift —
  * a scheduled path that behaved differently from the button is exactly how the
  * April run half-finished without anyone noticing.
+ *
+ * Returns the response body and its status rather than a NextResponse, because
+ * the scheduled path has to hand that body to recordRun() as the run summary
+ * before it becomes a response.
  */
-async function runProcessing(db: SupabaseClient, limit: number) {
+async function runProcessing(
+  db: SupabaseClient,
+  limit: number,
+  usage?: UsageTally,
+): Promise<{ status: number; body: Record<string, unknown> }> {
   // Fetch pending items
   const { data: pendingItems, error: fetchErr } = await db
     .from('discovery_queue')
@@ -197,11 +214,11 @@ async function runProcessing(db: SupabaseClient, limit: number) {
     .limit(limit)
 
   if (fetchErr) {
-    return NextResponse.json({ error: fetchErr.message }, { status: 500 })
+    return { status: 500, body: { error: fetchErr.message } }
   }
 
   if (!pendingItems?.length) {
-    return NextResponse.json({ ok: true, processed: 0, message: 'No pending items' })
+    return { status: 200, body: { ok: true, processed: 0, message: 'No pending items' } }
   }
 
   // Get existing grant URLs/titles to deduplicate before inserting
@@ -231,7 +248,7 @@ async function runProcessing(db: SupabaseClient, limit: number) {
     }
 
     // Enrich via Claude
-    const outcome = await enrichQueueItem(item)
+    const outcome = await enrichQueueItem(item, usage)
 
     if (!outcome.ok) {
       // Record WHY on the queue row, not just "failed". Left pending so it
@@ -340,7 +357,7 @@ async function runProcessing(db: SupabaseClient, limit: number) {
   const duplicates = results.filter(r => r.status === 'duplicate').length
   const failed = results.filter(r => r.status === 'failed').length
 
-  return NextResponse.json({ ok: true, processed: results.length, imported, duplicates, failed, results })
+  return { status: 200, body: { ok: true, processed: results.length, imported, duplicates, failed, results } }
 }
 
 // GET — return queue stats
@@ -360,13 +377,19 @@ export async function GET(req: NextRequest) {
     if (!await isAuthorised(req)) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
     }
-    if (process.env.PROCESS_DISCOVERY_ENABLED !== 'true') {
-      return NextResponse.json({
-        ok: true, skipped: true,
-        reason: 'Not armed. Set PROCESS_DISCOVERY_ENABLED=true to let the scheduled run write.',
-      })
-    }
-    return runProcessing(getAdminClient(), 10)
+    let httpStatus = 200
+    const payload = await recordRun('process-discovery-queue', async (ctx) => {
+      if (process.env.PROCESS_DISCOVERY_ENABLED !== 'true') {
+        return {
+          ok: true, skipped: true,
+          reason: 'Not armed. Set PROCESS_DISCOVERY_ENABLED=true to let the scheduled run write.',
+        } as Record<string, unknown>
+      }
+      const run = await runProcessing(getAdminClient(), 10, ctx.usage)
+      httpStatus = run.status
+      return run.body
+    })
+    return NextResponse.json(payload, { status: httpStatus })
   }
   return statsResponse(req)
 }

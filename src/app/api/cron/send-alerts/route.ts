@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { getOrgsWithAlertsEnabled, getUnsentAlerts, markAlertsSent } from '@/lib/alerts'
 import type { AlertGrant } from '@/lib/alerts'
+import { recordRun } from '@/lib/admin/cron-runs'
 
 export const dynamic = 'force-dynamic'
 
@@ -71,44 +72,50 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  if (!process.env.RESEND_API_KEY) {
-    return NextResponse.json({ error: 'RESEND_API_KEY not configured — add it to your environment variables' }, { status: 500 })
-  }
-
-  const resend = new Resend(process.env.RESEND_API_KEY)
-
-  try {
-    const orgs = await getOrgsWithAlertsEnabled()
-    const results = []
-
-    for (const org of orgs) {
-      const minScore = (org as typeof org & { alert_min_score?: number }).alert_min_score ?? 70
-      const grants = await getUnsentAlerts(org, minScore)
-
-      if (grants.length === 0) {
-        results.push({ org: org.name, sent: 0, reason: 'No new matching grants above threshold' })
-        continue
-      }
-
-      const { error } = await resend.emails.send({
-        from:    FROM_EMAIL,
-        to:      org.owner_email,
-        subject: `${grants.length} new grant${grants.length === 1 ? '' : 's'} matching ${org.name}`,
-        html:    buildEmailHtml(org.name, grants),
-      })
-
-      if (error) {
-        results.push({ org: org.name, sent: 0, error: error.message })
-        continue
-      }
-
-      await markAlertsSent(org.id, grants.map(g => g.grant.id))
-      results.push({ org: org.name, sent: grants.length })
+  let httpStatus = 200
+  const payload = await recordRun('send-alerts', async () => {
+    if (!process.env.RESEND_API_KEY) {
+      httpStatus = 500
+      return { error: 'RESEND_API_KEY not configured — add it to your environment variables' }
     }
 
-    return NextResponse.json({ success: true, orgsProcessed: orgs.length, results })
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Alert job failed'
-    return NextResponse.json({ error: message }, { status: 500 })
-  }
+    const resend = new Resend(process.env.RESEND_API_KEY)
+
+    try {
+      const orgs = await getOrgsWithAlertsEnabled()
+      const results = []
+
+      for (const org of orgs) {
+        const minScore = (org as typeof org & { alert_min_score?: number }).alert_min_score ?? 70
+        const grants = await getUnsentAlerts(org, minScore)
+
+        if (grants.length === 0) {
+          results.push({ org: org.name, sent: 0, reason: 'No new matching grants above threshold' })
+          continue
+        }
+
+        const { error } = await resend.emails.send({
+          from:    FROM_EMAIL,
+          to:      org.owner_email,
+          subject: `${grants.length} new grant${grants.length === 1 ? '' : 's'} matching ${org.name}`,
+          html:    buildEmailHtml(org.name, grants),
+        })
+
+        if (error) {
+          results.push({ org: org.name, sent: 0, error: error.message })
+          continue
+        }
+
+        await markAlertsSent(org.id, grants.map(g => g.grant.id))
+        results.push({ org: org.name, sent: grants.length })
+      }
+
+      return { success: true, orgsProcessed: orgs.length, results }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Alert job failed'
+      httpStatus = 500
+      return { error: message }
+    }
+  })
+  return NextResponse.json(payload, { status: httpStatus })
 }

@@ -49,6 +49,7 @@ import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
 import { mergeGrantUpdate } from '@/lib/grant-merge'
 import { deriveReviewReasons, type ReviewRow } from '@/lib/admin/review-reasons'
 import { gateDecision, GATE_POLICY_VERSION, type GateDecision } from '@/lib/admin/publish-gate'
+import { recordRun } from '@/lib/admin/cron-runs'
 
 export const dynamic     = 'force-dynamic'
 export const maxDuration = 270
@@ -89,201 +90,203 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // Dry run is the DEFAULT. Writing requires saying so, by one of two routes:
-  //
-  //   ?apply=true                  a manual run, human present
-  //   AUTO_PUBLISH_ENABLED=true    arms the SCHEDULED run
-  //
-  // The query string is the discriminator between manual and scheduled, NOT the
-  // secret. `vercel.json` invokes a fixed, parameterless path, so a scheduled
-  // run can never send ?apply=true; a manual caller always can. That matters
-  // because ADMIN_SECRET and CRON_SECRET currently hold the SAME VALUE, which
-  // makes `isCronCaller` win for every bearer-token caller and leaves the
-  // "manual admin trigger" branch unreachable. The sibling routes that gate on
-  // that distinction (reenrich-stale documents manual triggers as bypassing its
-  // cron-enabled gate) do not actually behave as their comments claim while the
-  // two secrets match. This route therefore does not rely on the distinction.
-  const wantsApply = req.nextUrl.searchParams.get('apply') === 'true'
-  const armed      = process.env.AUTO_PUBLISH_ENABLED === 'true'
+  let httpStatus = 200
+  const payload = await recordRun('auto-publish', async () => {
+    // Dry run is the DEFAULT. Writing requires saying so, by one of two routes:
+    //
+    //   ?apply=true                  a manual run, human present
+    //   AUTO_PUBLISH_ENABLED=true    arms the SCHEDULED run
+    //
+    // The query string is the discriminator between manual and scheduled, NOT the
+    // secret. `vercel.json` invokes a fixed, parameterless path, so a scheduled
+    // run can never send ?apply=true; a manual caller always can. That matters
+    // because ADMIN_SECRET and CRON_SECRET currently hold the SAME VALUE, which
+    // makes `isCronCaller` win for every bearer-token caller and leaves the
+    // "manual admin trigger" branch unreachable. The sibling routes that gate on
+    // that distinction (reenrich-stale documents manual triggers as bypassing its
+    // cron-enabled gate) do not actually behave as their comments claim while the
+    // two secrets match. This route therefore does not rely on the distinction.
+    const wantsApply = req.nextUrl.searchParams.get('apply') === 'true'
+    const armed      = process.env.AUTO_PUBLISH_ENABLED === 'true'
 
-  // `?dryRun=true` forces a dry run, and OVERRIDES both of the above.
-  //
-  // Until this existed there was no way to ask an armed production route what
-  // it would do. Once AUTO_PUBLISH_ENABLED is set, `armed` alone makes dryRun
-  // false, so every call — including a bare parameterless GET — publishes. That
-  // left the only safe verification at the deployment level (is the env var
-  // present, is the cron registered) and made "what would run tonight?"
-  // unanswerable without running it. A gate whose behaviour cannot be inspected
-  // without triggering it is the same class of problem as a cron that reports
-  // success while writing nothing: the state is unobservable.
-  //
-  // Deliberately wins over `?apply=true` as well. If a caller sends both, the
-  // contradictory request resolves to the harmless reading.
-  const forcedDryRun = req.nextUrl.searchParams.get('dryRun') === 'true'
-  const dryRun       = forcedDryRun || !(wantsApply || armed)
+    // `?dryRun=true` forces a dry run, and OVERRIDES both of the above.
+    //
+    // Until this existed there was no way to ask an armed production route what
+    // it would do. Once AUTO_PUBLISH_ENABLED is set, `armed` alone makes dryRun
+    // false, so every call — including a bare parameterless GET — publishes. That
+    // left the only safe verification at the deployment level (is the env var
+    // present, is the cron registered) and made "what would run tonight?"
+    // unanswerable without running it. A gate whose behaviour cannot be inspected
+    // without triggering it is the same class of problem as a cron that reports
+    // success while writing nothing: the state is unobservable.
+    //
+    // Deliberately wins over `?apply=true` as well. If a caller sends both, the
+    // contradictory request resolves to the harmless reading.
+    const forcedDryRun = req.nextUrl.searchParams.get('dryRun') === 'true'
+    const dryRun       = forcedDryRun || !(wantsApply || armed)
 
-  // Canary cap: apply at most N publishes this run.
-  //
-  // Paired with the already-live-first ordering below, `?apply=true&limit=3`
-  // exercises the entire write path — merger, trust ladder, state transition,
-  // RLS — while changing nothing any user can see, because those rows are
-  // already visible and is_active is already true. That matters here more than
-  // usual: the two crons this route is modelled on reported success for their
-  // whole existence while RLS silently rejected every write, and the only way
-  // to know the difference is to make a real write and then go and look at it.
-  const limitParam = Number(req.nextUrl.searchParams.get('limit'))
-  const applyLimit = Number.isFinite(limitParam) && limitParam > 0 ? limitParam : Infinity
+    // Canary cap: apply at most N publishes this run.
+    //
+    // Paired with the already-live-first ordering below, `?apply=true&limit=3`
+    // exercises the entire write path — merger, trust ladder, state transition,
+    // RLS — while changing nothing any user can see, because those rows are
+    // already visible and is_active is already true. That matters here more than
+    // usual: the two crons this route is modelled on reported success for their
+    // whole existence while RLS silently rejected every write, and the only way
+    // to know the difference is to make a real write and then go and look at it.
+    const limitParam = Number(req.nextUrl.searchParams.get('limit'))
+    const applyLimit = Number.isFinite(limitParam) && limitParam > 0 ? limitParam : Infinity
 
-  // `cache: 'no-store'` is not optional here.
-  //
-  // supabase-js issues its queries through global fetch, which Next.js patches
-  // and caches. Observed 2026-07-26: after a run published 73 rows and drained
-  // the queue from 125 to 52, the very next invocation still read 125 and
-  // re-published 3 rows it had already published minutes earlier. The response
-  // looked entirely healthy — right shape, plausible counts, no error — which is
-  // the failure mode this whole route exists to guard against, arriving through
-  // the read path instead of the write path.
-  //
-  // `export const dynamic = 'force-dynamic'` does NOT cover this: it governs
-  // route rendering, not the fetch cache inside a client library.
-  //
-  // A gate acting on a stale snapshot would publish rows a human had just
-  // rejected and miss rows added since. Correctness here depends on reading
-  // the queue as it is at this instant.
-  const db = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    {
-      auth: { persistSession: false },
-      global: {
-        fetch: (input: RequestInfo | URL, init?: RequestInit) =>
-          fetch(input, { ...init, cache: 'no-store' }),
+    // `cache: 'no-store'` is not optional here.
+    //
+    // supabase-js issues its queries through global fetch, which Next.js patches
+    // and caches. Observed 2026-07-26: after a run published 73 rows and drained
+    // the queue from 125 to 52, the very next invocation still read 125 and
+    // re-published 3 rows it had already published minutes earlier. The response
+    // looked entirely healthy — right shape, plausible counts, no error — which is
+    // the failure mode this whole route exists to guard against, arriving through
+    // the read path instead of the write path.
+    //
+    // `export const dynamic = 'force-dynamic'` does NOT cover this: it governs
+    // route rendering, not the fetch cache inside a client library.
+    //
+    // A gate acting on a stale snapshot would publish rows a human had just
+    // rejected and miss rows added since. Correctness here depends on reading
+    // the queue as it is at this instant.
+    const db = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: { persistSession: false },
+        global: {
+          fetch: (input: RequestInfo | URL, init?: RequestInit) =>
+            fetch(input, { ...init, cache: 'no-store' }),
+        },
       },
-    },
-  )
-
-  const { data, error } = await db
-    .from('scraped_grants')
-    .select(COLS)
-    .in('pipeline_state', QUEUE_STATES)
-    .not('saved_for_later', 'is', 'true')
-    .limit(BATCH_LIMIT)
-
-  // A failed read must never look like an empty queue. Six of eight queue
-  // loaders in the old admin page ignored their error and rendered
-  // "all clear!" when they had simply failed to read.
-  if (error) {
-    return NextResponse.json(
-      { success: false, error: `queue read failed: ${error.message}` },
-      { status: 500 },
     )
-  }
 
-  const rows = (data ?? []) as unknown as Row[]
-  const decisions: Array<{ row: Row; decision: GateDecision }> = rows
-    .map(row => ({ row, decision: gateDecision(row, deriveReviewReasons(row)) }))
-    // Already-live publishes first, so a capped canary run touches only rows
-    // whose visibility is not actually changing. Without this the cap would
-    // take an arbitrary slice and the first live run could expose new rows
-    // before the write path had been shown to work.
-    .sort((a, b) => Number(b.decision.wasLive) - Number(a.decision.wasLive))
+    const { data, error } = await db
+      .from('scraped_grants')
+      .select(COLS)
+      .in('pipeline_state', QUEUE_STATES)
+      .not('saved_for_later', 'is', 'true')
+      .limit(BATCH_LIMIT)
 
-  const toPublish = decisions.filter(d => d.decision.outcome === 'publish')
-  const attention = decisions.filter(d => d.decision.outcome === 'attention')
-  const held      = decisions.filter(d => d.decision.outcome === 'hold')
-
-  const published: string[] = []
-  const failed: Array<{ id: string; title: string; reason: string }> = []
-  const auditRows: Record<string, unknown>[] = []
-
-  for (const { row, decision } of decisions) {
-    let applied  = false
-    let rejected: string[] = []
-
-    const withinCap = published.length < applyLimit
-    if (decision.outcome === 'publish' && !dryRun && withinCap) {
-      try {
-        // is_active is untracked, so this goes through mergeGrantUpdate's
-        // untracked path, which still computes the pipeline_state transition —
-        // transitionPipelineState maps is_active:true → 'published'. Passing
-        // pipeline_state explicitly would SKIP that transition (it is treated
-        // as an admin override), so it is deliberately omitted.
-        const res = await mergeGrantUpdate({
-          id:     row.id,
-          fields: { is_active: true },
-          source: 'system:auto_publish',   // trust 50 — see header note 2
-          db,
-        })
-        rejected = res.rejected.map(r => r.field)
-        applied  = res.applied.includes('is_active')
-
-        if (applied) published.push(row.id)
-        else failed.push({
-          id: row.id,
-          title: row.title ?? row.id,
-          reason: rejected.length ? `write rejected: ${rejected.join(', ')}` : 'no field applied',
-        })
-      } catch (e) {
-        failed.push({
-          id: row.id,
-          title: row.title ?? row.id,
-          reason: e instanceof Error ? e.message : String(e),
-        })
-      }
+    // A failed read must never look like an empty queue. Six of eight queue
+    // loaders in the old admin page ignored their error and rendered
+    // "all clear!" when they had simply failed to read.
+    if (error) {
+      httpStatus = 500
+      return { success: false, error: `queue read failed: ${error.message}` }
     }
 
-    auditRows.push({
-      grant_id:            row.id,
-      outcome:             decision.outcome,
-      was_live:            decision.wasLive,
-      blocking_codes:      decision.blocking.map(r => r.code),
-      informational_codes: decision.informational.map(r => r.code),
-      applied,
-      rejected_fields:     rejected,
-      policy_version:      GATE_POLICY_VERSION,
-      // A publish deferred by the canary cap had no write ATTEMPTED, so it is
-      // recorded as a dry decision. Recording it as a live run with
-      // applied=false would be indistinguishable from a write the trust ladder
-      // refused, and would quietly corrupt the calibration data this table
-      // exists to provide.
-      dry_run:             dryRun || (decision.outcome === 'publish' && !withinCap),
-    })
-  }
+    const rows = (data ?? []) as unknown as Row[]
+    const decisions: Array<{ row: Row; decision: GateDecision }> = rows
+      .map(row => ({ row, decision: gateDecision(row, deriveReviewReasons(row)) }))
+      // Already-live publishes first, so a capped canary run touches only rows
+      // whose visibility is not actually changing. Without this the cap would
+      // take an arbitrary slice and the first live run could expose new rows
+      // before the write path had been shown to work.
+      .sort((a, b) => Number(b.decision.wasLive) - Number(a.decision.wasLive))
 
-  const auditError = await recordDecisions(db, auditRows)
+    const toPublish = decisions.filter(d => d.decision.outcome === 'publish')
+    const attention = decisions.filter(d => d.decision.outcome === 'attention')
+    const held      = decisions.filter(d => d.decision.outcome === 'hold')
 
-  return NextResponse.json({
-    success: true,
-    dryRun,
-    armed,
-    policyVersion: GATE_POLICY_VERSION,
-    queueSize: rows.length,
-    counts: {
-      publish:   toPublish.length,
-      attention: attention.length,
-      hold:      held.length,
-    },
-    // Split so the headline number cannot flatter itself: publishing a row that
-    // was already live changes nothing a user sees, and should not be counted
-    // as the gate having saved a review.
-    publishBreakdown: {
-      newlyVisible:   toPublish.filter(d => !d.decision.wasLive).length,
-      alreadyVisible: toPublish.filter(d => d.decision.wasLive).length,
-    },
-    written: dryRun ? 0 : published.length,
-    // Never let a cap pass as full coverage. Every silent truncation this audit
-    // found — the 12-row queue, the unrotated watchlist, the .limit(N)-then-
-    // filter checks — read as "we covered everything" when it had not.
-    deferredByCap: dryRun ? 0 : Math.max(0, toPublish.length - published.length - failed.length),
-    applyLimit: Number.isFinite(applyLimit) ? applyLimit : null,
-    failed,
-    auditError,
-    attentionRows: attention.slice(0, 20).map(d => ({
-      id:    d.row.id,
-      title: d.row.title ?? '',
-      why:   d.decision.blocking.map(r => r.label),
-    })),
+    const published: string[] = []
+    const failed: Array<{ id: string; title: string; reason: string }> = []
+    const auditRows: Record<string, unknown>[] = []
+
+    for (const { row, decision } of decisions) {
+      let applied  = false
+      let rejected: string[] = []
+
+      const withinCap = published.length < applyLimit
+      if (decision.outcome === 'publish' && !dryRun && withinCap) {
+        try {
+          // is_active is untracked, so this goes through mergeGrantUpdate's
+          // untracked path, which still computes the pipeline_state transition —
+          // transitionPipelineState maps is_active:true → 'published'. Passing
+          // pipeline_state explicitly would SKIP that transition (it is treated
+          // as an admin override), so it is deliberately omitted.
+          const res = await mergeGrantUpdate({
+            id:     row.id,
+            fields: { is_active: true },
+            source: 'system:auto_publish',   // trust 50 — see header note 2
+            db,
+          })
+          rejected = res.rejected.map(r => r.field)
+          applied  = res.applied.includes('is_active')
+
+          if (applied) published.push(row.id)
+          else failed.push({
+            id: row.id,
+            title: row.title ?? row.id,
+            reason: rejected.length ? `write rejected: ${rejected.join(', ')}` : 'no field applied',
+          })
+        } catch (e) {
+          failed.push({
+            id: row.id,
+            title: row.title ?? row.id,
+            reason: e instanceof Error ? e.message : String(e),
+          })
+        }
+      }
+
+      auditRows.push({
+        grant_id:            row.id,
+        outcome:             decision.outcome,
+        was_live:            decision.wasLive,
+        blocking_codes:      decision.blocking.map(r => r.code),
+        informational_codes: decision.informational.map(r => r.code),
+        applied,
+        rejected_fields:     rejected,
+        policy_version:      GATE_POLICY_VERSION,
+        // A publish deferred by the canary cap had no write ATTEMPTED, so it is
+        // recorded as a dry decision. Recording it as a live run with
+        // applied=false would be indistinguishable from a write the trust ladder
+        // refused, and would quietly corrupt the calibration data this table
+        // exists to provide.
+        dry_run:             dryRun || (decision.outcome === 'publish' && !withinCap),
+      })
+    }
+
+    const auditError = await recordDecisions(db, auditRows)
+
+    return {
+      success: true,
+      dryRun,
+      armed,
+      policyVersion: GATE_POLICY_VERSION,
+      queueSize: rows.length,
+      counts: {
+        publish:   toPublish.length,
+        attention: attention.length,
+        hold:      held.length,
+      },
+      // Split so the headline number cannot flatter itself: publishing a row that
+      // was already live changes nothing a user sees, and should not be counted
+      // as the gate having saved a review.
+      publishBreakdown: {
+        newlyVisible:   toPublish.filter(d => !d.decision.wasLive).length,
+        alreadyVisible: toPublish.filter(d => d.decision.wasLive).length,
+      },
+      written: dryRun ? 0 : published.length,
+      // Never let a cap pass as full coverage. Every silent truncation this audit
+      // found — the 12-row queue, the unrotated watchlist, the .limit(N)-then-
+      // filter checks — read as "we covered everything" when it had not.
+      deferredByCap: dryRun ? 0 : Math.max(0, toPublish.length - published.length - failed.length),
+      applyLimit: Number.isFinite(applyLimit) ? applyLimit : null,
+      failed,
+      auditError,
+      attentionRows: attention.slice(0, 20).map(d => ({
+        id:    d.row.id,
+        title: d.row.title ?? '',
+        why:   d.decision.blocking.map(r => r.label),
+      })),
+    }
   })
+  return NextResponse.json(payload, { status: httpStatus })
 }
 
 /**

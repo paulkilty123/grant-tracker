@@ -14,6 +14,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
 import { verifyPendingCFFunds } from '@/lib/cf-fund-verify'
+import { recordRun } from '@/lib/admin/cron-runs'
 
 export const dynamic     = 'force-dynamic'
 export const maxDuration = 270
@@ -30,18 +31,21 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  if (isCronCaller && process.env.CF_FUND_VERIFY_CRON_ENABLED !== 'true') {
-    return NextResponse.json({
-      success: true,
-      skipped: true,
-      reason:  'CF fund verify cron disabled — set CF_FUND_VERIFY_CRON_ENABLED=true to enable automated runs. Admin manual triggers still execute.',
-    })
-  }
+  const payload = await recordRun('verify-cf-funds', async () => {
+    if (isCronCaller && process.env.CF_FUND_VERIFY_CRON_ENABLED !== 'true') {
+      return {
+        success: true,
+        skipped: true,
+        reason:  'CF fund verify cron disabled — set CF_FUND_VERIFY_CRON_ENABLED=true to enable automated runs. Admin manual triggers still execute.',
+      }
+    }
 
-  // dryRun is ignored for the scheduled cron caller — only an admin caller
-  // (bearer ADMIN_SECRET or session) can request a preview with no writes.
-  const dryRun = isAdminCaller && new URL(req.url).searchParams.get('dryRun') === 'true'
+    // dryRun is ignored for the scheduled cron caller — only an admin caller
+    // (bearer ADMIN_SECRET or session) can request a preview with no writes.
+    const dryRun = isAdminCaller && new URL(req.url).searchParams.get('dryRun') === 'true'
 
-  const result = await verifyPendingCFFunds(undefined, { dryRun })
-  return NextResponse.json({ success: true, dryRun, ...result })
+    const result = await verifyPendingCFFunds(undefined, { dryRun })
+    return { success: true, dryRun, ...result }
+  })
+  return NextResponse.json(payload)
 }

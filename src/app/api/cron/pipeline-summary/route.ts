@@ -3,6 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
+import { recordRun } from '@/lib/admin/cron-runs'
 
 export const dynamic = 'force-dynamic'
 
@@ -192,66 +193,71 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  if (!process.env.RESEND_API_KEY) {
-    return NextResponse.json({
-      error: 'RESEND_API_KEY not configured — add it to your environment variables',
-    }, { status: 500 })
-  }
-
-  const supabase = adminClient()
-  const resend   = new Resend(process.env.RESEND_API_KEY)
-
-  // Fetch all organisations with alerts enabled (reuse same flag for pipeline digests)
-  const { data: orgs } = await supabase
-    .from('organisations')
-    .select('id, name, owner_id')
-    .eq('alerts_enabled', true)
-
-  if (!orgs?.length) {
-    return NextResponse.json({ success: true, emailsSent: 0, message: 'No organisations with alerts enabled' })
-  }
-
-  const results: object[] = []
-
-  for (const org of orgs) {
-    // Fetch all pipeline items for this org
-    const { data: items } = await supabase
-      .from('pipeline_items')
-      .select('id, grant_name, funder_name, stage, deadline, amount_min, amount_max, amount_requested, is_urgent')
-      .eq('org_id', org.id)
-      .order('deadline', { ascending: true, nullsFirst: false })
-
-    if (!items?.length) {
-      results.push({ org: org.name, sent: false, reason: 'No pipeline items' })
-      continue
+  let httpStatus = 200
+  const payload = await recordRun('pipeline-summary', async () => {
+    if (!process.env.RESEND_API_KEY) {
+      httpStatus = 500
+      return {
+        error: 'RESEND_API_KEY not configured — add it to your environment variables',
+      }
     }
 
-    // Fetch owner email
-    const { data: userData } = await supabase.auth.admin.getUserById(org.owner_id)
-    const email = userData?.user?.email
-    if (!email) {
-      results.push({ org: org.name, sent: false, reason: 'No owner email found' })
-      continue
+    const supabase = adminClient()
+    const resend   = new Resend(process.env.RESEND_API_KEY)
+
+    // Fetch all organisations with alerts enabled (reuse same flag for pipeline digests)
+    const { data: orgs } = await supabase
+      .from('organisations')
+      .select('id, name, owner_id')
+      .eq('alerts_enabled', true)
+
+    if (!orgs?.length) {
+      return { success: true, emailsSent: 0, message: 'No organisations with alerts enabled' }
     }
 
-    const activeCount = items.filter(i => i.stage !== 'won' && i.stage !== 'declined').length
-    const { error: sendErr } = await resend.emails.send({
-      from:    FROM_EMAIL,
-      to:      email,
-      subject: `📊 Weekly pipeline update — ${activeCount} active opportunit${activeCount === 1 ? 'y' : 'ies'} · ${org.name}`,
-      html:    buildSummaryHtml(org.name, items as PipelineRow[]),
-    })
+    const results: object[] = []
 
-    if (sendErr) {
-      results.push({ org: org.name, sent: false, error: sendErr.message })
-    } else {
-      results.push({ org: org.name, sent: true, itemCount: items.length })
+    for (const org of orgs) {
+      // Fetch all pipeline items for this org
+      const { data: items } = await supabase
+        .from('pipeline_items')
+        .select('id, grant_name, funder_name, stage, deadline, amount_min, amount_max, amount_requested, is_urgent')
+        .eq('org_id', org.id)
+        .order('deadline', { ascending: true, nullsFirst: false })
+
+      if (!items?.length) {
+        results.push({ org: org.name, sent: false, reason: 'No pipeline items' })
+        continue
+      }
+
+      // Fetch owner email
+      const { data: userData } = await supabase.auth.admin.getUserById(org.owner_id)
+      const email = userData?.user?.email
+      if (!email) {
+        results.push({ org: org.name, sent: false, reason: 'No owner email found' })
+        continue
+      }
+
+      const activeCount = items.filter(i => i.stage !== 'won' && i.stage !== 'declined').length
+      const { error: sendErr } = await resend.emails.send({
+        from:    FROM_EMAIL,
+        to:      email,
+        subject: `📊 Weekly pipeline update — ${activeCount} active opportunit${activeCount === 1 ? 'y' : 'ies'} · ${org.name}`,
+        html:    buildSummaryHtml(org.name, items as PipelineRow[]),
+      })
+
+      if (sendErr) {
+        results.push({ org: org.name, sent: false, error: sendErr.message })
+      } else {
+        results.push({ org: org.name, sent: true, itemCount: items.length })
+      }
     }
-  }
 
-  return NextResponse.json({
-    success: true,
-    emailsSent: results.filter((r: any) => r.sent).length,
-    results,
+    return {
+      success: true,
+      emailsSent: results.filter((r: any) => r.sent).length,
+      results,
+    }
   })
+  return NextResponse.json(payload, { status: httpStatus })
 }

@@ -37,6 +37,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
+import { recordRun } from '@/lib/admin/cron-runs'
 
 export const dynamic     = 'force-dynamic'
 export const maxDuration = 270
@@ -184,284 +185,289 @@ export async function GET(req: NextRequest) {
   // prompt + taxonomy have evolved since most rows were originally tagged);
   // we don't want that volume happening unsupervised during submission week.
   // Manual admin triggers (isAdminCaller=true) always run regardless.
-  if (isCronCaller && process.env.REENRICH_CRON_ENABLED !== 'true') {
-    return NextResponse.json({
-      success: true,
-      skipped: true,
-      reason:  'reenrich cron disabled — set REENRICH_CRON_ENABLED=true to enable automated runs. Admin manual triggers still execute.',
-    })
-  }
-
-  const db = adminClient()
-
-  // Manual triggers can pass ?limit=N to control batch size (capped at 50 to
-  // prevent runaway). Scheduled cron always uses the hard-coded BATCH_LIMIT.
-  const url = new URL(req.url)
-  const limitParam = url.searchParams.get('limit')
-  const requestedLimit = limitParam ? parseInt(limitParam, 10) : BATCH_LIMIT
-  const effectiveLimit = isAdminCaller && Number.isFinite(requestedLimit)
-    ? Math.min(Math.max(1, requestedLimit), 50)
-    : BATCH_LIMIT
-
-  // Compute stale cutoff as ISO date for the SQL comparison
-  const cutoff = new Date()
-  cutoff.setDate(cutoff.getDate() - STALE_AFTER_DAYS)
-  const staleCutoffISO = cutoff.toISOString().slice(0, 10)
-
-  // Back-off cutoff: skip rows attempted within the back-off window.
-  const attemptCutoff = new Date()
-  attemptCutoff.setDate(attemptCutoff.getDate() - REENRICH_ATTEMPT_BACKOFF_DAYS)
-  const attemptCutoffISO = attemptCutoff.toISOString()
-
-  // Pull candidates — over-fetch (3x batch limit) since some will be filtered
-  // out by the admin-touch guard in JS. Order by last_enriched ASC NULLS FIRST
-  // so we always work the oldest first.
-  const overFetch = effectiveLimit * 3
-  const { data: rows, error: fetchErr } = await db
-    .from('scraped_grants')
-    .select('id, title, funder, url_status, funder_brief, field_provenance')
-    .eq('is_active', true)
-    .eq('pipeline_state', 'published')
-    .is('needs_intervention_reason', null)
-    .or(
-      // Postgrest .or() string: combine the three stale signals.
-      // brief.last_enriched older than cutoff, OR knowledge_fallback baseline,
-      // OR _stale_dates flagged.
-      [
-        `funder_brief->>last_enriched.is.null`,
-        `funder_brief->>last_enriched.lt.${staleCutoffISO}`,
-        `funder_brief->>source.eq.knowledge_fallback`,
-      ].join(',')
-    )
-    // AND not attempted within the back-off window (a second .or() ANDs with
-    // the first). Stops the cron re-picking rows it just tried but couldn't
-    // refresh — those back off for REENRICH_ATTEMPT_BACKOFF_DAYS.
-    .or(`last_reenrich_attempt.is.null,last_reenrich_attempt.lt.${attemptCutoffISO}`)
-    .order('funder_brief->>last_enriched', { ascending: true, nullsFirst: true })
-    .limit(overFetch)
-
-  if (fetchErr) {
-    console.error('[reenrich-stale] fetch failed:', fetchErr.message)
-    return NextResponse.json({ error: `fetch: ${fetchErr.message}` }, { status: 500 })
-  }
-
-  if (!rows || rows.length === 0) {
-    return NextResponse.json({ success: true, candidates: 0, processed: 0, skipped_admin_touch: 0 })
-  }
-
-  // ── Apply admin-touch guard ────────────────────────────────────────────
-  const guardCutoff = Date.now() - ADMIN_TOUCH_GUARD_DAYS * 24 * 60 * 60 * 1000
-  const eligible: Candidate[] = []
-  const skipped: Array<{ id: string; title: string }> = []
-
-  for (const row of rows as Candidate[]) {
-    const prov = row.field_provenance ?? {}
-    const recentAdminTouch = Object.values(prov).some(entry => {
-      if (!entry?.source?.startsWith('admin:')) return false
-      if (!entry.set_at) return false
-      const t = Date.parse(entry.set_at)
-      return Number.isFinite(t) && t > guardCutoff
-    })
-    if (recentAdminTouch) {
-      skipped.push({ id: row.id, title: row.title })
-      continue
-    }
-    eligible.push(row)
-    if (eligible.length >= effectiveLimit) break
-  }
-
-  if (eligible.length === 0) {
-    return NextResponse.json({
-      success:    true,
-      candidates: rows.length,
-      processed:  0,
-      skipped_admin_touch: skipped.length,
-    })
-  }
-
-  // ── Process sequentially through the full chain ────────────────────────
-  type ChainResult = {
-    id: string
-    title: string
-    enriched:           boolean
-    classified:         boolean
-    swept:              boolean
-    materially_changed: boolean
-    flagged_for_review: boolean
-    diff_fields:        string[]
-    stale_dates:        number
-    elapsed_ms:         number
-    error?:             string
-  }
-  const results: ChainResult[] = []
-
-  for (const row of eligible) {
-    const t0 = Date.now()
-    const result: ChainResult = {
-      id:                 row.id,
-      title:              row.title,
-      enriched:           false,
-      classified:         false,
-      swept:              false,
-      materially_changed: false,
-      flagged_for_review: false,
-      diff_fields:        [],
-      stale_dates:        0,
-      elapsed_ms:         0,
-    }
-
-    // Step 0: capture pre-state of matcher-relevant fields
-    const { data: preRow, error: preErr } = await db
-      .from('scraped_grants')
-      .select(DIFF_FIELDS.join(', '))
-      .eq('id', row.id)
-      .single()
-    if (preErr || !preRow) {
-      result.error = `pre-state fetch failed: ${preErr?.message ?? 'no row'}`
-      result.elapsed_ms = Date.now() - t0
-      results.push(result)
-      console.warn(`[reenrich-stale] ✗ ${row.id} (${row.title}) — pre-state fetch failed`)
-      continue
-    }
-
-    // Mark the row ATTEMPTED up-front, before any step that can fail or no-op.
-    // This is the back-off anchor: no matter how this run ends (enrich no-op,
-    // sweep error, dead URL), the row won't be re-selected for
-    // REENRICH_ATTEMPT_BACKOFF_DAYS — so the cron always advances through the
-    // backlog instead of looping on rows it can't refresh.
-    await db.from('scraped_grants')
-      .update({ last_reenrich_attempt: new Date().toISOString() })
-      .eq('id', row.id)
-
-    // Dead URL → enrich can't fetch fresh content, so re-running just churns.
-    // Route to the intervention queue (excluded by the candidate query above)
-    // for a URL fix / archive decision instead of re-processing every cycle.
-    if (row.url_status === 'dead') {
-      await db.from('scraped_grants')
-        .update({ needs_intervention_reason: 'reenrich: apply_url dead — needs URL fix or archive' })
-        .eq('id', row.id)
-      result.error = 'skipped: url dead'
-      result.elapsed_ms = Date.now() - t0
-      results.push(result)
-      console.warn(`[reenrich-stale] ⊘ ${row.id} (${row.title}) — url dead, routed to intervention`)
-      continue
-    }
-
-    // Step 1: enrich
-    const enrichRes = await callAdmin('/api/admin/enrich-grant', { grantId: row.id })
-    if (!enrichRes.ok) {
-      result.error = `enrich: ${enrichRes.error}`
-      result.elapsed_ms = Date.now() - t0
-      results.push(result)
-      console.warn(`[reenrich-stale] ✗ ${row.id} (${row.title}) — enrich failed: ${enrichRes.error}`)
-      continue
-    }
-    result.enriched = true
-    const briefDebug = (enrichRes.json as { brief?: { _stale_dates?: unknown[] } })?.brief?._stale_dates
-    result.stale_dates = Array.isArray(briefDebug) ? briefDebug.length : 0
-
-    // Step 2: classify (non-fatal on failure — row still has fresh brief)
-    const classifyRes = await callAdmin('/api/admin/classify-grants', {
-      grant_ids:      [row.id],
-      include_review: true,
-      force:          true,
-      preserve_empty: true,  // automated chain: an empty [] from Claude must not wipe existing structures/beneficiaries
-    })
-    if (classifyRes.ok) {
-      result.classified = true
-    } else {
-      console.warn(`[reenrich-stale] classify miss for ${row.id}: ${classifyRes.error}`)
-    }
-
-    // Step 3: sweep (fatal — sweep is the final state-resolution step)
-    const sweepRes = await callAdmin('/api/admin/sweep', { id: row.id })
-    if (!sweepRes.ok) {
-      result.error = `sweep: ${sweepRes.error}`
-      result.elapsed_ms = Date.now() - t0
-      results.push(result)
-      console.warn(`[reenrich-stale] ✗ ${row.id} (${row.title}) — sweep failed: ${sweepRes.error}`)
-      continue
-    }
-    result.swept = true
-
-    // Step 4: capture post-state and compute diff
-    const { data: postRow, error: postErr } = await db
-      .from('scraped_grants')
-      .select(DIFF_FIELDS.join(', ') + ', field_provenance')
-      .eq('id', row.id)
-      .single()
-    if (postErr || !postRow) {
-      result.error = `post-state fetch failed: ${postErr?.message ?? 'no row'}`
-      result.elapsed_ms = Date.now() - t0
-      results.push(result)
-      continue
-    }
-
-    const { changed, diff } = detectMaterialDiff(
-      preRow as unknown as Record<string, unknown>,
-      postRow as unknown as Record<string, unknown>,
-    )
-    result.materially_changed = changed
-    result.diff_fields = Object.keys(diff)
-
-    // Step 5: if material change, flip to tagged_awaiting_review with diff
-    // stamped in provenance so admin can see what changed without re-running.
-    // is_active stays true — surface behaviour shouldn't snap to invisible
-    // while admin reviews; the existing tags still drive matching until they
-    // confirm or revert.
-    if (changed) {
-      const existingProv = ((postRow as unknown as { field_provenance?: Record<string, unknown> }).field_provenance ?? {}) as Record<string, unknown>
-      const newProv = {
-        ...existingProv,
-        pipeline_state: {
-          pinned:  false,
-          set_at:  new Date().toISOString(),
-          source:  'system:reenrich_chain:v1',
-          reason:  'reclassify_diff',
-          diff,
-        },
+  let httpStatus = 200
+  const payload = await recordRun('reenrich-stale', async () => {
+    if (isCronCaller && process.env.REENRICH_CRON_ENABLED !== 'true') {
+      return {
+        success: true,
+        skipped: true,
+        reason:  'reenrich cron disabled — set REENRICH_CRON_ENABLED=true to enable automated runs. Admin manual triggers still execute.',
       }
-      const { error: flipErr } = await db
+    }
+
+    const db = adminClient()
+
+    // Manual triggers can pass ?limit=N to control batch size (capped at 50 to
+    // prevent runaway). Scheduled cron always uses the hard-coded BATCH_LIMIT.
+    const url = new URL(req.url)
+    const limitParam = url.searchParams.get('limit')
+    const requestedLimit = limitParam ? parseInt(limitParam, 10) : BATCH_LIMIT
+    const effectiveLimit = isAdminCaller && Number.isFinite(requestedLimit)
+      ? Math.min(Math.max(1, requestedLimit), 50)
+      : BATCH_LIMIT
+
+    // Compute stale cutoff as ISO date for the SQL comparison
+    const cutoff = new Date()
+    cutoff.setDate(cutoff.getDate() - STALE_AFTER_DAYS)
+    const staleCutoffISO = cutoff.toISOString().slice(0, 10)
+
+    // Back-off cutoff: skip rows attempted within the back-off window.
+    const attemptCutoff = new Date()
+    attemptCutoff.setDate(attemptCutoff.getDate() - REENRICH_ATTEMPT_BACKOFF_DAYS)
+    const attemptCutoffISO = attemptCutoff.toISOString()
+
+    // Pull candidates — over-fetch (3x batch limit) since some will be filtered
+    // out by the admin-touch guard in JS. Order by last_enriched ASC NULLS FIRST
+    // so we always work the oldest first.
+    const overFetch = effectiveLimit * 3
+    const { data: rows, error: fetchErr } = await db
+      .from('scraped_grants')
+      .select('id, title, funder, url_status, funder_brief, field_provenance')
+      .eq('is_active', true)
+      .eq('pipeline_state', 'published')
+      .is('needs_intervention_reason', null)
+      .or(
+        // Postgrest .or() string: combine the three stale signals.
+        // brief.last_enriched older than cutoff, OR knowledge_fallback baseline,
+        // OR _stale_dates flagged.
+        [
+          `funder_brief->>last_enriched.is.null`,
+          `funder_brief->>last_enriched.lt.${staleCutoffISO}`,
+          `funder_brief->>source.eq.knowledge_fallback`,
+        ].join(',')
+      )
+      // AND not attempted within the back-off window (a second .or() ANDs with
+      // the first). Stops the cron re-picking rows it just tried but couldn't
+      // refresh — those back off for REENRICH_ATTEMPT_BACKOFF_DAYS.
+      .or(`last_reenrich_attempt.is.null,last_reenrich_attempt.lt.${attemptCutoffISO}`)
+      .order('funder_brief->>last_enriched', { ascending: true, nullsFirst: true })
+      .limit(overFetch)
+
+    if (fetchErr) {
+      console.error('[reenrich-stale] fetch failed:', fetchErr.message)
+      httpStatus = 500
+      return { error: `fetch: ${fetchErr.message}` }
+    }
+
+    if (!rows || rows.length === 0) {
+      return { success: true, candidates: 0, processed: 0, skipped_admin_touch: 0 }
+    }
+
+    // ── Apply admin-touch guard ────────────────────────────────────────────
+    const guardCutoff = Date.now() - ADMIN_TOUCH_GUARD_DAYS * 24 * 60 * 60 * 1000
+    const eligible: Candidate[] = []
+    const skipped: Array<{ id: string; title: string }> = []
+
+    for (const row of rows as Candidate[]) {
+      const prov = row.field_provenance ?? {}
+      const recentAdminTouch = Object.values(prov).some(entry => {
+        if (!entry?.source?.startsWith('admin:')) return false
+        if (!entry.set_at) return false
+        const t = Date.parse(entry.set_at)
+        return Number.isFinite(t) && t > guardCutoff
+      })
+      if (recentAdminTouch) {
+        skipped.push({ id: row.id, title: row.title })
+        continue
+      }
+      eligible.push(row)
+      if (eligible.length >= effectiveLimit) break
+    }
+
+    if (eligible.length === 0) {
+      return {
+        success:    true,
+        candidates: rows.length,
+        processed:  0,
+        skipped_admin_touch: skipped.length,
+      }
+    }
+
+    // ── Process sequentially through the full chain ────────────────────────
+    type ChainResult = {
+      id: string
+      title: string
+      enriched:           boolean
+      classified:         boolean
+      swept:              boolean
+      materially_changed: boolean
+      flagged_for_review: boolean
+      diff_fields:        string[]
+      stale_dates:        number
+      elapsed_ms:         number
+      error?:             string
+    }
+    const results: ChainResult[] = []
+
+    for (const row of eligible) {
+      const t0 = Date.now()
+      const result: ChainResult = {
+        id:                 row.id,
+        title:              row.title,
+        enriched:           false,
+        classified:         false,
+        swept:              false,
+        materially_changed: false,
+        flagged_for_review: false,
+        diff_fields:        [],
+        stale_dates:        0,
+        elapsed_ms:         0,
+      }
+
+      // Step 0: capture pre-state of matcher-relevant fields
+      const { data: preRow, error: preErr } = await db
         .from('scraped_grants')
-        .update({
-          pipeline_state:   'tagged_awaiting_review',
-          field_provenance: newProv,
-        })
+        .select(DIFF_FIELDS.join(', '))
         .eq('id', row.id)
-      if (flipErr) {
-        result.error = `flip-to-NR failed: ${flipErr.message}`
-        console.warn(`[reenrich-stale] flip-to-NR failed for ${row.id}: ${flipErr.message}`)
-      } else {
-        result.flagged_for_review = true
+        .single()
+      if (preErr || !preRow) {
+        result.error = `pre-state fetch failed: ${preErr?.message ?? 'no row'}`
+        result.elapsed_ms = Date.now() - t0
+        results.push(result)
+        console.warn(`[reenrich-stale] ✗ ${row.id} (${row.title}) — pre-state fetch failed`)
+        continue
       }
+
+      // Mark the row ATTEMPTED up-front, before any step that can fail or no-op.
+      // This is the back-off anchor: no matter how this run ends (enrich no-op,
+      // sweep error, dead URL), the row won't be re-selected for
+      // REENRICH_ATTEMPT_BACKOFF_DAYS — so the cron always advances through the
+      // backlog instead of looping on rows it can't refresh.
+      await db.from('scraped_grants')
+        .update({ last_reenrich_attempt: new Date().toISOString() })
+        .eq('id', row.id)
+
+      // Dead URL → enrich can't fetch fresh content, so re-running just churns.
+      // Route to the intervention queue (excluded by the candidate query above)
+      // for a URL fix / archive decision instead of re-processing every cycle.
+      if (row.url_status === 'dead') {
+        await db.from('scraped_grants')
+          .update({ needs_intervention_reason: 'reenrich: apply_url dead — needs URL fix or archive' })
+          .eq('id', row.id)
+        result.error = 'skipped: url dead'
+        result.elapsed_ms = Date.now() - t0
+        results.push(result)
+        console.warn(`[reenrich-stale] ⊘ ${row.id} (${row.title}) — url dead, routed to intervention`)
+        continue
+      }
+
+      // Step 1: enrich
+      const enrichRes = await callAdmin('/api/admin/enrich-grant', { grantId: row.id })
+      if (!enrichRes.ok) {
+        result.error = `enrich: ${enrichRes.error}`
+        result.elapsed_ms = Date.now() - t0
+        results.push(result)
+        console.warn(`[reenrich-stale] ✗ ${row.id} (${row.title}) — enrich failed: ${enrichRes.error}`)
+        continue
+      }
+      result.enriched = true
+      const briefDebug = (enrichRes.json as { brief?: { _stale_dates?: unknown[] } })?.brief?._stale_dates
+      result.stale_dates = Array.isArray(briefDebug) ? briefDebug.length : 0
+
+      // Step 2: classify (non-fatal on failure — row still has fresh brief)
+      const classifyRes = await callAdmin('/api/admin/classify-grants', {
+        grant_ids:      [row.id],
+        include_review: true,
+        force:          true,
+        preserve_empty: true,  // automated chain: an empty [] from Claude must not wipe existing structures/beneficiaries
+      })
+      if (classifyRes.ok) {
+        result.classified = true
+      } else {
+        console.warn(`[reenrich-stale] classify miss for ${row.id}: ${classifyRes.error}`)
+      }
+
+      // Step 3: sweep (fatal — sweep is the final state-resolution step)
+      const sweepRes = await callAdmin('/api/admin/sweep', { id: row.id })
+      if (!sweepRes.ok) {
+        result.error = `sweep: ${sweepRes.error}`
+        result.elapsed_ms = Date.now() - t0
+        results.push(result)
+        console.warn(`[reenrich-stale] ✗ ${row.id} (${row.title}) — sweep failed: ${sweepRes.error}`)
+        continue
+      }
+      result.swept = true
+
+      // Step 4: capture post-state and compute diff
+      const { data: postRow, error: postErr } = await db
+        .from('scraped_grants')
+        .select(DIFF_FIELDS.join(', ') + ', field_provenance')
+        .eq('id', row.id)
+        .single()
+      if (postErr || !postRow) {
+        result.error = `post-state fetch failed: ${postErr?.message ?? 'no row'}`
+        result.elapsed_ms = Date.now() - t0
+        results.push(result)
+        continue
+      }
+
+      const { changed, diff } = detectMaterialDiff(
+        preRow as unknown as Record<string, unknown>,
+        postRow as unknown as Record<string, unknown>,
+      )
+      result.materially_changed = changed
+      result.diff_fields = Object.keys(diff)
+
+      // Step 5: if material change, flip to tagged_awaiting_review with diff
+      // stamped in provenance so admin can see what changed without re-running.
+      // is_active stays true — surface behaviour shouldn't snap to invisible
+      // while admin reviews; the existing tags still drive matching until they
+      // confirm or revert.
+      if (changed) {
+        const existingProv = ((postRow as unknown as { field_provenance?: Record<string, unknown> }).field_provenance ?? {}) as Record<string, unknown>
+        const newProv = {
+          ...existingProv,
+          pipeline_state: {
+            pinned:  false,
+            set_at:  new Date().toISOString(),
+            source:  'system:reenrich_chain:v1',
+            reason:  'reclassify_diff',
+            diff,
+          },
+        }
+        const { error: flipErr } = await db
+          .from('scraped_grants')
+          .update({
+            pipeline_state:   'tagged_awaiting_review',
+            field_provenance: newProv,
+          })
+          .eq('id', row.id)
+        if (flipErr) {
+          result.error = `flip-to-NR failed: ${flipErr.message}`
+          console.warn(`[reenrich-stale] flip-to-NR failed for ${row.id}: ${flipErr.message}`)
+        } else {
+          result.flagged_for_review = true
+        }
+      }
+
+      result.elapsed_ms = Date.now() - t0
+      results.push(result)
+
+      const tagDiff = changed
+        ? ` — DIFF on ${result.diff_fields.join(', ')} → flagged for review`
+        : ''
+      console.log(
+        `[reenrich-stale] ✓ ${row.id} (${row.title}) — ${result.elapsed_ms}ms` +
+        ` — stale_dates=${result.stale_dates}${tagDiff}`
+      )
     }
 
-    result.elapsed_ms = Date.now() - t0
-    results.push(result)
+    const succeeded         = results.filter(r => r.enriched && r.swept).length
+    const failed            = results.filter(r => !r.enriched || !r.swept).length
+    const flaggedForReview  = results.filter(r => r.flagged_for_review).length
+    const materiallyChanged = results.filter(r => r.materially_changed).length
 
-    const tagDiff = changed
-      ? ` — DIFF on ${result.diff_fields.join(', ')} → flagged for review`
-      : ''
-    console.log(
-      `[reenrich-stale] ✓ ${row.id} (${row.title}) — ${result.elapsed_ms}ms` +
-      ` — stale_dates=${result.stale_dates}${tagDiff}`
-    )
-  }
-
-  const succeeded         = results.filter(r => r.enriched && r.swept).length
-  const failed            = results.filter(r => !r.enriched || !r.swept).length
-  const flaggedForReview  = results.filter(r => r.flagged_for_review).length
-  const materiallyChanged = results.filter(r => r.materially_changed).length
-
-  return NextResponse.json({
-    success:             true,
-    candidates:          rows.length,
-    processed:           results.length,
-    succeeded,
-    failed,
-    materially_changed:  materiallyChanged,
-    flagged_for_review:  flaggedForReview,
-    skipped_admin_touch: skipped.length,
-    results,
+    return {
+      success:             true,
+      candidates:          rows.length,
+      processed:           results.length,
+      succeeded,
+      failed,
+      materially_changed:  materiallyChanged,
+      flagged_for_review:  flaggedForReview,
+      skipped_admin_touch: skipped.length,
+      results,
+    }
   })
+  return NextResponse.json(payload, { status: httpStatus })
 }

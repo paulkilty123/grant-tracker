@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { crawlAllSources } from '@/lib/crawl'
 import { classifyUnclassified } from '@/lib/classify'
+import { recordRun } from '@/lib/admin/cron-runs'
 
 export const dynamic    = 'force-dynamic'
 export const maxDuration = 300   // Vercel Pro: allow up to 5 min per batch
@@ -34,84 +35,87 @@ export async function GET(req: NextRequest) {
               : undefined
 
   try {
-    const results = await crawlAllSources(batch)
-    const active  = results.filter(r => r.error !== 'skipped' && r.error !== 'disabled')
-    const total   = active.reduce((n, r) => n + r.upserted, 0)
+    const payload = await recordRun('crawl-grants', async () => {
+      const results = await crawlAllSources(batch)
+      const active  = results.filter(r => r.error !== 'skipped' && r.error !== 'disabled')
+      const total   = active.reduce((n, r) => n + r.upserted, 0)
 
-    // Auto-classify any unclassified grants (new or previously missed).
-    // Run after every batch so sectors/funding type are always populated.
-    let classified = 0
-    let classifyFailed = 0
-    let unclassifiedRemaining: number | null = null
-    try {
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        { auth: { persistSession: false } },
-      )
-      const r = await classifyUnclassified(supabase, 60)
-      classified     = r.classified
-      classifyFailed = r.failed
-
-      // Backlog visibility — count unclassified rows still active after this
-      // batch. Surfaces in Vercel logs so a quietly-failing classifier path
-      // doesn't go unnoticed (which is exactly what produced the 152-row
-      // backlog discovered on 2026-05-08).
-      const { count } = await supabase
-        .from('scraped_grants')
-        .select('id', { count: 'exact', head: true })
-        .eq('is_active', true)
-        .or('impact_sectors.is.null,impact_sectors.eq.{}')
-      unclassifiedRemaining = count ?? null
-
-      const BACKLOG_THRESHOLD = 10
-      if (unclassifiedRemaining != null && unclassifiedRemaining > BACKLOG_THRESHOLD) {
-        console.warn(
-          `[crawl-grants] CLASSIFY_BACKLOG ${unclassifiedRemaining} active rows still unclassified after batch=${batch ?? 'all'} ` +
-          `(classified=${classified}, failed=${classifyFailed}). ` +
-          `Threshold=${BACKLOG_THRESHOLD}. If this persists, investigate the classifier path.`
+      // Auto-classify any unclassified grants (new or previously missed).
+      // Run after every batch so sectors/funding type are always populated.
+      let classified = 0
+      let classifyFailed = 0
+      let unclassifiedRemaining: number | null = null
+      try {
+        const supabase = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          { auth: { persistSession: false } },
         )
+        const r = await classifyUnclassified(supabase, 60)
+        classified     = r.classified
+        classifyFailed = r.failed
+
+        // Backlog visibility — count unclassified rows still active after this
+        // batch. Surfaces in Vercel logs so a quietly-failing classifier path
+        // doesn't go unnoticed (which is exactly what produced the 152-row
+        // backlog discovered on 2026-05-08).
+        const { count } = await supabase
+          .from('scraped_grants')
+          .select('id', { count: 'exact', head: true })
+          .eq('is_active', true)
+          .or('impact_sectors.is.null,impact_sectors.eq.{}')
+        unclassifiedRemaining = count ?? null
+
+        const BACKLOG_THRESHOLD = 10
+        if (unclassifiedRemaining != null && unclassifiedRemaining > BACKLOG_THRESHOLD) {
+          console.warn(
+            `[crawl-grants] CLASSIFY_BACKLOG ${unclassifiedRemaining} active rows still unclassified after batch=${batch ?? 'all'} ` +
+            `(classified=${classified}, failed=${classifyFailed}). ` +
+            `Threshold=${BACKLOG_THRESHOLD}. If this persists, investigate the classifier path.`
+          )
+        }
+      } catch (err) {
+        console.error('[crawl-grants] Post-crawl classify failed:', err)
       }
-    } catch (err) {
-      console.error('[crawl-grants] Post-crawl classify failed:', err)
-    }
 
-    // ── Crawl errors visibility ───────────────────────────────────────────
-    // Counts unresolved entries in crawl_errors and surfaces a WARN line
-    // when sources are persistently failing. Mirrors the CLASSIFY_BACKLOG
-    // pattern so silent-failing crawlers don't go unnoticed.
-    let unresolvedErrors: number | null = null
-    try {
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        { auth: { persistSession: false } },
-      )
-      const { count } = await supabase
-        .from('crawl_errors')
-        .select('id', { count: 'exact', head: true })
-        .is('resolved_at', null)
-      unresolvedErrors = count ?? null
-
-      const ERROR_THRESHOLD = 5
-      if (unresolvedErrors != null && unresolvedErrors > ERROR_THRESHOLD) {
-        console.warn(
-          `[crawl-grants] CRAWL_ERRORS_UNRESOLVED ${unresolvedErrors} sources have unresolved errors after batch=${batch ?? 'all'}. ` +
-          `Threshold=${ERROR_THRESHOLD}. Inspect crawl_errors WHERE resolved_at IS NULL.`
+      // ── Crawl errors visibility ───────────────────────────────────────────
+      // Counts unresolved entries in crawl_errors and surfaces a WARN line
+      // when sources are persistently failing. Mirrors the CLASSIFY_BACKLOG
+      // pattern so silent-failing crawlers don't go unnoticed.
+      let unresolvedErrors: number | null = null
+      try {
+        const supabase = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          { auth: { persistSession: false } },
         )
-      }
-    } catch (err) {
-      console.error('[crawl-grants] crawl_errors count failed:', err)
-    }
+        const { count } = await supabase
+          .from('crawl_errors')
+          .select('id', { count: 'exact', head: true })
+          .is('resolved_at', null)
+        unresolvedErrors = count ?? null
 
-    return NextResponse.json({
-      success: true,
-      batch: batch ?? 'all',
-      totalUpserted: total,
-      classify: { classified, failed: classifyFailed, unclassifiedRemaining },
-      crawlErrors: { unresolved: unresolvedErrors },
-      results: active,
+        const ERROR_THRESHOLD = 5
+        if (unresolvedErrors != null && unresolvedErrors > ERROR_THRESHOLD) {
+          console.warn(
+            `[crawl-grants] CRAWL_ERRORS_UNRESOLVED ${unresolvedErrors} sources have unresolved errors after batch=${batch ?? 'all'}. ` +
+            `Threshold=${ERROR_THRESHOLD}. Inspect crawl_errors WHERE resolved_at IS NULL.`
+          )
+        }
+      } catch (err) {
+        console.error('[crawl-grants] crawl_errors count failed:', err)
+      }
+
+      return {
+        success: true,
+        batch: batch ?? 'all',
+        totalUpserted: total,
+        classify: { classified, failed: classifyFailed, unclassifiedRemaining },
+        crawlErrors: { unresolved: unresolvedErrors },
+        results: active,
+      }
     })
+    return NextResponse.json(payload)
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Crawl failed'
     return NextResponse.json({ error: message }, { status: 500 })

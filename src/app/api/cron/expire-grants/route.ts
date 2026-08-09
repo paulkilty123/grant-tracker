@@ -10,6 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { mergeGrantUpdate } from '@/lib/grant-merge'
+import { recordRun } from '@/lib/admin/cron-runs'
 
 export const dynamic = 'force-dynamic'
 
@@ -127,96 +128,100 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const supabase = getAdminClient()
-  const today = new Date().toISOString().split('T')[0]  // YYYY-MM-DD
+  let httpStatus = 200
+  const payload = await recordRun('expire-grants', async () => {
+    const supabase = getAdminClient()
+    const today = new Date().toISOString().split('T')[0]  // YYYY-MM-DD
 
-  // Find every grant whose deadline has passed
-  const { data: candidates, error: fetchErr } = await supabase
-    .from('scraped_grants')
-    .select('id, external_id, title, deadline, next_open_date, funder_brief, deadline_cycle')
-    .eq('is_active', true)
-    .eq('is_rolling', false)
-    .not('deadline', 'is', null)
-    .lt('deadline', today)
+    // Find every grant whose deadline has passed
+    const { data: candidates, error: fetchErr } = await supabase
+      .from('scraped_grants')
+      .select('id, external_id, title, deadline, next_open_date, funder_brief, deadline_cycle')
+      .eq('is_active', true)
+      .eq('is_rolling', false)
+      .not('deadline', 'is', null)
+      .lt('deadline', today)
 
-  if (fetchErr) return NextResponse.json({ error: fetchErr.message }, { status: 500 })
+    if (fetchErr) { httpStatus = 500; return { error: fetchErr.message } }
 
-  const rolled: Array<{ id: string; title: string; old: string; next: string }> = []
-  const betweenRoundsOut: Array<{ id: string; title: string; deadline: string }> = []
+    const rolled: Array<{ id: string; title: string; old: string; next: string }> = []
+    const betweenRoundsOut: Array<{ id: string; title: string; deadline: string }> = []
 
-  for (const g of candidates ?? []) {
-    const brief = g.funder_brief as Record<string, unknown> | null
-    const tl    = brief?.decision_timeline as string | undefined
-    // v2: prefer structured deadline_cycle column when populated.
-    // Falls back to the legacy prose parser only when the column is null
-    // (existing un-backfilled rows). Once Phase 4 auto-chain has run across
-    // the catalogue, every row with a cycle should have the column set.
-    const cycleFromColumn = g.deadline_cycle as CycleEntry[] | null | undefined
-    const nextDate = cycleFromColumn && cycleFromColumn.length > 0
-      ? nextCycleDateFromColumn(cycleFromColumn, today)
-      : (tl ? parseNextRoundDeadline(tl, today) : null)
+    for (const g of candidates ?? []) {
+      const brief = g.funder_brief as Record<string, unknown> | null
+      const tl    = brief?.decision_timeline as string | undefined
+      // v2: prefer structured deadline_cycle column when populated.
+      // Falls back to the legacy prose parser only when the column is null
+      // (existing un-backfilled rows). Once Phase 4 auto-chain has run across
+      // the catalogue, every row with a cycle should have the column set.
+      const cycleFromColumn = g.deadline_cycle as CycleEntry[] | null | undefined
+      const nextDate = cycleFromColumn && cycleFromColumn.length > 0
+        ? nextCycleDateFromColumn(cycleFromColumn, today)
+        : (tl ? parseNextRoundDeadline(tl, today) : null)
 
-    if (nextDate && nextDate > today) {
-      // Multi-round grant — advance the deadline instead of deactivating.
+      if (nextDate && nextDate > today) {
+        // Multi-round grant — advance the deadline instead of deactivating.
+        try {
+          const r = await mergeGrantUpdate({
+            id:     g.id as string,
+            fields: { deadline: nextDate },
+            source: PROVENANCE_SOURCE,
+            pinned: false,
+            db:     supabase,
+          })
+          if (r.applied.includes('deadline')) {
+            rolled.push({
+              id: g.external_id as string,
+              title: g.title as string,
+              old: g.deadline as string,
+              next: nextDate,
+            })
+            continue
+          }
+          // Rejected (admin pin or higher trust held the deadline) — leave as-is.
+          // The next scraper run will refresh content; admin's pinned deadline wins.
+          continue
+        } catch {
+          // fallthrough to between-rounds on write error
+        }
+      }
+
+      // No clean roll possible — mark as "between rounds" instead of deactivating.
+      // Keep is_active=true so the row stays in the catalogue (end users see a
+      // 'Closed — next round TBC' placeholder rather than the row vanishing) and
+      // stays OUT of the admin Needs Review queue (which is reserved for genuinely
+      // new arrivals). Admins review these via a dedicated "Between rounds" tab.
+      const existingNextOpen = (g.next_open_date as string | null) ?? null
       try {
         const r = await mergeGrantUpdate({
           id:     g.id as string,
-          fields: { deadline: nextDate },
+          fields: {
+            deadline:       null,
+            next_open_date: existingNextOpen ?? 'Closed — next round TBC',
+          },
           source: PROVENANCE_SOURCE,
           pinned: false,
           db:     supabase,
         })
-        if (r.applied.includes('deadline')) {
-          rolled.push({
+        if (r.applied.length > 0) {
+          betweenRoundsOut.push({
             id: g.external_id as string,
             title: g.title as string,
-            old: g.deadline as string,
-            next: nextDate,
+            deadline: g.deadline as string,
           })
-          continue
         }
-        // Rejected (admin pin or higher trust held the deadline) — leave as-is.
-        // The next scraper run will refresh content; admin's pinned deadline wins.
-        continue
-      } catch {
-        // fallthrough to between-rounds on write error
+      } catch (err) {
+        console.error('[expire-grants] write failed:', err)
       }
     }
 
-    // No clean roll possible — mark as "between rounds" instead of deactivating.
-    // Keep is_active=true so the row stays in the catalogue (end users see a
-    // 'Closed — next round TBC' placeholder rather than the row vanishing) and
-    // stays OUT of the admin Needs Review queue (which is reserved for genuinely
-    // new arrivals). Admins review these via a dedicated "Between rounds" tab.
-    const existingNextOpen = (g.next_open_date as string | null) ?? null
-    try {
-      const r = await mergeGrantUpdate({
-        id:     g.id as string,
-        fields: {
-          deadline:       null,
-          next_open_date: existingNextOpen ?? 'Closed — next round TBC',
-        },
-        source: PROVENANCE_SOURCE,
-        pinned: false,
-        db:     supabase,
-      })
-      if (r.applied.length > 0) {
-        betweenRoundsOut.push({
-          id: g.external_id as string,
-          title: g.title as string,
-          deadline: g.deadline as string,
-        })
-      }
-    } catch (err) {
-      console.error('[expire-grants] write failed:', err)
+    return {
+      success:           true,
+      betweenRoundsCount: betweenRoundsOut.length,
+      rolledCount:       rolled.length,
+      betweenRounds:     betweenRoundsOut,
+      rolled,
     }
-  }
-
-  return NextResponse.json({
-    success:           true,
-    betweenRoundsCount: betweenRoundsOut.length,
-    rolledCount:       rolled.length,
-    betweenRounds:     betweenRoundsOut,
-    rolled,
   })
+  return NextResponse.json(payload, { status: httpStatus })
 }

@@ -36,6 +36,7 @@ import { createClient } from '@supabase/supabase-js'
 import { checkUrl, deepCheckUrl } from '@/lib/url-validator'
 import { mergeGrantUpdate } from '@/lib/grant-merge'
 import { SEED_GRANTS } from '@/lib/grants'
+import { recordRun } from '@/lib/admin/cron-runs'
 
 export const dynamic    = 'force-dynamic'
 export const maxDuration = 300
@@ -90,252 +91,257 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  const supabase  = getAdminClient()
-  const ranAt     = new Date().toISOString()
-  const startedAt = Date.now()
+  let httpStatus = 200
+  const payload = await recordRun('validate-urls', async () => {
+    const supabase  = getAdminClient()
+    const ranAt     = new Date().toISOString()
+    const startedAt = Date.now()
 
-  // ── 1. Fetch all active scraped grants with a URL ─────────────────────────
-  // Order by url_last_checked ascending (nulls first) so never-checked and
-  // stalest rows are processed first. A partial run then clears the backlog
-  // instead of re-checking already-fresh rows.
-  const { data: grants, error } = await supabase
-    .from('scraped_grants')
-    .select('id, title, apply_url, funder')
-    .eq('is_active', true)
-    .not('apply_url', 'is', null)
-    .order('url_last_checked', { ascending: true, nullsFirst: true })
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
-  }
-
-  let checkedScraped   = 0
-  let okScraped        = 0
-  let deactivatedCount = 0
-  let closedCount      = 0
-  const deactivated: { id: string; title: string }[] = []
-  const closedForReview: { id: string; title: string }[] = []
-
-  // ── 2. Deep-check each grant URL (quality + liveness) ─────────────────────
-  // All fields written here are untracked, so mergeGrantUpdate takes the
-  // untracked-only path and computes the pipeline_state transition for us.
-  const scrapedRun = await inBatches(grants ?? [], 15, async (grant) => {
-    const result = await deepCheckUrl(
-      grant.apply_url as string,
-      (grant.funder as string) ?? '',
-      (grant.title as string) ?? '',
-    )
-    checkedScraped++
-
-    if (result.status === 'dead') {
-      // Genuinely broken link: deactivate. is_active=false + url_status='dead'
-      // → transitionPipelineState returns 'archived'.
-      await mergeGrantUpdate({
-        id:     grant.id,
-        source: PROVENANCE_SOURCE,
-        db:     supabase,
-        fields: {
-          url_status:         'dead',
-          url_last_checked:   ranAt,
-          is_active:          false,
-          url_quality_score:  result.qualityScore,
-          url_quality_issues: result.issues,
-        },
-      })
-      deactivatedCount++
-      deactivated.push({ id: grant.id, title: grant.title as string })
-    } else if (result.status === 'grant_closed') {
-      // The page is healthy; the ROUND is closed. Don't lie about the URL and
-      // don't deactivate — the grant may reopen, and expire-grants can only
-      // roll a deadline forward while is_active=true. Flag for review and
-      // leave it visible (same pattern as reenrich-stale / check-stale-rounds).
-      await mergeGrantUpdate({
-        id:     grant.id,
-        source: PROVENANCE_SOURCE,
-        db:     supabase,
-        fields: {
-          url_status:         'ok',
-          url_last_checked:   ranAt,
-          url_quality_score:  result.qualityScore,
-          url_quality_issues: result.issues,
-          pipeline_state:     'tagged_awaiting_review',
-        },
-      })
-      closedCount++
-      closedForReview.push({ id: grant.id, title: grant.title as string })
-    } else {
-      // Keep active — write quality metrics alongside status
-      const urlStatus = result.status === 'wrong_page' ? 'unchecked' as const : 'ok' as const
-      await mergeGrantUpdate({
-        id:     grant.id,
-        source: PROVENANCE_SOURCE,
-        db:     supabase,
-        fields: {
-          url_status:         urlStatus,
-          url_last_checked:   ranAt,
-          url_quality_score:  result.qualityScore,
-          url_quality_issues: result.issues,
-        },
-      })
-      okScraped++
-    }
-  }, startedAt + TIME_BUDGET_MS)
-
-  // ── 2b. Recovery pass — re-check a bounded slice of OUR OWN casualties ────
-  // Only rows this cron deactivated (url_last_checked IS NOT NULL). Rows with
-  // url_status='dead' AND url_last_checked IS NULL are manual admin hides and
-  // must never be resurrected here.
-  //
-  // A row found alive again is recorded honestly but NOT auto-republished —
-  // that is a publish decision, and additions stay gated. It is reported below
-  // so the recovered set is visible.
-  let recoveryChecked = 0
-  const recovered: { id: string; title: string }[] = []
-
-  if (Date.now() < startedAt + TIME_BUDGET_MS) {
-    const { data: deadRows } = await supabase
+    // ── 1. Fetch all active scraped grants with a URL ─────────────────────────
+    // Order by url_last_checked ascending (nulls first) so never-checked and
+    // stalest rows are processed first. A partial run then clears the backlog
+    // instead of re-checking already-fresh rows.
+    const { data: grants, error } = await supabase
       .from('scraped_grants')
       .select('id, title, apply_url, funder')
-      .eq('is_active', false)
-      .eq('url_status', 'dead')
-      .not('url_last_checked', 'is', null)   // ← excludes manual admin hides
-      .not('apply_url', 'is', null)
-      .order('url_last_checked', { ascending: true })
-      .limit(RECOVERY_LIMIT)
-
-    await inBatches(deadRows ?? [], 10, async (grant) => {
-      const result = await deepCheckUrl(
-        grant.apply_url as string,
-        (grant.funder as string) ?? '',
-        (grant.title as string) ?? '',
-      )
-      recoveryChecked++
-
-      // Always stamp the check so the row rotates out of the head of the queue,
-      // whether or not it recovered.
-      await mergeGrantUpdate({
-        id:     grant.id,
-        source: PROVENANCE_SOURCE,
-        db:     supabase,
-        fields: {
-          url_status:         result.status === 'dead' ? 'dead' : 'ok',
-          url_last_checked:   ranAt,
-          url_quality_score:  result.qualityScore,
-          url_quality_issues: result.issues,
-        },
-      })
-
-      if (result.status !== 'dead') {
-        recovered.push({ id: grant.id, title: grant.title as string })
-      }
-    }, startedAt + TIME_BUDGET_MS)
-  }
-
-  // ── 2c. Review-queue pass — break the link_unverified deadlock ────────────
-  // Rows awaiting review are is_active=false, so pass 1 (is_active=true) never
-  // reached them, and pass 2b only takes rows already marked dead. A withheld
-  // row with url_status='unchecked' was therefore reachable by NEITHER pass:
-  // it was held because its link was unverified, and nothing would ever verify
-  // it while it was held. Measured 2026-07-26: 27 of the 31 genuinely withheld
-  // rows sat in that state.
-  //
-  // This mattered more once the auto-publish gate existed. A gate must never
-  // block on a signal no job is able to produce — that is not caution, it is a
-  // permanent hold wearing caution's clothing. link_unverified is classified as
-  // informational partly for that reason; this pass is the other half of the
-  // fix, so the signal becomes real rather than merely non-blocking.
-  //
-  // Bounded and last, so it can only consume budget the catalogue passes left.
-  let queueChecked = 0
-  const queueDead: { id: string; title: string }[] = []
-
-  if (Date.now() < startedAt + TIME_BUDGET_MS) {
-    const { data: queueRows } = await supabase
-      .from('scraped_grants')
-      .select('id, title, apply_url, funder')
-      .eq('is_active', false)
-      .in('pipeline_state', ['captured', 'enriched', 'tagged', 'tagged_awaiting_review'])
-      .neq('url_status', 'dead')          // 2b owns those; never resurrect admin hides
+      .eq('is_active', true)
       .not('apply_url', 'is', null)
       .order('url_last_checked', { ascending: true, nullsFirst: true })
-      .limit(RECOVERY_LIMIT)
 
-    await inBatches(queueRows ?? [], 10, async (grant) => {
+    if (error) {
+      httpStatus = 500
+      return { error: error.message }
+    }
+
+    let checkedScraped   = 0
+    let okScraped        = 0
+    let deactivatedCount = 0
+    let closedCount      = 0
+    const deactivated: { id: string; title: string }[] = []
+    const closedForReview: { id: string; title: string }[] = []
+
+    // ── 2. Deep-check each grant URL (quality + liveness) ─────────────────────
+    // All fields written here are untracked, so mergeGrantUpdate takes the
+    // untracked-only path and computes the pipeline_state transition for us.
+    const scrapedRun = await inBatches(grants ?? [], 15, async (grant) => {
       const result = await deepCheckUrl(
         grant.apply_url as string,
         (grant.funder as string) ?? '',
         (grant.title as string) ?? '',
       )
-      queueChecked++
-
-      // Record the verdict only. Deliberately NOT deactivating a dead queue row
-      // here: these rows are already invisible to users, so there is nothing to
-      // protect anyone from, and archiving one would remove a human's chance to
-      // fix a merely-wrong URL. The gate reads url_status and will hold it.
-      await mergeGrantUpdate({
-        id:     grant.id,
-        source: PROVENANCE_SOURCE,
-        db:     supabase,
-        fields: {
-          url_status:         result.status === 'dead' ? 'dead' : 'ok',
-          url_last_checked:   ranAt,
-          url_quality_score:  result.qualityScore,
-          url_quality_issues: result.issues,
-        },
-      })
+      checkedScraped++
 
       if (result.status === 'dead') {
-        queueDead.push({ id: grant.id, title: grant.title as string })
+        // Genuinely broken link: deactivate. is_active=false + url_status='dead'
+        // → transitionPipelineState returns 'archived'.
+        await mergeGrantUpdate({
+          id:     grant.id,
+          source: PROVENANCE_SOURCE,
+          db:     supabase,
+          fields: {
+            url_status:         'dead',
+            url_last_checked:   ranAt,
+            is_active:          false,
+            url_quality_score:  result.qualityScore,
+            url_quality_issues: result.issues,
+          },
+        })
+        deactivatedCount++
+        deactivated.push({ id: grant.id, title: grant.title as string })
+      } else if (result.status === 'grant_closed') {
+        // The page is healthy; the ROUND is closed. Don't lie about the URL and
+        // don't deactivate — the grant may reopen, and expire-grants can only
+        // roll a deadline forward while is_active=true. Flag for review and
+        // leave it visible (same pattern as reenrich-stale / check-stale-rounds).
+        await mergeGrantUpdate({
+          id:     grant.id,
+          source: PROVENANCE_SOURCE,
+          db:     supabase,
+          fields: {
+            url_status:         'ok',
+            url_last_checked:   ranAt,
+            url_quality_score:  result.qualityScore,
+            url_quality_issues: result.issues,
+            pipeline_state:     'tagged_awaiting_review',
+          },
+        })
+        closedCount++
+        closedForReview.push({ id: grant.id, title: grant.title as string })
+      } else {
+        // Keep active — write quality metrics alongside status
+        const urlStatus = result.status === 'wrong_page' ? 'unchecked' as const : 'ok' as const
+        await mergeGrantUpdate({
+          id:     grant.id,
+          source: PROVENANCE_SOURCE,
+          db:     supabase,
+          fields: {
+            url_status:         urlStatus,
+            url_last_checked:   ranAt,
+            url_quality_score:  result.qualityScore,
+            url_quality_issues: result.issues,
+          },
+        })
+        okScraped++
       }
     }, startedAt + TIME_BUDGET_MS)
-  }
 
-  // ── 3. Check SEED_GRANTS URLs ─────────────────────────────────────────────
-  const seedWithUrl = SEED_GRANTS.filter(g => g.applyUrl)
-  const deadSeedGrants: { id: string; title: string; funder: string; url: string }[] = []
+    // ── 2b. Recovery pass — re-check a bounded slice of OUR OWN casualties ────
+    // Only rows this cron deactivated (url_last_checked IS NOT NULL). Rows with
+    // url_status='dead' AND url_last_checked IS NULL are manual admin hides and
+    // must never be resurrected here.
+    //
+    // A row found alive again is recorded honestly but NOT auto-republished —
+    // that is a publish decision, and additions stay gated. It is reported below
+    // so the recovered set is visible.
+    let recoveryChecked = 0
+    const recovered: { id: string; title: string }[] = []
 
-  const seedRun = await inBatches(seedWithUrl, 10, async (grant) => {
-    const status = await checkUrl(grant.applyUrl as string, grant.funder)
-    if (status === 'dead') {
-      deadSeedGrants.push({
-        id:     grant.id,
-        title:  grant.title,
-        funder: grant.funder,
-        url:    grant.applyUrl as string,
-      })
+    if (Date.now() < startedAt + TIME_BUDGET_MS) {
+      const { data: deadRows } = await supabase
+        .from('scraped_grants')
+        .select('id, title, apply_url, funder')
+        .eq('is_active', false)
+        .eq('url_status', 'dead')
+        .not('url_last_checked', 'is', null)   // ← excludes manual admin hides
+        .not('apply_url', 'is', null)
+        .order('url_last_checked', { ascending: true })
+        .limit(RECOVERY_LIMIT)
+
+      await inBatches(deadRows ?? [], 10, async (grant) => {
+        const result = await deepCheckUrl(
+          grant.apply_url as string,
+          (grant.funder as string) ?? '',
+          (grant.title as string) ?? '',
+        )
+        recoveryChecked++
+
+        // Always stamp the check so the row rotates out of the head of the queue,
+        // whether or not it recovered.
+        await mergeGrantUpdate({
+          id:     grant.id,
+          source: PROVENANCE_SOURCE,
+          db:     supabase,
+          fields: {
+            url_status:         result.status === 'dead' ? 'dead' : 'ok',
+            url_last_checked:   ranAt,
+            url_quality_score:  result.qualityScore,
+            url_quality_issues: result.issues,
+          },
+        })
+
+        if (result.status !== 'dead') {
+          recovered.push({ id: grant.id, title: grant.title as string })
+        }
+      }, startedAt + TIME_BUDGET_MS)
     }
-  }, startedAt + TIME_BUDGET_MS)
 
-  // ── 4. Return summary ─────────────────────────────────────────────────────
-  return NextResponse.json({
-    ranAt,
-    elapsedMs:      Date.now() - startedAt,
-    budgetExceeded: scrapedRun.skipped > 0 || seedRun.skipped > 0,
-    scraped: {
-      total:           (grants ?? []).length,
-      checked:         checkedScraped,
-      skipped:         scrapedRun.skipped,
-      ok:              okScraped,
-      deactivated:     deactivatedCount,
-      closed:          closedCount,
-      grants:          deactivated,
-      closedForReview: closedForReview,
-    },
-    recovery: {
-      checked:   recoveryChecked,
-      recovered: recovered.length,
-      grants:    recovered,
-    },
-    reviewQueue: {
-      checked: queueChecked,
-      dead:    queueDead.length,
-      grants:  queueDead,
-    },
-    seed: {
-      checked: seedWithUrl.length - seedRun.skipped,
-      skipped: seedRun.skipped,
-      dead:    deadSeedGrants.length,
-      grants:  deadSeedGrants,
-    },
+    // ── 2c. Review-queue pass — break the link_unverified deadlock ────────────
+    // Rows awaiting review are is_active=false, so pass 1 (is_active=true) never
+    // reached them, and pass 2b only takes rows already marked dead. A withheld
+    // row with url_status='unchecked' was therefore reachable by NEITHER pass:
+    // it was held because its link was unverified, and nothing would ever verify
+    // it while it was held. Measured 2026-07-26: 27 of the 31 genuinely withheld
+    // rows sat in that state.
+    //
+    // This mattered more once the auto-publish gate existed. A gate must never
+    // block on a signal no job is able to produce — that is not caution, it is a
+    // permanent hold wearing caution's clothing. link_unverified is classified as
+    // informational partly for that reason; this pass is the other half of the
+    // fix, so the signal becomes real rather than merely non-blocking.
+    //
+    // Bounded and last, so it can only consume budget the catalogue passes left.
+    let queueChecked = 0
+    const queueDead: { id: string; title: string }[] = []
+
+    if (Date.now() < startedAt + TIME_BUDGET_MS) {
+      const { data: queueRows } = await supabase
+        .from('scraped_grants')
+        .select('id, title, apply_url, funder')
+        .eq('is_active', false)
+        .in('pipeline_state', ['captured', 'enriched', 'tagged', 'tagged_awaiting_review'])
+        .neq('url_status', 'dead')          // 2b owns those; never resurrect admin hides
+        .not('apply_url', 'is', null)
+        .order('url_last_checked', { ascending: true, nullsFirst: true })
+        .limit(RECOVERY_LIMIT)
+
+      await inBatches(queueRows ?? [], 10, async (grant) => {
+        const result = await deepCheckUrl(
+          grant.apply_url as string,
+          (grant.funder as string) ?? '',
+          (grant.title as string) ?? '',
+        )
+        queueChecked++
+
+        // Record the verdict only. Deliberately NOT deactivating a dead queue row
+        // here: these rows are already invisible to users, so there is nothing to
+        // protect anyone from, and archiving one would remove a human's chance to
+        // fix a merely-wrong URL. The gate reads url_status and will hold it.
+        await mergeGrantUpdate({
+          id:     grant.id,
+          source: PROVENANCE_SOURCE,
+          db:     supabase,
+          fields: {
+            url_status:         result.status === 'dead' ? 'dead' : 'ok',
+            url_last_checked:   ranAt,
+            url_quality_score:  result.qualityScore,
+            url_quality_issues: result.issues,
+          },
+        })
+
+        if (result.status === 'dead') {
+          queueDead.push({ id: grant.id, title: grant.title as string })
+        }
+      }, startedAt + TIME_BUDGET_MS)
+    }
+
+    // ── 3. Check SEED_GRANTS URLs ─────────────────────────────────────────────
+    const seedWithUrl = SEED_GRANTS.filter(g => g.applyUrl)
+    const deadSeedGrants: { id: string; title: string; funder: string; url: string }[] = []
+
+    const seedRun = await inBatches(seedWithUrl, 10, async (grant) => {
+      const status = await checkUrl(grant.applyUrl as string, grant.funder)
+      if (status === 'dead') {
+        deadSeedGrants.push({
+          id:     grant.id,
+          title:  grant.title,
+          funder: grant.funder,
+          url:    grant.applyUrl as string,
+        })
+      }
+    }, startedAt + TIME_BUDGET_MS)
+
+    // ── 4. Return summary ─────────────────────────────────────────────────────
+    return {
+      ranAt,
+      elapsedMs:      Date.now() - startedAt,
+      budgetExceeded: scrapedRun.skipped > 0 || seedRun.skipped > 0,
+      scraped: {
+        total:           (grants ?? []).length,
+        checked:         checkedScraped,
+        skipped:         scrapedRun.skipped,
+        ok:              okScraped,
+        deactivated:     deactivatedCount,
+        closed:          closedCount,
+        grants:          deactivated,
+        closedForReview: closedForReview,
+      },
+      recovery: {
+        checked:   recoveryChecked,
+        recovered: recovered.length,
+        grants:    recovered,
+      },
+      reviewQueue: {
+        checked: queueChecked,
+        dead:    queueDead.length,
+        grants:  queueDead,
+      },
+      seed: {
+        checked: seedWithUrl.length - seedRun.skipped,
+        skipped: seedRun.skipped,
+        dead:    deadSeedGrants.length,
+        grants:  deadSeedGrants,
+      },
+    }
   })
+  return NextResponse.json(payload, { status: httpStatus })
 }

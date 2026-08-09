@@ -33,6 +33,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { recordRun } from '@/lib/admin/cron-runs'
 
 export const dynamic     = 'force-dynamic'
 export const maxDuration = 270  // ~4.5 min, leaves buffer under 300s cap
@@ -169,60 +170,65 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const db = adminClient()
+  let httpStatus = 200
+  const payload = await recordRun('process-pipeline-queue', async () => {
+    const db = adminClient()
 
-  // Fetch captured rows that haven't been quarantined yet.
-  // pipeline_state='captured' AND needs_intervention_reason IS NULL.
-  const { data: queued, error: fetchErr } = await db
-    .from('scraped_grants')
-    .select('id')
-    .eq('pipeline_state', 'captured')
-    .is('needs_intervention_reason', null)
-    .order('last_seen_at', { ascending: true, nullsFirst: true })
-    .limit(BATCH_LIMIT)
+    // Fetch captured rows that haven't been quarantined yet.
+    // pipeline_state='captured' AND needs_intervention_reason IS NULL.
+    const { data: queued, error: fetchErr } = await db
+      .from('scraped_grants')
+      .select('id')
+      .eq('pipeline_state', 'captured')
+      .is('needs_intervention_reason', null)
+      .order('last_seen_at', { ascending: true, nullsFirst: true })
+      .limit(BATCH_LIMIT)
 
-  if (fetchErr) {
-    return NextResponse.json({ error: `fetch queue: ${fetchErr.message}` }, { status: 500 })
-  }
-
-  const ids = (queued ?? []).map((r: { id: string }) => r.id)
-  if (ids.length === 0) {
-    return NextResponse.json({ processed: 0, enriched: 0, classified: 0, swept: 0, quarantined: 0, batches: 0, message: 'queue empty' })
-  }
-
-  const startedAt = Date.now()
-  const results: ChainResult[] = []
-  let skippedForBudget = 0
-
-  for (const id of ids) {
-    // Wall-clock guard: never START a chain we may not be able to finish.
-    // Being killed mid-chain wastes the enrich spend and leaves the row in
-    // 'captured' to be re-enriched from scratch next run.
-    if (Date.now() - startedAt > TIME_BUDGET_MS) {
-      skippedForBudget = ids.length - results.length
-      break
+    if (fetchErr) {
+      httpStatus = 500
+      return { error: `fetch queue: ${fetchErr.message}` }
     }
-    results.push(await processOne(db, id))
-  }
 
-  const enriched    = results.filter(r => r.enriched).length
-  const classified  = results.filter(r => r.classified).length
-  const swept       = results.filter(r => r.swept).length
-  const quarantined = results.filter(r => r.quarantined).length
+    const ids = (queued ?? []).map((r: { id: string }) => r.id)
+    if (ids.length === 0) {
+      return { processed: 0, enriched: 0, classified: 0, swept: 0, quarantined: 0, batches: 0, message: 'queue empty' }
+    }
 
-  if (skippedForBudget > 0) {
-    console.log(
-      `[process-pipeline-queue] time budget spent after ${results.length} rows; ` +
-      `${skippedForBudget} left for the next run`
-    )
-  }
+    const startedAt = Date.now()
+    const results: ChainResult[] = []
+    let skippedForBudget = 0
 
-  return NextResponse.json({
-    processed:   results.length,
-    enriched, classified, swept, quarantined,
-    skippedForBudget,
-    elapsedMs:   Date.now() - startedAt,
-    batches:     1,
-    quarantines: results.filter(r => r.quarantined).map(r => ({ id: r.id, error: r.error })),
+    for (const id of ids) {
+      // Wall-clock guard: never START a chain we may not be able to finish.
+      // Being killed mid-chain wastes the enrich spend and leaves the row in
+      // 'captured' to be re-enriched from scratch next run.
+      if (Date.now() - startedAt > TIME_BUDGET_MS) {
+        skippedForBudget = ids.length - results.length
+        break
+      }
+      results.push(await processOne(db, id))
+    }
+
+    const enriched    = results.filter(r => r.enriched).length
+    const classified  = results.filter(r => r.classified).length
+    const swept       = results.filter(r => r.swept).length
+    const quarantined = results.filter(r => r.quarantined).length
+
+    if (skippedForBudget > 0) {
+      console.log(
+        `[process-pipeline-queue] time budget spent after ${results.length} rows; ` +
+        `${skippedForBudget} left for the next run`
+      )
+    }
+
+    return {
+      processed:   results.length,
+      enriched, classified, swept, quarantined,
+      skippedForBudget,
+      elapsedMs:   Date.now() - startedAt,
+      batches:     1,
+      quarantines: results.filter(r => r.quarantined).map(r => ({ id: r.id, error: r.error })),
+    }
   })
+  return NextResponse.json(payload, { status: httpStatus })
 }

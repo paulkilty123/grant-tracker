@@ -21,6 +21,7 @@ import { createClient } from '@supabase/supabase-js'
 import { computeMatchScore } from '@/lib/matching'
 import { normaliseScrapedGrant } from '@/lib/grants-normalise'
 import type { Organisation, ImpactSector, BeneficiaryGroup, FundingType, LegalStructure } from '@/types'
+import { recordRun } from '@/lib/admin/cron-runs'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -369,89 +370,93 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
   }
 
-  const supabase = getAdminClient()
+  let httpStatus = 200
+  const payload = await recordRun('golden-queries', async () => {
+    const supabase = getAdminClient()
 
-  // Load all active grants once
-  const { data: rows, error } = await supabase
-    .from('grants_with_funder')
-    .select('*')
-    .eq('is_active', true)
-    .limit(2000)
+    // Load all active grants once
+    const { data: rows, error } = await supabase
+      .from('grants_with_funder')
+      .select('*')
+      .eq('is_active', true)
+      .limit(2000)
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (error) { httpStatus = 500; return { error: error.message } }
 
-  const grants = (rows ?? []).map(normaliseScrapedGrant)
+    const grants = (rows ?? []).map(normaliseScrapedGrant)
 
-  const results = QUERIES.map(q => {
-    // Filter by funding_type if specified
-    const pool = q.filterType
-      ? grants.filter(g => g.fundingType === q.filterType)
-      : grants
+    const results = QUERIES.map(q => {
+      // Filter by funding_type if specified
+      const pool = q.filterType
+        ? grants.filter(g => g.fundingType === q.filterType)
+        : grants
 
-    // Score every grant in the pool
-    const scored = pool
-      .map(g => ({ grant: g, result: computeMatchScore(g, q.org) }))
-      .sort((a, b) => b.result.score - a.result.score)
+      // Score every grant in the pool
+      const scored = pool
+        .map(g => ({ grant: g, result: computeMatchScore(g, q.org) }))
+        .sort((a, b) => b.result.score - a.result.score)
 
-    // Inspect top 50 for assertions
-    const top = scored.slice(0, 50)
-    const a = q.assertions
-    const scoreThreshold = a.scoreThreshold ?? 50
+      // Inspect top 50 for assertions
+      const top = scored.slice(0, 50)
+      const a = q.assertions
+      const scoreThreshold = a.scoreThreshold ?? 50
 
-    const failures: string[] = []
+      const failures: string[] = []
 
-    if (a.minTopMatches !== undefined) {
-      const aboveThreshold = top.filter(t => t.result.score >= scoreThreshold).length
-      if (aboveThreshold < a.minTopMatches) {
-        failures.push(`Only ${aboveThreshold} grants scored ≥${scoreThreshold} (expected ≥${a.minTopMatches})`)
-      }
-    }
-
-    if (a.topResultMinScore !== undefined && top.length > 0) {
-      if (top[0].result.score < a.topResultMinScore) {
-        failures.push(`Top result scored ${top[0].result.score} (expected ≥${a.topResultMinScore}). Top: "${top[0].grant.title}"`)
-      }
-    }
-
-    if (a.mustIncludeFunderRegex) {
-      for (const re of a.mustIncludeFunderRegex) {
-        const hit = top.find(t => re.test(t.grant.funder) || re.test(t.grant.title))
-        if (!hit) {
-          failures.push(`No funder/title in top-50 matches ${re}`)
+      if (a.minTopMatches !== undefined) {
+        const aboveThreshold = top.filter(t => t.result.score >= scoreThreshold).length
+        if (aboveThreshold < a.minTopMatches) {
+          failures.push(`Only ${aboveThreshold} grants scored ≥${scoreThreshold} (expected ≥${a.minTopMatches})`)
         }
       }
-    }
 
-    if (a.mustNotIncludeFunderRegex) {
-      for (const re of a.mustNotIncludeFunderRegex) {
-        const hits = top.filter(t => re.test(t.grant.funder))
-        if (hits.length > 0) {
-          failures.push(`${hits.length} unexpected match(es) for ${re}: ${hits.slice(0, 3).map(h => h.grant.funder).join(', ')}`)
+      if (a.topResultMinScore !== undefined && top.length > 0) {
+        if (top[0].result.score < a.topResultMinScore) {
+          failures.push(`Top result scored ${top[0].result.score} (expected ≥${a.topResultMinScore}). Top: "${top[0].grant.title}"`)
         }
       }
+
+      if (a.mustIncludeFunderRegex) {
+        for (const re of a.mustIncludeFunderRegex) {
+          const hit = top.find(t => re.test(t.grant.funder) || re.test(t.grant.title))
+          if (!hit) {
+            failures.push(`No funder/title in top-50 matches ${re}`)
+          }
+        }
+      }
+
+      if (a.mustNotIncludeFunderRegex) {
+        for (const re of a.mustNotIncludeFunderRegex) {
+          const hits = top.filter(t => re.test(t.grant.funder))
+          if (hits.length > 0) {
+            failures.push(`${hits.length} unexpected match(es) for ${re}: ${hits.slice(0, 3).map(h => h.grant.funder).join(', ')}`)
+          }
+        }
+      }
+
+      return {
+        name: q.name,
+        description: q.description,
+        pass: failures.length === 0,
+        failures,
+        top5: top.slice(0, 5).map(t => ({
+          score: t.result.score,
+          title: t.grant.title,
+          funder: t.grant.funder,
+          location: t.grant.locationTag ?? null,
+        })),
+      }
+    })
+
+    const summary = {
+      ranAt:    new Date().toISOString(),
+      grants:   grants.length,
+      queries:  QUERIES.length,
+      passed:   results.filter(r => r.pass).length,
+      failed:   results.filter(r => !r.pass).length,
     }
 
-    return {
-      name: q.name,
-      description: q.description,
-      pass: failures.length === 0,
-      failures,
-      top5: top.slice(0, 5).map(t => ({
-        score: t.result.score,
-        title: t.grant.title,
-        funder: t.grant.funder,
-        location: t.grant.locationTag ?? null,
-      })),
-    }
+    return { summary, results }
   })
-
-  const summary = {
-    ranAt:    new Date().toISOString(),
-    grants:   grants.length,
-    queries:  QUERIES.length,
-    passed:   results.filter(r => r.pass).length,
-    failed:   results.filter(r => !r.pass).length,
-  }
-
-  return NextResponse.json({ summary, results })
+  return NextResponse.json(payload, { status: httpStatus })
 }

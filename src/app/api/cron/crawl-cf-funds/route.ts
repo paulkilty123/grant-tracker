@@ -24,6 +24,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
 import { CF_FUND_SOURCES, extractFundsFromCF, CFFundResult, CFFundConfig } from '@/lib/cf-fund-extract'
+import { recordRun } from '@/lib/admin/cron-runs'
 
 export const dynamic     = 'force-dynamic'
 export const maxDuration = 270
@@ -41,55 +42,60 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  if (isCronCaller && process.env.CF_FUND_PIPELINE_CRON_ENABLED !== 'true') {
-    return NextResponse.json({
-      success: true,
-      skipped: true,
-      reason:  'CF fund pipeline cron disabled — set CF_FUND_PIPELINE_CRON_ENABLED=true to enable automated runs. Admin manual triggers still execute.',
-    })
-  }
-
-  const url        = new URL(req.url)
-  const slug       = url.searchParams.get('slug')
-  const batchParam = url.searchParams.get('batch')
-
-  let targets: CFFundConfig[]
-  if (slug) {
-    targets = CF_FUND_SOURCES.filter(c => c.slug === slug)
-    if (targets.length === 0) return NextResponse.json({ error: `unknown slug "${slug}"` }, { status: 400 })
-  } else if (batchParam !== null) {
-    const batchNum = parseInt(batchParam, 10)
-    if (!Number.isInteger(batchNum) || batchNum < 1) {
-      return NextResponse.json({ error: `invalid batch "${batchParam}"` }, { status: 400 })
+  let httpStatus = 200
+  const payload = await recordRun('crawl-cf-funds', async () => {
+    if (isCronCaller && process.env.CF_FUND_PIPELINE_CRON_ENABLED !== 'true') {
+      return {
+        success: true,
+        skipped: true,
+        reason:  'CF fund pipeline cron disabled — set CF_FUND_PIPELINE_CRON_ENABLED=true to enable automated runs. Admin manual triggers still execute.',
+      }
     }
-    const start = (batchNum - 1) * BATCH_SIZE
-    targets = CF_FUND_SOURCES.slice(start, start + BATCH_SIZE)
-  } else {
-    targets = CF_FUND_SOURCES
-  }
 
-  const settled = await Promise.allSettled(targets.map(config => extractFundsFromCF(config)))
+    const url        = new URL(req.url)
+    const slug       = url.searchParams.get('slug')
+    const batchParam = url.searchParams.get('batch')
 
-  const results: CFFundResult[] = settled.map((s, i) =>
-    s.status === 'fulfilled'
-      ? s.value
-      : {
-          slug: targets[i].slug,
-          funderName: targets[i].funderName,
-          extracted: 0, atOrAboveThreshold: 0, discardedBelowThreshold: 0, discardedUnstated: 0,
-          inserted: 0, updated: 0, discardedDetail: [], funderNotice: null,
-          errors: [s.reason instanceof Error ? s.reason.message : String(s.reason)],
-        }
-  )
+    let targets: CFFundConfig[]
+    if (slug) {
+      targets = CF_FUND_SOURCES.filter(c => c.slug === slug)
+      if (targets.length === 0) { httpStatus = 400; return { error: `unknown slug "${slug}"` } }
+    } else if (batchParam !== null) {
+      const batchNum = parseInt(batchParam, 10)
+      if (!Number.isInteger(batchNum) || batchNum < 1) {
+        httpStatus = 400
+        return { error: `invalid batch "${batchParam}"` }
+      }
+      const start = (batchNum - 1) * BATCH_SIZE
+      targets = CF_FUND_SOURCES.slice(start, start + BATCH_SIZE)
+    } else {
+      targets = CF_FUND_SOURCES
+    }
 
-  const totals = results.reduce((acc, r) => ({
-    extracted:               acc.extracted + r.extracted,
-    atOrAboveThreshold:      acc.atOrAboveThreshold + r.atOrAboveThreshold,
-    discardedBelowThreshold: acc.discardedBelowThreshold + r.discardedBelowThreshold,
-    discardedUnstated:       acc.discardedUnstated + r.discardedUnstated,
-    inserted:                acc.inserted + r.inserted,
-    updated:                 acc.updated + r.updated,
-  }), { extracted: 0, atOrAboveThreshold: 0, discardedBelowThreshold: 0, discardedUnstated: 0, inserted: 0, updated: 0 })
+    const settled = await Promise.allSettled(targets.map(config => extractFundsFromCF(config)))
 
-  return NextResponse.json({ success: true, totals, results })
+    const results: CFFundResult[] = settled.map((s, i) =>
+      s.status === 'fulfilled'
+        ? s.value
+        : {
+            slug: targets[i].slug,
+            funderName: targets[i].funderName,
+            extracted: 0, atOrAboveThreshold: 0, discardedBelowThreshold: 0, discardedUnstated: 0,
+            inserted: 0, updated: 0, discardedDetail: [], funderNotice: null,
+            errors: [s.reason instanceof Error ? s.reason.message : String(s.reason)],
+          }
+    )
+
+    const totals = results.reduce((acc, r) => ({
+      extracted:               acc.extracted + r.extracted,
+      atOrAboveThreshold:      acc.atOrAboveThreshold + r.atOrAboveThreshold,
+      discardedBelowThreshold: acc.discardedBelowThreshold + r.discardedBelowThreshold,
+      discardedUnstated:       acc.discardedUnstated + r.discardedUnstated,
+      inserted:                acc.inserted + r.inserted,
+      updated:                 acc.updated + r.updated,
+    }), { extracted: 0, atOrAboveThreshold: 0, discardedBelowThreshold: 0, discardedUnstated: 0, inserted: 0, updated: 0 })
+
+    return { success: true, totals, results }
+  })
+  return NextResponse.json(payload, { status: httpStatus })
 }

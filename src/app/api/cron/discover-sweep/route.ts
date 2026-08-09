@@ -29,6 +29,7 @@ import {
   BLOCKED_FUNDER_QUERIES,
   type DiscoveryFundingType,
 } from '@/lib/discovery-queries'
+import { recordRun } from '@/lib/admin/cron-runs'
 
 export const dynamic     = 'force-dynamic'
 export const maxDuration = 270
@@ -96,100 +97,105 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // Same arming rule as the publish gate, and for the same reason: the query
-  // string is the discriminator between a manual run and a scheduled one,
-  // because ADMIN_SECRET and CRON_SECRET currently hold the same value and
-  // `isCron` therefore cannot tell them apart. A fixed, parameterless cron URL
-  // can never send ?run=true.
-  const wantsRun = req.nextUrl.searchParams.get('run') === 'true'
-  const armed    = process.env.DISCOVER_SWEEP_ENABLED === 'true'
-  if (!wantsRun && !armed) {
-    return NextResponse.json({
-      success: true, skipped: true,
-      reason: 'Not armed. Set DISCOVER_SWEEP_ENABLED=true for scheduled runs, or call with ?run=true.',
-    })
-  }
-
-  // Base URL for the self-call, most-specific first.
-  //
-  // NEXT_PUBLIC_SITE_URL was not set in production, so the first armed run
-  // returned "NEXT_PUBLIC_SITE_URL is not set" and would have failed silently
-  // every Tuesday. It is set now, but a cron that dies on one missing env var
-  // is too brittle for unattended weekly work, so there are fallbacks.
-  //
-  // The www form matters: an apex -> www redirect STRIPS the Authorization
-  // header, so a self-call to the apex arrives unauthenticated and 401s.
-  const base =
-    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') ||
-    (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : '') ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '') ||
-    req.nextUrl.origin
-  if (!base) {
-    return NextResponse.json({ error: 'Could not resolve a base URL for the self-call' }, { status: 500 })
-  }
-
-  const start = Date.now()
-  const dayOfYear = Math.floor((Date.now() - Date.UTC(new Date().getUTCFullYear(), 0, 0)) / 86_400_000)
-  const queue = buildQueue(dayOfYear)
-
-  const results: Array<Record<string, unknown>> = []
-  let queued = 0, failed = 0, ran = 0
-
-  const skipped: Array<{ query: string; reason: string }> = []
-
-  for (const spec of queue) {
-    // Look AHEAD, not just back. Checking elapsed time alone is what let a 246s
-    // general query start at the 68s mark and blow past the function cap.
-    const est = spec.domains?.length ? EST_MS.targeted : EST_MS.general
-    if (Date.now() - start + est > BUDGET_MS) {
-      skipped.push({
-        query: spec.query,
-        reason: `needs ~${Math.round(est / 1000)}s, only ~${Math.round((BUDGET_MS - (Date.now() - start)) / 1000)}s of budget left`,
-      })
-      continue
-    }
-    ran++
-
-    try {
-      const res = await fetch(`${base}/api/admin/discover-grants`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${process.env.ADMIN_SECRET}`,
-        },
-        body: JSON.stringify(spec),
-        signal: AbortSignal.timeout(250_000),
-      })
-      const json = await res.json().catch(() => ({})) as Record<string, unknown>
-
-      // Read the response rather than assuming it worked. The old Discovery
-      // panel counted a 502 as a completed query.
-      if (!res.ok || json.ok === false) {
-        failed++
-        results.push({ query: spec.query, ok: false, error: json.error ?? `HTTP ${res.status}`, detail: json.detail })
-      } else {
-        queued += Number(json.queued ?? 0)
-        results.push({ query: spec.query, ok: true, queued: json.queued ?? 0, found: json.found ?? 0 })
+  let httpStatus = 200
+  const payload = await recordRun('discover-sweep', async () => {
+    // Same arming rule as the publish gate, and for the same reason: the query
+    // string is the discriminator between a manual run and a scheduled one,
+    // because ADMIN_SECRET and CRON_SECRET currently hold the same value and
+    // `isCron` therefore cannot tell them apart. A fixed, parameterless cron URL
+    // can never send ?run=true.
+    const wantsRun = req.nextUrl.searchParams.get('run') === 'true'
+    const armed    = process.env.DISCOVER_SWEEP_ENABLED === 'true'
+    if (!wantsRun && !armed) {
+      return {
+        success: true, skipped: true,
+        reason: 'Not armed. Set DISCOVER_SWEEP_ENABLED=true for scheduled runs, or call with ?run=true.',
       }
-    } catch (e) {
-      failed++
-      results.push({ query: spec.query, ok: false, error: e instanceof Error ? e.message : String(e) })
     }
-  }
 
-  return NextResponse.json({
-    success: true,
-    armed,
-    queriesPlanned: queue.length,
-    queriesRun: ran,
-    // Never let a truncated sweep read as a complete one. `skipped` names each
-    // query that did not fit and why, so a sweep that ran two of five is
-    // visibly that, not a quiet success.
-    stoppedEarly: ran < queue.length,
-    skipped,
-    queued,
-    failed,
-    elapsedMs: Date.now() - start,
-    results,
+    // Base URL for the self-call, most-specific first.
+    //
+    // NEXT_PUBLIC_SITE_URL was not set in production, so the first armed run
+    // returned "NEXT_PUBLIC_SITE_URL is not set" and would have failed silently
+    // every Tuesday. It is set now, but a cron that dies on one missing env var
+    // is too brittle for unattended weekly work, so there are fallbacks.
+    //
+    // The www form matters: an apex -> www redirect STRIPS the Authorization
+    // header, so a self-call to the apex arrives unauthenticated and 401s.
+    const base =
+      process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') ||
+      (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : '') ||
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '') ||
+      req.nextUrl.origin
+    if (!base) {
+      httpStatus = 500
+      return { error: 'Could not resolve a base URL for the self-call' }
+    }
+
+    const start = Date.now()
+    const dayOfYear = Math.floor((Date.now() - Date.UTC(new Date().getUTCFullYear(), 0, 0)) / 86_400_000)
+    const queue = buildQueue(dayOfYear)
+
+    const results: Array<Record<string, unknown>> = []
+    let queued = 0, failed = 0, ran = 0
+
+    const skipped: Array<{ query: string; reason: string }> = []
+
+    for (const spec of queue) {
+      // Look AHEAD, not just back. Checking elapsed time alone is what let a 246s
+      // general query start at the 68s mark and blow past the function cap.
+      const est = spec.domains?.length ? EST_MS.targeted : EST_MS.general
+      if (Date.now() - start + est > BUDGET_MS) {
+        skipped.push({
+          query: spec.query,
+          reason: `needs ~${Math.round(est / 1000)}s, only ~${Math.round((BUDGET_MS - (Date.now() - start)) / 1000)}s of budget left`,
+        })
+        continue
+      }
+      ran++
+
+      try {
+        const res = await fetch(`${base}/api/admin/discover-grants`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${process.env.ADMIN_SECRET}`,
+          },
+          body: JSON.stringify(spec),
+          signal: AbortSignal.timeout(250_000),
+        })
+        const json = await res.json().catch(() => ({})) as Record<string, unknown>
+
+        // Read the response rather than assuming it worked. The old Discovery
+        // panel counted a 502 as a completed query.
+        if (!res.ok || json.ok === false) {
+          failed++
+          results.push({ query: spec.query, ok: false, error: json.error ?? `HTTP ${res.status}`, detail: json.detail })
+        } else {
+          queued += Number(json.queued ?? 0)
+          results.push({ query: spec.query, ok: true, queued: json.queued ?? 0, found: json.found ?? 0 })
+        }
+      } catch (e) {
+        failed++
+        results.push({ query: spec.query, ok: false, error: e instanceof Error ? e.message : String(e) })
+      }
+    }
+
+    return {
+      success: true,
+      armed,
+      queriesPlanned: queue.length,
+      queriesRun: ran,
+      // Never let a truncated sweep read as a complete one. `skipped` names each
+      // query that did not fit and why, so a sweep that ran two of five is
+      // visibly that, not a quiet success.
+      stoppedEarly: ran < queue.length,
+      skipped,
+      queued,
+      failed,
+      elapsedMs: Date.now() - start,
+      results,
+    }
   })
+  return NextResponse.json(payload, { status: httpStatus })
 }
