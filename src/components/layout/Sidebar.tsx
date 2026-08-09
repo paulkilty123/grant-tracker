@@ -19,6 +19,7 @@ import {
   Activity,
   ClipboardList,
   Inbox,
+  Gauge,
   Menu,
   X,
   Users,
@@ -92,6 +93,10 @@ const ADMIN_NAV = [
   // Captured tabs are replaced by the queue and its All grants / URL Issues /
   // By Category tabs by the Catalogue, but Add Funder, Saved for Later and the
   // bulk validation runners still have no other home.
+  // Pipeline first: it answers "is the machine running at all", which precedes
+  // "what needs my judgement". A stalled cron makes an empty review queue
+  // look like good news.
+  { href: '/dashboard/admin/pipeline',     label: 'Pipeline',            Icon: Gauge         },
   { href: '/dashboard/admin/review',       label: 'Review queue',        Icon: Inbox         },
   { href: '/dashboard/admin/grants',       label: 'Catalogue',           Icon: Library       },
   { href: '/dashboard/admin',              label: 'Grant Health',        Icon: Activity      },
