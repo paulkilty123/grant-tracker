@@ -22,6 +22,12 @@ import {
 } from '@/lib/mcp-oauth'
 import LogoMark from '@/components/icons/LogoMark'
 import { MCP_PUBLIC_ORIGIN } from '@/lib/mcp-brand'
+import { createClient as createServiceClient } from '@supabase/supabase-js'
+import { headers } from 'next/headers'
+import { enforceSignupRateLimit } from '@/lib/mcp-rate-limit'
+import SignupForm from './SignupForm'
+import ConnectButton from './ConnectButton'
+import './shoots-auth.css'
 
 export const dynamic = 'force-dynamic'
 
@@ -98,19 +104,164 @@ function buildAuthorizeUrl(p: AuthorizeSearchParams): string {
   return u.pathname + u.search
 }
 
+function serviceClient() {
+  return createServiceClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { persistSession: false } },
+  )
+}
+
+function clientIp(h: Headers): string {
+  const xff = h.get('x-forwarded-for')
+  if (xff) return xff.split(',')[0].trim()
+  return h.get('x-real-ip')?.trim() || 'unknown'
+}
+
+/**
+ * Create an account without leaving the connect flow, then continue to consent.
+ *
+ * Uses the service role with email_confirm: true because Supabase will not
+ * issue a session for an unconfirmed user, and an interrupted OAuth flow is
+ * exactly what phase 6 exists to prevent. The consequence is that nobody has
+ * proved they own the address at this point, which is why:
+ *   - a per-IP ceiling guards the endpoint (this path bypasses Supabase's own
+ *     signup protections, so it is the only brake), and
+ *   - marketing consent is recorded but NOT armed. public.marketing_list
+ *     filters on own_verified_at, which only the nudge link can set.
+ */
+async function createAccountAction(formData: FormData) {
+  'use server'
+
+  const sp = Object.fromEntries(
+    Array.from(formData.entries())
+      .filter(([k]) => k.startsWith('oa_'))
+      .map(([k, v]) => [k.slice(3), String(v)]),
+  ) as AuthorizeSearchParams
+
+  const email    = String(formData.get('email') ?? '').trim().toLowerCase()
+  const password = String(formData.get('password') ?? '')
+  const consent  = formData.get('marketing_consent') === 'yes'
+
+  if (!email || !password) throw new Error('Email and password are required.')
+  if (password.length < 8)  throw new Error('Password must be at least 8 characters.')
+
+  // Fails CLOSED: an Upstash outage blocks signup rather than leaving an
+  // unauthenticated account-creation path with no brake at all.
+  const rl = await enforceSignupRateLimit(clientIp(await headers()))
+  if (!rl.allowed) {
+    throw new Error(
+      rl.reason === 'limiter_unavailable'
+        ? 'Account creation is briefly unavailable. Please try again in a few minutes.'
+        : 'Too many accounts created from this network. Please try again later.',
+    )
+  }
+
+  const svc = serviceClient()
+  const { data: created, error: createErr } = await svc.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,   // lets a session issue; NOT proof of ownership
+  })
+  if (createErr) {
+    // Supabase does not distinguish "already exists" cleanly across versions;
+    // treat it as the common case rather than leaking the raw message.
+    const msg = createErr.message.toLowerCase()
+    if (msg.includes('already') || msg.includes('registered') || msg.includes('exists')) {
+      throw new Error('An account with that email already exists. Sign in instead.')
+    }
+    throw new Error('Could not create the account. Please check the address and try again.')
+  }
+
+  const userId = created.user?.id
+  if (!userId) throw new Error('Could not create the account. Please try again.')
+
+  // Record the answer either way: a stored `false` is what proves the box was
+  // not pre-ticked, and an absent row would prove nothing.
+  await svc.from('user_marketing_consent').upsert({
+    user_id: userId,
+    consented: consent,
+    source: 'mcp_authorize',
+  }, { onConflict: 'user_id' })
+
+  // Establish the session on the user-scoped client so the consent screen sees
+  // them as signed in.
+  const supabase = await createClient()
+  const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password })
+  if (signInErr) throw new Error('Account created, but sign-in failed. Please sign in to continue.')
+
+  // The single nudge. Transactional, not marketing, so it is not gated on
+  // consent: it is the only way own_verified_at ever gets set. Best-effort —
+  // a mail failure must not strand someone mid-connection.
+  try {
+    const { error: nudgeErr } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        shouldCreateUser: false,
+        emailRedirectTo: `${MCP_PUBLIC_ORIGIN}/auth/callback?next=/mcp/verified`,
+      },
+    })
+    if (!nudgeErr) {
+      await svc.from('user_marketing_consent')
+        .update({ nudge_sent_at: new Date().toISOString() })
+        .eq('user_id', userId)
+    }
+  } catch { /* non-fatal by design */ }
+
+  redirect(buildAuthorizeUrl(sp))
+}
+
+async function signInAction(formData: FormData) {
+  'use server'
+
+  const sp = Object.fromEntries(
+    Array.from(formData.entries())
+      .filter(([k]) => k.startsWith('oa_'))
+      .map(([k, v]) => [k.slice(3), String(v)]),
+  ) as AuthorizeSearchParams
+
+  const email    = String(formData.get('email') ?? '').trim().toLowerCase()
+  const password = String(formData.get('password') ?? '')
+
+  const supabase = await createClient()
+  const { error } = await supabase.auth.signInWithPassword({ email, password })
+  if (error) throw new Error('That email and password did not match an account.')
+
+  redirect(buildAuthorizeUrl(sp))
+}
+
 export default async function AuthorizePage({
   searchParams,
 }: {
-  searchParams: Promise<AuthorizeSearchParams>
+  searchParams: Promise<AuthorizeSearchParams & { mode?: string }>
 }) {
   const sp = await searchParams
 
-  // Auth gate. If logged out, bounce to login with next= so consent resumes
-  // after sign-in.
+  // Auth gate. Logged-out callers now stay INSIDE the flow: phase 6 replaced
+  // the bounce to /auth/login with in-place signup, because a detour to the
+  // main site loses most people and the site's own signup is cohort-gated.
+  // Validation still runs first, so an unrecognised client is refused before
+  // anyone is invited to type a password.
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+
   if (!user) {
-    redirect(`/auth/login?next=${encodeURIComponent(buildAuthorizeUrl(sp))}`)
+    const pre = await validateAuthorizeRequest(sp)
+    if (!pre.ok) {
+      if (pre.kind === 'redirect') {
+        redirect(buildRedirect(pre.redirect_uri, { error: pre.error, error_description: pre.description, state: pre.state }))
+      }
+      return <ErrorScreen error={pre.error} description={pre.description} />
+    }
+    const mode = sp.mode === 'signin' ? 'signin' : 'signup'
+    return (
+      <AuthScreen
+        params={pre.params}
+        sp={sp}
+        mode={mode}
+        action={mode === 'signup' ? createAccountAction : signInAction}
+      />
+    )
   }
 
   const v = await validateAuthorizeRequest(sp)
@@ -131,20 +282,20 @@ export default async function AuthorizePage({
 
 function PortalNav() {
   return (
-    <nav style={{ background: 'white', borderBottom: '0.5px solid rgba(23,52,4,0.08)', padding: '18px 0' }}>
+    <nav style={{ background: 'var(--surface-card)', borderBottom: '1px solid var(--border-hairline)', padding: '18px 0' }}>
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Link href="/mcp" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}>
           <LogoMark size={28} />
-          <span style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 22, letterSpacing: '-0.025em', color: '#2C2C2A' }}>GrantTracker</span>
+          <span style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 22, letterSpacing: '-0.025em', color: 'var(--text-heading)' }}>GrantTracker</span>
         </Link>
         <div style={{ display: 'flex', gap: 18 }}>
-          <Link href="/mcp" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13, color: '#5F5E5A', textDecoration: 'none' }}>
+          <Link href="/mcp" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13, color: 'var(--text-muted)', textDecoration: 'none' }}>
             Overview
           </Link>
-          <Link href="/mcp/terms" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13, color: '#5F5E5A', textDecoration: 'none' }}>
+          <Link href="/mcp/terms" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13, color: 'var(--text-muted)', textDecoration: 'none' }}>
             Terms
           </Link>
-          <Link href="/dashboard" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13, color: '#5F5E5A', textDecoration: 'none' }}>
+          <Link href="/dashboard" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13, color: 'var(--text-muted)', textDecoration: 'none' }}>
             App
           </Link>
         </div>
@@ -155,11 +306,11 @@ function PortalNav() {
 
 function ErrorScreen({ error, description }: { error: string; description: string }) {
   return (
-    <div style={{ background: '#FAFAF7', minHeight: '100vh', fontFamily: 'var(--font-plus-jakarta, Plus Jakarta Sans, sans-serif)', color: '#2C2C2A' }}>
+    <div className="shoots-auth" style={{ minHeight: '100vh', fontFamily: 'var(--font-plus-jakarta, Plus Jakarta Sans, sans-serif)' }}>
       <PortalNav />
       <main style={{ maxWidth: 560, margin: '0 auto', padding: '64px 32px' }}>
-        <div className="rounded-xl p-8" style={{ background: 'white', border: '0.5px solid rgba(23,52,4,0.08)', boxShadow: '0 2px 16px rgba(26,46,43,0.04)' }}>
-          <div className="text-[11px] font-bold uppercase tracking-wider mb-2" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#993C1D' }}>
+        <div className="rounded-xl p-8" style={{ background: 'var(--surface-card)', border: '1px solid var(--border-hairline)' }}>
+          <div className="text-[11px] font-bold uppercase tracking-wider mb-2" style={{ fontFamily: 'var(--font-space-grotesk)', color: 'var(--terra)' }}>
             Authorization request rejected
           </div>
           <h1 className="text-xl font-bold mb-3" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
@@ -167,7 +318,7 @@ function ErrorScreen({ error, description }: { error: string; description: strin
           </h1>
           <p className="text-sm text-mid mb-4">{description}</p>
           <p className="text-xs text-mid mb-5">
-            Error code: <code style={{ background: '#F0EDE2', padding: '1px 6px', borderRadius: 4, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>{error}</code>
+            Error code: <code style={{ background: 'var(--surface-sunken)', padding: '1px 6px', borderRadius: 4, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>{error}</code>
           </p>
           <p className="text-xs text-mid mb-6">
             If you reached this page from an app you trust, please go back and try connecting again.
@@ -177,10 +328,66 @@ function ErrorScreen({ error, description }: { error: string; description: strin
           <Link
             href="/mcp"
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg"
-            style={{ background: '#173404', color: '#F1F7E4', fontFamily: 'var(--font-space-grotesk)' }}
+            style={{ background: 'var(--deep)', color: 'var(--text-on-dark)', fontFamily: 'var(--font-space-grotesk)' }}
           >
             Back to Grant Tracker MCP
           </Link>
+        </div>
+      </main>
+    </div>
+  )
+}
+
+/**
+ * Signup / sign-in, rendered in place of the old bounce to /auth/login.
+ *
+ * The OAuth params ride along as hidden oa_* fields so the server action can
+ * rebuild the authorize URL and drop the user straight onto consent. Carrying
+ * them through the form rather than a session avoids losing the request state
+ * if someone takes a while over the password field.
+ */
+function AuthScreen({
+  params,
+  sp,
+  mode,
+  action,
+}: {
+  params: ValidatedAuthorizeParams
+  sp:     AuthorizeSearchParams & { mode?: string }
+  mode:   'signup' | 'signin'
+  action: (fd: FormData) => Promise<void>
+}) {
+  const clientName = params.client.client_name?.trim() || 'an application'
+  const isSignup = mode === 'signup'
+  const switchSp = new URLSearchParams()
+  for (const [k, v] of Object.entries(sp)) {
+    if (k !== 'mode' && v != null && v !== '') switchSp.set(k, String(v))
+  }
+  switchSp.set('mode', isSignup ? 'signin' : 'signup')
+
+  return (
+    <div className="shoots-auth" style={{ minHeight: '100vh', fontFamily: 'var(--font-plus-jakarta, Plus Jakarta Sans, sans-serif)' }}>
+      <PortalNav />
+      <main style={{ maxWidth: 460, margin: '0 auto', padding: '48px 20px' }}>
+        <div style={{ background: 'var(--surface-card)', border: '1px solid var(--border-hairline)', borderRadius: 12, padding: 28 }}>
+          <h1 style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 22, fontWeight: 600, color: 'var(--text-heading)', letterSpacing: '-0.01em', marginBottom: 6 }}>
+            {isSignup ? 'Create your account' : 'Sign in to continue'}
+          </h1>
+          <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.55, marginBottom: 22 }}>
+            {isSignup
+              ? 'A free account lets you search the full UK funding catalogue from your AI client, with complete eligibility criteria on every result.'
+              : 'Sign in to connect your account.'}
+          </p>
+
+          <SignupForm
+            action={action}
+            clientName={clientName}
+            mode={mode}
+            switchHref={`/oauth/authorize?${switchSp.toString()}`}
+            hiddenFields={Object.entries(sp)
+              .filter(([k, v]) => k !== 'mode' && v != null && v !== '')
+              .map(([k, v]) => ({ name: `oa_${k}`, value: String(v) }))}
+          />
         </div>
       </main>
     </div>
@@ -205,25 +412,25 @@ function ConsentScreen({
   }
 
   return (
-    <div style={{ background: '#FAFAF7', minHeight: '100vh', fontFamily: 'var(--font-plus-jakarta, Plus Jakarta Sans, sans-serif)', color: '#2C2C2A' }}>
+    <div className="shoots-auth" style={{ minHeight: '100vh', fontFamily: 'var(--font-plus-jakarta, Plus Jakarta Sans, sans-serif)' }}>
       <PortalNav />
       <main style={{ maxWidth: 560, margin: '0 auto', padding: '48px 32px' }}>
-        <div className="rounded-xl p-8" style={{ background: 'white', border: '0.5px solid rgba(23,52,4,0.08)', boxShadow: '0 2px 16px rgba(26,46,43,0.04)' }}>
-          <div className="text-[11px] font-bold uppercase tracking-wider mb-2" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#5F5E5A' }}>
+        <div className="rounded-xl p-8" style={{ background: 'var(--surface-card)', border: '1px solid var(--border-hairline)' }}>
+          <div className="text-[11px] font-bold uppercase tracking-wider mb-2" style={{ fontFamily: 'var(--font-space-grotesk)', color: 'var(--text-muted)' }}>
             Authorize connection
           </div>
           <h1 className="text-2xl font-bold mb-3" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.01em' }}>
             Connect {clientName} to Grant Tracker
           </h1>
-          <p className="text-sm mb-5" style={{ color: '#2C2C2A' }}>
+          <p className="text-sm mb-5" style={{ color: 'var(--text-heading)' }}>
             <strong>{clientName}</strong> is asking for <strong>read access</strong> to your Grant Tracker funding catalogue.
           </p>
 
-          <div className="rounded-lg p-4 mb-5" style={{ background: '#F1F7E4', border: '0.5px solid rgba(59,109,17,0.18)' }}>
+          <div className="rounded-lg p-4 mb-5" style={{ background: 'var(--surface-sunken)', border: '1px solid var(--border-hairline)' }}>
             <div className="text-[11px] font-bold uppercase tracking-wider mb-2" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#3B6D11' }}>
               What it can do
             </div>
-            <ul className="text-sm space-y-1.5" style={{ color: '#2C2C2A' }}>
+            <ul className="text-sm space-y-1.5" style={{ color: 'var(--text-heading)' }}>
               <li>• Search the UK funding catalogue</li>
               <li>• Read full details for an opportunity</li>
               <li>• Read intelligence on a funder or provider</li>
@@ -232,18 +439,39 @@ function ConsentScreen({
             </ul>
           </div>
 
-          <div className="rounded-lg p-4 mb-6" style={{ background: '#F5F1E8', border: '0.5px solid rgba(95,94,90,0.18)' }}>
-            <div className="text-[11px] font-bold uppercase tracking-wider mb-2" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#5F5E5A' }}>
+          <div className="rounded-lg p-4 mb-6" style={{ background: 'var(--surface-sunken)', border: '1px solid var(--border-hairline)' }}>
+            <div className="text-[11px] font-bold uppercase tracking-wider mb-2" style={{ fontFamily: 'var(--font-space-grotesk)', color: 'var(--text-muted)' }}>
               What it can&apos;t do
             </div>
-            <p className="text-sm" style={{ color: '#2C2C2A' }}>
+            <p className="text-sm" style={{ color: 'var(--text-heading)' }}>
               Save grants, edit your pipeline, change your profile, or write any data back to your account.
             </p>
           </div>
 
-          <div className="text-xs space-y-1 mb-7" style={{ color: '#5F5E5A' }}>
-            <div>Signed in as <span style={{ color: '#2C2C2A', fontWeight: 600 }}>{userEmail}</span></div>
-            <div>Will redirect to <span style={{ color: '#2C2C2A', fontWeight: 600 }}>{redirectHost}</span></div>
+          {/* The address is echoed prominently rather than as fine print
+              because a typo here is the common failure and an unrecoverable
+              one: the account is created against an address the person cannot
+              read, so the nudge never arrives and password reset cannot help.
+              Last point at which it can be caught. */}
+          <div
+            className="mb-4"
+            style={{
+              background: 'var(--surface-sunken)',
+              border: '1px solid var(--border-hairline)',
+              borderRadius: 10,
+              padding: '12px 14px',
+            }}
+          >
+            <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginBottom: 2 }}>
+              Connecting as
+            </div>
+            <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 15, fontWeight: 600, color: 'var(--text-heading)', wordBreak: 'break-all' }}>
+              {userEmail}
+            </div>
+          </div>
+
+          <div className="text-xs space-y-1 mb-7" style={{ color: 'var(--text-muted)' }}>
+            <div>Will redirect to <span style={{ color: 'var(--text-heading)', fontWeight: 600 }}>{redirectHost}</span></div>
           </div>
 
           <form action={action}>
@@ -256,21 +484,17 @@ function ConsentScreen({
             <input type="hidden" name="code_challenge_method" value={params.code_challenge_method} />
             <input type="hidden" name="resource"              value={params.resource ?? ''} />
             <div className="flex items-center gap-5">
-              <button
-                type="submit"
-                name="decision"
-                value="approve"
-                className="inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity"
-                style={{ background: '#8ECB3C', color: '#173404', fontFamily: 'var(--font-space-grotesk)' }}
-              >
+              {/* The main consent action: deep filled, per the Shoots set.
+                  Was lime, which is the retiring palette. */}
+              <ConnectButton type="submit" name="decision" value="approve" variant="primary">
                 Approve
-              </button>
+              </ConnectButton>
               <button
                 type="submit"
                 name="decision"
                 value="deny"
                 className="text-sm font-semibold hover:underline"
-                style={{ color: '#5F5E5A', fontFamily: 'var(--font-space-grotesk)', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
+                style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-space-grotesk)', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
               >
                 Cancel
               </button>
