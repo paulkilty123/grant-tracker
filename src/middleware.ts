@@ -118,8 +118,13 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Redirect logged-in users away from auth pages
-  if (user && isAuthPage) {
+  // Redirect logged-in users away from auth pages.
+  // Password reset is exempt: recovery deliberately establishes a session on
+  // that page before the new password is saved, so bouncing an authenticated
+  // user to /dashboard would throw them off mid-flow and burn the single-use
+  // link. It also broke reset for anyone who still had a live session in the
+  // browser where they opened the email.
+  if (user && isAuthPage && pathname !== '/auth/reset-password') {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
     return NextResponse.redirect(url)
