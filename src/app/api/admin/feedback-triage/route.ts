@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
 import { getAdminDb } from '@/lib/admin/admin-db'
 import { mergeGrantUpdate } from '@/lib/grant-merge'
-import { resolveFlagGrant, candidateFilterForFlagIds, type GrantKey } from '@/lib/feedback/resolve-grant'
+import { resolveFlagGrant, type GrantKey } from '@/lib/feedback/resolve-grant'
+import { fetchFlagCandidates } from '@/lib/feedback/fetch-candidates'
 import {
   TRIAGE_CLASSES, RESOLUTIONS, isCorrectableField, acceptSource,
   pinsOnCorrectableFields, CORRECTABLE_FIELDS,
@@ -67,12 +68,15 @@ export async function GET(req: NextRequest) {
   if (flags.length === 0) return NextResponse.json({ flags: [], counts: { total: 0, rich: 0 } })
 
   // Candidate grants, queried on BOTH key forms so external_id-keyed flags are
-  // not silently dropped (which is what the older feedback page does).
-  const filter = candidateFilterForFlagIds(flags.map(f => f.grant_id))
-  const { data: grantRows } = filter
-    ? await db.from('scraped_grants').select(GRANT_COLUMNS).or(filter)
-    : { data: [] }
-  const candidates = (grantRows ?? []) as unknown as Array<GrantKey & Record<string, unknown>>
+  // not silently dropped (which is what the older feedback page does), and
+  // chunked so the filter cannot outgrow the query string.
+  let candidates: Array<GrantKey & Record<string, unknown>>
+  try {
+    candidates = await fetchFlagCandidates<GrantKey & Record<string, unknown>>(
+      db, flags.map(f => f.grant_id), GRANT_COLUMNS)
+  } catch (e) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : 'Grant lookup failed' }, { status: 500 })
+  }
 
   // Org names for context. match_feedback keys on user_id, and a user can own
   // more than one org, so take the oldest — the same one the app resolves.
@@ -196,11 +200,13 @@ export async function POST(req: NextRequest) {
 
   if (hasCorrections) {
     const grantKey = (flagRow as { grant_id: string }).grant_id
-    const filter = candidateFilterForFlagIds([grantKey])
-    const { data: grantRows } = filter
-      ? await db.from('scraped_grants').select('id, external_id, title').or(filter)
-      : { data: [] }
-    const resolved = resolveFlagGrant(grantKey, (grantRows ?? []) as unknown as GrantKey[])
+    let grantRows: GrantKey[]
+    try {
+      grantRows = await fetchFlagCandidates<GrantKey>(db, [grantKey], 'id, external_id, title')
+    } catch (e) {
+      return NextResponse.json({ error: e instanceof Error ? e.message : 'Grant lookup failed' }, { status: 500 })
+    }
+    const resolved = resolveFlagGrant(grantKey, grantRows)
     if (!resolved.ok) {
       return NextResponse.json(
         { error: `Could not resolve this flag to a single grant (${resolved.reason}). Corrections not written.` },

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
 import { getAdminDb } from '@/lib/admin/admin-db'
-import { resolveFlagGrant, candidateFilterForFlagIds, type GrantKey } from '@/lib/feedback/resolve-grant'
+import { resolveFlagGrant, type GrantKey } from '@/lib/feedback/resolve-grant'
+import { fetchFlagCandidates } from '@/lib/feedback/fetch-candidates'
 import { FEEDBACK_QUEUE_SOURCE } from '@/lib/feedback/triage'
 
 export const dynamic = 'force-dynamic'
@@ -57,13 +58,13 @@ export async function POST(req: NextRequest) {
   const flags = (allFlags ?? []) as Array<{ id: string; grant_id: string; reviewed_at: string | null }>
   if (flags.length === 0) return NextResponse.json({ queued: 0, released: 0, skipped: 0 })
 
-  const filter = candidateFilterForFlagIds(flags.map(f => f.grant_id))
-  const { data: grantRows } = filter
-    ? await db.from('scraped_grants')
-        .select('id, external_id, is_active, pipeline_state, field_provenance')
-        .or(filter)
-    : { data: [] }
-  const candidates = (grantRows ?? []) as unknown as GrantRow[]
+  let candidates: GrantRow[]
+  try {
+    candidates = await fetchFlagCandidates<GrantRow>(
+      db, flags.map(f => f.grant_id), 'id, external_id, is_active, pipeline_state, field_provenance')
+  } catch (e) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : 'Grant lookup failed' }, { status: 500 })
+  }
 
   // Group flags by resolved grant so a grant with several flags is handled once.
   const untriagedByGrant = new Map<string, number>()

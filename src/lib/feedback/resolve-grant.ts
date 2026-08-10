@@ -49,23 +49,44 @@ export function resolveFlagGrant<T extends GrantKey>(
 }
 
 /**
- * The `or` filter for a Supabase query that fetches candidates for a set of
- * flags. Both key forms, so nothing is silently dropped.
+ * `or` filters for a Supabase query fetching candidates for a set of flags.
+ * Both key forms, so nothing is silently dropped.
  *
- * Values are validated before interpolation: PostgREST's `or` filter is a string
- * grammar, and an unescaped comma or parenthesis in an external_id would change
- * the parsed filter rather than error.
+ * Returns an ARRAY of filters, because these go into the query string and a
+ * long one kills the request. Measured 2026-08-10: 403 flag ids produced a
+ * 14,810-character filter and supabase-js failed with a bare
+ * `TypeError: fetch failed` — no PostgREST error, no status code. A caller that
+ * ignores `error` sees an empty result set and concludes every flag points at a
+ * missing grant. Deduplicating first cut 403 ids to 274, which still built a
+ * 10KB filter, so chunking is the actual fix and deduplication is the cheap win.
+ *
+ * Values are validated before interpolation: PostgREST's `or` is a string
+ * grammar, so an unescaped comma or parenthesis would change the parsed filter
+ * rather than error.
  */
+export function candidateFiltersForFlagIds(
+  grantIds: readonly string[],
+  chunkSize = 80,
+): string[] {
+  const safe = Array.from(new Set(
+    grantIds.map(g => g.trim()).filter(g => g.length > 0 && !/[(),"]/.test(g)),
+  ))
+  const filters: string[] = []
+  for (let i = 0; i < safe.length; i += chunkSize) {
+    const chunk = safe.slice(i, i + chunkSize)
+    const uuids  = chunk.filter(isUuid)
+    const others = chunk.filter(g => !isUuid(g))
+    const clauses: string[] = []
+    if (uuids.length)  clauses.push(`id.in.(${uuids.join(',')})`)
+    if (others.length) clauses.push(`external_id.in.(${others.join(',')})`)
+    if (clauses.length) filters.push(clauses.join(','))
+  }
+  return filters
+}
+
+/** Single-filter form, for the one-id case. Empty string when nothing is usable. */
 export function candidateFilterForFlagIds(grantIds: readonly string[]): string {
-  const safe = grantIds
-    .map(g => g.trim())
-    .filter(g => g.length > 0 && !/[(),"]/.test(g))
-  const uuids = safe.filter(isUuid)
-  const others = safe.filter(g => !isUuid(g))
-  const clauses: string[] = []
-  if (uuids.length) clauses.push(`id.in.(${uuids.join(',')})`)
-  if (others.length) clauses.push(`external_id.in.(${others.join(',')})`)
-  return clauses.join(',')
+  return candidateFiltersForFlagIds(grantIds, Number.MAX_SAFE_INTEGER)[0] ?? ''
 }
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i

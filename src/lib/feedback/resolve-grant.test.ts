@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { resolveFlagGrant, candidateFilterForFlagIds, isUuid, type GrantKey } from './resolve-grant'
+import { resolveFlagGrant, candidateFilterForFlagIds, candidateFiltersForFlagIds, isUuid, type GrantKey } from './resolve-grant'
 
 /**
  * The two rows below are real, and they are the reason this module exists.
@@ -89,6 +89,39 @@ describe('candidateFilterForFlagIds', () => {
   it('returns an empty filter for no usable ids', () => {
     expect(candidateFilterForFlagIds([])).toBe('')
     expect(candidateFilterForFlagIds(['  '])).toBe('')
+  })
+})
+
+describe('candidateFiltersForFlagIds — chunking', () => {
+  // The bug this exists to prevent, found in local verification before ship:
+  // 403 flag ids built a 14,810-character `or` filter, supabase-js failed with a
+  // bare "TypeError: fetch failed", and a caller reading only { data } saw an
+  // empty array. Every flag then resolved to not_found and the triage screen
+  // reported, truthfully and uselessly, that there was nothing to do.
+  it('splits a large id set into several filters rather than one huge one', () => {
+    const ids = Array.from({ length: 403 }, (_, i) =>
+      `00000000-0000-0000-0000-${String(i).padStart(12, '0')}`)
+    const filters = candidateFiltersForFlagIds(ids)
+    expect(filters.length).toBeGreaterThan(1)
+    for (const f of filters) expect(f.length).toBeLessThan(6000)
+  })
+
+  it('deduplicates, because many flags point at the same grant', () => {
+    const filters = candidateFiltersForFlagIds([MCR.id, MCR.id, MCR.id])
+    expect(filters).toHaveLength(1)
+    expect(filters[0]).toBe(`id.in.(${MCR.id})`)
+  })
+
+  it('keeps both key forms within a chunk', () => {
+    const filters = candidateFiltersForFlagIds([MCR.id, SOMERSET.external_id!], 80)
+    expect(filters).toHaveLength(1)
+    expect(filters[0]).toContain(`id.in.(${MCR.id})`)
+    expect(filters[0]).toContain(`external_id.in.(${SOMERSET.external_id})`)
+  })
+
+  it('returns no filters at all for an empty or unusable set', () => {
+    expect(candidateFiltersForFlagIds([])).toEqual([])
+    expect(candidateFiltersForFlagIds(['bad,id'])).toEqual([])
   })
 })
 
