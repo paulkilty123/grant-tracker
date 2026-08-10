@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Rocket, GraduationCap, Gift, MapPin, ChevronRight } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { createPipelineItem } from '@/lib/pipeline'
+import { describePipelineWriteError } from '@/lib/pipeline-errors'
 import { getOrganisationByOwner } from '@/lib/organisations'
 import { track } from '@/lib/analytics'
 import GrantDetailModal from '@/components/GrantDetailModal'
@@ -245,10 +246,12 @@ export default function ProgrammesPage() {
       })
       track('pipeline_added')
       setPipelineMsg('Added to pipeline!')
-    } catch {
-      setPipelineMsg('Already in pipeline')
+    } catch (e) {
+      // This used to report "Already in pipeline" whatever went wrong, so an
+      // entitlement or constraint rejection read back as a success.
+      setPipelineMsg(describePipelineWriteError(e, 'programmesAddToPipeline'))
     }
-    setTimeout(() => setPipelineMsg(null), 2500)
+    setTimeout(() => setPipelineMsg(null), 4000)
   }
 
   const filtered = activeTab === 'all'

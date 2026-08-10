@@ -10,6 +10,7 @@ import {
   createPipelineItem,
   deletePipelineItem,
 } from '@/lib/pipeline'
+import { describePipelineWriteError } from '@/lib/pipeline-errors'
 import { getOrganisationByOwner } from '@/lib/organisations'
 import { setDismissSnooze, removeInteraction } from '@/lib/interactions'
 import { emitClientEvent } from '@/lib/events/client'
@@ -728,9 +729,9 @@ export default function PipelinePage() {
     try {
       await updatePipelineItem(id, { starred })
       if (item) emitClientEvent(item.org_id, 'pipeline_starred', { pipeline_item_id: id, starred })
-    } catch {
+    } catch (e) {
       setItems(prev => prev.map(i => i.id === id ? { ...i, starred: !starred } : i))
-      showToast('Failed to update — please try again')
+      showToast(describePipelineWriteError(e, 'toggleStar', 'Could not update that. Please try again.'))
     }
   }
 
