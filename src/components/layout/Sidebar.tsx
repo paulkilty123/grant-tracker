@@ -309,6 +309,7 @@ export default function Sidebar({ org, userEmail, companionSurface = false }: Pr
             <nav className="flex flex-col gap-0.5">
               {ADMIN_NAV.map(item => navLink(item.href, item.label, item.Icon))}
               {navLink('/dashboard/admin/feedback', 'Match Feedback', MessageSquare)}
+              {navLink('/dashboard/admin/feedback-triage', 'Feedback triage', MessageSquare)}
             </nav>
           </>
         )}
