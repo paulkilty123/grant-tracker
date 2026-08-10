@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { TRACKED_FIELDS } from '@/lib/grant-merge'
 import {
   CORRECTABLE_FIELDS, isCorrectableField, acceptSource, pinsOnCorrectableFields,
-  USER_VERIFIED_TRUST, TRIAGE_CLASSES, FEEDBACK_QUEUE_SOURCE,
+  USER_VERIFIED_TRUST, TRIAGE_CLASSES, FEEDBACK_QUEUE_SOURCE, noteRequiredFor, CLASSES_REQUIRING_NOTE,
 } from './triage'
 
 describe('CORRECTABLE_FIELDS', () => {
@@ -108,5 +108,24 @@ describe('constants', () => {
 
   it('uses a system: queue marker, so it cannot pin pipeline_state', () => {
     expect(FEEDBACK_QUEUE_SOURCE.startsWith('system:')).toBe(true)
+  })
+})
+
+describe('reviewer note requirement', () => {
+  // match_precision and taxonomy_gap write nothing to the grant. Without a note
+  // the class label is the only artefact, and the reasoning behind it — e.g.
+  // that Buttle UK correctly lists homeless, which is why a homelessness
+  // charity matched — is lost. That reasoning IS the output of those classes.
+  it('requires a note for the classes that write nothing', () => {
+    expect(noteRequiredFor('match_precision')).toBe(true)
+    expect(noteRequiredFor('taxonomy_gap')).toBe(true)
+  })
+
+  it('leaves it optional for catalogue_gap, where the correction is the record', () => {
+    expect(noteRequiredFor('catalogue_gap')).toBe(false)
+  })
+
+  it('lists exactly the two write-nothing classes', () => {
+    expect([...CLASSES_REQUIRING_NOTE].sort()).toEqual(['match_precision', 'taxonomy_gap'])
   })
 })

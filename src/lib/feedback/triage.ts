@@ -65,6 +65,16 @@ for (const f of CORRECTABLE_FIELDS) {
   }
 }
 
+/**
+ * Classes that write nothing to the grant, so the reviewer's note is the only
+ * record of the decision. The API requires a note for these.
+ */
+export const CLASSES_REQUIRING_NOTE: readonly TriageClass[] = ['match_precision', 'taxonomy_gap']
+
+export function noteRequiredFor(cls: TriageClass): boolean {
+  return CLASSES_REQUIRING_NOTE.includes(cls)
+}
+
 /** Provenance marker written when a flag routes a grant into the review queue. */
 export const FEEDBACK_QUEUE_SOURCE = 'system:user_feedback:v1'
 

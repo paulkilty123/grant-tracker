@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo, useCallback } from 'react'
 import {
-  TRIAGE_CLASSES, TRIAGE_CLASS_LABEL, TRIAGE_CLASS_HELP, CORRECTABLE_FIELDS,
+  TRIAGE_CLASSES, TRIAGE_CLASS_LABEL, TRIAGE_CLASS_HELP, CORRECTABLE_FIELDS, noteRequiredFor,
   type TriageClass, type TriageFlag, type FieldPin,
 } from '@/lib/feedback/triage'
 
@@ -136,6 +136,7 @@ function FlagCard({ flag, onDone }: { flag: TriageFlag; onDone: () => void }) {
   const [cls, setCls]         = useState<TriageClass | null>(null)
   const [edits, setEdits]     = useState<Record<string, string>>({})
   const [lock, setLock]       = useState(false)
+  const [note, setNote]       = useState('')
   const [busy, setBusy]       = useState(false)
   const [result, setResult]   = useState<{ ok: boolean; message: string; merge?: MergeResult } | null>(null)
 
@@ -169,6 +170,7 @@ function FlagCard({ flag, onDone }: { flag: TriageFlag; onDone: () => void }) {
           resolution,
           corrections: resolution === 'applied' ? corrections : {},
           lock: overrideLock || lock,
+          reviewer_note: note,
         }),
       })
       const data = await res.json()
@@ -297,6 +299,26 @@ function FlagCard({ flag, onDone }: { flag: TriageFlag; onDone: () => void }) {
         </div>
       )}
 
+      {/* Your reasoning. For match_precision and taxonomy_gap nothing is written
+          to the grant, so this note is the only record the decision was made. */}
+      {cls && (
+        <div className="mb-4">
+          <label className="block text-xs font-semibold text-mid mb-1.5" style={{ fontFamily: UI }}>
+            Your note{noteRequiredFor(cls) && <span style={{ color: '#993C1D' }}> (required)</span>}
+          </label>
+          <textarea
+            value={note}
+            onChange={e => setNote(e.target.value)}
+            rows={2}
+            placeholder={noteRequiredFor(cls)
+              ? 'Nothing is written to the grant for this class, so this is the only record of why. What did you check?'
+              : 'Optional. Anything worth knowing later about this decision.'}
+            className="w-full rounded-lg px-3 py-2 text-xs"
+            style={{ border: '0.5px solid rgba(0,0,0,0.14)', fontFamily: 'inherit', resize: 'vertical' }}
+          />
+        </div>
+      )}
+
       {/* Result — never softened. A write that did not land must say so. */}
       {result && (
         <div
@@ -346,7 +368,7 @@ function FlagCard({ flag, onDone }: { flag: TriageFlag; onDone: () => void }) {
         </button>
         <button
           onClick={() => submit('rejected')}
-          disabled={busy || !cls}
+          disabled={busy || !cls || (noteRequiredFor(cls) && note.trim().length === 0)}
           className="rounded-lg border px-4 py-2 text-xs font-semibold text-charcoal disabled:opacity-40"
           style={{ borderColor: '#2C2C2A', fontFamily: UI }}
         >

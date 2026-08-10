@@ -6,7 +6,7 @@ import { resolveFlagGrant, type GrantKey } from '@/lib/feedback/resolve-grant'
 import { fetchFlagCandidates } from '@/lib/feedback/fetch-candidates'
 import {
   TRIAGE_CLASSES, RESOLUTIONS, isCorrectableField, acceptSource,
-  pinsOnCorrectableFields, CORRECTABLE_FIELDS,
+  pinsOnCorrectableFields, CORRECTABLE_FIELDS, noteRequiredFor,
   type TriageClass, type Resolution, type TriageFlag, type TriageGrant,
 } from '@/lib/feedback/triage'
 
@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
 
   const { data: flagRows, error: flagErr } = await db
     .from('match_feedback')
-    .select('id, user_id, grant_id, direction, reasons, free_text, match_score_at_time, created_at')
+    .select('id, user_id, grant_id, direction, reasons, free_text, match_score_at_time, created_at, reviewer_note')
     .eq('direction', 'down')
     .is('reviewed_at', null)
     .order('created_at', { ascending: false })
@@ -134,6 +134,7 @@ export async function POST(req: NextRequest) {
   let body: {
     flag_id?: unknown; triage_class?: unknown; resolution?: unknown
     corrections?: unknown; lock?: unknown; supersede_flag_ids?: unknown
+    reviewer_note?: unknown
   }
   try { body = await req.json() } catch {
     return NextResponse.json({ error: 'Body must be JSON' }, { status: 400 })
@@ -152,6 +153,20 @@ export async function POST(req: NextRequest) {
   const triageClass = body.triage_class as TriageClass
   const resolution  = body.resolution as Resolution
   const lock        = body.lock === true
+
+  const noteRaw = body.reviewer_note
+  if (noteRaw !== undefined && noteRaw !== null && typeof noteRaw !== 'string') {
+    return NextResponse.json({ error: 'reviewer_note must be a string' }, { status: 400 })
+  }
+  const reviewerNote = typeof noteRaw === 'string' ? noteRaw.trim() : ''
+  // match_precision and taxonomy_gap write nothing to the grant, so the note is
+  // the only record that the decision was ever made, or why.
+  if (noteRequiredFor(triageClass) && reviewerNote.length === 0) {
+    return NextResponse.json(
+      { error: `${triageClass} writes nothing to the grant, so a note explaining the decision is required.` },
+      { status: 400 },
+    )
+  }
 
   const corrections = (body.corrections ?? {}) as Record<string, unknown>
   if (typeof corrections !== 'object' || corrections === null || Array.isArray(corrections)) {
@@ -240,7 +255,12 @@ export async function POST(req: NextRequest) {
 
   const { error: updErr } = await db
     .from('match_feedback')
-    .update({ reviewed_at: new Date().toISOString(), resolution, triage_class: triageClass })
+    .update({
+      reviewed_at: new Date().toISOString(),
+      resolution,
+      triage_class: triageClass,
+      reviewer_note: reviewerNote || null,
+    })
     .eq('id', flagId)
   if (updErr) return NextResponse.json({ error: updErr.message }, { status: 500 })
 
