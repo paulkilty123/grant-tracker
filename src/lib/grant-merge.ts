@@ -86,6 +86,19 @@ export type FieldProvenance = Record<string, ProvenanceEntry>
 const TRUST_BY_TYPE: Record<string, number> = {
   admin:           100,
   '360giving':      80,
+  // A correction a fundraiser reported against a live match, which an admin has
+  // then reviewed and accepted (see the review queue's user_flagged reason).
+  // Deliberately between 360giving and the ai_* tiers:
+  //   - ABOVE ai_enrich (60), because a fundraiser quoting the funder's own
+  //     stated policy ("max income cap of £750,000 p.a") is better evidence than
+  //     an LLM reading a page. Without this, the next enrichment run would
+  //     silently overwrite a human-verified figure with a worse guess.
+  //   - BELOW 360giving (80), which is the funder's own structured filing.
+  //   - NOT `admin` (100), because admin auto-pins (see the pin branch below)
+  //     and pinning freezes the value for good. Confirming a correction is not
+  //     the same as deciding it must never improve. An admin who does want a
+  //     value frozen can still write `admin:` explicitly via the lock option.
+  user_verified:    70,
   ai_classifier:    60,
   ai_enrich:        60,
   ai_audit:         60,

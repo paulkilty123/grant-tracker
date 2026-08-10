@@ -363,10 +363,19 @@ create table public.match_feedback (
   match_score_at_time integer not null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
+  -- Triage state (migration 051). All nullable: NULL reviewed_at = not yet triaged.
+  reviewed_at timestamptz,
+  resolution text,
+  triage_class text,
   constraint match_feedback_pkey primary key (id),
   constraint match_feedback_user_id_grant_id_key unique (user_id, grant_id),
-  constraint match_feedback_direction_check check ((direction = any (array['up'::text, 'down'::text])))
+  constraint match_feedback_direction_check check ((direction = any (array['up'::text, 'down'::text]))),
+  constraint match_feedback_resolution_check check ((resolution is null or resolution = any (array['applied'::text, 'rejected'::text, 'superseded'::text]))),
+  constraint match_feedback_triage_class_check check ((triage_class is null or triage_class = any (array['catalogue_gap'::text, 'match_precision'::text, 'taxonomy_gap'::text])))
 );
+
+create index idx_match_feedback_untriaged on public.match_feedback
+  using btree (created_at desc) where (reviewed_at is null and direction = 'down'::text);
 
 create table public.oauth_clients (
   client_id text not null,

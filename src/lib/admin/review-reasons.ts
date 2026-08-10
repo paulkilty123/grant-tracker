@@ -21,6 +21,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { readGrantFlags, type GrantFlag } from '@/lib/grant-flags'
+import { FEEDBACK_QUEUE_SOURCE } from '@/lib/feedback/triage'
 
 /** Matches cron/reenrich-stale's STALE_AFTER_DAYS. Keep in step. */
 const STALE_AFTER_DAYS = 90
@@ -117,6 +118,7 @@ export type ReviewReasonCode =
   | 'applicant_not_social_sector'
   | 'applicant_individual_only'
   | 'deadline_implausible'
+  | 'user_flagged'
 
 export type ReviewReason = {
   code:     ReviewReasonCode
@@ -452,6 +454,23 @@ export function deriveReviewReasons(row: ReviewRow, todayISO?: string): ReviewRe
       code: 'beneficiaries_generic_only', severity: 'check',
       label: 'Beneficiaries unspecific',
       detail: 'only “general public” is tagged, which is often what gets recorded when nothing could be determined',
+    })
+  }
+
+  // ── Reported by a user ───────────────────────────────────────────────────
+  // A fundraiser rejected this grant against their own organisation and said
+  // why. Higher signal than anything derived from the row alone, because it is
+  // someone checking our record against the funder's actual policy. `check`
+  // rather than `critical`: a flag means "wrong for me", which is not always
+  // "this row is wrong", so it wants a human read before anything is edited.
+  const queueProv = (row.field_provenance as Record<string, { source?: string; outstanding_flags?: number }> | null)
+    ?.pipeline_state
+  if (queueProv?.source === FEEDBACK_QUEUE_SOURCE) {
+    const n = typeof queueProv.outstanding_flags === 'number' ? queueProv.outstanding_flags : 1
+    reasons.push({
+      code: 'user_flagged', severity: 'check',
+      label: n > 1 ? `Reported by ${n} users` : 'Reported by a user',
+      detail: 'someone rejected this in their matches and said why — triage it in Feedback triage',
     })
   }
 
