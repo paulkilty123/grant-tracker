@@ -126,22 +126,72 @@ async function fetchViaReaderProxy(url: string): Promise<string> {
       },
     })
     if (!res.ok) throw new Error(`reader proxy HTTP ${res.status}`)
-    return (await res.text()).replace(/\s{2,}/g, ' ').trim().slice(0, PAGE_CAP)
+    return excerpt((await res.text()).replace(/\s{2,}/g, ' ').trim())
   } finally {
     clearTimeout(timeout)
   }
 }
 
 function stripHtml(html: string): string {
-  return html
+  return excerpt(html
     .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
     .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
     .replace(/<[^>]+>/g, ' ')
     .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<').replace(/&gt;/g, '>')
     .replace(/\s{2,}/g, ' ')
-    .trim()
-    .slice(0, PAGE_CAP)
+    .trim())
+}
+
+/** Words that mark the part of a funder page we actually need. */
+const RELEVANCE = /income|turnover|deadline|closing date|closes|apply by|eligib|unsolicited|invitation|invited|rolling|year round|not accept|criteria|who can apply|£\s?[\d,]+/gi
+
+/**
+ * Keep the parts of a long page that matter, not merely the first 12,000
+ * characters.
+ *
+ * Measured on Bentley's fund page: 53,919 characters, and the sentence
+ * "annual income of under £500,000" sits at character 30,596. Every one of the
+ * nine relevant keyword hits fell beyond a naive prefix cap, so the model was
+ * shown marketing copy and truthfully reported that the page stated no
+ * eligibility detail. The engine was not wrong; it was starved.
+ *
+ * The opening is always kept, because the gate needs it to tell which fund the
+ * page is about. The rest of the budget goes to the highest-scoring windows, in
+ * document order, with a marker where text was dropped so a quote is never
+ * silently stitched across a gap.
+ */
+export function excerpt(text: string, cap = PAGE_CAP): string {
+  if (text.length <= cap) return text
+
+  const HEAD = 3000                       // enough to identify the fund
+  const WINDOW = 1500
+  const head = text.slice(0, HEAD)
+  const rest = text.slice(HEAD)
+
+  const windows: { start: number; score: number }[] = []
+  for (let i = 0; i < rest.length; i += WINDOW) {
+    const chunk = rest.slice(i, i + WINDOW)
+    windows.push({ start: i, score: (chunk.match(RELEVANCE) ?? []).length })
+  }
+
+  const budget = cap - HEAD
+  const chosen = windows
+    .filter(w => w.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, Math.max(1, Math.floor(budget / WINDOW)))
+    .sort((a, b) => a.start - b.start)
+
+  if (chosen.length === 0) return text.slice(0, cap)
+
+  let out = head
+  let prevEnd = 0
+  for (const w of chosen) {
+    if (w.start > prevEnd) out += ' […] '
+    out += rest.slice(w.start, w.start + WINDOW)
+    prevEnd = w.start + WINDOW
+  }
+  return out.slice(0, cap)
 }
 
 export type Fetched = { text: string; via: 'direct' | 'proxy' } | { error: string }
