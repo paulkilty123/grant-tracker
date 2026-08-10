@@ -299,25 +299,25 @@ function FlagCard({ flag, onDone }: { flag: TriageFlag; onDone: () => void }) {
         </div>
       )}
 
-      {/* Your reasoning. For match_precision and taxonomy_gap nothing is written
-          to the grant, so this note is the only record the decision was made. */}
-      {cls && (
-        <div className="mb-4">
-          <label className="block text-xs font-semibold text-mid mb-1.5" style={{ fontFamily: UI }}>
-            Your note{noteRequiredFor(cls) && <span style={{ color: '#993C1D' }}> (required)</span>}
-          </label>
-          <textarea
-            value={note}
-            onChange={e => setNote(e.target.value)}
-            rows={2}
-            placeholder={noteRequiredFor(cls)
-              ? 'Nothing is written to the grant for this class, so this is the only record of why. What did you check?'
-              : 'Optional. Anything worth knowing later about this decision.'}
-            className="w-full rounded-lg px-3 py-2 text-xs"
-            style={{ border: '0.5px solid rgba(0,0,0,0.14)', fontFamily: 'inherit', resize: 'vertical' }}
-          />
-        </div>
-      )}
+      {/* Your reasoning. Always visible: it was previously revealed only after a
+          class was chosen, which hid its existence and forced you to classify
+          before writing, when in practice the note is often how you work the
+          classification out. */}
+      <div className="mb-4">
+        <label className="block text-xs font-semibold text-mid mb-1.5" style={{ fontFamily: UI }}>
+          Your note{cls && noteRequiredFor(cls) && <span style={{ color: '#993C1D' }}> (required)</span>}
+        </label>
+        <textarea
+          value={note}
+          onChange={e => setNote(e.target.value)}
+          rows={2}
+          placeholder={cls && noteRequiredFor(cls)
+            ? 'Nothing is written to the grant for this class, so this is the only record of why. What did you check?'
+            : 'Why you decided this. Anything worth knowing later.'}
+          className="w-full rounded-lg px-3 py-2 text-xs"
+          style={{ border: '0.5px solid rgba(0,0,0,0.14)', fontFamily: 'inherit', resize: 'vertical' }}
+        />
+      </div>
 
       {/* Result — never softened. A write that did not land must say so. */}
       {result && (
