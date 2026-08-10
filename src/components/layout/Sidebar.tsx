@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import type { Organisation } from '@/types'
 import { cn } from '@/lib/utils'
 import LogoMark from '@/components/icons/LogoMark'
+import { isNavActive } from '@/lib/nav-active'
 import {
   LayoutDashboard,
   Compass,
@@ -169,9 +170,7 @@ export default function Sidebar({ org, userEmail, companionSurface = false }: Pr
     Icon:  React.ElementType,
     badge?: React.ReactNode,
   ) => {
-    const isActive =
-      pathname === href ||
-      (href != '/dashboard' && href != '/dashboard/admin' && pathname.startsWith(href))
+    const isActive = isNavActive(pathname, href)
 
     return (
       <Link
