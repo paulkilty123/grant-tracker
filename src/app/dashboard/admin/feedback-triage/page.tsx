@@ -363,6 +363,12 @@ function FlagCard({ flag, onDone }: { flag: TriageFlag; onDone: () => void }) {
           disabled={busy || cls !== 'catalogue_gap' || Object.keys(corrections).length === 0}
           className="rounded-lg px-4 py-2 text-xs font-semibold disabled:opacity-40"
           style={{ background: '#8ECB3C', color: '#173404', fontFamily: UI }}
+          title={
+            !cls                        ? 'Pick what kind of problem this is first'
+            : cls !== 'catalogue_gap'   ? `${TRIAGE_CLASS_LABEL[cls]} never writes to the grant, so there is nothing to accept. Use Record and close.`
+            : Object.keys(corrections).length === 0 ? 'Edit a field above to accept a correction'
+            : undefined
+          }
         >
           {busy ? 'Saving…' : `Accept${Object.keys(corrections).length ? ` (${Object.keys(corrections).length})` : ''}`}
         </button>
@@ -372,7 +378,11 @@ function FlagCard({ flag, onDone }: { flag: TriageFlag; onDone: () => void }) {
           className="rounded-lg border px-4 py-2 text-xs font-semibold text-charcoal disabled:opacity-40"
           style={{ borderColor: '#2C2C2A', fontFamily: UI }}
         >
-          Close with no change
+          {/* "Close with no change" reads like discard, but this button saves the
+              class and the note either way. For the classes that can never write
+              to the grant, "no change" is not a choice the admin is making, so
+              saying so is misleading. */}
+          {cls && noteRequiredFor(cls) ? 'Record and close' : 'Close with no change'}
         </button>
         {grant?.apply_url && (
           <a href={grant.apply_url} target="_blank" rel="noopener noreferrer" className="text-xs text-sage underline">
