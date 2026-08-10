@@ -8,7 +8,7 @@ import { formatRange, formatNextOpen } from '@/lib/utils'
 import { SHOW_NEW_THIS_WEEK_BADGE, NEW_THIS_WEEK_DAYS } from '@/lib/ui-flags'
 import { createClient } from '@/lib/supabase/client'
 import { createPipelineItem, deletePipelineItem, updatePipelineStage } from '@/lib/pipeline'
-import { describePipelineWriteError } from '@/lib/pipeline-errors'
+import { describePipelineWriteError, ENTITLEMENT_MESSAGE } from '@/lib/pipeline-errors'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { getOrganisationByOwner } from '@/lib/organisations'
 import { computeMatchScore, scoreColour, grantInGeoSelection, grantMatchesLocationText } from '@/lib/matching'
@@ -282,6 +282,8 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
   const isMobile = useIsMobile()
   const [insightsHover, setInsightsHover] = useState(false)
   const [removeHover, setRemoveHover]     = useState(false)
+  /** Apply-tier entitlement, which pipeline_items RLS requires. */
+  const cardApplyAccess = !!org?.apply_access
   // Capture layer — opportunity_viewed fires once when the user opens the
   // insights strip (the real "look at this opportunity in depth" action; the
   // grant detail page is not reachable from this flow).
@@ -681,11 +683,24 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                   </div>
                 )}
 
-                {/* Add to pipeline (neutral + saved) */}
+                {/* Add to pipeline (neutral + saved).
+                    Without apply_access the write is rejected by RLS, so this
+                    drops out of the lime primary-CTA treatment rather than
+                    promising something the database will refuse. It stays
+                    visible and clickable so the feature is still discoverable,
+                    and the click explains itself. */}
                 {state != 'pipeline' && (
                   <button
                     onClick={() => onAddToPipeline(grant)}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, borderRadius: 10, background: '#8ECB3C', color: '#173404', border: 'none', padding: '9px 14px', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-dm-sans)', whiteSpace: 'nowrap' }}
+                    title={cardApplyAccess ? undefined : 'Pipeline is part of the Apply plan'}
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+                      borderRadius: 10, padding: '9px 14px', fontSize: 13, fontWeight: 500,
+                      cursor: 'pointer', fontFamily: 'var(--font-dm-sans)', whiteSpace: 'nowrap',
+                      ...(cardApplyAccess
+                        ? { background: '#8ECB3C', color: '#173404', border: 'none' }
+                        : { background: '#fff', color: '#8A8986', border: '0.5px solid rgba(0,0,0,0.14)' }),
+                    }}
                   >
                     + Add to pipeline
                   </button>
@@ -1473,6 +1488,20 @@ export default function SearchPage() {
     return () => { cancelled = true }
   }, [pinnedGrantId, scrapedGrants])
 
+  /**
+   * Apply-tier entitlement. pipeline_items RLS requires it, so without it every
+   * pipeline write is rejected by Postgres with 42501 no matter what the
+   * interface offers. Check before acting rather than letting the user find out
+   * from a failed request.
+   */
+  const applyAccess = !!org?.apply_access
+
+  function guardApplyAccess(): boolean {
+    if (applyAccess) return true
+    showToast(ENTITLEMENT_MESSAGE, 'error')
+    return false
+  }
+
   function showToast(msg: string, variant: 'success' | 'error' = 'success') {
     setToast({ msg, variant })
     // Failures need longer on screen: they usually carry an instruction, and an
@@ -1668,6 +1697,7 @@ export default function SearchPage() {
 
   async function handleAddToPipeline(grant: GrantOpportunity) {
     if (!org) { showToast('Complete your profile first to track grants'); return }
+    if (!guardApplyAccess()) return
     try {
       const added = await createPipelineItem({
         org_id:               org.id,
@@ -1752,6 +1782,7 @@ export default function SearchPage() {
     reasons?: { tags: string[]; freeText: string },
   ) {
     if (!org) { showToast('Complete your profile first to mark grants'); return }
+    if (!guardApplyAccess()) return
     try {
       const stage = outcome === 'pending' ? 'submitted' : outcome
       const notesText = reasons && (reasons.tags.length > 0 || reasons.freeText.trim().length > 0)

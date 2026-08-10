@@ -238,6 +238,18 @@ export interface Organisation {
   owner_id: string
   geographic_reach: string | null
   website_url: string | null
+  // ── Entitlements ──────────────────────────────────────────────────────────
+  /**
+   * Apply-tier entitlement: pipeline + builder. Enforced in RLS on
+   * pipeline_items / projects / applications / org_core_content, so a write
+   * from a non-entitled org is rejected by Postgres with 42501 regardless of
+   * what the interface allows. Only service_role may change it
+   * (trg_enforce_apply_access_immutable). Read it before offering those
+   * controls, or the user gets a button that always fails.
+   */
+  apply_access?: boolean | null
+  /** Companion/Adviser-tier entitlement. Same enforcement model. */
+  companion_access?: boolean | null
 }
 
 export interface PipelineItem {
