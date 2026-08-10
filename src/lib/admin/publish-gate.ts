@@ -78,6 +78,13 @@ const POLICY: Record<ReviewReasonCode, 'block' | 'info'> = {
   amount_ungrounded:    'block',  // £ figure with no matching wording on the page
   eligibility_missing:  'block',  // see note 1 in the header — over-matches, does not hide
   tags_changed:         'block',  // ONLY at critical severity — see isBlocking()
+  // A fundraiser checked this row against the funder's actual policy and
+  // rejected it. Blocking for two reasons: a human reporting a problem is
+  // stronger evidence than anything derived from the row, and the feedback
+  // router moves a published grant into the queue, so an 'info' verdict here
+  // would let auto-publish immediately republish it and silently discard the
+  // report. Cleared by triaging the flag, not by re-running the chain.
+  user_flagged:         'block',
   // The funder says the applicant must be a business, producer, employer or
   // academic researcher. Not a gap and not a tagging fault: the fund is real,
   // correctly described, and cannot be won by anyone this catalogue serves.
