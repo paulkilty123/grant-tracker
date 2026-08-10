@@ -367,6 +367,7 @@ create table public.match_feedback (
   reviewed_at timestamptz,
   resolution text,
   triage_class text,
+  reviewer_note text,
   constraint match_feedback_pkey primary key (id),
   constraint match_feedback_user_id_grant_id_key unique (user_id, grant_id),
   constraint match_feedback_direction_check check ((direction = any (array['up'::text, 'down'::text]))),
