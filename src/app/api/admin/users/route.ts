@@ -22,6 +22,10 @@ interface UserRow {
   onboarding_complete: boolean
   pipeline_count: number
   saved_count: number
+  /** Apply-tier entitlement on the org the app actually resolves for this user. */
+  apply_access: boolean
+  /** How many orgs this user owns. >1 means the toggle targets the oldest. */
+  org_count: number
 }
 
 export async function GET() {
@@ -44,16 +48,28 @@ export async function GET() {
   const users = list.users
   const userIds = users.map(u => u.id)
 
-  // Pull orgs for those users in one shot
+  // Pull orgs for those users in one shot.
+  // Ordered oldest-first, because the first row per owner is the one kept below
+  // and the app resolves a multi-org user to their OLDEST org
+  // (getOrganisationByOwner). Without the order this picked an arbitrary org, so
+  // for a user with several orgs the admin screen could report on, and toggle
+  // entitlement for, an org they never actually use.
   const { data: orgs } = await admin
     .from('organisations')
-    .select('id, owner_id, name, legal_structure, impact_sectors')
+    .select('id, owner_id, name, legal_structure, impact_sectors, apply_access')
     .in('owner_id', userIds)
+    .order('created_at', { ascending: true })
 
-  const orgByOwner = new Map<string, { id: string; name: string | null; legal_structure: string | null; impact_sectors: string[] | null }>()
-  for (const o of (orgs ?? []) as Array<{ id: string; owner_id: string; name: string | null; legal_structure: string | null; impact_sectors: string[] | null }>) {
+  type OrgRow = { id: string; name: string | null; legal_structure: string | null; impact_sectors: string[] | null; apply_access: boolean | null }
+  const orgByOwner = new Map<string, OrgRow>()
+  const orgCountByOwner = new Map<string, number>()
+  for (const o of (orgs ?? []) as Array<OrgRow & { owner_id: string }>) {
+    orgCountByOwner.set(o.owner_id, (orgCountByOwner.get(o.owner_id) ?? 0) + 1)
     if (!orgByOwner.has(o.owner_id)) {
-      orgByOwner.set(o.owner_id, { id: o.id, name: o.name, legal_structure: o.legal_structure, impact_sectors: o.impact_sectors })
+      orgByOwner.set(o.owner_id, {
+        id: o.id, name: o.name, legal_structure: o.legal_structure,
+        impact_sectors: o.impact_sectors, apply_access: o.apply_access,
+      })
     }
   }
 
@@ -96,6 +112,8 @@ export async function GET() {
       onboarding_complete: !!org?.legal_structure && Array.isArray(sectors) && sectors.length > 0,
       pipeline_count: org ? (pipelineByOrg.get(org.id) ?? 0) : 0,
       saved_count: org ? (savedByOrg.get(org.id) ?? 0) : 0,
+      apply_access: !!org?.apply_access,
+      org_count: orgCountByOwner.get(u.id) ?? 0,
     }
   })
 

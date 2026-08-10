@@ -19,6 +19,8 @@ interface UserRow {
   onboarding_complete: boolean
   pipeline_count: number
   saved_count: number
+  apply_access: boolean
+  org_count: number
 }
 
 const ADMIN_EMAIL = 'paulkilty1@gmail.com'
@@ -47,7 +49,37 @@ export default function AdminUsersPage() {
   const [denied, setDenied] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
-  const [filter, setFilter] = useState<'all' | 'confirmed' | 'unconfirmed' | 'onboarded' | 'not_onboarded' | 'active'>('all')
+  const [filter, setFilter] = useState<'all' | 'confirmed' | 'unconfirmed' | 'onboarded' | 'not_onboarded' | 'active' | 'no_apply'>('all')
+  // Orgs currently being toggled, so a row cannot be double-submitted.
+  const [savingOrg, setSavingOrg] = useState<Set<string>>(new Set())
+  const [toggleError, setToggleError] = useState<string | null>(null)
+
+  // Apply-tier entitlement lives in the database (organisations.apply_access)
+  // and gates pipeline + builder in RLS. Nothing else in the product can set
+  // it, so without this control every new cohort invite silently gets a
+  // pipeline that 403s.
+  async function toggleApplyAccess(u: UserRow, next: boolean) {
+    if (!u.org_id || savingOrg.has(u.org_id)) return
+    const orgId = u.org_id
+    setToggleError(null)
+    setSavingOrg(prev => new Set(prev).add(orgId))
+    // Optimistic, reverted below if the write is refused.
+    setRows(prev => prev.map(r => r.org_id === orgId ? { ...r, apply_access: next } : r))
+    try {
+      const res = await fetch('/api/admin/apply-access', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ org_id: orgId, apply_access: next }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data?.error ?? `Request failed (${res.status})`)
+    } catch (e) {
+      setRows(prev => prev.map(r => r.org_id === orgId ? { ...r, apply_access: !next } : r))
+      setToggleError(e instanceof Error ? e.message : 'Could not change that.')
+    } finally {
+      setSavingOrg(prev => { const n = new Set(prev); n.delete(orgId); return n })
+    }
+  }
 
   useEffect(() => {
     fetch('/api/admin/users')
@@ -72,6 +104,9 @@ export default function AdminUsersPage() {
       if (filter === 'onboarded' && !u.onboarding_complete) return false
       if (filter === 'not_onboarded' && u.onboarding_complete) return false
       if (filter === 'active' && u.pipeline_count === 0 && u.saved_count === 0) return false
+      // Has an org but no Apply entitlement: RLS rejects their pipeline writes,
+      // so this chip is the list of people silently blocked.
+      if (filter === 'no_apply' && (!u.org_id || u.apply_access)) return false
       if (q && !(
         (u.email ?? '').toLowerCase().includes(q)
         || (u.org_name ?? '').toLowerCase().includes(q)
@@ -133,6 +168,7 @@ export default function AdminUsersPage() {
             { key: 'onboarded',     label: `Onboarded (${onboardedCount})` },
             { key: 'not_onboarded', label: `Not onboarded (${rows.length - onboardedCount})` },
             { key: 'active',        label: `Active (${activeCount})` },
+            { key: 'no_apply',      label: `No pipeline access (${rows.filter(u => u.org_id && !u.apply_access).length})` },
           ] as const).map(t => (
             <button
               key={t.key}
@@ -147,6 +183,16 @@ export default function AdminUsersPage() {
         </div>
       </div>
 
+      {toggleError && (
+        <div
+          role="alert"
+          className="mb-4 rounded-xl px-4 py-3 text-sm"
+          style={{ background: '#FAECE7', color: '#993C1D', border: '0.5px solid rgba(153,60,29,0.25)' }}
+        >
+          Could not change Apply access: {toggleError}
+        </div>
+      )}
+
       {/* Table */}
       <div className="bg-white rounded-xl shadow-card overflow-hidden" style={{ border: '0.5px solid rgba(23,52,4,0.08)' }}>
         <div className="overflow-x-auto">
@@ -160,13 +206,14 @@ export default function AdminUsersPage() {
                 <th className="px-4 py-3">Last seen</th>
                 <th className="px-3 py-3 text-center">Confirmed</th>
                 <th className="px-3 py-3 text-center">Onboarded</th>
+                <th className="px-3 py-3 text-center">Apply access</th>
                 <th className="px-3 py-3 text-right">Pipeline</th>
                 <th className="px-3 py-3 text-right">Saved</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-warm/40">
               {filtered.length === 0 ? (
-                <tr><td colSpan={9} className="px-4 py-12 text-center text-mid">No users match.</td></tr>
+                <tr><td colSpan={10} className="px-4 py-12 text-center text-mid">No users match.</td></tr>
               ) : filtered.map(u => {
                 const isAdmin = u.email === ADMIN_EMAIL
                 return (
@@ -194,6 +241,28 @@ export default function AdminUsersPage() {
                       {u.onboarding_complete
                         ? <span className="text-sage">✓</span>
                         : <span className="text-light text-xs">{u.org_id ? 'Partial' : 'No org'}</span>}
+                    </td>
+                    <td className="px-3 py-3 text-center" onClick={e => e.stopPropagation()}>
+                      {u.org_id ? (
+                        <button
+                          onClick={() => toggleApplyAccess(u, !u.apply_access)}
+                          disabled={savingOrg.has(u.org_id)}
+                          title={
+                            u.org_count > 1
+                              ? `This user owns ${u.org_count} orgs. This toggles the oldest, which is the one the app uses.`
+                              : 'Pipeline and builder access (organisations.apply_access)'
+                          }
+                          className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors disabled:opacity-50 ${
+                            u.apply_access
+                              ? 'bg-sage/15 text-sage hover:bg-sage/25'
+                              : 'border border-coral-deep/30 text-coral-deep hover:bg-coral-deep/10'
+                          }`}
+                        >
+                          {savingOrg.has(u.org_id) ? '…' : u.apply_access ? 'On' : 'Off'}
+                        </button>
+                      ) : (
+                        <span className="text-light text-xs">—</span>
+                      )}
                     </td>
                     <td className="px-3 py-3 text-right text-charcoal font-medium">{u.pipeline_count || <span className="text-light">—</span>}</td>
                     <td className="px-3 py-3 text-right text-charcoal font-medium">{u.saved_count || <span className="text-light">—</span>}</td>

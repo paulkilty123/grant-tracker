@@ -8,6 +8,7 @@ import { formatRange, formatNextOpen } from '@/lib/utils'
 import { SHOW_NEW_THIS_WEEK_BADGE, NEW_THIS_WEEK_DAYS } from '@/lib/ui-flags'
 import { createClient } from '@/lib/supabase/client'
 import { createPipelineItem, deletePipelineItem, updatePipelineStage } from '@/lib/pipeline'
+import { describePipelineWriteError, ENTITLEMENT_MESSAGE } from '@/lib/pipeline-errors'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { getOrganisationByOwner } from '@/lib/organisations'
 import { computeMatchScore, scoreColour, grantInGeoSelection, grantMatchesLocationText } from '@/lib/matching'
@@ -281,6 +282,8 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
   const isMobile = useIsMobile()
   const [insightsHover, setInsightsHover] = useState(false)
   const [removeHover, setRemoveHover]     = useState(false)
+  /** Apply-tier entitlement, which pipeline_items RLS requires. */
+  const cardApplyAccess = !!org?.apply_access
   // Capture layer — opportunity_viewed fires once when the user opens the
   // insights strip (the real "look at this opportunity in depth" action; the
   // grant detail page is not reachable from this flow).
@@ -680,11 +683,24 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                   </div>
                 )}
 
-                {/* Add to pipeline (neutral + saved) */}
+                {/* Add to pipeline (neutral + saved).
+                    Without apply_access the write is rejected by RLS, so this
+                    drops out of the lime primary-CTA treatment rather than
+                    promising something the database will refuse. It stays
+                    visible and clickable so the feature is still discoverable,
+                    and the click explains itself. */}
                 {state != 'pipeline' && (
                   <button
                     onClick={() => onAddToPipeline(grant)}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, borderRadius: 10, background: '#8ECB3C', color: '#173404', border: 'none', padding: '9px 14px', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-dm-sans)', whiteSpace: 'nowrap' }}
+                    title={cardApplyAccess ? undefined : 'Pipeline is part of the Apply plan'}
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+                      borderRadius: 10, padding: '9px 14px', fontSize: 13, fontWeight: 500,
+                      cursor: 'pointer', fontFamily: 'var(--font-dm-sans)', whiteSpace: 'nowrap',
+                      ...(cardApplyAccess
+                        ? { background: '#8ECB3C', color: '#173404', border: 'none' }
+                        : { background: '#fff', color: '#8A8986', border: '0.5px solid rgba(0,0,0,0.14)' }),
+                    }}
                   >
                     + Add to pipeline
                   </button>
@@ -1262,7 +1278,7 @@ export default function SearchPage() {
   const [aiLoading, setAiLoading]       = useState(false)
   const [aiError, setAiError]           = useState<string | null>(null)
   const [smartMatched, setSmartMatched] = useState(false)
-  const [toast, setToast]               = useState<string | null>(null)
+  const [toast, setToast]               = useState<{ msg: string; variant: 'success' | 'error' } | null>(null)
   const [org, setOrg]                   = useState<Organisation | null>(null)
   const [userId, setUserId]             = useState('')
   const [sortBy, setSortBy]             = useState<'match' | 'amount' | 'freshest' | 'deadline'>('match')
@@ -1472,9 +1488,25 @@ export default function SearchPage() {
     return () => { cancelled = true }
   }, [pinnedGrantId, scrapedGrants])
 
-  function showToast(msg: string) {
-    setToast(msg)
-    setTimeout(() => setToast(null), 3000)
+  /**
+   * Apply-tier entitlement. pipeline_items RLS requires it, so without it every
+   * pipeline write is rejected by Postgres with 42501 no matter what the
+   * interface offers. Check before acting rather than letting the user find out
+   * from a failed request.
+   */
+  const applyAccess = !!org?.apply_access
+
+  function guardApplyAccess(): boolean {
+    if (applyAccess) return true
+    showToast(ENTITLEMENT_MESSAGE, 'error')
+    return false
+  }
+
+  function showToast(msg: string, variant: 'success' | 'error' = 'success') {
+    setToast({ msg, variant })
+    // Failures need longer on screen: they usually carry an instruction, and an
+    // entitlement message is not something you can act on in three seconds.
+    setTimeout(() => setToast(null), variant === 'error' ? 6000 : 3000)
   }
 
   // Called by the "Save and remove" button (after reasons are captured), NOT by
@@ -1665,6 +1697,7 @@ export default function SearchPage() {
 
   async function handleAddToPipeline(grant: GrantOpportunity) {
     if (!org) { showToast('Complete your profile first to track grants'); return }
+    if (!guardApplyAccess()) return
     try {
       const added = await createPipelineItem({
         org_id:               org.id,
@@ -1702,8 +1735,8 @@ export default function SearchPage() {
         })
       }
       showToast('Added to your pipeline')
-    } catch {
-      showToast('Failed to add — please try again')
+    } catch (e) {
+      showToast(describePipelineWriteError(e, 'addToPipeline', 'Could not add that. Please try again.'), 'error')
     }
   }
 
@@ -1730,8 +1763,8 @@ export default function SearchPage() {
       }
       setPipelinedIds(prev => { const m = new Map(prev); m.delete(grant.title); return m })
       showToast('Removed from pipeline')
-    } catch {
-      showToast('Failed to remove — please try again')
+    } catch (e) {
+      showToast(describePipelineWriteError(e, 'removeFromPipeline', 'Could not remove that. Please try again.'), 'error')
     } finally {
       setRemoving(false)
       setRemoveTarget(null)
@@ -1749,6 +1782,7 @@ export default function SearchPage() {
     reasons?: { tags: string[]; freeText: string },
   ) {
     if (!org) { showToast('Complete your profile first to mark grants'); return }
+    if (!guardApplyAccess()) return
     try {
       const stage = outcome === 'pending' ? 'submitted' : outcome
       const notesText = reasons && (reasons.tags.length > 0 || reasons.freeText.trim().length > 0)
@@ -1790,8 +1824,8 @@ export default function SearchPage() {
         outcome === 'won'      ? 'Nice. Logged as a win.' :
         'Marked as already applied',
       )
-    } catch {
-      showToast('Failed to save — please try again')
+    } catch (e) {
+      showToast(describePipelineWriteError(e, 'markApplied'), 'error')
     }
   }
 
@@ -3512,8 +3546,20 @@ export default function SearchPage() {
       />
 
       {toast && (
-        <div className="fixed bottom-6 right-6 bg-charcoal text-white px-5 py-3.5 shadow-card-lg text-sm z-50">
-          ✓ {toast}
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-6 right-6 px-5 py-3.5 shadow-card-lg text-sm z-50 rounded-xl flex items-start gap-2.5 max-w-sm"
+          style={
+            toast.variant === 'error'
+              ? { background: '#FAECE7', color: '#993C1D', border: '0.5px solid rgba(153,60,29,0.25)' }
+              : { background: '#2C2C2A', color: '#fff' }
+          }
+        >
+          {toast.variant === 'error'
+            ? <AlertTriangle style={{ width: 16, height: 16, flexShrink: 0, marginTop: 1 }} />
+            : <CheckCircle2 style={{ width: 16, height: 16, flexShrink: 0, marginTop: 1 }} />}
+          <span>{toast.msg}</span>
         </div>
       )}
 

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { track } from '@/lib/analytics'
 import { createClient } from '@/lib/supabase/client'
 import { createPipelineItem } from '@/lib/pipeline'
+import { describePipelineWriteError } from '@/lib/pipeline-errors'
 import { getOrganisationByOwner } from '@/lib/organisations'
 import { emitClientEvent } from '@/lib/events/client'
 import type { FunderType } from '@/types'
@@ -34,6 +35,7 @@ const VALID_FUNDER_TYPES: FunderType[] = [
 
 export default function AddToPipelineButton({ grant, opportunityUuid }: Props) {
   const [state, setState] = useState<'idle' | 'loading' | 'done' | 'error' | 'noorg'>('idle')
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   async function handleClick() {
     setState('loading')
@@ -75,7 +77,8 @@ export default function AddToPipelineButton({ grant, opportunityUuid }: Props) {
         pipeline_item_id: added.id,
       })
       setState('done')
-    } catch {
+    } catch (e) {
+      setErrorMsg(describePipelineWriteError(e, 'grantDetailAddToPipeline'))
       setState('error')
     }
   }
@@ -96,12 +99,25 @@ export default function AddToPipelineButton({ grant, opportunityUuid }: Props) {
   }
 
   return (
-    <button
-      onClick={handleClick}
-      disabled={state === 'loading'}
-      className="btn-gold disabled:opacity-60"
-    >
-      {state === 'loading' ? 'Adding…' : state === 'error' ? 'Retry — Add to Pipeline' : '+ Add to Pipeline'}
-    </button>
+    <div>
+      <button
+        onClick={handleClick}
+        disabled={state === 'loading'}
+        className="btn-gold disabled:opacity-60"
+      >
+        {state === 'loading' ? 'Adding…' : state === 'error' ? 'Try again' : '+ Add to Pipeline'}
+      </button>
+      {/* Say why. The old version offered a Retry that could never succeed,
+          because the usual cause is an entitlement rejection, not a blip. */}
+      {state === 'error' && errorMsg && (
+        <p
+          role="alert"
+          className="mt-2 text-xs rounded-lg px-3 py-2"
+          style={{ background: '#FAECE7', color: '#993C1D', border: '0.5px solid rgba(153,60,29,0.25)' }}
+        >
+          {errorMsg}
+        </p>
+      )}
+    </div>
   )
 }
