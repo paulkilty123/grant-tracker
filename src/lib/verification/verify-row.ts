@@ -66,6 +66,7 @@ export type Proposal = {
 
 export type Outcome =
   | 'verified'          // gate passed, facts extracted
+  | 'round_closed'      // page states a deadline that has already passed
   | 'fixable_link'      // gate failed — surface to the admin as a link to fix
   | 'no_longer_listed'  // page says the fund is gone
   | 'not_a_grant'       // the thing described is not funding
@@ -81,6 +82,8 @@ export type VerifyResult = {
   confirmed: string[]        // page agrees with what we hold — stamp as checked
   notFound:  string[]        // page does not address it — leave null
   notes:     string[]
+  /** Set on round_closed: the passed date the page states, and its quote. */
+  closedRound?: { deadline: string; quote: string }
   usage?:    { input: number; output: number }
 }
 
@@ -395,8 +398,9 @@ async function runModel(
   const deadlineFact = fact('deadline')
   const extractedDeadline = asDate(deadlineFact.value)
   const todayISO = new Date().toISOString().slice(0, 10)
+  let closedRound: { deadline: string; quote: string } | undefined
   if (extractedDeadline && deadlineFact.quote && extractedDeadline < todayISO) {
-    notes.push(`round appears closed: the page states a deadline of ${extractedDeadline}, which has passed — "${deadlineFact.quote}"`)
+    closedRound = { deadline: extractedDeadline, quote: deadlineFact.quote }
     notFound.push('deadline')
   } else {
     consider('deadline', deadlineFact, row.deadline, asDate)
@@ -405,5 +409,9 @@ async function runModel(
   consider('max_org_income', fact('max_org_income'), row.max_org_income, asMoney)
   consider('is_invite_only', fact('is_invite_only'), row.is_invite_only, asBool)
 
-  return { ...base, usage, gate, outcome: 'verified', proposals, confirmed, notFound, notes }
+  return {
+    ...base, usage, gate,
+    outcome: closedRound ? 'round_closed' : 'verified',
+    proposals, confirmed, notFound, notes, closedRound,
+  }
 }
