@@ -196,6 +196,22 @@ export function GrantDetail({ row, reasons, diffs }: {
             <Field k="Where"       p={prov.location_tag}>{str(row.location_tag) ?? 'not recorded'}</Field>
             <Field k="Funding type" p={prov.funding_type}>{str(row.funding_type) ?? 'not recorded'}</Field>
             <Field k="Link status">{str(row.url_status) ?? 'unchecked'}</Field>
+            {/* Both of these were already stored and already used — invite-only
+                drives a badge and a filter on Find Funding, and the income
+                limits are a hard eligibility gate that caps the match score at
+                30. Neither was shown here, so the one screen meant to say what
+                is recorded was silent about the two fields users complain about
+                most. */}
+            <Field k="Invite only" p={prov.is_invite_only}>
+              {row.is_invite_only === true
+                ? <span style={{ color: 'var(--coral-deep)' }}>yes, applications not accepted</span>
+                : row.is_invite_only === false ? 'no' : 'not recorded'}
+            </Field>
+            <Field k="Income limits" p={prov.max_org_income ?? prov.min_org_income}>
+              {row.min_org_income == null && row.max_org_income == null
+                ? 'none recorded'
+                : `${row.min_org_income == null ? 'no floor' : gbp(row.min_org_income)} to ${row.max_org_income == null ? 'no cap' : gbp(row.max_org_income)}`}
+            </Field>
           </Grid>
         </Section>
 
