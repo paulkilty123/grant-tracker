@@ -32,16 +32,41 @@ import {
 import { recordRun } from '@/lib/admin/cron-runs'
 
 export const dynamic     = 'force-dynamic'
-export const maxDuration = 270
+export const maxDuration = 300
 
 /**
- * How many queries one run attempts.
+ * How many queries one run attempts, when no slice is named.
  *
- * Each is a live search taking roughly 30-60s, so the cap is a time budget, not
+ * Each is a live search taking tens of seconds, so the cap is a time budget, not
  * a preference. It is reported in the response — a sweep that stopped early
  * must never read as a sweep that finished.
  */
 const MAX_QUERIES = 5
+
+/**
+ * WHY THIS ROUTE IS SLICED.
+ *
+ * The unsliced queue is over-subscribed and always was: two targeted queries at
+ * ~34s plus one general query at ~246s is 314s against a function cap that has
+ * never been higher than 300s. The look-ahead budget check did its job and
+ * skipped the general queries, correctly, on every single run.
+ *
+ * The effect was that the three rotated general queries were skipped 100% of the
+ * time, permanently, and nobody noticed because `stoppedEarly: true` was the
+ * normal state. Those three cover social investment, blended finance and CDFI
+ * lending, so the one part of the catalogue with the thinnest coverage (29 live
+ * investment rows, 5 added in 90 days) was fed by a code path that had never
+ * executed.
+ *
+ * Arithmetic could not fix it: 246s is measured, not padding. One general query
+ * needs a whole invocation. So the work is split and each slice is scheduled
+ * separately, the same shape crawl-grants already uses with `?batch=`.
+ *
+ *   targeted — the blocked funders, ~68s for both
+ *   general  — exactly ONE rotated thematic query, ~246s
+ *   (none)   — every query, budget-limited. Manual use and backwards compatible.
+ */
+type Slice = 'targeted' | 'general' | 'all'
 
 /**
  * Measured wall-clock per query, used to decide what still fits.
@@ -55,10 +80,17 @@ const MAX_QUERIES = 5
  * killed mid-write. The old check only looked at ELAPSED time, so it happily
  * started a 246s query at the 68s mark.
  */
-const EST_MS = { targeted: 60_000, general: 260_000 }
+const EST_MS = { targeted: 60_000, general: 255_000 }
 
-/** Stop launching with enough headroom to return a clean summary under the 270s cap. */
-const BUDGET_MS = 235_000
+/**
+ * Stop launching with enough headroom to return a clean summary under the cap.
+ *
+ * 270s against a 300s maxDuration, so a single general query (est 255s, hard
+ * aborted at 250s by the fetch signal) fits in its own invocation with 30s left
+ * to write the summary. The previous 235s could not admit a general query even
+ * at elapsed zero, which is why they never ran.
+ */
+const BUDGET_MS = 270_000
 
 type QuerySpec = { query: string; fundingType: DiscoveryFundingType; domains?: string[] }
 
@@ -71,7 +103,7 @@ type QuerySpec = { query: string; fundingType: DiscoveryFundingType; domains?: s
  * set rather than re-running the same first five forever — the mistake the
  * watchlist checker made, where 51% of entries had never been checked once.
  */
-function buildQueue(dayOfYear: number): QuerySpec[] {
+function buildQueue(dayOfYear: number, slice: Slice): QuerySpec[] {
   // `domains` selects the TARGETED prompt for a single named funder. It is not
   // a hard search filter — see the note in discover-grants where allowed_domains
   // was removed.
@@ -83,8 +115,17 @@ function buildQueue(dayOfYear: number): QuerySpec[] {
   for (const type of Object.keys(DEFAULT_QUERIES) as DiscoveryFundingType[]) {
     for (const query of DEFAULT_QUERIES[type]) general.push({ query, fundingType: type })
   }
-  const offset = general.length ? (dayOfYear * MAX_QUERIES) % general.length : 0
+
+  if (slice === 'targeted') return blocked
+
+  // Step by 1, not by MAX_QUERIES. The general slice now takes one query per
+  // run, so a daily cron walks the whole set in `general.length` days and
+  // repeats. Stepping by 5 while consuming 1 would silently skip four in five
+  // queries forever, which is the same class of bug this split exists to fix.
+  const offset  = general.length ? dayOfYear % general.length : 0
   const rotated = [...general.slice(offset), ...general.slice(0, offset)]
+
+  if (slice === 'general') return rotated.slice(0, 1)
 
   return [...blocked, ...rotated].slice(0, MAX_QUERIES)
 }
@@ -99,11 +140,17 @@ export async function GET(req: NextRequest) {
 
   let httpStatus = 200
   const payload = await recordRun('discover-sweep', async () => {
-    // Same arming rule as the publish gate, and for the same reason: the query
-    // string is the discriminator between a manual run and a scheduled one,
-    // because ADMIN_SECRET and CRON_SECRET currently hold the same value and
-    // `isCron` therefore cannot tell them apart. A fixed, parameterless cron URL
-    // can never send ?run=true.
+    // Same arming rule as the publish gate: the query string is the
+    // discriminator between a manual run and a scheduled one, because a fixed
+    // cron URL can never send ?run=true.
+    //
+    // It used to be that `isCron` COULD NOT tell a cron from an admin, because
+    // ADMIN_SECRET and CRON_SECRET held the same value. They were rotated apart
+    // on 2026-08-11, so that is no longer true and `isCron` is now a real
+    // discriminator. The query-string rule is kept anyway: it is explicit at the
+    // call site, it survives the two secrets being set equal again by accident,
+    // and every scheduled entry in vercel.json now carries a ?slice= param, so
+    // the parameterless form is unambiguously a human.
     const wantsRun = req.nextUrl.searchParams.get('run') === 'true'
     const armed    = process.env.DISCOVER_SWEEP_ENABLED === 'true'
     if (!wantsRun && !armed) {
@@ -134,7 +181,12 @@ export async function GET(req: NextRequest) {
 
     const start = Date.now()
     const dayOfYear = Math.floor((Date.now() - Date.UTC(new Date().getUTCFullYear(), 0, 0)) / 86_400_000)
-    const queue = buildQueue(dayOfYear)
+
+    const rawSlice = req.nextUrl.searchParams.get('slice')
+    const slice: Slice =
+      rawSlice === 'targeted' || rawSlice === 'general' ? rawSlice : 'all'
+
+    const queue = buildQueue(dayOfYear, slice)
 
     const results: Array<Record<string, unknown>> = []
     let queued = 0, failed = 0, ran = 0
@@ -184,6 +236,7 @@ export async function GET(req: NextRequest) {
     return {
       success: true,
       armed,
+      slice,
       queriesPlanned: queue.length,
       queriesRun: ran,
       // Never let a truncated sweep read as a complete one. `skipped` names each

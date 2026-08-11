@@ -1,7 +1,12 @@
 // Vercel Cron handler — called daily at 07:00
 // Checks for grants whose next_open_date_parsed has arrived (i.e. the grant
-// should now be open). Clears the "Opens …" badge and moves the grant into
-// "Needs Review" so an admin can re-populate it with the actual deadline.
+// should now be open). Clears the "Opens …" badge and routes the grant into the
+// review queue so its real deadline can be re-established.
+//
+// 2026-08-11: it no longer deactivates the row. Hiding a fund on the day it
+// reopens is backwards, and it made a reopening look identical to a fresh
+// scrape. Visibility is now left untouched and only pipeline_state moves. See
+// the long note at the write site.
 //
 // 2026-07-25: this used to be a single bulk `.update()` that bypassed
 // mergeGrantUpdate. Two bugs followed from that:
@@ -17,10 +22,11 @@
 //   2. It nulled next_open_date, which is a TRACKED field, outside the trust
 //      ladder — silently clobbering admin-pinned values.
 //
-// Both are fixed by routing through mergeGrantUpdate. No new behaviour is
-// invented: transitionPipelineState already maps
-// `is_active=false` + current='published' → 'captured', and 'captured' is in
-// the Needs Review predicate. The intent of the original comment now holds.
+// Both were fixed by routing through mergeGrantUpdate. The computed transition
+// that fix relied on (`is_active=false` + current='published' → 'captured') is
+// no longer used here, because is_active is no longer written: the row is sent
+// to 'tagged_awaiting_review' explicitly instead. Bug 2 stays fixed, since
+// next_open_date still goes through the trust ladder.
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
@@ -69,13 +75,13 @@ export async function GET(req: NextRequest) {
       return { ok: true, processed: 0, message: 'No grants due' }
     }
 
-    // Clear the "Opens …" badge and move to Needs Review, one row at a time so
-    // each write goes through the trust ladder and the state machine.
+    // Clear the "Opens …" badge and route to review, one row at a time so each
+    // write goes through the trust ladder and the state machine.
     //
     // next_open_date is tracked (trust-checked); next_open_date_parsed and
-    // is_active are untracked and pass straight through. If the tracked write is
-    // rejected because an admin pinned next_open_date, we leave the parsed
-    // column alone too — nulling only half the pair would leave the row
+    // pipeline_state are untracked and pass straight through. If the tracked
+    // write is rejected because an admin pinned next_open_date, we leave the
+    // parsed column alone too — nulling only half the pair would leave the row
     // internally inconsistent (badge text present, parsed date gone).
     const processed: string[] = []
     const skippedPinned: string[] = []
@@ -97,11 +103,36 @@ export async function GET(req: NextRequest) {
           continue
         }
 
-        // Now the untracked half + the state transition
-        // (published → captured, i.e. into the Needs Review queue).
+        // Now the untracked half, plus an explicit route into the review queue.
+        //
+        // THIS USED TO SET is_active:false, WHICH HID THE FUND ON THE DAY IT
+        // REOPENED. The reopen date arriving is the single most positive event
+        // in a grant's life, and the response to it was to remove the row from
+        // every user-facing surface until a human noticed and republished it.
+        // The row also landed in `captured`, which is where genuinely new
+        // arrivals go, so a reopening was indistinguishable from a fresh scrape.
+        //
+        // What the date arriving actually means is "our information is now out
+        // of date, in a specific and checkable way". That is a review trigger,
+        // not a retraction, so visibility is left exactly as it was and the row
+        // is routed to tagged_awaiting_review:
+        //
+        //   already live      → stays live, and the gate treats a blocking
+        //                       reason as `attention` rather than pulling it
+        //   between rounds    → stays hidden, but is now IN the gate's queue,
+        //                       so a clean row publishes itself at 09:00
+        //
+        // Passing pipeline_state explicitly overrides the computed transition
+        // (see transitionPipelineState), which is what keeps is_active out of it.
+        //
+        // Until the verification engine has a home this is a re-read request
+        // aimed at a human or at auto-publish. Once it does, this is the event
+        // that should enqueue a verify: the page either says the round is open,
+        // in which case publish, or it names a new date, in which case push the
+        // reopen date out and go back to waiting.
         await mergeGrantUpdate({
           id:     g.id,
-          fields: { next_open_date_parsed: null, is_active: false },
+          fields: { next_open_date_parsed: null, pipeline_state: 'tagged_awaiting_review' },
           source: PROVENANCE_SOURCE,
           db,
         })

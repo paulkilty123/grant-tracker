@@ -186,11 +186,28 @@ export async function GET(req: NextRequest) {
         }
       }
 
-      // No clean roll possible — mark as "between rounds" instead of deactivating.
-      // Keep is_active=true so the row stays in the catalogue (end users see a
-      // 'Closed — next round TBC' placeholder rather than the row vanishing) and
-      // stays OUT of the admin Needs Review queue (which is reserved for genuinely
-      // new arrivals). Admins review these via a dedicated "Between rounds" tab.
+      // No clean roll possible. What happens next turns on whether we know when
+      // it reopens, because those are two different things to tell a user.
+      //
+      //   KNOWN reopen date  → stay visible. "Opens 1 September" is useful, and
+      //                        check-coming-soon will pick the row up on the day.
+      //   NO reopen date     → hide. The row previously stayed live carrying a
+      //                        'Closed — next round TBC' placeholder, on the
+      //                        reasoning that vanishing was worse than a
+      //                        placeholder. That reasoning does not survive
+      //                        contact with the surfaces: every user-facing
+      //                        query accepts a null deadline, so the row sat in
+      //                        results indistinguishable from an open fund, and
+      //                        the placeholder only appeared once a user opened
+      //                        the detail page. A closed round with no known
+      //                        return is not a lead, and showing it spends the
+      //                        user's attention on an application they cannot
+      //                        make.
+      //
+      // is_active:false with next_open_date set transitions the row to
+      // between_rounds_scheduled (see transitionPipelineState), which is the
+      // state that exists for exactly this and which the admin "Between rounds"
+      // tab reads. It does NOT go to Needs Review.
       const existingNextOpen = (g.next_open_date as string | null) ?? null
       try {
         const r = await mergeGrantUpdate({
@@ -198,6 +215,7 @@ export async function GET(req: NextRequest) {
           fields: {
             deadline:       null,
             next_open_date: existingNextOpen ?? 'Closed — next round TBC',
+            ...(existingNextOpen ? {} : { is_active: false }),
           },
           source: PROVENANCE_SOURCE,
           pinned: false,

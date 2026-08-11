@@ -603,8 +603,11 @@ NOTE: _deadline_cycle and its _citations entry are ONLY present when a recurring
   // Scan brief text fields for past-dated phrases in stale contexts (e.g.
   // "expected December 2025", "next round opens autumn 2025"). Flag the
   // brief with _stale_dates and lower citation confidence on affected fields.
-  // The downstream check-stale-rounds cron can pick this up, and admin
-  // review UI surfaces it via the citation confidence.
+  //
+  // Consumed by the `stale_dates` review reason and by the admin review UI via
+  // citation confidence. It used to say check-stale-rounds picked this up; that
+  // cron was deleted on 2026-08-11 having written to zero rows in its entire
+  // existence, and it never read _stale_dates anyway.
   const today = new Date()
   const staleFields: Array<{ field: string; phrase: string; matched_date: string }> = []
   const SCAN_FIELDS = ['decision_timeline', 'how_to_apply', 'typical_award', 'open_status', 'priorities', 'who_can_apply'] as const
