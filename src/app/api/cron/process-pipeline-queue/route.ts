@@ -174,14 +174,35 @@ export async function GET(req: NextRequest) {
   const payload = await recordRun('process-pipeline-queue', async () => {
     const db = adminClient()
 
-    // Fetch captured rows that haven't been quarantined yet.
-    // pipeline_state='captured' AND needs_intervention_reason IS NULL.
+    // Fetch captured rows that haven't been quarantined yet, newest arrival
+    // first.
+    //
+    // next_open_date IS NULL excludes funds we have verified as closed until a
+    // future date. The state guard alone is not enough: de-publishing a row
+    // used to send it back to 'captured' (fixed in transitionPipelineState, but
+    // any other write path could do it again), and a closed fund is not a
+    // candidate for enrichment under ANY state — there is nothing new to learn
+    // and no user who can see the result. Structural, not a one-off drain.
+    //
+    // Ordering is newest-arrival-first, not oldest-stale-first. last_seen_at
+    // ascending was a backfill order: it prioritised whatever the scraper had
+    // seen least recently, which is a staleness signal, not an arrival one, and
+    // it meant every genuinely new fund queued behind the entire historical
+    // backlog. At ~6 rows/day that was a week's wait before a new opportunity
+    // could appear in "X new since your last login" — the one place where
+    // enrichment latency is visible to users. Freshness of stale rows is
+    // reenrich-stale's job; this queue exists to process arrivals.
+    //
+    // Starvation caveat: sustained arrivals above throughput would hold the tail
+    // back indefinitely. Acceptable while the real backlog is 4 rows, and the
+    // proper fix is cadence (see the throughput history above), not ordering.
     const { data: queued, error: fetchErr } = await db
       .from('scraped_grants')
       .select('id')
       .eq('pipeline_state', 'captured')
       .is('needs_intervention_reason', null)
-      .order('last_seen_at', { ascending: true, nullsFirst: true })
+      .is('next_open_date', null)
+      .order('first_seen_at', { ascending: false, nullsFirst: false })
       .limit(BATCH_LIMIT)
 
     if (fetchErr) {
