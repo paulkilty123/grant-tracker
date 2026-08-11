@@ -163,4 +163,9 @@ export type TriageFlag = {
   grant:               TriageGrant | null
   unresolved:          'not_found' | 'ambiguous' | null
   pins:                FieldPin[]
+  /** Populated once triaged, so a decision can be read back. */
+  reviewer_note?:      string | null
+  reviewed_at?:        string | null
+  resolution?:         Resolution | null
+  triage_class?:       TriageClass | null
 }

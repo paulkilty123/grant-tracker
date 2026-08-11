@@ -48,21 +48,28 @@ export async function GET(req: NextRequest) {
   // users can still see. 'all' includes tag-only flags, which say a grant was
   // wrong for someone without saying what is wrong with the row.
   const scope = req.nextUrl.searchParams.get('scope') === 'all' ? 'all' : 'rich'
+  // A decision you cannot read back is barely a decision. Triaged flags leave
+  // the working queue but stay reachable here, otherwise the note an admin
+  // wrote is only recoverable by hand-writing SQL.
+  const state = req.nextUrl.searchParams.get('state') === 'triaged' ? 'triaged' : 'untriaged'
   const db = getAdminDb()
 
-  const { data: flagRows, error: flagErr } = await db
+  let query = db
     .from('match_feedback')
-    .select('id, user_id, grant_id, direction, reasons, free_text, match_score_at_time, created_at, reviewer_note')
+    .select('id, user_id, grant_id, direction, reasons, free_text, match_score_at_time, created_at, reviewer_note, reviewed_at, resolution, triage_class')
     .eq('direction', 'down')
-    .is('reviewed_at', null)
-    .order('created_at', { ascending: false })
+    .order(state === 'triaged' ? 'reviewed_at' : 'created_at', { ascending: false })
     .limit(500)
+  query = state === 'triaged' ? query.not('reviewed_at', 'is', null) : query.is('reviewed_at', null)
+  const { data: flagRows, error: flagErr } = await query
 
   if (flagErr) return NextResponse.json({ error: flagErr.message }, { status: 500 })
   const flags = (flagRows ?? []) as Array<{
     id: string; user_id: string; grant_id: string; direction: 'up' | 'down'
     reasons: string[] | null; free_text: string | null
     match_score_at_time: number; created_at: string
+    reviewer_note: string | null; reviewed_at: string | null
+    resolution: string | null; triage_class: string | null
   }>
 
   if (flags.length === 0) return NextResponse.json({ flags: [], counts: { total: 0, rich: 0 } })
@@ -101,6 +108,10 @@ export async function GET(req: NextRequest) {
       free_text: f.free_text,
       match_score_at_time: f.match_score_at_time,
       org_name: orgByOwner.get(f.user_id) ?? null,
+      reviewer_note: f.reviewer_note,
+      reviewed_at: f.reviewed_at,
+      resolution: f.resolution as TriageFlag['resolution'],
+      triage_class: f.triage_class as TriageFlag['triage_class'],
       grant: row ? (pickGrant(row) as TriageGrant) : null,
       unresolved: resolved.ok ? null : resolved.reason,
       pins: row ? pinsOnCorrectableFields(row.field_provenance as never) : [],
@@ -111,8 +122,9 @@ export async function GET(req: NextRequest) {
     f.free_text != null && f.free_text.trim().length > 2 && f.grant?.is_active === true)
 
   return NextResponse.json({
-    flags: scope === 'all' ? out : rich,
+    flags: state === 'triaged' ? out : (scope === 'all' ? out : rich),
     counts: { total: out.length, rich: rich.length },
+    state,
   })
 }
 

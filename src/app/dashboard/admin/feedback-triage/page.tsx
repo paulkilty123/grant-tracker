@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo, useCallback } from 'react'
 import {
   TRIAGE_CLASSES, TRIAGE_CLASS_LABEL, TRIAGE_CLASS_HELP, CORRECTABLE_FIELDS, noteRequiredFor,
+  type TriageClass as TC,
   type TriageClass, type TriageFlag, type FieldPin,
 } from '@/lib/feedback/triage'
 
@@ -41,6 +42,9 @@ export default function FeedbackTriagePage() {
   const [flags, setFlags]     = useState<TriageFlag[]>([])
   const [counts, setCounts]   = useState<{ total: number; rich: number }>({ total: 0, rich: 0 })
   const [scope, setScope]     = useState<'rich' | 'all'>('rich')
+  // Triaged flags leave the working queue but must stay readable — a decision
+  // you cannot look up again is barely recorded.
+  const [state, setState]     = useState<'untriaged' | 'triaged'>('untriaged')
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState<string | null>(null)
   const [syncing, setSyncing] = useState(false)
@@ -49,7 +53,7 @@ export default function FeedbackTriagePage() {
   const load = useCallback(async () => {
     setLoading(true); setError(null)
     try {
-      const res = await fetch(`/api/admin/feedback-triage?scope=${scope}`)
+      const res = await fetch(`/api/admin/feedback-triage?scope=${scope}&state=${state}`)
       if (res.status === 401) { setError('Admin only.'); setLoading(false); return }
       const data = await res.json()
       if (data.error) { setError(data.error); setLoading(false); return }
@@ -59,7 +63,7 @@ export default function FeedbackTriagePage() {
       setError(e instanceof Error ? e.message : 'Load failed')
     }
     setLoading(false)
-  }, [scope])
+  }, [scope, state])
 
   useEffect(() => { load() }, [load])
 
@@ -91,7 +95,7 @@ export default function FeedbackTriagePage() {
       </div>
 
       <div className="mb-5 flex flex-wrap items-center gap-2">
-        {([
+        {state === 'untriaged' && ([
           { key: 'rich', label: `With a stated reason (${counts.rich})` },
           { key: 'all',  label: `All untriaged (${counts.total})` },
         ] as const).map(t => (
@@ -105,6 +109,14 @@ export default function FeedbackTriagePage() {
             {t.label}
           </button>
         ))}
+        <button
+          onClick={() => setState(s => (s === 'triaged' ? 'untriaged' : 'triaged'))}
+          className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+            state === 'triaged' ? 'bg-forest text-white' : 'border border-warm bg-white text-mid hover:text-charcoal'
+          }`}
+        >
+          {state === 'triaged' ? `Triaged (${counts.total})` : 'Triaged'}
+        </button>
         <div className="flex-1" />
         <button
           onClick={runSync}
@@ -119,12 +131,80 @@ export default function FeedbackTriagePage() {
 
       {flags.length === 0 ? (
         <div className="rounded-xl bg-white p-12 text-center text-sm text-mid" style={{ border: '0.5px solid rgba(23,52,4,0.08)' }}>
-          Nothing left to triage.
+          {state === 'triaged' ? 'Nothing triaged yet.' : 'Nothing left to triage.'}
         </div>
       ) : (
         <div className="space-y-5">
-          {flags.map(f => <FlagCard key={f.id} flag={f} onDone={load} />)}
+          {flags.map(f => f.reviewed_at
+            ? <TriagedCard key={f.id} flag={f} />
+            : <FlagCard key={f.id} flag={f} onDone={load} />)}
         </div>
+      )}
+    </div>
+  )
+}
+
+// ── A decision already made ──────────────────────────────────────────────────
+
+const RESOLUTION_LABEL: Record<string, string> = {
+  applied:    'correction applied',
+  rejected:   'closed with no change',
+  superseded: 'covered by another flag',
+}
+
+/**
+ * Read-only view of a triaged flag.
+ *
+ * Exists because the write path shipped without a read path: three notes were
+ * written and none could be read back outside SQL. For match_precision and
+ * taxonomy_gap the note IS the whole output, so a decision with no way to
+ * revisit it records nothing anyone can use.
+ */
+function TriagedCard({ flag }: { flag: TriageFlag }) {
+  const grant = flag.grant
+  const cls = flag.triage_class as TC | null | undefined
+  return (
+    <div className="rounded-xl bg-white p-5" style={{ border: '0.5px solid rgba(23,52,4,0.08)' }}>
+      <div className="flex items-start justify-between gap-4 mb-3">
+        <div className="min-w-0">
+          <p className="font-semibold text-charcoal" style={{ fontFamily: UI }}>
+            {grant?.title ?? <span className="text-coral-deep">Unresolved grant</span>}
+          </p>
+          <p className="text-xs text-mid">{grant?.funder}</p>
+        </div>
+        <div className="text-right flex-shrink-0">
+          {cls && (
+            <span className="rounded-full px-2.5 py-1 text-[11px] font-semibold"
+                  style={{ background: '#EAF3DE', color: '#3B6D11', fontFamily: UI }}>
+              {TRIAGE_CLASS_LABEL[cls]}
+            </span>
+          )}
+          <p className="text-[11px] text-light mt-1">
+            {flag.reviewed_at?.slice(0, 10)}
+            {flag.resolution ? ` · ${RESOLUTION_LABEL[flag.resolution] ?? flag.resolution}` : ''}
+          </p>
+        </div>
+      </div>
+
+      <div className="rounded-lg px-4 py-3 mb-3" style={{ background: '#F5F1E8' }}>
+        {flag.free_text
+          ? <p className="text-sm text-charcoal">&ldquo;{flag.free_text}&rdquo;</p>
+          : <p className="text-sm text-mid italic">No comment left.</p>}
+        <p className="text-[11px] text-mid mt-1.5">{flag.org_name ?? 'unknown org'} · scored {flag.match_score_at_time}</p>
+      </div>
+
+      {flag.reviewer_note && (
+        <div className="rounded-lg px-4 py-3" style={{ background: '#FAFAF7', border: '0.5px solid rgba(23,52,4,0.08)' }}>
+          <p className="text-[11px] font-semibold text-mid mb-1" style={{ fontFamily: UI }}>Your note</p>
+          <p className="text-sm text-charcoal whitespace-pre-wrap">{flag.reviewer_note}</p>
+        </div>
+      )}
+
+      {grant && (
+        <a href={`/dashboard/admin/grants/${grant.id}`}
+           className="inline-block mt-3 text-xs text-sage underline">
+          Open the catalogue record →
+        </a>
       )}
     </div>
   )
