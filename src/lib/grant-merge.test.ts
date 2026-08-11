@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import { mergeFieldUpdate, trustOf, type ProvenanceEntry } from './grant-merge'
+import {
+  mergeFieldUpdate,
+  trustOf,
+  transitionPipelineState,
+  type ProvenanceEntry,
+} from './grant-merge'
 
 /**
  * The `user_verified` tier (70) exists so a correction a fundraiser reported and
@@ -89,5 +94,74 @@ describe('user_verified trust tier', () => {
   it('is a no-op when the accepted value already matches', () => {
     const decision = mergeFieldUpdate(VERIFIED_CAP, prov('ai_enrich:v3'), VERIFIED_CAP, userVerified)
     expect(decision).toEqual({ write: false, reason: 'idempotent' })
+  })
+})
+
+/**
+ * De-publishing a round-closed fund.
+ *
+ * On 2026-08-11, hiding 44 verified round-closed funds sent every one of them
+ * back to `pipeline_state = 'captured'` — the same state a brand-new scrape
+ * lands in. process-pipeline-queue selects on exactly that state, so closed
+ * funds entered the enrichment queue and outnumbered genuinely new arrivals
+ * 37 to 4, each one costing a model call to re-describe a row no user can see.
+ *
+ * The bug was invisible from either end: the admin Between rounds tab keys on
+ * next_open_date, not state, so the rows looked correctly filed there, and the
+ * queue reported healthy runs while enriching the wrong rows.
+ */
+describe('transitionPipelineState — de-publish', () => {
+  const base = { current: 'published' as const, source: 'user_verified:round-closed-2026-08-11' }
+
+  it('sends a round-closed row with a reopen date to between_rounds_scheduled', () => {
+    expect(transitionPipelineState({
+      ...base,
+      fields: { is_active: false, deadline: null, next_open_date: 'Autumn 2026' },
+    })).toBe('between_rounds_scheduled')
+  })
+
+  it('still sends a plain de-publish to captured', () => {
+    // No reopen date recorded — we do not know it is between rounds, so the
+    // conservative existing behaviour must be preserved.
+    expect(transitionPipelineState({
+      ...base,
+      fields: { is_active: false },
+    })).toBe('captured')
+  })
+
+  it('does not treat an empty reopen date as scheduled', () => {
+    // A cleared form field arrives as '' rather than null; truthiness must not
+    // promote that to a scheduled reopen.
+    expect(transitionPipelineState({
+      ...base,
+      fields: { is_active: false, next_open_date: '' },
+    })).toBe('captured')
+  })
+
+  it('lets a dead URL archive the row even with a reopen date present', () => {
+    // Precedence: archive is checked first and must stay first. A dead link is
+    // a stronger statement than a hoped-for reopen.
+    expect(transitionPipelineState({
+      ...base,
+      fields: { is_active: false, url_status: 'dead', next_open_date: 'Autumn 2026' },
+    })).toBe('archived')
+  })
+
+  it('republishes when the round reopens', () => {
+    expect(transitionPipelineState({
+      current: 'between_rounds_scheduled',
+      source:  'admin:reopen',
+      fields:  { is_active: true, next_open_date: 'Autumn 2026' },
+    })).toBe('published')
+  })
+
+  it('leaves state alone when a write merely mentions next_open_date', () => {
+    // Recording a reopen date on a row that is not being de-published is not a
+    // state transition.
+    expect(transitionPipelineState({
+      current: 'published',
+      source:  'admin:note',
+      fields:  { next_open_date: 'Autumn 2026' },
+    })).toBe('published')
   })
 })

@@ -538,6 +538,14 @@ export function transitionPipelineState({ current, source, fields, anyTrackedWri
 
   // Admin de-publish without archive: is_active=false but URL not dead.
   if (fields.is_active === false && current === 'published') {
+    // A row hidden because its round closed, with a reopen date recorded in the
+    // same write, is between rounds — not a fresh capture. Returning it to
+    // 'captured' is what put 40 verified-closed funds into the enrichment
+    // queue on 2026-08-11, where they outnumbered genuinely new arrivals 37 to
+    // 4. 'captured' means "newly scraped, never processed"; a fund we have
+    // already published and then verified as closed is neither, and paying a
+    // model to re-describe it is spend on a row no user can see.
+    if (fields.next_open_date) return 'between_rounds_scheduled'
     return 'captured'  // conservative — re-publishing always requires explicit approval
   }
 
