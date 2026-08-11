@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { retiredOriginTarget } from '@/lib/mcp-retired-origin'
+import { landingCutoverTarget } from '@/lib/landing-cutover'
 
 export async function middleware(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl
@@ -66,6 +67,20 @@ export async function middleware(request: NextRequest) {
 
   // Refresh session — keeps the user logged in
   const { data: { user } } = await supabase.auth.getUser()
+
+  // Shoots landing page → the site root, once the cutover env is set. Inert
+  // until LANDING_CUTOVER is set at the flip. Runs after the session lookup
+  // because it deliberately does not apply to a signed-in user, and before the
+  // login redirect below because the rewritten path is not a public page and
+  // would otherwise bounce a logged-out visitor to /auth/login.
+  const landingTarget = landingCutoverTarget(pathname, Boolean(user))
+  if (landingTarget) {
+    const url = request.nextUrl.clone()
+    url.pathname = landingTarget
+    // Rewrite, not redirect: the visitor stays on `/` and the URL never shows
+    // the internal document path.
+    return NextResponse.rewrite(url)
+  }
 
   const isAuthPage = pathname.startsWith('/auth')
   const isPublicPage =
