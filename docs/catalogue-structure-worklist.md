@@ -23,25 +23,29 @@ no single answer to give. This list tracks those rows to resolution.
 
 ## Re-point
 
-### The Bromley Trust — 2 rows *(added 2026-08-11)*
+### The Bromley Trust — 3 rows *(done 2026-08-11)*
 
-Both `The Bromley Trust — Human Rights` and `— Prison Reform` point at
-`https://www.thebromleytrust.org.uk/our-approach/`. Dedicated pages exist:
+All three rows pointed at `/our-approach/`, a philosophy page. Paul's review
+found the funds actually live behind `/apply-for-funding/`, which names both
+programmes and holds the eligibility quiz gating the application form:
 
-| Row | Should point at |
-|---|---|
-| Human Rights | `https://www.thebromleytrust.org.uk/human-rights/` |
-| Prison Reform | `https://www.thebromleytrust.org.uk/prison-reform/` |
+> "We can only accept applications for funding that fit within one of our two
+> grant programmes: Human Rights Grants Programme, Prison Reform Grants
+> Programme"
 
-No split needed — the two rows are already correct in shape. Verified
-2026-08-11, both **open**:
+All three re-pointed there. No split needed — the two programme rows were
+already correct in shape. Both verified **open** on 2026-08-11 ("We have two
+open grant programmes, Human Rights and Prison Reform"), income band
+£100k–£1.2m.
 
-> "We have two open grant programmes, Human Rights and Prison Reform, and are
-> only able to accept applications for funding which fit within these."
+**Still open:** neither programme row has a deadline. The application route is a
+quiz then a form, with no stated closing date, so rolling is the likely answer
+but it has not been evidenced. Not activatable until it is.
 
-Each dedicated page carries live criteria including the income band
-(£100k–£1.2m), which the shared page does not attribute to either programme.
-Re-pointing is also what makes the income figure attributable per row.
+> Note: `/our-approach/` returns **401 to a direct fetch** and reads only through
+> the proxy, yet its row showed `url_status: ok` from the 9 August check. The
+> link checker is very likely not proxy-aware, so bot-walled funders can show
+> green while being unreadable. Own bug, not tracked here.
 
 ---
 
@@ -56,12 +60,35 @@ only, and only to previously unsuccessful Ufi applicants). Generic row stays
 live. See `docs/lifecycle-review-additions-2026-08-11.md` for why this became
 the worked example for enrich-before-review.
 
-### Baring Foundation — 3 rows created 2026-08-11
-Strengthening Civil Society is **open**, deadline 7 September 2026, and is the
-only opportunity on the funder's own current-opportunities page. International
-Development is between rounds and invite-only. Arts is **absent** from that page
-entirely — no closure notice, simply not listed — so its row's URL does not
-describe it and it has no evidenced open status.
+### Baring Foundation — 3 rows created, resolved 2026-08-11
+All three initially pointed at the same generic listing page. The single open
+opportunity is a **themed call** under Strengthening Civil Society: legal tools
+to hold corporations to account, migration focus, deadline 11am Monday
+7 September 2026, £150,000 over three years (or £50,000 over 18 months for
+exploratory work).
+
+**Strengthening Civil Society is now live**, re-pointed at the call
+announcement, with the real terms taken from the application guidelines PDF.
+Arts and International Development stay inactive — no open opportunity. The
+generic `Baring Foundation Grants` row is **archived**, superseded.
+
+**The guidelines PDF inverted what the announcement implied**, and this is the
+reason enrichment must be given the authoritative document rather than the
+nearest page. The news story says applicants need "an annual income in the
+region of £2 million", which reads as a target. The guidelines say:
+
+> "have an income of under £2m a year (we have some flexibility with this, if
+> your income is slightly over £2m, please get in touch to discuss your
+> eligibility)"
+
+That is a ceiling. Enriching from the announcement alone produced a brief
+stating income "must be in the region of £2 million" and an exclusion reading
+"organisations with annual income significantly below £2 million may fall
+outside the target profile" — which would have told an eligible £200k charity it
+was out of scope, while `max_org_income = 2000000` sat correctly in the
+structured field beside it. Passing the PDF as an `additionalSource` and
+re-running produced the correct text. **A funder's announcement is not a
+sufficient source when guidelines exist.**
 
 ---
 
@@ -77,10 +104,26 @@ Needs per-programme pages, or accept name-and-brief-only rows deliberately.
 Trading for Good and its regional variants, Social Investment Gateway. Same
 blocker as Barrow Cadbury.
 
-### Somerset Community Foundation — 16 programmes
-One row staged so far (Crisis and Resilience Alliance, **open**, deadline
-4 September 2026). Of the remainder, 11 are closed with reopen dates from
-Autumn 2026 onward — those belong in between-rounds, not in a split queue.
+### Somerset Community Foundation — reconciled 2026-08-11
+Not a split job after all. The funder's page marks each fund open or closed
+explicitly, and the five open ones already had rows, so the work was
+reconciliation:
+
+| Fund | Deadline | State |
+|---|---|---|
+| Crisis and Resilience Alliance | 4 Sep 2026 | Re-pointed, £40k–£80k added. **Staged, not live** |
+| HPC Small Grants | **24 Aug 2026** | Deadline was missing entirely; added |
+| HPC Open Grants | 7 Sep 2026 | Already correct |
+| Oake Sunshine | 12 Oct 2026 | Already correct |
+| Social Investment | 21 Aug 2026 | Already correct |
+
+**`Stronger Communities Fund` was `is_active = true` while the funder's page
+read "Closed. Expected to re-open: Autumn 2026."** Live and wrong to users, and
+it is the fund Charlotte flagged, so a cohort user could see it. Now between
+rounds. Mendip Hills also corrected (we held Autumn 2026 against the funder's
+Early 2027).
+
+**Gap:** `WCS Pickford Trust Fund` has no row at all. Closed, so low priority.
 
 ---
 
