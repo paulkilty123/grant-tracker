@@ -15,6 +15,7 @@ import { computeMatchScore, scoreColour, grantInGeoSelection, grantMatchesLocati
 import type { FeedbackSignals, MatchBreakdown } from '@/lib/matching'
 import { getInteractions, recordInteraction, removeInteraction, getSavedReminders, setSavedReminder, getDismissSnoozes, setDismissSnooze, getSavedNotes, setSavedNote } from '@/lib/interactions'
 import { getMatchFeedback, type StoredFeedback } from '@/lib/matchFeedback'
+import { eligibilityStated, ELIGIBILITY_NOT_STATED, ELIGIBILITY_NOT_STATED_SHORT } from '@/lib/eligibility-disclosure'
 import {
   LIKE_SCORE_BOOST, DISLIKE_SCORE_PENALTY, LIKE_SECTOR_BOOST, DISLIKE_SECTOR_PENALTY,
   FB_UP_SCORE_BOOST, FB_DOWN_SCORE_PENALTY, FB_UP_SECTOR_BOOST, FB_DOWN_SECTOR_PENALTY,
@@ -482,10 +483,14 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
         })()
 
   // ── Qualify check ──
+  // The tick is an assertion, so it requires a positive match against a list we
+  // actually hold. An empty list used to return true here ("no restriction = all
+  // qualify"), which put a green tick beside grants whose eligibility nobody had
+  // read. Unknown is now rendered as unknown, never as a match.
   const qualifies = hasOrg && !!org?.legal_structure && (() => {
     const eligible = grant.eligibleStructures as LegalStructure[] | undefined
-    if (!eligible || eligible.length === 0) return true // no restriction = all qualify
-    return eligible.includes(org!.legal_structure as LegalStructure)
+    if (!eligibilityStated(eligible)) return false
+    return eligible!.includes(org!.legal_structure as LegalStructure)
   })()
 
   // ── Subtype label for meta Type cell ──
@@ -624,8 +629,10 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
               <div>
                 <div style={{ fontSize: 10, color: '#8A8986', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3, fontFamily: 'var(--font-dm-sans)' }}>Eligible</div>
                 <div style={{ fontSize: 13, color: '#2C2C2A', fontFamily: 'var(--font-dm-sans)', display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
-                  <span>
-                    {structureLabels.length > 0 ? structureLabels.slice(0, 2).join(', ') : '—'}
+                  <span style={structureLabels.length > 0 ? undefined : { color: '#8A8986' }}>
+                    {structureLabels.length > 0
+                      ? structureLabels.slice(0, 2).join(', ')
+                      : ELIGIBILITY_NOT_STATED_SHORT}
                     {structureLabels.length > 2 && (
                       <span style={{ color: '#8A8986' }}> +{structureLabels.length - 2}</span>
                     )}
@@ -1122,9 +1129,9 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                     </ul>
                   </div>
                 )}
-                {(grant as EnrichedGrant).eligibleStructures?.length ? (
-                  <div style={{ marginBottom: 16 }}>
-                    <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 10, fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#8A8986', margin: '0 0 8px' }}>Eligible organisations</p>
+                <div style={{ marginBottom: 16 }}>
+                  <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 10, fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#8A8986', margin: '0 0 8px' }}>Eligible organisations</p>
+                  {eligibilityStated((grant as EnrichedGrant).eligibleStructures) ? (
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                       {((grant as EnrichedGrant).eligibleStructures ?? []).map(s => (
                         <span key={s} style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 11, fontWeight: 500, padding: '4px 10px', borderRadius: 9999, background: 'rgba(142,203,60,0.12)', color: '#639922' }}>
@@ -1132,8 +1139,10 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                         </span>
                       ))}
                     </div>
-                  </div>
-                ) : null}
+                  ) : (
+                    <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 12, color: '#5F5E5A', margin: 0 }}>{ELIGIBILITY_NOT_STATED}</p>
+                  )}
+                </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 4 }}>
                   <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 12, color: '#8A8986', margin: 0 }}>No funder intelligence yet.</p>
                   {grant.applyUrl && (

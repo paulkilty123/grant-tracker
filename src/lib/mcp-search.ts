@@ -396,15 +396,28 @@ export function computeMatchQuality(row: ScrapedGrantRow, params: MCPSearchParam
     const dbStructures = expandStructureTokens(params.structure)
     const es = row.eligible_structures ?? []
     let s: number
-    if (es.some(x => dbStructures.includes(x))) {
+    /**
+     * `explicitMatch` gates the SIGNAL, not the score.
+     *
+     * An empty list still scores 0.7, because for ranking purposes an untagged
+     * row is a better bet than one that explicitly excludes you, and dropping it
+     * to 0 would bury every untagged row in a structure-filtered search.
+     *
+     * But `structure_eligible` is a claim, not a ranking weight: it is returned
+     * to an external model as a reason this row matched. Asserting it off an
+     * empty array told the model the funder had confirmed eligibility when
+     * nobody had read the rule. Score the hedge, do not assert it.
+     */
+    const explicitMatch = es.some(x => dbStructures.includes(x))
+    if (explicitMatch) {
       s = 1.0   // explicit match
     } else if (es.length === 0) {
-      s = 0.7   // no restriction (catch-all)
+      s = 0.7   // unknown, hedged for ranking only — see above
     } else {
       s = 0.0   // excluded — filter would have removed
     }
     signalSum += s
-    if (s > 0) signals.push('structure_eligible')
+    if (explicitMatch) signals.push('structure_eligible')
   }
 
   if (params.funder_type?.length) {

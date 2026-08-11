@@ -134,8 +134,23 @@ export async function GET(req: NextRequest) {
     // usual: the two crons this route is modelled on reported success for their
     // whole existence while RLS silently rejected every write, and the only way
     // to know the difference is to make a real write and then go and look at it.
+    //
+    // AUTO_PUBLISH_LIMIT applies the same cap to the SCHEDULED run, which cannot
+    // carry a query string: vercel.json registers this path bare, so `?limit=`
+    // is reachable by hand and never by cron. Without it, a policy change that
+    // unblocks a batch of rows publishes all of them on the next 09:00 run with
+    // no opportunity to look first. Policy c2 demoted `tags_changed` and
+    // `eligibility_missing`, which released 37 rows in one go — exactly the case
+    // this is for. Set it in Vercel while a policy change beds in, then unset it;
+    // an absent variable means uncapped, which is the steady state.
+    //
+    // Precedence: explicit `?limit=` > AUTO_PUBLISH_LIMIT > uncapped.
     const limitParam = Number(req.nextUrl.searchParams.get('limit'))
-    const applyLimit = Number.isFinite(limitParam) && limitParam > 0 ? limitParam : Infinity
+    const envLimit   = Number(process.env.AUTO_PUBLISH_LIMIT)
+    const applyLimit =
+      Number.isFinite(limitParam) && limitParam > 0 ? limitParam
+      : Number.isFinite(envLimit) && envLimit > 0   ? envLimit
+      : Infinity
 
     // `cache: 'no-store'` is not optional here.
     //

@@ -11,6 +11,7 @@
 // not in any MCP-side return shape.
 
 import { MCP_APP_ORIGIN, MCP_BRAND_NAME } from './mcp-brand'
+import { eligibilityStated, ELIGIBILITY_NOT_STATED } from './eligibility-disclosure'
 
 // ──────────────────────────────────────────────────────────────────────────
 // Raw inputs (DB row shapes)
@@ -171,6 +172,13 @@ export interface MCPOpportunityDetail {
     summary: string
     who_can_apply: string
     eligible_structures: string[]
+    /**
+     * Set when `eligible_structures` is empty. An empty array means nobody has
+     * established the funder's rule, NOT that the fund is open to all, and an
+     * external model reading a bare `[]` will infer the second. Mirrors the
+     * `notes` slot already carried by amount and deadline.
+     */
+    eligible_structures_note: string | null
     geographic_scope: string
     exclusions: string
   }
@@ -1018,6 +1026,9 @@ export function toMCPOpportunityDetail(
       summary: summary.eligibility_summary,
       who_can_apply: brief.who_can_apply,
       eligible_structures: row.eligible_structures ?? [],
+      eligible_structures_note: eligibilityStated(row.eligible_structures)
+        ? null
+        : ELIGIBILITY_NOT_STATED,
       geographic_scope: brief.geographic_focus || summary.geographic_scope,
       exclusions: brief.exclusions,
     },

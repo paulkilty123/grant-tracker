@@ -20,12 +20,25 @@
 //
 // Two findings from that measurement shaped the split, and both are load-bearing:
 //
-//   1. `eligibility_missing` BLOCKS even though it looks like a gap. Empty
-//      eligible_structures does not hide a row — matching.ts:1497 only applies
-//      the hard structure gate when the array is non-empty, so an untagged row
-//      falls through to soft text matching and is shown to organisations that
-//      cannot apply. Missing eligibility over-matches. That is a wrong answer,
-//      not an absent one.
+//   1. `eligibility_missing` USED TO BLOCK even though it looks like a gap, and
+//      the reason was never really about the row. Empty eligible_structures does
+//      not hide a row: matching.ts only applies the hard structure gate when the
+//      array is non-empty (see the `.length > 0` at the eligible_structures hard
+//      gate), so an untagged row fell through to soft text matching, scored no
+//      cap, and was reported to a registered charity as affirmatively `eligible`
+//      with a green tick on the search card. Empty and permissive were
+//      indistinguishable in five independent places: both matchers, all three
+//      list filters and the MCP scorer.
+//
+//      That was a wrong answer, so it blocked. But the wrongness lived in the
+//      SURFACE, not in the row — the row honestly held nothing, and the app
+//      turned nothing into "yes". Fixed 2026-08-11: every eligibility surface now
+//      renders "eligibility not fully stated on the funder's site" when the array
+//      is empty, and the unearned tick is gone. With the surface telling the
+//      truth, an empty array is an honest gap like any other, so this code is now
+//      `info`. If you are ever tempted to make the surface assert eligibility
+//      from an empty array again, this code has to go back to `block` in the same
+//      change.
 //
 //   2. `link_unverified` DOES NOT BLOCK, because 57 of its 60 rows are
 //      url_status='unchecked' — never validated, rather than validated and
@@ -48,7 +61,7 @@ import {
  * comparable across policy revisions and calibration is measured against a
  * known rule rather than "whatever the gate did that week".
  */
-export const GATE_POLICY_VERSION = 'c1'
+export const GATE_POLICY_VERSION = 'c2'
 
 /**
  * Every reason code, classified. `block` = the row asserts something wrong or
@@ -76,8 +89,6 @@ const POLICY: Record<ReviewReasonCode, 'block' | 'info'> = {
   amount_inverted:      'block',  // minimum above maximum — self-evidently wrong
   amount_pot_suspected: 'block',  // whole-fund figure presented as per-applicant
   amount_ungrounded:    'block',  // £ figure with no matching wording on the page
-  eligibility_missing:  'block',  // see note 1 in the header — over-matches, does not hide
-  tags_changed:         'block',  // ONLY at critical severity — see isBlocking()
   // A fundraiser checked this row against the funder's actual policy and
   // rejected it. Blocking for two reasons: a human reporting a problem is
   // stronger evidence than anything derived from the row, and the feedback
@@ -109,6 +120,24 @@ const POLICY: Record<ReviewReasonCode, 'block' | 'info'> = {
   link_unverified:            'info',  // see note 2 in the header — 57/60 never checked
   stale_dates:                'info',
   stale_enrichment:           'info',
+  eligibility_missing:        'info',  // see note 1 — honest only because the surface now says so
+  // A re-read changed this row's tags. It blocked at 'critical' severity, i.e.
+  // when eligibility was NARROWED, because the classifier used to shorten the
+  // structure list whenever a page was silent on legal form: 152 values removed
+  // against 117 added in a single pass, concentrated on cooperative,
+  // unincorporated and the ltd forms. That was a real question and it earned a
+  // human.
+  //
+  // It is not a real question any more. classify.ts now requires positive
+  // evidence to REMOVE a structure (additions still land immediately), and the
+  // 24 rows narrowed by the old behaviour had their values restored. A narrowing
+  // that survives the new classifier is one the page actually supports.
+  //
+  // It is also the wrong side of the policy. Narrowing hides a fund from SOME
+  // organisations; it never shows a fund to someone barred from it. That is an
+  // under-match, the recoverable direction. Blocking on it held 37 rows whose
+  // only complaint was that the machine had improved them.
+  tags_changed:               'info',
 }
 
 /** The blocking set, derived so it can never disagree with POLICY. */
@@ -122,17 +151,20 @@ export const INFORMATIONAL_CODES: readonly ReviewReasonCode[] =
 /**
  * Does this reason block publication?
  *
- * `tags_changed` is the one code whose severity carries the meaning, so the
- * code alone is not enough to judge it. deriveReviewReasons emits it at
- * 'critical' only when a re-read NARROWED eligibility — the failure class that
- * removed 152 structure values across the catalogue and silently hid funds from
- * the CICs and co-ops that could apply. Otherwise it is 'changed': the machine
- * improved something and wants a nod, which is the single most common state in
- * the queue and the least alarming. Matching on the code alone conflates them
- * and holds 60 benign rows for no reason.
+ * POLICY is the whole answer. Severity is a presentation concern: it colours the
+ * card in the review queue and orders it, and it deliberately has no vote here.
+ *
+ * It used to have a vote. `tags_changed` carried a severity special case in this
+ * function, blocking at 'critical' and publishing otherwise. When that case was
+ * removed, note that flipping POLICY alone would NOT have changed behaviour:
+ * this function short-circuited on the code before it ever read POLICY, so the
+ * table and the gate would have disagreed silently, with BLOCKING_CODES and
+ * INFORMATIONAL_CODES reporting the table's answer and the gate acting on the
+ * other one. tsc cannot catch that, because both halves type-check. If a code
+ * ever needs per-row nuance again, put it in deriveReviewReasons as a distinct
+ * CODE, not as a severity branch here.
  */
 export function isBlocking(reason: ReviewReason): boolean {
-  if (reason.code === 'tags_changed') return reason.severity === 'critical'
   return POLICY[reason.code] === 'block'
 }
 
@@ -171,11 +203,13 @@ export type GateDecision = {
  * withheld, so for three quarters of the queue "hold" was never protecting
  * anyone — it was just bookkeeping that had fallen behind.
  *
- * `attention` is deliberately NOT a retraction. 32 of the 42 live-and-blocking
- * rows are blocking because a re-read narrowed their eligibility. Narrowing
- * hides a fund from SOME organisations; deactivating hides it from ALL. Pulling
- * those rows would amplify the exact bug being fixed, so the gate surfaces them
- * and leaves them live.
+ * `attention` is deliberately NOT a retraction. The row stays live and is
+ * surfaced for a human. When this was written, 32 of the 42 live-and-blocking
+ * rows were blocking on a narrowed re-read; that class is now `info` (see
+ * `tags_changed` in POLICY) and publishes itself, so the `attention` bucket is
+ * both smaller and better targeted. The principle stands for what remains:
+ * pulling a live row hides it from ALL organisations, which is nearly always a
+ * bigger harm than the defect that flagged it.
  */
 export function gateDecision(row: ReviewRow, precomputed?: ReviewReason[]): GateDecision {
   const reasons       = precomputed ?? deriveReviewReasons(row)

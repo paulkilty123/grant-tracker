@@ -6,6 +6,7 @@ import ViewTracker from '@/components/ViewTracker'
 import AddToPipelineButton from './AddToPipelineButton'
 import FlagGrantButton from './FlagGrantButton'
 import { FunderBrief, briefHasContent, leadParagraph } from '@/components/FunderBrief'
+import { eligibilityStated, ELIGIBILITY_NOT_STATED } from '@/lib/eligibility-disclosure'
 import {
   Award, Rocket, GraduationCap, TrendingUp, Users, GitMerge, Gift, Landmark,
   MapPin, Bell, RefreshCw, Calendar, AlertTriangle, CheckCircle, ShieldAlert,
@@ -279,26 +280,35 @@ export default async function GrantDetailPage({
           </div>
         )}
 
-        {/* Eligible structures */}
-        {eligibleStructures.length > 0 && (
-          <div className="mb-5 pt-4 border-t border-warm">
-            <h2 className="text-xs font-semibold text-light uppercase tracking-wider mb-2.5 inline-flex items-center gap-1.5">
-              <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
-              Eligible organisation types
-            </h2>
-            <div className="flex flex-wrap gap-2">
-              {eligibleStructures.map(s => (
-                <span key={s} className="tag bg-emerald-50 text-emerald-700 border border-emerald-200">
-                  {STRUCTURE_LABELS[s] ?? s}
-                </span>
-              ))}
-            </div>
-            <p className="text-xs text-light mt-2 inline-flex items-center gap-1">
-              <ShieldAlert className="w-3 h-3" />
-              Only the organisation types listed above are eligible to apply.
+        {/* Eligible structures. Always rendered: an absent section read as
+            "no restriction", which is the one thing an empty array does not
+            mean. See lib/eligibility-disclosure.ts. */}
+        <div className="mb-5 pt-4 border-t border-warm">
+          <h2 className="text-xs font-semibold text-light uppercase tracking-wider mb-2.5 inline-flex items-center gap-1.5">
+            <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+            Eligible organisation types
+          </h2>
+          {eligibilityStated(eligibleStructures) ? (
+            <>
+              <div className="flex flex-wrap gap-2">
+                {eligibleStructures.map(s => (
+                  <span key={s} className="tag bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    {STRUCTURE_LABELS[s] ?? s}
+                  </span>
+                ))}
+              </div>
+              <p className="text-xs text-light mt-2 inline-flex items-center gap-1">
+                <ShieldAlert className="w-3 h-3" />
+                Only the organisation types listed above are eligible to apply.
+              </p>
+            </>
+          ) : (
+            <p className="text-xs text-mid inline-flex items-start gap-1">
+              <ShieldAlert className="w-3 h-3 flex-shrink-0 mt-0.5" />
+              {ELIGIBILITY_NOT_STATED}
             </p>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Legacy free-text sectors fallback — shown only if no classified sectors */}
         {impactSectors.length === 0 && sectors.length > 0 && (

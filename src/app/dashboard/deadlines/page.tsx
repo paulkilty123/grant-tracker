@@ -12,6 +12,7 @@ import { toCatalogueUuid } from '@/lib/events/taxonomy'
 import { track } from '@/lib/analytics'
 import { normaliseScrapedGrant, type EnrichedGrant } from '@/lib/grants-normalise'
 import { computeMatchScore } from '@/lib/matching'
+import { eligibilityStated, ELIGIBILITY_NOT_STATED } from '@/lib/eligibility-disclosure'
 import type { DeadlineAlert, PipelineItem, PipelineStage, FundingType, Organisation } from '@/types'
 
 const ACTIVE_STAGES = ['identified', 'applying'] // 'submitted' excluded — those need a decision date, not a deadline
@@ -877,20 +878,22 @@ function GrantPreviewModal({
                           </ul>
                         </div>
                       )}
-                      {grant.eligibleStructures && grant.eligibleStructures.length > 0 && (
-                        <div>
-                          <p style={{ fontFamily: BODY_FONT, fontSize: 10, fontWeight: 500, letterSpacing: '0.08em',
-                            textTransform: 'uppercase', color: '#8A8986', margin: '0 0 8px' }}>Eligible organisations</p>
+                      <div>
+                        <p style={{ fontFamily: BODY_FONT, fontSize: 10, fontWeight: 500, letterSpacing: '0.08em',
+                          textTransform: 'uppercase', color: '#8A8986', margin: '0 0 8px' }}>Eligible organisations</p>
+                        {eligibilityStated(grant.eligibleStructures) ? (
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                            {grant.eligibleStructures.map(s => (
+                            {grant.eligibleStructures!.map(s => (
                               <span key={s} style={{ fontFamily: BODY_FONT, fontSize: 11, fontWeight: 500, padding: '4px 10px',
                                 borderRadius: 9999, background: 'rgba(142,203,60,0.12)', color: '#639922' }}>
                                 {STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
                               </span>
                             ))}
                           </div>
-                        </div>
-                      )}
+                        ) : (
+                          <p style={{ fontFamily: BODY_FONT, fontSize: 12, color: '#5F5E5A', margin: 0 }}>{ELIGIBILITY_NOT_STATED}</p>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
