@@ -84,12 +84,80 @@ export type VerifyResult = {
   notes:     string[]
   /** Set on round_closed: the passed date the page states, and its quote. */
   closedRound?: { deadline: string; quote: string }
+  /** Set when the answer came from a page one level down from apply_url. */
+  followedUrl?: string
   usage?:    { input: number; output: number }
 }
 
 // ── Fetch (mirrors enrich-grant, including the reader-proxy fallback) ────────
 
 const PAGE_CAP = 12000
+
+/** Link text or href that suggests the funding detail lives one level down. */
+const FUNDING_LINK = /\b(grants?|funding|apply|applying|application|eligib|criteria|programmes?|how-we-fund|how-to-apply|open-funds?|our-funds?|what-we-fund|guidelines)\b/i
+
+/** Obvious non-destinations, so we never wander into news or admin pages. */
+const LINK_NOISE = /\b(news|blog|privacy|cookie|terms|contact|about-us|careers|jobs|login|account|donate|shop|press|media|policy|accessibility|sitemap)\b/i
+
+/**
+ * Candidate pages one level down, best first.
+ *
+ * A funder's landing page often describes the organisation and links to the
+ * eligibility detail. The Julia Rausing Trust is the worked case: our apply_url
+ * is the homepage, which truthfully states no eligibility, while
+ * "The Trust does not accept unsolicited applications" sits on /grants/.
+ * Without this the engine correctly reports "no funding detail" and the row
+ * becomes a chore for a human, when the answer was one click away.
+ *
+ * Same host only, and never the page we just read.
+ */
+function sameSite(a: string, b: string): boolean {
+  const norm = (h: string) => h.replace(/^www\./i, '').toLowerCase()
+  return norm(a) === norm(b)
+}
+
+export function candidateLinks(pageSource: string, baseUrl: string, isMarkdown: boolean): string[] {
+  let base: URL
+  try { base = new URL(baseUrl) } catch { return [] }
+
+  const found: { url: string; score: number }[] = []
+  const seen = new Set<string>([base.href.replace(/\/$/, '')])
+
+  const pattern = isMarkdown
+    ? /\[([^\]]{0,120})\]\(([^)\s]+)\)/g            // [text](href) from the reader proxy
+    : /<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]{0,160}?)<\/a>/gi
+
+  for (const m of Array.from(pageSource.matchAll(pattern))) {
+    const rawHref = isMarkdown ? m[2] : m[1]
+    const rawText = (isMarkdown ? m[1] : m[2]).replace(/<[^>]+>/g, ' ').trim()
+    if (!rawHref || rawHref.startsWith('#') || /^(mailto|tel|javascript):/i.test(rawHref)) continue
+
+    let abs: URL
+    try { abs = new URL(rawHref, base) } catch { continue }
+    // Compare hosts with "www." stripped. Sites commonly redirect apex to www,
+    // so an apply_url of juliarausingtrust.org sits alongside links to
+    // www.juliarausingtrust.org — a strict comparison rejected all twelve of
+    // them, including the /grants page that holds the answer.
+    if (sameSite(abs.host, base.host)) { /* keep */ } else continue
+    if (/\.(pdf|jpe?g|png|gif|svg|zip|docx?|xlsx?)$/i.test(abs.pathname)) continue
+
+    const key = abs.href.replace(/\/$/, '').split('#')[0]
+    if (seen.has(key)) continue
+
+    const haystack = `${abs.pathname} ${rawText}`
+    if (LINK_NOISE.test(haystack) && !FUNDING_LINK.test(abs.pathname)) continue
+    const hits = (haystack.match(FUNDING_LINK) ?? []).length
+    if (hits === 0) continue
+
+    // Prefer a match in the path over one in link text, and shallower paths.
+    const depth = abs.pathname.split('/').filter(Boolean).length
+    const score = hits * 2 + (FUNDING_LINK.test(abs.pathname) ? 3 : 0) - depth
+    seen.add(key)
+    found.push({ url: abs.href, score })
+  }
+
+  return found.sort((a, b) => b.score - a.score).map(f => f.url).slice(0, 3)
+}
 
 async function fetchDirect(url: string): Promise<string> {
   const controller = new AbortController()
@@ -106,7 +174,7 @@ async function fetchDirect(url: string): Promise<string> {
       },
     })
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    return stripHtml(await res.text())
+    return await res.text()   // raw: links are extracted before stripping
   } finally {
     clearTimeout(timeout)
   }
@@ -126,7 +194,7 @@ async function fetchViaReaderProxy(url: string): Promise<string> {
       },
     })
     if (!res.ok) throw new Error(`reader proxy HTTP ${res.status}`)
-    return excerpt((await res.text()).replace(/\s{2,}/g, ' ').trim())
+    return await res.text()   // raw markdown: links are extracted before excerpting
   } finally {
     clearTimeout(timeout)
   }
@@ -194,17 +262,28 @@ export function excerpt(text: string, cap = PAGE_CAP): string {
   return out.slice(0, cap)
 }
 
-export type Fetched = { text: string; via: 'direct' | 'proxy' } | { error: string }
+export type Fetched =
+  | { text: string; via: 'direct' | 'proxy'; links: string[] }
+  | { error: string }
 
 export async function fetchPage(url: string, forceProxy = false): Promise<Fetched> {
+  const shape = (raw: string, via: 'direct' | 'proxy'): Fetched => {
+    const isMarkdown = via === 'proxy'
+    const links = candidateLinks(raw, url, isMarkdown)
+    const text = isMarkdown
+      ? excerpt(raw.replace(/\s{2,}/g, ' ').trim())
+      : stripHtml(raw)
+    return { text, via, links }
+  }
+
   if (!forceProxy) {
     try {
-      return { text: await fetchDirect(url), via: 'direct' }
+      return shape(await fetchDirect(url), 'direct')
     } catch (e) {
       const direct = e instanceof Error ? e.message : String(e)
       if (!process.env.READER_PROXY_URL) return { error: direct }
       try {
-        return { text: await fetchViaReaderProxy(url), via: 'proxy' }
+        return shape(await fetchViaReaderProxy(url), 'proxy')
       } catch (e2) {
         return { error: `${direct}; proxy: ${e2 instanceof Error ? e2.message : String(e2)}` }
       }
@@ -216,7 +295,7 @@ export async function fetchPage(url: string, forceProxy = false): Promise<Fetche
   // contain. Falling back only on a FAILED fetch misses exactly those pages, so
   // a gate failure re-reads through the proxy before giving up on the link.
   try {
-    return { text: await fetchViaReaderProxy(url), via: 'proxy' }
+    return shape(await fetchViaReaderProxy(url), 'proxy')
   } catch (e) {
     return { error: `proxy: ${e instanceof Error ? e.message : String(e)}` }
   }
@@ -319,6 +398,7 @@ export async function verifyRow(
 
   let usage = { input: 0, output: 0 }
   let best: VerifyResult | null = null
+  let followedFrom: string[] = []
 
   // How far an attempt got. A retry that fails at the fetch must never replace a
   // first attempt that actually read the page — otherwise a dead reader proxy
@@ -346,6 +426,7 @@ export async function verifyRow(
       continue
     }
 
+    if (followedFrom.length === 0) followedFrom = fetched.links
     const result = await runModel(row, fetched.text, anthropic, base)
     usage = { input: usage.input + (result.usage?.input ?? 0), output: usage.output + (result.usage?.output ?? 0) }
     result.usage = usage
@@ -356,6 +437,25 @@ export async function verifyRow(
     const retryable = result.gate.failure === 'no_funding_detail' || result.gate.failure === 'no_content'
     if (!retryable) break
     if (!process.env.READER_PROXY_URL) break
+  }
+
+  // Still nothing usable, but the landing page pointed somewhere. Follow the
+  // single best candidate one level down and try again. One extra hop only:
+  // the aim is /grants from a homepage, not a crawl.
+  if (best && !(best as VerifyResult).gate.pass) {
+    const failure = ((best as VerifyResult).gate as { failure?: GateFailure }).failure
+    if (failure === 'no_funding_detail' && followedFrom.length > 0) {
+      const target = followedFrom[0]
+      const fetched = await fetchPage(target)
+      if (!('error' in fetched) && fetched.text.length >= 200) {
+        const deeper = await runModel(row, fetched.text, anthropic, base)
+        usage = { input: usage.input + (deeper.usage?.input ?? 0), output: usage.output + (deeper.usage?.output ?? 0) }
+        deeper.usage = usage
+        deeper.notes = [...deeper.notes, `read one level down: ${target}`]
+        deeper.followedUrl = target
+        keep(deeper)
+      }
+    }
   }
 
   return best ?? { ...base, outcome: 'fixable_link', gate: { pass: false, failure: 'fetch_failed', detail: 'no attempt completed' } }
