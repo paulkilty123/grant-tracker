@@ -17,7 +17,7 @@ Nothing here is on `main`. `main` only moves on an explicit go.
 finding social investment again, and stops the system hiding a fund on the day
 it reopens.
 
-**Commit:** `c173867`
+**Commits:** `c173867` (the four defects), `8f62169` (rotation rebalance + yield instrumentation)
 
 ### Discovery was running at 40% and saying so
 
@@ -82,43 +82,88 @@ Its own header records the predicate as unreachable, and production agrees:
 **zero rows carry `system:check_stale_rounds` provenance, ever.** A cron entry
 implying coverage it does not provide is worse than no cron.
 
-### Cost, and this is the one thing worth a decision
+### Composition and cost, signed off 2026-08-12
 
-Daily discovery is a real increase. Sonnet 5 at $3/$15 per MTok, against the
-output token counts already measured in the file (2,943 targeted, 11,864
-general), plus web search:
+The rotation was rebalanced before settling the cadence, because the totals hid
+two problems.
 
-| | now | after |
-|---|---|---|
-| cadence | 2 targeted per week, general never ran | 2 targeted + 1 general per day |
-| cost | **~$1.20/month** | **~$17/month** |
+**In-kind had no queries at all.** 50 live rows, every one from a scraper or
+entered by hand. The job whose whole purpose is finding funders nobody has
+catalogued had never searched the category we call a differentiator. Five
+in-kind queries added, with their own prompt context, because the obvious
+reading of "funding" excludes donated services and the sweep would have returned
+nothing.
 
-That is **+$193/year against a system that currently spends about $110/year in
-total**, so it roughly triples catalogue API spend. I think it is right, because
-you called investment coverage a launch problem and this is the only feed that
-addresses it, and because $17/month buys the differentiator. But it is your call
-and it is the largest single cost change in this work.
+**Two funders were taking 46% of the budget.** Arts Council England and the GLA
+ran daily, for funders whose pages move on a scale of weeks. Dropped to alternate
+days. Their `fundingType` hint was also `programme`, and both award
+predominantly grants; it never reaches the model on a targeted query but it is
+the fallback row type, so it is now the grant-shaped category.
 
-Halving it is a one character edit: `40 8 * * *` to `40 8 */2 * *` runs the
-general slice every other day, ~$9/month, and still walks all 15 queries
-monthly. Say if you want that instead and I will change it before merge.
+| slice | cadence | queries | cost |
+|---|---|---|---|
+| targeted | alternate days | 2 (ACE, GLA) | $3.95/month |
+| general | daily, 20-day rotation | 20: grant / investment / programme / **in-kind**, 5 each | $9.12/month |
+| | | | **$13.07/month** |
 
-Input token counts are estimated, output counts are measured, so treat the total
-as the right order of magnitude rather than exact.
+Cheaper than the $17 a daily-everything rotation would have cost, with the
+missing category covered. Output token counts are measured (2,943 targeted,
+11,864 general); input is estimated, so treat the total as the right order of
+magnitude.
+
+Dropping to every other day remains a one character edit (`40 8 * * *` to
+`40 8 */2 * *`), which is the lever for the four-week review below.
+
+### Yield is now measured, not estimated
+
+Cost per published row was not computable: `discover-grants` tracked real usage
+and returned it, `discover-sweep` threw it away, and across 37 recorded runs
+exactly one carried usage. Spend is now banked **before** the success branch,
+because a query that searched, burned tokens and then failed to parse still cost
+money.
+
+Yield renders on the **Pipeline page**, as a second line under the existing row
+counts, keyed on the summary carrying the shape rather than on the job's name.
+Verified end to end against a real scheduled run:
+
+```
+found 10 (grant 5, prog 5) · 26 in review · 11 published (grant 9, inv 1, prog 1)
+```
+
+`found` is that run. `in review` and `published` are the cumulative state of the
+whole discovery cohort, because a run cannot know the fate of its own rows: they
+take days to be enriched, gated and published. The question the line answers is
+whether the funnel converts.
+
+The manual POST path records a run too, so a morning where the button was pressed
+no longer looks identical to a morning where nothing ran.
+
+**Four-week review due 2026-09-09.** Cost per published row, by category, from
+`cron_runs.summary.usage` against the published counts. A written roll-up then,
+once, not a standing document.
 
 ### Deploy gate
 
 ```
-Regression: tsc clean. 107 tests pass (9 files). next build clean.
-            eslint 36 errors, identical to main's baseline, none new.
+Regression: tsc clean. 113 tests pass (10 files), 6 of them new and covering
+            the yield formatter, the first asserting the exact rendered line
+            against a summary copied from cron_runs rather than invented.
+            next build clean. eslint 36 errors, identical to main's baseline.
             vercel.json parses; 36 cron entries, within the Pro limit of 40.
             Slice routing exercised against a dead self-call target, so queue
             construction was verified with no model spend (output above).
+            Yield and usage verified end to end by running the scheduled path
+            locally: 10 imported, real usage and funnel written to cron_runs.
 Free-surface fingerprint: NOT APPLICABLE. No MCP route, tool, schema or
             response shape is touched by this branch.
-Accent check: PASSED. No rendered surface changed.
+Accent check: PASSED. The Pipeline page gains a text line, no accent.
 Named rollback: 5ba4669
 ```
+
+The Pipeline page render was not screenshotted: it is behind an admin session and
+I will not enter credentials. It is covered by the unit test instead, which is
+the stronger check anyway because it pins the producer's shape to the renderer's
+expectation.
 
 ### Known residue, not fixed here
 
