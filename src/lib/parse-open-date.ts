@@ -20,7 +20,20 @@
  *   "Late 2026"        → "2026-09-01"
  *   "2026"             → "2026-01-01"
  *
+ * Day-precision formats keep the day rather than rounding to the 1st:
+ *   "2026-07-30"           → "2026-07-30"
+ *   "5 August 2026"        → "2026-08-05"
+ *   "16 July 2026 (round 2)" → "2026-07-16"
+ *
  * Returns null if the string can't be parsed.
+ *
+ * The day-precision cases were added 2026-08-11. Before that, an exact date fell
+ * through every branch to the bare-year fallback: "2026-07-30" parsed to
+ * "2026-01-01", seven months early and silently wrong, because the string
+ * contains no month NAME and the ISO digits were never looked at. A reopen
+ * watcher reading that would fire more than half a year before the round opened.
+ * Rounding down is the right default for a vague period ("Autumn 2026"), but an
+ * exact date is not a period and must not be rounded.
  */
 
 const MONTHS: Record<string, number> = {
@@ -37,10 +50,55 @@ const QUALIFIERS: Record<string, number> = {
   early: 1, mid: 6, late: 9,
 }
 
+// Is this a real calendar date? Guards against "2026-13-40" surviving the regex.
+function validYMD(y: number, m: number, d: number): boolean {
+  if (m < 1 || m > 12 || d < 1 || d > 31) return false
+  const dt = new Date(Date.UTC(y, m - 1, d))
+  return dt.getUTCFullYear() === y && dt.getUTCMonth() === m - 1 && dt.getUTCDate() === d
+}
+
+const iso = (y: number, m: number, d: number) =>
+  `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+
 export function parseOpenDate(text: string | null | undefined): string | null {
   if (!text) return null
   const s = text.trim().toLowerCase()
 
+  // ── Exact dates first ──────────────────────────────────────────────────────
+  // These must be checked before the year/month/season branches below, which
+  // deliberately round down to the start of a period. An exact date is not a
+  // period, so rounding it loses real precision the source gave us.
+
+  // ISO: "2026-07-30", and the same date embedded in longer text.
+  const isoMatch = s.match(/\b(20\d{2})-(\d{1,2})-(\d{1,2})\b/)
+  if (isoMatch) {
+    const [, y, m, d] = isoMatch.map(Number)
+    if (validYMD(y, m, d)) return iso(y, m, d)
+  }
+
+  // "5 August 2026", "16 July 2026 (round 2)", "31st July 2026"
+  const dmyMatch = s.match(
+    /\b(\d{1,2})(?:st|nd|rd|th)?\s+([a-z]+)\.?,?\s+(20\d{2})\b/,
+  )
+  if (dmyMatch) {
+    const day = Number(dmyMatch[1])
+    const month = MONTHS[dmyMatch[2]]
+    const year = Number(dmyMatch[3])
+    if (month && validYMD(year, month, day)) return iso(year, month, day)
+  }
+
+  // "August 5 2026" / "August 5th, 2026"
+  const mdyMatch = s.match(
+    /\b([a-z]+)\.?\s+(\d{1,2})(?:st|nd|rd|th)?,?\s+(20\d{2})\b/,
+  )
+  if (mdyMatch) {
+    const month = MONTHS[mdyMatch[1]]
+    const day = Number(mdyMatch[2])
+    const year = Number(mdyMatch[3])
+    if (month && validYMD(year, month, day)) return iso(year, month, day)
+  }
+
+  // ── Period formats: round down to the start of the period ──────────────────
   // Extract year (4-digit number)
   const yearMatch = s.match(/\b(20\d{2})\b/)
   if (!yearMatch) return null
