@@ -19,6 +19,7 @@ import { GrantEditor } from '@/components/admin/GrantEditor'
 import { useToast } from '@/components/ui/Toast'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { IMPACT_SECTOR_OPTIONS, BENEFICIARY_OPTIONS, labelFor } from '@/lib/tag-suggestions'
+import { changedFields, isUnchanged } from '@/lib/admin/changed-fields'
 
 const ADMIN_EMAIL = 'paulkilty1@gmail.com'
 
@@ -330,6 +331,23 @@ export default function UrlAdminPage() {
     urlImproved?: boolean
     urlWasDead?: boolean
     form: AddGrantForm
+    /**
+     * The row as STORED when the modal opened, in the form's own shape.
+     *
+     * Save diffs against this and sends only what actually differs. Previously
+     * it sent all seventeen form fields on every save, and update-grant stamps
+     * an admin session at trust 100 with pinned:true — so opening this modal to
+     * fix one typo froze sixteen other fields against every automated source
+     * for good. Measured 2026-07-26: 54% of active rows carry a pin and 53 have
+     * `deadline` pinned to NULL, which is this modal's fingerprint (several
+     * fields stamped in the same second).
+     *
+     * The snapshot is of the stored values, NOT of the AI-discovered values the
+     * form is seeded with — so an AI proposal the admin leaves in place still
+     * counts as a change and is written. Confirming a suggestion is a decision;
+     * leaving an untouched field alone is not.
+     */
+    original: AddGrantForm
   } | null>(null)
   const [refreshSaving, setRefreshSaving]           = useState(false)
   const [refreshError, setRefreshError]             = useState<string | null>(null)
@@ -1500,6 +1518,28 @@ export default function UrlAdminPage() {
           is_local:      locRow?.is_local ?? false,
           funding_subtype: locRow?.funding_subtype ?? '',
         },
+        // The row AS STORED, in the same shape, so save can diff against it.
+        // Deliberately built from `grant`/`locRow` and never from `d` — `d` is
+        // what the AI just proposed, and diffing against a proposal would make
+        // every accepted suggestion look unchanged and silently drop it.
+        original: {
+          title:         grant.title,
+          funder:        grant.funder ?? '',
+          funder_type:   grant.funder_type ?? 'trust_foundation',
+          funding_type:  grant.funding_type ?? 'grant',
+          apply_url:     grant.apply_url ?? '',
+          description:   grant.description ?? '',
+          amount_min:    grant.amount_min != null ? String(grant.amount_min) : '',
+          amount_max:    grant.amount_max != null ? String(grant.amount_max) : '',
+          is_rolling:    grant.is_rolling ?? true,
+          deadline:      grant.deadline ?? '',
+          sectors:       Array.isArray(grant.impact_sectors) && grant.impact_sectors.length > 0 ? grant.impact_sectors.join(', ') : '',
+          is_invite_only: grant.is_invite_only,
+          next_open_date: grant.next_open_date ?? '',
+          location_tag:  locRow?.location_tag ?? '',
+          is_local:      locRow?.is_local ?? false,
+          funding_subtype: locRow?.funding_subtype ?? '',
+        },
       })
     } catch (err) {
       alert(`Search failed: ${err instanceof Error ? err.message : String(err)}`)
@@ -1617,26 +1657,46 @@ export default function UrlAdminPage() {
     // entry. The save fields below take care of pipeline_state via the
     // updateGrant merger path.
     const isReviewApproval = filter === 'review' || filter === 'tag_review'
+
+    // Send ONLY what actually changed.
+    //
+    // update-grant stamps an admin session at trust 100 with pinned:true, so
+    // every field included here is frozen against all automated sources for
+    // good. Sending the whole form meant opening this modal to correct one
+    // value pinned sixteen others nobody had looked at — the single largest
+    // source of the catalogue's pinning debt.
+    //
+    // Fields the admin genuinely changed still pin, which is correct: that is a
+    // human decision and should outrank the machine.
+    const original = refreshModal?.original
+    const changed = changedFields([
+      { key: 'title',           formValue: form.title,           storedValue: original?.title,           dbValue: form.title.trim() },
+      { key: 'funder',          formValue: form.funder,          storedValue: original?.funder,          dbValue: form.funder.trim() },
+      { key: 'funder_type',     formValue: form.funder_type,     storedValue: original?.funder_type,     dbValue: form.funder_type },
+      { key: 'funding_type',    formValue: form.funding_type,    storedValue: original?.funding_type,    dbValue: form.funding_type },
+      { key: 'funding_subtype', formValue: form.funding_subtype, storedValue: original?.funding_subtype, dbValue: form.funding_subtype || null },
+      { key: 'apply_url',       formValue: savedUrl,             storedValue: original?.apply_url,       dbValue: savedUrl },
+      { key: 'description',     formValue: form.description,     storedValue: original?.description,     dbValue: form.description.trim() || null },
+      { key: 'amount_min',      formValue: form.amount_min,      storedValue: original?.amount_min,      dbValue: form.amount_min ? parseInt(form.amount_min, 10) : null },
+      { key: 'amount_max',      formValue: form.amount_max,      storedValue: original?.amount_max,      dbValue: form.amount_max ? parseInt(form.amount_max, 10) : null },
+      { key: 'is_rolling',      formValue: form.is_rolling,      storedValue: original?.is_rolling,      dbValue: form.is_rolling },
+      { key: 'deadline',        formValue: form.deadline,        storedValue: original?.deadline,        dbValue: (!form.is_rolling && form.deadline) ? form.deadline : null },
+      { key: 'sectors',         formValue: form.sectors,         storedValue: original?.sectors,         dbValue: sectors },
+      { key: 'is_invite_only',  formValue: form.is_invite_only,  storedValue: original?.is_invite_only,  dbValue: form.is_invite_only },
+      { key: 'location_tag',    formValue: form.location_tag,    storedValue: original?.location_tag,    dbValue: form.location_tag.trim() || null },
+      { key: 'is_local',        formValue: form.is_local,        storedValue: original?.is_local,        dbValue: form.is_local },
+    ])
+    // next_open_date carries a derived companion column, so it moves as a pair.
+    if (!isUnchanged(form.next_open_date, original?.next_open_date)) {
+      changed.next_open_date        = form.next_open_date.trim() || null
+      changed.next_open_date_parsed = parseOpenDate(form.next_open_date.trim() || null)
+    }
+
     const result = await updateGrant(grantId, {
-      title:            form.title.trim(),
-      funder:           form.funder.trim(),
-      funder_type:      form.funder_type,
-      funding_type:     form.funding_type,
-      funding_subtype:  form.funding_subtype || null,
-      apply_url:        savedUrl,
-      description:      form.description.trim() || null,
-      amount_min:       form.amount_min ? parseInt(form.amount_min, 10) : null,
-      amount_max:       form.amount_max ? parseInt(form.amount_max, 10) : null,
-      is_rolling:       form.is_rolling,
-      deadline:         (!form.is_rolling && form.deadline) ? form.deadline : null,
-      sectors,
-      is_invite_only:   form.is_invite_only,
-      next_open_date:        form.next_open_date.trim() || null,
-      next_open_date_parsed: parseOpenDate(form.next_open_date.trim() || null),
-      location_tag:     form.location_tag.trim() || null,
-      is_local:         form.is_local,
-      // Sparkles confirmed this URL exists — mark it ok so it doesn't
-      // sit in the Unchecked queue waiting for the next validation run
+      ...changed,
+      // Untracked, so these never pin — safe to send every time.
+      // Sparkles confirmed this URL exists, so mark it ok rather than leaving
+      // it in the Unchecked queue until the next validation run.
       url_status:       savedUrl ? 'ok' : null,
       url_last_checked: savedUrl ? new Date().toISOString() : null,
       // Auto-approve when editing from the Needs Review tab
