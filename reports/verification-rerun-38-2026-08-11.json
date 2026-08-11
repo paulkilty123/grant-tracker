@@ -1,0 +1,1019 @@
+{
+ "results": [
+  {
+   "id": "18dcac42-fa21-4f81-a689-57da1bd0dd92",
+   "title": "Growth Impact Fund",
+   "funder": "Big Issue Invest Fund Management Ltd",
+   "url": "https://growthimpactfund.org.uk/",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [
+    "deadline",
+    "is_rolling",
+    "max_org_income",
+    "is_invite_only"
+   ],
+   "notes": [
+    "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped"
+   ],
+   "usage": {
+    "input": 2160,
+    "output": 280
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Growth Impact Fund"
+   },
+   "outcome": "verified",
+   "ft": "investment"
+  },
+  {
+   "id": "bec586cc-4172-4d15-bb05-5fd5f24c7bb9",
+   "title": "Innovate UK Innovation Loans",
+   "funder": "Innovate UK",
+   "url": "https://iuk-business-connect.org.uk/programme/innovation-loans/",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [],
+   "notes": [
+    "Innovate UK is offering Innovation Loans to micro, small and medium-sized enterprises (SMEs). The Innovate UK Innovation Loans Programme offers loan funding to UK registered micro, small and medium-sized enterprises (SMEs) for innovative late-stage research and development (R&D) projects"
+   ],
+   "usage": {
+    "input": 2827,
+    "output": 377
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Innovation Loans"
+   },
+   "outcome": "not_a_grant",
+   "ft": "investment"
+  },
+  {
+   "id": "cc0252b3-e362-401c-80b6-5407fed2dfc8",
+   "title": "Property Fund",
+   "funder": "Key Fund",
+   "url": "https://thekeyfund.co.uk/funding/property-fund/",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [],
+   "notes": [
+    "Investments up to £300k Term up to 10 years 4.5% flat interest rate 1.5% arrangement fee"
+   ],
+   "usage": {
+    "input": 1601,
+    "output": 280
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Property Fund"
+   },
+   "outcome": "not_a_grant",
+   "ft": "investment"
+  },
+  {
+   "id": "e4cb0712-1507-434c-b31e-1ca464946760",
+   "title": "Joseph Rowntree Foundation — Social Investment Programme",
+   "funder": "Joseph Rowntree Foundation",
+   "url": "https://www.jrf.org.uk/social-investment/apply-for-social-investment",
+   "proposals": [],
+   "confirmed": [
+    "is_rolling",
+    "is_invite_only"
+   ],
+   "notFound": [
+    "deadline",
+    "max_org_income"
+   ],
+   "notes": [],
+   "usage": {
+    "input": 2973,
+    "output": 390
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Social investment programme"
+   },
+   "outcome": "verified",
+   "ft": "investment"
+  },
+  {
+   "id": "5e37d1c3-0cc8-4b9a-9459-086a0d3027cc",
+   "title": "Northern Cultural Regeneration Fund",
+   "funder": "Key Fund",
+   "url": "https://thekeyfund.co.uk/funding/northern-cultural-regeneration-fund/",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [],
+   "notes": [
+    "Investments up to £150k Loans can only be used flexibly for capital or working capital"
+   ],
+   "usage": {
+    "input": 1714,
+    "output": 279
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Northern Cultural Regeneration Fund"
+   },
+   "outcome": "not_a_grant",
+   "ft": "investment"
+  },
+  {
+   "id": "266a1eac-562b-4a32-9d89-f5e42bfaeb4e",
+   "title": "Community Business Fund",
+   "funder": "Key Fund",
+   "url": "https://thekeyfund.co.uk/funding/community-business-fund/",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [],
+   "notes": [
+    "Loans from £5k up to £250k Maximum loan terms of up to 15 years 6.5% flat interest rate 1% arrangement fee"
+   ],
+   "usage": {
+    "input": 1611,
+    "output": 281
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Community Business Fund"
+   },
+   "outcome": "not_a_grant",
+   "ft": "investment"
+  },
+  {
+   "id": "4f507ab2-bda9-41a9-a26d-2a590b30f73d",
+   "title": "TheGivingMachine — GivingLottery",
+   "funder": "TheGivingMachine",
+   "url": "https://www.thegivingmachine.co.uk/solutions/for-causes/lottery/",
+   "proposals": [],
+   "confirmed": [
+    "is_rolling",
+    "is_invite_only"
+   ],
+   "notFound": [
+    "deadline",
+    "max_org_income"
+   ],
+   "notes": [],
+   "usage": {
+    "input": 2688,
+    "output": 322
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "GivingLottery"
+   },
+   "outcome": "verified",
+   "ft": "in_kind"
+  },
+  {
+   "id": "200ad44b-7a81-48e0-9ce5-1118aaaba9f0",
+   "title": "S J Noble Trust",
+   "funder": "S J Noble Trust",
+   "url": "https://funding.scot/funds/a0Rb0000003ikOPEAY/s-j-noble-trust",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [],
+   "notes": [
+    "Loans can be given for any legitimate business activity, eg capital development, working capital, training (training costs and loss of earnings while undertaking training), marketing and so forth."
+   ],
+   "usage": {
+    "input": 3104,
+    "output": 340
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "S J Noble Trust"
+   },
+   "outcome": "not_a_grant",
+   "ft": "investment"
+  },
+  {
+   "id": "b7f40968-6892-4004-9bd7-ea2af8410635",
+   "title": "Zoom for Nonprofits",
+   "funder": "Zoom",
+   "url": "https://www.zoom.com/en/zoom-cares/",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [],
+   "notes": [
+    "Zoom for Nonprofits Get 50% off select Zoom products"
+   ],
+   "usage": {
+    "input": 3407,
+    "output": 345
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Zoom for Nonprofits"
+   },
+   "outcome": "not_a_grant",
+   "ft": "in_kind"
+  },
+  {
+   "id": "970ce070-6fea-44fc-bfea-a7317776681a",
+   "title": "Reach Volunteering — TrusteeWorks",
+   "funder": "Reach Volunteering",
+   "url": "https://reachvolunteering.org.uk/build-dynamic-trustee-board",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [],
+   "notes": [],
+   "usage": {
+    "input": 3484,
+    "output": 303
+   },
+   "outcome": "fixable_link",
+   "gate": {
+    "pass": false,
+    "failure": "wrong_fund",
+    "fund_on_page": null,
+    "detail": "our fund is not on this page"
+   },
+   "ft": "in_kind"
+  },
+  {
+   "id": "0e506d16-9e5c-47e0-aae9-7f3444b3646c",
+   "title": "TrustLaw — Pro Bono Legal Programme",
+   "funder": "Thomson Reuters Foundation",
+   "url": "https://www.trust.org/trustlaw/",
+   "proposals": [
+    {
+     "field": "is_rolling",
+     "from": false,
+     "to": true,
+     "quote": "TrustLaw is a completely free service open to law firms and corporate legal teams globally. Once a member, you can access available pro bono opportunities from vetted civil society organisations and social enterprises through our easy-to-use online platform and can volunteer to work on projects that align with your interests and skills.",
+     "verdict": "confirmed"
+    }
+   ],
+   "confirmed": [
+    "is_invite_only"
+   ],
+   "notFound": [
+    "deadline",
+    "max_org_income"
+   ],
+   "notes": [],
+   "usage": {
+    "input": 2404,
+    "output": 405
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "TrustLaw"
+   },
+   "outcome": "verified",
+   "ft": "in_kind"
+  },
+  {
+   "id": "aa43adba-9454-4147-9ff1-614c334d3195",
+   "title": "Social Investment Scotland — Loan Funding",
+   "funder": "Social Investment Scotland",
+   "url": "https://www.socialinvestmentscotland.com/",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [],
+   "notes": [
+    "We offer loan funding We provide access to finance and support so that social enterprises can achieve maximum impact. Our loans range from £25k to £875k, with 33% of SIS customers securing loans under £50k."
+   ],
+   "usage": {
+    "input": 2629,
+    "output": 396
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Loan Funding"
+   },
+   "outcome": "not_a_grant",
+   "ft": "investment"
+  },
+  {
+   "id": "e48bb644-14c4-4785-8825-47babba04a2b",
+   "title": "Social Investment Programme",
+   "funder": "Postcode Innovation Trust",
+   "url": "https://www.postcodeinnovationtrust.org.uk/social-investment",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [
+    "deadline",
+    "is_rolling",
+    "max_org_income",
+    "is_invite_only"
+   ],
+   "notes": [
+    "is_rolling: a value was offered without a quote we could find on the page, so it was dropped",
+    "is_invite_only withheld: the quote describes a staged or selective process, not an invitation-only fund — \"If there's a strong match, we'll allocate you a place in one of our investment rounds and invite you to submit a full ap\""
+   ],
+   "usage": {
+    "input": 2275,
+    "output": 310
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Social Investment Programme"
+   },
+   "outcome": "verified",
+   "ft": "investment"
+  },
+  {
+   "id": "105cf22a-e502-436b-8806-b1f0c56b4df1",
+   "title": "Northern Impact Fund 2",
+   "funder": "Key Fund",
+   "url": "https://thekeyfund.co.uk/funding/northern-impact-fund-2/",
+   "proposals": [],
+   "confirmed": [
+    "is_invite_only"
+   ],
+   "notFound": [
+    "deadline",
+    "is_rolling",
+    "max_org_income"
+   ],
+   "notes": [],
+   "usage": {
+    "input": 1744,
+    "output": 288
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Northern Impact Fund 2"
+   },
+   "outcome": "verified",
+   "ft": "investment"
+  },
+  {
+   "id": "8f63ed16-b59e-4dd5-9ea5-56130e9aaf2e",
+   "title": "Start Up Loans",
+   "funder": "British Business Bank / Start Up Loans Company",
+   "url": "https://www.startuploans.co.uk/",
+   "proposals": [],
+   "confirmed": [
+    "is_rolling",
+    "is_invite_only"
+   ],
+   "notFound": [
+    "deadline",
+    "max_org_income"
+   ],
+   "notes": [
+    "the model judged this not to be funding but quoted nothing; verdict withheld",
+    "read through the reader proxy"
+   ],
+   "usage": {
+    "input": 2955,
+    "output": 343
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Start Up Loans"
+   },
+   "outcome": "verified",
+   "ft": "investment"
+  },
+  {
+   "id": "1df738d5-d952-425c-bfa6-a4c2b4057f61",
+   "title": "CAF Venturesome Impact Fund",
+   "funder": "CAF Venturesome",
+   "url": "https://www.cafonline.org/services-for-charities/funding-for-charities/social-investment",
+   "proposals": [],
+   "confirmed": [
+    "is_rolling",
+    "is_invite_only"
+   ],
+   "notFound": [
+    "deadline",
+    "max_org_income"
+   ],
+   "notes": [],
+   "usage": {
+    "input": 2442,
+    "output": 387
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Venturesome Impact Fund"
+   },
+   "outcome": "verified",
+   "ft": "investment"
+  },
+  {
+   "id": "b2dd8088-88c4-4696-a4d2-6fe034422d65",
+   "title": "Ethex Positive Investment Platform",
+   "funder": "Ethex",
+   "url": "https://www.ethex.org.uk/user/fundraiser",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [],
+   "notes": [
+    "Flexible finance – harness the crowd for lending or bridging via withdrawable shares and bond instruments"
+   ],
+   "usage": {
+    "input": 2899,
+    "output": 329
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Ethex Investment Platform"
+   },
+   "outcome": "not_a_grant",
+   "ft": "investment"
+  },
+  {
+   "id": "759177bd-20e8-4141-821a-93f5ebe820dd",
+   "title": "Social Investment",
+   "funder": "Esmée Fairbairn Foundation",
+   "url": "https://esmeefairbairn.org.uk/our-support/social-investment/",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [],
+   "notes": [
+    "Social investment is one of the tools we use, alongside grants and our own actions, to achieve our impact goals."
+   ],
+   "usage": {
+    "input": 2060,
+    "output": 316
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Social Investment"
+   },
+   "outcome": "not_a_grant",
+   "ft": "investment"
+  },
+  {
+   "id": "9bcadb67-6618-4ac7-9b9a-49cec783360e",
+   "title": "Community Finance Ireland (UCIT) — Social Loans",
+   "funder": "Ulster Community Investment Trust (Community Finance Ireland)",
+   "url": "https://www.communityfinanceireland.com/",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [],
+   "notes": [
+    "What we don't do: Offer grants. Lend to private businesses or individuals. Lend to projects outside the Third Sector."
+   ],
+   "usage": {
+    "input": 3209,
+    "output": 321
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Social Finance Loans"
+   },
+   "outcome": "not_a_grant",
+   "ft": "investment"
+  },
+  {
+   "id": "1b62fbe2-6a97-45bd-9f40-63a8b59dc7eb",
+   "title": "FareShare Greater Manchester — Community Food Membership",
+   "funder": "FareShare Greater Manchester",
+   "url": "https://faresharegm.org.uk/get-support/join-our-community-membership/",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [],
+   "notes": [
+    "the cost for the food from FareShare is on average 80-90% cheaper than buying from a low-cost supermarket"
+   ],
+   "usage": {
+    "input": 2320,
+    "output": 338
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Community Food Membership"
+   },
+   "outcome": "not_a_grant",
+   "ft": "in_kind"
+  },
+  {
+   "id": "279016ce-2758-436a-9387-6fa286c0c2dd",
+   "title": "WCVA Social Investment Cymru — Communities Investment Fund",
+   "funder": "WCVA (Social Investment Cymru)",
+   "url": "https://wcva.cymru/funding/social-investment-cymru/communities-investment-fund/",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [],
+   "notes": [
+    "CIF loans are available from £50,000 to £250,000 with a guide interest rate of around 7%."
+   ],
+   "usage": {
+    "input": 2241,
+    "output": 394
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Communities Investment Fund"
+   },
+   "outcome": "not_a_grant",
+   "ft": "investment"
+  },
+  {
+   "id": "ed047490-107e-4805-8ea2-6cd85520b3ae",
+   "title": "Clore Social Leadership Programme",
+   "funder": "Clore Social Leadership",
+   "url": "https://cloresocialleadership.org.uk/",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [],
+   "notes": [
+    "page covers 4 programmes (Discover Course; Emerging Leader; Experienced Leader; Leading Social Impact) and our row matches none of them cleanly",
+    "read through the reader proxy"
+   ],
+   "usage": {
+    "input": 1987,
+    "output": 419
+   },
+   "outcome": "multiple_funds",
+   "gate": {
+    "pass": true,
+    "fund_on_page": null
+   },
+   "fundsOnPage": [
+    "Discover Course",
+    "Emerging Leader",
+    "Experienced Leader",
+    "Leading Social Impact"
+   ],
+   "ft": "programme"
+  },
+  {
+   "id": "29740517-2d8b-4557-9d95-c85743c238b3",
+   "title": "AI Growth Lab",
+   "funder": "Department for Business, Innovation, Science and Trade",
+   "url": "https://www.find-government-grants.service.gov.uk/grants/ai-growth-labs-1",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [],
+   "notes": [
+    "Participants will not receive funding."
+   ],
+   "usage": {
+    "input": 1897,
+    "output": 358
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "AI Growth Lab"
+   },
+   "outcome": "not_a_grant",
+   "ft": "programme"
+  },
+  {
+   "id": "c40dc901-c460-4358-9a86-bd5a13878966",
+   "title": "AI For All",
+   "funder": "The Different Foundation",
+   "url": "https://www.thedifferent.foundation/ai-for-all",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [],
+   "notes": [
+    "read through the reader proxy"
+   ],
+   "usage": {
+    "input": 4603,
+    "output": 674
+   },
+   "outcome": "fixable_link",
+   "gate": {
+    "pass": false,
+    "failure": "no_funding_detail",
+    "fund_on_page": "AI For All",
+    "detail": "no eligibility, deadline or application detail on the page"
+   },
+   "ft": "programme"
+  },
+  {
+   "id": "6ffdea3c-fb1c-4e33-87af-b717e961ad91",
+   "title": "Trust for London — Social Investment Programme",
+   "funder": "Trust for London",
+   "url": "https://trustforlondon.org.uk/funding/social-investment/",
+   "proposals": [],
+   "confirmed": [
+    "is_rolling",
+    "is_invite_only"
+   ],
+   "notFound": [
+    "deadline",
+    "max_org_income"
+   ],
+   "notes": [],
+   "usage": {
+    "input": 2244,
+    "output": 357
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Social investment"
+   },
+   "outcome": "verified",
+   "ft": "investment"
+  },
+  {
+   "id": "469b52bf-f8b9-4b4a-b8cd-54789928562e",
+   "title": "National Digital Inclusion Network membership",
+   "funder": "Good Things Foundation",
+   "url": "https://www.goodthingsfoundation.org/network",
+   "proposals": [],
+   "confirmed": [
+    "is_rolling",
+    "is_invite_only"
+   ],
+   "notFound": [
+    "deadline",
+    "max_org_income"
+   ],
+   "notes": [],
+   "usage": {
+    "input": 2641,
+    "output": 339
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "National Digital Inclusion Network membership"
+   },
+   "outcome": "verified",
+   "ft": "in_kind"
+  },
+  {
+   "id": "a9bf3c97-5e60-403d-9951-6fc218d4150c",
+   "title": "Start Up Loans — South West (SWIG Finance)",
+   "funder": "SWIG Finance",
+   "url": "https://www.swigfinance.co.uk/start-up-loans/",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [],
+   "notes": [
+    "A Start Up Loan is a personal loan for business purposes for a term of 1 to 5 years at a fixed rate of 7.5% per annum."
+   ],
+   "usage": {
+    "input": 3386,
+    "output": 358
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Start Up Loans"
+   },
+   "outcome": "not_a_grant",
+   "ft": "investment"
+  },
+  {
+   "id": "f7e51198-d22b-484a-bec3-aadbe08fb748",
+   "title": "Network Membership",
+   "funder": "StreetGames",
+   "url": "https://www.streetgames.org/partner-with-us/join-the-network/",
+   "proposals": [],
+   "confirmed": [
+    "is_rolling",
+    "is_invite_only"
+   ],
+   "notFound": [
+    "deadline",
+    "max_org_income"
+   ],
+   "notes": [],
+   "usage": {
+    "input": 2421,
+    "output": 314
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Join the Network"
+   },
+   "outcome": "verified",
+   "ft": "in_kind"
+  },
+  {
+   "id": "b818a116-3579-4eb3-8808-b40abc38e393",
+   "title": "Key Fund Flexible Finance",
+   "funder": "Key Fund",
+   "url": "https://thekeyfund.co.uk/funding/",
+   "proposals": [],
+   "confirmed": [
+    "is_rolling"
+   ],
+   "notFound": [
+    "deadline",
+    "max_org_income",
+    "is_invite_only"
+   ],
+   "notes": [
+    "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped"
+   ],
+   "usage": {
+    "input": 2585,
+    "output": 431
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Flexible Finance"
+   },
+   "outcome": "verified",
+   "ft": "investment"
+  },
+  {
+   "id": "6192dca0-0913-47ca-82cb-3891a30eed3a",
+   "title": "Access — The Foundation for Social Investment",
+   "funder": "Access — The Foundation for Social Investment",
+   "url": "https://www.access-socialinvestment.org.uk/",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [],
+   "notes": [
+    "page covers 5 programmes (Access Funding 2025-2029; Enterprise Development Programme; Local Access; Cost of living Social Investment Support Fund; Enterprise Grants Taskforce) and our row matches none of them cleanly",
+    "read one level down: https://access-socialinvestment.org.uk/what-we-do/enterprise-grants"
+   ],
+   "usage": {
+    "input": 7580,
+    "output": 952
+   },
+   "outcome": "multiple_funds",
+   "gate": {
+    "pass": true,
+    "fund_on_page": null
+   },
+   "fundsOnPage": [
+    "Access Funding 2025-2029",
+    "Enterprise Development Programme",
+    "Local Access",
+    "Cost of living Social Investment Support Fund",
+    "Enterprise Grants Taskforce"
+   ],
+   "followedUrl": "https://access-socialinvestment.org.uk/what-we-do/enterprise-grants",
+   "ft": "investment"
+  },
+  {
+   "id": "6c5b16b7-0c43-4b03-9e68-e551603c6a26",
+   "title": "Business Loans",
+   "funder": "Triodos Bank UK",
+   "url": "https://www.triodos.co.uk/business-lending",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [],
+   "notes": [
+    "page covers 3 programmes (Business loans up to £1m; Business loans over £1m; Raising capital for impact organisations) and our row matches none of them cleanly"
+   ],
+   "usage": {
+    "input": 3063,
+    "output": 287
+   },
+   "outcome": "multiple_funds",
+   "gate": {
+    "pass": true,
+    "fund_on_page": null
+   },
+   "fundsOnPage": [
+    "Business loans up to £1m",
+    "Business loans over £1m",
+    "Raising capital for impact organisations"
+   ],
+   "ft": "investment"
+  },
+  {
+   "id": "7eb61b99-36e4-4246-a7da-bc91a61e3e8e",
+   "title": "More than a Pub",
+   "funder": "Key Fund",
+   "url": "https://thekeyfund.co.uk/funding/more-than-a-pub/",
+   "proposals": [],
+   "confirmed": [
+    "is_invite_only"
+   ],
+   "notFound": [
+    "deadline",
+    "is_rolling",
+    "max_org_income"
+   ],
+   "notes": [
+    "the model judged this not to be funding but quoted nothing; verdict withheld"
+   ],
+   "usage": {
+    "input": 1599,
+    "output": 300
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "More than a Pub"
+   },
+   "outcome": "verified",
+   "ft": "investment"
+  },
+  {
+   "id": "68a158d4-e2c7-42af-934b-fbb418f08e28",
+   "title": "North East Create Growth Programme",
+   "funder": "Creative UK",
+   "url": "https://www.wearecreative.uk/support/regional-growth-programmes/north-east/",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [
+    "deadline",
+    "is_rolling",
+    "max_org_income",
+    "is_invite_only"
+   ],
+   "notes": [],
+   "usage": {
+    "input": 2912,
+    "output": 317
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "North East Create Growth Programme"
+   },
+   "outcome": "verified",
+   "ft": "programme"
+  },
+  {
+   "id": "27a138cf-1fec-4509-8ad9-ba125b239265",
+   "title": "Realising a New Economy",
+   "funder": "Friends Provident Foundation",
+   "url": "https://friendsprovidentfoundation.org/grants/",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [],
+   "notes": [
+    "These are all now closed to new applications. Final decisions on those applications already underway will be made at our Board of Trustees meeting in March 2027."
+   ],
+   "usage": {
+    "input": 2188,
+    "output": 385
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Realising a New Economy"
+   },
+   "outcome": "no_longer_listed",
+   "ft": "grant"
+  },
+  {
+   "id": "283f4277-aca4-4cc1-ae9e-2d2aebcf54f3",
+   "title": "Community Shares — Booster Fund",
+   "funder": "Community Shares",
+   "url": "https://www.uk.coop/support-your-co-op/community-shares/support/booster-fund/apply",
+   "proposals": [
+    {
+     "field": "is_rolling",
+     "from": false,
+     "to": true,
+     "quote": "Applications are accepted on a rolling basis",
+     "verdict": "confirmed"
+    }
+   ],
+   "confirmed": [],
+   "notFound": [
+    "deadline",
+    "max_org_income",
+    "is_invite_only"
+   ],
+   "notes": [
+    "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped"
+   ],
+   "usage": {
+    "input": 3481,
+    "output": 321
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Booster Fund"
+   },
+   "outcome": "verified",
+   "ft": "grant"
+  },
+  {
+   "id": "72739682-6794-487d-95dc-fac4d4ce3f1f",
+   "title": "Charity Bank Loans for Social Purpose",
+   "funder": "Charity Bank",
+   "url": "https://charitybank.org/loans",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [],
+   "notes": [
+    "page covers 5 programmes (Loans up to £750,000; Loans over £750,000; Green Loans; Development Finance; Energy Efficiency Programme) and our row matches none of them cleanly"
+   ],
+   "usage": {
+    "input": 4682,
+    "output": 339
+   },
+   "outcome": "multiple_funds",
+   "gate": {
+    "pass": true,
+    "fund_on_page": null
+   },
+   "fundsOnPage": [
+    "Loans up to £750,000",
+    "Loans over £750,000",
+    "Green Loans",
+    "Development Finance",
+    "Energy Efficiency Programme"
+   ],
+   "ft": "investment"
+  },
+  {
+   "id": "0adbc570-5d75-4d6e-af6d-3263559896a3",
+   "title": "Community Builders Fund",
+   "funder": "Social Investment Business",
+   "url": "https://www.sibgroup.org.uk/fund/community-builders-fund/",
+   "proposals": [],
+   "confirmed": [
+    "is_rolling",
+    "is_invite_only"
+   ],
+   "notFound": [
+    "deadline",
+    "max_org_income"
+   ],
+   "notes": [
+    "the model judged this not to be funding but quoted nothing; verdict withheld"
+   ],
+   "usage": {
+    "input": 2938,
+    "output": 284
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Community Builders Fund"
+   },
+   "outcome": "verified",
+   "ft": "investment"
+  },
+  {
+   "id": "171ceb65-7ddf-4a90-ac4c-57adf480279f",
+   "title": "AWS Nonprofit Credit Program",
+   "funder": "Amazon Web Services",
+   "url": "https://aws.amazon.com/government-education/nonprofits/",
+   "proposals": [],
+   "confirmed": [
+    "is_rolling",
+    "is_invite_only"
+   ],
+   "notFound": [
+    "deadline",
+    "max_org_income"
+   ],
+   "notes": [],
+   "usage": {
+    "input": 3382,
+    "output": 432
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "AWS Nonprofit Credit Program"
+   },
+   "outcome": "verified",
+   "ft": "in_kind"
+  },
+  {
+   "id": "b81f41be-db1a-4b9e-9e7f-da7cacff19b1",
+   "title": "Social Investment Fund for London",
+   "funder": "City Bridge Foundation",
+   "url": "https://www.citybridgefoundation.org.uk/funding/social-investment-fund-for-london",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [],
+   "notes": [
+    "read through the reader proxy"
+   ],
+   "usage": {
+    "input": 1272,
+    "output": 234
+   },
+   "outcome": "fixable_link",
+   "gate": {
+    "pass": false,
+    "failure": "wrong_fund",
+    "fund_on_page": null,
+    "detail": "our fund is not on this page"
+   },
+   "ft": "investment"
+  },
+  {
+   "id": "6c379e4b-482c-4548-9b77-bfb74dc314f8",
+   "title": "Better Brighton & Hove Fund — Ward Pots 2026",
+   "funder": "Brighton & Hove City Council",
+   "url": "https://yourvoice.brighton-hove.gov.uk/projects/better-brighton-hove-fund",
+   "proposals": [],
+   "confirmed": [
+    "is_rolling",
+    "is_invite_only"
+   ],
+   "notFound": [
+    "deadline",
+    "max_org_income"
+   ],
+   "notes": [
+    "the model judged this not to be funding but quoted nothing; verdict withheld",
+    "the model judged this fund no longer listed but quoted nothing; verdict withheld",
+    "deadline: a value was offered without a quote we could find on the page, so it was dropped",
+    "read through the reader proxy"
+   ],
+   "usage": {
+    "input": 5234,
+    "output": 320
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Better Brighton & Hove fund"
+   },
+   "outcome": "verified",
+   "ft": "grant"
+  }
+ ]
+}
