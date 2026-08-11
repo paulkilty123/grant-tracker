@@ -156,8 +156,25 @@ export async function deepCheckUrl(
     if (res.status >= 500) {
       return { status: 'wrong_page', qualityScore: 20, issues: ['http_5xx'] }
     }
-    if (res.status === 403) {
-      return { status: 'wrong_page', qualityScore: 20, issues: ['http_403_blocked'] }
+    // 401 belongs here with 403 and was missing until 2026-08-11. It fell
+    // through to the content checks below, where the outcome depended on
+    // whether the funder's name happened to appear in the auth-error body —
+    // The Bromley Trust's /our-approach/ returns 401 to a plain fetch and was
+    // recorded url_status='ok', so a page nobody could read looked healthy.
+    if (res.status === 401 || res.status === 403) {
+      // A bot wall is not a dead link and not an unknown either: the reader
+      // proxy can usually read what a plain fetch cannot. Checking it here is
+      // what stops the ~16 known bot-walled funders sitting permanently at
+      // 'unchecked'. Only runs on the blocked path, so the normal path is
+      // unaffected.
+      if (await readableViaReaderProxy(url)) {
+        return { status: 'ok', qualityScore: 35, issues: ['bot_walled_read_via_proxy'] }
+      }
+      return {
+        status: 'wrong_page',
+        qualityScore: 20,
+        issues: [res.status === 401 ? 'http_401_blocked' : 'http_403_blocked'],
+      }
     }
     if (res.status === 429) {
       return { status: 'wrong_page', qualityScore: 20, issues: ['http_429_rate_limited'] }
@@ -359,6 +376,38 @@ export async function deepCheckUrl(
 // DNS failures (domain no longer exists), and wrong-page redirects
 // (content sniffing: funder name absent from page HTML). TLS cert failures
 // return 'unchecked' (flag for human re-check) — never silently 'ok'.
+/**
+ * Can the reader proxy read a page our own fetch was blocked from?
+ *
+ * Deliberately a boolean, not the content: this only decides whether a blocked
+ * page is live, and pulling the body into the validator would duplicate the
+ * fetching that `verify-row.ts` already owns. That file has its own copy of this
+ * call (`fetchViaReaderProxy`); they are kept separate so the validator does not
+ * import the verification engine and, with it, the Anthropic SDK.
+ */
+async function readableViaReaderProxy(url: string): Promise<boolean> {
+  const base = process.env.READER_PROXY_URL
+  if (!base) return false
+  try {
+    const res = await fetch(`${base.replace(/\/$/, '')}/${url}`, {
+      signal: AbortSignal.timeout(20_000),
+      headers: {
+        Accept: 'text/plain',
+        ...(process.env.READER_PROXY_KEY ? { Authorization: `Bearer ${process.env.READER_PROXY_KEY}` } : {}),
+      },
+    })
+    if (!res.ok) return false
+    const text = await res.text()
+    // The proxy answers failures with a short JSON envelope (~370 chars, e.g.
+    // an auth or quota error) and successes with long markdown. Treat only the
+    // latter as a read, so a quota-exhausted proxy cannot silently certify
+    // every blocked URL as live.
+    return text.length > 800 && !text.trimStart().startsWith('{')
+  } catch {
+    return false
+  }
+}
+
 export async function checkUrl(url: string, funderName?: string): Promise<'ok' | 'dead' | 'unchecked'> {
   try {
     const res = await fetch(url, {
@@ -372,8 +421,13 @@ export async function checkUrl(url: string, funderName?: string): Promise<'ok' |
     if (res.status === 404 || res.status === 410 || res.status === 400) return 'dead'
 
     // Server errors / blocked requests — 'unchecked', not 'ok' and not 'dead'.
-    // See the equivalent block in deepCheckUrl for the reasoning.
-    if (res.status >= 500 || res.status === 403 || res.status === 429) return 'unchecked'
+    // See the equivalent block in deepCheckUrl for the reasoning. 401 was
+    // missing here too, with the same consequence: a bot-walled page scored on
+    // the contents of its auth error.
+    if (res.status >= 500 || res.status === 429) return 'unchecked'
+    if (res.status === 401 || res.status === 403) {
+      return (await readableViaReaderProxy(url)) ? 'ok' : 'unchecked'
+    }
 
     // ── Soft 404 detection ─────────────────────────────────────────────────────
     const finalUrl = res.url
