@@ -20,6 +20,39 @@ import Anthropic from '@anthropic-ai/sdk'
  *     computed in code, where it is a comparison.
  *  3. NO QUOTE, NO FACT. Every value must carry a verbatim sentence from the
  *     page. A value the model cannot point at is not evidence.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * QUOTE-VERIFIED IS NOT MEANING-VERIFIED. Learned 2026-08-11, expensively.
+ *
+ * A check confirming the proposed value appears in the quoted sentence scored
+ * max_org_income at 32/32. A random sample of five then found three wrong:
+ *
+ *   - Wax Chandlers': proposed a £200,000 income cap from "less than £200k in
+ *     CASH AT BANK". Cash is not income. Worse, the same page carried the real
+ *     limit — "Organisations with an annual income over £100,000" — so the
+ *     right answer was present and the wrong one was taken, out by 2x.
+ *   - Colwinston: proposed invite-only from "Eligible applicants will then be
+ *     invited to submit a formal application". That is a two-stage process, not
+ *     an invitation-only fund.
+ *   - Ufi VocTech: proposed invite-only for the whole trust from "VocTech
+ *     Ignite ... By invitation only" — a rule belonging to one of its four
+ *     programmes, the only one users cannot apply to.
+ *
+ * Every quote was real and accurate ABOUT ITS OWN SUBJECT. The check catches
+ * fabrication and is blind to misinterpretation, so it can only ever be a
+ * floor. Two consequences, both structural:
+ *
+ *   a) A field is only proposable when the quote is about THAT field's concept.
+ *      Income means organisational income or turnover — not cash at bank, not
+ *      balance sheet, not headcount.
+ *   b) A page describing several funds cannot answer questions about one row.
+ *      Ufi's page covers four programmes with different rules; our catalogue
+ *      holds one generic "Ufi VocTech Trust" row and three archived ones, two
+ *      of which no longer exist. There is no correct value to extract, because
+ *      the row does not correspond to a thing the funder offers. That is a
+ *      catalogue-structure finding, not a field correction — see the
+ *      `multiple_funds` outcome.
+ * ─────────────────────────────────────────────────────────────────────────────
  */
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -66,6 +99,7 @@ export type Proposal = {
 
 export type Outcome =
   | 'verified'          // gate passed, facts extracted
+  | 'multiple_funds'    // page covers several funds; our row maps to none of them cleanly
   | 'round_closed'      // page states a deadline that has already passed
   | 'fixable_link'      // gate failed — surface to the admin as a link to fix
   | 'no_longer_listed'  // page says the fund is gone
@@ -86,6 +120,8 @@ export type VerifyResult = {
   closedRound?: { deadline: string; quote: string }
   /** Set when the answer came from a page one level down from apply_url. */
   followedUrl?: string
+  /** Set on multiple_funds: what the page actually covers, for a split decision. */
+  fundsOnPage?: string[]
   usage?:    { input: number; output: number }
 }
 
@@ -347,6 +383,13 @@ ${pageText}
 Answer in JSON only, no prose, no markdown fence.
 
 STEP 1 — GATE. Decide whether this page can be used to verify OUR fund.
+  "funds_on_page" : an array naming EVERY distinct funding programme this page
+                    describes. One page often covers several. Use the funder's
+                    own names. Empty array if none.
+  "our_fund_is_one_of_them" : true if exactly one entry in funds_on_page is the
+                    fund our record refers to. False if our record is generic
+                    and the page offers several distinct programmes with
+                    different rules — we cannot then tell which applies.
   "fund_on_page"  : the name of the fund this page actually describes, or null.
                     If the page lists several funds, name the one matching ours,
                     or null if ours is not among them.
@@ -394,7 +437,7 @@ quote of the sentence it came from. If the page does not state it, use
                      a paid membership, a discounted service, or a loan product).
 
 Shape:
-{"gate":{"fund_on_page":string|null,"describes_our_fund":bool,"has_funding_detail":bool},
+{"gate":{"funds_on_page":string[],"our_fund_is_one_of_them":bool,"fund_on_page":string|null,"describes_our_fund":bool,"has_funding_detail":bool},
  "facts":{"deadline":{"value":null,"quote":null},"is_rolling":{"value":null,"quote":null},
  "max_org_income":{"value":null,"quote":null},"is_invite_only":{"value":null,"quote":null},
  "still_listed":{"value":true,"quote":null},"is_grant":{"value":true,"quote":null}}}`
@@ -519,7 +562,10 @@ async function runModel(
     return { ...base, usage, outcome: 'fixable_link', gate: { pass: false, failure: 'no_content', detail: 'model returned unparseable JSON' } }
   }
 
-  const g = (parsed.gate ?? {}) as { fund_on_page?: string | null; describes_our_fund?: boolean; has_funding_detail?: boolean }
+  const g = (parsed.gate ?? {}) as {
+    fund_on_page?: string | null; describes_our_fund?: boolean; has_funding_detail?: boolean
+    funds_on_page?: unknown; our_fund_is_one_of_them?: boolean
+  }
   const fundOnPage = typeof g.fund_on_page === 'string' ? g.fund_on_page : null
 
   // Resolve the model contradicting itself: a "no" that names our own fund in
@@ -540,6 +586,24 @@ async function runModel(
       ...base, usage, outcome: 'fixable_link',
       gate: { pass: false, failure: 'no_funding_detail', fund_on_page: fundOnPage,
               detail: 'no eligibility, deadline or application detail on the page' },
+    }
+  }
+
+  // One row, one fund. A page covering several distinct programmes cannot
+  // answer a question about our row: Ufi's page carries four, one of which is
+  // invitation-only, and proposing that rule for the generic row would have
+  // shut the three anyone can apply to. This is a catalogue-structure finding —
+  // the row needs splitting or re-pointing — not a field correction, so no
+  // facts are proposed.
+  const fundsOnPage = Array.isArray(g.funds_on_page)
+    ? (g.funds_on_page as unknown[]).filter((x): x is string => typeof x === 'string')
+    : []
+  if (fundsOnPage.length > 1 && g.our_fund_is_one_of_them !== true) {
+    return {
+      ...base, usage, outcome: 'multiple_funds',
+      gate: { pass: true, fund_on_page: fundOnPage },
+      fundsOnPage,
+      notes: [`page covers ${fundsOnPage.length} programmes (${fundsOnPage.slice(0, 5).join('; ')}) and our row matches none of them cleanly`],
     }
   }
 
@@ -601,8 +665,31 @@ async function runModel(
     consider('deadline', deadlineFact, row.deadline, asDate)
   }
   consider('is_rolling',     fact('is_rolling'),     row.is_rolling,     asBool)
-  consider('max_org_income', fact('max_org_income'), row.max_org_income, asMoney)
-  consider('is_invite_only', fact('is_invite_only'), row.is_invite_only, asBool)
+  // Only propose an income cap when the sentence is about organisational income
+  // or turnover. Wax Chandlers' "less than £200k in cash at bank" is a real
+  // sentence with a real number that means something else entirely.
+  const incomeFact = fact('max_org_income')
+  const INCOME_CONCEPT = /\b(income|turnover|revenue|annual (operating )?budget|operating budget)\b/i
+  const CASH_CONCEPT   = /\b(cash at bank|cash and investments|balance sheet|reserves|in the bank)\b/i
+  if (incomeFact.quote && (!INCOME_CONCEPT.test(incomeFact.quote) || CASH_CONCEPT.test(incomeFact.quote))) {
+    notFound.push('max_org_income')
+    notes.push(`max_org_income withheld: the quote is not about organisational income — "${incomeFact.quote.slice(0, 120)}"`)
+  } else {
+    consider('max_org_income', incomeFact, row.max_org_income, asMoney)
+  }
+  // "Invited to submit a full application" describes a two-stage process open to
+  // anyone, which is the opposite of invitation-only. Require language of
+  // refusal or nomination, and reject staged-application phrasing.
+  const inviteFact = fact('is_invite_only')
+  const TRUE_INVITE = /\b(unsolicited|do not accept applications|does not accept applications|by invitation only|invitation only|not open to applications|nominat)/i
+  const TWO_STAGE   = /\b(then be invited|will be invited to submit|invited to submit a (full|formal|second)|shortlist)/i
+  if (inviteFact.value === true && inviteFact.quote
+      && (!TRUE_INVITE.test(inviteFact.quote) || TWO_STAGE.test(inviteFact.quote))) {
+    notFound.push('is_invite_only')
+    notes.push(`is_invite_only withheld: the quote describes a staged or selective process, not an invitation-only fund — "${inviteFact.quote.slice(0, 120)}"`)
+  } else {
+    consider('is_invite_only', inviteFact, row.is_invite_only, asBool)
+  }
 
   return {
     ...base, usage, gate,

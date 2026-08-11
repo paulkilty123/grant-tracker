@@ -1,0 +1,1789 @@
+{
+ "results": [
+  {
+   "id": "01955113-ce3d-4c8f-861f-b50ed2f15803",
+   "title": "Community Grants",
+   "funder": "Wiltshire and Swindon Community Foundation",
+   "url": "https://www.wscf.org.uk/grants-and-support/groups/community-grants/",
+   "proposals": [
+    {
+     "field": "is_rolling",
+     "from": true,
+     "to": false,
+     "quote": "For 2026/27 the currently planned dates for this programme are outlined below.",
+     "verdict": "confirmed"
+    },
+    {
+     "field": "max_org_income",
+     "from": null,
+     "to": 1000000,
+     "quote": "Applicants must have an annual income which has been on average under £1,000,000 for the last three years.",
+     "verdict": "confirmed"
+    }
+   ],
+   "confirmed": [],
+   "notFound": [
+    "deadline",
+    "is_invite_only"
+   ],
+   "notes": [
+    "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped"
+   ],
+   "usage": {
+    "input": 2856,
+    "output": 343
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Community Grants"
+   },
+   "outcome": "round_closed",
+   "closedRound": {
+    "deadline": "2026-03-03",
+    "quote": "3 March 2026 - 17 July 2026"
+   }
+  },
+  {
+   "id": "6344f1bf-cc8a-4410-a4b6-f15e200559f5",
+   "title": "JRCT — Power & Accountability Programme",
+   "funder": "Joseph Rowntree Charitable Trust",
+   "url": "https://www.jrct.org.uk/power-and-accountability",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [
+    "deadline",
+    "is_rolling",
+    "max_org_income",
+    "is_invite_only"
+   ],
+   "notes": [
+    "deadline: a value was offered without a quote we could find on the page, so it was dropped",
+    "is_rolling: a value was offered without a quote we could find on the page, so it was dropped",
+    "is_invite_only withheld: the quote describes a staged or selective process, not an invitation-only fund — \"Only those new applicants who have completed the expression of interest stage and been invited to submit a full applicat\""
+   ],
+   "usage": {
+    "input": 2483,
+    "output": 367
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Power and Accountability"
+   },
+   "outcome": "verified"
+  },
+  {
+   "id": "c1caaf02-8461-4393-8ba1-c81096cded8a",
+   "title": "Pilotlight 360",
+   "funder": "Pilotlight",
+   "url": "https://www.pilotlight.org.uk/charities/apply-for-support",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [],
+   "notes": [],
+   "usage": {
+    "input": 1977,
+    "output": 308
+   },
+   "outcome": "fixable_link",
+   "gate": {
+    "pass": false,
+    "failure": "wrong_fund",
+    "fund_on_page": null,
+    "detail": "our fund is not on this page"
+   }
+  },
+  {
+   "id": "c282c317-515b-4aad-85b2-11cd8c7b2aea",
+   "title": "North London Community Fund",
+   "funder": "North London Waste Authority",
+   "url": "https://www.nlwa.gov.uk/article/north-london-community-fund",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [
+    "deadline",
+    "is_rolling",
+    "max_org_income",
+    "is_invite_only"
+   ],
+   "notes": [
+    "is_invite_only withheld: the quote describes a staged or selective process, not an invitation-only fund — \"After careful consideration, 23 community groups will receive grants of up to £20,000.\""
+   ],
+   "usage": {
+    "input": 3548,
+    "output": 325
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "North London Community Fund"
+   },
+   "outcome": "verified"
+  },
+  {
+   "id": "05fcaae0-a3d3-43b7-87b8-69d951b45c24",
+   "title": "Somerset Community Foundation Grants",
+   "funder": "Somerset Community Foundation",
+   "url": "https://www.somersetcf.org.uk/grants-and-funding/grants-and-funding-for-groups/",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [],
+   "notes": [
+    "page covers 16 programmes (Somerset Crisis and Resilience Alliance; HPC Community Fund Small Grants; HPC Community Fund Open Grants; Oake Sunshine Fund; Somerset Social Investment Programme) and our row matches none of them cleanly"
+   ],
+   "usage": {
+    "input": 3591,
+    "output": 442
+   },
+   "outcome": "multiple_funds",
+   "gate": {
+    "pass": true,
+    "fund_on_page": null
+   },
+   "fundsOnPage": [
+    "Somerset Crisis and Resilience Alliance",
+    "HPC Community Fund Small Grants",
+    "HPC Community Fund Open Grants",
+    "Oake Sunshine Fund",
+    "Somerset Social Investment Programme",
+    "Somerset Older People's Fund",
+    "Waste Not Somerset Fund",
+    "Stronger Communities Fund",
+    "WCS Pickford Trust Fund",
+    "Supporting Care Leavers",
+    "Festive Fund for Somerset",
+    "Mendip Hills Fund",
+    "The Gooch Charitable Fund",
+    "Churchstanton Community Fund",
+    "Wessex Water Environment Fund",
+    "Wessex Water Community Fund"
+   ]
+  },
+  {
+   "id": "600db8c5-dc40-43c4-9b2c-e812b018bdad",
+   "title": "Joseph Rank Trust",
+   "funder": "Joseph Rank Trust",
+   "url": "https://www.ranktrust.org/rank-trust-grants.htm",
+   "proposals": [
+    {
+     "field": "is_invite_only",
+     "from": false,
+     "to": true,
+     "quote": "On-going commitments, combined with the fact that the Trustees take an active role in identifying projects to support, means that it is not always possible to make grants in response to unsolicited applications.",
+     "verdict": "confirmed"
+    }
+   ],
+   "confirmed": [
+    "deadline"
+   ],
+   "notFound": [
+    "is_rolling",
+    "max_org_income"
+   ],
+   "notes": [],
+   "usage": {
+    "input": 2066,
+    "output": 367
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Joseph Rank Trust"
+   },
+   "outcome": "verified"
+  },
+  {
+   "id": "ba33eb0c-e6d9-453c-b57e-21f23e925738",
+   "title": "Champions for Children — Match Fundraising Programme",
+   "funder": "The Childhood Trust",
+   "url": "https://www.childhoodtrust.org.uk/apply-for-funding/",
+   "proposals": [],
+   "confirmed": [
+    "is_invite_only"
+   ],
+   "notFound": [
+    "deadline",
+    "is_rolling",
+    "max_org_income"
+   ],
+   "notes": [],
+   "usage": {
+    "input": 1996,
+    "output": 351
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Champions for Children"
+   },
+   "outcome": "verified"
+  },
+  {
+   "id": "29e9ed97-ea0a-4b23-8a11-50d59ccf85a7",
+   "title": "Strengthening Communities",
+   "funder": "National Lottery Community Fund",
+   "url": "https://www.tnlcommunityfund.org.uk/funding/funding-programmes/strengthening-communities",
+   "proposals": [
+    {
+     "field": "max_org_income",
+     "from": null,
+     "to": 500000,
+     "quote": "By smaller organisations, we mean those with an annual income under £500,000.",
+     "verdict": "confirmed"
+    }
+   ],
+   "confirmed": [
+    "is_rolling",
+    "is_invite_only"
+   ],
+   "notFound": [
+    "deadline"
+   ],
+   "notes": [],
+   "usage": {
+    "input": 1817,
+    "output": 305
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Strengthening Communities"
+   },
+   "outcome": "verified"
+  },
+  {
+   "id": "8a7c3b87-8539-47bf-aef1-889169c6a2f6",
+   "title": "Peter Sell Award",
+   "funder": "Leslie Sell Charitable Trust",
+   "url": "https://lesliesellct.org.uk/the-peter-sell-annual-award/",
+   "proposals": [],
+   "confirmed": [
+    "is_rolling"
+   ],
+   "notFound": [
+    "deadline",
+    "max_org_income",
+    "is_invite_only"
+   ],
+   "notes": [
+    "is_invite_only withheld: the quote describes a staged or selective process, not an invitation-only fund — \"The Trustees invite applications which seek to do the following:\""
+   ],
+   "usage": {
+    "input": 1946,
+    "output": 391
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "The Peter Sell Award"
+   },
+   "outcome": "round_closed",
+   "closedRound": {
+    "deadline": "2025-09-14",
+    "quote": "Therefore the deadlines for receipt of application are 14th February and 14th September."
+   }
+  },
+  {
+   "id": "59b7e30c-4018-4d22-9e7a-074a5f19ae24",
+   "title": "Steel Charitable Trust",
+   "funder": "Steel Charitable Trust",
+   "url": "https://steelcharitabletrust.org.uk/",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [],
+   "notes": [],
+   "usage": {
+    "input": 1617,
+    "output": 257
+   },
+   "outcome": "fixable_link",
+   "gate": {
+    "pass": false,
+    "failure": "wrong_fund",
+    "fund_on_page": null,
+    "detail": "our fund is not on this page"
+   }
+  },
+  {
+   "id": "4b989eab-79b0-4981-987d-f308f0843fdc",
+   "title": "National Lottery Heritage Grants £250,000 to £10million",
+   "funder": "National Lottery Heritage Fund",
+   "url": "https://www.heritagefund.org.uk/funding/national-lottery-heritage-grants-250k-10m",
+   "proposals": [
+    {
+     "field": "is_rolling",
+     "from": true,
+     "to": false,
+     "quote": "Deadlines for development and delivery applications are quarterly",
+     "verdict": "confirmed"
+    }
+   ],
+   "confirmed": [],
+   "notFound": [
+    "deadline",
+    "max_org_income",
+    "is_invite_only"
+   ],
+   "notes": [
+    "is_invite_only withheld: the quote describes a staged or selective process, not an invitation-only fund — \"You must first submit an Expression of Interest to tell us about your idea, and we will let you know if you are invited \""
+   ],
+   "usage": {
+    "input": 3506,
+    "output": 341
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "National Lottery Heritage Grants £250,000 to £10million"
+   },
+   "outcome": "verified"
+  },
+  {
+   "id": "e271481d-bb05-49b0-850b-e0cc6853a4ca",
+   "title": "Performing and Visual Arts Grants (Wales)",
+   "funder": "Colwinston Charitable Trust",
+   "url": "https://colwinston.org.uk/how-to-apply/",
+   "proposals": [],
+   "confirmed": [
+    "is_rolling"
+   ],
+   "notFound": [
+    "deadline",
+    "max_org_income",
+    "is_invite_only"
+   ],
+   "notes": [
+    "is_invite_only withheld: the quote describes a staged or selective process, not an invitation-only fund — \"Eligible applicants will then be invited to submit a formal application in either March or September.\""
+   ],
+   "usage": {
+    "input": 2133,
+    "output": 326
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Colwinston Charitable Trust Grants"
+   },
+   "outcome": "verified"
+  },
+  {
+   "id": "0f6795e2-bdd9-4746-b1d8-88a6ea469824",
+   "title": "Barbara Ward Children's Foundation",
+   "funder": "Barbara Ward Children's Foundation",
+   "url": "https://www.bwcf.org.uk/",
+   "proposals": [],
+   "confirmed": [
+    "is_invite_only"
+   ],
+   "notFound": [
+    "deadline",
+    "is_rolling",
+    "max_org_income"
+   ],
+   "notes": [],
+   "usage": {
+    "input": 1724,
+    "output": 272
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Barbara Ward Children's Foundation"
+   },
+   "outcome": "verified"
+  },
+  {
+   "id": "b12c394d-346d-4246-a254-06ca5bbadd08",
+   "title": "Calouste Gulbenkian Foundation UK Branch — Grants",
+   "funder": "Calouste Gulbenkian Foundation UK Branch",
+   "url": "https://gulbenkian.pt/uk-branch/our-work/our-grant-making/",
+   "proposals": [
+    {
+     "field": "is_invite_only",
+     "from": false,
+     "to": true,
+     "quote": "We do not accept unsolicited applications. However, we welcome initial inquiries if an organisation's work aligns with our goals.",
+     "verdict": "confirmed"
+    }
+   ],
+   "confirmed": [],
+   "notFound": [
+    "deadline",
+    "is_rolling",
+    "max_org_income"
+   ],
+   "notes": [
+    "read one level down: https://gulbenkian.pt/uk-branch/funding-approach/"
+   ],
+   "usage": {
+    "input": 8345,
+    "output": 898
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": null
+   },
+   "outcome": "verified",
+   "followedUrl": "https://gulbenkian.pt/uk-branch/funding-approach/"
+  },
+  {
+   "id": "74a6396c-b8dc-42ff-abe8-5d3ebb8fe349",
+   "title": "Highlands and Islands Environment Foundation Grants",
+   "funder": "Highlands and Islands Environment Foundation",
+   "url": "https://hief.scot/grants/",
+   "proposals": [
+    {
+     "field": "max_org_income",
+     "from": null,
+     "to": 1000000,
+     "quote": "Organisations with an annual income of over £1m, and non-local applicants, will not be considered for funding unless potential projects meet all of the criteria listed below",
+     "verdict": "confirmed"
+    }
+   ],
+   "confirmed": [
+    "is_rolling",
+    "is_invite_only"
+   ],
+   "notFound": [
+    "deadline"
+   ],
+   "notes": [],
+   "usage": {
+    "input": 2888,
+    "output": 405
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Highlands and Islands Environment Foundation Grants"
+   },
+   "outcome": "round_closed",
+   "closedRound": {
+    "deadline": "2026-02-23",
+    "quote": "Expression of Interest deadlines will be at 9am on the following days: Monday 23rd February"
+   }
+  },
+  {
+   "id": "4ae29598-b2c4-4de0-8a11-103dc682d669",
+   "title": "The Bromley Trust — Grants",
+   "funder": "The Bromley Trust",
+   "url": "https://www.thebromleytrust.org.uk/our-approach/",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [],
+   "notes": [
+    "page covers 2 programmes (Human Rights; Prison Reform) and our row matches none of them cleanly",
+    "read through the reader proxy"
+   ],
+   "usage": {
+    "input": 1533,
+    "output": 332
+   },
+   "outcome": "multiple_funds",
+   "gate": {
+    "pass": true,
+    "fund_on_page": null
+   },
+   "fundsOnPage": [
+    "Human Rights",
+    "Prison Reform"
+   ]
+  },
+  {
+   "id": "b3086bff-58af-4ffa-836c-855cf136a499",
+   "title": "Vicar's Relief Fund — St Martin-in-the-Fields Charity",
+   "funder": "St Martin-in-the-Fields Charity",
+   "url": "https://smitfc.org/the-vicars-relief-fund/",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [],
+   "notes": [],
+   "usage": {
+    "input": 2132,
+    "output": 337
+   },
+   "outcome": "fixable_link",
+   "gate": {
+    "pass": false,
+    "failure": "wrong_fund",
+    "fund_on_page": null,
+    "detail": "our fund is not on this page"
+   }
+  },
+  {
+   "id": "6e6e8050-27ca-456a-846c-91a1198681fd",
+   "title": "Energy Resilience Fund — Social Investment Business",
+   "funder": "Social Investment Business",
+   "url": "https://www.sibgroup.org.uk/fund/energy-resilience-fund/",
+   "proposals": [],
+   "confirmed": [
+    "is_rolling",
+    "is_invite_only"
+   ],
+   "notFound": [
+    "deadline",
+    "max_org_income"
+   ],
+   "notes": [
+    "max_org_income withheld: the quote is not about organisational income — \"Does your organisation have less than 250 employees and an annual turnover not exceeding £40m and an annual balance shee\""
+   ],
+   "usage": {
+    "input": 3264,
+    "output": 323
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Energy Resilience Fund"
+   },
+   "outcome": "verified"
+  },
+  {
+   "id": "33f2e884-f1b2-4da0-815b-e7b14f55334a",
+   "title": "Priority Grants Round",
+   "funder": "Berkshire Community Foundation",
+   "url": "https://berkshirecf.org/available-funding/priority-grant-round/",
+   "proposals": [],
+   "confirmed": [
+    "is_rolling"
+   ],
+   "notFound": [
+    "deadline",
+    "max_org_income",
+    "is_invite_only"
+   ],
+   "notes": [
+    "max_org_income withheld: the quote is not about organisational income — \"Your annual operating budget exceeds £2 million\"",
+    "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped",
+    "read through the reader proxy"
+   ],
+   "usage": {
+    "input": 2026,
+    "output": 349
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Priority Grants Round"
+   },
+   "outcome": "round_closed",
+   "closedRound": {
+    "deadline": "2024-08-13",
+    "quote": "Our Priority Grants Round will be open for applications from 29th June until 13th August"
+   }
+  },
+  {
+   "id": "91c3a177-354a-475e-baa1-02c34b0f340a",
+   "title": "The Pixel Fund",
+   "funder": "The Pixel Fund",
+   "url": "https://pixelfund.org.uk/",
+   "proposals": [
+    {
+     "field": "is_rolling",
+     "from": true,
+     "to": false,
+     "quote": "We are currently oversubscribed for new applications. Due to this we have temporarily closed to new applications and have therefore removed the contact form at the bottom of this page.",
+     "verdict": "confirmed"
+    },
+    {
+     "field": "max_org_income",
+     "from": null,
+     "to": 2000000,
+     "quote": "Trustees have a strong preference for organisations with annual income of under £2m.",
+     "verdict": "confirmed"
+    }
+   ],
+   "confirmed": [],
+   "notFound": [
+    "deadline",
+    "is_invite_only"
+   ],
+   "notes": [
+    "is_invite_only withheld: the quote describes a staged or selective process, not an invitation-only fund — \"You won't be invited to submit an application unless we feel your charity is a good fit for us.\""
+   ],
+   "usage": {
+    "input": 3542,
+    "output": 354
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "The Pixel Fund"
+   },
+   "outcome": "verified"
+  },
+  {
+   "id": "3b8727a4-faa4-49b7-a162-c46212af731b",
+   "title": "Fishmongers' Company — Charitable Grants",
+   "funder": "The Fishmongers' Company",
+   "url": "https://fishmongers.org.uk/grants/",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [],
+   "notes": [
+    "page covers 2 programmes (Fisheries Grants; Philanthropy & Grants) and our row matches none of them cleanly"
+   ],
+   "usage": {
+    "input": 2412,
+    "output": 360
+   },
+   "outcome": "multiple_funds",
+   "gate": {
+    "pass": true,
+    "fund_on_page": null
+   },
+   "fundsOnPage": [
+    "Fisheries Grants",
+    "Philanthropy & Grants"
+   ]
+  },
+  {
+   "id": "5e04c94c-345e-45b0-80c9-ffdfe1969b59",
+   "title": "Strengthening Organisations",
+   "funder": "National Lottery Community Fund",
+   "url": "https://www.tnlcommunityfund.org.uk/funding/funding-programmes/strengthening-organisations",
+   "proposals": [],
+   "confirmed": [
+    "is_rolling"
+   ],
+   "notFound": [
+    "deadline",
+    "max_org_income",
+    "is_invite_only"
+   ],
+   "notes": [
+    "is_invite_only withheld: the quote describes a staged or selective process, not an invitation-only fund — \"This funding is for organisations in Scotland that we currently fund.\""
+   ],
+   "usage": {
+    "input": 1825,
+    "output": 296
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Strengthening Organisations"
+   },
+   "outcome": "verified"
+  },
+  {
+   "id": "3d144f51-ecc8-4413-b760-021684a6e442",
+   "title": "Ufi VocTech Trust — VocTech Impact Fund",
+   "funder": "Ufi VocTech Trust",
+   "url": "https://ufi.co.uk/grant-funding/",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [],
+   "notes": [],
+   "usage": {
+    "input": 2310,
+    "output": 293
+   },
+   "outcome": "fixable_link",
+   "gate": {
+    "pass": false,
+    "failure": "wrong_fund",
+    "fund_on_page": null,
+    "detail": "our fund is not on this page"
+   }
+  },
+  {
+   "id": "37a8f875-7834-495f-8e14-a0fade147ebf",
+   "title": "Ufi VocTech Trust",
+   "funder": "Ufi VocTech Trust",
+   "url": "https://ufi.co.uk/grant-funding/",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [],
+   "notes": [
+    "page covers 4 programmes (VocTech Together Support Programme; VocTech Activate; VocTech Challenge; VocTech Ignite) and our row matches none of them cleanly"
+   ],
+   "usage": {
+    "input": 2303,
+    "output": 325
+   },
+   "outcome": "multiple_funds",
+   "gate": {
+    "pass": true,
+    "fund_on_page": null
+   },
+   "fundsOnPage": [
+    "VocTech Together Support Programme",
+    "VocTech Activate",
+    "VocTech Challenge",
+    "VocTech Ignite"
+   ]
+  },
+  {
+   "id": "ca27a805-4ee8-437d-9ae6-a90cc9e66739",
+   "title": "Glasspool — Flexible Frontline Fund",
+   "funder": "Glasspool Charity Trust",
+   "url": "https://www.glasspool.org.uk/",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [
+    "deadline",
+    "is_rolling",
+    "max_org_income",
+    "is_invite_only"
+   ],
+   "notes": [
+    "is_invite_only withheld: the quote describes a staged or selective process, not an invitation-only fund — \"During 2023 we undertook a comprehensive recruitment process to select our frontline partners for this fund. This recrui\""
+   ],
+   "usage": {
+    "input": 1926,
+    "output": 364
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Flexible Frontline Fund"
+   },
+   "outcome": "verified"
+  },
+  {
+   "id": "cdc9da1a-1c11-428c-8be1-3f9d8cf42c04",
+   "title": "Ufi VocTech Trust — VocTech Activate",
+   "funder": "Ufi VocTech Trust",
+   "url": "https://ufi.co.uk/apply/",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [
+    "deadline",
+    "is_rolling",
+    "max_org_income",
+    "is_invite_only"
+   ],
+   "notes": [],
+   "usage": {
+    "input": 2224,
+    "output": 341
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "VocTech Activate"
+   },
+   "outcome": "verified"
+  },
+  {
+   "id": "ba0561c6-155c-4d34-b4c1-70ace3a68b68",
+   "title": "The Democratic Engagement Fund",
+   "funder": "Ministry of Housing Communities and Local Government",
+   "url": "https://www.find-government-grants.service.gov.uk/grants/the-democratic-engagement-fund-1",
+   "proposals": [
+    {
+     "field": "max_org_income",
+     "from": null,
+     "to": 1000000,
+     "quote": "Applicants must have an annual turnover of at least £50,000 and no more than £1 million.",
+     "verdict": "confirmed"
+    }
+   ],
+   "confirmed": [
+    "deadline",
+    "is_rolling",
+    "is_invite_only"
+   ],
+   "notFound": [],
+   "notes": [],
+   "usage": {
+    "input": 2745,
+    "output": 411
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "The Democratic Engagement Fund"
+   },
+   "outcome": "verified"
+  },
+  {
+   "id": "21c02ac2-79d6-4e26-8ded-a0a55428326f",
+   "title": "Baring Foundation Grants",
+   "funder": "Baring Foundation",
+   "url": "https://baringfoundation.org.uk/our-grantmaking/current-funding-opportunities/",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [],
+   "notes": [
+    "page covers 3 programmes (Arts; International Development Programme; Strengthening Civil Society Programme) and our row matches none of them cleanly"
+   ],
+   "usage": {
+    "input": 1545,
+    "output": 313
+   },
+   "outcome": "multiple_funds",
+   "gate": {
+    "pass": true,
+    "fund_on_page": null
+   },
+   "fundsOnPage": [
+    "Arts",
+    "International Development Programme",
+    "Strengthening Civil Society Programme"
+   ]
+  },
+  {
+   "id": "0346c786-fb9c-4df9-9307-205a4337acab",
+   "title": "C B & H H Taylor 1984 Trust — Grants",
+   "funder": "C B & H H Taylor 1984 Trust",
+   "url": "http://www.cbandhhtaylortrust.com/guidelines-for-grant-programmes",
+   "proposals": [
+    {
+     "field": "max_org_income",
+     "from": null,
+     "to": 1000000,
+     "quote": "Trustees prefer to consider charities with an income of under £500k and will not consider charities applying through the Overseas strand which have an income over £1m per annum",
+     "verdict": "confirmed"
+    }
+   ],
+   "confirmed": [
+    "is_invite_only"
+   ],
+   "notFound": [
+    "deadline",
+    "is_rolling"
+   ],
+   "notes": [],
+   "usage": {
+    "input": 2412,
+    "output": 328
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "C B and H H Taylor 1984 Trust Grant programmes"
+   },
+   "outcome": "verified"
+  },
+  {
+   "id": "d744daaa-34fb-4a24-be94-d2217a88be84",
+   "title": "Lead the Change",
+   "funder": "Community Foundation for Merseyside",
+   "url": "https://cfmerseyside.org.uk/grants/lead-the-change",
+   "proposals": [
+    {
+     "field": "max_org_income",
+     "from": null,
+     "to": 2000000,
+     "quote": "Applicants should have less than £2 million annual income based on their most recent annual accounts.",
+     "verdict": "confirmed"
+    },
+    {
+     "field": "is_invite_only",
+     "from": false,
+     "to": true,
+     "quote": "Stage 2: Full Application (Invitation Only) Invitations sent to successful applicants in May.",
+     "verdict": "confirmed"
+    }
+   ],
+   "confirmed": [
+    "is_rolling"
+   ],
+   "notFound": [
+    "deadline"
+   ],
+   "notes": [],
+   "usage": {
+    "input": 3514,
+    "output": 359
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Lead the Change"
+   },
+   "outcome": "round_closed",
+   "closedRound": {
+    "deadline": "2026-04-22",
+    "quote": "Deadline 22nd April 2026"
+   }
+  },
+  {
+   "id": "b94474e5-854f-4010-86ff-5efd0aad1b9a",
+   "title": "Bentley Advancing Life Chances — National Fund",
+   "funder": "Bentley Motors",
+   "url": "https://www.bentleymotors.com/en/about-bentley/beyond-100/social-sustainability.html",
+   "proposals": [
+    {
+     "field": "max_org_income",
+     "from": null,
+     "to": 500000,
+     "quote": "Your organisation must also have an annual income of under £500,000",
+     "verdict": "confirmed"
+    }
+   ],
+   "confirmed": [],
+   "notFound": [
+    "deadline",
+    "is_rolling",
+    "is_invite_only"
+   ],
+   "notes": [
+    "is_rolling: a value was offered without a quote we could find on the page, so it was dropped",
+    "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped"
+   ],
+   "usage": {
+    "input": 3010,
+    "output": 405
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Bentley Advancing Life Chances National Fund"
+   },
+   "outcome": "round_closed",
+   "closedRound": {
+    "deadline": "2026-05-11",
+    "quote": "Round 1 2026 Mon 11-May-26"
+   }
+  },
+  {
+   "id": "64246032-25e4-4dd1-bca6-28df839abe62",
+   "title": "Regional Grants",
+   "funder": "Steve Morgan Foundation",
+   "url": "https://stevemorganfoundation.org.uk/regional-grants/",
+   "proposals": [
+    {
+     "field": "max_org_income",
+     "from": null,
+     "to": 5000000,
+     "quote": "Have an annual turnover of £300,000 – £5 million.",
+     "verdict": "confirmed"
+    }
+   ],
+   "confirmed": [
+    "is_invite_only"
+   ],
+   "notFound": [
+    "deadline",
+    "is_rolling"
+   ],
+   "notes": [
+    "is_rolling: a value was offered without a quote we could find on the page, so it was dropped"
+   ],
+   "usage": {
+    "input": 2876,
+    "output": 407
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Regional grants"
+   },
+   "outcome": "verified"
+  },
+  {
+   "id": "757e41c3-07dd-4f84-9f4f-9588a4bcfd41",
+   "title": "Yapp Charitable Trust",
+   "funder": "Yapp Charitable Trust",
+   "url": "https://yappcharitabletrust.org.uk/",
+   "proposals": [],
+   "confirmed": [
+    "is_invite_only"
+   ],
+   "notFound": [
+    "deadline",
+    "is_rolling",
+    "max_org_income"
+   ],
+   "notes": [
+    "max_org_income withheld: the quote is not about organisational income — \"We offer grants only to registered charities with a total annual expenditure of less than £50,000.\""
+   ],
+   "usage": {
+    "input": 1345,
+    "output": 302
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Yapp Charitable Trust"
+   },
+   "outcome": "verified"
+  },
+  {
+   "id": "bfaa140a-ed84-4862-a455-6e48ca22e906",
+   "title": "Fine & Country Foundation — Homelessness Grants",
+   "funder": "The Fine & Country Foundation",
+   "url": "https://www.fineandcountryfoundation.com/grants",
+   "proposals": [
+    {
+     "field": "is_invite_only",
+     "from": false,
+     "to": true,
+     "quote": "Contact your nearest Fine & Country location and request to be nominated for a grant.",
+     "verdict": "confirmed"
+    }
+   ],
+   "confirmed": [
+    "is_rolling"
+   ],
+   "notFound": [
+    "deadline",
+    "max_org_income"
+   ],
+   "notes": [],
+   "usage": {
+    "input": 2369,
+    "output": 347
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "The Fine & Country Foundation Grants"
+   },
+   "outcome": "verified"
+  },
+  {
+   "id": "5c9bf8bf-5307-427a-afc0-923cbb0326a0",
+   "title": "Grants for Older People",
+   "funder": "Berkshire Community Foundation",
+   "url": "https://berkshirecf.org/available-funding/funds-for-older-people/",
+   "proposals": [],
+   "confirmed": [
+    "is_rolling",
+    "is_invite_only"
+   ],
+   "notFound": [
+    "deadline",
+    "max_org_income"
+   ],
+   "notes": [
+    "max_org_income withheld: the quote is not about organisational income — \"Your annual operating budget exceeds £2 million\"",
+    "read through the reader proxy"
+   ],
+   "usage": {
+    "input": 1991,
+    "output": 387
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Funds for Older People"
+   },
+   "outcome": "verified"
+  },
+  {
+   "id": "984554ba-ffda-47c5-8115-0f222a48f916",
+   "title": "The Grocers' Charity",
+   "funder": "The Grocers' Company",
+   "url": "https://grocershall.co.uk/the-charity/apply-for-a-grant",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [],
+   "notes": [
+    "page covers 18 programmes (Relief of Hardship; Hospitality and Hope; Children and Young People (0-25); Mark Evison Foundation; Elderly) and our row matches none of them cleanly"
+   ],
+   "usage": {
+    "input": 2494,
+    "output": 493
+   },
+   "outcome": "multiple_funds",
+   "gate": {
+    "pass": true,
+    "fund_on_page": null
+   },
+   "fundsOnPage": [
+    "Relief of Hardship",
+    "Hospitality and Hope",
+    "Children and Young People (0-25)",
+    "Mark Evison Foundation",
+    "Elderly",
+    "Claremont Project",
+    "Disability and Inclusion",
+    "The Limbless Association",
+    "Health",
+    "MQ Mental Health Research",
+    "Military",
+    "Taxi Charity for Military Veterans",
+    "The Arts",
+    "Whitchurch Silk Mill",
+    "Heritage",
+    "Grinling Gibbons Society",
+    "Environment and Conservation",
+    "South Downs National Park Trust"
+   ]
+  },
+  {
+   "id": "696935b8-7b67-45ee-9141-2ba4546c3619",
+   "title": "William Kendall Small Awards Programme",
+   "funder": "The Wax Chandlers' Company (with Bexley Voluntary Service Council)",
+   "url": "https://www.bvsc.co.uk/funding",
+   "proposals": [],
+   "confirmed": [
+    "is_rolling"
+   ],
+   "notFound": [
+    "deadline",
+    "max_org_income",
+    "is_invite_only"
+   ],
+   "notes": [
+    "max_org_income withheld: the quote is not about organisational income — \"Be small enough for the funding to make a real difference, i.e. those with less than £200k in cash at bank in the accoun\"",
+    "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped"
+   ],
+   "usage": {
+    "input": 3115,
+    "output": 453
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "William Kendall Small Awards Programme for Bexley"
+   },
+   "outcome": "verified"
+  },
+  {
+   "id": "57c4802f-2d34-4d89-969e-a21f9ef397db",
+   "title": "SSE — All Programmes",
+   "funder": "School for Social Entrepreneurs",
+   "url": "https://www.the-sse.org/learning-support/programmes/",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [],
+   "notes": [
+    "page covers 6 programmes (Trading for Good; Social Investment Gateway Programme; Trading for Good: Community Business; Trading for Good: Bury; Trading for Good: Milton Keynes) and our row matches none of them cleanly"
+   ],
+   "usage": {
+    "input": 2860,
+    "output": 338
+   },
+   "outcome": "multiple_funds",
+   "gate": {
+    "pass": true,
+    "fund_on_page": null
+   },
+   "fundsOnPage": [
+    "Trading for Good",
+    "Social Investment Gateway Programme",
+    "Trading for Good: Community Business",
+    "Trading for Good: Bury",
+    "Trading for Good: Milton Keynes",
+    "Trading for Good: Stockport"
+   ]
+  },
+  {
+   "id": "90da13dd-fdc8-4246-8f63-00a8cb80c4e5",
+   "title": "Childs Charitable Trust",
+   "funder": "Childs Charitable Trust",
+   "url": "https://childscharitabletrust.org/funding/",
+   "proposals": [
+    {
+     "field": "is_rolling",
+     "from": false,
+     "to": true,
+     "quote": "Applications received in February, March, April & May will be considered at the July trustees meeting Applications received in June, July & August will be considered at the October trustees meeting. Applications received in September, October, November, December & January will be considered at the April trustees meeting.",
+     "verdict": "confirmed"
+    },
+    {
+     "field": "max_org_income",
+     "from": null,
+     "to": 100000,
+     "quote": "Organisations less than three years old with a turnover under £100,000",
+     "verdict": "confirmed"
+    }
+   ],
+   "confirmed": [
+    "is_invite_only"
+   ],
+   "notFound": [
+    "deadline"
+   ],
+   "notes": [],
+   "usage": {
+    "input": 1654,
+    "output": 428
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Childs Charitable Trust Funding"
+   },
+   "outcome": "verified"
+  },
+  {
+   "id": "32949533-a7ae-4c48-a7a6-57368e083dee",
+   "title": "Strategic Legal Fund for Vulnerable Young Migrants",
+   "funder": "Immigration Law Practitioners' Association",
+   "url": "https://strategiclegalfund.org.uk/how-to-apply/",
+   "proposals": [
+    {
+     "field": "deadline",
+     "from": null,
+     "to": "2026-09-07",
+     "quote": "Next application deadlines 7 September 2026 26 October 2026",
+     "verdict": "confirmed"
+    },
+    {
+     "field": "is_rolling",
+     "from": true,
+     "to": false,
+     "quote": "There are usually six closing dates for applications during the year, roughly every two months.",
+     "verdict": "confirmed"
+    }
+   ],
+   "confirmed": [
+    "is_invite_only"
+   ],
+   "notFound": [
+    "max_org_income"
+   ],
+   "notes": [],
+   "usage": {
+    "input": 1745,
+    "output": 336
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Strategic Legal Fund"
+   },
+   "outcome": "verified"
+  },
+  {
+   "id": "5f1c3fd2-c8e9-451d-a0ef-1ae501ce0093",
+   "title": "The Three Guineas Trust",
+   "funder": "Three Guineas Trust",
+   "url": "https://www.sfct.org.uk/the-three-guineas-trust/",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [
+    "deadline",
+    "is_rolling",
+    "max_org_income",
+    "is_invite_only"
+   ],
+   "notes": [
+    "is_invite_only withheld: the quote describes a staged or selective process, not an invitation-only fund — \"We find projects that align with our values by careful research and talking to people active in our fields of interest.\""
+   ],
+   "usage": {
+    "input": 1579,
+    "output": 311
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "The Three Guineas Trust"
+   },
+   "outcome": "verified"
+  },
+  {
+   "id": "2f87181a-b0f1-4a76-acec-519a8c35bb5c",
+   "title": "Good Place to Live: New Beginnings Fund",
+   "funder": "Lloyds Bank Foundation for England and Wales",
+   "url": "https://www.lloydsbankfoundation.org.uk/funding/good-place-to-live-new-beginnings/",
+   "proposals": [
+    {
+     "field": "max_org_income",
+     "from": null,
+     "to": 2000000,
+     "quote": "Have an annual income of between £25,000 and £2 million in its last set of published accounts.",
+     "verdict": "confirmed"
+    }
+   ],
+   "confirmed": [
+    "deadline"
+   ],
+   "notFound": [
+    "is_rolling",
+    "is_invite_only"
+   ],
+   "notes": [
+    "is_rolling: a value was offered without a quote we could find on the page, so it was dropped",
+    "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped"
+   ],
+   "usage": {
+    "input": 3607,
+    "output": 349
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Good Place to Live: New Beginnings Fund"
+   },
+   "outcome": "verified"
+  },
+  {
+   "id": "9e29e607-f4aa-488f-a0d0-190d2a21880a",
+   "title": "Granada Foundation — Grants",
+   "funder": "Granada Foundation",
+   "url": "https://granadafoundation.org/how-to-apply/",
+   "proposals": [],
+   "confirmed": [
+    "is_invite_only"
+   ],
+   "notFound": [
+    "deadline",
+    "is_rolling",
+    "max_org_income"
+   ],
+   "notes": [
+    "deadline: a value was offered without a quote we could find on the page, so it was dropped",
+    "is_rolling: a value was offered without a quote we could find on the page, so it was dropped"
+   ],
+   "usage": {
+    "input": 2312,
+    "output": 371
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Granada Foundation Grants"
+   },
+   "outcome": "verified"
+  },
+  {
+   "id": "c740bb33-f49e-4c9f-b8db-110b767e985f",
+   "title": "J N Derbyshire Trust",
+   "funder": "Forever Notts (Nottinghamshire Community Foundation)",
+   "url": "https://www.forevernotts.com/grant/j-n-derbyshire-trust/",
+   "proposals": [
+    {
+     "field": "max_org_income",
+     "from": null,
+     "to": 1000000,
+     "quote": "We will not consider applications from nationally operated charities who have reported income of more than £1m in their latest set of financial statements that are available.",
+     "verdict": "confirmed"
+    }
+   ],
+   "confirmed": [
+    "deadline",
+    "is_rolling"
+   ],
+   "notFound": [
+    "is_invite_only"
+   ],
+   "notes": [
+    "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped"
+   ],
+   "usage": {
+    "input": 2110,
+    "output": 390
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "J N Derbyshire Trust"
+   },
+   "outcome": "verified"
+  },
+  {
+   "id": "9b421b99-249c-44cb-b5f7-4fa4b426a4a4",
+   "title": "Halifax Foundation for Northern Ireland — COLLABORATE",
+   "funder": "Halifax Foundation for Northern Ireland",
+   "url": "https://www.halifaxfoundationni.org/collaborate/",
+   "proposals": [
+    {
+     "field": "max_org_income",
+     "from": null,
+     "to": 500000,
+     "quote": "All collaborating charities must have individual income levels of £500,000 or less.",
+     "verdict": "confirmed"
+    }
+   ],
+   "confirmed": [
+    "is_rolling",
+    "is_invite_only"
+   ],
+   "notFound": [
+    "deadline"
+   ],
+   "notes": [],
+   "usage": {
+    "input": 3466,
+    "output": 386
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "COLLABORATE Programme"
+   },
+   "outcome": "verified"
+  },
+  {
+   "id": "791f1756-4303-431e-b50a-fee89460c633",
+   "title": "Camden Giving — We Make Camden Kit",
+   "funder": "Camden Giving",
+   "url": "https://www.camdengiving.org.uk/we-make-camden-kit",
+   "proposals": [
+    {
+     "field": "max_org_income",
+     "from": null,
+     "to": 250000,
+     "quote": "Un-constituted groups with an annual income below £250,000",
+     "verdict": "confirmed"
+    }
+   ],
+   "confirmed": [
+    "is_invite_only"
+   ],
+   "notFound": [
+    "deadline",
+    "is_rolling"
+   ],
+   "notes": [],
+   "usage": {
+    "input": 2936,
+    "output": 357
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "We Make Camden Kit"
+   },
+   "outcome": "verified"
+  },
+  {
+   "id": "80780415-2429-42f4-8ee4-3f0525f7c5ed",
+   "title": "Evelyn Partners Merseyside Charitable Fund",
+   "funder": "Community Foundation for Merseyside",
+   "url": "https://cfmerseyside.org.uk/grants/evelyn-partners-merseyside-charitable-fund",
+   "proposals": [
+    {
+     "field": "max_org_income",
+     "from": null,
+     "to": 500000,
+     "quote": "Group annual income must be less than £500,000 to be eligible.",
+     "verdict": "confirmed"
+    }
+   ],
+   "confirmed": [],
+   "notFound": [
+    "deadline",
+    "is_rolling",
+    "is_invite_only"
+   ],
+   "notes": [
+    "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped"
+   ],
+   "usage": {
+    "input": 2526,
+    "output": 324
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Evelyn Partners Merseyside Charitable Fund"
+   },
+   "outcome": "round_closed",
+   "closedRound": {
+    "deadline": "2026-03-30",
+    "quote": "Deadline 30th March 2026"
+   }
+  },
+  {
+   "id": "bd72165c-9f44-4935-9b50-d6bed81def8e",
+   "title": "A&O Shearman Global Grants Program",
+   "funder": "A&O Shearman Foundation",
+   "url": "https://www.aoshearman.com/en/about-us/social-impact/charity-support",
+   "proposals": [],
+   "confirmed": [
+    "is_rolling"
+   ],
+   "notFound": [
+    "deadline",
+    "max_org_income",
+    "is_invite_only"
+   ],
+   "notes": [
+    "is_invite_only withheld: the quote describes a staged or selective process, not an invitation-only fund — \"You must include the name of an A&O Shearman colleague who is willing to champion your work alongside your application. \""
+   ],
+   "usage": {
+    "input": 2928,
+    "output": 517
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "A&O Shearman Foundation's Global Grants Program"
+   },
+   "outcome": "verified"
+  },
+  {
+   "id": "d1a4d7c2-dc0a-4f97-a910-52ab5d64d355",
+   "title": "The Headley Trust",
+   "funder": "Headley Trust",
+   "url": "https://www.sfct.org.uk/the-headley-trust/",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [
+    "deadline",
+    "is_rolling",
+    "max_org_income",
+    "is_invite_only"
+   ],
+   "notes": [
+    "is_invite_only withheld: the quote describes a staged or selective process, not an invitation-only fund — \"The Headley Trust identifies many of the organisations it chooses to support through its own research.\""
+   ],
+   "usage": {
+    "input": 2035,
+    "output": 297
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "The Headley Trust"
+   },
+   "outcome": "verified"
+  },
+  {
+   "id": "cbad88ec-2eed-40b8-a1f2-1c05cb023dbc",
+   "title": "Angels' Den 2026",
+   "funder": "The Clare Foundation",
+   "url": "https://theclarefoundation.org/angels-den-2026",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [
+    "deadline",
+    "is_rolling",
+    "max_org_income",
+    "is_invite_only"
+   ],
+   "notes": [
+    "is_invite_only withheld: the quote describes a staged or selective process, not an invitation-only fund — \"Ten remarkable charities will be chosen to participate in this event\""
+   ],
+   "usage": {
+    "input": 2086,
+    "output": 300
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Angels' Den 2026"
+   },
+   "outcome": "verified"
+  },
+  {
+   "id": "22b5670a-dc7e-406a-aae4-e7926ea51d78",
+   "title": "Baillie Gifford International Fund",
+   "funder": "Foundation Scotland",
+   "url": "https://foundationscotland.org.uk/apply-for-funding/funding-available/baillie-gifford-international-fund",
+   "proposals": [
+    {
+     "field": "deadline",
+     "from": null,
+     "to": "2026-08-12",
+     "quote": "Deadline for enquiry forms : 12/08/26",
+     "verdict": "confirmed"
+    },
+    {
+     "field": "is_rolling",
+     "from": true,
+     "to": false,
+     "quote": "Due to receiving a high volume of enquiries, we have made the decision to close the fund earlier than planned as it is already heavily oversubscribed.",
+     "verdict": "confirmed"
+    },
+    {
+     "field": "max_org_income",
+     "from": null,
+     "to": 1000000,
+     "quote": "The fund prioritises smaller charities with an income of maximum £1M GBP",
+     "verdict": "confirmed"
+    }
+   ],
+   "confirmed": [
+    "is_invite_only"
+   ],
+   "notFound": [],
+   "notes": [],
+   "usage": {
+    "input": 2313,
+    "output": 379
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Baillie Gifford International Fund"
+   },
+   "outcome": "verified"
+  },
+  {
+   "id": "7dd07b66-3b0f-42ae-a22f-7de3a03764ca",
+   "title": "John Moores Foundation — Grants for Merseyside",
+   "funder": "John Moores Foundation",
+   "url": "https://www.jmf.org.uk/grants-for-merseyside/",
+   "proposals": [
+    {
+     "field": "max_org_income",
+     "from": null,
+     "to": 750000,
+     "quote": "Applicants with an annual income over £750,000 are unlikely to be considered for funding by JMF.",
+     "verdict": "confirmed"
+    }
+   ],
+   "confirmed": [
+    "is_rolling",
+    "is_invite_only"
+   ],
+   "notFound": [
+    "deadline"
+   ],
+   "notes": [],
+   "usage": {
+    "input": 2780,
+    "output": 365
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Grants for Merseyside"
+   },
+   "outcome": "verified"
+  },
+  {
+   "id": "61220eaf-37b3-4662-891d-121633deabd4",
+   "title": "Building On Overlooked Sporting Talent (BOOST)",
+   "funder": "BOOST",
+   "url": "https://www.boostct.org/",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [],
+   "notes": [],
+   "usage": {
+    "input": 1319,
+    "output": 275
+   },
+   "outcome": "fixable_link",
+   "gate": {
+    "pass": false,
+    "failure": "wrong_fund",
+    "fund_on_page": null,
+    "detail": "our fund is not on this page"
+   }
+  },
+  {
+   "id": "ded31718-e5bd-4062-b1cd-2ddf5baa47dc",
+   "title": "Neighbourhood Fund",
+   "funder": "Dorset Community Foundation",
+   "url": "https://www.dorsetcommunityfoundation.org/funds/neighbourhood-fund/",
+   "proposals": [],
+   "confirmed": [
+    "is_rolling"
+   ],
+   "notFound": [
+    "deadline",
+    "max_org_income",
+    "is_invite_only"
+   ],
+   "notes": [
+    "max_org_income withheld: the quote is not about organisational income — \"The Neighbourhood Fund prioritises smaller community groups, therefore, applications made by groups with annual expendit\"",
+    "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped"
+   ],
+   "usage": {
+    "input": 2648,
+    "output": 383
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Neighbourhood Fund"
+   },
+   "outcome": "round_closed",
+   "closedRound": {
+    "deadline": "2026-01-11",
+    "quote": "The winter Round opens for applications on 23rd November and the deadline to apply is midday, 11th January."
+   }
+  },
+  {
+   "id": "f2a00b69-693f-490d-80e3-51547c177655",
+   "title": "Ufi VocTech Trust — Seedbed",
+   "funder": "Ufi VocTech Trust",
+   "url": "https://ufi.co.uk/apply/",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [],
+   "notes": [],
+   "usage": {
+    "input": 2221,
+    "output": 293
+   },
+   "outcome": "fixable_link",
+   "gate": {
+    "pass": false,
+    "failure": "wrong_fund",
+    "fund_on_page": null,
+    "detail": "our fund is not on this page"
+   }
+  },
+  {
+   "id": "e4a68adc-7a8a-4f61-b3de-2e7b5cbbba0e",
+   "title": "Salters' Charitable Foundation Grants",
+   "funder": "The Salters' Charitable Foundation",
+   "url": "https://salters.co.uk/the-salters-charitable-foundation/",
+   "proposals": [],
+   "confirmed": [
+    "is_rolling",
+    "is_invite_only"
+   ],
+   "notFound": [
+    "deadline",
+    "max_org_income"
+   ],
+   "notes": [],
+   "usage": {
+    "input": 1800,
+    "output": 453
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Salters' Charitable Foundation"
+   },
+   "outcome": "round_closed",
+   "closedRound": {
+    "deadline": "2026-03-31",
+    "quote": "However, please note that entries for this year have now closed, as of the end of March 2026."
+   }
+  },
+  {
+   "id": "7e2f1cd7-bc26-4028-afbd-5a42d5438322",
+   "title": "Barrow Cadbury Trust Grants",
+   "funder": "Barrow Cadbury Trust",
+   "url": "https://barrowcadbury.org.uk/our-work/applying-for-funding/",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [],
+   "notes": [
+    "page covers 6 programmes (Criminal Justice; Economic Justice; Migration; Fair by Design; The Connect Fund) and our row matches none of them cleanly"
+   ],
+   "usage": {
+    "input": 2647,
+    "output": 391
+   },
+   "outcome": "multiple_funds",
+   "gate": {
+    "pass": true,
+    "fund_on_page": null
+   },
+   "fundsOnPage": [
+    "Criminal Justice",
+    "Economic Justice",
+    "Migration",
+    "Fair by Design",
+    "The Connect Fund",
+    "Economic Justice Brum"
+   ]
+  },
+  {
+   "id": "c99c9f91-9b19-4e1f-ae89-2e97afde3af5",
+   "title": "Migration Fund",
+   "funder": "Paul Hamlyn Foundation",
+   "url": "https://www.phf.org.uk/funding/migration",
+   "proposals": [
+    {
+     "field": "max_org_income",
+     "from": null,
+     "to": 500000,
+     "quote": "While we will continue to consider applications from a broad range of organisations that align with our vision and critieria, we will prioritise applications from organisations: led by migrants and diaspora communities; that work with historically underfunded groups and regions; with annual turnover under £500,000; or that have less access to funding from other sources.",
+     "verdict": "confirmed"
+    }
+   ],
+   "confirmed": [
+    "is_rolling"
+   ],
+   "notFound": [
+    "deadline",
+    "is_invite_only"
+   ],
+   "notes": [
+    "is_invite_only withheld: the quote describes a staged or selective process, not an invitation-only fund — \"We only accept applications from organisations who have been invited to apply following an enquiry call.\""
+   ],
+   "usage": {
+    "input": 3123,
+    "output": 418
+   },
+   "gate": {
+    "pass": true,
+    "fund_on_page": "Migration Fund"
+   },
+   "outcome": "verified"
+  },
+  {
+   "id": "c94379cc-bd70-482c-a3cd-76d406e9908f",
+   "title": "The Julia Rausing Trust — Grants",
+   "funder": "The Julia Rausing Trust",
+   "url": "https://juliarausingtrust.org/",
+   "proposals": [],
+   "confirmed": [],
+   "notFound": [],
+   "notes": [
+    "page covers 3 programmes (Giving Themes; Place-based Giving; Strategic Programmes) and our row matches none of them cleanly",
+    "read one level down: https://www.juliarausingtrust.org/grants/"
+   ],
+   "usage": {
+    "input": 11614,
+    "output": 940
+   },
+   "outcome": "multiple_funds",
+   "gate": {
+    "pass": true,
+    "fund_on_page": null
+   },
+   "fundsOnPage": [
+    "Giving Themes",
+    "Place-based Giving",
+    "Strategic Programmes"
+   ],
+   "followedUrl": "https://www.juliarausingtrust.org/grants/"
+  }
+ ]
+}
