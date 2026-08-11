@@ -27,6 +27,7 @@ import { headers } from 'next/headers'
 import { enforceSignupRateLimit } from '@/lib/mcp-rate-limit'
 import SignupForm from './SignupForm'
 import ConnectButton from './ConnectButton'
+import type { AuthActionResult } from './auth-errors'
 import './shoots-auth.css'
 
 export const dynamic = 'force-dynamic'
@@ -130,7 +131,7 @@ function clientIp(h: Headers): string {
  *   - marketing consent is recorded but NOT armed. public.marketing_list
  *     filters on own_verified_at, which only the nudge link can set.
  */
-async function createAccountAction(formData: FormData) {
+async function createAccountAction(formData: FormData): Promise<AuthActionResult> {
   'use server'
 
   const sp = Object.fromEntries(
@@ -143,18 +144,17 @@ async function createAccountAction(formData: FormData) {
   const password = String(formData.get('password') ?? '')
   const consent  = formData.get('marketing_consent') === 'yes'
 
-  if (!email || !password) throw new Error('Email and password are required.')
-  if (password.length < 8)  throw new Error('Password must be at least 8 characters.')
+  if (!email || !password) return { ok: false, code: 'missing_fields' }
+  if (password.length < 8)  return { ok: false, code: 'password_too_short' }
 
   // Fails CLOSED: an Upstash outage blocks signup rather than leaving an
   // unauthenticated account-creation path with no brake at all.
   const rl = await enforceSignupRateLimit(clientIp(await headers()))
   if (!rl.allowed) {
-    throw new Error(
-      rl.reason === 'limiter_unavailable'
-        ? 'Account creation is briefly unavailable. Please try again in a few minutes.'
-        : 'Too many accounts created from this network. Please try again later.',
-    )
+    return {
+      ok: false,
+      code: rl.reason === 'limiter_unavailable' ? 'limiter_unavailable' : 'rate_limited',
+    }
   }
 
   const svc = serviceClient()
@@ -168,13 +168,13 @@ async function createAccountAction(formData: FormData) {
     // treat it as the common case rather than leaking the raw message.
     const msg = createErr.message.toLowerCase()
     if (msg.includes('already') || msg.includes('registered') || msg.includes('exists')) {
-      throw new Error('An account with that email already exists. Sign in instead.')
+      return { ok: false, code: 'email_exists' }
     }
-    throw new Error('Could not create the account. Please check the address and try again.')
+    return { ok: false, code: 'create_failed' }
   }
 
   const userId = created.user?.id
-  if (!userId) throw new Error('Could not create the account. Please try again.')
+  if (!userId) return { ok: false, code: 'create_no_user' }
 
   // Record the answer either way: a stored `false` is what proves the box was
   // not pre-ticked, and an absent row would prove nothing.
@@ -188,7 +188,7 @@ async function createAccountAction(formData: FormData) {
   // them as signed in.
   const supabase = await createClient()
   const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password })
-  if (signInErr) throw new Error('Account created, but sign-in failed. Please sign in to continue.')
+  if (signInErr) return { ok: false, code: 'signin_after_create_failed' }
 
   // The single nudge. Transactional, not marketing, so it is not gated on
   // consent: it is the only way own_verified_at ever gets set. Best-effort —
@@ -211,7 +211,7 @@ async function createAccountAction(formData: FormData) {
   redirect(buildAuthorizeUrl(sp))
 }
 
-async function signInAction(formData: FormData) {
+async function signInAction(formData: FormData): Promise<AuthActionResult> {
   'use server'
 
   const sp = Object.fromEntries(
@@ -225,7 +225,7 @@ async function signInAction(formData: FormData) {
 
   const supabase = await createClient()
   const { error } = await supabase.auth.signInWithPassword({ email, password })
-  if (error) throw new Error('That email and password did not match an account.')
+  if (error) return { ok: false, code: 'signin_failed' }
 
   redirect(buildAuthorizeUrl(sp))
 }
@@ -355,7 +355,7 @@ function AuthScreen({
   params: ValidatedAuthorizeParams
   sp:     AuthorizeSearchParams & { mode?: string }
   mode:   'signup' | 'signin'
-  action: (fd: FormData) => Promise<void>
+  action: (fd: FormData) => Promise<AuthActionResult | void>
 }) {
   const clientName = params.client.client_name?.trim() || 'an application'
   const isSignup = mode === 'signup'

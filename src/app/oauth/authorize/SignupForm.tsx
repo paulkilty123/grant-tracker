@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import ConnectButton from './ConnectButton'
+import { AUTH_ERROR_COPY, AUTH_ERROR_FALLBACK, type AuthActionResult } from './auth-errors'
 
 /**
  * Account creation inside the OAuth connect flow.
@@ -33,7 +34,7 @@ export default function SignupForm({
   switchHref,
   hiddenFields,
 }: {
-  action: (fd: FormData) => Promise<void>
+  action: (fd: FormData) => Promise<AuthActionResult | void>
   clientName: string
   mode: 'signup' | 'signin'
   switchHref: string
@@ -56,11 +57,20 @@ export default function SignupForm({
         setError(null)
         setSubmitting(true)
         try {
-          await action(fd)
+          // The action RETURNS its failures as codes and redirects on success,
+          // so nothing user-facing rides on an Error message: Next strips those
+          // in production. See auth-errors.ts.
+          const result = await action(fd)
+          if (result && !result.ok) {
+            setError(AUTH_ERROR_COPY[result.code] ?? AUTH_ERROR_FALLBACK)
+            setSubmitting(false)
+          }
         } catch (e) {
           // A Next redirect throws by design; only surface real failures.
           if (e && typeof e === 'object' && 'digest' in e && String((e as { digest?: string }).digest).startsWith('NEXT_REDIRECT')) throw e
-          setError(e instanceof Error ? e.message : 'Something went wrong. Please try again.')
+          // Anything reaching here is unexpected, and its message is stripped in
+          // production anyway, so show the generic line rather than the digest.
+          setError(AUTH_ERROR_FALLBACK)
           setSubmitting(false)
         }
       }}
