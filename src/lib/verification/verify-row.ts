@@ -111,6 +111,32 @@ const LINK_NOISE = /\b(news|blog|privacy|cookie|terms|contact|about-us|careers|j
  *
  * Same host only, and never the page we just read.
  */
+/**
+ * Do two fund names refer to the same thing?
+ *
+ * Used to override the model when it contradicts itself. Measured on the
+ * re-run: it returned describes_our_fund=false while naming the page's fund as
+ * "Camden Climate Fund" against our "Camden Climate Fund", and did the same for
+ * Stronger Communities Fund, Gatsby Charitable Foundation and Impact Hub
+ * Programmes. A boolean that disagrees with the model's own answer in the next
+ * field is not a judgement worth honouring, so the comparison is done here
+ * where it is deterministic.
+ *
+ * Generic words are stripped because they carry no distinguishing information:
+ * nearly every record contains "fund", "grants" or "trust".
+ */
+function namesMatch(ours: string, theirs: string): boolean {
+  const norm = (v: string) => v
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\b(the|a|an|of|for|and|fund|funds|grant|grants|programme|programmes|program|trust|foundation|charity|charitable|limited|ltd)\b/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+  const a = norm(ours), b = norm(theirs)
+  if (a.length < 3 || b.length < 3) return false
+  return a === b || a.includes(b) || b.includes(a)
+}
+
 function sameSite(a: string, b: string): boolean {
   const norm = (h: string) => h.replace(/^www\./i, '').toLowerCase()
   return norm(a) === norm(b)
@@ -324,13 +350,26 @@ STEP 1 — GATE. Decide whether this page can be used to verify OUR fund.
   "fund_on_page"  : the name of the fund this page actually describes, or null.
                     If the page lists several funds, name the one matching ours,
                     or null if ours is not among them.
-  "describes_our_fund" : true if this page describes OUR fund, ALLOWING for the
-                    funder using a shorter, longer or slightly different name for
-                    it ("Hyde Foundation" and "Hyde Foundation Community
-                    Investment" are the same thing; so are "The Community Fund"
-                    and "The Local Community Fund"). Set false ONLY when the page
-                    is clearly about a DIFFERENT, separately named fund, or when
-                    our fund is genuinely absent from the page.
+  "describes_our_fund" : true if this page could reasonably be describing the
+                    funding our record refers to.
+
+                    Our fund title is often OUR OWN label rather than a name the
+                    funder uses. "John Ellerman Foundation Grants" is simply our
+                    way of saying "the grants that funder makes", and for a
+                    record like that the funder's own grants, funding or
+                    how-to-apply page IS the right page — answer true, even
+                    though no fund of that exact name appears anywhere.
+
+                    Allow naming variants freely: "Community Catalyst Fund
+                    (2025-27)" and "The Community Catalyst Fund 2025 to 2027"
+                    are the same fund, as are "Hyde Foundation" and "Hyde
+                    Foundation Community Investment".
+
+                    Answer false ONLY when BOTH of these hold: our record names
+                    a SPECIFIC programme, AND this page is about a DIFFERENT
+                    specific programme from the same funder. Also answer false
+                    if the page has nothing to do with this funder's grant
+                    making at all.
   "has_funding_detail" : true if the page states any eligibility, deadline,
                     amount or application detail. A general "about us" or news
                     page is false.
@@ -483,7 +522,13 @@ async function runModel(
   const g = (parsed.gate ?? {}) as { fund_on_page?: string | null; describes_our_fund?: boolean; has_funding_detail?: boolean }
   const fundOnPage = typeof g.fund_on_page === 'string' ? g.fund_on_page : null
 
-  if (g.describes_our_fund !== true) {
+  // Resolve the model contradicting itself: a "no" that names our own fund in
+  // the very next field is not a rejection, it is a mistake.
+  const selfContradicted = g.describes_our_fund !== true
+    && fundOnPage !== null
+    && (namesMatch(row.title, fundOnPage) || (row.funder ? namesMatch(row.funder, fundOnPage) : false))
+
+  if (g.describes_our_fund !== true && !selfContradicted) {
     return {
       ...base, usage, outcome: 'fixable_link',
       gate: { pass: false, failure: 'wrong_fund', fund_on_page: fundOnPage,
