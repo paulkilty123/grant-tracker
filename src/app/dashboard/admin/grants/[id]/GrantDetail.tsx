@@ -44,10 +44,25 @@ const BRIEF_FIELDS: Array<[string, string]> = [
 
 type Source = { label: string; url: string; text: string }
 
-export function GrantDetail({ row, reasons, diffs }: {
+/** One user's flag on this grant, plus whatever was decided about it. */
+export type GrantFeedback = {
+  id: string
+  direction: 'up' | 'down'
+  reasons: string[] | null
+  free_text: string | null
+  match_score_at_time: number
+  created_at: string
+  reviewed_at: string | null
+  resolution: string | null
+  triage_class: string | null
+  reviewer_note: string | null
+}
+
+export function GrantDetail({ row, reasons, diffs, feedback = [] }: {
   row: Record<string, unknown>
   reasons: ReviewReason[]
   diffs: FieldDiff[]
+  feedback?: GrantFeedback[]
 }) {
   const router = useRouter()
   const toast = useToast()
@@ -214,6 +229,50 @@ export function GrantDetail({ row, reasons, diffs }: {
             </Field>
           </Grid>
         </Section>
+
+        {/* ── What users said ──────────────────────────────────────────
+            Put here, next to the values, because this is where someone decides
+            whether a row is right. Previously a flag and its triage note lived
+            only in match_feedback and were unreachable outside SQL. */}
+        {feedback.length > 0 && (
+          <Section title={`What users said (${feedback.length})`}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {feedback.map(f => (
+                <div key={f.id} style={{
+                  background: f.direction === 'down' ? 'var(--coral-pale, #FAECE7)' : 'var(--color-surface-2, #F1F7E4)',
+                  borderRadius: 10, padding: '12px 14px',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'baseline' }}>
+                    <span style={{ ...display, fontSize: 11.5 }}>
+                      {f.direction === 'down' ? 'Not for us' : 'Good match'} · scored {f.match_score_at_time}
+                    </span>
+                    <span style={{ fontSize: 11, color: 'var(--color-text-tertiary)' }}>
+                      {f.created_at.slice(0, 10)}
+                      {f.reviewed_at ? ` · triaged ${f.reviewed_at.slice(0, 10)}` : ' · not yet triaged'}
+                    </span>
+                  </div>
+                  {f.free_text && <p style={{ fontSize: 13.5, marginTop: 6 }}>&ldquo;{f.free_text}&rdquo;</p>}
+                  {f.reasons && f.reasons.length > 0 && (
+                    <p style={{ fontSize: 11.5, color: 'var(--color-text-tertiary)', marginTop: 4 }}>
+                      {f.reasons.join(', ')}
+                    </p>
+                  )}
+                  {f.triage_class && (
+                    <p style={{ fontSize: 11.5, marginTop: 6 }}>
+                      <strong style={{ ...display }}>{f.triage_class.replace(/_/g, ' ')}</strong>
+                      {f.resolution ? ` — ${f.resolution}` : ''}
+                    </p>
+                  )}
+                  {f.reviewer_note && (
+                    <p style={{ fontSize: 12.5, marginTop: 6, whiteSpace: 'pre-wrap', opacity: 0.9 }}>
+                      {f.reviewer_note}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </Section>
+        )}
 
         {/* ── Tags ─────────────────────────────────────────────────────── */}
         <Section title="Tags — what the matcher uses">

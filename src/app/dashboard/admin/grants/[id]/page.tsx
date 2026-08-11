@@ -14,7 +14,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { deriveReviewReasons, extractTagsDiff, type ReviewRow } from '@/lib/admin/review-reasons'
-import { GrantDetail } from './GrantDetail'
+import { GrantDetail, type GrantFeedback } from './GrantDetail'
 import { getAdminDb } from '@/lib/admin/admin-db'
 
 export const dynamic = 'force-dynamic'
@@ -27,6 +27,18 @@ export default async function GrantDetailPage({ params }: { params: { id: string
     .select('*')
     .eq('id', params.id)
     .maybeSingle()
+
+  // What users said about this grant, and what was decided about it. Keyed on
+  // BOTH id forms because match_feedback.grant_id holds a mix of uuids and
+  // external_ids; joining on id alone silently drops the external_id-keyed ones.
+  const keys = [params.id, String((data as Record<string, unknown> | null)?.external_id ?? '')]
+    .filter(k => k.length > 0)
+  const { data: feedbackRows } = await db
+    .from('match_feedback')
+    .select('id, direction, reasons, free_text, match_score_at_time, created_at, reviewed_at, resolution, triage_class, reviewer_note')
+    .in('grant_id', keys)
+    .order('created_at', { ascending: false })
+  const feedback = (feedbackRows ?? []) as GrantFeedback[]
 
   // A read failure must not render as "not found". The old Needs Review screen
   // showed "all clear" when its query had simply errored, and the same mistake
@@ -56,7 +68,7 @@ export default async function GrantDetailPage({ params }: { params: { id: string
       >
         ← Catalogue
       </Link>
-      <GrantDetail row={row} reasons={reasons} diffs={diffs} />
+      <GrantDetail row={row} reasons={reasons} diffs={diffs} feedback={feedback} />
     </main>
   )
 }
