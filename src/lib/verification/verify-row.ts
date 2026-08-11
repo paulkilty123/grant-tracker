@@ -61,6 +61,8 @@ export type VerifyRow = {
   id:              string
   title:           string
   funder:          string | null
+  /** grant | programme | investment | in_kind. Scope is decided by this, not by the model. */
+  funding_type?:   string | null
   apply_url:       string | null
   deadline:        string | null
   is_rolling:      boolean | null
@@ -433,8 +435,18 @@ quote of the sentence it came from. If the page does not state it, use
   "still_listed"   : false if the page indicates this fund has closed permanently,
                      been withdrawn, or is no longer offered. Note: a closed
                      application ROUND is not the same as a withdrawn fund.
-  "is_grant"       : false if what is described is not funding at all (for example
-                     a paid membership, a discounted service, or a loan product).
+  "is_grant"       : false ONLY if this is not a funding opportunity our
+                     catalogue covers at all. We DELIBERATELY carry four kinds:
+                       - grants
+                       - programmes (accelerators, fellowships, support schemes)
+                       - investment (loans, patient capital, social investment,
+                         blended finance, community shares — repayable finance
+                         IS in scope, answer true)
+                       - in-kind (software credits, ad grants, free workspace,
+                         pro bono services, discounted goods — also in scope)
+                     So answer false only for things like a paid consultancy
+                     service sold commercially, a job advert, a conference
+                     ticket, or a page that offers the reader nothing at all.
 
 Shape:
 {"gate":{"funds_on_page":string[],"our_fund_is_one_of_them":bool,"fund_on_page":string|null,"describes_our_fund":bool,"has_funding_detail":bool},
@@ -638,14 +650,41 @@ async function runModel(
 
   const stillListed = fact('still_listed')
   const isGrant     = fact('is_grant')
+  const earlyNotes: string[] = notes
 
+  // NO QUOTE, NO VERDICT. The rule already governed field proposals but not
+  // these two outcomes, which fell back to placeholder prose when the model
+  // offered no sentence — so "no longer listed" could be pure inference and
+  // still recommend hiding a row. Two of the thirteen withdrawn findings on
+  // 2026-08-11 reached Paul that way. An outcome that removes a fund from view
+  // needs at least as much evidence as one that edits a field.
+  // Scope is a question our own data already answers, so stop asking the model.
+  //
+  // The catalogue deliberately carries four funding types, and 25 of the 38
+  // rows first flagged "not a grant" were `investment` — repayable finance,
+  // which is a stated differentiator, not a mistake. Rewording the prompt cut
+  // it to 14 and thirteen of those were still investment or in_kind rows: told
+  // plainly that loans are in scope, the model kept re-adjudicating anyway,
+  // because "is_grant" is the wrong question to put to it at all.
+  //
+  // A row whose classifier already assigned a known funding_type is in scope by
+  // definition. The verdict now only survives for rows with no type at all.
+  const KNOWN_TYPES = new Set(['grant', 'programme', 'investment', 'in_kind'])
   if (isGrant.value === false) {
-    return { ...base, usage, gate, outcome: 'not_a_grant',
-             notes: [isGrant.quote ?? 'the page describes something other than funding'] }
+    if (row.funding_type && KNOWN_TYPES.has(row.funding_type)) {
+      notes.push(`scope verdict ignored: this row is classified "${row.funding_type}", which the catalogue carries deliberately`)
+    } else if (!isGrant.quote) {
+      notes.push('the model judged this not to be funding but quoted nothing; verdict withheld')
+    } else {
+      return { ...base, usage, gate, outcome: 'not_a_grant', notes: [isGrant.quote] }
+    }
   }
   if (stillListed.value === false) {
-    return { ...base, usage, gate, outcome: 'no_longer_listed',
-             notes: [stillListed.quote ?? 'the page indicates this fund is no longer offered'] }
+    if (!stillListed.quote) {
+      notes.push('the model judged this fund no longer listed but quoted nothing; verdict withheld')
+    } else {
+      return { ...base, usage, gate, outcome: 'no_longer_listed', notes: [stillListed.quote] }
+    }
   }
 
   // A deadline the page states in the PAST is not a deadline to write, it is

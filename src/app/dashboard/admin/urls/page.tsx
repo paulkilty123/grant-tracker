@@ -686,7 +686,12 @@ export default function UrlAdminPage() {
     const { data, error } = await createClient()
       .from('scraped_grants')
       .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_brief, grant_sources, description, location_tag, amount_min, amount_max, deadline, is_rolling, next_open_date, eligible_structures, funder_type, funding_type, first_seen_at, impact_sectors, target_beneficiaries, field_provenance')
-      .eq('is_active', true)
+      // Deliberately NOT filtered on is_active. A between-rounds row can be
+      // either visible with a "Closed — next round TBC" placeholder (what
+      // expire-grants does) or hidden from users entirely (what a verified
+      // round-closed finding does). Both still need an admin to see them, and
+      // requiring is_active=true here would make the hidden ones invisible to
+      // everyone — the dead-zone pattern that put 169 rows in no queue at all.
       .is('deadline', null)
       .not('next_open_date', 'is', null)
       .order('next_open_date_parsed', { ascending: true, nullsFirst: false })
