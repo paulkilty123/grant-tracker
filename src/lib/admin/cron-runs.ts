@@ -52,6 +52,69 @@ export class UsageTally {
   get isEmpty(): boolean { return this.byModel.size === 0 }
 }
 
+/**
+ * Discovery yield, by catalogue funding type.
+ *
+ * A DECLARED SHAPE, not a per-job field map. The Pipeline page renders this
+ * whenever a summary carries it, keyed on the field existing rather than on the
+ * job's name, so any future job that produces catalogue rows can report its
+ * yield the same way without the page learning about it.
+ *
+ * `found` is what this run produced. `inReview` and `published` are the
+ * CUMULATIVE state of everything the discovery path has ever produced, because
+ * a run cannot know the fate of its own rows: they take days to be enriched,
+ * gated and published. Attributing a publication to the run that found it would
+ * need a cohort join nobody is asking for. The question this answers is "is the
+ * funnel converting", and for that a snapshot alongside each run is enough.
+ *
+ * Keys are the four catalogue funding types (grant, programme, investment,
+ * in_kind), not the discovery query categories, because those are what a row
+ * actually becomes and what a user filters on.
+ */
+export type RunYield = {
+  found:     Record<string, number>
+  inReview?: Record<string, number>
+  published?: Record<string, number>
+}
+
+/** Short labels: the Pipeline cell is narrow and "investment" three times over
+ *  pushes the spend column off a laptop screen. */
+const TYPE_SHORT: Record<string, string> = {
+  grant: 'grant', programme: 'prog', investment: 'inv', in_kind: 'in-kind',
+}
+
+function tally(m: Record<string, number> | undefined): { total: number; parts: string } {
+  const entries = Object.entries(m ?? {}).filter(([, n]) => n > 0)
+  const total = entries.reduce((a, [, n]) => a + n, 0)
+  const parts = entries
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([t, n]) => `${TYPE_SHORT[t] ?? t} ${n}`)
+    .join(', ')
+  return { total, parts }
+}
+
+/**
+ * One line of discovery yield for the Pipeline page, or null if this run did not
+ * report any.
+ *
+ * Lives here rather than in the page for two reasons: it belongs next to the
+ * shape it renders, and a page.tsx cannot export a helper for a test to import
+ * without breaking the Next build (only default and metadata may be exported).
+ */
+export function formatYield(summary: Record<string, unknown> | null | undefined): string | null {
+  const y = summary?.yield as RunYield | undefined
+  if (!y || typeof y !== 'object' || !y.found) return null
+
+  const found = tally(y.found)
+  const bits: string[] = [found.parts ? `found ${found.total} (${found.parts})` : `found ${found.total}`]
+  if (y.inReview) bits.push(`${tally(y.inReview).total} in review`)
+  if (y.published) {
+    const p = tally(y.published)
+    bits.push(p.parts ? `${p.total} published (${p.parts})` : `${p.total} published`)
+  }
+  return bits.join(' · ')
+}
+
 type RunContext = { usage: UsageTally }
 
 /**

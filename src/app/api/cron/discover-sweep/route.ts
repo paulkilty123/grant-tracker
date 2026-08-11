@@ -29,7 +29,7 @@ import {
   BLOCKED_FUNDER_QUERIES,
   type DiscoveryFundingType,
 } from '@/lib/discovery-queries'
-import { recordRun } from '@/lib/admin/cron-runs'
+import { recordRun, type RunYield } from '@/lib/admin/cron-runs'
 
 export const dynamic     = 'force-dynamic'
 export const maxDuration = 300
@@ -67,6 +67,10 @@ const MAX_QUERIES = 5
  *   (none)   — every query, budget-limited. Manual use and backwards compatible.
  */
 type Slice = 'targeted' | 'general' | 'all'
+
+/** Must match discover-grants' MODEL. Usage is attributed per model, and a
+ *  wrong name here would price the run against the wrong rate card. */
+const DISCOVERY_MODEL = 'claude-sonnet-5'
 
 /**
  * Measured wall-clock per query, used to decide what still fits.
@@ -107,8 +111,15 @@ function buildQueue(dayOfYear: number, slice: Slice): QuerySpec[] {
   // `domains` selects the TARGETED prompt for a single named funder. It is not
   // a hard search filter — see the note in discover-grants where allowed_domains
   // was removed.
+  //
+  // fundingType is 'corporate' (the grant-shaped category) rather than
+  // 'programme'. The targeted prompt ignores fundingType entirely, so this value
+  // never reaches the model; it is used for exactly one thing, the fallback row
+  // type when the model does not return one (`item.funding_type ?? fundingType`).
+  // Arts Council England and the GLA award predominantly grants, so an
+  // unlabelled row from either should land as a grant, not a programme.
   const blocked: QuerySpec[] = BLOCKED_FUNDER_QUERIES.map(b => ({
-    query: b.query, fundingType: 'programme', domains: b.domains,
+    query: b.query, fundingType: 'corporate', domains: b.domains,
   }))
 
   const general: QuerySpec[] = []
@@ -139,7 +150,7 @@ export async function GET(req: NextRequest) {
   }
 
   let httpStatus = 200
-  const payload = await recordRun('discover-sweep', async () => {
+  const payload = await recordRun('discover-sweep', async (ctx) => {
     // Same arming rule as the publish gate: the query string is the
     // discriminator between a manual run and a scheduled one, because a fixed
     // cron URL can never send ?run=true.
@@ -191,6 +202,11 @@ export async function GET(req: NextRequest) {
     const results: Array<Record<string, unknown>> = []
     let queued = 0, failed = 0, ran = 0
 
+    // What this run found, keyed by the query's own category. discover-grants
+    // reports `queued` per call, so this is a straight tally rather than a
+    // second read of the queue table.
+    const foundByCategory: Record<string, number> = {}
+
     const skipped: Array<{ query: string; reason: string }> = []
 
     for (const spec of queue) {
@@ -218,13 +234,30 @@ export async function GET(req: NextRequest) {
         })
         const json = await res.json().catch(() => ({})) as Record<string, unknown>
 
+        // Bank the spend BEFORE branching on success. A query that searched,
+        // burned tokens and then failed to parse still cost money, and a cost
+        // figure that only counts successes understates exactly the runs worth
+        // investigating. discover-grants reports usage on both paths.
+        //
+        // Its field names are input/output, not the SDK's input_tokens /
+        // output_tokens, so they are mapped rather than spread.
+        const u = (json.search as { usage?: Record<string, number> } | undefined)?.usage
+        if (u) {
+          ctx.usage.add(DISCOVERY_MODEL, {
+            input_tokens:  (u.input ?? 0) + (u.cacheRead ?? 0) + (u.cacheWrite ?? 0),
+            output_tokens: u.output ?? 0,
+          })
+        }
+
         // Read the response rather than assuming it worked. The old Discovery
         // panel counted a 502 as a completed query.
         if (!res.ok || json.ok === false) {
           failed++
           results.push({ query: spec.query, ok: false, error: json.error ?? `HTTP ${res.status}`, detail: json.detail })
         } else {
-          queued += Number(json.queued ?? 0)
+          const n = Number(json.queued ?? 0)
+          queued += n
+          foundByCategory[spec.fundingType] = (foundByCategory[spec.fundingType] ?? 0) + n
           results.push({ query: spec.query, ok: true, queued: json.queued ?? 0, found: json.found ?? 0 })
         }
       } catch (e) {
@@ -237,6 +270,10 @@ export async function GET(req: NextRequest) {
       success: true,
       armed,
       slice,
+      // Declared shape, read by the Pipeline page. Only `found` here: the rest
+      // of the funnel belongs to process-discovery-queue, which is where a
+      // discovery item becomes a catalogue row with a real funding type.
+      yield: { found: foundByCategory } satisfies RunYield,
       queriesPlanned: queue.length,
       queriesRun: ran,
       // Never let a truncated sweep read as a complete one. `skipped` names each

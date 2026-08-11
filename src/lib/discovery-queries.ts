@@ -1,7 +1,20 @@
 // Shared discovery query constants — importable by both the API route and client components
 
-export type DiscoveryFundingType = 'corporate' | 'social_investment' | 'programme'
+export type DiscoveryFundingType = 'corporate' | 'social_investment' | 'programme' | 'in_kind'
 
+/**
+ * The rotation, five queries per category.
+ *
+ * These map onto the catalogue's four funding types: corporate → grant,
+ * social_investment → investment, programme → programme, in_kind → in_kind.
+ *
+ * `in_kind` was added on 2026-08-11 and had no queries before that. The
+ * catalogue carried 50 live in-kind rows, all of them from scrapers or entered
+ * by hand, and the only job whose purpose is finding funders nobody has
+ * catalogued had never once searched for one. Non-grant breadth is a stated
+ * differentiator, so a category with zero discovery coverage was a hole in the
+ * thing the product is meant to be good at.
+ */
 export const DEFAULT_QUERIES: Record<DiscoveryFundingType, string[]> = {
   corporate: [
     'UK corporate foundation grants charities CICs 2025 2026 open applications',
@@ -23,6 +36,13 @@ export const DEFAULT_QUERIES: Record<DiscoveryFundingType, string[]> = {
     'capacity building programme UK charities CICs funding support 2026',
     'UK social enterprise support programme mentoring funding apply now',
     'charity incubator accelerator UK open applications cohort 2026',
+  ],
+  in_kind: [
+    'UK pro bono support charities CICs legal accounting marketing donated',
+    'free software licences nonprofits UK charities donated technology apply',
+    'corporate volunteering skills-based support UK charities apply now',
+    'donated goods equipment furniture UK charities community groups apply',
+    'free meeting space venue hire UK charities community organisations offer',
   ],
 }
 

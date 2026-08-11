@@ -11,7 +11,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
 import { stampNewGrant, mergeGrantUpdate } from '@/lib/grant-merge'
 import { VALID_SECTORS } from '@/lib/classify'
-import { recordRun, type UsageTally } from '@/lib/admin/cron-runs'
+import { recordRun, type UsageTally, type RunYield } from '@/lib/admin/cron-runs'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
@@ -185,7 +185,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
   }
   const { limit = 10 } = await req.json().catch(() => ({})) as { limit?: number }
-  const { status, body } = await runProcessing(getAdminClient(), limit)
+
+  // Recorded, exactly like the scheduled path. A manual drain imports real rows
+  // and spends real tokens, and leaving it out of cron_runs made the Pipeline
+  // page quietly wrong: a morning where the button was pressed and the cron was
+  // not looked identical to a morning where nothing happened at all. The job
+  // name is shared with the GET path on purpose, so the page shows the latest
+  // drain whichever triggered it.
+  let status = 200
+  const body = await recordRun('process-discovery-queue', async (ctx) => {
+    const r = await runProcessing(getAdminClient(), limit, ctx.usage)
+    status = r.status
+    return r.body
+  })
   return NextResponse.json(body, { status })
 }
 
@@ -229,7 +241,7 @@ async function runProcessing(
   const existingUrls = new Set((existingGrants ?? []).map((g: { apply_url?: string | null }) => (g.apply_url ?? '').toLowerCase().trim()))
   const existingTitles = new Set((existingGrants ?? []).map((g: { title?: string | null }) => (g.title ?? '').toLowerCase().trim()))
 
-  const results: { id: string; title: string; status: 'imported' | 'duplicate' | 'failed'; reason?: string }[] = []
+  const results: { id: string; title: string; status: 'imported' | 'duplicate' | 'failed'; reason?: string; funding_type?: string | null }[] = []
 
   for (const item of pendingItems as QueueItem[]) {
     const urlLower = (item.url ?? '').toLowerCase().trim()
@@ -350,14 +362,56 @@ async function runProcessing(
     await db.from('discovery_queue').update({ status: 'processed', processed_at: new Date().toISOString() }).eq('id', item.id)
     existingUrls.add(urlLower)
     existingTitles.add(titleLower)
-    results.push({ id: item.id, title: item.title, status: 'imported' })
+    results.push({ id: item.id, title: item.title, status: 'imported', funding_type: grantRow.funding_type })
   }
 
   const imported = results.filter(r => r.status === 'imported').length
   const duplicates = results.filter(r => r.status === 'duplicate').length
   const failed = results.filter(r => r.status === 'failed').length
 
-  return { status: 200, body: { ok: true, processed: results.length, imported, duplicates, failed, results } }
+  // ── Yield, the declared shape the Pipeline page renders ───────────────────
+  //
+  // `found` is this run's imports by the funding type the row actually landed
+  // with. inReview and published are the cumulative state of everything the
+  // discovery path has ever produced, because a run cannot know the fate of its
+  // own rows — they take days to be enriched, gated and published.
+  //
+  // One extra read, not one per row: the whole discovery cohort is a few dozen
+  // rows, so a single select and a tally in JS beats a grouped query round trip.
+  // A failure here must not fail the run, because this is bookkeeping about work
+  // that has already succeeded — the same rule recordRun applies to itself.
+  const found: Record<string, number> = {}
+  for (const r of results) {
+    if (r.status !== 'imported') continue
+    const t = (r as { funding_type?: string | null }).funding_type ?? 'unknown'
+    found[t] = (found[t] ?? 0) + 1
+  }
+
+  const runYield: RunYield = { found }
+  try {
+    const { data: cohort } = await db
+      .from('scraped_grants')
+      .select('funding_type, is_active, pipeline_state')
+      .eq('source', 'discovery_queue')
+
+    if (cohort) {
+      const inReview: Record<string, number> = {}
+      const published: Record<string, number> = {}
+      for (const row of cohort as Array<{ funding_type: string | null; is_active: boolean | null; pipeline_state: string | null }>) {
+        const t = row.funding_type ?? 'unknown'
+        if (row.is_active) published[t] = (published[t] ?? 0) + 1
+        else if (['captured', 'enriched', 'tagged', 'tagged_awaiting_review'].includes(row.pipeline_state ?? '')) {
+          inReview[t] = (inReview[t] ?? 0) + 1
+        }
+      }
+      runYield.inReview = inReview
+      runYield.published = published
+    }
+  } catch (e) {
+    console.error('[process-discovery-queue] yield snapshot failed:', e)
+  }
+
+  return { status: 200, body: { ok: true, processed: results.length, imported, duplicates, failed, yield: runYield, results } }
 }
 
 // GET — return queue stats

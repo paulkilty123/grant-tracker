@@ -134,7 +134,7 @@
     },
     {
       "path": "/api/cron/discover-sweep?slice=targeted",
-      "schedule": "30 8 * * *"
+      "schedule": "30 8 */2 * *"
     },
     {
       "path": "/api/cron/discover-sweep?slice=general",

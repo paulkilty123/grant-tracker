@@ -350,6 +350,9 @@ function buildUserPrompt(query: string, fundingType: FundingType): string {
     corporate: 'UK corporate foundations, company community funds, CSR grant programmes. Think: FTSE companies, major retailers, banks, law firms, tech companies with UK foundations or community programmes.',
     social_investment: 'UK social investment — patient capital, blended finance, CDFI loans, impact investment funds, social enterprise lending. Think: CDFIs, impact funds, ethical banks, social investment wholesalers.',
     programme: 'UK accelerators, incubators, fellowships, capacity building programmes, cohort support schemes for social enterprises and charities. Think: sector support bodies, foundation-backed programmes, government-backed enterprise schemes.',
+    // Non-cash support. Worth stating what counts, because the obvious reading
+    // of "funding" excludes all of it and the sweep returns nothing.
+    in_kind: 'UK in-kind and pro bono support for charities, CICs and social enterprises: donated professional services (legal, accounting, marketing, HR), free or discounted software licences, skills-based corporate volunteering, donated goods and equipment, free meeting or office space. Think: law firms with pro bono programmes, tech companies with nonprofit licence schemes, corporates with employee volunteering, furniture and IT reuse charities. The award is the service or the goods, not cash.',
   }[fundingType]
 
   return `Find 10–14 specific UK funding opportunities matching this search: "${query}"
