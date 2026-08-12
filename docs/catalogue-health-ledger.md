@@ -35,7 +35,7 @@ should reach zero first.
 | A3 | Rows the engine found closed, still live (`round_closed`) | **44** | **yes** | Same | Same |
 | A4 | Rows the engine found are not funding (`not_a_grant`) | **38** | **yes** | Same, then archive | Same |
 | A5 | Rows the engine found delisted (`no_longer_listed`) | **13** | **yes** | Same, then archive | Same |
-| A6 | Live rows asserting "Rolling" with no evidence (`is_rolling = !deadline`) | **380** | **yes** | Relabel to "no deadline stated"; needs a decision, not a build | Not scheduled |
+| A6 | Live rows asserting "Rolling" with no evidence (`is_rolling = !deadline`) | **380** | **yes** | Verification engine, **explicit goal of its first scheduled runs** | Tranche 2 |
 | A7 | Live rows with no timing information at all | **137** | **yes** | Verification engine, highest-risk recheck class | Tranche 2 |
 | A8 | Live rows with a brief written from model memory, not the page | **8** | **yes** | Re-enrich; blocked on some by pins (D1) | Not scheduled |
 | A9 | Live rows with invite-only language and no `is_invite_only` flag | **~8** | **yes** | Regex floor from the 10 Aug audit, not re-measured. Needs a pass | Not scheduled |
@@ -53,11 +53,22 @@ split of the 138 is `wrong_fund` 107, `no_funding_detail` 27, `fetch_failed` 3,
 that page". **These four rows need re-running before they are trusted**: they are
 a snapshot from 11 August, and the catalogue has moved since.
 
-**A6 is the biggest single number in this ledger** and it is not a bug so much as
-a labelling decision nobody has taken. `is_rolling` is set as `!deadline`, so a
-parse failure and a genuinely rolling fund are indistinguishable. 380 of 682 live
-rows say "Rolling, apply any time". Some of them are wrong and we cannot tell
-which without the engine.
+**A6 is the biggest single number in this ledger.** `is_rolling` is set as
+`!deadline`, so a parse failure and a genuinely rolling fund are indistinguishable
+in the data and identical on screen. 380 of 682 live rows say "Rolling, apply any
+time", and an unknown share of them are funds whose deadline we simply failed to
+read.
+
+It cannot be resolved by relabelling, because "no deadline stated" is just as
+unevidenced as "rolling" and would understate the genuinely rolling funds. It
+needs a page read per row: does the funder say applications are open year-round,
+or does the page carry a date we missed?
+
+**Standing instruction, 2026-08-12: separating genuinely rolling from unread
+deadline, with a quote for each, is an explicit goal of the verification engine's
+first scheduled runs.** It is the single largest correctness question in the live
+catalogue and the engine is the only thing that can answer it. Not a side effect
+of general rechecking; a named objective with its own count in this ledger.
 
 ---
 
@@ -67,7 +78,7 @@ Costs Paul time or hides work, but no fundraiser sees it.
 
 | # | Issue | Now | Visible | What fixes it | When |
 |---|---|---:|---|---|---|
-| B1 | Published-but-inactive: in no user surface **and** in no admin queue | **173** | no | State reconciliation pass | Not scheduled |
+| B1 | Published-but-inactive: in no user surface **and** in no admin queue | **173** | no | One-off drain, proposed in the merge digest | **First cleanup** |
 | B2 | Live rows carrying a non-published `pipeline_state` | **59** | no | Same | Not scheduled |
 | B3 | Archived but still `is_active` | **8** | no | Same | Not scheduled |
 | B4 | Rows quarantined with `needs_intervention_reason`, frozen from retry | **34** | no | Clear the reason, re-run the chain | Not scheduled |
@@ -77,9 +88,35 @@ Costs Paul time or hides work, but no fundraiser sees it.
 | B8 | Rows marked dead by hand, evidence says likely open | **66** | no | `reports/dead-row-triage-2026-07-29-verified.json`, 20 strong + 46 weak. Never actioned | Not scheduled |
 
 **B1 grew.** It was 137, then 169 on 10 August, and is **173** today. Nothing has
-ever fixed it; each pass just re-counts it. It is the residue of jobs that set
-`is_active=false` without moving `pipeline_state`, which is the exact class of bug
-`check-coming-soon` was fixed for on this branch.
+ever fixed it; each pass just re-counts it.
+
+Segmented 2026-08-12, which is what makes a drain proposable:
+
+| Destination | Rows | Signal |
+|---|---:|---|
+| `archived` | 11 | `url_status = 'dead'` from a validator check |
+| `between_rounds_scheduled` | 19 | carries reopen information |
+| Deadline passed, **recoverable** | 126 | 64 have a `deadline_cycle`, 62 more have `decision_timeline` prose |
+| Deadline passed, no recovery signal | 4 | archive |
+| No obvious reason, needs a look | 13 | live-shaped but inactive |
+
+**These are not stale rows.** 127 of the 130 deadline-passed rows closed within
+the last 90 days, the oldest is 9 April, and none is more than a year old. Nearly
+all carry a cycle or timeline, so most should roll to their next round rather
+than be archived. The drain is mostly a recovery job, not a clear-out.
+
+**The trap that keeps them there:** `expire-grants` selects `is_active = true`, so
+a row that is inactive can never have its deadline rolled. Once a row lands here
+its deadline rots in the past permanently.
+
+**Cause not identified, and worth saying so.** None of these rows carries
+`pipeline_state` provenance and only 5 carry `is_active` provenance, so the
+writes bypassed `mergeGrantUpdate`. The obvious suspect was the
+`trg_auto_deactivate_closed_grants` trigger, which sets `is_active := false`
+without touching `pipeline_state`: **measured, and it explains none of them.**
+Zero rows in the whole table match its twelve phrases, so it is dormant. The rows
+are spread across every source, which rules out a single bad scraper. So the
+drain proposal includes a detector rather than assuming the feed is closed.
 
 **B5 note.** Demoting the code unblocks the queue; it does not review the tags.
 Those 42 rows keep whatever narrowed structure list the re-read produced. That is
@@ -255,6 +292,17 @@ significant milestone. The counts are cheap: every figure above came from
 Re-run A2 to A5 before trusting them: they are a snapshot of 11 August, and the
 verification engine has no home yet, so nothing has refreshed them since.
 
+### Standing priorities
+
+Set by Paul, 2026-08-12, and to be carried forward until closed.
+
+1. **B1, the 173 invisible rows, is the first cleanup.** Drain proposed in the
+   merge digest, with a destination per row rather than a bulk state change.
+2. **A6, the 380 unevidenced Rolling rows, is priority input for tranche 2.**
+   Resolving genuinely rolling against unread deadline, with evidence, is an
+   explicit goal of the engine's first scheduled runs, not a by-product.
+
 | Date | Change |
 |---|---|
 | 2026-08-12 | Ledger opened. All counts measured. Retired the stale 198, 54%, 135 and 17. |
+| 2026-08-12 | B1 segmented by destination: 11 archive, 19 between rounds, 126 recoverable, 4 archive, 13 unclear. Trigger hypothesis tested and disproved. B1 and A6 set as standing priorities. |
