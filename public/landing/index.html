@@ -473,7 +473,7 @@
       <nav>
         <a class="brand" href="#top"><svg class="brand-svg" viewBox="0 0 24 24" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 10a6 6 0 0 0 -6 -6h-3v2a6 6 0 0 0 6 6h3" stroke="#1D3C3E"/><path d="M12 14a6 6 0 0 1 6 -6h3v1a6 6 0 0 1 -6 6h-3" stroke="#1D3C3E"/><path d="M12 20l0 -10" stroke="#1D3C3E"/></svg><span class="logo">shoots</span></a>
         <div class="nav-center"><a href="#how">How it works</a><a href="#funding">Funding mix</a><a href="#pricing">Pricing</a><a href="#about" class="nav-opt">About</a><a href="#faq">FAQ</a></div>
-        <div class="nav-right"><a href="/auth/login" class="nav-signin" style="font-weight:600;">Sign in</a><a class="btn btn-primary nav-btn" href="#pricing">Join the waitlist</a><button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="mobileMenu" aria-label="Open menu"><i class="ti ti-menu-2" aria-hidden="true"></i></button></div>
+        <div class="nav-right"><a href="/auth/login" class="nav-signin" style="font-weight:600;">Sign in</a><a class="btn btn-primary nav-btn" href="#waitlist">Join the waitlist</a><button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="mobileMenu" aria-label="Open menu"><i class="ti ti-menu-2" aria-hidden="true"></i></button></div>
       </nav>
       <div class="mobile-menu" id="mobileMenu" hidden>
         <a href="#how">How it works</a>
@@ -501,7 +501,7 @@
             <span><i class="ti ti-users-group" aria-hidden="true"></i>Built with UK charities, CICs and social enterprises</span>
           </p>
           <div class="hero-cta">
-            <a href="#" class="btn btn-primary">See your matches</a>
+            <a href="#waitlist" class="btn btn-primary">Join the waitlist</a>
             <a href="#how" class="hero-cta-link">See how it works <span class="arw" aria-hidden="true">&rarr;</span></a>
           </div>
           <p class="hero-reassure">Tell us about your organisation and see what fits, in about three minutes.</p>
@@ -802,16 +802,16 @@
       <p class="eyb">Pricing for charities, CICs and community groups</p>
       <h2>Pricing coming soon</h2>
       <p class="lead" style="color:#5f6b64;max-width:56ch;">Simple plans priced for smaller organisations, whilst catering for bigger teams. Join the waitlist to see launch pricing first.</p>
-      <div class="waitlist-card" style="background:var(--deep);border-radius:16px;padding:clamp(28px,4vw,44px);margin-top:28px;">
+      <div class="waitlist-card" id="waitlist" style="background:var(--deep);border-radius:16px;padding:clamp(28px,4vw,44px);margin-top:28px;">
         <h3 style="color:var(--cream);margin:0 0 6px;">Join the waitlist</h3>
         <p style="color:rgba(246,241,231,.75);margin:0 0 18px;font-size:.95rem;">Be first in when we launch.</p>
-        <form name="waitlist" method="POST" data-netlify="true" style="display:flex;gap:10px;flex-wrap:wrap;align-items:stretch;">
-          <input type="hidden" name="form-name" value="waitlist">
+        <form id="wl-form" method="POST" action="/api/waitlist" style="display:flex;gap:10px;flex-wrap:wrap;align-items:stretch;">
           <label for="wl-email" class="sr-only" style="position:absolute;left:-9999px;">Email address</label>
           <input id="wl-email" type="email" name="email" required placeholder="you@yourorganisation.org.uk" style="flex:1;min-width:220px;padding:12px 16px;border-radius:10px;border:1px solid rgba(246,241,231,.3);background:rgba(246,241,231,.08);color:var(--cream);font:inherit;">
-          <button type="submit" class="btn btn-primary" style="white-space:nowrap;">Join the waitlist</button>
+          <button id="wl-submit" type="submit" class="btn btn-primary" style="white-space:nowrap;">Join the waitlist</button>
         </form>
-        <p style="color:rgba(246,241,231,.55);margin:14px 0 0;font-size:.85rem;">No card, no spam. Just launch news.</p>
+        <p id="wl-status" role="status" aria-live="polite" style="margin:14px 0 0;font-size:.9rem;min-height:1.25em;color:rgba(246,241,231,.75);"></p>
+        <p style="color:rgba(246,241,231,.55);margin:8px 0 0;font-size:.85rem;">No card, no spam. Just launch news.</p>
       </div>
       <div class="partner" style="margin-top:28px;">
         <span class="partner-ic"><i class="ti ti-users-group" aria-hidden="true"></i></span>
@@ -831,7 +831,7 @@
     <div class="wrap">
       <h2>Start with funding you can actually win.</h2>
       <p>Launching soon. Join the waitlist for first access.</p>
-      <a class="btn btn-primary" style="padding:16px 40px;font-size:17px;" href="#pricing">Join the waitlist</a>
+      <a class="btn btn-primary" style="padding:16px 40px;font-size:17px;" href="#waitlist">Join the waitlist</a>
     </div>
   </section>
 
@@ -853,10 +853,9 @@
           </div>
         </div>
         <div class="contact-form">
-          <label>Name<input type="text" placeholder="Your name"></label>
-          <label>Email<input type="email" placeholder="you@organisation.org"></label>
-          <label>Message<textarea rows="5" placeholder="How can I help?"></textarea></label>
-          <a class="btn btn-primary contact-send">Send message</a>
+          <p class="cd-label">Send an email</p>
+          <p class="cd-sub">Tell me what you need and I'll reply, usually within a couple of days.</p>
+          <a class="btn btn-primary contact-send" href="mailto:hello@shootsfunding.co.uk">hello@shootsfunding.co.uk</a>
         </div>
       </div>
     </div>
@@ -1000,6 +999,72 @@
     block.addEventListener('mouseleave', start);
     render();
     start();
+  })();
+  </script>
+
+<script>
+  // Waitlist submit. Posts JSON to /api/waitlist, which stores the address and
+  // its timestamp as the consent record. Same-origin: this document is served
+  // at the site root by a middleware rewrite, so no CORS is involved.
+  //
+  // The form's action points at the endpoint rather than nowhere, so a browser
+  // with this script blocked posts to a route that exists. That path is not a
+  // working fallback: the route reads JSON, so a native form post gets a 400
+  // rather than being stored. It fails visibly instead of silently, which the
+  // old 405-on-a-static-page did not.
+  (function(){
+    var form   = document.getElementById('wl-form');
+    if(!form) return;
+    var email  = document.getElementById('wl-email');
+    var button = document.getElementById('wl-submit');
+    var status = document.getElementById('wl-status');
+    var OK    = 'rgba(246,241,231,.9)';
+    var ERR   = '#F0997B';
+    var done  = false;
+
+    function say(message, isError){
+      status.textContent = message;
+      status.style.color = isError ? ERR : OK;
+    }
+
+    form.addEventListener('submit', function(event){
+      event.preventDefault();
+      if(done) return;
+
+      var value = (email.value || '').trim();
+      if(!value){
+        say('Please enter your email address.', true);
+        email.focus();
+        return;
+      }
+
+      button.disabled = true;
+      var original = button.textContent;
+      button.textContent = 'Joining...';
+      say('', false);
+
+      fetch('/api/waitlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: value, source: 'landing' })
+      }).then(function(res){
+        return res.json().then(function(data){ return { ok: res.ok, data: data }; });
+      }).then(function(result){
+        if(result.ok){
+          done = true;
+          form.hidden = true;
+          say("You're on the list. We'll email you when we launch.", false);
+          return;
+        }
+        button.disabled = false;
+        button.textContent = original;
+        say((result.data && result.data.error) || 'Something went wrong. Please try again.', true);
+      }).catch(function(){
+        button.disabled = false;
+        button.textContent = original;
+        say('Something went wrong. Please try again.', true);
+      });
+    });
   })();
   </script>
 </body>
