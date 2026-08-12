@@ -12,6 +12,8 @@
 import { createHash, randomBytes } from 'crypto'
 import { readFile } from 'fs/promises'
 import path from 'path'
+// Safe to import here: mcp-brand has no imports of its own, so no cycle.
+import { MCP_CONTACT_EMAIL } from '@/lib/mcp-brand'
 
 // ──────────────────────────────────────────────────────────────────────────
 // API key generation and hashing
@@ -90,11 +92,20 @@ export async function readMCPToS(): Promise<ParsedToS> {
   } catch (err) {
     // Fallback for environments where docs/ isn't bundled. Returns a stub so
     // the flow doesn't crash; surfaces via the version string for debugging.
+    //
+    // Logged, not swallowed. This fired on every production request to
+    // /mcp/terms from 2026-07-25 to 2026-08-12 and nobody knew, because the
+    // page renders happily and its DRAFT banner only triggers on a status
+    // starting "DRAFT", not on this "ERROR:" one. A served legal page with no
+    // terms in it is worth a line in the log.
+    console.error('[mcp-tos] unreadable at', TOS_PATH, '- serving fallback:', err)
     return {
       version: 'v0-fallback',
       last_updated: null,
       status: 'ERROR: ToS file unreadable',
-      body: '# Terms of Service\n\nTerms are being prepared. Contact hello@granttracker.co.uk for current terms.',
+      // No hardcoded address: the old one outlived the domain move here,
+      // behind a fallback nobody was watching.
+      body: `# Terms of Service\n\nTerms are being prepared. Contact ${MCP_CONTACT_EMAIL} for current terms.`,
     }
   }
 }

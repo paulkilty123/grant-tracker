@@ -42,7 +42,19 @@ yarn-error.log*
 # ── Not needed to build the app ──────────────────────────────────────────────
 # None of these are imported by src/. Excluding them keeps the upload small and
 # keeps internal working material out of the deployment.
-/docs/
+#
+# ⚠️  "Not imported by src/" is NOT the same test as "not needed at runtime".
+# docs/legal/mcp-tos.md is never imported: src/lib/mcp-auth.ts reads it with
+# fs.readFile at request time, which no import audit can see. Excluding /docs/
+# wholesale therefore shipped a /mcp/terms page that served the "Terms are being
+# prepared" fallback instead of the terms, silently, from 2026-07-25 until
+# 2026-08-12. next.config.mjs traces the file correctly; it was simply never in
+# the upload for the trace to find. Before adding anything here, grep for
+# readFile/readFileSync on the path, not just for imports.
+/docs/*
+!/docs/legal/
+/docs/legal/*
+!/docs/legal/mcp-tos.md
 /data/
 /reports/
 /scripts/
