@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Key, Plus } from 'lucide-react'
 import { RevokeKeyButton } from './RevokeKeyButton'
 import LogoMark from '@/components/icons/LogoMark'
+import { MCP_BRAND_NAME } from '@/lib/mcp-brand'
 
 export const dynamic = 'force-dynamic'
 
@@ -50,7 +51,7 @@ export default async function MCPKeysPage() {
         <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/mcp" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}>
             <LogoMark size={28} />
-            <span style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 22, letterSpacing: '-0.025em', color: '#2C2C2A' }}>GrantTracker</span>
+            <span style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 22, letterSpacing: '-0.025em', color: '#2C2C2A' }}>{MCP_BRAND_NAME}</span>
           </Link>
           <div style={{ display: 'flex', gap: 18 }}>
             <Link href="/mcp" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13, color: '#5F5E5A', textDecoration: 'none' }}>
@@ -73,7 +74,7 @@ export default async function MCPKeysPage() {
               MCP API Keys
             </h1>
             <p className="text-sm text-mid">
-              Keys for connecting MCP-compatible agents (Claude, ChatGPT, Gemini, others) to the Grant Tracker funding catalogue.
+              Keys for connecting MCP-compatible agents (Claude, ChatGPT, Gemini, others) to the {MCP_BRAND_NAME} funding catalogue.
             </p>
           </div>
           <Link
@@ -92,7 +93,7 @@ export default async function MCPKeysPage() {
             <p className="text-sm font-semibold text-charcoal mb-1" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
               No API keys yet
             </p>
-            <p className="text-xs text-mid mb-4">Generate your first key to connect an agent to the Grant Tracker MCP.</p>
+            <p className="text-xs text-mid mb-4">Generate your first key to connect an agent to the {MCP_BRAND_NAME} MCP.</p>
             <Link
               href="/mcp/keys/new"
               className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg"
