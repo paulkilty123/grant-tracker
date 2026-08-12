@@ -807,9 +807,10 @@
         <p style="color:rgba(246,241,231,.75);margin:0 0 18px;font-size:.95rem;">Be first in when we launch.</p>
         <form id="wl-form" method="POST" action="/api/waitlist" style="display:flex;gap:10px;flex-wrap:wrap;align-items:stretch;">
           <label for="wl-email" class="sr-only" style="position:absolute;left:-9999px;">Email address</label>
-          <input id="wl-email" type="email" name="email" required placeholder="you@yourorganisation.org.uk" style="flex:1;min-width:220px;padding:12px 16px;border-radius:10px;border:1px solid rgba(246,241,231,.3);background:rgba(246,241,231,.08);color:var(--cream);font:inherit;">
+          <input id="wl-email" type="email" name="email" required aria-describedby="wl-consent" placeholder="you@yourorganisation.org.uk" style="flex:1;min-width:220px;padding:12px 16px;border-radius:10px;border:1px solid rgba(246,241,231,.3);background:rgba(246,241,231,.08);color:var(--cream);font:inherit;">
           <button id="wl-submit" type="submit" class="btn btn-primary" style="white-space:nowrap;">Join the waitlist</button>
         </form>
+        <p id="wl-consent" style="color:rgba(246,241,231,.55);margin:12px 0 0;font-size:.85rem;line-height:1.5;">We'll email you when Shoots opens, plus occasional funding updates. Unsubscribe any time. See our <a href="/privacy" style="color:rgba(246,241,231,.85);text-decoration:underline;">privacy policy</a>.</p>
         <p id="wl-status" role="status" aria-live="polite" style="margin:14px 0 0;font-size:.9rem;min-height:1.25em;color:rgba(246,241,231,.75);"></p>
         <p style="color:rgba(246,241,231,.55);margin:8px 0 0;font-size:.85rem;">No card, no spam. Just launch news.</p>
       </div>
