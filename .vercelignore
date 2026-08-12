@@ -1,6 +1,22 @@
-# Controls what the Vercel CLI uploads when deploying from a working copy
-# (`vercel --prod`). Git-triggered deploys are unaffected — those take the repo
-# contents, not the working directory.
+# Controls what reaches a Vercel build. This governs BOTH CLI deploys
+# (`vercel --prod`) and Git-triggered deploys. Anything excluded here is absent
+# from the running application, however it was deployed.
+#
+# ⚠️  A runtime file read into an excluded path FAILS SILENTLY. The file is
+# simply not there, the read throws, and whatever fallback the calling code has
+# is what production serves. Nothing warns you.
+#
+# This header used to claim the opposite: "Git-triggered deploys are unaffected
+# — those take the repo contents, not the working directory." That was wrong,
+# and it cost /mcp/terms two and a half weeks of serving a "Terms are being
+# prepared" stub instead of the terms, from 2026-07-25 to 2026-08-12. Proven by
+# fixing it: re-including the one file below was the only change to file
+# availability in that deploy, and the page started serving real terms.
+#
+# So: before adding a path here, grep for `readFile`/`readFileSync` against it,
+# not just for imports. An import of a missing file breaks the build loudly. An
+# fs read of one does not. `src/lib/mcp-tos.test.ts` guards the single runtime
+# read that exists today; it will fail if this file starts excluding it again.
 #
 # ⚠️  When a .vercelignore exists, Vercel uses it INSTEAD OF .gitignore, so
 # everything .gitignore protects has to be repeated here. That is why the
