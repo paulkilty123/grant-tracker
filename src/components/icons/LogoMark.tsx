@@ -1,48 +1,67 @@
-// Canonical Grant Tracker brand mark — "growth beside you". Two pills:
-// short pill (left) + tall pill (right), rx=13, viewBox 100x100. Geometry
-// from designer export (Downloads/grant_tracker_icons.html, 2026-06-06).
+// Canonical Shoots brand mark — the sprout. Two opposed leaf curves off a
+// central stem, geometry taken verbatim from the landing page's inline mark
+// (public/landing/index.html, `.brand-svg`) so the app and the landing page
+// render the same logo rather than two drifting copies.
 //
-// Pills are shifted UP by 8 units from the rendered designer values so
-// the bottom sits at y=80. The designer source has the pills floating
-// inside a square viewBox; with flex items-center the SVG bounding-box
-// centre aligns with the wordmark line-height centre, which leaves the
-// pills' visual bottom sitting BELOW the wordmark baseline. Lifting the
-// pills brings the pill bottom flush with the GrantTracker baseline at
-// the live render sizes.
+// Stroke-based, not fill-based: the sprout is drawn with 1.75-width round-capped
+// strokes on a 24x24 viewBox. The retired mark was two filled pills on a 100x100
+// viewBox in the old lime palette (#8ECB3C family), which is why this is a
+// replacement rather than a recolour.
 //
-// Variant mapping:
-//   default — light surfaces (landing nav, bridge-page top bar). Forest
-//             short pill + green tall pill, transparent background.
-//   onInk   — dark forest surfaces (footer). Cream short pill + green
-//             tall pill — the "tile interior" dropping onto the dark bg.
-//   onGreen — green-tinted surfaces. Inverse: forest short pill + cream
-//             tall pill.
+// The pill-lifting note that used to live here is gone with the pills. This
+// viewBox has no float, so the mark's optical centre already lines up with a
+// wordmark's line-height centre under `flex items-center`.
+//
+// Variant mapping (single stroke colour per surface, since the sprout is one
+// continuous mark rather than two pills):
+//   default — light surfaces (nav, bridge pages, authorize screen). Deep teal.
+//   onInk   — dark surfaces (sidebar, footer). Cream, dropping onto the dark bg.
+//   onGreen — green-tinted surfaces. Deep teal, same as default: the tint is
+//             light enough that cream would lose contrast.
+//
+// Colours are `var(--token, #hex)` rather than bare tokens on purpose. This
+// component renders on pages that do not load shoots-auth.css (privacy, terms,
+// the bridge pages), where the custom properties are undefined and a bare
+// var() would collapse to the SVG default of black.
 type LogoMarkProps = {
   size?: number
   className?: string
   variant?: 'default' | 'onInk' | 'onGreen'
+  /** Accessible name. Defaults to the brand. Not read from mcp-brand: that
+   *  module reads non-public env at module load and this component is used
+   *  inside client components (Sidebar, Logo). */
+  label?: string
 }
 
-const palettes = {
-  default: { short: '#173404', tall: '#7CC242' },
-  onInk:   { short: '#F5F1E8', tall: '#7CC242' },
-  onGreen: { short: '#173404', tall: '#F5F1E8' },
+const strokes = {
+  default: 'var(--deep, #1D3C3E)',
+  onInk:   'var(--cream, #F5F1E8)',
+  onGreen: 'var(--deep, #1D3C3E)',
 }
 
-const LogoMark = ({ size = 28, className, variant = 'default' }: LogoMarkProps) => {
-  const c = palettes[variant]
+const LogoMark = ({ size = 28, className, variant = 'default', label = 'Shoots' }: LogoMarkProps) => {
+  const stroke = strokes[variant]
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 100 100"
+      viewBox="0 0 24 24"
       width={size}
       height={size}
       className={className}
+      fill="none"
+      stroke={stroke}
+      strokeWidth={1.75}
+      strokeLinecap="round"
+      strokeLinejoin="round"
       role="img"
-      aria-label="Grant Tracker"
+      aria-label={label}
     >
-      <rect x="20" y="38" width="26" height="42" rx="13" fill={c.short} />
-      <rect x="56" y="10" width="26" height="70" rx="13" fill={c.tall} />
+      {/* upper-left leaf */}
+      <path d="M12 10a6 6 0 0 0 -6 -6h-3v2a6 6 0 0 0 6 6h3" />
+      {/* lower-right leaf */}
+      <path d="M12 14a6 6 0 0 1 6 -6h3v1a6 6 0 0 1 -6 6h-3" />
+      {/* stem */}
+      <path d="M12 20l0 -10" />
     </svg>
   )
 }

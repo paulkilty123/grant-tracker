@@ -284,9 +284,14 @@ function PortalNav() {
   return (
     <nav style={{ background: 'var(--surface-card)', borderBottom: '1px solid var(--border-hairline)', padding: '18px 0' }}>
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Link href="/mcp" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}>
+        {/* Logotype, matched to the landing page's `.brand` treatment: lowercase
+            wordmark, weight 500, -0.01em tracking, 8px gap. Lowercased in CSS
+            rather than by changing MCP_BRAND_NAME, because the brand is
+            capitalised everywhere it appears as prose ("your Shoots funding
+            catalogue") and only the logotype is lowercase. */}
+        <Link href="/mcp" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
           <LogoMark size={28} />
-          <span style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 22, letterSpacing: '-0.025em', color: 'var(--text-heading)' }}>{MCP_BRAND_NAME}</span>
+          <span style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 22, letterSpacing: '-0.01em', textTransform: 'lowercase', color: 'var(--deep, #1D3C3E)' }}>{MCP_BRAND_NAME}</span>
         </Link>
         <div style={{ display: 'flex', gap: 18 }}>
           <Link href="/mcp" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13, color: 'var(--text-muted)', textDecoration: 'none' }}>
@@ -423,12 +428,18 @@ function ConsentScreen({
             Connect {clientName} to {MCP_BRAND_NAME}
           </h1>
           <p className="text-sm mb-5" style={{ color: 'var(--text-heading)' }}>
-            <strong>{clientName}</strong> is asking for <strong>read access</strong> to your {MCP_BRAND_NAME} funding catalogue.
+            {/* Was "asking for read access". The OAuth scope string is indeed
+                `read`, but the scope string is not the granted capability: paid
+                plans expose pipeline and goal writes over this connection, so
+                summarising the whole grant as read access was wrong. The scope
+                value itself is unchanged. */}
+            <strong>{clientName}</strong> is asking to connect to your {MCP_BRAND_NAME} account.
+            Here is what that allows.
           </p>
 
           <div className="rounded-lg p-4 mb-5" style={{ background: 'var(--surface-sunken)', border: '1px solid var(--border-hairline)' }}>
             <div className="text-[11px] font-bold uppercase tracking-wider mb-2" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#3B6D11' }}>
-              What it can do
+              What it can do on any plan
             </div>
             <ul className="text-sm space-y-1.5" style={{ color: 'var(--text-heading)' }}>
               <li>• Search the UK funding catalogue</li>
@@ -439,12 +450,40 @@ function ConsentScreen({
             </ul>
           </div>
 
+          {/* Write scope, stated because it is real. The Apply and Adviser plans
+              expose four writing tools over this same connection
+              (add_to_pipeline, update_pipeline_item, set_funding_goal,
+              update_goal_purposes), all verified live in the phase 7 smoke test.
+              This block previously did not exist and the panel below claimed the
+              connection could not "edit your pipeline" or "write any data back",
+              which understated the grant for anyone on a paid plan.
+
+              Deliberately NOT tier-aware: the consent screen resolves the signed
+              in user but never their organisation, so the tier is not known here.
+              Making it tier-aware would mean adding an org lookup to the consent
+              path, which is a behaviour change, not a copy fix. Stating the
+              condition in words is accurate for every tier. */}
+          <div className="rounded-lg p-4 mb-5" style={{ background: 'var(--surface-sunken)', border: '1px solid var(--border-hairline)' }}>
+            <div className="text-[11px] font-bold uppercase tracking-wider mb-2" style={{ fontFamily: 'var(--font-space-grotesk)', color: 'var(--text-heading)' }}>
+              And, on plans that include these features
+            </div>
+            <ul className="text-sm space-y-1.5" style={{ color: 'var(--text-heading)' }}>
+              <li>• Add opportunities to your pipeline and update their stage</li>
+              <li>• Set your funding goal and what it is for</li>
+            </ul>
+            <p className="text-xs mt-2.5" style={{ color: 'var(--text-muted)' }}>
+              These write to your own pipeline and goals on the Apply and Adviser
+              plans. On the free plan the connection reads only.
+            </p>
+          </div>
+
           <div className="rounded-lg p-4 mb-6" style={{ background: 'var(--surface-sunken)', border: '1px solid var(--border-hairline)' }}>
             <div className="text-[11px] font-bold uppercase tracking-wider mb-2" style={{ fontFamily: 'var(--font-space-grotesk)', color: 'var(--text-muted)' }}>
               What it can&apos;t do
             </div>
             <p className="text-sm" style={{ color: 'var(--text-heading)' }}>
-              Save grants, edit your pipeline, change your profile, or write any data back to your account.
+              Change your organisation profile, write or store application content,
+              delete anything, or reach another organisation&apos;s data.
             </p>
           </div>
 

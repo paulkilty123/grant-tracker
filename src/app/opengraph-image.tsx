@@ -1,7 +1,8 @@
 import { ImageResponse } from 'next/og'
+import { MCP_BRAND_NAME, MCP_APP_HOST } from '@/lib/mcp-brand'
 
 export const runtime = 'edge'
-export const alt = 'Grant Tracker — UK funding, matched for you'
+export const alt = `${MCP_BRAND_NAME} — UK funding, matched for you`
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
@@ -21,10 +22,15 @@ export default async function Image() {
           fontFamily: 'sans-serif',
         }}
       >
-        {/* Wordmark — two-pill mark + GrantTracker. Two-pill geometry mirrors
-            LogoMark.tsx (cream short pill + green tall pill on the forest
-            background that this image already provides). Pills sized for
-            a 48px icon-height equivalent; bottom-aligned. */}
+        {/* Wordmark. The wordmark text now follows the brand config, but the
+            MARK below is still the retired two-pill geometry, and the card's
+            palette (#173404 forest / #7CC242 green) is still the retiring one.
+            LogoMark.tsx has moved to the Shoots sprout; this is a second,
+            independent copy built from plain divs rather than SVG paths, so it
+            cannot simply import the component. Converting it needs a real SVG
+            path through Satori plus a look at the rendered PNG to confirm the
+            stroke survives, which is more than a copy fix. Left deliberately,
+            flagged, not forgotten. */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 5, height: 48 }}>
             {/* short pill (left) */}
@@ -38,9 +44,10 @@ export default async function Image() {
               fontWeight: 700,
               letterSpacing: '-0.02em',
               color: '#FAF7F2',
+              textTransform: 'lowercase',
             }}
           >
-            GrantTracker
+            {MCP_BRAND_NAME}
           </span>
         </div>
 
@@ -74,7 +81,7 @@ export default async function Image() {
         {/* Footer URL */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{ fontSize: 24, color: '#97C459', letterSpacing: '0.01em' }}>
-            granttracker.co.uk
+            {MCP_APP_HOST}
           </span>
           <span style={{ fontSize: 18, color: '#97C459', textTransform: 'uppercase', letterSpacing: '0.18em' }}>
             Founding cohort open
