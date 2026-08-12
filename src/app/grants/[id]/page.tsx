@@ -8,6 +8,11 @@ import {
   MapPin, Bell, RefreshCw, Calendar, AlertTriangle, CheckCircle, ShieldAlert,
   ExternalLink,
 } from 'lucide-react'
+// This is the page every MCP search result links to via grant_tracker_url, so
+// it is the most-visited surface in the connector journey after /mcp itself.
+// Server component, so it reads the brand from config rather than a hardcoded
+// copy, same as the rest of the MCP surface.
+import { MCP_BRAND_NAME } from '@/lib/mcp-brand'
 
 // ── Public bridge page ───────────────────────────────────────────────────────
 // Read-only view rendering the audit-grade fields on a public route. Linked
@@ -96,13 +101,13 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const { id } = await params
   const result = await loadGrant(id)
   if (!result) {
-    return { title: 'Opportunity not found — Grant Tracker' }
+    return { title: `Opportunity not found — ${MCP_BRAND_NAME}` }
   }
   const { row } = result
-  const title = `${row.title} — ${row.funder} · Grant Tracker`
+  const title = `${row.title} — ${row.funder} · ${MCP_BRAND_NAME}`
   const description = typeof row.description === 'string'
     ? row.description.slice(0, 160).trim()
-    : 'A UK funding opportunity, verified by Grant Tracker.'
+    : `A UK funding opportunity, verified by ${MCP_BRAND_NAME}.`
   return {
     title,
     description,
@@ -170,9 +175,9 @@ export default async function PublicGrantPage({
       {/* Top bar — wordmark sizing + container matched to LandingPage nav */}
       <header className="border-b border-warm bg-white">
         <div className="flex items-center justify-between px-6 md:px-8 py-5 max-w-7xl mx-auto">
-          <Link href="/" className="flex items-center gap-1.5 text-2xl font-bold text-[#2C2C2A] tracking-tight no-underline" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>
+          <Link href="/" className="flex items-center gap-1.5 text-2xl font-medium lowercase tracking-tight no-underline" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', color: 'var(--deep, #1D3C3E)' }}>
             <LogoMark size={30} />
-            GrantTracker
+            {MCP_BRAND_NAME}
           </Link>
           <div className="flex items-center gap-4 text-sm">
             <Link href="/auth/login" className="text-mid hover:text-charcoal no-underline">Sign in</Link>
@@ -421,10 +426,10 @@ export default async function PublicGrantPage({
 
         {/* Footer — trust line, no internal source slug */}
         <p className="text-xs text-center" style={{ color: '#8A8986' }}>
-          Last verified {lastSeenHuman} · GrantTracker catalogue
+          Last verified {lastSeenHuman} · {MCP_BRAND_NAME} catalogue
         </p>
         <p className="text-xs text-center mt-3" style={{ color: '#8A8986' }}>
-          GrantTracker maintains a curated, URL-validated UK funding catalogue.{' '}
+          {MCP_BRAND_NAME} maintains a curated, URL-validated UK funding catalogue.{' '}
           <Link href="/" className="no-underline hover:underline" style={{ color: '#3B6D11' }}>Learn more</Link>.
         </p>
       </main>
