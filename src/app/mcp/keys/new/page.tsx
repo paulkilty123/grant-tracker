@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/server'
 import { readMCPToS } from '@/lib/mcp-auth'
 import { IssueKeyForm } from './IssueKeyForm'
 import LogoMark from '@/components/icons/LogoMark'
+import { MCP_BRAND_NAME } from '@/lib/mcp-brand'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,7 +26,7 @@ export default async function NewMCPKeyPage() {
         <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/mcp" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}>
             <LogoMark size={28} />
-            <span style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 22, letterSpacing: '-0.025em', color: '#2C2C2A' }}>GrantTracker</span>
+            <span style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 22, letterSpacing: '-0.025em', color: '#2C2C2A' }}>{MCP_BRAND_NAME}</span>
           </Link>
           <div style={{ display: 'flex', gap: 18 }}>
             <Link href="/mcp" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13, color: '#5F5E5A', textDecoration: 'none' }}>
@@ -55,10 +56,12 @@ export default async function NewMCPKeyPage() {
           Generate a new MCP API key
         </h1>
         <p className="text-sm text-mid mb-6">
-          Use this key in any MCP-compatible agent (Claude, ChatGPT, Gemini, others) to give it access to the Grant Tracker funding catalogue.
+          Use this key in any MCP-compatible agent (Claude, ChatGPT, Gemini, others) to give it access to the {MCP_BRAND_NAME} funding catalogue.
         </p>
 
-        <IssueKeyForm tosVersion={tos.version} tosStatus={tos.status} />
+        {/* Brand passed down: IssueKeyForm is a client component and must not
+            import mcp-brand, which reads non-public env at module load. */}
+        <IssueKeyForm tosVersion={tos.version} tosStatus={tos.status} brandName={MCP_BRAND_NAME} />
       </main>
     </div>
   )

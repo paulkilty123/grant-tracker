@@ -4,6 +4,10 @@
 import Link from 'next/link'
 import { ArrowRight, Plug, BookOpen, FileText } from 'lucide-react'
 import LogoMark from '@/components/icons/LogoMark'
+// This page is the resource_documentation / service_documentation URL advertised
+// in both OAuth discovery documents, so its brand and endpoint have to track the
+// same env the protocol surface reads — not a second hardcoded copy.
+import { MCP_BRAND_NAME, MCP_RESOURCE_URL, MCP_CONTACT_EMAIL } from '@/lib/mcp-brand'
 
 export default function MCPLandingPage() {
   return (
@@ -12,7 +16,7 @@ export default function MCPLandingPage() {
         <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}>
             <LogoMark size={28} />
-            <span style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 22, letterSpacing: '-0.025em', color: '#2C2C2A' }}>GrantTracker</span>
+            <span style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 22, letterSpacing: '-0.025em', color: '#2C2C2A' }}>{MCP_BRAND_NAME}</span>
           </Link>
           <Link href="/mcp/terms" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13, color: '#5F5E5A', textDecoration: 'none' }}>
             Terms
@@ -28,7 +32,7 @@ export default function MCPLandingPage() {
           UK funding discovery, inside your AI agent.
         </h1>
         <p style={{ fontSize: 17, lineHeight: 1.6, color: '#5F5E5A', marginBottom: 28 }}>
-          Grant Tracker&apos;s catalogue of UK grants, programmes, social investment, and in-kind support, made available to Claude, ChatGPT, Gemini, and any other MCP-compatible agent.
+          {MCP_BRAND_NAME}&apos;s catalogue of UK grants, programmes, social investment, and in-kind support, made available to Claude, ChatGPT, Gemini, and any other MCP-compatible agent.
         </p>
 
         <div style={{ display: 'flex', gap: 12, marginBottom: 48, flexWrap: 'wrap' }}>
@@ -57,9 +61,9 @@ export default function MCPLandingPage() {
         <section id="connect" style={{ borderTop: '0.5px solid rgba(23,52,4,0.08)', paddingTop: 32, marginBottom: 36 }}>
           <h2 style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, fontSize: 22, letterSpacing: '-0.02em', color: '#2C2C2A', marginBottom: 14 }}>Connect</h2>
           <p style={{ fontSize: 15, lineHeight: 1.6, color: '#5F5E5A', marginBottom: 10 }}>
-            <strong style={{ color: '#2C2C2A' }}>In Claude, ChatGPT, Gemini, or any MCP-compatible client:</strong> add a custom connector pointing at the remote MCP server URL below, then sign in to Grant Tracker and authorise access. Authentication uses OAuth 2.0 with Dynamic Client Registration and PKCE — you don&apos;t paste a client ID or secret; the client registers itself.
+            <strong style={{ color: '#2C2C2A' }}>In Claude, ChatGPT, Gemini, or any MCP-compatible client:</strong> add a custom connector pointing at the remote MCP server URL below, then sign in to {MCP_BRAND_NAME} and authorise access. Authentication uses OAuth 2.0 with Dynamic Client Registration and PKCE — you don&apos;t paste a client ID or secret; the client registers itself.
           </p>
-          <pre style={{ background: '#F1F7E4', border: '0.5px solid rgba(23,52,4,0.12)', borderRadius: 8, padding: '12px 14px', fontSize: 13, color: '#173404', overflowX: 'auto', margin: '0 0 12px' }}>https://www.granttracker.co.uk/api/mcp/v1/mcp</pre>
+          <pre style={{ background: '#F1F7E4', border: '0.5px solid rgba(23,52,4,0.12)', borderRadius: 8, padding: '12px 14px', fontSize: 13, color: '#173404', overflowX: 'auto', margin: '0 0 12px' }}>{MCP_RESOURCE_URL}</pre>
           <p style={{ fontSize: 13, color: '#8A8986', lineHeight: 1.6 }}>Transport: Streamable HTTP (JSON-RPC). Authentication is OAuth 2.0. The server is read-only.</p>
         </section>
 
@@ -68,10 +72,10 @@ export default function MCPLandingPage() {
           <h2 style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, fontSize: 22, letterSpacing: '-0.02em', color: '#2C2C2A', marginBottom: 14 }}>Tools</h2>
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 12 }}>
             {[
-              ['search_funding_and_support', 'Search the catalogue by sector, region, beneficiary group, organisation structure, amount, deadline and funding type. Returns ranked opportunities, each with the funder’s own application link plus a Grant Tracker link for full details and eligibility.'],
+              ['search_funding_and_support', `Search the catalogue by sector, region, beneficiary group, organisation structure, amount, deadline and funding type. Returns ranked opportunities, each with the funder’s own application link plus a ${MCP_BRAND_NAME} link for full details and eligibility.`],
               ['get_opportunity_detail', 'Full detail for a single opportunity: eligibility, amounts, deadline and application process.'],
               ['get_provider_intelligence', 'A funder’s profile — priorities, what they fund, who can apply, and their currently open opportunities.'],
-              ['get_taxonomy', 'Grant Tracker’s controlled vocabularies (sectors, regions, structures, funding types, beneficiary groups) for translating a free-text need into precise filters.'],
+              ['get_taxonomy', `${MCP_BRAND_NAME}’s controlled vocabularies (sectors, regions, structures, funding types, beneficiary groups) for translating a free-text need into precise filters.`],
               ['health_check', 'Server status, version, and catalogue freshness.'],
             ].map(([name, desc]) => (
               <li key={name} style={{ fontSize: 14, lineHeight: 1.6, color: '#5F5E5A' }}>
@@ -87,12 +91,14 @@ export default function MCPLandingPage() {
           <h2 style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, fontSize: 22, letterSpacing: '-0.02em', color: '#2C2C2A', marginBottom: 14 }}>Troubleshooting</h2>
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 12 }}>
             {[
-              ['Can’t connect, or the sign-in loops', 'Allow pop-ups and complete the Grant Tracker sign-in. The connector handles credentials via OAuth, so no manual key is needed.'],
+              ['Can’t connect, or the sign-in loops', `Allow pop-ups and complete the ${MCP_BRAND_NAME} sign-in. The connector handles credentials via OAuth, so no manual key is needed.`],
               ['Authorization required (401)', 'Re-authenticate the connector — your token may have expired or been revoked.'],
               ['Rate limited (429)', 'Limits are per credential. Wait for the reset time shown in each response’s rate_limit_status field.'],
               ['No results', 'The catalogue is UK-only and curated (~600 live opportunities). Broaden your filters, or call get_taxonomy for valid values. Zero-result responses include a diagnostic with suggested looser filters.'],
               ['A link looks unverified, or a result is missing', 'Opportunity URLs are re-validated weekly; rows that fail are hidden by default. Set exclude_unverified_urls to false to include them.'],
-              ['Still stuck', 'Email hello@granttracker.co.uk — we aim to reply within 2 business days.'],
+              // MCP_CONTACT_EMAIL is a separate var precisely so it can lag the
+              // domain move until mail works on the new domain.
+              ['Still stuck', `Email ${MCP_CONTACT_EMAIL} — we aim to reply within 2 business days.`],
             ].map(([q, a]) => (
               <li key={q} style={{ fontSize: 14, lineHeight: 1.6, color: '#5F5E5A' }}>
                 <strong style={{ color: '#2C2C2A' }}>{q}</strong>
@@ -103,7 +109,7 @@ export default function MCPLandingPage() {
         </section>
 
         <div style={{ borderTop: '0.5px solid rgba(23,52,4,0.08)', paddingTop: 24, fontSize: 13, color: '#8A8986', lineHeight: 1.6 }}>
-          The MCP is read-only. Saving opportunities, deadline alerts, pipeline tracking, and personalised matching against your organisation&apos;s profile all happen in the <Link href="/" style={{ color: '#3B6D11', fontWeight: 600, textDecoration: 'none' }}>Grant Tracker web app</Link>.
+          The MCP is read-only. Saving opportunities, deadline alerts, pipeline tracking, and personalised matching against your organisation&apos;s profile all happen in the <Link href="/" style={{ color: '#3B6D11', fontWeight: 600, textDecoration: 'none' }}>{MCP_BRAND_NAME} web app</Link>.
         </div>
       </main>
     </div>

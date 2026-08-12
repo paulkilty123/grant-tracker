@@ -21,7 +21,7 @@ import {
   type ValidatedAuthorizeParams,
 } from '@/lib/mcp-oauth'
 import LogoMark from '@/components/icons/LogoMark'
-import { MCP_PUBLIC_ORIGIN } from '@/lib/mcp-brand'
+import { MCP_PUBLIC_ORIGIN, MCP_BRAND_NAME } from '@/lib/mcp-brand'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { headers } from 'next/headers'
 import { enforceSignupRateLimit } from '@/lib/mcp-rate-limit'
@@ -286,7 +286,7 @@ function PortalNav() {
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Link href="/mcp" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}>
           <LogoMark size={28} />
-          <span style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 22, letterSpacing: '-0.025em', color: 'var(--text-heading)' }}>GrantTracker</span>
+          <span style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 22, letterSpacing: '-0.025em', color: 'var(--text-heading)' }}>{MCP_BRAND_NAME}</span>
         </Link>
         <div style={{ display: 'flex', gap: 18 }}>
           <Link href="/mcp" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13, color: 'var(--text-muted)', textDecoration: 'none' }}>
@@ -323,14 +323,14 @@ function ErrorScreen({ error, description }: { error: string; description: strin
           <p className="text-xs text-mid mb-6">
             If you reached this page from an app you trust, please go back and try connecting again.
             If the problem persists, contact the app&apos;s support team — the redirect address it sent us
-            doesn&apos;t match what was registered with Grant Tracker, so we can&apos;t safely complete the sign-in.
+            doesn&apos;t match what was registered with {MCP_BRAND_NAME}, so we can&apos;t safely complete the sign-in.
           </p>
           <Link
             href="/mcp"
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg"
             style={{ background: 'var(--deep)', color: 'var(--text-on-dark)', fontFamily: 'var(--font-space-grotesk)' }}
           >
-            Back to Grant Tracker MCP
+            Back to {MCP_BRAND_NAME} MCP
           </Link>
         </div>
       </main>
@@ -420,10 +420,10 @@ function ConsentScreen({
             Authorize connection
           </div>
           <h1 className="text-2xl font-bold mb-3" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.01em' }}>
-            Connect {clientName} to Grant Tracker
+            Connect {clientName} to {MCP_BRAND_NAME}
           </h1>
           <p className="text-sm mb-5" style={{ color: 'var(--text-heading)' }}>
-            <strong>{clientName}</strong> is asking for <strong>read access</strong> to your Grant Tracker funding catalogue.
+            <strong>{clientName}</strong> is asking for <strong>read access</strong> to your {MCP_BRAND_NAME} funding catalogue.
           </p>
 
           <div className="rounded-lg p-4 mb-5" style={{ background: 'var(--surface-sunken)', border: '1px solid var(--border-hairline)' }}>
@@ -503,7 +503,7 @@ function ConsentScreen({
         </div>
 
         <p className="text-[11px] text-center mt-5" style={{ color: '#8A8986' }}>
-          You can revoke this connection at any time from your <Link href="/mcp/keys" className="underline">Grant Tracker MCP settings</Link>.
+          You can revoke this connection at any time from your <Link href="/mcp/keys" className="underline">{MCP_BRAND_NAME} MCP settings</Link>.
         </p>
       </main>
     </div>
