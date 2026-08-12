@@ -19,10 +19,10 @@ export default function Logo({ variant = 'dark', size = 'md' }: LogoProps) {
     <span className={`inline-flex items-center gap-1.5 ${color}`}>
       <LogoMark size={iconSize} variant={markVariant} />
       <span
-        className={`font-bold tracking-tight leading-none ${textSize}`}
+        className={`font-medium lowercase tracking-tight leading-none ${textSize}`}
         style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}
       >
-        GrantTracker
+        Shoots
       </span>
     </span>
   )
