@@ -503,7 +503,8 @@ function ConsentScreen({
         </div>
 
         <p className="text-[11px] text-center mt-5" style={{ color: '#8A8986' }}>
-          You can revoke this connection at any time from your <Link href="/mcp/keys" className="underline">{MCP_BRAND_NAME} MCP settings</Link>.
+          You can revoke this connection at any time by disconnecting the connector in your AI
+          client. <Link href="/mcp" className="underline">How revocation works</Link>.
         </p>
       </main>
     </div>
