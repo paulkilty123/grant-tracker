@@ -1,5 +1,22 @@
 # MCP legal copy — for phase 6 and the rebrand pass
 
+> **Status: sections 1 and 2 APPLIED 12 August 2026** to `src/app/privacy/page.tsx`
+> and `src/app/terms/page.tsx`, with both documents re-dated and a rename note added.
+> The two placeholders at the top of this doc resolved as assumed: the endpoint is
+> `https://www.shootsfunding.co.uk/api/mcp/v1/mcp` and the contact address is
+> `hello@shootsfunding.co.uk` (`MCP_CONTACT_EMAIL` was already switched in
+> production, which per the flip checklist only happens once mail works there).
+>
+> One wording change against the draft: section 1 said "On plans that include
+> pipeline features". Shipped as "On the Apply and Adviser plans", because the goal
+> writes are not a pipeline feature and because it then matches the consent screen
+> verbatim. Section 3 was handled by the phase 6 build, not by this pass.
+>
+> NOT applied, and still stale: `docs/legal/mcp-tos.md` (served at `/mcp/terms`,
+> linked twice from the `/mcp` nav) reads Grant Tracker throughout. It carries a
+> `version` recorded against every issued API key, so rebranding it is a version
+> bump with consequences for existing keys, not a copy sweep. Needs a decision.
+
 Three pieces: the rewritten privacy policy MCP section, two additions to the terms,
 and the signup consent copy for the OAuth authorize page. British English, sentence
 case, no em dashes, matching the existing voice of both documents.
