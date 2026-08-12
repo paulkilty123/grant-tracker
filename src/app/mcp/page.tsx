@@ -67,6 +67,27 @@ export default function MCPLandingPage() {
           <p style={{ fontSize: 13, color: '#8A8986', lineHeight: 1.6 }}>Transport: Streamable HTTP (JSON-RPC). Authentication is OAuth 2.0. The server is read-only.</p>
         </section>
 
+        {/* ── Disconnecting ─────────────────────────────────────────────────
+            The consent screen links here for revocation, so this section is
+            load-bearing: it is the answer to "how do I revoke this?". Every
+            claim below was verified against production in the phase 7 smoke
+            test (revoked credential refused on the next call, refresh token
+            dead at the same moment, reconnect clean). Do not soften it into a
+            promise the server does not keep. */}
+        <section id="disconnecting" style={{ borderTop: '0.5px solid rgba(23,52,4,0.08)', paddingTop: 32, marginBottom: 36 }}>
+          <h2 style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, fontSize: 22, letterSpacing: '-0.02em', color: '#2C2C2A', marginBottom: 14 }}>Disconnecting</h2>
+          <p style={{ fontSize: 15, lineHeight: 1.6, color: '#5F5E5A', marginBottom: 10 }}>
+            Remove or disconnect the connector in your AI client to revoke its access. There is
+            nothing to undo on our side.
+          </p>
+          <p style={{ fontSize: 15, lineHeight: 1.6, color: '#5F5E5A' }}>
+            Revocation is enforced immediately. The next request made with that credential is
+            refused, and its refresh token stops working at the same moment, so the client cannot
+            quietly renew itself. Access tokens are short-lived regardless. Reconnecting starts a
+            fresh authorisation and issues new credentials.
+          </p>
+        </section>
+
         {/* ── Tools ─────────────────────────────────────────────────────── */}
         <section style={{ marginBottom: 36 }}>
           <h2 style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, fontSize: 22, letterSpacing: '-0.02em', color: '#2C2C2A', marginBottom: 14 }}>Tools</h2>
