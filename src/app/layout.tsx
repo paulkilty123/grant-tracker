@@ -32,6 +32,13 @@ const spaceGrotesk = Space_Grotesk({
 })
 
 import type { Viewport } from 'next'
+// Brand + origin for the app's own metadata. The MCP_ prefix is historical:
+// mcp-brand.ts is the repo's single flip point for a rebrand or domain move,
+// and hardcoding a second copy of the brand here is exactly what left the
+// authorize screen and /mcp reading "Grant Tracker" after the cutover.
+// Note: public/landing/index.html carries its OWN <title> and og:site_name,
+// so this metadata governs the app routes only, not the landing page.
+import { MCP_BRAND_NAME, MCP_APP_ORIGIN } from '@/lib/mcp-brand'
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -39,21 +46,21 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://granttracker.co.uk'),
-  title: 'Grant Tracker — UK Funding for CICs, Social Enterprises, Charities & Impact Founders',
+  metadataBase: new URL(MCP_APP_ORIGIN),
+  title: `${MCP_BRAND_NAME} — UK Funding for CICs, Social Enterprises, Charities & Impact Founders`,
   description: 'Find grants, accelerators, social investment, and diversity funding matched to your legal structure and mission. Built for CICs, social enterprises, charities, co-operatives, and impact-driven founders across the UK.',
   openGraph: {
     type: 'website',
-    url: 'https://granttracker.co.uk',
-    siteName: 'Grant Tracker',
-    title: 'Grant Tracker — UK Funding, Matched For You',
+    url: MCP_APP_ORIGIN,
+    siteName: MCP_BRAND_NAME,
+    title: `${MCP_BRAND_NAME} — UK Funding, Matched For You`,
     description: 'Discover grants, programmes, investment and in-kind support, all matched to your setup and impact priorities. Built for UK charities, CICs, social enterprises and co-operatives.',
     locale: 'en_GB',
     // og:image is supplied by src/app/opengraph-image.tsx (rendered dynamically).
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Grant Tracker — UK Funding, Matched For You',
+    title: `${MCP_BRAND_NAME} — UK Funding, Matched For You`,
     description: 'Discover grants, programmes, investment and in-kind support, all matched to your setup and impact priorities.',
     // twitter:image is supplied by src/app/opengraph-image.tsx (rendered dynamically).
   },
