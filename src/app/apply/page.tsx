@@ -4,8 +4,8 @@ import { ArrowLeft } from 'lucide-react'
 import LogoMark from '@/components/icons/LogoMark'
 
 export const metadata = {
-  title: 'Apply to join the founding cohort — Grant Tracker',
-  description: 'Join the Grant Tracker founding cohort. Around 20–30 organisations who help shape the product and get free access during beta.',
+  title: 'Apply to join the founding cohort — Shoots',
+  description: 'Join the Shoots founding cohort. Around 20–30 organisations who help shape the product and get free access during beta.',
 }
 
 const UI = "var(--font-space-grotesk), Space Grotesk, sans-serif"
@@ -21,7 +21,7 @@ export default function ApplyPage() {
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}>
             <LogoMark size={30} />
-            <span style={{ fontFamily: UI, fontWeight: 700, fontSize: 24, letterSpacing: '-0.03em', color: '#2C2C2A' }}>GrantTracker</span>
+            <span style={{ fontFamily: UI, fontWeight: 500, fontSize: 24, letterSpacing: '-0.01em', textTransform: 'lowercase', color: 'var(--deep, #1D3C3E)' }}>Shoots</span>
           </Link>
           <Link href="/" style={{ fontFamily: UI, fontSize: 13.5, color: '#5F5E5A', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
             <ArrowLeft size={14} /> Back to home
@@ -42,10 +42,10 @@ export default function ApplyPage() {
           </h1>
           <div>
             <p style={{ fontFamily: SERIF, fontWeight: 400, fontSize: 19, lineHeight: 1.6, color: '#2C2C2A', marginBottom: 18, letterSpacing: '-0.005em' }}>
-              Hi, I&apos;m Paul. I&apos;ve spent the last twenty years in the social enterprise and charity sector, and I&apos;ve built Grant Tracker because I got tired of watching good people spend more time hunting for funding than doing the work the funding was meant to support.
+              Hi, I&apos;m Paul. I&apos;ve spent the last twenty years in the social enterprise and charity sector, and I&apos;ve built Shoots because I got tired of watching good people spend more time hunting for funding than doing the work the funding was meant to support.
             </p>
             <p style={{ fontFamily: SERIF, fontWeight: 400, fontSize: 19, lineHeight: 1.6, color: '#2C2C2A', marginBottom: 18, letterSpacing: '-0.005em' }}>
-              I&apos;m building Grant Tracker with a small group of real users before opening it more widely in June. Not a waitlist or marketing funnel, but a genuine founding cohort of around 20 to 30 organisations whose feedback shapes how Grant Tracker works, who get to try new features first, and who benefit from being here first.
+              I&apos;m building Shoots with a small group of real users before opening it more widely in June. Not a waitlist or marketing funnel, but a genuine founding cohort of around 20 to 30 organisations whose feedback shapes how Shoots works, who get to try new features first, and who benefit from being here first.
             </p>
             <p style={{ fontFamily: SERIF, fontWeight: 400, fontSize: 19, lineHeight: 1.6, color: '#2C2C2A', letterSpacing: '-0.005em' }}>
               If that sounds interesting, I&apos;d love to hear from you.
@@ -59,10 +59,10 @@ export default function ApplyPage() {
         {/* WHAT GRANT TRACKER DOES */}
         <section style={{ padding: '0 0 56px' }}>
           <h2 style={{ fontFamily: UI, fontWeight: 500, fontSize: 28, lineHeight: 1.15, letterSpacing: '-0.02em', color: '#2C2C2A', marginBottom: 20 }}>
-            What Grant Tracker <span style={{ color: '#8ECB3C' }}>does.</span>
+            What Shoots <span style={{ color: '#8ECB3C' }}>does.</span>
           </h2>
           <p style={{ fontSize: 16, color: '#5F5E5A', lineHeight: 1.65, marginBottom: 16 }}>
-            Grant Tracker covers the full UK funding picture: grants, programmes, social investment, and in-kind support. It helps you find what fits your impact, track what you&apos;re applying for, and keep on top of deadlines.
+            Shoots covers the full UK funding picture: grants, programmes, social investment, and in-kind support. It helps you find what fits your impact, track what you&apos;re applying for, and keep on top of deadlines.
           </p>
           <p style={{ fontSize: 16, color: '#5F5E5A', lineHeight: 1.65 }}>
             It&apos;s for UK CICs, charities, social enterprises, co-operatives, and the people doing fundraising work alongside everything else.
@@ -78,7 +78,7 @@ export default function ApplyPage() {
             600+ live funding opportunities in the catalogue right now, growing each week as new ones come in and old ones expire. They include grants, programmes, social investment and in-kind support, covering UK foundations, government, lottery, and corporate funders.
           </p>
           <p style={{ fontSize: 16, color: '#5F5E5A', lineHeight: 1.65, marginBottom: 16 }}>
-            When you add your organisation profile, Grant Tracker matches you against the catalogue and scores each opportunity for fit. The matching engine checks eligibility against the things that actually disqualify you: legal structure, geography, organisation size. Ineligible opportunities are flagged so you don&apos;t waste time chasing them.
+            When you add your organisation profile, Shoots matches you against the catalogue and scores each opportunity for fit. The matching engine checks eligibility against the things that actually disqualify you: legal structure, geography, organisation size. Ineligible opportunities are flagged so you don&apos;t waste time chasing them.
           </p>
           <p style={{ fontSize: 16, color: '#5F5E5A', lineHeight: 1.65, marginBottom: 16 }}>
             Once you find something worth applying for, you can move it into a pipeline view with five stages, from identified through to won or declined, and set deadlines that show up on a calendar. If a deadline is coming up, you&apos;ll see it.
@@ -94,7 +94,7 @@ export default function ApplyPage() {
             Who I&apos;m <span style={{ color: '#8ECB3C' }}>looking for.</span>
           </h2>
           <p style={{ fontSize: 16, color: '#5F5E5A', lineHeight: 1.65, marginBottom: 16 }}>
-            Grant Tracker is built for UK organisations doing social impact work. For the founding cohort specifically, I&apos;m prioritising organisations where I can genuinely learn from how you use the product, and where the product can genuinely help you.
+            Shoots is built for UK organisations doing social impact work. For the founding cohort specifically, I&apos;m prioritising organisations where I can genuinely learn from how you use the product, and where the product can genuinely help you.
           </p>
           <p style={{ fontSize: 16, color: '#5F5E5A', lineHeight: 1.65, marginBottom: 0 }}>
             That means I&apos;m most interested in hearing from:
@@ -133,7 +133,7 @@ export default function ApplyPage() {
               {[
                 { title: 'Free access during beta.', body: 'Full product, no limits, no payment details required.' },
                 { title: 'Free for six months.', body: 'Six months of full access on me, as a thank you for being here first.' },
-                { title: 'A permanent founding rate.', body: 'After your free six months, cohort members lock in a price significantly below the standard subscription, for as long as you stay with Grant Tracker.' },
+                { title: 'A permanent founding rate.', body: 'After your free six months, cohort members lock in a price significantly below the standard subscription, for as long as you stay with Shoots.' },
                 { title: 'A direct line to me.', body: "When something’s not working, when you have an idea, when you want to talk to someone who can actually change the product, that’s me." },
               ].map((item, i) => (
                 <li key={i} style={{ position: 'relative', paddingLeft: 28, marginBottom: 16, fontSize: 16, color: '#5F5E5A', lineHeight: 1.6 }}>
@@ -201,7 +201,7 @@ export default function ApplyPage() {
                 frameBorder="0"
                 marginHeight={0}
                 marginWidth={0}
-                title="Apply to the Grant Tracker founding cohort"
+                title="Apply to the Shoots founding cohort"
                 style={{ display: 'block' }}
               />
             </div>
@@ -237,7 +237,7 @@ export default function ApplyPage() {
           {[
             {
               q: 'When do paid signups open?',
-              a: 'June 2026. The cohort runs until then, giving us time to iterate on the product based on real use before Grant Tracker opens to everyone. Cohort members keep their founding benefits regardless of when paid signups open to the wider public.',
+              a: 'June 2026. The cohort runs until then, giving us time to iterate on the product based on real use before Shoots opens to everyone. Cohort members keep their founding benefits regardless of when paid signups open to the wider public.',
             },
             {
               q: 'How long will the beta last?',
@@ -249,7 +249,7 @@ export default function ApplyPage() {
             },
             {
               q: "What if I don’t hear back?",
-              a: "You will. I commit to replying to every application, usually within a week. If it’s been longer, please email me directly at hello@granttracker.co.uk.",
+              a: "You will. I commit to replying to every application, usually within a week. If it’s been longer, please email me directly at hello@shootsfunding.co.uk.",
             },
             {
               q: 'What if the founding cohort is full?',
@@ -273,7 +273,7 @@ export default function ApplyPage() {
       <footer style={{ background: '#0F2502', padding: '32px 40px 28px' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 20, borderBottom: '0.5px solid rgba(192,221,151,0.15)', marginBottom: 20, flexWrap: 'wrap', gap: 16 }}>
-            <span style={{ fontFamily: UI, fontWeight: 500, fontSize: 18, color: 'white', letterSpacing: '-0.02em' }}>GrantTracker</span>
+            <span style={{ fontFamily: UI, fontWeight: 500, fontSize: 18, color: 'white', letterSpacing: '-0.01em', textTransform: 'lowercase' }}>Shoots</span>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 22, fontFamily: UI, fontSize: 12.5, color: '#97C459', fontWeight: 500 }}>
               <Link href="/#how" style={{ color: 'inherit', textDecoration: 'none' }}>How it works</Link>
               <Link href="/#features" style={{ color: 'inherit', textDecoration: 'none' }}>Features</Link>
@@ -284,7 +284,7 @@ export default function ApplyPage() {
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11.5, color: '#97C459', flexWrap: 'wrap', gap: 6 }}>
             <span>Built for the UK social impact sector.</span>
-            <span>&copy; 2026 Grant Tracker</span>
+            <span>&copy; 2026 Shoots</span>
           </div>
         </div>
       </footer>

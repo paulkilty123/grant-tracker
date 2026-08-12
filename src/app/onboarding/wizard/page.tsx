@@ -234,7 +234,7 @@ function deriveEligibilityFlags(s: LegalStructure | ''): {
     case 'cooperative':
       return { has_asset_lock: true,  social_mission_declared: true,  articles_restrict_profit: true  }
     case 'ltd_guarantee':
-      // Ltd-by-guarantee orgs on Grant Tracker are overwhelmingly social
+      // Ltd-by-guarantee orgs on Shoots are overwhelmingly social
       // enterprises with mission-locked articles (often charities-in-waiting
       // or CIC-equivalents structurally). Default to all three true so they
       // aren't silently excluded from non-charity funding; user can untick
@@ -545,8 +545,8 @@ function CardShell({
           <div style={{ padding: isMobile ? '16px 20px 0' : '20px 32px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
               <LogoMark size={26} />
-              <span style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 20, color: T.textPrimary, letterSpacing: '-0.025em' }}>
-                GrantTracker
+              <span style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 20, color: T.textPrimary, letterSpacing: '-0.01em', textTransform: 'lowercase' }}>
+                Shoots
               </span>
             </span>
             <StepDots active={step} />

@@ -96,7 +96,7 @@ export default function OnboardingWelcomePage() {
           maxWidth: 460,
           marginBottom: 36,
         }}>
-          You&rsquo;re one of the first to use Grant Tracker. Let&rsquo;s set up your organisation so we can match you with funding that fits: grants, programmes, social investment, and in-kind support. About two minutes.
+          You&rsquo;re one of the first to use Shoots. Let&rsquo;s set up your organisation so we can match you with funding that fits: grants, programmes, social investment, and in-kind support. About two minutes.
         </p>
 
         <Link
