@@ -545,19 +545,266 @@ number that moves, and it is why the cap is 3 pages and not 5.
 
 ---
 
-## 8. Order of work
+## 8. Discovery intake must check before it queues
 
-1. **`validate-urls` pass 2c budget** — live defect, standalone, small (§4.1).
-2. **Refused-write surfacing** — widen `rejected`, render it (§1).
-3. **`field_evidence` column + engine writes stamps** (§2).
-4. **Engine route, schedule, Pipeline line** (§4.2).
-5. **First runs: the 380 Rolling rows + the 12 unverified links** (§6).
-6. **Gate policy `c3`, armed only once §5 reports coverage** (§3).
-7. **Watchlist reader** (§5).
-8. **Multi-page sourcing** (§7) — after §5 shows how many rows fail for
-   want of a second page. That number is the business case, and we do not have
-   it yet.
+Added to scope 2026-08-13, on evidence from this week's own runs.
 
-Note that 8 comes last on purpose. The single-page engine will tell us how big
-the multi-page problem actually is, and that is a cheaper way to find out than
-building it.
+Discovery currently queues what it finds. It does not ask whether we already
+hold the fund, and it does not ask whether the funder is one we already know is
+mis-modelled. In seven days it produced, unprompted:
+
+| What it re-imported | Against |
+|---|---|
+| **Community Business Funding Programmes** (`powertochange.org.uk/our-funding/`) | **Power to Change Community Business Funding** (`/our-funds/`), which it had itself imported the previous day |
+| **Movement for Good Awards** | `cw-2026-05-06-movement-for-good-1k`, catalogued since May |
+| **Open Grants — Justice and Migration Programmes** (`barrowcadbury.org.uk/what-we-fund/`) | The Barrow Cadbury split, an open item on the health ledger |
+| **SSE Start Up Programme** (`the-sse.org/programmes/`) | The SSE split, likewise |
+
+Two distinct failures. The first two are **duplicates** the intake could have
+caught by itself. The last two are **split fragments**: a single row scraped off
+a funder's "what we fund" index page, where the ledger already records that the
+funder runs several distinct programmes and the correct modelling is one row
+each. Importing the index page re-creates precisely the row we have already
+decided is wrong, and it will keep doing so on every sweep.
+
+Three checks at intake, before a candidate is queued:
+
+1. **Same-URL check.** Normalised `apply_url` (scheme, `www.`, trailing slash,
+   query, fragment stripped) against every non-rejected row. An exact match is a
+   duplicate, full stop. This alone catches Movement for Good.
+2. **Fuzzy title + funder check.** Reuse `namesMatch()` from `verify-row.ts`,
+   which already strips the generic words (`fund`, `grants`, `trust`,
+   `foundation`) that make naive comparison useless. This catches Power to
+   Change, where the URLs differ by one path segment.
+3. **Known-problem funder check.** A new `funder_watchlist` table, seeded from
+   the ledger's open split and re-point items, keyed on domain:
+
+   ```
+   domain                  | issue           | action
+   ------------------------|-----------------|---------------------------
+   barrowcadbury.org.uk    | split_pending   | hold_for_review
+   the-sse.org             | split_pending   | hold_for_review
+   thebromleytrust.org.uk  | shared_page     | hold_for_review
+   ```
+
+   A candidate on a listed domain is **queued but flagged**, never
+   auto-published, and carries the ledger note into the review row so the
+   reviewer sees "this funder has an open split" rather than judging it cold.
+
+A rejected row's `rejection_reason` should also be consulted: Movement for Good
+Awards now carries "Do not re-add: Movement for Good is already catalogued", and
+that sentence is worthless if nothing reads it. Match on normalised URL against
+`pipeline_state = 'rejected'` rows and drop the candidate silently, counting it
+in the run summary as `suppressed`.
+
+**Cost:** three indexed queries per candidate, no model call. At ~10 candidates
+a run this is free. It is a filter, not an analysis.
+
+**Reported in the yield line**, so suppression is visible rather than invisible:
+`found 10 · 3 suppressed (2 duplicate, 1 watchlist) · 7 queued`. A silent
+deduplicator is its own kind of lie — if it starts over-matching and dropping
+real finds, that number is the only thing that would show it.
+
+---
+
+## 9. The 173 drain, and how recovered rows come back
+
+The dead zone was **173** on 12 August and is **178** today, which is the point:
+it is still filling. Segmentation from the health ledger:
+
+| Destination | Rows | Signal |
+|---|---:|---|
+| Roll the deadline forward, recoverable | 126 | 64 carry `deadline_cycle`, 62 more carry `decision_timeline` prose |
+| `between_rounds_scheduled` | 19 | carries reopen information |
+| `archived` | 11 | validator-confirmed dead URL |
+| `archived`, no recovery signal | 4 | — |
+| Needs a look | 13 | live-shaped but inactive |
+
+**Sequencing, set 2026-08-13: the drain executes once refused-write surfacing
+exists.** Not before, and the reason is specific rather than procedural. Rolling
+a deadline forward is a write to `deadline`, and **54 live rows carry an
+admin-pinned `deadline`**, many of them form-save artefacts. Running the drain
+without the surfacing means an unknown share of the 126 are silently refused, the
+run reports success, and the rows stay exactly where they are — the same failure
+the drain is meant to end, executed at scale.
+
+**The 126 re-enter through the gate, under the cap, counted as new.** They do not
+go straight back to `published`, for three reasons:
+
+- Their `deadline` has been recomputed, and a recomputed deadline is a fresh
+  assertion. Under `c3` it needs evidence like any other.
+- Most have not been read since they fell out of view, so their `funder_brief`
+  and tags are as old as the problem.
+- Publishing 126 rows in one morning is exactly the "backlog released sight
+  unseen" case §3 now forbids. Under the cap they arrive over about a fortnight,
+  which is reviewable.
+
+Counted as **new** in the yield line, not as recoveries, because from a user's
+point of view that is what they are — a fund that was not there yesterday. The
+run summary keeps them distinguishable (`source: drain`) so the four-week cost
+review is not polluted by rows discovery never found.
+
+The 15 `archived` and 19 `between_rounds_scheduled` moves are unambiguous and
+happen immediately. The 13 "needs a look" go to the review queue.
+
+**Also required: a detector.** The feeder is still unidentified — my
+`trg_auto_deactivate_closed_grants` hypothesis was tested and **disproved**, with
+zero rows in the table matching its twelve ILIKE phrases. So the drain is a
+one-off cleanup of a leak that has not been found. A nightly count of
+`pipeline_state = 'published' AND NOT is_active`, on the Pipeline page beside the
+other job lines, means the next arrival is visible within a day instead of
+discovered at 178.
+
+---
+
+## 10. The first scheduled act: a full pass over every live row
+
+Set 2026-08-13. Once the engine has a home (§4.2) and refused writes are visible
+(§1), the engine's first scheduled work is **not** a targeted cohort. It is every
+live row, and it does not stop until each one has an answer.
+
+**677 live rows today.** Every one ends in exactly one of three states:
+
+| Outcome | What it means |
+|---|---|
+| **Stamped** | `field_evidence` carries a quote, a source URL and a date for each asserted field. The row is verified as at that date. |
+| **Corrected** | The page disagreed. The correction carries its quote, and lands as a proposal, or applies directly for the classes agreed in §4.2. |
+| **Removed from view** | `no_longer_listed`, `not_a_grant`, or a round the page states has closed. Out of public view, with the quote recorded. |
+
+No fourth outcome. A row the engine cannot resolve is not left alone quietly —
+it is a `fixable_link` and goes to the queue with the reason.
+
+**A6 resolves inside this pass, not beside it.** The 388 live rolling rows are
+not a separate exercise; `is_rolling` is one of the fields the pass stamps, so a
+complete pass is by definition a complete answer to "genuinely rolling, or a
+deadline we failed to read". Report the split as its own line, because it is the
+single largest correctness question in the catalogue and "677 rows checked" would
+bury it.
+
+**Sizing.** At ~65 rows per 300s run with 5-way concurrency, four runs a day:
+
+| | Rows | Runs | Elapsed | Model cost |
+|---|---:|---:|---:|---:|
+| First full pass | 677 | 11 | **~3 days** | ~£5.75 |
+| At 2,000 rows | 2,000 | 31 | ~8 days | ~£17 |
+
+The money is not a constraint at any catalogue size we are planning for.
+
+**After the first pass, "when was this row last checked" is answerable for every
+live row** — that is what `field_evidence.checked_at` is for, and it should be
+rendered on the admin row and available as a sort. A row with no stamp becomes a
+visible anomaly rather than the silent default it is today.
+
+**Then risk-based recheck keeps the stamps fresh.** Not a flat re-run: the
+freshness a row needs depends on how fast its facts rot.
+
+| Class | Window | Why |
+|---|---|---|
+| Dated deadline inside 60 days | 14 days | the fact expires on a known date |
+| `deadline_cycle` rows between rounds | 30 days | reopen dates move |
+| Rolling, evidenced | 120 days | a year-round fund rarely changes |
+| No timing information at all (A7, 137 rows) | 30 days | we cannot tell whether it has rotted |
+| Everything else | 90 days | the default in §3's codes |
+
+Oldest-stamp-first inside each class, so the queue self-drains and no row starves
+— the same ordering discipline §4.1 had to be taught the hard way.
+
+---
+
+## 11. Order of work
+
+1. **`AUTO_PUBLISH_LIMIT=0` must mean stop** — currently falls through to
+   uncapped. Fifteen minutes, and it is a brake.
+2. **`validate-urls` queue pass first** — live defect, standalone (§4.1).
+   *Built, pushed: `fix/validate-urls-queue-first`.*
+3. **Refused-write surfacing** — widened `rejected`, rendered on the row (§1).
+   *Built, pushed: `feat/surface-refused-writes`.*
+4. **`field_evidence` column + engine writes stamps** (§2).
+5. **Engine route, schedule, Pipeline line, kill switch** (§4.2).
+6. **Re-read gains `deadline` and `is_rolling`** — with evidence, and
+   `is_rolling` stops silencing `no_deadline` unless it is evidenced rolling
+   (§1c). Without this the engine can find a wrong rolling flag and still not
+   fix it.
+7. **Discovery intake checks** (§8) — before the next sweep re-imports another
+   fragment.
+8. **The full pass over all 677 live rows** (§10). A6 resolves here.
+9. **The 173 drain** (§9) — after 3, which it depends on.
+10. **Gate policy `c3` + two-step arming** (§3), armed once 8 reports coverage.
+11. **Watchlist reader** (§5).
+12. **Multi-page sourcing** (§7) — see §12: this is no longer optional.
+
+---
+
+## 12. Against the definition of done
+
+Set by Paul 2026-08-13:
+
+> Everything public evidenced, ledger section A at zero, and the
+> found→verified→published pipeline running with me only reading the morning
+> line and the digest.
+
+### Where section A actually stands
+
+| # | Issue | Now | Closed by | Human decisions left after |
+|---|---|---:|---|---:|
+| A1 | Empty structures rendered as eligible | 20 | pushed branch | 0 |
+| A2 | Page does not describe our fund | **138** | **§7 multi-page, then manual** | **see below** |
+| A3 | Round closed, still live | 44 | engine, if it may act | 0 or 44 |
+| A4 | Not funding | 38 | engine, if it may act | 0 or 38 |
+| A5 | Delisted | 13 | engine, if it may act | 0 or 13 |
+| A6 | Rolling with no evidence | **388** | §10 full pass | ~0 |
+| A7 | No timing at all | 137 | §10 full pass | ~0 |
+| A8 | Brief from model memory | 8 | re-enrich | 8 |
+| A9 | Invite-only unflagged | ~8 | engine field | ~0 |
+| A10 | Income in prose only | ~30 | engine field | ~0 |
+| A11 | `deadline` and `is_rolling` both set | 8 | data fix | 8 |
+| A12 | `deadline` pinned to NULL | 15 | unpin, needs §1 | 15 |
+| A13 | Duplicate live rows | 2 | manual merge | 2 |
+
+### Two things the definition forces, that were previously optional
+
+**1. Multi-page sourcing is now required, not deferred.** §7 put it last,
+pending evidence of how big the problem is. A2 is that evidence and we already
+have it: **138 rows, of which 107 are `wrong_fund`** — the page loads fine and
+our fund is not on it. That is exactly the case a second hop resolves, and there
+is no other route to closing A2 except finding 138 URLs by hand. Section A
+cannot reach zero without it. Moving it into scope proper.
+
+**2. The engine must be allowed to act, not only propose, on the removal
+classes.** A3 + A4 + A5 is **95 rows**, each needing a decision that is already
+determined by a quote from the funder's own page: the round has closed, this is
+not funding, this is no longer listed. Routing all 95 to a queue contradicts
+"only reading the morning line and the digest" directly — it *is* the queue.
+
+Recommended unattended classes, all removals or de-assertions, none of which can
+put anything new in front of a user:
+
+- `no_longer_listed`, `not_a_grant` → archive, quote recorded
+- `round_closed` → out of view, quote recorded
+- `is_rolling: true → false` where the page names dated windows
+
+Everything else — amounts, eligibility, income caps, anything that *adds* or
+*widens* a claim — stays a proposal. The asymmetry is the safeguard: the engine
+may take things down on evidence, and may never put things up.
+
+### Estimate
+
+Assuming the two decisions above go through:
+
+| Phase | Work | Elapsed |
+|---|---|---|
+| Merge what is built | 6 branches, your review | 1–2 days |
+| Build 4–7 above | evidence stamps, engine home, re-read fields, intake checks | ~4 days |
+| First full pass | 677 rows, unattended | ~3 days |
+| Multi-page + A2 | build, then re-run the 138 | ~4 days |
+| The drain + residue | A8, A11, A12, A13 — 33 rows, mostly by hand | ~2 days |
+| `c3` armed, watchlist reader | | ~1 day |
+
+**Roughly four weeks to the full definition**, of which about eight days are
+building and the rest is running and reviewing.
+
+**If the engine stays proposal-only, it is not four weeks.** A3–A5 alone is 95
+decisions, A2 adds 138, and the 677-row pass will surface more. At a realistic
+20–30 reviewed rows a day that is upwards of two months, and the third clause of
+the definition — you reading only the morning line — is not reachable at all,
+because a permanent queue is the opposite of it.
