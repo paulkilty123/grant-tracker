@@ -54,6 +54,45 @@ Zero output = clean. Fix all errors before pushing.
 
 ---
 
+## Shell: this is zsh, and a bad quote returns a FALSE PASS
+
+Two wrong answers in one week came from shell quoting, and neither looked like
+an error — both looked like success. That is the danger: a broken shell
+construct usually produces empty or degenerate output, and a check that greps
+for a problem finds none.
+
+**1. zsh does NOT word-split unquoted variables.** In bash, `for b in $LIST`
+iterates the words. In zsh it iterates ONCE with the whole string.
+
+```bash
+LIST="a b c"
+for b in $LIST; do git merge "origin/$b"; done   # WRONG in zsh: one bogus merge
+```
+
+A merge rehearsal written that way reported all seven branches conflict-free.
+It had performed one meaningless merge whose error text happened not to contain
+the word "conflict". Use an explicit array:
+
+```bash
+set -- a b c
+for b in "$@"; do ...; done          # correct
+```
+
+**2. Commit messages containing double quotes break `-m`.** Write the message
+to a file in the scratchpad and use `git commit -F <file>`.
+
+**Rules that follow:**
+- Never conclude "no problems found" from a loop or pipeline without first
+  proving the loop iterated the expected number of times. Echo the count.
+- Prefer a dedicated tool over a shell one-liner when one exists.
+- A verification command must be able to FAIL. If you cannot state what its
+  output would look like when the thing is broken, it is not a check. (See also
+  the readiness-probe rule: a fingerprint that is already true proves nothing.)
+- `grep -c` on an empty result exits non-zero — do not let `&&` chains swallow
+  that into a silent skip.
+
+---
+
 ## Design System
 
 ### Fonts
