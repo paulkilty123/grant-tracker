@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { mergeGrantUpdate } from '@/lib/grant-merge'
 import { recordRun } from '@/lib/admin/cron-runs'
+import { nextCycleDeadline, type CycleEntry } from '@/lib/deadline-cycle'
 
 export const dynamic = 'force-dynamic'
 
@@ -35,23 +36,10 @@ const EXPIRE_VERSION    = 'v2'
 const PROVENANCE_SOURCE = `system:expire_grants:${EXPIRE_VERSION}`
 
 // ── Cycle math — Pipeline v1 ──────────────────────────────────────────────────
-// Structured-column reader. Mirrors src/app/api/admin/sweep/route.ts:nextCycleDate.
-type CycleEntry = { day: number; month: number; label?: string }
-
-function nextCycleDateFromColumn(cycle: CycleEntry[] | null | undefined, todayISO: string): string | null {
-  if (!cycle || cycle.length === 0) return null
-  const today        = new Date(`${todayISO}T00:00:00Z`)
-  const currentYear  = today.getUTCFullYear()
-  let earliest: Date | null = null
-  for (const { day, month } of cycle) {
-    if (!Number.isInteger(day) || day < 1 || day > 31) continue
-    if (!Number.isInteger(month) || month < 1 || month > 12) continue
-    let candidate = new Date(Date.UTC(currentYear, month - 1, day))
-    if (candidate <= today) candidate = new Date(Date.UTC(currentYear + 1, month - 1, day))
-    if (!earliest || candidate < earliest) earliest = candidate
-  }
-  return earliest ? earliest.toISOString().slice(0, 10) : null
-}
+// Moved to src/lib/deadline-cycle.ts, shared with admin/sweep. It lived here and
+// there byte-identical, with a "mirrors" comment holding the two in step by
+// hope; both carried the same opening-date bug, and fixing one would have left
+// the sweep proposing a different date from the cron that acts on it.
 
 const MONTHS: Record<string, number> = {
   jan: 1, feb: 2, mar: 3, apr: 4,  may: 5,  jun: 6,
@@ -156,7 +144,7 @@ export async function GET(req: NextRequest) {
       // the catalogue, every row with a cycle should have the column set.
       const cycleFromColumn = g.deadline_cycle as CycleEntry[] | null | undefined
       const nextDate = cycleFromColumn && cycleFromColumn.length > 0
-        ? nextCycleDateFromColumn(cycleFromColumn, today)
+        ? nextCycleDeadline(cycleFromColumn, today)
         : (tl ? parseNextRoundDeadline(tl, today) : null)
 
       if (nextDate && nextDate > today) {
