@@ -620,6 +620,41 @@ it is still filling. Segmentation from the health ledger:
 | `archived`, no recovery signal | 4 | — |
 | Needs a look | 13 | live-shaped but inactive |
 
+### The worked example: London LGBT+ Fund
+
+Set by Paul 2026-08-13 as the row to follow end to end. It is one row that
+touches every piece of work built this fortnight, so if it comes out right the
+machinery is right.
+
+`35dd731c` — `deadline = 2026-08-12`, `is_active = false`,
+`pipeline_state = 'published'`, `deadline_cycle` of two labelled entries.
+
+What went wrong, in order:
+
+1. It fell into the dead zone, so it is invisible to users **and** to every
+   admin queue.
+2. `expire-grants` selects `is_active = true`, so on 13 August at 02:00 it was
+   not even a candidate. The run reported `rolledCount: 0` and it was right to.
+3. Had it been active, it would have rolled to **17 June 2027** — the date
+   applications OPEN — because the roll-forward maths ignored the `label` on
+   each cycle entry. The real deadline is 12 August 2027.
+
+Its route through the fortnight's work:
+
+| Piece | What it does for this row |
+|---|---|
+| Cycle-label fix (`fix/cycle-label-opening-dates`) | 17 June 2027 → **12 August 2027**, verified against production |
+| The B1 drain (§9) | returns it to `is_active = true` so `expire-grants` can reach it at all |
+| The gate, under the cap | it re-enters as new rather than reappearing silently |
+| Verification engine (§10) | stamps the deadline with a quote and a source URL |
+| `c3` (§3) | it may only publish once that stamp exists |
+| B1 detector (§9) | if it falls back into the dead zone, that shows within a day |
+
+**Definition of done for this row:** live, `deadline = 2027-08-12`, carrying
+`field_evidence.deadline` with a quote from lgbtfund.org.uk and a date. Anything
+else means one of the six pieces above did not work, and it will be obvious
+which.
+
 **Sequencing, set 2026-08-13: the drain executes once refused-write surfacing
 exists.** Not before, and the reason is specific rather than procedural. Rolling
 a deadline forward is a write to `deadline`, and **54 live rows carry an
