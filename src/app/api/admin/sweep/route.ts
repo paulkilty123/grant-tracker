@@ -21,6 +21,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
 import { mergeGrantUpdate } from '@/lib/grant-merge'
+import { nextCycleDeadline, type CycleEntry } from '@/lib/deadline-cycle'
 
 export const dynamic = 'force-dynamic'
 
@@ -41,26 +42,11 @@ async function isAuthorised(req: NextRequest): Promise<boolean> {
 }
 
 // ── Cycle math ────────────────────────────────────────────────────────────────
-// Given a list of (day, month) cycle entries, return the next future date as
-// an ISO YYYY-MM-DD string. Used to promote a past deadline forward to the
-// next round when deadline_cycle is populated.
-type CycleEntry = { day: number; month: number; label?: string }
+// Shared with expire-grants via src/lib/deadline-cycle.ts. The two used to hold
+// byte-identical private copies, which is exactly how they came to share a bug:
+// an entry labelled "Applications open" counted as a deadline candidate, so a
+// cycle describing a window rolled forward to the day it OPENS.
 
-function nextCycleDate(cycle: CycleEntry[], todayISO: string): string | null {
-  if (!cycle || cycle.length === 0) return null
-  const today        = new Date(`${todayISO}T00:00:00Z`)
-  const currentYear  = today.getUTCFullYear()
-
-  let earliest: Date | null = null
-  for (const { day, month } of cycle) {
-    if (!Number.isInteger(day) || day < 1 || day > 31) continue
-    if (!Number.isInteger(month) || month < 1 || month > 12) continue
-    let candidate = new Date(Date.UTC(currentYear, month - 1, day))
-    if (candidate <= today) candidate = new Date(Date.UTC(currentYear + 1, month - 1, day))
-    if (!earliest || candidate < earliest) earliest = candidate
-  }
-  return earliest ? earliest.toISOString().slice(0, 10) : null
-}
 
 // ── Sweep single row ──────────────────────────────────────────────────────────
 type SweepAction = 'pass' | 'promoted' | 'rejected' | 'archived'
@@ -93,7 +79,7 @@ async function sweepOne(
 
   // Rule 2 — past deadline + future cycle date → promote
   if (deadline && deadline < todayISO && cycle && cycle.length > 0) {
-    const next = nextCycleDate(cycle, todayISO)
+    const next = nextCycleDeadline(cycle, todayISO)
     if (next && next > todayISO) {
       try {
         await mergeGrantUpdate({
@@ -122,7 +108,7 @@ async function sweepOne(
   // explicitly instead (the merger honours an explicit override) and leave
   // url_status alone.
   if (openStatus === 'closed') {
-    const next = cycle ? nextCycleDate(cycle, todayISO) : null
+    const next = cycle ? nextCycleDeadline(cycle, todayISO) : null
     if (!next) {
       try {
         await mergeGrantUpdate({
