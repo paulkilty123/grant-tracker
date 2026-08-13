@@ -50,6 +50,7 @@ import { mergeGrantUpdate } from '@/lib/grant-merge'
 import { deriveReviewReasons, type ReviewRow } from '@/lib/admin/review-reasons'
 import { gateDecision, GATE_POLICY_VERSION, type GateDecision } from '@/lib/admin/publish-gate'
 import { recordRun } from '@/lib/admin/cron-runs'
+import { resolvePublishCap } from '@/lib/admin/publish-cap'
 
 export const dynamic     = 'force-dynamic'
 export const maxDuration = 270
@@ -144,13 +145,13 @@ export async function GET(req: NextRequest) {
     // this is for. Set it in Vercel while a policy change beds in, then unset it;
     // an absent variable means uncapped, which is the steady state.
     //
-    // Precedence: explicit `?limit=` > AUTO_PUBLISH_LIMIT > uncapped.
-    const limitParam = Number(req.nextUrl.searchParams.get('limit'))
-    const envLimit   = Number(process.env.AUTO_PUBLISH_LIMIT)
-    const applyLimit =
-      Number.isFinite(limitParam) && limitParam > 0 ? limitParam
-      : Number.isFinite(envLimit) && envLimit > 0   ? envLimit
-      : Infinity
+    // Precedence: explicit `?limit=` > AUTO_PUBLISH_LIMIT > uncapped, and ZERO
+    // MEANS STOP. See resolvePublishCap — the rule is subtle enough that it
+    // lives in a tested function rather than in a chain of ternaries here.
+    const applyLimit = resolvePublishCap({
+      limitParam: req.nextUrl.searchParams.get('limit'),
+      envLimit:   process.env.AUTO_PUBLISH_LIMIT,
+    })
 
     // `cache: 'no-store'` is not optional here.
     //
