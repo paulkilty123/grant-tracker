@@ -5,10 +5,6 @@
       "schedule": "0 2 * * *"
     },
     {
-      "path": "/api/cron/check-stale-rounds",
-      "schedule": "30 4 * * *"
-    },
-    {
       "path": "/api/cron/check-coming-soon",
       "schedule": "0 7 * * *"
     },
@@ -137,12 +133,16 @@
       "schedule": "0 8 * * 1,4"
     },
     {
-      "path": "/api/cron/discover-sweep",
-      "schedule": "30 8 * * 2"
+      "path": "/api/cron/discover-sweep?slice=targeted",
+      "schedule": "30 8 */2 * *"
+    },
+    {
+      "path": "/api/cron/discover-sweep?slice=general",
+      "schedule": "40 8 * * *"
     },
     {
       "path": "/api/admin/process-discovery-queue?run=true",
-      "schedule": "30 9 * * 2"
+      "schedule": "30 9 * * *"
     }
   ]
 }

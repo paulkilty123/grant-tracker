@@ -6,6 +6,7 @@
 
 import { getAdminDb } from '@/lib/admin/admin-db'
 import { jobSchedules, nextDueForJob, overdueAfter, runCostGBP, type UsageEntry } from '@/lib/admin/cron-schedule'
+import { formatYield } from '@/lib/admin/cron-runs'
 
 export const dynamic = 'force-dynamic'
 
@@ -161,6 +162,14 @@ export default async function PipelinePage() {
                 </td>
                 <td style={{ ...td, color: 'var(--color-text-secondary)', fontSize: 12.5 }}>
                   {rowsInOut(r.run?.summary ?? null)}
+                  {/* Second line only when the job reported a yield, so every
+                      other row keeps its single-line height. */}
+                  {(() => {
+                    const y = formatYield(r.run?.summary ?? null)
+                    return y
+                      ? <div style={{ color: 'var(--color-text-tertiary, #8A8986)', fontSize: 11.5, marginTop: 2 }}>{y}</div>
+                      : null
+                  })()}
                 </td>
                 <td style={{ ...td, color: 'var(--color-text-secondary)', fontSize: 12.5 }}>
                   {/* No usage means the job calls no model — NOT that it was free. */}

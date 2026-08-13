@@ -29,19 +29,48 @@ import {
   BLOCKED_FUNDER_QUERIES,
   type DiscoveryFundingType,
 } from '@/lib/discovery-queries'
-import { recordRun } from '@/lib/admin/cron-runs'
+import { recordRun, type RunYield } from '@/lib/admin/cron-runs'
 
 export const dynamic     = 'force-dynamic'
-export const maxDuration = 270
+export const maxDuration = 300
 
 /**
- * How many queries one run attempts.
+ * How many queries one run attempts, when no slice is named.
  *
- * Each is a live search taking roughly 30-60s, so the cap is a time budget, not
+ * Each is a live search taking tens of seconds, so the cap is a time budget, not
  * a preference. It is reported in the response — a sweep that stopped early
  * must never read as a sweep that finished.
  */
 const MAX_QUERIES = 5
+
+/**
+ * WHY THIS ROUTE IS SLICED.
+ *
+ * The unsliced queue is over-subscribed and always was: two targeted queries at
+ * ~34s plus one general query at ~246s is 314s against a function cap that has
+ * never been higher than 300s. The look-ahead budget check did its job and
+ * skipped the general queries, correctly, on every single run.
+ *
+ * The effect was that the three rotated general queries were skipped 100% of the
+ * time, permanently, and nobody noticed because `stoppedEarly: true` was the
+ * normal state. Those three cover social investment, blended finance and CDFI
+ * lending, so the one part of the catalogue with the thinnest coverage (29 live
+ * investment rows, 5 added in 90 days) was fed by a code path that had never
+ * executed.
+ *
+ * Arithmetic could not fix it: 246s is measured, not padding. One general query
+ * needs a whole invocation. So the work is split and each slice is scheduled
+ * separately, the same shape crawl-grants already uses with `?batch=`.
+ *
+ *   targeted — the blocked funders, ~68s for both
+ *   general  — exactly ONE rotated thematic query, ~246s
+ *   (none)   — every query, budget-limited. Manual use and backwards compatible.
+ */
+type Slice = 'targeted' | 'general' | 'all'
+
+/** Must match discover-grants' MODEL. Usage is attributed per model, and a
+ *  wrong name here would price the run against the wrong rate card. */
+const DISCOVERY_MODEL = 'claude-sonnet-5'
 
 /**
  * Measured wall-clock per query, used to decide what still fits.
@@ -55,10 +84,17 @@ const MAX_QUERIES = 5
  * killed mid-write. The old check only looked at ELAPSED time, so it happily
  * started a 246s query at the 68s mark.
  */
-const EST_MS = { targeted: 60_000, general: 260_000 }
+const EST_MS = { targeted: 60_000, general: 255_000 }
 
-/** Stop launching with enough headroom to return a clean summary under the 270s cap. */
-const BUDGET_MS = 235_000
+/**
+ * Stop launching with enough headroom to return a clean summary under the cap.
+ *
+ * 270s against a 300s maxDuration, so a single general query (est 255s, hard
+ * aborted at 250s by the fetch signal) fits in its own invocation with 30s left
+ * to write the summary. The previous 235s could not admit a general query even
+ * at elapsed zero, which is why they never ran.
+ */
+const BUDGET_MS = 270_000
 
 type QuerySpec = { query: string; fundingType: DiscoveryFundingType; domains?: string[] }
 
@@ -71,20 +107,36 @@ type QuerySpec = { query: string; fundingType: DiscoveryFundingType; domains?: s
  * set rather than re-running the same first five forever — the mistake the
  * watchlist checker made, where 51% of entries had never been checked once.
  */
-function buildQueue(dayOfYear: number): QuerySpec[] {
+function buildQueue(dayOfYear: number, slice: Slice): QuerySpec[] {
   // `domains` selects the TARGETED prompt for a single named funder. It is not
   // a hard search filter — see the note in discover-grants where allowed_domains
   // was removed.
+  //
+  // fundingType is 'corporate' (the grant-shaped category) rather than
+  // 'programme'. The targeted prompt ignores fundingType entirely, so this value
+  // never reaches the model; it is used for exactly one thing, the fallback row
+  // type when the model does not return one (`item.funding_type ?? fundingType`).
+  // Arts Council England and the GLA award predominantly grants, so an
+  // unlabelled row from either should land as a grant, not a programme.
   const blocked: QuerySpec[] = BLOCKED_FUNDER_QUERIES.map(b => ({
-    query: b.query, fundingType: 'programme', domains: b.domains,
+    query: b.query, fundingType: 'corporate', domains: b.domains,
   }))
 
   const general: QuerySpec[] = []
   for (const type of Object.keys(DEFAULT_QUERIES) as DiscoveryFundingType[]) {
     for (const query of DEFAULT_QUERIES[type]) general.push({ query, fundingType: type })
   }
-  const offset = general.length ? (dayOfYear * MAX_QUERIES) % general.length : 0
+
+  if (slice === 'targeted') return blocked
+
+  // Step by 1, not by MAX_QUERIES. The general slice now takes one query per
+  // run, so a daily cron walks the whole set in `general.length` days and
+  // repeats. Stepping by 5 while consuming 1 would silently skip four in five
+  // queries forever, which is the same class of bug this split exists to fix.
+  const offset  = general.length ? dayOfYear % general.length : 0
   const rotated = [...general.slice(offset), ...general.slice(0, offset)]
+
+  if (slice === 'general') return rotated.slice(0, 1)
 
   return [...blocked, ...rotated].slice(0, MAX_QUERIES)
 }
@@ -98,12 +150,18 @@ export async function GET(req: NextRequest) {
   }
 
   let httpStatus = 200
-  const payload = await recordRun('discover-sweep', async () => {
-    // Same arming rule as the publish gate, and for the same reason: the query
-    // string is the discriminator between a manual run and a scheduled one,
-    // because ADMIN_SECRET and CRON_SECRET currently hold the same value and
-    // `isCron` therefore cannot tell them apart. A fixed, parameterless cron URL
-    // can never send ?run=true.
+  const payload = await recordRun('discover-sweep', async (ctx) => {
+    // Same arming rule as the publish gate: the query string is the
+    // discriminator between a manual run and a scheduled one, because a fixed
+    // cron URL can never send ?run=true.
+    //
+    // It used to be that `isCron` COULD NOT tell a cron from an admin, because
+    // ADMIN_SECRET and CRON_SECRET held the same value. They were rotated apart
+    // on 2026-08-11, so that is no longer true and `isCron` is now a real
+    // discriminator. The query-string rule is kept anyway: it is explicit at the
+    // call site, it survives the two secrets being set equal again by accident,
+    // and every scheduled entry in vercel.json now carries a ?slice= param, so
+    // the parameterless form is unambiguously a human.
     const wantsRun = req.nextUrl.searchParams.get('run') === 'true'
     const armed    = process.env.DISCOVER_SWEEP_ENABLED === 'true'
     if (!wantsRun && !armed) {
@@ -134,10 +192,20 @@ export async function GET(req: NextRequest) {
 
     const start = Date.now()
     const dayOfYear = Math.floor((Date.now() - Date.UTC(new Date().getUTCFullYear(), 0, 0)) / 86_400_000)
-    const queue = buildQueue(dayOfYear)
+
+    const rawSlice = req.nextUrl.searchParams.get('slice')
+    const slice: Slice =
+      rawSlice === 'targeted' || rawSlice === 'general' ? rawSlice : 'all'
+
+    const queue = buildQueue(dayOfYear, slice)
 
     const results: Array<Record<string, unknown>> = []
     let queued = 0, failed = 0, ran = 0
+
+    // What this run found, keyed by the query's own category. discover-grants
+    // reports `queued` per call, so this is a straight tally rather than a
+    // second read of the queue table.
+    const foundByCategory: Record<string, number> = {}
 
     const skipped: Array<{ query: string; reason: string }> = []
 
@@ -166,13 +234,30 @@ export async function GET(req: NextRequest) {
         })
         const json = await res.json().catch(() => ({})) as Record<string, unknown>
 
+        // Bank the spend BEFORE branching on success. A query that searched,
+        // burned tokens and then failed to parse still cost money, and a cost
+        // figure that only counts successes understates exactly the runs worth
+        // investigating. discover-grants reports usage on both paths.
+        //
+        // Its field names are input/output, not the SDK's input_tokens /
+        // output_tokens, so they are mapped rather than spread.
+        const u = (json.search as { usage?: Record<string, number> } | undefined)?.usage
+        if (u) {
+          ctx.usage.add(DISCOVERY_MODEL, {
+            input_tokens:  (u.input ?? 0) + (u.cacheRead ?? 0) + (u.cacheWrite ?? 0),
+            output_tokens: u.output ?? 0,
+          })
+        }
+
         // Read the response rather than assuming it worked. The old Discovery
         // panel counted a 502 as a completed query.
         if (!res.ok || json.ok === false) {
           failed++
           results.push({ query: spec.query, ok: false, error: json.error ?? `HTTP ${res.status}`, detail: json.detail })
         } else {
-          queued += Number(json.queued ?? 0)
+          const n = Number(json.queued ?? 0)
+          queued += n
+          foundByCategory[spec.fundingType] = (foundByCategory[spec.fundingType] ?? 0) + n
           results.push({ query: spec.query, ok: true, queued: json.queued ?? 0, found: json.found ?? 0 })
         }
       } catch (e) {
@@ -184,6 +269,11 @@ export async function GET(req: NextRequest) {
     return {
       success: true,
       armed,
+      slice,
+      // Declared shape, read by the Pipeline page. Only `found` here: the rest
+      // of the funnel belongs to process-discovery-queue, which is where a
+      // discovery item becomes a catalogue row with a real funding type.
+      yield: { found: foundByCategory } satisfies RunYield,
       queriesPlanned: queue.length,
       queriesRun: ran,
       // Never let a truncated sweep read as a complete one. `skipped` names each
