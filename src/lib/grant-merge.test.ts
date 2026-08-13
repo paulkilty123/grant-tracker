@@ -3,6 +3,7 @@ import {
   mergeFieldUpdate,
   trustOf,
   transitionPipelineState,
+  compactValue,
   type ProvenanceEntry,
 } from './grant-merge'
 
@@ -163,5 +164,87 @@ describe('transitionPipelineState — de-publish', () => {
       source:  'admin:note',
       fields:  { next_open_date: 'Autumn 2026' },
     })).toBe('published')
+  })
+})
+
+/**
+ * `attempted` on a rejection crosses an HTTP boundary and is rendered to a
+ * person, so it has two jobs that pull against each other: show the value
+ * clearly, and never turn a diagnostic into a payload problem.
+ *
+ * The fields people actually judge are scalars (amount_max, deadline,
+ * is_rolling) and short arrays (eligible_structures) — those must survive
+ * verbatim, because "Proposed 5000" is the whole point. funder_brief is
+ * multi-kilobyte, and a bulk path can reject hundreds of fields in one
+ * response, so blobs must be replaced rather than truncated into noise.
+ *
+ * The UI keys the override button on `typeof attempted !== 'object'`, so the
+ * boundary between "replayable" and "omitted" is load-bearing, not cosmetic:
+ * get it wrong and the button either disappears from a scalar or appears on a
+ * value that cannot be replayed.
+ */
+describe('compactValue — what a refusal is allowed to carry', () => {
+  it('passes scalars through untouched, including the falsy ones', () => {
+    expect(compactValue(5_000)).toBe(5_000)
+    expect(compactValue('2026-05-24')).toBe('2026-05-24')
+    expect(compactValue(true)).toBe(true)
+    // 0 and false are real proposals (amount_min = 0, is_rolling = false) and
+    // must not be coerced away by a truthiness check.
+    expect(compactValue(0)).toBe(0)
+    expect(compactValue(false)).toBe(false)
+  })
+
+  it('normalises both empty values to null, so the UI has one case to render', () => {
+    expect(compactValue(null)).toBeNull()
+    expect(compactValue(undefined)).toBeNull()
+  })
+
+  it('keeps a short array of primitives, which is what eligible_structures is', () => {
+    expect(compactValue(['charity', 'cic', 'scio'])).toEqual(['charity', 'cic', 'scio'])
+  })
+
+  it('replaces a long array rather than truncating it', () => {
+    const long = Array.from({ length: 21 }, (_, i) => `tag-${i}`)
+    expect(compactValue(long)).toEqual({ _omitted: 'array', length: 21 })
+  })
+
+  it('replaces an array of objects, however short', () => {
+    // deadline_cycle is [{day, month}, …] — six entries on Movement for Good.
+    const cycle = [{ day: 23, month: 3 }, { day: 7, month: 9 }]
+    expect(compactValue(cycle)).toEqual({ _omitted: 'array', length: 2 })
+  })
+
+  it('replaces an object with its key count, never its content', () => {
+    const brief = { who_can_apply: 'x'.repeat(4000), exclusions: 'y'.repeat(4000) }
+    const out = compactValue(brief) as Record<string, unknown>
+    expect(out).toEqual({ _omitted: 'object', keys: 2 })
+    expect(JSON.stringify(out).length).toBeLessThan(60)
+  })
+
+  it('caps a long string but leaves it a string, so it stays replayable', () => {
+    const out = compactValue('z'.repeat(1000))
+    expect(typeof out).toBe('string')
+    expect(out as string).toHaveLength(301)   // 300 + the ellipsis
+    expect(out as string).toMatch(/…$/)
+  })
+
+  it('marks exactly the values the override button may offer', () => {
+    // Mirrors RefusalNotice's guard. The discriminator is "did compactValue keep
+    // this verbatim", not "is it a scalar": a short array survives intact and
+    // must stay replayable, because eligible_structures is an array and is the
+    // field most worth overriding — a narrowed structure list is what hides a
+    // fund from the organisations that can apply.
+    const replayable = (v: unknown) => {
+      const c = compactValue(v)
+      return c === null || Array.isArray(c) || typeof c !== 'object'
+    }
+    expect(replayable(5_000)).toBe(true)
+    expect(replayable(false)).toBe(true)
+    expect(replayable(null)).toBe(true)
+    expect(replayable(['charity', 'cic'])).toBe(true)          // survives verbatim
+    expect(replayable('z'.repeat(1000))).toBe(true)            // capped, still a string
+    expect(replayable({ who_can_apply: 'x' })).toBe(false)     // blob, omitted
+    expect(replayable(Array.from({ length: 30 }, () => 'x'))).toBe(false)  // too long, omitted
+    expect(replayable([{ day: 1, month: 4 }])).toBe(false)     // objects inside, omitted
   })
 })
