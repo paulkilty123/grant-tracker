@@ -50,6 +50,7 @@ import { mergeGrantUpdate } from '@/lib/grant-merge'
 import { deriveReviewReasons, type ReviewRow } from '@/lib/admin/review-reasons'
 import { gateDecision, GATE_POLICY_VERSION, type GateDecision } from '@/lib/admin/publish-gate'
 import { recordRun } from '@/lib/admin/cron-runs'
+import { resolvePublishCap } from '@/lib/admin/publish-cap'
 
 export const dynamic     = 'force-dynamic'
 export const maxDuration = 270
@@ -134,8 +135,23 @@ export async function GET(req: NextRequest) {
     // usual: the two crons this route is modelled on reported success for their
     // whole existence while RLS silently rejected every write, and the only way
     // to know the difference is to make a real write and then go and look at it.
-    const limitParam = Number(req.nextUrl.searchParams.get('limit'))
-    const applyLimit = Number.isFinite(limitParam) && limitParam > 0 ? limitParam : Infinity
+    //
+    // AUTO_PUBLISH_LIMIT applies the same cap to the SCHEDULED run, which cannot
+    // carry a query string: vercel.json registers this path bare, so `?limit=`
+    // is reachable by hand and never by cron. Without it, a policy change that
+    // unblocks a batch of rows publishes all of them on the next 09:00 run with
+    // no opportunity to look first. Policy c2 demoted `tags_changed` and
+    // `eligibility_missing`, which released 37 rows in one go — exactly the case
+    // this is for. Set it in Vercel while a policy change beds in, then unset it;
+    // an absent variable means uncapped, which is the steady state.
+    //
+    // Precedence: explicit `?limit=` > AUTO_PUBLISH_LIMIT > uncapped, and ZERO
+    // MEANS STOP. See resolvePublishCap — the rule is subtle enough that it
+    // lives in a tested function rather than in a chain of ternaries here.
+    const applyLimit = resolvePublishCap({
+      limitParam: req.nextUrl.searchParams.get('limit'),
+      envLimit:   process.env.AUTO_PUBLISH_LIMIT,
+    })
 
     // `cache: 'no-store'` is not optional here.
     //

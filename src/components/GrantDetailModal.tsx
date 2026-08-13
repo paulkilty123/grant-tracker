@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { formatRange, formatNextOpen, locationLabel, spendLabel } from '@/lib/utils'
 import { FunderBrief, briefHasContent, leadParagraph } from '@/components/FunderBrief'
+import { eligibilityStated, ELIGIBILITY_NOT_STATED } from '@/lib/eligibility-disclosure'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -402,30 +403,39 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
                   </div>
                 )}
 
-                {/* Eligible structures */}
-                {structures.length > 0 && (
-                  <div className="bg-white border border-[#E8E0D1] px-5 py-4" style={{ borderRadius: 16 }}>
-                    <p className="text-[10px] font-bold text-[#5F5E5A] uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
-                      <CheckCircle className="w-3.5 h-3.5" style={{ color: '#8ECB3C' }} />
-                      Eligible organisation types
+                {/* Eligible structures. Always rendered: an absent section read
+                    as "no restriction", which is the one thing an empty array
+                    does not mean. See lib/eligibility-disclosure.ts. */}
+                <div className="bg-white border border-[#E8E0D1] px-5 py-4" style={{ borderRadius: 16 }}>
+                  <p className="text-[10px] font-bold text-[#5F5E5A] uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+                    <CheckCircle className="w-3.5 h-3.5" style={{ color: '#8ECB3C' }} />
+                    Eligible organisation types
+                  </p>
+                  {eligibilityStated(structures) ? (
+                    <>
+                      <div className="flex flex-wrap gap-1.5 mb-2">
+                        {structures.map(s => (
+                          <span
+                            key={s}
+                            className="text-[11px] font-semibold px-2.5 py-1"
+                            style={{ backgroundColor: 'rgba(132,204,22,0.10)', color: '#639922', borderRadius: 9999 }}
+                          >
+                            {STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                          </span>
+                        ))}
+                      </div>
+                      <p className="text-xs text-[#5F5E5A] flex items-center gap-1 mt-1">
+                        <ShieldAlert className="w-3 h-3 flex-shrink-0" />
+                        Only these organisation types are eligible to apply.
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-xs text-[#5F5E5A] flex items-start gap-1">
+                      <ShieldAlert className="w-3 h-3 flex-shrink-0 mt-0.5" />
+                      {ELIGIBILITY_NOT_STATED}
                     </p>
-                    <div className="flex flex-wrap gap-1.5 mb-2">
-                      {structures.map(s => (
-                        <span
-                          key={s}
-                          className="text-[11px] font-semibold px-2.5 py-1"
-                          style={{ backgroundColor: 'rgba(132,204,22,0.10)', color: '#639922', borderRadius: 9999 }}
-                        >
-                          {STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
-                        </span>
-                      ))}
-                    </div>
-                    <p className="text-xs text-[#5F5E5A] flex items-center gap-1 mt-1">
-                      <ShieldAlert className="w-3 h-3 flex-shrink-0" />
-                      Only these organisation types are eligible to apply.
-                    </p>
-                  </div>
-                )}
+                  )}
+                </div>
 
                 {/* Impact sectors */}
                 {impactSectors.length > 0 && (

@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { formatRange, locationLabel } from '@/lib/utils'
 import { notFound } from 'next/navigation'
 import LogoMark from '@/components/icons/LogoMark'
+import { eligibilityStated, ELIGIBILITY_NOT_STATED } from '@/lib/eligibility-disclosure'
 import {
   MapPin, Bell, RefreshCw, Calendar, AlertTriangle, CheckCircle, ShieldAlert,
   ExternalLink,
@@ -336,33 +337,42 @@ export default async function PublicGrantPage({
             </div>
           )}
 
-          {/* Eligible structures */}
-          {eligibleStructures.length > 0 && (
-            <div className="mb-5 pt-4 border-t border-warm">
-              <h2
-                className="text-xs font-semibold uppercase tracking-wider mb-2.5 inline-flex items-center gap-1.5"
-                style={{ color: '#8A8986', fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}
-              >
-                <CheckCircle className="w-3.5 h-3.5" style={{ color: '#3B6D11' }} />
-                Eligible organisation types
-              </h2>
-              <div className="flex flex-wrap gap-2">
-                {eligibleStructures.map(s => (
-                  <span
-                    key={s}
-                    className="inline-block text-xs font-semibold px-2.5 py-1 rounded-md border"
-                    style={{ background: '#F1F7E4', color: '#3B6D11', borderColor: '#97C459', fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}
-                  >
-                    {STRUCTURE_LABELS[s] ?? s}
-                  </span>
-                ))}
-              </div>
-              <p className="text-xs mt-2 inline-flex items-center gap-1" style={{ color: '#8A8986' }}>
-                <ShieldAlert className="w-3 h-3" />
-                Only the organisation types listed above are eligible to apply.
+          {/* Eligible structures. Always rendered: an absent section read as
+              "no restriction", which is the one thing an empty array does not
+              mean. See lib/eligibility-disclosure.ts. */}
+          <div className="mb-5 pt-4 border-t border-warm">
+            <h2
+              className="text-xs font-semibold uppercase tracking-wider mb-2.5 inline-flex items-center gap-1.5"
+              style={{ color: '#8A8986', fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}
+            >
+              <CheckCircle className="w-3.5 h-3.5" style={{ color: '#3B6D11' }} />
+              Eligible organisation types
+            </h2>
+            {eligibilityStated(eligibleStructures) ? (
+              <>
+                <div className="flex flex-wrap gap-2">
+                  {eligibleStructures.map(s => (
+                    <span
+                      key={s}
+                      className="inline-block text-xs font-semibold px-2.5 py-1 rounded-md border"
+                      style={{ background: '#F1F7E4', color: '#3B6D11', borderColor: '#97C459', fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}
+                    >
+                      {STRUCTURE_LABELS[s] ?? s}
+                    </span>
+                  ))}
+                </div>
+                <p className="text-xs mt-2 inline-flex items-center gap-1" style={{ color: '#8A8986' }}>
+                  <ShieldAlert className="w-3 h-3" />
+                  Only the organisation types listed above are eligible to apply.
+                </p>
+              </>
+            ) : (
+              <p className="text-xs inline-flex items-start gap-1" style={{ color: '#5F5E5A' }}>
+                <ShieldAlert className="w-3 h-3 flex-shrink-0 mt-0.5" />
+                {ELIGIBILITY_NOT_STATED}
               </p>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* Legacy free-text sectors fallback */}
           {impactSectors.length === 0 && sectors.length > 0 && (
