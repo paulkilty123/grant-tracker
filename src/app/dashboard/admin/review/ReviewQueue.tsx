@@ -178,24 +178,56 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
     id: string,
     fields: Record<string, unknown>,
     what: string,
+    /**
+     * Fields that MUST come back in the server's `applied` list for this write
+     * to count as done.
+     *
+     * HTTP 200 only means the request was understood. mergeGrantUpdate returns
+     * early without writing when nothing is actually changing, so a caller that
+     * checks only `res.ok` will report success for a write that never landed.
+     * Any action a person would treat as final — Reject above all — must assert
+     * what the server says it wrote, not that it answered.
+     */
+    expect?: string[],
   ): Promise<boolean> => {
-    const res = await fetch('/api/admin/update-grant', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, fields }),
-    })
+    let res: Response
+    try {
+      res = await fetch('/api/admin/update-grant', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, fields }),
+      })
+    } catch (err) {
+      // A dropped connection used to reject the promise and reach nobody: the
+      // click simply did nothing. Offline is a failure, and it must say so.
+      toast.error(`${what} failed: could not reach the server. Nothing changed.`)
+      console.error(`[review] ${what} network error:`, err)
+      return false
+    }
     if (!res.ok) {
       const j = await res.json().catch(() => ({}))
       toast.error(`${what} failed: ${j.error ?? `HTTP ${res.status}`}`)
       return false
     }
-    const j = await res.json().catch(() => ({})) as { rejected?: { field: string; reason: string }[] }
+    const j = await res.json().catch(() => ({})) as {
+      applied?: string[]
+      rejected?: { field: string; reason: string }[]
+    }
     // A write the trust ladder refused is NOT a success. The old screen counted
     // it as one and the row simply did not change, with nothing said.
     if (j.rejected?.length) {
       const pinnedFields = j.rejected.filter(r => r.reason === 'pinned').map(r => r.field)
       if (pinnedFields.length) {
         toast.error(`${what}: ${pinnedFields.join(', ')} is pinned to an earlier admin decision and was not changed.`)
+        return false
+      }
+    }
+    if (expect?.length) {
+      const applied = j.applied ?? []
+      const missing = expect.filter(f => !applied.includes(f))
+      if (missing.length) {
+        toast.error(`${what} did not take: the server did not write ${missing.join(', ')}. Nothing changed — try again.`)
+        console.error(`[review] ${what} expected ${expect.join(', ')}, server applied`, applied)
         return false
       }
     }
@@ -213,7 +245,16 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
     //
     // Neither field is in TRACKED_FIELDS, so this still pins nothing — the whole
     // point of Accept remains intact.
-    const ok = await patch(item.id, { is_active: true, pipeline_state: 'published' }, 'Publishing')
+    //
+    // Asserted for the same reason Reject is: this is the other action a person
+    // treats as final, and "Published X" over a row that never moved is the
+    // same lie in the opposite direction.
+    const ok = await patch(
+      item.id,
+      { is_active: true, pipeline_state: 'published' },
+      'Publishing',
+      ['is_active', 'pipeline_state'],
+    )
     setBusyId(null)
     if (!ok) return
     setDone(d => new Set(d).add(item.id))
@@ -337,21 +378,47 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
     await reRead(item)
   }, [patch, reRead, toast])
 
+  /**
+   * Reject — the emergency brake, so it may never fail quietly.
+   *
+   * Every exit from this function now says something. It used to have two
+   * silent ones: `if (!reason || !reason.trim()) return` swallowed both a
+   * cancelled prompt and an empty reason, and a write that did not land looked
+   * identical to one that did. Measured 2026-08-13: Movement for Good Awards
+   * was rejected in this UI and stayed `is_active = true`,
+   * `pipeline_state = 'published'`, `rejection_reason = null` — public for a
+   * further day, with nothing on screen to say the brake had not engaged.
+   *
+   * A control someone reaches for when something is wrong in public must
+   * report its own outcome, both ways.
+   */
   const reject = useCallback(async (item: QueueItem) => {
     const reason = window.prompt(
       `Why is "${item.title}" not right for the catalogue?\n\nThis is recorded, so a future pass knows not to re-add it.`,
     )
-    if (!reason || !reason.trim()) return
+    // Cancel and empty-reason are different intentions and get different words.
+    // Neither may pass without one.
+    if (reason === null) {
+      toast.info(`Reject cancelled. "${item.title}" is unchanged and still live.`)
+      return
+    }
+    if (!reason.trim()) {
+      toast.error('Reject needs a reason, so a future pass knows not to re-add it. Nothing changed.')
+      return
+    }
     setBusyId(item.id)
+    // `expect` is the whole point here: pipeline_state is what actually takes
+    // the row out of circulation, so the confirmation below is only allowed to
+    // appear once the server confirms it wrote that field.
     const ok = await patch(item.id, {
       is_active: false,
       pipeline_state: 'rejected',
       rejection_reason: reason.trim(),
-    }, 'Rejecting')
+    }, 'Rejecting', ['is_active', 'pipeline_state'])
     setBusyId(null)
-    if (!ok) return
+    if (!ok) return   // patch has already said why
     setDone(d => new Set(d).add(item.id))
-    toast.success('Rejected, with the reason recorded')
+    toast.success(`Rejected. "${item.title}" is no longer visible to users, and the reason is recorded.`)
     router.refresh()
   }, [patch, router, toast])
 
