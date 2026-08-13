@@ -30,6 +30,9 @@ import { useRouter } from 'next/navigation'
 import { useToast } from '@/components/ui/Toast'
 import GrantDetailModal from '@/components/GrantDetailModal'
 import type { ReviewReason, FieldDiff } from '@/lib/admin/review-reasons'
+// Type-only, so the merger's server dependencies are erased at build and this
+// stays a client component.
+import type { MergeRejection } from '@/lib/grant-merge'
 
 export type QueueItem = {
   /** Brief is a stub (or absent) — drives the "Needs enrichment" view. */
@@ -94,6 +97,16 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
   const [busyId, setBusyId] = useState<string | null>(null)
   const [busyLabel, setBusyLabel] = useState<string | null>(null)
   const [done, setDone] = useState<Set<string>>(new Set())
+  /**
+   * Fields a job proposed and the merger refused, per row.
+   *
+   * Held in state rather than announced in a toast because a refusal is an
+   * unresolved decision, not an event: something better was computed, something
+   * older won, and until a person picks one the row is quietly out of date. A
+   * message that disappears leaves the screen showing the old value with no
+   * account of why.
+   */
+  const [refusals, setRefusals] = useState<Record<string, MergeRejection[]>>({})
   const [filter, setFilter] = useState<string | null>(null)
   // Which rows to show, by whether users can currently see them.
   //   'hidden' is what the old Grant Manager called Needs Review: rows not yet
@@ -303,10 +316,30 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
       // enrich-grant reports fields the trust ladder refused. Surfacing that is
       // the difference between "nothing happened" and "nothing happened because
       // an earlier admin decision is pinned".
-      const j = await res.json().catch(() => ({})) as { rejected?: { field: string; reason: string }[] }
-      const pinned = (j.rejected ?? []).filter(r => r.reason === 'pinned').map(r => r.field)
-      if (pinned.length) {
-        toast.error(`${label} ran, but ${pinned.join(', ')} is pinned to an earlier decision and did not change.`)
+      //
+      // Two things were wrong with the first version of this, and both showed up
+      // on Movement for Good Awards. It reported only `pinned`, so a
+      // `lower_trust` refusal — the commoner kind — passed in total silence. And
+      // it reported through a toast, which is gone in four seconds and carries no
+      // remedy, so the screen went back to showing the old value with nothing to
+      // explain it. Refusals are now held in state and rendered on the row until
+      // they are dealt with.
+      const j = await res.json().catch(() => ({})) as { rejected?: MergeRejection[] }
+      // `idempotent` is not a refusal — the value already matched. Only these two
+      // mean something was proposed and something else won.
+      const blocked = (j.rejected ?? []).filter(r => r.reason === 'pinned' || r.reason === 'lower_trust')
+      if (blocked.length) {
+        setRefusals(prev => ({ ...prev, [id]: blocked }))
+        toast.error(`${label} ran, but ${blocked.length === 1 ? '1 field was' : `${blocked.length} fields were`} not saved. See the row for what held them.`)
+      } else {
+        // A clean re-run clears an earlier refusal, so the notice cannot outlive
+        // the problem it describes.
+        setRefusals(prev => {
+          if (!prev[id]) return prev
+          const next = { ...prev }
+          delete next[id]
+          return next
+        })
       }
       return true
     } catch (err) {
@@ -377,6 +410,32 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
     toast.success('Link saved — re-reading')
     await reRead(item)
   }, [patch, reRead, toast])
+
+  /**
+   * Take the value the merger refused, on this admin's authority.
+   *
+   * Goes through the ordinary admin PATCH, so `update-grant` stamps
+   * `admin:<email>` and the merger auto-pins it. Pinning is right here and
+   * mostly wrong elsewhere: a person reading a named refusal and choosing the
+   * proposed value over the stored one IS the deliberate decision pinning exists
+   * to record, unlike a form save that writes every field on screen whether or
+   * not anyone looked at it.
+   */
+  const override = useCallback(async (id: string, r: MergeRejection) => {
+    setBusyId(id)
+    const ok = await patch(id, { [r.field]: r.attempted }, `Overriding ${r.field}`, [r.field])
+    setBusyId(null)
+    if (!ok) return
+    setRefusals(prev => {
+      const remaining = (prev[id] ?? []).filter(x => x.field !== r.field)
+      const next = { ...prev }
+      if (remaining.length) next[id] = remaining
+      else delete next[id]
+      return next
+    })
+    toast.success(`${r.field} set to the proposed value, and pinned to you.`)
+    router.refresh()
+  }, [patch, router, toast])
 
   /**
    * Reject — the emergency brake, so it may never fail quietly.
@@ -620,6 +679,8 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
                 onReRead={() => reRead(item)}
                 onReClassify={() => reClassify(item)}
                 onFixLink={() => fixLink(item)}
+                rejections={refusals[item.id] ?? []}
+                onOverride={(r) => override(item.id, r)}
               />
             </Fragment>
           ))}
@@ -749,9 +810,87 @@ function askFor(item: QueueItem): Ask {
   return { line: 'Nothing looks wrong with this one. Give it a glance and keep it.', primary: 'publish', label: keep }
 }
 
+/**
+ * What a job proposed, what stopped it, and the one button that resolves it.
+ *
+ * The failure this replaces: a re-read on Movement for Good Awards computed the
+ * right draw dates, had the write refused, and said nothing. The screen kept
+ * showing the old value and there was no way to tell a refusal from a no-op.
+ *
+ * Deliberately states the trust numbers. "Held by ai_enrich:v2" alone does not
+ * tell you whether the thing holding it is better evidence than the thing being
+ * refused; 60 against 25 does.
+ */
+function RefusalNotice({
+  rejections, busy, onOverride,
+}: {
+  rejections: MergeRejection[]
+  busy: boolean
+  onOverride: (r: MergeRejection) => void
+}) {
+  const fmt = (v: unknown): string => {
+    if (v === null || v === undefined) return 'nothing'
+    if (typeof v === 'object') return '(too large to show)'
+    return String(v)
+  }
+  return (
+    <div style={{
+      background: 'var(--coral-pale)', color: 'var(--coral-deep)',
+      border: '0.5px solid rgba(153,60,29,0.25)', borderRadius: 'var(--radius-card)',
+      padding: '10px 12px', marginTop: 10, fontSize: 12.5,
+    }}>
+      <strong style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 12 }}>
+        {rejections.length === 1 ? 'One field was not saved' : `${rejections.length} fields were not saved`}
+      </strong>
+      <ul style={{ margin: '6px 0 0', paddingLeft: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {rejections.map(r => {
+          // An omitted value cannot be replayed, so the override is withheld
+          // rather than offered and then failing.
+          //
+          // The test is "did compactValue keep this verbatim", NOT "is this a
+          // scalar". A short array of primitives survives intact, and
+          // eligible_structures is exactly that — the field most worth
+          // overriding, since a narrowed structure list is what hides a fund
+          // from the organisations that can apply. Excluding every array would
+          // have withheld the button from the case it matters most for.
+          // compactValue's replacement marker is a plain object, never an array,
+          // so Array.isArray is a sound discriminator.
+          const replayable =
+            r.attempted === null || Array.isArray(r.attempted) || typeof r.attempted !== 'object'
+          return (
+            <li key={r.field}>
+              <code>{r.field}</code> stayed as it was. Proposed <strong>{fmt(r.attempted)}</strong>.
+              {r.blockedBy ? (
+                <> Held by <code>{r.blockedBy.source}</code> (trust {r.blockedBy.trust}) since{' '}
+                  {r.blockedBy.set_at.slice(0, 10)}
+                  {r.blockedBy.pinned ? ', pinned' : ''}; this write had trust {r.attemptedTrust}.</>
+              ) : (
+                <> Refused as {r.reason}.</>
+              )}
+              {replayable && (
+                <button
+                  onClick={() => onOverride(r)}
+                  disabled={busy}
+                  style={{
+                    marginLeft: 8, borderRadius: 6, border: 'none', cursor: busy ? 'default' : 'pointer',
+                    background: 'var(--coral-deep)', color: '#fff',
+                    fontFamily: 'var(--font-space-grotesk)', fontSize: 11, padding: '3px 9px',
+                  }}
+                >
+                  Use the proposed value
+                </button>
+              )}
+            </li>
+          )
+        })}
+      </ul>
+    </div>
+  )
+}
+
 function Row({
   item, open, busy, busyLabel, onToggle, onPublish, onReject, onRevert,
-  onReRead, onReClassify, onFixLink,
+  onReRead, onReClassify, onFixLink, rejections, onOverride,
 }: {
   item: QueueItem
   open: boolean
@@ -764,6 +903,8 @@ function Row({
   onReRead: () => void
   onReClassify: () => void
   onFixLink: () => void
+  rejections: MergeRejection[]
+  onOverride: (r: MergeRejection) => void
 }) {
   const [preview, setPreview] = useState(false)
   const worst = item.reasons.reduce<string>((acc, r) => {
@@ -932,6 +1073,13 @@ function Row({
           </button>
           <button onClick={onReject} disabled={busy} style={dangerBtn}>Reject</button>
         </div>
+
+        {/* Outside `open`, on purpose. A refused write means the row is showing
+            a value the machine has already disagreed with, which is not a detail
+            to go looking for. */}
+        {rejections.length > 0 && (
+          <RefusalNotice rejections={rejections} busy={busy} onOverride={onOverride} />
+        )}
 
         {open && (
           <div style={{

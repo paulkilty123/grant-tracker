@@ -237,9 +237,67 @@ export type MergeGrantOptions = {
   citations?: Record<string, NonNullable<ProvenanceEntry['citation']>>
 }
 
+/**
+ * One field a write proposed and did not get to store.
+ *
+ * `field` and `reason` were all this used to carry, which made it impossible
+ * for any surface to explain a refusal: no caller could say who was holding the
+ * field, since when, or what value had been proposed instead. The Review Inbox
+ * and the URLs page both had to settle for "X is pinned to an earlier admin
+ * decision", and the enrich panel showed nothing at all — a re-read would
+ * compute a better value, flash it on screen, have it refused, and revert on
+ * the next state refresh with no explanation.
+ *
+ * Additive only. Existing consumers read `.field` and `.reason` and are
+ * unaffected.
+ */
+export type MergeRejection = {
+  field:  string
+  reason: 'idempotent' | 'pinned' | 'lower_trust'
+  /** What this write proposed. Compacted — see compactValue(). */
+  attempted: unknown
+  /**
+   * Who holds the field and since when, so a surface can name them.
+   * Absent only for `idempotent`, where nothing is blocking: the incoming
+   * value simply matched what was already there.
+   */
+  blockedBy?: {
+    source: ProvenanceSource
+    set_at: string
+    pinned: boolean
+    /** Resolved trust, so a UI can say 60 vs 25 without re-deriving the ladder. */
+    trust:  number
+  }
+  /** Resolved trust of the source that was refused, for the same reason. */
+  attemptedTrust: number
+}
+
 export type MergeGrantResult = {
   applied: string[]
-  rejected: { field: string; reason: 'idempotent' | 'pinned' | 'lower_trust' }[]
+  rejected: MergeRejection[]
+}
+
+/**
+ * Keep `attempted` small enough to cross an HTTP boundary safely.
+ *
+ * Most refused fields are scalars (`amount_max`, `deadline`, `is_rolling`) or
+ * short arrays (`eligible_structures`) and are worth showing verbatim. But
+ * `funder_brief` is a multi-kilobyte blob, and bulk paths can reject hundreds of
+ * fields in one response, so passing every value through unbounded would turn a
+ * diagnostic into a payload problem.
+ */
+export function compactValue(v: unknown): unknown {
+  if (v === null || v === undefined) return v ?? null
+  const t = typeof v
+  if (t === 'string')  return (v as string).length <= 300 ? v : `${(v as string).slice(0, 300)}…`
+  if (t === 'number' || t === 'boolean') return v
+  if (Array.isArray(v)) {
+    return v.length <= 20 && v.every(x => ['string', 'number', 'boolean'].includes(typeof x))
+      ? v
+      : { _omitted: 'array', length: v.length }
+  }
+  if (t === 'object') return { _omitted: 'object', keys: Object.keys(v as object).length }
+  return { _omitted: t }
 }
 
 export async function mergeGrantUpdate(opts: MergeGrantOptions): Promise<MergeGrantResult> {
@@ -371,7 +429,24 @@ export async function mergeGrantUpdate(opts: MergeGrantOptions): Promise<MergeGr
       applied.push(field)
       anyTrackedWritten = true
     } else {
-      rejected.push({ field, reason: decision.reason })
+      // `idempotent` has no blocker: the value was already what we proposed, so
+      // there is nobody holding it and naming the last writer would misread as
+      // an obstruction. Every other reason does have one.
+      const holder = decision.reason === 'idempotent' ? undefined : currentProv[field]
+      rejected.push({
+        field,
+        reason:         decision.reason,
+        attempted:      compactValue(newValue),
+        attemptedTrust: trustOf(source),
+        ...(holder ? {
+          blockedBy: {
+            source: holder.source,
+            set_at: holder.set_at,
+            pinned: holder.pinned,
+            trust:  trustOf(holder.source, holder.backfilled),
+          },
+        } : {}),
+      })
     }
   }
 
