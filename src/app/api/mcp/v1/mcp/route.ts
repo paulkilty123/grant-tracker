@@ -769,9 +769,9 @@ function buildHandler(surface: HandlerSurface) {
     server.tool(
       'get_provider_intelligence',
       // Description verbatim from spec §8.3
-      `Get intelligence on a UK funder, investor, programme operator, or in-kind\nsupport provider — their priorities, what they fund, who can apply, and\ntheir currently active opportunities. Curated by ${MCP_BRAND_NAME}; depth\nvaries per provider.\n\nWHEN TO USE:\n- The user wants to understand whether a specific funder is right for them\n- The user is researching a funder's priorities before applying\n- After search_funding_and_support, when the user is interested in a specific\n  funder behind an opportunity\n- The user asks "what does [funder name] fund?" or "is [funder] a good fit?"\n\nWHEN NOT TO USE:\n- To search for funding opportunities, use search_funding_and_support\n- For details on a specific opportunity, use get_opportunity_detail\n\nPRESENTING TO THE USER — REQUIRED:\n- The **funder's own website (funder_url) is the primary link** when the\n  user wants to research the funder directly. Lead with it.\n- When listing the provider's active opportunities, lead with the apply_url\n  for each opportunity so the user can verify and apply directly at the\n  source.\n- If provider.data_richness is "basic" rather than "enriched", say so to\n  the user — it tells them how confident the profile is.\n\nCOMPOSABLE PATTERNS:\n- Pass either provider_name (case-insensitive) OR opportunity_id (cleaner —\n  gets the provider behind a specific opportunity)\n- The active_opportunities.opportunity_ids field returns IDs for all currently\n  open opportunities from this provider. Use get_opportunity_detail to drill\n  into any of them\n- search → get_provider_intelligence → review their other active opportunities\n  is a common workflow\n\nDATA QUALITY NOTES:\n- The provider.data_richness field signals whether this provider has been\n  enriched with curated data ("enriched") or only has basic information\n  ("basic"). Enrichment depth varies by provider type. For "basic" providers,\n  the funder_brief content (what_they_fund, who_can_apply, priorities, etc.)\n  is still substantial — it's the curated insider guidance that's restricted\n  to the app.\n- Provider names are matched case-insensitively. If exact-name matching\n  fails, the opportunity_id entry point is more reliable.\n\nSOURCE:\nFunder intelligence is curated and maintained by ${MCP_BRAND_NAME}. The link\nto surface is the funder's own site (funder_url).`,
+      `Get intelligence on a UK funder, investor, programme operator, or in-kind\nsupport provider — their priorities, what they fund, who can apply, and\ntheir currently active opportunities. Curated by ${MCP_BRAND_NAME}; depth\nvaries per provider.\n\nWHEN TO USE:\n- The user wants to understand whether a specific funder is right for them\n- The user is researching a funder's priorities before applying\n- After search_funding_and_support, when the user is interested in a specific\n  funder behind an opportunity\n- The user asks "what does [funder name] fund?" or "is [funder] a good fit?"\n\nWHEN NOT TO USE:\n- To search for funding opportunities, use search_funding_and_support\n- For details on a specific opportunity, use get_opportunity_detail\n\nPRESENTING TO THE USER — REQUIRED:\n- The **funder's own website (funder_url) is the primary link** when the\n  user wants to research the funder directly. Lead with it.\n- When listing the provider's active opportunities, lead with the apply_url\n  for each opportunity so the user can verify and apply directly at the\n  source.\n- If provider.data_richness is "basic" rather than "enriched", say so to\n  the user — it tells them how confident the profile is.\n\nCOMPOSABLE PATTERNS:\n- Pass either provider_name (case-insensitive) OR opportunity_id (cleaner —\n  gets the provider behind a specific opportunity)\n- The active_opportunities.opportunity_ids field returns IDs for all currently\n  open opportunities from this provider. Use get_opportunity_detail to drill\n  into any of them\n- search → get_provider_intelligence → review their other active opportunities\n  is a common workflow\n\nDATA QUALITY NOTES:\n- The provider.data_richness field signals whether this provider has been\n  enriched with curated data ("enriched") or only has basic information\n  ("basic"). Enrichment depth varies by provider type. For "basic" providers,\n  the funder_brief content (what_they_fund, who_can_apply, priorities, etc.)\n  is still substantial — it's the curated insider guidance that's restricted\n  to the app.\n- Provider names are matched case-insensitively: the exact name first, then a\n  partial match if it resolves to exactly one provider. An ambiguous partial\n  returns "ambiguous_provider" with the candidate names; call again with one.\n- A name that does not resolve is NOT evidence the funder is missing from the\n  catalogue. "provider_name_not_found" means the name did not match, and the\n  funder may well be present under a different one. "no_active_opportunities"\n  is the separate case: the provider IS in the catalogue but nothing of theirs\n  is currently open. Do not report either as a coverage gap. When a name fails,\n  run search_funding_and_support and use opportunity_id from a result, which is\n  the reliable entry point.\n\nSOURCE:\nFunder intelligence is curated and maintained by ${MCP_BRAND_NAME}. The link\nto surface is the funder's own site (funder_url).`,
       {
-        provider_name:  z.string().optional().describe('Case-insensitive match against the provider name. Provide either this or opportunity_id.'),
+        provider_name:  z.string().optional().describe('Provider name, matched case-insensitively. An exact name is tried first; a partial name resolves only if it matches exactly one provider, otherwise the candidates are returned. Provide either this or opportunity_id.'),
         opportunity_id: z.string().uuid().optional().describe('UUID of an opportunity from this provider. Cleaner than name-matching when available.'),
       },
       { title: 'Funder intelligence', readOnlyHint: true },
@@ -824,28 +824,101 @@ function buildHandler(surface: HandlerSurface) {
           }
         }
 
-        // Pull all active opportunities matching this funder name (case-insensitive)
-        const { data: oppsRaw, error: oppsErr } = await sb
-          .from('scraped_grants')
-          .select('*')
-          .eq('is_active', true)
-          .ilike('funder', resolved_name)
-          .order('last_seen_at', { ascending: false })
-        if (oppsErr) {
+        // Resolve the funder name to active opportunities.
+        //
+        // `ilike` without wildcards is an EXACT case-insensitive match, which
+        // is why a partial name used to fail: "Jerwood" returned nothing while
+        // "Jerwood Foundation" returned the row. The old failure message then
+        // said "No active opportunities found for provider X", which asserts
+        // the provider is absent. A model probing with a short name concluded
+        // the catalogue had a coverage gap and told the user so, about a funder
+        // that is present, active and URL-verified.
+        //
+        // Exact first, so a precise name is never hijacked by a longer one that
+        // merely contains it. Partial only as a fallback, and only when it
+        // resolves to a single funder — otherwise the candidates are returned
+        // so the caller can choose, which beats guessing on their behalf.
+        const fetchActive = async (pattern: string) => {
+          const { data, error } = await sb
+            .from('scraped_grants')
+            .select('*')
+            .eq('is_active', true)
+            .ilike('funder', pattern)
+            .order('last_seen_at', { ascending: false })
+          return { rows: (data ?? []) as ScrapedGrantRow[], error }
+        }
+
+        const exact = await fetchActive(resolved_name)
+        if (exact.error) {
           return {
             content: [{ type: 'text', text: JSON.stringify({
-              error: { code: 'internal_error', message: oppsErr.message },
+              error: { code: 'internal_error', message: exact.error.message },
               attribution: ATTRIBUTION,
               rate_limit_status: rateLimitStatusForContext(auth),
             }) }],
             isError: true,
           }
         }
-        const active_opps = (oppsRaw ?? []) as ScrapedGrantRow[]
+
+        let active_opps = exact.rows
         if (active_opps.length === 0) {
+          const partial = await fetchActive(`%${resolved_name}%`)
+          if (partial.error) {
+            return {
+              content: [{ type: 'text', text: JSON.stringify({
+                error: { code: 'internal_error', message: partial.error.message },
+                attribution: ATTRIBUTION,
+                rate_limit_status: rateLimitStatusForContext(auth),
+              }) }],
+              isError: true,
+            }
+          }
+          const candidates = Array.from(
+            new Set(partial.rows.map(r => r.funder).filter((f): f is string => !!f)),
+          )
+          if (candidates.length === 1) {
+            active_opps = partial.rows
+            resolved_name = candidates[0]
+          } else if (candidates.length > 1) {
+            return {
+              content: [{ type: 'text', text: JSON.stringify({
+                error: {
+                  code: 'ambiguous_provider',
+                  message: `"${resolved_name}" matches ${candidates.length} providers. Call again with the full name.`,
+                  candidates: candidates.slice(0, 10),
+                },
+                attribution: ATTRIBUTION,
+                rate_limit_status: rateLimitStatusForContext(auth),
+              }) }],
+              isError: true,
+            }
+          }
+        }
+
+        if (active_opps.length === 0) {
+          // Separate the two failures the old message ran together. A provider
+          // whose opportunities are all inactive genuinely exists and is worth
+          // saying so; a name that matches nothing is a different answer, and
+          // neither is evidence the catalogue lacks the funder.
+          const { data: anyRow } = await sb
+            .from('scraped_grants')
+            .select('funder')
+            .ilike('funder', `%${resolved_name}%`)
+            .limit(1)
+            .maybeSingle()
+          const knownName = (anyRow as { funder?: string } | null)?.funder ?? null
           return {
             content: [{ type: 'text', text: JSON.stringify({
-              error: { code: 'not_found', message: `No active opportunities found for provider "${resolved_name}".` },
+              error: knownName
+                ? {
+                    code: 'no_active_opportunities',
+                    message: `${knownName} is in the catalogue but has no currently active opportunities. This is not a gap in coverage.`,
+                    provider_name: knownName,
+                  }
+                : {
+                    code: 'provider_name_not_found',
+                    message: `No provider matching "${resolved_name}". The name may differ from the one in the catalogue; try the funder's full registered name, or pass opportunity_id from a search result. This does not establish that the funder is absent from the catalogue.`,
+                  },
               attribution: ATTRIBUTION,
               rate_limit_status: rateLimitStatusForContext(auth),
             }) }],

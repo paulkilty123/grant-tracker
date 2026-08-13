@@ -104,10 +104,52 @@ async function anyActiveClientId(): Promise<string> {
   return data.client_id
 }
 
+/**
+ * Refuse to run over a reviewer account that already exists, unless --force.
+ *
+ * This script is not idempotent and re-running it is destructive in ways that
+ * are invisible until a reviewer hits them: it rotates the password, so
+ * credentials already handed out stop working; it deletes every pipeline item
+ * and rebuilds the canned four, so anything a reviewer added is lost; and it
+ * revokes live tokens, so a connected client drops mid-review. It also used to
+ * set companion_access false, which silently downgraded the account from
+ * Adviser to Apply and left the funding goal stranded behind tools the account
+ * could no longer see.
+ *
+ * The account is meant to be long-lived and handed to a stranger. Treat a
+ * second run as a mistake unless the caller says otherwise.
+ */
+async function refuseIfExists(userId: string): Promise<void> {
+  if (process.argv.includes('--force')) {
+    console.log('--force given: overwriting the existing reviewer account')
+    return
+  }
+  const { data: orgs } = await sb.from('organisations').select('id, name').eq('owner_id', userId)
+  const orgIds = (orgs ?? []).map(o => o.id)
+  const [{ count: pipelineCount }, { count: goalCount }, { count: tokenCount }] = await Promise.all([
+    sb.from('pipeline_items').select('*', { count: 'exact', head: true }).in('org_id', orgIds.length ? orgIds : ['00000000-0000-0000-0000-000000000000']),
+    sb.from('goals').select('*', { count: 'exact', head: true }).in('org_id', orgIds.length ? orgIds : ['00000000-0000-0000-0000-000000000000']),
+    sb.from('oauth_tokens').select('*', { count: 'exact', head: true }).eq('user_id', userId).is('revoked_at', null),
+  ])
+  console.error(
+    `\n✗ REFUSED: a reviewer account already exists (${REVIEWER_EMAIL}).\n\n` +
+    `  Re-running would rotate its password, invalidating any credentials\n` +
+    `  already handed to a reviewer, delete ${pipelineCount ?? 0} pipeline item(s) and\n` +
+    `  rebuild the canned four, and revoke ${tokenCount ?? 0} live token(s), dropping a\n` +
+    `  connected client mid-review. ${goalCount ?? 0} funding goal(s) would be left in place\n` +
+    `  but detached from the pipeline they were sized against.\n\n` +
+    `  Credentials for the existing account are in .mcp-reviewer-account.json.\n` +
+    `  To replace it deliberately:  --force\n` +
+    `  To remove it first:          --destroy\n`,
+  )
+  process.exit(1)
+}
+
 async function create() {
   const password = randomBytes(18).toString('base64url')
 
   let userId = await findUserByEmail(REVIEWER_EMAIL)
+  if (userId) await refuseIfExists(userId)
   if (!userId) {
     const { data, error } = await sb.auth.admin.createUser({
       email: REVIEWER_EMAIL, password, email_confirm: true,
@@ -139,8 +181,11 @@ async function create() {
     // not `arts_culture`; an invented tag would leave the org unscoreable.
     impact_sectors: ['creative', 'community', 'young_people'],
     alerts_enabled: false,      // a review account must never trigger email
-    apply_access: true,         // Apply tier: pipeline tools visible
-    companion_access: false,
+    apply_access: true,
+    // Adviser tier since 2026-08-13, so the goal and planning tools return real
+    // arithmetic for a reviewer instead of empty state. Was false, which meant
+    // re-running this script silently downgraded the live reviewer account.
+    companion_access: true,
   }
 
   let orgId: string
@@ -191,7 +236,7 @@ async function create() {
     password,
     org_id: orgId,
     user_id: userId,
-    tier: 'apply',
+    tier: 'companion',
     verification_access_token: rawAccess,
     note: 'Reviewer signs in with email + password during the OAuth authorize step. The token is for our own server-side verification, not for the reviewer.',
   }, null, 2))
