@@ -190,7 +190,7 @@ header comment justifies the `info` classification on the grounds that 57 of 60
 rows were "never validated, rather than validated and found bad" and that this
 was "fixed separately". **It was not fixed.** See §4.1.
 
-Two changes that make this safe to turn on:
+Three changes that make this safe to turn on:
 
 1. **`c3` applies to `hold`/`publish`, not to retraction.** The existing
    live/not-live split already encodes this: a blocking reason on an
@@ -200,6 +200,29 @@ Two changes that make this safe to turn on:
    evidence would take the publish rate to near zero — measured, only **2 of the
    55** rows published in the last week carry any timing citation. Order:
    engine ships → engine runs → `c3` arms. Not the reverse.
+3. **Arming is two steps, and `c3` must enforce it in code.** Standing rule set
+   by Paul, 2026-08-13:
+
+   > I review the dry run's would-publish list first, then arm. Never again a
+   > re-arm that publishes a backlog sight unseen.
+
+   Arming does not release "what happens next" — it releases **everything
+   currently in the queue that passes the gate**, including rows withdrawn since
+   the last armed run. Measured the same day: with the gate disarmed, the dry run
+   reported `publish: 19`, all 19 `newlyVisible`, and those 19 were exactly the
+   rows pulled from public view hours earlier. Arming without looking would have
+   silently undone the retraction and looked like an ordinary morning.
+
+   Today this is a documented habit, which is the weakest kind of control. Under
+   `c3` it should become a mechanism: **a run under a policy version that has not
+   had a reviewed dry run is forced to `dryRun`.** Store the acknowledged version
+   next to the arming flag; when `GATE_POLICY_VERSION` moves, the acknowledgement
+   goes stale and the first run under the new policy can only report. A policy
+   change then cannot publish its own backlog, and the protection does not depend
+   on who is paying attention that morning.
+
+   This is also the answer to a real hazard sitting in the queue right now: 19
+   withdrawn rows are one environment variable away from going back out.
 
 ### 3.1 The audit: what `c3` would have caught, and what to pull now
 
