@@ -1,6 +1,6 @@
 {
-  "name": "Grant Tracker",
-  "short_name": "Grant Tracker",
+  "name": "Shoots",
+  "short_name": "Shoots",
   "icons": [
     {
       "src": "/android-chrome-192x192.png",
@@ -13,7 +13,7 @@
       "type": "image/png"
     }
   ],
-  "theme_color": "#173404",
+  "theme_color": "#1D3C3E",
   "background_color": "#FAFAF7",
   "display": "standalone"
 }
