@@ -182,12 +182,117 @@ first live proof is whatever the first armed run reports.
 
 ---
 
+# Decided, and what came of it
+
+## Multi-page sourcing moved ahead of the engine's acting powers
+
+Your call, 15 August, with the cheap guard added as cover in the meantime.
+`docs/tranche-2-design.md` §11 is reordered accordingly. Also built on this
+branch: `cf7c094` (the front-door guard), `94d5915` (multi-page sourcing).
+
+**The guard.** `is_rolling = true` may no longer be confirmed *or* proposed from
+a page that names no single fund. `false` is untouched: that only removes an
+assertion. Measured against the live catalogue, 673 live rows, 227 on a front
+door; of the 386 claiming rolling, **139 are withheld and 247 remain
+confirmable**, so the engine still does most of its A6 work.
+
+**Multi-page.** Three conditions now fire a hop instead of one: no funding
+detail (unchanged), the gate passed but timing is unanswered, or the page covers
+several funds and one is ours. Timing is the trigger because it is what the
+surface asserts. Hard limits: 3 pages, 2 hops, 5 model calls, same domain, a
+seen set across hops, 500ms between requests to a host, and stop as soon as
+timing is answered so the common case costs nothing extra.
+
+### The acceptance test: half passed, and I want to be exact about which half
+
+You set Movement for Good as the proof. Re-running `120e1d2a`:
+
+```
+pages: movementforgood.com  ->  /draws/1000  ->  /draws/special
+is_rolling   silent
+deadline     silent
+```
+
+**What passed.** The hop fires on the right condition and finds the right page:
+`/draws/1000` scores near zero on the old funding vocabulary and was
+unreachable before. The row **no longer certifies a false Rolling claim**, which
+was the whole danger. Under `c3` it would not publish.
+
+**What did not.** The engine does not yet *correct* the row. It reached the page,
+quoted the draw dates under another field, and still returned nothing for
+`deadline`, because the extraction asks for one closing date and that page has
+three dated windows, so it abstains. Same shape as the amount extractor
+abstaining on Movement for Good's two award tiers, recorded in §1(b).
+
+**What it needs:** the extraction has to be able to return a dated *cycle*, not a
+single date, and propose it into `deadline_cycle`. That is a real next piece,
+not a tweak. I have not started it.
+
+**A second defect the run found, fixed here.** The first multi-page attempt
+reached `/draws/1000` and *still* certified `is_rolling` from "Nominations open
+all year" sitting on that same page. Both sentences are true: nominations are
+taken continuously, awards are decided in dated draws. So a rolling claim may
+not stand on a page that also states dated windows. Two distinct day-and-month
+dates plus round vocabulary, both required, because either alone over-fires.
+That is the third instance in this file of a sentence being accurate about its
+own subject and wrong about the field it was offered for.
+
+The London LGBT+ Fund is the control and is unchanged: `round_closed`, deadline
+contradicted, quoting the funder's own closing sentence.
+
+---
+
+## `discover-sweep` targeted slice: proved, not guessed
+
+**Vercel's 300s function timeout killed it.** The runtime log says so verbatim:
+`Task timed out after 300 seconds`, at 08:35:35 UTC on 15 August.
+
+The Arts Council query took **192 seconds**, against a hardcoded estimate of 60.
+The look-ahead check then asked whether there was room for the GLA query,
+answered with the wrong estimate (192 + 60 = 252, under the 270s budget), and
+launched a query that could never finish. Neither safety net could fire: the
+parent's own `AbortSignal.timeout(250_000)` would not have tripped until
+08:37:59 and the child's `maxDuration = 270` not until 08:38:19. The orphaned
+child kept spending Sonnet 5 with web search for four and a half minutes after
+its caller was dead.
+
+`recordRun` writes `finished_at` only on a normal return or a catch. A runtime
+kill is neither, so `ok IS NULL` is the correct and documented signature. It is
+1 of 105 runs across 16 jobs in 30 days, so this is not systemic.
+
+**The structural bug is one line of arithmetic:** for the targeted slice the
+second query's abort deadline is *unreachable by construction*. Any query
+starting later than 50s in has `start + 250s > 300s`, so the timeout that exists
+to prevent this can never fire first. The general slice survives only because it
+runs exactly one query starting at elapsed zero, and even that took **247 of 270
+seconds** on the 15th. It is 23 seconds from the same cliff.
+
+**Recommended, not built:**
+
+1. **Split targeted into two cron entries** (`?slice=targeted-ace`,
+   `?slice=targeted-gla`), the shape `crawl-grants?batch=N` already uses, so
+   every invocation runs one query from elapsed zero. Alternate-day scheduling
+   makes this free: one funder a day rather than two every other day. ~30 min,
+   and it is the better fix because it removes the arithmetic rather than
+   correcting it.
+2. **Derive the abort from the remaining budget**, not a constant, so a future
+   overrun becomes a visible `ok: true, failed: 1` instead of an invisible
+   `ok IS NULL`. ~15 lines.
+3. **Nothing alerts on `ok IS NULL`.** A run killed by the platform cannot
+   self-report, so detection has to be external: a reaper query, or a line on
+   the Pipeline page for runs open longer than N minutes. Not sized. Without it
+   the next occurrence is again found only because somebody looked.
+
+Say which of these you want and I will build it.
+
+---
+
 # Decisions
 
 ## The single-page reader certifies front-door claims. `c3` cannot be armed on it.
 
-**This changes the order of work in `docs/tranche-2-design.md` §11 and I have not
-changed it — it is yours to call.**
+**Settled 15 August: multi-page moves first, plus the cheap guard. See above.**
+Kept here because it is the reasoning behind the reorder.
 
 The first live stamping run went over two rows. One worked exactly as designed.
 The other did something worse than fail.
