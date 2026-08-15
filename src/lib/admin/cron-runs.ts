@@ -115,6 +115,57 @@ export function formatYield(summary: Record<string, unknown> | null | undefined)
   return bits.join(' · ')
 }
 
+/** The shape `verify-rows` reports. Declared here, beside the renderer. */
+type RunVerify = {
+  outcomes?:     Record<string, number>
+  evidence?:     { confirmed?: number; contradicted?: number; silent?: number; unquoted?: number }
+  proposals?:    number
+  fixableLinks?: number
+  failures?:     number
+}
+
+/**
+ * One line of verification result for the Pipeline page, or null if this run did
+ * not report any.
+ *
+ * Keyed on the summary carrying the shape rather than on the job's name, the
+ * same as `formatYield`, so a second verifier would render without the page
+ * learning about it.
+ *
+ * `unread` is deliberately named, and deliberately not called "missing". It
+ * counts fields the page was asked about and said nothing about, which is the
+ * most useful number here: it measures how far a single-page read actually
+ * gets, and it is the number that should fall when multi-page sourcing lands. A
+ * run that checked 60 rows and learned nothing from any of them would otherwise
+ * look identical to one that verified them all.
+ */
+export function formatVerify(summary: Record<string, unknown> | null | undefined): string | null {
+  const v = summary?.verify as RunVerify | undefined
+  if (!v || typeof v !== 'object') return null
+
+  const checked = typeof summary?.checked === 'number' ? summary.checked : null
+  const e       = v.evidence ?? {}
+  const bits: string[] = []
+
+  if (checked !== null) bits.push(`checked ${checked}`)
+  const ev = [
+    e.confirmed    ? `${e.confirmed} confirmed`       : null,
+    e.contradicted ? `${e.contradicted} contradicted` : null,
+    e.silent       ? `${e.silent} unread`             : null,
+  ].filter(Boolean)
+  if (ev.length > 0) bits.push(ev.join(', '))
+  if (v.proposals)    bits.push(`${v.proposals} proposal${v.proposals === 1 ? '' : 's'}`)
+  if (v.fixableLinks) bits.push(`${v.fixableLinks} link${v.fixableLinks === 1 ? '' : 's'} to fix`)
+  if (v.failures)     bits.push(`${v.failures} failed`)
+  // A run that ran out of clock says so on the line, not only in the JSON.
+  if (summary?.stoppedEarly === true) {
+    const left = typeof summary?.remaining === 'number' ? `, ${summary.remaining} left` : ''
+    bits.push(`stopped on the clock${left}`)
+  }
+
+  return bits.length > 0 ? bits.join(' · ') : null
+}
+
 type RunContext = { usage: UsageTally }
 
 /**
