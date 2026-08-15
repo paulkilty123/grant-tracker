@@ -37,12 +37,16 @@ the new version.
 
 ## `feat/field-evidence`
 
-**What it does:** gives a row somewhere to record that a human-readable sentence
-on the funder's page was actually read, and what it said. Until now a check that
-agreed with us left no trace at all, which is why the publish bar cannot ask for
-evidence.
+**What it does:** starts checking the catalogue against the funders' own pages on
+a schedule, and gives a row somewhere to record what the page said. Until now a
+check that agreed with us left no trace at all, and the engine that does the
+checking had never once been run by anything other than a person typing ids.
 
-**Commits:** `389009b` (column, library, engine wiring), `cacca3f` (stamp from the command line)
+Tranche 2 items 4 and 5 (`docs/tranche-2-design.md` §2, §4.2).
+
+**Commits:** `389009b` (column and library), `cacca3f` (stamp from the command
+line), `45e8902` (the engine's route, queue and kill switch), `d476a8c` (the
+Pipeline line)
 
 ### The gap this closes
 
@@ -99,27 +103,82 @@ the merged object so the caller can prove the write landed. A null return
 under RLS, and three crons in this codebase reported success while writing
 nothing.
 
+### The engine's home
+
+`verify-row.ts` has worked for weeks and has never had a caller in the app. So
+nothing in the catalogue has ever been checked on a schedule, and "when was this
+row last read against the funder's page" has had no answer for any row.
+
+`GET /api/cron/verify-rows`, `recordRun`-wrapped, four times a day
+(`0 1,7,13,19 * * *`), **disarmed**: `VERIFY_ENABLED` is not set, so the
+scheduled run reports the queue and fetches nothing. Arming it is one variable
+and it is yours to set. A disarmed run still costs nothing and still answers
+"how much is unverified", which today is:
+
+| | |
+|---|---:|
+| Eligible to verify | 958 |
+| Never checked | 951 |
+| **Live, asserting their own timing, never checked** | **508** |
+| Excluded (882 rejected or archived, 33 quarantined) | 915 |
+
+**It writes `field_evidence` and nothing else.** No value on any row changes, so
+it is safe to point at the live catalogue: a user cannot see a difference. It
+deliberately does not move `pipeline_state` either — §12 proposes letting the
+engine act unattended on the removal classes, that argument is sound, and the
+decision is yours to make rather than mine to assume.
+
+**Selection is in SQL, not in JavaScript.** "Oldest evidence first" is an
+ordering over the contents of a jsonb column; fetching a window and sorting it in
+JS is how this codebase has produced confident wrong answers before. Three bands,
+so the 508 rows that assert timing with nothing behind them come first rather
+than eventually.
+
+**Every deadline is absolute from `startedAt`** and the run stops on the clock,
+not on a count. `validate-urls` defined its third pass as "whatever is left" and
+that pass got nothing on every run it ever made.
+
+### A defect the live run found, and its fix
+
+The first real run over three rows exposed something the design did not
+anticipate. A page that fails the gate produces no facts, so it produced no
+stamps, so **it could never drain from the queue** — it would come back at the
+front of every run, four times a day, for ever. The catalogue holds 138 rows
+whose page does not describe our fund. That is 552 pointless fetches a day.
+
+Every visited row now carries a `_page_read` stamp recording the attempt and its
+outcome, whatever happened. Proven by making the same call twice: the
+`wrong_fund` row appeared in the first run and not the second, and
+`neverChecked` fell by exactly three.
+
 ### Deploy gate
 
 ```
-Regression: tsc clean. 184 tests pass (15 files), 18 of them new.
-            eslint clean on all four changed files.
-            The migration was applied to prod and then PROVEN, not assumed: a DO
-            block asserted shallow merge preserves siblings, same-key replace
-            keeps siblings, and a miss returns null, then cleaned its probe row.
-            Privileges checked: EXECUTE is granted to service_role and postgres
-            only, not anon or authenticated.
+Regression: tsc clean. 192 tests pass (15 files), 26 of them new.
+            eslint clean on all changed files. next build clean, route registers.
+            vercel.json parses; 37 crons, 0 malformed, within the Pro limit of 40.
+            Both migrations applied to prod and then PROVEN, not assumed:
+              053 — a DO block asserted shallow merge preserves siblings,
+                    same-key replace keeps siblings, a miss returns null, then
+                    cleaned its probe row. EXECUTE granted to service_role and
+                    postgres only, not anon or authenticated.
+              054 — the batch function returns band 0 first, and the two rows
+                    stamped earlier sort to positions 957 and 958 of 958. Had the
+                    ordering been wrong they would not be last.
             Mutation-tested: relaxing isConfirmed() to accept a silent-page stamp
             fails 3 tests. The suite can fail.
+            Run end to end against production rows five times, including the
+            drain proof above.
 Free-surface fingerprint: NOT APPLICABLE. No MCP route, tool, schema or response
             shape is touched. The column is not in grants_with_funder and no
             user-facing surface reads it.
-Accent check: NOT APPLICABLE. No UI.
+Accent check: PASSED. The Pipeline page gains a text line. Zero accent lines
+            touched, counted on the diff.
 Named rollback: 7073226
 ```
 
-Verified end to end against two production rows, which is where the finding
-below came from.
+**Not verified as a scheduled run.** The cron is disarmed and unmerged, so the
+first live proof is whatever the first armed run reports.
 
 ---
 
