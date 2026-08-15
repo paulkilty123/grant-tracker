@@ -1,5 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Grant Tracker">
-  <rect x="0" y="0" width="100" height="100" rx="22" fill="#173404"/>
-  <rect x="20" y="46" width="26" height="42" rx="13" fill="#F5F1E8"/>
-  <rect x="56" y="18" width="26" height="70" rx="13" fill="#7CC242"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Shoots">
+  <rect width="32" height="32" rx="7" fill="#1D3C3E"/>
+  <g transform="translate(-1.33 -1.33) scale(1.444)" fill="none" stroke="#F5F1E8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 10a6 6 0 0 0 -6 -6h-3v2a6 6 0 0 0 6 6h3"/>
+    <path d="M12 14a6 6 0 0 1 6 -6h3v1a6 6 0 0 1 -6 6h-3"/>
+    <path d="M12 20l0 -10"/>
+  </g>
 </svg>
