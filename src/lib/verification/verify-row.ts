@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
+import type { EvidenceInput } from '../field-evidence'
 
 /**
  * One visit per row: fetch the funder's page, decide whether it is usable, and
@@ -117,6 +118,15 @@ export type VerifyResult = {
   proposals: Proposal[]      // fields to change, each with its quote
   confirmed: string[]        // page agrees with what we hold — stamp as checked
   notFound:  string[]        // page does not address it — leave null
+  /**
+   * The same three findings in the shape `field_evidence` stores, one entry per
+   * field the page was asked about: agrees true (confirmed), false (a proposal
+   * is owed) or null (the page said nothing). This is the record that used to be
+   * discarded — `confirmed` named the fields but dropped their quotes, so a run
+   * that agreed with every stored value left no trace at all and the gate could
+   * never tell "verified" from "never looked at".
+   */
+  evidence:  EvidenceInput[]
   notes:     string[]
   /** Set on round_closed: the passed date the page states, and its quote. */
   closedRound?: { deadline: string; quote: string }
@@ -483,7 +493,7 @@ export async function verifyRow(
   const base = {
     id: row.id, title: row.title, funder: row.funder, url: row.apply_url,
     proposals: [] as Proposal[], confirmed: [] as string[], notFound: [] as string[],
-    notes: [] as string[],
+    evidence: [] as EvidenceInput[], notes: [] as string[],
   }
 
   if (!row.apply_url) {
@@ -521,7 +531,9 @@ export async function verifyRow(
     }
 
     if (followedFrom.length === 0) followedFrom = fetched.links
-    const result = await runModel(row, fetched.text, anthropic, base)
+    // The reader proxy is a transport, not a source: the fact still came from
+    // the funder's own page, so that is the URL the evidence cites.
+    const result = await runModel(row, fetched.text, anthropic, base, row.apply_url)
     usage = { input: usage.input + (result.usage?.input ?? 0), output: usage.output + (result.usage?.output ?? 0) }
     result.usage = usage
     if (fetched.via === 'proxy') result.notes = [...result.notes, 'read through the reader proxy']
@@ -542,7 +554,7 @@ export async function verifyRow(
       const target = followedFrom[0]
       const fetched = await fetchPage(target)
       if (!('error' in fetched) && fetched.text.length >= 200) {
-        const deeper = await runModel(row, fetched.text, anthropic, base)
+        const deeper = await runModel(row, fetched.text, anthropic, base, target)
         usage = { input: usage.input + (deeper.usage?.input ?? 0), output: usage.output + (deeper.usage?.output ?? 0) }
         deeper.usage = usage
         deeper.notes = [...deeper.notes, `read one level down: ${target}`]
@@ -560,6 +572,8 @@ async function runModel(
   pageText: string,
   anthropic: Anthropic,
   base: Omit<VerifyResult, 'outcome' | 'gate'>,
+  /** The page these facts came from — stamped onto every piece of evidence. */
+  sourceUrl: string | null,
 ): Promise<VerifyResult> {
   const res = await anthropic.messages.create({
     model: MODEL,
@@ -631,14 +645,29 @@ async function runModel(
   const confirmed: string[] = []
   const notFound: string[] = []
   const notes: string[] = []
+  const evidence: EvidenceInput[] = []
+
+  /**
+   * Record what the page said about a field, whatever it said.
+   *
+   * Every path that pushes to `confirmed`, `proposals` or `notFound` also lands
+   * here, so a field the model was asked about always ends with exactly one
+   * stamp. `agrees: null` is the honest reading of every notFound path,
+   * including the withheld ones — a quote about cash at bank is not evidence
+   * about organisational income, so the row is left saying we do not know.
+   */
+  const stamp = (field: string, agrees: boolean | null, quote: string | null) => {
+    evidence.push({ field, agrees, quote: agrees === null ? null : quote, source_url: sourceUrl })
+  }
 
   const consider = (field: string, extracted: { value: unknown; quote: string | null }, current: unknown, coerce: (v: unknown) => unknown) => {
-    if (extracted.value === null || extracted.value === undefined) { notFound.push(field); return }
-    if (!extracted.quote) { notFound.push(field); notes.push(`${field}: a value was offered without a quote we could find on the page, so it was dropped`); return }
+    if (extracted.value === null || extracted.value === undefined) { notFound.push(field); stamp(field, null, null); return }
+    if (!extracted.quote) { notFound.push(field); stamp(field, null, null); notes.push(`${field}: a value was offered without a quote we could find on the page, so it was dropped`); return }
     const next = coerce(extracted.value)
-    if (next === null) { notFound.push(field); return }
-    if (next === current) { confirmed.push(field); return }
+    if (next === null) { notFound.push(field); stamp(field, null, null); return }
+    if (next === current) { confirmed.push(field); stamp(field, true, extracted.quote); return }
     proposals.push({ field, from: current, to: next, quote: extracted.quote, verdict: 'confirmed' })
+    stamp(field, false, extracted.quote)
   }
 
   const asDate = (v: unknown) => (typeof v === 'string' && ISO_DATE.test(v) ? v : null)
@@ -673,18 +702,27 @@ async function runModel(
   if (isGrant.value === false) {
     if (row.funding_type && KNOWN_TYPES.has(row.funding_type)) {
       notes.push(`scope verdict ignored: this row is classified "${row.funding_type}", which the catalogue carries deliberately`)
+      stamp('is_grant', null, null)
     } else if (!isGrant.quote) {
       notes.push('the model judged this not to be funding but quoted nothing; verdict withheld')
+      stamp('is_grant', null, null)
     } else {
-      return { ...base, usage, gate, outcome: 'not_a_grant', notes: [isGrant.quote] }
+      stamp('is_grant', false, isGrant.quote)
+      return { ...base, usage, gate, outcome: 'not_a_grant', evidence, notes: [isGrant.quote] }
     }
+  } else {
+    stamp('is_grant', isGrant.value === true && isGrant.quote ? true : null, isGrant.quote)
   }
   if (stillListed.value === false) {
     if (!stillListed.quote) {
       notes.push('the model judged this fund no longer listed but quoted nothing; verdict withheld')
+      stamp('still_listed', null, null)
     } else {
-      return { ...base, usage, gate, outcome: 'no_longer_listed', notes: [stillListed.quote] }
+      stamp('still_listed', false, stillListed.quote)
+      return { ...base, usage, gate, outcome: 'no_longer_listed', evidence, notes: [stillListed.quote] }
     }
+  } else {
+    stamp('still_listed', stillListed.value === true && stillListed.quote ? true : null, stillListed.quote)
   }
 
   // A deadline the page states in the PAST is not a deadline to write, it is
@@ -700,6 +738,10 @@ async function runModel(
   if (extractedDeadline && deadlineFact.quote && extractedDeadline < todayISO) {
     closedRound = { deadline: extractedDeadline, quote: deadlineFact.quote }
     notFound.push('deadline')
+    // The page DID address timing, and what it said contradicts a row that
+    // presents itself as open. That is evidence, not silence — stamping it null
+    // here would let a closed round sit unverified-but-unremarkable forever.
+    stamp('deadline', false, deadlineFact.quote)
   } else {
     consider('deadline', deadlineFact, row.deadline, asDate)
   }
@@ -712,6 +754,7 @@ async function runModel(
   const CASH_CONCEPT   = /\b(cash at bank|cash and investments|balance sheet|reserves|in the bank)\b/i
   if (incomeFact.quote && (!INCOME_CONCEPT.test(incomeFact.quote) || CASH_CONCEPT.test(incomeFact.quote))) {
     notFound.push('max_org_income')
+    stamp('max_org_income', null, null)
     notes.push(`max_org_income withheld: the quote is not about organisational income — "${incomeFact.quote.slice(0, 120)}"`)
   } else {
     consider('max_org_income', incomeFact, row.max_org_income, asMoney)
@@ -725,6 +768,7 @@ async function runModel(
   if (inviteFact.value === true && inviteFact.quote
       && (!TRUE_INVITE.test(inviteFact.quote) || TWO_STAGE.test(inviteFact.quote))) {
     notFound.push('is_invite_only')
+    stamp('is_invite_only', null, null)
     notes.push(`is_invite_only withheld: the quote describes a staged or selective process, not an invitation-only fund — "${inviteFact.quote.slice(0, 120)}"`)
   } else {
     consider('is_invite_only', inviteFact, row.is_invite_only, asBool)
@@ -733,6 +777,6 @@ async function runModel(
   return {
     ...base, usage, gate,
     outcome: closedRound ? 'round_closed' : 'verified',
-    proposals, confirmed, notFound, notes, closedRound,
+    proposals, confirmed, notFound, evidence, notes, closedRound,
   }
 }
