@@ -190,6 +190,69 @@ function sameSite(a: string, b: string): boolean {
   return norm(a) === norm(b)
 }
 
+/**
+ * Path segments that name a category rather than a fund. A URL made only of
+ * these is an index page: it tells you the funder gives grants, not what the
+ * rules of any particular one are.
+ */
+const GENERIC_SEGMENT = new RegExp(
+  '^(' + [
+    'home', 'index', 'en', 'en-gb', 'en-us', 'uk',
+    'grant', 'grants', 'grant-funding', 'funding', 'fund', 'funds',
+    'our-funds', 'our-fund', 'our-funding', 'our-grants', 'our-work',
+    'what-we-fund', 'who-we-fund', 'what-we-do',
+    'apply', 'apply-now', 'applying', 'application', 'applications',
+    'apply-for-funding', 'applying-for-funding', 'apply-for-a-grant',
+    'funding-programmes', 'grant-programmes', 'open-funds', 'live-funds',
+    'how-to-apply', 'how-we-fund', 'get-funding', 'get-involved',
+    'programme', 'programmes', 'program', 'programs',
+    'support', 'charities', 'for-charities', 'community',
+  ].join('|') + ')$', 'i',
+)
+
+/**
+ * Is this the funder's front door rather than a page about one fund?
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * WHY THIS EXISTS. Learned 2026-08-15, on the engine's first live stamping run.
+ *
+ * Movement for Good's homepage produced `is_rolling: true` with the quote
+ * "Nominations open all year". The quote is real, it is on the page, and it is
+ * grounded. It is also wrong about the thing the surface renders: nominations
+ * are collected all year, awards are made in six dated draws, and our own
+ * catalogue holds a sibling row with a dated deadline that proves it. The draw
+ * dates live on a subpage the engine never reads, because the hop only fires
+ * when the first page has NO funding detail at all, and that homepage is rich
+ * in funding detail.
+ *
+ * So a front door does not merely fail to answer the timing question. It
+ * produces a confident, citable, WRONG answer to it, which is worse than
+ * silence: a gate that requires evidence would have found some.
+ *
+ * The rule this supports is narrow and one-directional — see the `is_rolling`
+ * handling in runModel. A front door may still take a claim DOWN. It may never
+ * put one up.
+ *
+ * Judged on the twelve rows §3.1 of the tranche 2 design lists: bare domains
+ * (movementforgood.com/, asdafoundation.org/, sibgroup.org.uk/) and single
+ * generic segments (/our-funds/, /our-funding/, /en-gb) are front doors;
+ * /local-community-fund, /live-funds/london-fund/ and /our-work/growth-fund/
+ * are not. Two segments where the first is generic still count as specific,
+ * because the second segment is doing the naming.
+ */
+export function isFrontDoorUrl(url: string | null | undefined): boolean {
+  if (!url) return false
+  let u: URL
+  try { u = new URL(url) } catch { return false }
+  const segments = u.pathname
+    .split('/')
+    .filter(Boolean)
+    .map(s => s.replace(/\.(html?|php|aspx?|jsp)$/i, ''))
+  if (segments.length === 0) return true          // a bare domain is always a front door
+  if (segments.length > 2)   return false         // deep enough that something is being named
+  return segments.every(s => GENERIC_SEGMENT.test(s))
+}
+
 export function candidateLinks(pageSource: string, baseUrl: string, isMarkdown: boolean): string[] {
   let base: URL
   try { base = new URL(baseUrl) } catch { return [] }
@@ -656,8 +719,8 @@ async function runModel(
    * including the withheld ones — a quote about cash at bank is not evidence
    * about organisational income, so the row is left saying we do not know.
    */
-  const stamp = (field: string, agrees: boolean | null, quote: string | null, proposed?: unknown) => {
-    evidence.push({ field, agrees, quote: agrees === null ? null : quote, source_url: sourceUrl, proposed })
+  const stamp = (field: string, agrees: boolean | null, quote: string | null, proposed?: unknown, note?: string) => {
+    evidence.push({ field, agrees, quote: agrees === null ? null : quote, source_url: sourceUrl, proposed, note })
   }
 
   const consider = (field: string, extracted: { value: unknown; quote: string | null }, current: unknown, coerce: (v: unknown) => unknown) => {
@@ -745,7 +808,31 @@ async function runModel(
   } else {
     consider('deadline', deadlineFact, row.deadline, asDate)
   }
-  consider('is_rolling',     fact('is_rolling'),     row.is_rolling,     asBool)
+  // A FRONT DOOR MAY TAKE A CLAIM DOWN. IT MAY NEVER PUT ONE UP.
+  //
+  // `is_rolling = true` is the one field where the surface turns our data into a
+  // positive claim about today: it renders the word "Rolling", which says you
+  // can apply and be considered now. A funder's index page is systematically
+  // the wrong place to establish that — it says the funder gives money all year
+  // without saying that any particular round is open, and the engine will quote
+  // it happily. Movement for Good is the worked case; see isFrontDoorUrl.
+  //
+  // So from a front door a `true` is withheld, whether it would have CONFIRMED
+  // the stored value or PROPOSED setting it. A `false` is untouched, because
+  // that only ever removes an assertion, which is strictly safer than the status
+  // quo. Withheld means agrees:null — we looked and cannot say — not agrees:false.
+  //
+  // Remove this once multi-page sourcing lands and the timing page is actually
+  // read. Until then it is the difference between an unverified row and a
+  // wrongly certified one.
+  const rollingFact = fact('is_rolling')
+  if (rollingFact.value === true && isFrontDoorUrl(sourceUrl)) {
+    notFound.push('is_rolling')
+    stamp('is_rolling', null, null, undefined, 'rolling not confirmable from a front-door page')
+    notes.push(`is_rolling withheld: "${(rollingFact.quote ?? '').slice(0, 90)}" comes from ${sourceUrl}, which names no single fund, so it cannot establish that a round is open today`)
+  } else {
+    consider('is_rolling', rollingFact, row.is_rolling, asBool)
+  }
   // Only propose an income cap when the sentence is about organisational income
   // or turnover. Wax Chandlers' "less than £200k in cash at bank" is a real
   // sentence with a real number that means something else entirely.

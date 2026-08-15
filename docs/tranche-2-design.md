@@ -748,25 +748,51 @@ Oldest-stamp-first inside each class, so the queue self-drains and no row starve
 
 ## 11. Order of work
 
+**Reordered 2026-08-15 on Paul's decision.** Multi-page sourcing moves ahead of
+the full pass, the removal powers and `c3`. The reason is evidence rather than
+preference: on the engine's first live stamping run, a single-page read of
+Movement for Good's homepage produced `is_rolling: agrees` quoting "Nominations
+open all year" — a real, grounded quote certifying the exact claim the row was
+pulled up for. A front door does not merely fail to answer the timing question,
+it answers it confidently and wrongly, so evidence gathered before item 8 below
+would have to be gathered again. See the digest entry under "Decisions".
+
 1. **`AUTO_PUBLISH_LIMIT=0` must mean stop** — currently falls through to
-   uncapped. Fifteen minutes, and it is a brake.
+   uncapped. Fifteen minutes, and it is a brake. *Merged 13 Aug, live.*
 2. **`validate-urls` queue pass first** — live defect, standalone (§4.1).
-   *Built, pushed: `fix/validate-urls-queue-first`.*
+   *Merged 13 Aug. Unproven until the first Sunday run.*
 3. **Refused-write surfacing** — widened `rejected`, rendered on the row (§1).
-   *Built, pushed: `feat/surface-refused-writes`.*
+   *Merged 13 Aug.*
 4. **`field_evidence` column + engine writes stamps** (§2).
+   *Built, pushed: `feat/field-evidence`.*
 5. **Engine route, schedule, Pipeline line, kill switch** (§4.2).
-6. **Re-read gains `deadline` and `is_rolling`** — with evidence, and
+   *Built, pushed: same branch. Scheduled 4×/day and disarmed.*
+6. **The front-door guard** — an interim, one-directional rule: `is_rolling`
+   may never be CONFIRMED or PROPOSED true from a page that names no single
+   fund, though it may still be contradicted from one. Set by Paul 2026-08-15
+   as cover until item 8 lands, and removable then. Measured cost: 139 of the
+   386 live rolling rows sit on a front door and will be withheld; 247 remain
+   confirmable. *Built, pushed: same branch.*
+7. **Re-read gains `deadline` and `is_rolling`** — with evidence, and
    `is_rolling` stops silencing `no_deadline` unless it is evidenced rolling
    (§1c). Without this the engine can find a wrong rolling flag and still not
    fix it.
-7. **Discovery intake checks** (§8) — before the next sweep re-imports another
+8. **Multi-page sourcing** (§7). No longer last and no longer optional: §12's
+   A2 count of 138 was one reason, and the Movement for Good stamp is the
+   second, independent one. **Its acceptance test is that row**: re-running
+   `120e1d2a` must produce `is_rolling` contradicted, quoting the draw dates.
+   The existing wrong stamp is deliberately preserved as the before-picture.
+9. **Discovery intake checks** (§8) — before the next sweep re-imports another
    fragment.
-8. **The full pass over all 677 live rows** (§10). A6 resolves here.
-9. **The 173 drain** (§9) — after 3, which it depends on.
-10. **Gate policy `c3` + two-step arming** (§3), armed once 8 reports coverage.
-11. **Watchlist reader** (§5).
-12. **Multi-page sourcing** (§7) — see §12: this is no longer optional.
+10. **The full pass over all live rows** (§10). A6 resolves here, and it runs
+    once rather than twice because 8 precedes it.
+11. **The 173 drain** (§9) — after 3, which it depends on.
+12. **Gate policy `c3` + two-step arming** (§3), armed once 10 reports coverage.
+13. **The engine's removal powers** (§12) — archive on `no_longer_listed` /
+    `not_a_grant`, out of view on `round_closed`, unset an unevidenced rolling
+    flag. Deliberately after 8, because every one of those verdicts is only as
+    good as the page it was read from.
+14. **Watchlist reader** (§5).
 
 ---
 
