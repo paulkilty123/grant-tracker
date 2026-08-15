@@ -656,8 +656,8 @@ async function runModel(
    * including the withheld ones — a quote about cash at bank is not evidence
    * about organisational income, so the row is left saying we do not know.
    */
-  const stamp = (field: string, agrees: boolean | null, quote: string | null) => {
-    evidence.push({ field, agrees, quote: agrees === null ? null : quote, source_url: sourceUrl })
+  const stamp = (field: string, agrees: boolean | null, quote: string | null, proposed?: unknown) => {
+    evidence.push({ field, agrees, quote: agrees === null ? null : quote, source_url: sourceUrl, proposed })
   }
 
   const consider = (field: string, extracted: { value: unknown; quote: string | null }, current: unknown, coerce: (v: unknown) => unknown) => {
@@ -667,7 +667,7 @@ async function runModel(
     if (next === null) { notFound.push(field); stamp(field, null, null); return }
     if (next === current) { confirmed.push(field); stamp(field, true, extracted.quote); return }
     proposals.push({ field, from: current, to: next, quote: extracted.quote, verdict: 'confirmed' })
-    stamp(field, false, extracted.quote)
+    stamp(field, false, extracted.quote, next)
   }
 
   const asDate = (v: unknown) => (typeof v === 'string' && ISO_DATE.test(v) ? v : null)
@@ -741,7 +741,7 @@ async function runModel(
     // The page DID address timing, and what it said contradicts a row that
     // presents itself as open. That is evidence, not silence — stamping it null
     // here would let a closed round sit unverified-but-unremarkable forever.
-    stamp('deadline', false, deadlineFact.quote)
+    stamp('deadline', false, deadlineFact.quote, extractedDeadline)
   } else {
     consider('deadline', deadlineFact, row.deadline, asDate)
   }

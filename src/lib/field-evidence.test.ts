@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import {
   isConfirmed, isContradicted, wasChecked, evidenceAgeDays, readStamp,
-  buildEvidencePatch, recordFieldEvidence,
+  buildEvidencePatch, recordFieldEvidence, PAGE_READ_KEY,
   type FieldEvidence,
 } from './field-evidence'
 
@@ -143,6 +143,51 @@ describe('buildEvidencePatch', () => {
     expect(patch.is_rolling.agrees).toBe(null)
     expect(patch.deadline.agrees).toBe(null)
     expect(isConfirmed(patch, 'is_rolling', { asOf: NOW })).toBe(false)
+  })
+
+  it('carries the proposed value on a contradiction, and only there', () => {
+    // A contradiction that does not say what the page DOES state is not
+    // actionable, and this stamp is the proposal's only durable home: the one
+    // machine-to-human channel the Review Inbox renders today has no quote slot
+    // and is overwritten wholesale by the feedback router.
+    const { patch } = buildEvidencePatch([
+      { field: 'deadline',   agrees: false, quote: 'Closes 1 December 2026.', source_url: null, proposed: '2026-12-01' },
+      { field: 'is_rolling', agrees: true,  quote: 'Open all year.', source_url: null, proposed: true },
+      { field: 'is_invite_only', agrees: null, quote: null, source_url: null, proposed: true },
+    ], { by: 'verify:v1', checkedAt: NOW })
+
+    expect(patch.deadline.proposed).toBe('2026-12-01')
+    // An agreement proposes nothing — there is nothing to change.
+    expect('proposed' in patch.is_rolling).toBe(false)
+    // Nor does a silent page, or the row would hold a value nothing stands behind.
+    expect('proposed' in patch.is_invite_only).toBe(false)
+  })
+
+  it('drops the proposal when the verdict is downgraded for want of a quote', () => {
+    const { patch, unquoted } = buildEvidencePatch([
+      { field: 'deadline', agrees: false, quote: null, source_url: null, proposed: '2026-12-01' },
+    ], { by: 'verify:v1', checkedAt: NOW })
+
+    expect(unquoted).toEqual(['deadline'])
+    expect(patch.deadline.agrees).toBe(null)
+    expect('proposed' in patch.deadline).toBe(false)
+  })
+
+  it('stamps a page read that found nothing, so the row can still drain', () => {
+    // A page that fails the gate yields no facts and so no field stamps. The
+    // work queue orders by the oldest stamp on the row, so without a page-read
+    // stamp such a row is never drained: it comes back at the front of every
+    // run, for ever. 138 rows in the catalogue are in exactly that state.
+    const { patch } = buildEvidencePatch([
+      { field: PAGE_READ_KEY, agrees: null, quote: null,
+        source_url: 'https://example.org/', note: 'fixable_link: wrong_fund' },
+    ], { by: 'verify:v1', checkedAt: NOW })
+
+    expect(patch[PAGE_READ_KEY].checked_at).toBe(NOW.toISOString())
+    expect(patch[PAGE_READ_KEY].note).toBe('fixable_link: wrong_fund')
+    // It records an attempt, never a fact. No gate may read it as evidence.
+    expect(isConfirmed(patch, PAGE_READ_KEY, { asOf: NOW })).toBe(false)
+    expect(wasChecked(patch, PAGE_READ_KEY, { asOf: NOW })).toBe(true)
   })
 
   it('trims the quote and leaves a silent field with no quote at all', () => {

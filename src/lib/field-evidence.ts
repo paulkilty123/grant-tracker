@@ -58,6 +58,22 @@ export type EvidenceStamp = {
   /** Who checked. `verify:v1` today. */
   by:         string
   agrees:     boolean | null
+  /**
+   * Why this stamp says what it says, when the reason is not in the quote.
+   * Carries the gate failure on a page-read stamp, and nothing on a normal one.
+   */
+  note?:      string
+  /**
+   * What the page says the value should be. Present only when `agrees` is
+   * false. Without it a contradiction records that the page disagreed but not
+   * what it said, which is not something anyone can act on — and this stamp is
+   * the proposal's only durable home. `field_provenance.pipeline_state.diff`,
+   * the one machine-to-human field-change channel the Review Inbox renders
+   * today, has no quote slot and is overwritten wholesale by the feedback
+   * router, so a proposal parked there vanishes the first time anyone flags
+   * the grant.
+   */
+  proposed?:  unknown
 }
 
 export type FieldEvidence = Record<string, EvidenceStamp>
@@ -80,6 +96,23 @@ export const EVIDENCE_FIELDS = [
 ] as const
 
 export type EvidenceField = (typeof EVIDENCE_FIELDS)[number]
+
+/**
+ * Reserved key: "this row's page was read at this time, and this is what
+ * happened". Not a field, and never a claim about a value.
+ *
+ * It exists because the work queue orders by the OLDEST stamp on the row, so a
+ * row that can never be stamped can never drain. A page that fails the gate —
+ * wrong fund, bot wall, nothing readable — produces no facts and therefore no
+ * field stamps, so without this the engine would re-read the same unreadable
+ * page four times a day forever. The catalogue currently holds 138 rows whose
+ * page does not describe our fund; that is 552 pointless fetches a day.
+ *
+ * Recording the attempt is also the honest answer to "when did we last look at
+ * this row", which is not the same question as "what do we know about its
+ * deadline".
+ */
+export const PAGE_READ_KEY = '_page_read'
 
 /** Default freshness window, matching gate policy c3's 90 days. */
 export const DEFAULT_MAX_AGE_DAYS = 90
@@ -104,6 +137,8 @@ function stampOf(evidence: FieldEvidence | null | undefined, field: string): Evi
     checked_at: stamp.checked_at,
     by:         typeof stamp.by === 'string' ? stamp.by : 'unknown',
     agrees:     typeof stamp.agrees === 'boolean' ? stamp.agrees : null,
+    ...('proposed' in stamp ? { proposed: stamp.proposed } : {}),
+    ...(typeof stamp.note === 'string' ? { note: stamp.note } : {}),
   }
 }
 
@@ -195,6 +230,10 @@ export type EvidenceInput = {
   quote:      string | null
   source_url: string | null
   agrees:     boolean | null
+  /** The value the page supports. Carried only on a contradiction. */
+  proposed?:  unknown
+  /** Free text for a page-read stamp. Never a substitute for a quote. */
+  note?:      string
 }
 
 export type BuiltPatch = {
@@ -235,6 +274,10 @@ export function buildEvidencePatch(
       checked_at,
       by:         meta.by,
       agrees,
+      // Only a contradiction proposes anything. A downgraded verdict carries no
+      // proposal either, or the row would hold a value nothing stands behind.
+      ...(agrees === false && input.proposed !== undefined ? { proposed: input.proposed } : {}),
+      ...(input.note ? { note: input.note } : {}),
     }
   }
 
