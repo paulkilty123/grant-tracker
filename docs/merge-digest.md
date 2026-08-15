@@ -3,11 +3,11 @@
 Finished branches waiting on Paul's go, newest first. One entry per branch: a
 plain English line saying what it does, then the deploy gate evidence.
 
-Nothing here is on `main`. `main` only moves on an explicit go.
+Nothing in the "Waiting" section is on `main`. `main` only moves on an explicit go.
 
-> Both current branches add this file. If git flags an add/add conflict on
-> `docs/merge-digest.md`, take **this** version, from
-> `fix/lifecycle-live-defects` — it already contains every entry.
+The nine branches merged on 13 August have moved to
+[`merge-digest-archive-2026-08-13.md`](merge-digest-archive-2026-08-13.md), so
+this file only ever lists work that is actually waiting.
 
 ---
 
@@ -23,455 +23,202 @@ Set by Paul after a re-arm would have released a 19-row backlog unseen.
 2. Review the list.
 3. Only then set `AUTO_PUBLISH_ENABLED=true`.
 
-This is not a nicety. Arming does not publish "what happens next"; it publishes
-**everything currently sitting in the queue that passes the gate**, including
-rows withdrawn since the last run. On 13 August the dry run reported
-`publish: 19`, all 19 `newlyVisible` — the exact set pulled from public view
-hours earlier. Re-arming without step 1 would have undone the retraction and
-looked like a normal morning.
+Arming does not publish "what happens next"; it publishes **everything currently
+sitting in the queue that passes the gate**, including rows withdrawn since the
+last run.
 
-When gate policy `c3` lands, this belongs in the route rather than in a
-document: a policy-version change should force a dry run before the first armed
-run under the new version.
+When gate policy `c3` lands, this belongs in the route rather than in a document:
+a policy-version change should force a dry run before the first armed run under
+the new version.
 
 ---
 
-## `fix/validate-urls-queue-first`
+# Waiting
 
-**What it does:** makes sure a newly discovered fund actually gets its link
-checked before anything can publish it. Until now the check that decides this
-was the one job guaranteed never to run.
+## `feat/field-evidence`
 
-**Commit:** `3c60c21`
+**What it does:** gives a row somewhere to record that a human-readable sentence
+on the funder's page was actually read, and what it said. Until now a check that
+agreed with us left no trace at all, which is why the publish bar cannot ask for
+evidence.
 
-### The pass that gates publishing was the one that starved
+**Commits:** `389009b` (column, library, engine wiring), `cacca3f` (stamp from the command line)
 
-`validate-urls` runs three passes. The third checks withheld review-queue rows,
-which are `is_active=false` and therefore invisible to the catalogue sweep
-(`is_active=true`) and to the recovery pass (dead rows only). It exists to break
-a genuine deadlock: a row is held because its link is unverified, and nothing
-else will ever verify it while it is held.
+### The gap this closes
 
-It ran last, on whatever budget the sweep left. It never got any. From the
-2026-08-12 run, recorded in `cron_runs`:
+`field_provenance` answers "who last **wrote** this". It cannot answer "when was
+this last **checked** against the funder's page", because `mergeFieldUpdate`
+treats an unchanged value as `idempotent` and writes nothing. That rule is right
+and should stay. Its consequence is not: a verification run that **agrees** with
+the stored value leaves no record whatsoever. The engine has been computing a
+`confirmed[]` array on every run since it was written and discarding it, because
+there was nowhere to put it.
 
-```
-scraped:     checked 645, skipped 37
-recovery:    checked 0
-reviewQueue: checked 0
-budgetExceeded: true
-elapsedMs: 276697
-```
+So "verified last week" and "never looked at once" are the same picture, on every
+row, and that is the whole reason 53 of the 55 rows published in the week to
+13 August carry no citation on their timing.
 
-277 seconds of a 270-second budget spent before it was reached. This was not a
-bad day: the sweep grows with the catalogue and this pass was defined as the
-remainder, so it would have starved on every run forever.
+New `jsonb` column `field_evidence`, one entry per field:
 
-The consequence is the 12 August incident. Twelve rows discovered at 23:06 on
-the 11th were published at 09:00 on the 12th on a link nothing had ever
-fetched — because the only job that could have checked them ran at 03:00 in
-between and had nothing left by the time it got here.
-
-This also retires a claim in `publish-gate.ts`, which classifies
-`link_unverified` as informational partly on the grounds that the pass was
-"fixed separately". The pass existed; the budget never reached it.
-
-### The change
-
-The review-queue pass runs **first**, with its own 60s slice of the 270s
-budget, and its row limit rises from `RECOVERY_LIMIT` (40) to `QUEUE_LIMIT`
-(60) — enough to drain the 121-row queue in about two runs and stay ahead of
-discovery's daily additions after that.
-
-Deadlines remain absolute from `startedAt`, so the run still finishes inside the
-300s function cap. The sweep yields 60 of its 270 seconds. That trade is the
-whole argument: an active row has been checked before and is already in front of
-users, so delaying it one run costs a little staleness. Delaying this pass costs
-a publish decision made blind.
-
-The summary now reports `candidates` / `skipped` / `atLimit` for the pass. A
-bare `checked: 0` read exactly like "nothing to do" for the entire time this was
-broken, which is why nobody caught it.
-
-### Deploy gate
-
-```
-Regression: tsc clean (only the pre-existing stale .next/types errors for
-            deleted src/app/mcp/keys pages, identical on a clean baseline).
-            eslint clean on the changed file.
-            Budget arithmetic re-checked: all four deadlines are absolute from
-            startedAt, so total wall clock is unchanged at 270s inside a 300s cap.
-Free-surface fingerprint: NOT APPLICABLE. No MCP route, tool, schema or
-            response shape is touched.
-Accent check: NOT APPLICABLE. No UI.
-Named rollback: origin/main at branch point.
+```jsonc
+"is_rolling": {
+  "quote":      "Nominations open all year",
+  "source_url": "https://movementforgood.com/",
+  "checked_at": "2026-08-15T20:16:22.504Z",
+  "by":         "verify:v1",
+  "agrees":     true
+}
 ```
 
-**Not verified against a live run.** This is a cron and the next scheduled
-invocation is Sunday 03:00. The starvation itself is proven from recorded run
-data; the fix is reasoned from the budget arithmetic, not yet observed. First
-run to check: `reviewQueue.checked` should be non-zero and `atLimit` true.
+Three design points, each of which had a wrong answer available:
 
----
+- **`agrees` is three-valued.** `null` means we read the page and it did not
+  address this field. That is **not** evidence and `isConfirmed()` returns false
+  for it, but it is stored, because otherwise a silent page is indistinguishable
+  from a page never read: the engine would re-read the same rows on every pass
+  forever, and section A7's 137 timing-less rows would have nowhere to record
+  their answer.
+- **`agrees: false` also fails `isConfirmed()`.** A field the page contradicts is
+  not merely unverified, it is known wrong. A gate that read "we checked and it
+  disagreed" as satisfied would be worse than one with no evidence column at all.
+  `isContradicted()` tells the two apart for reporting.
+- **`source_url` is per field, not per row**, even though today every fact in a
+  run comes from one page. It is what makes multi-page sourcing storable rather
+  than merely possible.
 
-## `fix/reject-must-not-fail-silently`
+Writes bypass `mergeGrantUpdate` deliberately. Recording that a page was read is
+not a claim about what the value should be, so an `ai_*` check must be able to
+stamp a field whose **value** an `admin:` source owns, or the 121 admin-pinned
+amounts and 54 admin-pinned deadlines would be permanently unverifiable, which is
+the opposite of the point.
 
-**What it does:** makes the Reject button tell the truth. It could previously do
-nothing, say nothing, and leave a wrong grant public.
-
-**Commit:** `9761f7a`
-
-### The emergency brake was a no-op
-
-Movement for Good Awards was rejected in the Review Inbox on 12 August. It
-stayed `is_active = true`, `pipeline_state = 'published'`,
-`rejection_reason = null`, and remained public for a further day. Nothing on
-screen said the brake had not engaged.
-
-Three silent exits, all closed:
-
-- **A cancelled prompt and an empty reason were the same branch.**
-  `if (!reason || !reason.trim()) return` swallowed both, wordlessly. They are
-  different intentions and now get different messages.
-- **A dropped connection reached nobody.** The fetch promise rejected and the
-  click simply did nothing.
-- **HTTP 200 was treated as done.** It only means the request was understood.
-  `mergeGrantUpdate` returns early without writing when nothing is actually
-  changing, so a write that never landed was indistinguishable from one that did.
-
-`patch()` gains an optional `expect` list. Reject and Publish now name the
-fields the server must confirm it wrote (`is_active`, `pipeline_state`) before
-either may show a success toast.
-
-Publish is included deliberately: it is the other action a person treats as
-final, and "Published X" over a row that never moved is the same lie in the
-opposite direction.
-
-### Deploy gate
-
-```
-Regression: tsc clean (same pre-existing stale .next/types baseline).
-            eslint clean on the changed file.
-            No behaviour change on paths that already reported correctly:
-            the new argument is optional and unused by revertField and fixLink.
-Free-surface fingerprint: NOT APPLICABLE. Admin surface only, no MCP contact.
-Accent check: PASSED. Toast variants only, existing tokens, no accent added.
-Named rollback: origin/main at branch point.
-```
-
-**Not verified in the browser.** The Review Inbox is behind an admin session and
-I will not enter credentials. The assertion path is exercised by the shape of
-`update-grant`'s response, which is already covered where `rejected` is read.
-Worth one manual Reject after deploy to see the new confirmation wording.
-
----
-
-## Correction, 2026-08-13: `AUTO_PUBLISH_LIMIT` is not live
-
-Recorded here because the entry below and the table at the foot both read as
-though the cap is in force. It is not.
-
-The env-reading code is real and correct, but it lives in `dc40d4d` **on
-`fix/eligibility-honest-surface`, which is unmerged**. Production reads the cap
-only from `?limit=`, and `vercel.json` registers the cron path bare, so
-`applyLimit` is `Infinity` on every scheduled run. Proven 13 August: the 09:00
-run published 12 rows with `applyLimit: null` while `AUTO_PUBLISH_LIMIT=10` had
-been set in Vercel for two days.
-
-**The switch that does work is `AUTO_PUBLISH_ENABLED`.** Set to `false` and
-redeployed on 13 August; verified against production, `armed: false`,
-`dryRun: true`, `written: 0`.
-
-**Pre-merge fix required on that branch:** `AUTO_PUBLISH_LIMIT=0` currently
-falls through to uncapped, because the guard is `envLimit > 0`. Zero must mean
-stop, not "no limit" — it is the value anyone reaches for to halt the job, and
-it currently does the opposite of what it looks like. Do not merge that branch
-until this is changed.
-
----
-
-## `fix/lifecycle-live-defects`
-
-**What it does:** turns discovery back on properly, so the catalogue starts
-finding social investment again, and stops the system hiding a fund on the day
-it reopens.
-
-**Commits:** `c173867` (the four defects), `8f62169` (rotation rebalance + yield instrumentation)
-
-### Discovery was running at 40% and saying so
-
-The sweep plans two targeted queries at ~34s plus three rotated general ones at
-~246s each. That is 314s against a function cap that has never been above 300s,
-so the look-ahead budget check skipped every general query on every run since
-the cron was created. **It was right to.** The 246s is measured and recorded in
-the file, not padding, so no change to the arithmetic fixes it.
-
-Nobody noticed because `stoppedEarly: true` was the normal state. The three
-skipped queries are the social investment, blended finance and CDFI ones, so
-the thinnest part of the catalogue was being fed by a code path that had never
-once executed.
-
-Split by `?slice=`, the same shape `crawl-grants` already uses with `?batch=`:
-
-| slice | what it runs | measured |
-|---|---|---|
-| `targeted` | both blocked funders (Arts Council England, GLA) | ~68s |
-| `general` | exactly one rotated thematic query | ~246s |
-| none | everything, budget-limited. Manual use, unchanged. | |
-
-Verified by pointing the self-call at a closed port, so queue construction ran
-for real with no model spend:
-
-```
-slice=targeted  planned 2  ran 2  stoppedEarly false
-slice=general   planned 1  ran 1  stoppedEarly false   <-- was skipped 100% of runs
-slice=<none>    planned 5  ran 5
-```
-
-Rotation now steps by 1 instead of by `MAX_QUERIES`, which at one query per run
-would have skipped four in five queries forever, the same class of bug the split
-exists to fix.
-
-### A closed round stayed in the catalogue
-
-`expire-grants` marked a row closed and left `is_active=true`, on the reasoning
-that a "Closed, next round TBC" placeholder beat the row vanishing. That
-reasoning does not survive contact with the surfaces: every user-facing query
-accepts a null deadline, so the row sat in results looking open, and the
-placeholder only appeared once someone opened the detail page.
-
-Now it hides only when there is **no known reopen date**. A row that has one
-stays visible, because "opens 1 September" is a real lead.
-
-### Reopening a fund removed it from the catalogue
-
-`check-coming-soon` set `is_active=false` on the day a fund reopened, and sent it
-to `captured`, where fresh scrapes go. The most positive event in a grant's life
-triggered a retraction, and a reopening was indistinguishable from a new find.
-
-It now leaves visibility exactly as it was and routes to
-`tagged_awaiting_review`. A live row stays live and the gate treats it as
-`attention`; a between-rounds row stays hidden but enters the gate's queue and
-can publish itself. When the verification engine has a home, this is the event
-that should enqueue a verify.
-
-### `check-stale-rounds` deleted
-
-Its own header records the predicate as unreachable, and production agrees:
-**zero rows carry `system:check_stale_rounds` provenance, ever.** A cron entry
-implying coverage it does not provide is worse than no cron.
-
-### Composition and cost, signed off 2026-08-12
-
-The rotation was rebalanced before settling the cadence, because the totals hid
-two problems.
-
-**In-kind had no queries at all.** 50 live rows, every one from a scraper or
-entered by hand. The job whose whole purpose is finding funders nobody has
-catalogued had never searched the category we call a differentiator. Five
-in-kind queries added, with their own prompt context, because the obvious
-reading of "funding" excludes donated services and the sweep would have returned
+The write goes through a `merge_field_evidence` RPC rather than a
+read-modify-write, so concurrent stamps cannot lose each other, and it returns
+the merged object so the caller can prove the write landed. A null return
+**throws**: that is what a cron writing through a cookie-scoped client looks like
+under RLS, and three crons in this codebase reported success while writing
 nothing.
 
-**Two funders were taking 46% of the budget.** Arts Council England and the GLA
-ran daily, for funders whose pages move on a scale of weeks. Dropped to alternate
-days. Their `fundingType` hint was also `programme`, and both award
-predominantly grants; it never reaches the model on a targeted query but it is
-the fallback row type, so it is now the grant-shaped category.
-
-| slice | cadence | queries | cost |
-|---|---|---|---|
-| targeted | alternate days | 2 (ACE, GLA) | $3.95/month |
-| general | daily, 20-day rotation | 20: grant / investment / programme / **in-kind**, 5 each | $9.12/month |
-| | | | **$13.07/month** |
-
-Cheaper than the $17 a daily-everything rotation would have cost, with the
-missing category covered. Output token counts are measured (2,943 targeted,
-11,864 general); input is estimated, so treat the total as the right order of
-magnitude.
-
-Dropping to every other day remains a one character edit (`40 8 * * *` to
-`40 8 */2 * *`), which is the lever for the four-week review below.
-
-### Yield is now measured, not estimated
-
-Cost per published row was not computable: `discover-grants` tracked real usage
-and returned it, `discover-sweep` threw it away, and across 37 recorded runs
-exactly one carried usage. Spend is now banked **before** the success branch,
-because a query that searched, burned tokens and then failed to parse still cost
-money.
-
-Yield renders on the **Pipeline page**, as a second line under the existing row
-counts, keyed on the summary carrying the shape rather than on the job's name.
-Verified end to end against a real scheduled run:
-
-```
-found 10 (grant 5, prog 5) · 26 in review · 11 published (grant 9, inv 1, prog 1)
-```
-
-`found` is that run. `in review` and `published` are the cumulative state of the
-whole discovery cohort, because a run cannot know the fate of its own rows: they
-take days to be enriched, gated and published. The question the line answers is
-whether the funnel converts.
-
-The manual POST path records a run too, so a morning where the button was pressed
-no longer looks identical to a morning where nothing ran.
-
-**Four-week review due 2026-09-09.** Cost per published row, by category, from
-`cron_runs.summary.usage` against the published counts. A written roll-up then,
-once, not a standing document.
-
 ### Deploy gate
 
 ```
-Regression: tsc clean. 113 tests pass (10 files), 6 of them new and covering
-            the yield formatter, the first asserting the exact rendered line
-            against a summary copied from cron_runs rather than invented.
-            next build clean. eslint 36 errors, identical to main's baseline.
-            vercel.json parses; 36 cron entries, within the Pro limit of 40.
-            Slice routing exercised against a dead self-call target, so queue
-            construction was verified with no model spend (output above).
-            Yield and usage verified end to end by running the scheduled path
-            locally: 10 imported, real usage and funnel written to cron_runs.
-Free-surface fingerprint: NOT APPLICABLE. No MCP route, tool, schema or
-            response shape is touched by this branch.
-Accent check: PASSED. The Pipeline page gains a text line, no accent.
-Named rollback: 5ba4669
+Regression: tsc clean. 184 tests pass (15 files), 18 of them new.
+            eslint clean on all four changed files.
+            The migration was applied to prod and then PROVEN, not assumed: a DO
+            block asserted shallow merge preserves siblings, same-key replace
+            keeps siblings, and a miss returns null, then cleaned its probe row.
+            Privileges checked: EXECUTE is granted to service_role and postgres
+            only, not anon or authenticated.
+            Mutation-tested: relaxing isConfirmed() to accept a silent-page stamp
+            fails 3 tests. The suite can fail.
+Free-surface fingerprint: NOT APPLICABLE. No MCP route, tool, schema or response
+            shape is touched. The column is not in grants_with_funder and no
+            user-facing surface reads it.
+Accent check: NOT APPLICABLE. No UI.
+Named rollback: 7073226
 ```
 
-The Pipeline page render was not screenshotted: it is behind an admin session and
-I will not enter credentials. It is covered by the unit test instead, which is
-the stronger check anyway because it pins the producer's shape to the renderer's
-expectation.
-
-### Known residue, not fixed here
-
-One live row still carries the old "Closed, next round TBC" placeholder from
-before this fix. `expire-grants` will not revisit it, because its selection
-requires a non-null past deadline and this row's deadline is already null. It is
-a single row and a data fix rather than a code one, so I have left it. Say if
-you want it swept.
+Verified end to end against two production rows, which is where the finding
+below came from.
 
 ---
 
-## `fix/eligibility-honest-surface`
+# Decisions
 
-**What it does:** stops the app telling a charity it is eligible for a grant
-whose eligibility nobody has read, and takes 37 rows out of Paul's review queue
-that were only waiting because the machine had improved them.
+## The single-page reader certifies front-door claims. `c3` cannot be armed on it.
 
-**Commits:** `2c7e663` (lifecycle review doc), `dc40d4d` (the fix), `9c04758` (digest)
+**This changes the order of work in `docs/tranche-2-design.md` §11 and I have not
+changed it — it is yours to call.**
 
-### The three steps, in the order they had to happen
+The first live stamping run went over two rows. One worked exactly as designed.
+The other did something worse than fail.
 
-1. **`tags_changed` demoted to info.** It blocked because the classifier used to
-   narrow eligibility whenever a page was silent on legal form: 152 structure
-   values removed against 117 added in one pass. That was fixed at source before
-   this branch. `classify.ts` now requires positive evidence to remove a
-   structure, and the 24 rows narrowed by the old behaviour had their values
-   restored, so a narrowing that survives today is one the page supports.
+**London LGBT+ Fund** — outcome `round_closed`, `deadline` stamped
+**CONTRADICTS**, quoting the funder's own page:
 
-2. **The surface stopped asserting eligibility it did not have.** `[]` meant
-   nobody had established the funder's rule. Every consumer read it as "no
-   restriction", because the check everywhere is `length > 0`. On the search card
-   that rendered as `Eligible  —  ✓`: a green tick beside an em dash, on 20 live
-   rows. All six user-facing surfaces now render the gap, and the tick requires a
-   positive match against a list we actually hold.
+> "Wednesday 12 August 2026 Application Window Closes The fund will close to
+> applications at 12pm noon."
 
-3. **`eligibility_missing` demoted to info,** which only became safe once step 2
-   shipped. The wrongness was never in the row. The row honestly held nothing and
-   the app turned nothing into "yes".
+That is the machinery working. A contradiction is now recorded somewhere other
+than a console.
 
-### What a user sees now
+**Movement for Good — £1,000 Draws** (`120e1d2a`, live) — `is_rolling` stamped
+**AGREES**, quoting:
 
-![Eligibility not fully stated on the funder's site](evidence/eligibility-not-fully-stated.png)
+> "Nominations open all year"
 
-Verbatim: **"Eligibility not fully stated on the funder's site. Check directly
-before applying."** Reproduce at `/grants/manual-2026-05-01-bfi-audience-projects`.
+The quote is real, it is on the page, and it is grounded. And it certifies the
+exact claim the row was pulled up for on 12 August. Nominations are collected all
+year; awards are made in six dated draws, which is why our own catalogue carries
+a sibling row (`921bffd3`, £5,000 Special Draws) with a dated deadline of
+24 May 2026. The surface renders `is_rolling = true` as **Rolling**, a positive
+claim that you can apply and be considered today.
 
-Previously this section was absent entirely, which is what read as "no
-restriction". It now renders on both grant detail pages, the grant modal, the
-search card meta cell and its expanded panel, and the deadlines drawer. MCP
-carries it as a new `eligibility.eligible_structures_note` field beside the
-array, because an external model reading a bare `[]` infers "open to all" too.
+The engine never saw the draw dates, because they are on a subpage and the hop
+only fires when the first page has **no funding detail at all**. `movementforgood.com/`
+is rich in funding detail. So the hop did not fire, the page was silent on
+`deadline`, and the model reached for the one timing-ish sentence it could see.
 
-### Measured effect on the queue
+**Why this is a decision and not a bug fix.** §3 designs `c3` so that a quoted,
+agreeing stamp on `is_rolling` is sufficient to publish. This run shows a quoted,
+agreeing stamp being produced for a row that is wrong, from a page that is
+honest — the page is simply not the whole story. §11 currently orders multi-page
+sourcing **last** (12), after `c3` arms (10). On this evidence that order is
+backwards: arming `c3` on single-page evidence would not raise the bar, it would
+put a citation under the same errors.
 
-Against the live queue via `npx tsx scripts/gate-dry-run.ts`:
+I see three ways forward and I have a recommendation:
 
-| | before (policy c1) | after (policy c2) |
-|---|---|---|
-| publish | 4 | **49** (26 already live, 23 newly visible) |
-| attention | 45 | 17 |
-| hold | 43 | 28 |
+1. **Move multi-page sourcing (§7.2) before `c3` arms.** §12 already says it is
+   "required, not deferred" on the strength of A2's 138 rows; this is a second,
+   independent reason. **Recommended.**
+2. **Refuse to confirm `is_rolling` from a front-door URL.** Cheap, computable —
+   §3.1 already found seven of twelve bad rows pointing at a funder's front
+   door — and it fails safe. But it only narrows this one field.
+3. **Accept it and let `c3` arm on single-page evidence.** I would not: it makes
+   the citation the thing that is wrong, which is harder to spot than no citation.
 
-Nothing that blocked for a reason a person actually needs to judge has moved.
-`applicant_individual_only`, `applicant_not_social_sector`, `link_dead`,
-`deadline_passed`, `amount_ungrounded`, `amount_pot_suspected`, `quarantined`,
-`no_brief` and `page_unreadable` all still block.
+Not urgent, in the sense that nothing reads `field_evidence` yet. It is only
+urgent relative to `c3`, and `c3` is items away.
 
-### Canary
-
-23 rows would become newly visible on the first 09:00 run. The route's cap was
-only reachable by hand (`?limit=`), and `vercel.json` registers the cron path
-bare, so a scheduled run could never carry one. Added `AUTO_PUBLISH_LIMIT` as an
-env cap for exactly this. **Set to 10 in Vercel on 2026-08-11 — but see the
-correction above: that variable is inert until this branch merges, and `0` must
-be made to mean stop before it does.**
-
-The route publishes already-live rows first, so the first two or three runs
-change nothing a user can see while still exercising the full write path
-(merger, trust ladder, state transition, RLS). That is deliberate: the crons this
-route was modelled on reported success for their whole existence while RLS
-silently rejected every write. Unset the variable once the newly-visible rows
-look right.
-
-### Deploy gate
-
-```
-Regression: tsc clean. 107 tests pass (9 files). next build clean.
-            eslint 36 errors, identical to main's baseline of 36, none new.
-            gate-dry-run against live data confirms tags_changed and
-            eligibility_missing no longer appear in any blocked list.
-Free-surface fingerprint: UNCHANGED, and asserted rather than assumed.
-            Pre-merge baseline captured from production:
-            5 tools, sha256 4eb66cb6a1cdbf1010ee9306089d7be860e44accd86830d2c6465ccc442a9cda
-            No tool name, description or input schema is touched. The MCP change
-            is additive to a tool RESPONSE (eligibility.eligible_structures_note),
-            which hard constraint 4 permits but requires declaring. Re-run
-            scripts/agent-eval/mcp-toollist.ts after deploy and compare.
-Accent check: PASSED, accent discipline held. No lime accent added or moved.
-Named rollback: 5ba4669
-            Main moved from c873fc3 to 5ba4669 while this branch was in flight
-            (docs/mcp-handover only, no code, no overlapping files). The branch
-            is still based on c873fc3 and merges cleanly either way; the rollback
-            target is main's tip at merge time. Re-read it if main moves again.
-```
-
-### Note on scope
-
-The fundraiser-facing note keys on the durable signal, `eligible_structures`
-being empty. It deliberately does **not** key on the narrowing diff, which lives
-at `field_provenance.pipeline_state.diff` in a slot the feedback router
-overwrites wholesale, so a note derived from it would vanish the first time
-anyone flagged the grant. Narrowed rows stay visible in the admin review queue,
-which already renders the diff and offers a per field revert. Paul confirmed
-admin-only visibility is enough for these, 2026-08-11.
+**I have deliberately left the Movement for Good stamp in place.** It is
+misleading as evidence and accurate as a record: it is the proof of this finding,
+and deleting it would be tidying away the only thing that demonstrates the
+problem.
 
 ---
 
-## Done, no longer waiting
+# Since the merge — what the crons have and have not proven
+
+Two nights have run on the 13 August merge. The scorecard is mixed and one item
+is worse than mixed.
+
+| Fix | Status |
+|---|---|
+| `AUTO_PUBLISH_LIMIT=0` means stop | **Proven.** `applyLimit: 0`, `armed: false`, `written: 0` on both the 14th and the 15th. |
+| Discovery slice split | **Proven.** The `general` slice ran both days and queued 13 then 11 social investment rows — the category that had never once been searched. |
+| Cycle-label opening dates | **Unproven, and may stay that way.** `expire-grants` ran clean both nights with `rolledCount: 0`. It selects `is_active = true`, and the rows that need a roll are mostly in the dead zone. It cannot prove itself until the drain runs. A green run of zero rows is not evidence. |
+| `validate-urls` queue-first | **Unproven.** Next scheduled run is Sunday 16 August, 03:00 UTC. First thing to check: `reviewQueue.checked` non-zero, `atLimit` true. |
+| Reject button | **Proven, incidentally.** Movement for Good Awards (`e05d267d`) is now `is_active = false`, `pipeline_state = 'rejected'`. It was still public on 13 August. |
+
+**One new defect.** The `discover-sweep` `targeted` slice started at 09:30 on
+15 August and never reported back: `ok IS NULL`, no `summary`, no `error`, no
+`finished_at`. By `cron_runs`' own documented convention that means a crash or a
+timeout. It is the alternate-day slice, so the next scheduled attempt is the
+17th. Not chased yet.
+
+**The queue behind the brake is growing.** `publish` was 70 on the 13th, 76 on
+the 14th, 88 on the 15th; `queueSize` 121 → 127 → 141. The brakes are holding,
+but whatever gets reviewed before arming gets bigger every day.
+
+---
+
+# Done, no longer waiting
 
 | Action | Status |
 |---|---|
-| `AUTO_PUBLISH_LIMIT=10` in Vercel | Set 2026-08-11, **but inert** — the code that reads it is unmerged. See the correction above. |
-| `AUTO_PUBLISH_ENABLED=false` in Vercel | Set 2026-08-13 and redeployed. This is the working brake. Verified against production: `armed: false`, `dryRun: true`, `written: 0`. |
-| `PROCESS_DISCOVERY_ENABLED=true` in Vercel | Set 2026-08-11, proven by a manual run: 10 processed, 10 imported, 0 failed, 26s. Queue 54 to 44 pending. |
-| `ADMIN_SECRET` rotated | Verified consistent: local matches production, admin route returns 200, `CRON_SECRET` unchanged and still authenticating. |
-
-The rotation had one side effect worth recording: `ADMIN_SECRET` and
-`CRON_SECRET` were previously identical, which made `isCronCaller` unable to
-tell a cron from an admin. Several routes carry a documented "manual admin
-trigger bypasses the arming gate" branch that was therefore **unreachable**.
-Those now work, so `reenrich-stale` and `verify-cf-funds` can be triggered by
-hand past their disabled flags.
+| `AUTO_PUBLISH_ENABLED=false` in Vercel | Set 2026-08-13. Confirmed on two scheduled runs since. |
+| `AUTO_PUBLISH_LIMIT=0` in Vercel | Now live, and now means stop rather than uncapped. Second independent brake. |
+| `PROCESS_DISCOVERY_ENABLED=true` in Vercel | Running daily, 10 processed per run. |
+| `ADMIN_SECRET` rotated | Verified consistent. |
+| Migration `053_field_evidence` | Applied to prod 2026-08-15, before the file was committed, per the house convention. |
