@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { isFrontDoorUrl } from './verify-row'
+import { isFrontDoorUrl, timingAnswered, foldEvidence, candidateLinks, statesDatedWindows } from './verify-row'
 
 /**
  * The front-door guard decides whether the engine is allowed to certify that a
@@ -80,5 +80,118 @@ describe('isFrontDoorUrl — bad input fails closed', () => {
     expect(isFrontDoorUrl('')).toBe(false)
     expect(isFrontDoorUrl('not a url')).toBe(false)
     expect(isFrontDoorUrl('/our-funds/')).toBe(false)
+  })
+})
+
+// ── Multi-page sourcing ──────────────────────────────────────────────────────
+
+const ev = (field: string, agrees: boolean | null, quote: string | null = null, url = 'https://x/') =>
+  ({ field, agrees, quote, source_url: url })
+
+describe('timingAnswered — what makes a second page worth fetching', () => {
+  it('is satisfied by either a deadline or a rolling flag, not both', () => {
+    expect(timingAnswered({ evidence: [ev('deadline', true, 'Closes 1 Dec.')] })).toBe(true)
+    expect(timingAnswered({ evidence: [ev('is_rolling', false, 'Two rounds a year.')] })).toBe(true)
+  })
+
+  it('is NOT satisfied by a page that stayed silent on both', () => {
+    // Movement for Good after the front-door guard: the page passed the gate,
+    // described the awards, and said nothing usable about when. That is the
+    // condition the old single hop could never see, because the gate had passed.
+    expect(timingAnswered({ evidence: [ev('is_rolling', null), ev('deadline', null)] })).toBe(false)
+  })
+
+  it('is not satisfied by an amount, however well evidenced', () => {
+    // An absent amount renders as absent and misleads nobody, so it does not
+    // earn a fetch. Keeping the trigger tied to what the surface ASSERTS is what
+    // stops this becoming a general appetite for more pages.
+    expect(timingAnswered({ evidence: [ev('max_org_income', true, 'Income under £1m.')] })).toBe(false)
+  })
+})
+
+describe('foldEvidence — a later definite answer wins', () => {
+  it('lets a hop settle a field the first page was silent on', () => {
+    const first = [ev('is_rolling', null), ev('deadline', null)]
+    const hop   = [ev('deadline', false, 'Draw 2 closes 11 September.', 'https://x/draw-dates')]
+    const out   = foldEvidence(first, hop)
+    expect(out.find(e => e.field === 'deadline')).toEqual(hop[0])
+    // A field the hop did not address keeps what it had.
+    expect(out.find(e => e.field === 'is_rolling')?.agrees).toBe(null)
+  })
+
+  it('does not let a silent hop erase a definite first answer', () => {
+    // The hop happened because something was missing, not because the first page
+    // was wrong. A blank second page must not undo a good first one.
+    const first = [ev('is_rolling', true, 'Applications any time.')]
+    const out   = foldEvidence(first, [ev('is_rolling', null)])
+    expect(out[0].agrees).toBe(true)
+    expect(out[0].quote).toBe('Applications any time.')
+  })
+
+  it('prefers the hop when both pages answer, because the hop is the specific one', () => {
+    const out = foldEvidence(
+      [ev('deadline', true, 'Applications welcome.', 'https://x/')],
+      [ev('deadline', false, 'Closes 12 August 2026.', 'https://x/key-dates')],
+    )
+    expect(out[0].agrees).toBe(false)
+    expect(out[0].source_url).toBe('https://x/key-dates')
+  })
+})
+
+describe('candidateLinks — the timing bias', () => {
+  const page = `
+    <a href="/about-us">About us</a>
+    <a href="/our-funds/">Our funds</a>
+    <a href="/draw-dates">Draw dates</a>
+    <a href="/news/latest">News</a>`
+
+  it('picks the dates page when timing is what is missing', () => {
+    // /draw-dates scores near zero on the funding vocabulary, which is exactly
+    // why Movement for Good was never resolved.
+    const got = candidateLinks(page, 'https://movementforgood.com/', false, 'timing')
+    expect(got[0]).toBe('https://movementforgood.com/draw-dates')
+  })
+
+  it('picks the funding page when funding detail is what is missing', () => {
+    const got = candidateLinks(page, 'https://movementforgood.com/', false, 'funding')
+    expect(got[0]).toBe('https://movementforgood.com/our-funds/')
+  })
+
+  it('will not revisit a page an earlier hop already spent a call on', () => {
+    const got = candidateLinks(page, 'https://movementforgood.com/', false, 'timing',
+      ['https://movementforgood.com/draw-dates'])
+    expect(got).not.toContain('https://movementforgood.com/draw-dates')
+  })
+})
+
+describe('statesDatedWindows — a rolling claim cannot stand beside dated rounds', () => {
+  it('fires on the page that beat the first attempt', () => {
+    // Verbatim from movementforgood.com/draws/1000, which also says
+    // "Nominations open all year". Both sentences are true; only one of them
+    // describes what the surface renders.
+    const page = `Nominations open all year. Draw 1 23-27 March 240 x £1,000 awards.
+      Draw 2 7-11 September 100 x £1,000 awards. Draw 3 1-16 December 240 x £1,000 awards.`
+    expect(statesDatedWindows(page)).toBe(true)
+  })
+
+  it('fires on a launch-and-close schedule', () => {
+    expect(statesDatedWindows(
+      'Wednesday 17 June 2026 Fund Launches. Wednesday 12 August 2026 Application Window Closes.',
+    )).toBe(true)
+  })
+
+  it('does NOT fire on a genuinely rolling page', () => {
+    // The cost of over-firing is a row that stays unverified, so the bar is two
+    // dates AND round vocabulary. Neither alone is enough.
+    expect(statesDatedWindows(
+      'We accept applications at any time. The trustees meet regularly and there is no deadline.',
+    )).toBe(false)
+    expect(statesDatedWindows('The foundation was established on 4 May 1948.')).toBe(false)
+    expect(statesDatedWindows('Applications close 14 April each year.')).toBe(false)
+    expect(statesDatedWindows('')).toBe(false)
+  })
+
+  it('counts distinct dates, so one date repeated is not a schedule', () => {
+    expect(statesDatedWindows('Round closes 12 August. Remember: 12 August. Deadline 12 August.')).toBe(false)
   })
 })
