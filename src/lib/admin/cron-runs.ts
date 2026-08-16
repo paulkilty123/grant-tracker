@@ -166,7 +166,13 @@ export function formatVerify(summary: Record<string, unknown> | null | undefined
   return bits.length > 0 ? bits.join(' · ') : null
 }
 
-type RunContext = { usage: UsageTally }
+type RunContext = {
+  usage: UsageTally
+  /** This run's own `cron_runs` id, so a handler can exclude itself when asking
+   *  whether another run of the same job is already in flight. Null if the row
+   *  could not be opened — bookkeeping never blocks the job. */
+  runId: string | null
+}
 
 /**
  * The longest any run can legitimately still be open.
@@ -253,7 +259,7 @@ export async function recordRun<T>(
   fn: (ctx: RunContext) => Promise<T>,
 ): Promise<T> {
   const db = runsDb()
-  const ctx: RunContext = { usage: new UsageTally() }
+  const ctx: RunContext = { usage: new UsageTally(), runId: null }
   let runId: string | null = null
 
   // Sweep before opening. Every job that runs closes somebody else's abandoned
@@ -263,6 +269,7 @@ export async function recordRun<T>(
   try {
     const { data } = await db.from('cron_runs').insert({ job }).select('id').single()
     runId = (data as { id?: string } | null)?.id ?? null
+    ctx.runId = runId
   } catch (e) {
     console.error(`[cron_runs] could not open run for ${job}:`, e)
   }
