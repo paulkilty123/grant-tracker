@@ -84,6 +84,41 @@ describe('formatVerify', () => {
     expect(formatVerify(undefined)).toBeNull()
   })
 
+  // Paul's condition on approving the backoff, 2026-08-16: "Shape C's count goes
+  // on the Pipeline line beside live_unbacked from day one, so a deferred gap
+  // never reads as a closed one."
+  describe('the standing gaps', () => {
+    const WITH_QUEUE = {
+      ...REAL,
+      queue: {
+        eligible: 963, neverChecked: 291, band0: 341, excluded: 918,
+        liveUnbacked: 341, liveUnbackedDue: 341,
+        timingUnknown: 378, timingUnknownLive: 318, flagged: 0,
+      },
+    }
+
+    it('puts the two standing counts on the line', () => {
+      expect(formatVerify(WITH_QUEUE)).toContain('queue: 341 claimed, 378 unknown')
+    })
+
+    it('shows a zero rather than dropping the segment', () => {
+      // A line that only appears while the news is bad teaches a reader to stop
+      // looking for it, and "unknown 0" is the thing we are working towards.
+      const clean = { ...WITH_QUEUE, queue: { ...WITH_QUEUE.queue, liveUnbacked: 0, timingUnknown: 0 } }
+      expect(formatVerify(clean)).toContain('queue: 0 claimed, 0 unknown')
+    })
+
+    it('leads with flagged rows when something says a page changed', () => {
+      const flagged = { ...WITH_QUEUE, queue: { ...WITH_QUEUE.queue, flagged: 3 } }
+      expect(formatVerify(flagged)).toContain('queue: 3 flagged, 341 claimed, 378 unknown')
+    })
+
+    it('renders nothing extra for a run predating the counts', () => {
+      // REAL is a real summary from before this shipped. It must still render.
+      expect(formatVerify(REAL)).not.toContain('queue:')
+    })
+  })
+
   it('reports a disarmed run as checking nothing rather than as no line at all', () => {
     // A disarmed run carries no `verify` block, so it falls to null and the row
     // keeps its single-line height. The armed-but-empty case still renders.

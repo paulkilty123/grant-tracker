@@ -124,6 +124,16 @@ type RunVerify = {
   failures?:     number
 }
 
+/** The queue counts the same run reports, from `verify_batch_counts()`. */
+type RunQueue = {
+  /** Live rows asserting timing with no quoted confirmation behind it. */
+  liveUnbacked?:      number
+  /** Rows read where the page still does not say when anyone can apply. */
+  timingUnknown?:     number
+  timingUnknownLive?: number
+  flagged?:           number
+}
+
 /**
  * One line of verification result for the Pipeline page, or null if this run did
  * not report any.
@@ -138,6 +148,26 @@ type RunVerify = {
  * gets, and it is the number that should fall when multi-page sourcing lands. A
  * run that checked 60 rows and learned nothing from any of them would otherwise
  * look identical to one that verified them all.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * THE TWO STANDING GAPS ARE ON THIS LINE AS A CONDITION
+ *
+ * Set by Paul, 2026-08-16, on approving the backoff:
+ *
+ *   "Shape C's count goes on the Pipeline line beside live_unbacked from day
+ *    one, so a deferred gap never reads as a closed one."
+ *
+ * The per-run tally answers "what did this run do". These two answer "what is
+ * still wrong", and they are the ones that will not move on their own:
+ *
+ *   claimed  341 live rows assert their timing with no quote behind it
+ *   unknown  378 rows have been read and the page still does not say
+ *
+ * A backoff makes the second cheaper to live with. It does not make it smaller,
+ * and a schedule that quietly stops asking is indistinguishable on a dashboard
+ * from a question that got answered. Both counts are the whole population, not
+ * the part currently due — a row resting inside its cadence is no better
+ * evidenced for resting.
  */
 export function formatVerify(summary: Record<string, unknown> | null | undefined): string | null {
   const v = summary?.verify as RunVerify | undefined
@@ -157,6 +187,19 @@ export function formatVerify(summary: Record<string, unknown> | null | undefined
   if (v.proposals)    bits.push(`${v.proposals} proposal${v.proposals === 1 ? '' : 's'}`)
   if (v.fixableLinks) bits.push(`${v.fixableLinks} link${v.fixableLinks === 1 ? '' : 's'} to fix`)
   if (v.failures)     bits.push(`${v.failures} failed`)
+
+  // The standing gaps, after the run's own numbers. Rendered whenever the run
+  // reported the queue at all, including when the counts are zero — "claimed 0"
+  // is worth seeing, and a line that only appears while the news is bad teaches
+  // a reader to stop looking for it.
+  const q = summary?.queue as RunQueue | undefined
+  if (q && typeof q === 'object') {
+    const gaps: string[] = []
+    if (typeof q.flagged === 'number' && q.flagged > 0) gaps.push(`${q.flagged} flagged`)
+    if (typeof q.liveUnbacked === 'number')  gaps.push(`${q.liveUnbacked} claimed`)
+    if (typeof q.timingUnknown === 'number') gaps.push(`${q.timingUnknown} unknown`)
+    if (gaps.length > 0) bits.push(`queue: ${gaps.join(', ')}`)
+  }
   // A run that ran out of clock says so on the line, not only in the JSON.
   if (summary?.stoppedEarly === true) {
     const left = typeof summary?.remaining === 'number' ? `, ${summary.remaining} left` : ''

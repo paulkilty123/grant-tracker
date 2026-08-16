@@ -62,6 +62,7 @@ import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
 import { recordRun } from '@/lib/admin/cron-runs'
 import { verifyRow, type VerifyRow, type VerifyResult } from '@/lib/verification/verify-row'
 import { buildEvidencePatch, recordFieldEvidence, PAGE_READ_KEY } from '@/lib/field-evidence'
+import { computeCadence, previousSilentStreak } from '@/lib/verification/verify-cadence'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
@@ -96,8 +97,26 @@ function adminClient(): SupabaseClient {
   )
 }
 
+// `next_open_date` and `field_evidence` are here for the cadence, not for the
+// extraction: the first supplies shape B's reopen checkpoints and the second
+// carries the previous `silent_streak`. A column missing from the SELECT that a
+// later filter reads has produced a false "match" in this codebase before, so
+// they are added to the list rather than fetched separately.
 const SELECT_COLS =
-  'id, title, funder, funding_type, apply_url, deadline, deadline_cycle, is_rolling, max_org_income, is_invite_only'
+  'id, title, funder, funding_type, apply_url, deadline, deadline_cycle, next_open_date, is_rolling, max_org_income, is_invite_only, field_evidence'
+
+/**
+ * What the row carries for scheduling, on top of what the extraction reads.
+ *
+ * Kept separate from `VerifyRow` deliberately: that type is the extraction's
+ * input contract — the facts a page is read against — and the cadence is a
+ * different question asked of the same row. Folding reopen dates and streak
+ * counters into it would make the contract mean two things.
+ */
+type CadenceCols = {
+  next_open_date: string | null
+  field_evidence: Record<string, unknown> | null
+}
 
 type QueueCounts = {
   eligible: number; neverChecked: number; band0: number; excluded: number
@@ -108,6 +127,13 @@ type QueueCounts = {
   liveUnbacked: number
   /** How many of those the next run may actually re-read. */
   liveUnbackedDue: number
+  /** Shape C: read, and the page still does not say when anyone can apply.
+   *  Reported beside `liveUnbacked` on the admin Pipeline line, as a condition
+   *  of shipping the backoff — a deferred gap must never read as a closed one. */
+  timingUnknown: number
+  timingUnknownLive: number
+  /** Rows an outside signal says have changed, waiting at the front. */
+  flagged: number
 }
 
 async function queueCounts(db: SupabaseClient): Promise<QueueCounts | null> {
@@ -121,6 +147,9 @@ async function queueCounts(db: SupabaseClient): Promise<QueueCounts | null> {
     excluded:     Number(r.excluded),
     liveUnbacked:    Number(r.live_unbacked),
     liveUnbackedDue: Number(r.live_unbacked_due),
+    timingUnknown:     Number(r.timing_unknown),
+    timingUnknownLive: Number(r.timing_unknown_live),
+    flagged:           Number(r.flagged),
   }
 }
 
@@ -237,11 +266,15 @@ export async function GET(req: NextRequest) {
     const { data: rowData, error: rowErr } = await db
       .from('scraped_grants').select(SELECT_COLS).in('id', targets)
     if (rowErr) throw new Error(`fetch rows: ${rowErr.message}`)
-    const rows = (rowData ?? []) as VerifyRow[]
+    const rows = (rowData ?? []) as (VerifyRow & CadenceCols)[]
 
     const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
 
     const outcomes:   Record<string, number> = {}
+    /** How many rows each cadence shape claimed this run. Reported so the shape
+     *  mix can be watched without querying: if `silent` swallows the catalogue,
+     *  the extraction is the problem, not the schedule. */
+    const shapes:     Record<string, number> = {}
     const tally = { confirmed: 0, contradicted: 0, silent: 0, unquoted: 0 }
     const proposals: unknown[]    = []
     const fixable:   unknown[]    = []
@@ -271,15 +304,37 @@ export async function GET(req: NextRequest) {
       // the attempt is also the only honest answer to "when did we last look at
       // this row".
       const gate = result.gate as { failure?: string; detail?: string }
-      const { patch, unquoted } = buildEvidencePatch([
+      const checkedAt = new Date()
+
+      // The cadence is decided by what the page JUST said, so it is computed
+      // against this run's stamps rather than the row's stored evidence. Build
+      // the field patch first, then hand that patch to the cadence: passing the
+      // pre-run evidence would key the schedule off the previous read, which is
+      // the mistake the whole change exists to remove.
+      const { patch: fieldPatch, unquoted } = buildEvidencePatch(result.evidence, { by: VERIFIER })
+      const cadence = computeCadence({
+        deadline:       typeof row.deadline === 'string' ? row.deadline : null,
+        next_open_date: typeof row.next_open_date === 'string' ? row.next_open_date : null,
+        deadline_cycle: Array.isArray(row.deadline_cycle)
+          ? (row.deadline_cycle as { day: number; month: number; label?: string }[])
+          : null,
+        evidence: fieldPatch,
+      }, {
+        checkedAt,
+        previousStreak: previousSilentStreak(row.field_evidence),
+      })
+
+      const { patch } = buildEvidencePatch([
         ...result.evidence,
         {
           field: PAGE_READ_KEY, agrees: null, quote: null,
           source_url: result.followedUrl ?? row.apply_url,
           note: result.gate.pass ? result.outcome : `${result.outcome}: ${gate.failure ?? 'gate failed'}`,
+          silent_streak: cadence.silentStreak,
         },
-      ], { by: VERIFIER })
+      ], { by: VERIFIER, checkedAt })
       tally.unquoted += unquoted.length
+      shapes[cadence.shape] = (shapes[cadence.shape] ?? 0) + 1
       for (const [field, stamp] of Object.entries(patch)) {
         if (field === PAGE_READ_KEY)     continue
         if (stamp.agrees === true)       tally.confirmed++
@@ -293,6 +348,22 @@ export async function GET(req: NextRequest) {
         // A write that did not land is a failure of the run, not a footnote.
         failures.push({ id: row.id, title: row.title, error: e instanceof Error ? e.message : String(e) })
         return
+      }
+
+      // Evidence first, schedule second, deliberately in that order. If the
+      // second write is lost the row keeps a null due date, which means due now:
+      // it gets re-read sooner than it needed to be. The reverse order would
+      // lose the evidence and keep the nap, which is a row resting on a read
+      // that never happened. Both are failures; only one of them is quiet.
+      //
+      // `verify_flag` is cleared in the same statement. Whatever made this row
+      // jump the queue has now been answered by an actual read, and a flag left
+      // set would pin it to band 0 for ever.
+      const { error: dueErr } = await db.from('scraped_grants')
+        .update({ verify_due_at: cadence.dueAt.toISOString(), verify_flag: null })
+        .eq('id', row.id)
+      if (dueErr) {
+        failures.push({ id: row.id, title: row.title, error: `verify_due_at: ${dueErr.message}` })
       }
 
       for (const p of result.proposals) {
@@ -323,6 +394,7 @@ export async function GET(req: NextRequest) {
       queue,
       verify: {
         outcomes,
+        cadence: shapes,
         evidence: tally,
         proposals: proposalTotal,
         fixableLinks: fixableTotal,
