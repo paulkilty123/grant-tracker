@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import type { EvidenceInput } from '../field-evidence'
 import { isOpeningEntry, type CycleEntry } from '../deadline-cycle'
+import { asStructures, asExclusions, compareStructures, newExclusions, namesJurisdiction, quoteNamesAForm } from './eligibility'
 
 /**
  * One visit per row: fetch the funder's page, decide whether it is usable, and
@@ -70,7 +71,15 @@ export type VerifyRow = {
   deadline_cycle:  unknown
   is_rolling:      boolean | null
   max_org_income:  number | null
+  min_org_income?: number | null
   is_invite_only:  boolean | null
+  /** The matcher's hard gate. See eligibility.ts for why this is read here. */
+  eligible_structures?: string[] | null
+  /** Read-only context for the comparison: geography for the charity-form
+   *  derivation, and the brief's own eligibility prose so an exclusion the page
+   *  states is not reported as new when we already carry it. */
+  location_tag?:   string | null
+  funder_brief?:   Record<string, unknown> | null
 }
 
 export type GateFailure =
@@ -90,9 +99,16 @@ export type Extraction = {
   deadline_cycle: Fact<CycleEntry[]>
   is_rolling:     Fact<boolean>
   max_org_income: Fact<number>
+  min_org_income: Fact<number>
   is_invite_only: Fact<boolean>
   still_listed:   Fact<boolean>
   is_grant:       Fact<boolean>
+  /** Legal forms the page says MAY apply. */
+  eligible_structures: Fact<string[]>
+  /** Legal forms the page says may NOT. The only route to a removal. */
+  excluded_structures: Fact<string[]>
+  /** Who or what the page says it will not fund, in the funder's own words. */
+  exclusions:     Fact<string[]>
 }
 
 export type Proposal = {
@@ -595,6 +611,40 @@ quote of the sentence it came from. If the page does not state it, use
                      Absence of a deadline is NOT evidence of rolling — use null.
   "max_org_income" : maximum applicant organisation annual income/turnover as a
                      plain number of pounds (e.g. 500000), or null.
+  "min_org_income" : MINIMUM applicant organisation annual income/turnover, as a
+                     plain number of pounds, or null. A band like "£250,000 to
+                     £5 million" has a minimum of 250000 and a maximum of
+                     5000000. Only when the page states a floor — most funds have
+                     none, and inventing one hides the fund from every small
+                     organisation that could win it.
+  "eligible_structures" : the legal forms the page says MAY apply, as a list
+                     drawn ONLY from this vocabulary:
+                       registered_charity, cio, scio,
+                       cic_guarantee, cic_shares, cic (if not specified),
+                       ltd_guarantee, ltd_shares, llp,
+                       cooperative, unincorporated, sole_trader,
+                       not_registered, individual
+                     "unincorporated" covers constituted community groups with no
+                     legal registration. "individual" means a private person
+                     applying in their own name. Null if the page does not say.
+                     Do NOT list a form merely because the page fails to exclude
+                     it: only forms the page positively names.
+  "excluded_structures" : legal forms the page positively RULES OUT, same
+                     vocabulary, or null. This is different from a form simply
+                     not being mentioned — use it only for an explicit "we do not
+                     fund X" / "X are not eligible".
+  "structures_are_exhaustive" : true ONLY if the page presents its list as the
+                     COMPLETE set of who may apply — "we can only consider
+                     applications from...", "applicants must be...", "eligible
+                     organisations are:" followed by a closed list. False or null
+                     when the page merely gives examples, says "such as", or
+                     describes some applicants without ruling others out. If you
+                     are unsure, answer false: treating a partial list as complete
+                     removes organisations that can genuinely apply.
+  "exclusions"     : what the funder says it will NOT fund, as a list of short
+                     phrases in the funder's own words — activities, costs,
+                     purposes or applicant types. Null if the page states none.
+                     Do not invent standard ones; only what this page says.
   "is_invite_only" : true if the page says applications are by invitation, or
                      that unsolicited applications are not accepted.
   "still_listed"   : false if the page indicates this fund has closed permanently,
@@ -617,7 +667,10 @@ Shape:
 {"gate":{"funds_on_page":string[],"our_fund_is_one_of_them":bool,"fund_on_page":string|null,"describes_our_fund":bool,"has_funding_detail":bool},
  "facts":{"deadline":{"value":null,"quote":null},"deadline_cycle":{"value":null,"quote":null},
  "is_rolling":{"value":null,"quote":null},
- "max_org_income":{"value":null,"quote":null},"is_invite_only":{"value":null,"quote":null},
+ "max_org_income":{"value":null,"quote":null},"min_org_income":{"value":null,"quote":null},
+ "eligible_structures":{"value":null,"quote":null},"excluded_structures":{"value":null,"quote":null},
+ "structures_are_exhaustive":{"value":null,"quote":null},
+ "exclusions":{"value":null,"quote":null},"is_invite_only":{"value":null,"quote":null},
  "still_listed":{"value":true,"quote":null},"is_grant":{"value":true,"quote":null}}}`
 }
 
@@ -1202,6 +1255,125 @@ async function runModel(
     notes.push(`is_invite_only withheld: the quote describes a staged or selective process, not an invitation-only fund — "${inviteFact.quote.slice(0, 120)}"`)
   } else {
     consider('is_invite_only', inviteFact, row.is_invite_only, asBool)
+  }
+
+  // A FLOOR HIDES A FUND FROM EVERYONE BELOW IT, so the bar is the same as the
+  // ceiling's: the sentence must be about organisational income, not cash at
+  // bank. Only 16 live rows carry a floor today, and most funds genuinely have
+  // none — inventing one would make a fund invisible to exactly the small
+  // organisations the catalogue exists for.
+  const minIncomeFact = fact('min_org_income')
+  if (minIncomeFact.quote && (!INCOME_CONCEPT.test(minIncomeFact.quote) || CASH_CONCEPT.test(minIncomeFact.quote))) {
+    notFound.push('min_org_income')
+    stamp('min_org_income', null, null)
+    notes.push(`min_org_income withheld: the quote is not about organisational income — "${minIncomeFact.quote.slice(0, 120)}"`)
+  } else {
+    consider('min_org_income', minIncomeFact, row.min_org_income ?? null, asMoney)
+  }
+
+  // ── Who can apply ──────────────────────────────────────────────────────────
+  //
+  // `eligible_structures` is the matcher's HARD GATE — a structure mismatch caps
+  // the score at 44 — and on 370 live rows it was set by `ai_classifier`, which
+  // reads our own stored description rather than the funder's page. So the
+  // filter deciding whether a fund is ever shown to a CIC is, for most of the
+  // catalogue, a model's reading of a model's summary. This is the first time
+  // any of it gets checked against the funder.
+  //
+  // The comparison rules, and why, are in eligibility.ts. The one that matters:
+  // a form the page did not mention is SILENCE, never exclusion. Wee Grants lost
+  // its `scio` tag to the opposite assumption and vanished from its own audience.
+  const structFact  = fact('eligible_structures')
+  const excludeFact = fact('excluded_structures')
+  const pageStructures = asStructures(structFact.value)
+  const excludedForms  = asStructures(excludeFact.value) ?? []
+
+  // UNDEFINED IS NOT EMPTY. `null` and `[]` mean the row genuinely holds no
+  // structures; `undefined` means the caller did not SELECT the column. Reading
+  // the second as the first would make every form the page names look like a
+  // widening, on every row, with the caller none the wiser — the same shape as
+  // the filter-on-an-unselected-column bug this codebase has paid for twice.
+  const structuresFetched = row.eligible_structures !== undefined
+
+  if (pageStructures && structFact.quote && !structuresFetched) {
+    notFound.push('eligible_structures')
+    stamp('eligible_structures', null, null, undefined, 'row fetched without eligible_structures')
+    notes.push('eligible_structures not compared: the caller did not select the column')
+  // The quote must be about organisational form, the same bar `max_org_income`
+  // applies to its own. See `quoteNamesAForm` for the live row that made it
+  // necessary.
+  } else if (pageStructures && structFact.quote && !quoteNamesAForm(structFact.quote)) {
+    notFound.push('eligible_structures')
+    stamp('eligible_structures', null, null)
+    notes.push(`eligible_structures withheld: the quote names no organisational form — "${structFact.quote.slice(0, 120)}"`)
+  } else if (pageStructures && structFact.quote) {
+    const brief    = row.funder_brief ?? null
+    const eligText = [brief?.who_can_apply, brief?.exclusions].filter(v => typeof v === 'string').join(' ') || null
+    // THE PAGE'S GEOGRAPHY BEATS OURS, when the page states one. The charity-form
+    // derivation decides whether "registered charities" also covers CIOs and
+    // SCIOs by reading a geography string, and the only one it had was our own
+    // `location_tag`. That is how a page naming the Charity Commission of England
+    // and Wales came to CONFIRM a row tagged `scio`. Where the page says nothing
+    // about jurisdiction our tag is the only signal there is, and the fallback
+    // is right: reading a silent quote as "not Scotland" would strip `scio` off
+    // every UK-wide fund in the catalogue.
+    const geoText = namesJurisdiction(structFact.quote) ? structFact.quote : (row.location_tag ?? null)
+    const exhaustive = fact('structures_are_exhaustive').value === true
+    const verdict  = compareStructures({
+      pageStructures,
+      rowStructures: row.eligible_structures,
+      excludedForms,
+      geoText,
+      eligText,
+      exhaustive,
+    })
+
+    if (verdict.kind === 'confirmed') {
+      confirmed.push('eligible_structures')
+      stamp('eligible_structures', true, structFact.quote)
+    } else {
+      // WIDENING AND NARROWING ARE BOTH PROPOSALS AND NEITHER IS WRITTEN. A
+      // narrowing is a takedown and would be allowed under the asymmetry; a
+      // widening puts a fund in front of more organisations and is Paul's to
+      // approve. Naming which it is on the proposal is what makes that decision
+      // possible later without re-deriving it.
+      const direction = verdict.kind === 'widens' ? 'widens' : verdict.kind === 'narrows' ? 'narrows' : 'widens and narrows'
+      proposals.push({
+        field: 'eligible_structures', from: row.eligible_structures ?? null,
+        to: verdict.proposed, quote: structFact.quote, verdict: 'confirmed',
+      })
+      stamp('eligible_structures', false, structFact.quote, verdict.proposed,
+        `the page ${direction} what we hold`)
+    }
+  } else if (structFact.value) {
+    // Offered, but nothing in our vocabulary survived, or no quote.
+    notFound.push('eligible_structures')
+    stamp('eligible_structures', null, null)
+  } else {
+    notFound.push('eligible_structures')
+    stamp('eligible_structures', null, null)
+  }
+
+  // Exclusions are recorded, never proposed away. Rule 6: they stay complete on
+  // every tier and every surface, because sending somebody to apply where they
+  // are explicitly barred is a worse outcome than anything else this system can
+  // get wrong. So a page that is SILENT on exclusions never removes one we hold.
+  const exclFact  = fact('exclusions')
+  const pageExcl  = asExclusions(exclFact.value)
+  if (pageExcl && exclFact.quote) {
+    const knownText = typeof row.funder_brief?.exclusions === 'string' ? row.funder_brief.exclusions : null
+    const fresh = newExclusions(pageExcl, knownText)
+    if (fresh.length === 0) {
+      confirmed.push('exclusions')
+      stamp('exclusions', true, exclFact.quote)
+    } else {
+      stamp('exclusions', false, exclFact.quote, fresh,
+        `${fresh.length} exclusion${fresh.length === 1 ? '' : 's'} on the page we do not carry`)
+      notes.push(`exclusions the page states and we do not hold: ${fresh.map(e => `"${e}"`).join('; ')}`)
+    }
+  } else {
+    notFound.push('exclusions')
+    stamp('exclusions', null, null)
   }
 
   return {

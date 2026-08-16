@@ -67,8 +67,17 @@ import { computeCadence, previousSilentStreak } from '@/lib/verification/verify-
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
 
-/** Bump when the extraction changes in a way that should invalidate old stamps. */
-const VERIFIER = 'verify:v1'
+/**
+ * Bump when the extraction changes in a way that should invalidate old stamps.
+ *
+ * v2, 2026-08-16: gained eligibility — `eligible_structures`, `exclusions` and
+ * `min_org_income`. A v1 stamp on a row is not wrong, it is INCOMPLETE, which is
+ * a different thing and the reason nothing here invalidates automatically: a
+ * `deadline` confirmed under v1 is just as confirmed today. Re-reading for the
+ * new fields is a deliberate one-off, priced and run by hand — see
+ * scripts/requeue-for-eligibility.ts.
+ */
+const VERIFIER = 'verify:v2'
 const MODEL    = 'claude-haiku-4-5-20251001'
 
 /** Measured shape: a page fetch is up to 12s and a model call ~4s, so a row is
@@ -102,8 +111,17 @@ function adminClient(): SupabaseClient {
 // carries the previous `silent_streak`. A column missing from the SELECT that a
 // later filter reads has produced a false "match" in this codebase before, so
 // they are added to the list rather than fetched separately.
-const SELECT_COLS =
-  'id, title, funder, funding_type, apply_url, deadline, deadline_cycle, next_open_date, is_rolling, max_org_income, is_invite_only, field_evidence'
+//
+// `eligible_structures`, `location_tag` and `funder_brief` are the eligibility
+// comparison's inputs: the row's own tags, the geography the charity-form
+// derivation needs, and the brief prose that says whether an exclusion the page
+// states is one we already carry. A column missing from the SELECT that a later
+// filter reads has produced a false "match" in this codebase before, so they go
+// in the list rather than being fetched separately.
+// One line, not a concatenation: supabase-js parses this string at TYPE level to
+// infer the row shape, and a `+` defeats that parser — it falls back to
+// GenericStringError and every downstream cast becomes a lie.
+const SELECT_COLS = 'id, title, funder, funding_type, apply_url, deadline, deadline_cycle, next_open_date, is_rolling, max_org_income, min_org_income, is_invite_only, eligible_structures, location_tag, funder_brief, field_evidence'
 
 /**
  * What the row carries for scheduling, on top of what the extraction reads.
