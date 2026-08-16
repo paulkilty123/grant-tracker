@@ -35,7 +35,161 @@ the new version.
 
 # Waiting
 
-## `feat/field-evidence`
+## `feat/verify-cadence`
+
+**What it does:** stops re-reading funder pages on a timer and starts re-reading
+them when the page itself says it is worth it. Joins the funder watchlist to the
+catalogue for the first time, so a page that actually changed can push the rows
+we hold on it to the front of the queue. And labels the 387 unread watchlist
+alerts so the feed can be triaged instead of ignored.
+
+Approved by you, 16 August, in the recommended order. Nothing here is on `main`.
+
+**Commits:** `7455e8d` (the cadence), `0a0ef40` (the between-rounds join and the
+emptied-listing signal), `96243b4` (the diff classifier)
+
+### The cadence: three shapes, no clock
+
+Migration 055 shipped a flat 14 days. It is right for a row we cannot resolve and
+wrong for nearly everything else, which is the correction you made.
+
+| Shape | Rule | Cadence |
+|---|---|---|
+| **dated** | the row holds a real date | ten days before an opening, the day after it opens, the day after a closing |
+| **always open** | the page states year-round **and** we hold the quote | 180 days |
+| **silent** | read, and the page still does not say | 14 → 28 → 56 → 112 → 180, doubling on each consecutive silence, reset by any answer |
+
+Precedence is dated, then always open, then silent. The cycle maths is reused
+from `deadline-cycle.ts` rather than restated in SQL: that file exists because
+two copies of it drifted into the same live bug, and a third copy in another
+language is the one thing this could not afford.
+
+**Effect on the live queue, measured after the backfill:**
+
+| | Before | After |
+|---|---:|---:|
+| Live rows asserting timing with nothing behind them | 341 | **341** |
+| ...of those, due for a re-read | 341 | **1** |
+
+That is the whole point in two rows. The churn went and the gap did not.
+
+### Shape A's escape hatch, which you asked to be a test
+
+Both halves are proved.
+
+**In process:** a date outranks a confirmed rolling flag at the moment of the
+read, so a row holding any live date never reaches shape A at all. Three tests,
+one each for a deadline, a reopen date and a round schedule arriving.
+
+**In the database:** a trigger clears `verify_due_at` whenever `deadline`,
+`next_open_date`, `deadline_cycle` or `is_rolling` changes, so a date arriving
+between reads makes the row due at once rather than at its next scheduled one. A
+trigger rather than a line in `mergeGrantUpdate` because the crawlers, the admin
+UI and hand-run SQL all reach this table directly.
+
+The migration proves it with a `DO` block, and **the same assertion was run again
+with the trigger disabled and failed**, which is the half that gives the passing
+run its weight.
+
+**It already applies to 114 of the 198 confirmed-rolling rows.** They hold a date
+as well, so they are governed by it, and 113 of them are now due sooner than a
+180-day nap would have allowed.
+
+### Your other condition: the deferred gap stays visible
+
+`live_unbacked` and the shape C count are both on the admin Pipeline line from
+the first run: `queue: 341 claimed, 378 unknown`. Rendered even at zero, because
+a line that only appears while the news is bad teaches a reader to stop looking
+for it. Both are the whole population rather than the part currently due — a row
+resting inside its cadence is no better evidenced for resting.
+
+### The watchlist, in three targeted pieces rather than as the general trigger
+
+**The join that never existed.** 50 rows sat in `between_rounds_scheduled` and
+exactly one was watched. Enrolment lived in the admin UI — marking a row by hand
+made two calls, one to update the grant and one to the watchlist — while the
+automatic transition promoted any row carrying a `next_open_date` and never
+touched the watchlist. So we had a state meaning "this fund will come back and we
+do not know when", and nothing watching for it coming back. Now a trigger on the
+state itself, all 50 backfilled, and the assertion proving it was false before
+the backfill ran. The watchlist insert is wrapped so it can never roll back a
+pipeline transition: a missing convenience must not become a row left published
+after its round closed.
+
+**A changed page jumps the queue.** Exact-URL match only, deliberately. 261 rows
+share a host with a watchlist entry against 54 that match exactly, and the shared
+hosts are the noisiest sites we watch, so host matching would turn one cosmetic
+edit to a CF homepage into dozens of unrelated rows at the front of the queue.
+
+**An emptied listing is its own event.** Of 17 changes on 16 August, one was
+mechanically separable without a model: Five Lamps went from 11 heading items to
+0. A page that stops rendering its own headings has been taken down, walled or
+redesigned, and it was being filed under the same label as a reordered news
+carousel. Now `listing_collapsed`, and the admin screen calls it "Listing
+emptied".
+
+`BATCH_LIMIT` 120 → 150. Two runs a week covered 239 entries in exactly 7 days
+with no headroom; the 50 new ones take the list to 288. The last two runs
+finished in 126s and 146s against a 240s budget, so the wall clock has the room.
+
+### The classifier, and why nothing reads it yet
+
+387 unresolved alerts, none ever resolved, growing ~54 a week. The set difference
+between the two stored snapshots has been computable since the watchlist was
+built and nothing computed it. The model now sees only the difference, never the
+two pages, and returns one label and the line it turns on.
+
+Probed on four real alerts before shipping: ~430 input and ~60 output tokens
+each, so the backlog costs about **30p** and the ongoing feed about **4p a week**.
+Three read cosmetic (job listings, blog rotation, a news item); the fourth was
+Triangle Trust, where a line describing funding for girls aged 11 to 18 had
+disappeared, read `funding_change` with that line quoted.
+
+**It gates nothing.** It does not resolve an alert, set `verify_flag` or move a
+row, per your condition. The 14-of-17 estimate the idea rests on is a hand
+reading of one run, n=17, and a classifier trusted to auto-resolve on that basis
+would be discarding funding changes via a feed nobody reads.
+`scripts/sample-alert-classifications.ts` draws the sample — stratified, not
+random, because the expensive mistake is a funding change filed as cosmetic and a
+uniform sample of an 80%-cosmetic feed spends 80% of the reading on the easy
+class.
+
+### Deploy gate
+
+```
+Regression: tsc clean. 275 tests pass (20 files), 41 of them new.
+            eslint clean on every changed file.
+            Three migrations applied to prod and then PROVEN, not assumed:
+              056 — the escape-hatch DO block passed, then the SAME assertion was
+                    re-run with the trigger disabled and FAILED, so the proof is
+                    not a tautology. Trigger confirmed re-enabled afterwards.
+              057 — asserted every between-rounds row with a URL is watched. That
+                    was false before the backfill in the same migration (1 of 50).
+              058 — columns only, report-only by design.
+            The PostgREST `or` predicate in flagRowsForUrl was run against the
+            live API and matched the expected row; a deliberately malformed
+            predicate errored, so the probe can fail.
+            Backfill dry-run read before it wrote, then wrote 668 of 668.
+Free-surface fingerprint: NOT APPLICABLE. No MCP route, tool, schema or response
+            shape is touched — 0 MCP files in the diff. No user-facing page is
+            touched: the only screens changed are admin.
+Accent check: PASSED. Zero accent lines, counted on the diff. No rendered string
+            gains a dash.
+Named rollback: f9c830a
+```
+
+**Not verified as scheduled runs.** `classify-alerts` has never run as a cron —
+its first live proof is whatever the first scheduled run reports, and its lib is
+tested and was probed by hand against production alerts. The between-rounds
+trigger has not yet fired on a live transition; the backfill it shipped with is
+the proof that the state is now covered.
+
+---
+
+## `feat/field-evidence` — MERGED 16 August, kept for the reasoning
+
+All four commits are on `main`. Left here rather than archived because the
+reasoning in it is what the cadence above is built on top of.
 
 **What it does:** starts checking the catalogue against the funders' own pages on
 a schedule, and gives a row somewhere to record what the page said. Until now a
@@ -482,34 +636,30 @@ is the canary, and it is deliberately dull.
 
 ---
 
-# Waiting on you: the cadence design
+# The cadence design — approved 16 August, all of it built
 
-`docs/verify-cadence-design.md`, proposal only, nothing built. Two corrections
-to the brief are in it and both change what is worth building:
+`docs/verify-cadence-design.md` is the proposal; `feat/verify-cadence` above is
+the build. The two corrections to the brief that shaped it, kept because they are
+the reason the watchlist got a targeted role rather than the general one:
 
 - **`check-watchlist` is not daily.** Sundays and Wednesdays, 120 entries a run,
-  239 active, so a **7-day full cycle with zero headroom**.
+  239 active, so a **7-day full cycle with zero headroom**. Now 150 a run against
+  288 entries, which holds the cycle at 7 days.
 - **It does not cover the catalogue.** 54 of 963 eligible rows (5.6%) have an
   exact-URL watchlist entry, 261 (27%) share a host, and **134 of 239 watchlist
-  entries map to no eligible row at all**. There is no foreign key and no code
-  joins them. It is a discovery instrument, not a mirror of the catalogue.
+  entries map to no eligible row at all**. There was no foreign key and no code
+  joined them. It is a discovery instrument, not a mirror of the catalogue.
 - **The change signal is mostly cosmetic.** ~14 of 17 changes on 16 August were
   news carousels, jobs boards, blog lists, a maintenance banner and a typo fix.
-  Essex Community Foundation has fired 14 times in 24 cycles.
+  Essex Community Foundation has fired 14 times in 24 cycles. That estimate is
+  n=17 and the classifier is report-only until it is measured properly.
 - **387 alerts, none ever resolved**, growing ~54 a week.
 
-So the watchlist earns a targeted role rather than the general one, and the
-single most valuable item in the design is a join that was never built: **44 rows
-sit in `between_rounds_scheduled` and exactly one is watched**, because the
-manual admin button enrols them and the automatic transition in `grant-merge.ts`
-does not.
-
-The three shapes, sized: **198** evidenced always-open (180 days), **474** dated
-(windows around the dates, no clock), **402** read but silent on timing
-(14 → 28 → 56 → 112 → 180, reset on any answer).
-
-Recommended order is in §6 and is deliberately not the order of interest: the
-silent backoff first, because it is the smallest change and saves the most reads.
+**Still owed to you:** the silent/confirmed/contradicted split by field and by
+live vs not-live, once the first pass finishes. 291 rows remain unread, so it is
+a day or so away at four runs a day. That report is what says what the product
+can honestly claim, and it is the last thing outstanding from 16 August before
+eligibility extraction starts.
 
 ---
 
@@ -522,3 +672,6 @@ silent backoff first, because it is the smallest change and saves the most reads
 | `PROCESS_DISCOVERY_ENABLED=true` in Vercel | Running daily, 10 processed per run. |
 | `ADMIN_SECRET` rotated | Verified consistent. |
 | Migration `053_field_evidence` | Applied to prod 2026-08-15, before the file was committed, per the house convention. |
+| Migrations `056`–`058` | Applied to prod 2026-08-16, before the files were committed. Each carries its own proof; `056`'s was re-run with its trigger off and failed, as it must. |
+| Backfill `verify_due_at` | 668 of 668 already-read rows, anchored to each row's own last read rather than to the clock, so a week of engine work is not erased by a fresh cooldown. |
+| Between-rounds watchlist backfill | 50 of 50. Was 1 of 50. |
