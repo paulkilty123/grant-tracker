@@ -162,6 +162,9 @@ export type ReviewRow = {
   raw_data?:                 unknown
   needs_intervention_reason?: string | null
   location_tag?: string | null
+  /** Which Find Funding tab the row lands in. Not used to derive a reason; the
+   *  review queue reads it so a reviewer can correct a misclassification. */
+  funding_type?: string | null
 }
 
 const SEVERITY_ORDER: Record<ReviewSeverity, number> = { critical: 0, check: 1, changed: 2 }

@@ -39,7 +39,7 @@ const COLS = [
   'id', 'external_id', 'title', 'funder', 'apply_url', 'is_active', 'pipeline_state',
   'url_status', 'url_quality_score',
   'amount_min', 'amount_max', 'deadline', 'is_rolling', 'next_open_date', 'deadline_cycle',
-  'eligible_structures', 'impact_sectors', 'target_beneficiaries',
+  'eligible_structures', 'impact_sectors', 'target_beneficiaries', 'funding_type',
   'funder_brief', 'field_provenance', 'raw_data', 'needs_intervention_reason',
   // What the funder's own page said, when the engine last read it. Every other
   // column here is our bookkeeping; this is the only one from outside.
@@ -228,6 +228,7 @@ export default async function ReviewPage() {
         isRolling:  r.is_rolling === true,
         structures: r.eligible_structures ?? [],
         sectors:    r.impact_sectors ?? [],
+        fundingType: (r.funding_type as string | null) ?? null,
       },
       }
     })
