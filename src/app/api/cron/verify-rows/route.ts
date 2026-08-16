@@ -83,7 +83,7 @@ function adminClient(): SupabaseClient {
 }
 
 const SELECT_COLS =
-  'id, title, funder, funding_type, apply_url, deadline, is_rolling, max_org_income, is_invite_only'
+  'id, title, funder, funding_type, apply_url, deadline, deadline_cycle, is_rolling, max_org_income, is_invite_only'
 
 type QueueCounts = { eligible: number; neverChecked: number; band0: number; excluded: number }
 

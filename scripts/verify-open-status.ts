@@ -47,7 +47,7 @@ async function main() {
 
   const { data, error } = await db
     .from('scraped_grants')
-    .select('id, title, funder, funding_type, apply_url, deadline, is_rolling, max_org_income, is_invite_only')
+    .select('id, title, funder, funding_type, apply_url, deadline, deadline_cycle, is_rolling, max_org_income, is_invite_only')
     .in('id', ids)
   if (error) throw new Error(`fetch rows: ${error.message}`)
   if (!data?.length) throw new Error('no rows returned for those ids')

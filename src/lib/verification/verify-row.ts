@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
 import type { EvidenceInput } from '../field-evidence'
+import { isOpeningEntry, type CycleEntry } from '../deadline-cycle'
 
 /**
  * One visit per row: fetch the funder's page, decide whether it is usable, and
@@ -66,6 +67,7 @@ export type VerifyRow = {
   funding_type?:   string | null
   apply_url:       string | null
   deadline:        string | null
+  deadline_cycle:  unknown
   is_rolling:      boolean | null
   max_org_income:  number | null
   is_invite_only:  boolean | null
@@ -85,6 +87,7 @@ export type Fact<T> = { value: T | null; quote: string | null }
 
 export type Extraction = {
   deadline:       Fact<string>   // ISO yyyy-mm-dd
+  deadline_cycle: Fact<CycleEntry[]>
   is_rolling:     Fact<boolean>
   max_org_income: Fact<number>
   is_invite_only: Fact<boolean>
@@ -571,11 +574,25 @@ STEP 2 — FACTS. Only if the gate passed. For each, give the value AND a verbat
 quote of the sentence it came from. If the page does not state it, use
 {"value": null, "quote": null}. NEVER infer, never use outside knowledge.
 
-  "deadline"       : closing date as yyyy-mm-dd, or null. Do NOT judge whether it
-                     has passed; just report the date the page states.
+  "deadline"       : the closing date FOR THIS FUND as yyyy-mm-dd, or null. Do NOT
+                     judge whether it has passed; just report the date the page
+                     states. If the page lists several rounds or several
+                     different funds, do NOT pick one of their dates for this
+                     field — put the rounds in deadline_cycle and leave this
+                     null.
+  "deadline_cycle" : the page's whole schedule, when it names more than one round
+                     or draw, as a list. Otherwise null. Each entry:
+                       {"day":7,"month":9,"label":"Draw 2 closes"}
+                     Use the day and month only, never the year: this describes a
+                     repeating cycle. Label each entry with the page's own words,
+                     and say whether it opens or closes, because an opening date
+                     is not a deadline. A range like "7-11 September" closes on
+                     the LAST day, so day 11.
   "is_rolling"     : true ONLY if the page explicitly says applications are
-                     accepted year round / on a rolling basis. Absence of a
-                     deadline is NOT evidence of rolling — use null.
+                     accepted year round / on a rolling basis, AND names no dated
+                     rounds. A page that says nominations run all year and then
+                     lists dated draws is NOT rolling: the draws are the rounds.
+                     Absence of a deadline is NOT evidence of rolling — use null.
   "max_org_income" : maximum applicant organisation annual income/turnover as a
                      plain number of pounds (e.g. 500000), or null.
   "is_invite_only" : true if the page says applications are by invitation, or
@@ -598,7 +615,8 @@ quote of the sentence it came from. If the page does not state it, use
 
 Shape:
 {"gate":{"funds_on_page":string[],"our_fund_is_one_of_them":bool,"fund_on_page":string|null,"describes_our_fund":bool,"has_funding_detail":bool},
- "facts":{"deadline":{"value":null,"quote":null},"is_rolling":{"value":null,"quote":null},
+ "facts":{"deadline":{"value":null,"quote":null},"deadline_cycle":{"value":null,"quote":null},
+ "is_rolling":{"value":null,"quote":null},
  "max_org_income":{"value":null,"quote":null},"is_invite_only":{"value":null,"quote":null},
  "still_listed":{"value":true,"quote":null},"is_grant":{"value":true,"quote":null}}}`
 }
@@ -956,6 +974,33 @@ async function runModel(
 
   const asDate = (v: unknown) => (typeof v === 'string' && ISO_DATE.test(v) ? v : null)
   const asBool = (v: unknown) => (typeof v === 'boolean' ? v : null)
+  /**
+   * Coerce the page's schedule into `deadline_cycle`'s shape.
+   *
+   * Day and month only, never a year: the column describes a repeating cycle,
+   * and `nextCycleDeadline` supplies the year by rolling forward. An entry with
+   * an out-of-range day or month is dropped rather than clamped — 31 February is
+   * how a plausible-looking wrong date gets written onto a live row, and the
+   * roll-forward maths already carries a guard against exactly that.
+   */
+  const asCycle = (v: unknown): CycleEntry[] | null => {
+    if (!Array.isArray(v) || v.length === 0) return null
+    const out: CycleEntry[] = []
+    for (const raw of v) {
+      if (!raw || typeof raw !== 'object') continue
+      const e = raw as { day?: unknown; month?: unknown; label?: unknown }
+      const day   = Number(e.day)
+      const month = Number(e.month)
+      if (!Number.isInteger(day) || !Number.isInteger(month)) continue
+      if (day < 1 || day > 31 || month < 1 || month > 12) continue
+      out.push({ day, month, ...(typeof e.label === 'string' && e.label.trim() ? { label: e.label.trim() } : {}) })
+    }
+    // One entry is not a cycle. A single date belongs in `deadline`, and
+    // promoting it here would turn a one-off round into a claim that the fund
+    // repeats every year, which is a claim the page did not make.
+    return out.length >= 2 ? out : null
+  }
+
   const asMoney = (v: unknown) => {
     const n = typeof v === 'number' ? v : Number(String(v).replace(/[£,\s]/g, ''))
     return Number.isFinite(n) && n > 0 ? Math.round(n) : null
@@ -1019,7 +1064,27 @@ async function runModel(
   const extractedDeadline = asDate(deadlineFact.value)
   const todayISO = new Date().toISOString().slice(0, 10)
   let closedRound: { deadline: string; quote: string } | undefined
-  if (extractedDeadline && deadlineFact.quote && extractedDeadline < todayISO) {
+  // The schedule is read BEFORE the single deadline, because whether a lone date
+  // can be trusted depends on whether the page turned out to run in rounds.
+  const cycleFact = fact('deadline_cycle')
+  const pageCycle = asCycle(cycleFact.value)
+
+  // A SINGLE DATE OFF A MULTI-ROUND PAGE IS ONE OF SEVERAL, AND WE CANNOT TELL
+  // WHICH. Movement for Good's homepage lists every draw; asked for "the"
+  // closing date it returned 18 October, from the £5,000 Animals & Wildlife
+  // draw, for our £1,000 draws row. Worse, that answer made the timing question
+  // look answered, so the hop to the fund's own page stopped firing — a wrong
+  // date is not merely wrong, it suppresses the machinery that would have found
+  // the right one.
+  //
+  // So when the page plainly runs in rounds and the model could not structure
+  // them, the lone date is withheld and timing stays unanswered, which is what
+  // sends the reader one level down.
+  if (extractedDeadline && deadlineFact.quote && !pageCycle && statesDatedWindows(pageText)) {
+    notFound.push('deadline')
+    stamp('deadline', null, null, undefined, 'a single date off a page that runs in rounds')
+    notes.push(`deadline withheld: "${deadlineFact.quote.slice(0, 80)}" is one of several rounds this page lists, and which one belongs to this row is not stated`)
+  } else if (extractedDeadline && deadlineFact.quote && extractedDeadline < todayISO) {
     closedRound = { deadline: extractedDeadline, quote: deadlineFact.quote }
     notFound.push('deadline')
     // The page DID address timing, and what it said contradicts a row that
@@ -1046,7 +1111,58 @@ async function runModel(
   // Remove this once multi-page sourcing lands and the timing page is actually
   // read. Until then it is the difference between an unverified row and a
   // wrongly certified one.
+  // ── The page's whole schedule ──────────────────────────────────────────────
+  //
+  // A page that names several rounds was previously unreadable: the extraction
+  // asked for one closing date, Movement for Good's draws page states three, and
+  // it abstained. So the engine could reach the right page, quote the draw dates
+  // under another field, and still return nothing about timing.
+  //
+  // The cycle is proposed, never written here. `expire-grants` and the admin
+  // sweep already roll a deadline forward from `deadline_cycle` — including the
+  // opening-date fix — so landing the cycle is enough; duplicating that maths
+  // here would be a second copy to keep in step, which is how those two came to
+  // share a bug in the first place.
+  const sameCycle  = (a: CycleEntry[] | null, b: unknown) => {
+    const norm = (c: unknown) => Array.isArray(c)
+      ? JSON.stringify((c as CycleEntry[]).map(e => [e.day, e.month]).sort())
+      : null
+    return norm(a) !== null && norm(a) === norm(b)
+  }
+  if (pageCycle && cycleFact.quote) {
+    if (sameCycle(pageCycle, row.deadline_cycle)) {
+      confirmed.push('deadline_cycle')
+      stamp('deadline_cycle', true, cycleFact.quote)
+    } else {
+      proposals.push({ field: 'deadline_cycle', from: row.deadline_cycle, to: pageCycle, quote: cycleFact.quote, verdict: 'confirmed' })
+      stamp('deadline_cycle', false, cycleFact.quote, pageCycle)
+    }
+  } else if (cycleFact.value) {
+    // Offered, but not a usable cycle: fewer than two valid entries, or no quote.
+    notFound.push('deadline_cycle')
+    stamp('deadline_cycle', null, null)
+  }
+
   const rollingFact = fact('is_rolling')
+
+  // A DATED SCHEDULE IS A TAKEDOWN, AND TAKEDOWNS ARE ALLOWED.
+  //
+  // The guards below withhold a rolling claim they cannot stand behind, which
+  // leaves the row unverified. That is safe but it is not a correction, and on
+  // its own it means Movement for Good stays wrong for ever. Once the page has
+  // actually named its rounds, we are no longer guessing: dated rounds and
+  // "applications accepted at any time" cannot both be true, and the rounds
+  // carry the quote. So this contradicts rather than withholds — it only ever
+  // moves a row from "claims open today" to "we do not say", which is strictly
+  // safer than the status quo and is the asymmetry §12 of the design sets out.
+  if (pageCycle && cycleFact.quote && row.is_rolling === true) {
+    const closing = pageCycle.filter(e => !isOpeningEntry(e))
+    const shown   = (closing.length > 0 ? closing : pageCycle)
+      .map(e => `${e.day}/${e.month}`).join(', ')
+    proposals.push({ field: 'is_rolling', from: true, to: false, quote: cycleFact.quote, verdict: 'confirmed' })
+    stamp('is_rolling', false, cycleFact.quote, false)
+    notes.push(`is_rolling contradicted: the page names dated rounds (${shown}), so applications are not accepted at any time`)
+  } else {
   const rollingBlock =
       rollingFact.value !== true                 ? null
     : isFrontDoorUrl(sourceUrl)                  ? `it comes from ${sourceUrl}, which names no single fund, so it cannot establish that a round is open today`
@@ -1058,6 +1174,7 @@ async function runModel(
     notes.push(`is_rolling withheld: "${(rollingFact.quote ?? '').slice(0, 90)}" — ${rollingBlock}`)
   } else {
     consider('is_rolling', rollingFact, row.is_rolling, asBool)
+  }
   }
   // Only propose an income cap when the sentence is about organisational income
   // or turnover. Wax Chandlers' "less than £200k in cash at bank" is a real
