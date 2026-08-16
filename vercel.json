@@ -137,8 +137,12 @@
       "schedule": "0 8 * * 1,4"
     },
     {
-      "path": "/api/cron/discover-sweep?slice=targeted",
+      "path": "/api/cron/discover-sweep?slice=targeted-ace",
       "schedule": "30 8 */2 * *"
+    },
+    {
+      "path": "/api/cron/discover-sweep?slice=targeted-gla",
+      "schedule": "30 8 2-30/2 * *"
     },
     {
       "path": "/api/cron/discover-sweep?slice=general",

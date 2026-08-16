@@ -169,6 +169,73 @@ export function formatVerify(summary: Record<string, unknown> | null | undefined
 type RunContext = { usage: UsageTally }
 
 /**
+ * The longest any run can legitimately still be open.
+ *
+ * Vercel's hard function cap is 300s, so a row open for fifteen minutes is not
+ * slow, it is dead. The margin is deliberately generous: a false reap would mark
+ * a healthy job as failed, which is a worse lie than the silence it replaces.
+ */
+const ABANDONED_AFTER_MS = 15 * 60 * 1000
+
+/**
+ * Close runs that started and never reported back.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * WHY THIS CANNOT LIVE INSIDE recordRun's OWN ERROR HANDLING.
+ *
+ * `finish()` is reached on a normal return or a thrown error. A run killed by
+ * the platform is neither: the process is gone, so no `catch`, no `finally`, and
+ * no amount of care inside the handler can write that row. `ok IS NULL` is the
+ * correct signature and the migration documents it as such.
+ *
+ * The consequence is that the one failure mode nobody can self-report was also
+ * the one nothing reported. On 2026-08-15 `discover-sweep` was killed at exactly
+ * 300s by Vercel; the row sat open, the Pipeline page showed "no reply" in
+ * amber, and it was found four days later only because somebody went looking.
+ *
+ * So detection has to come from outside the run, and the cheapest outside is the
+ * next run of any job at all. No new cron entry, no new schedule to forget, and
+ * with 38 jobs a day the detection lag is minutes rather than days. It writes
+ * `ok = false`, which the Pipeline page already renders red — the alarm reuses
+ * the existing signal rather than inventing a second one nobody watches.
+ *
+ * NEVER THROWS. Same rule as the rest of this file: bookkeeping that can break
+ * the job it observes is worse than no bookkeeping.
+ */
+export async function reapAbandonedRuns(
+  db: SupabaseClient,
+  now: Date = new Date(),
+): Promise<number> {
+  const cutoff = new Date(now.getTime() - ABANDONED_AFTER_MS).toISOString()
+  try {
+    const { data, error } = await db
+      .from('cron_runs')
+      .update({
+        ok:          false,
+        finished_at: now.toISOString(),
+        error:       'never reported back: killed or timed out. The process died before it could record anything, so there is no summary and no error from the job itself. Check the platform runtime log for the window around started_at.',
+      })
+      .is('ok', null)
+      .is('finished_at', null)
+      .lt('started_at', cutoff)
+      .select('id, job')
+
+    if (error) {
+      console.error('[cron_runs] reap failed:', error.message)
+      return 0
+    }
+    const rows = (data ?? []) as { job: string }[]
+    if (rows.length > 0) {
+      console.error(`[cron_runs] reaped ${rows.length} abandoned run(s): ${rows.map(r => r.job).join(', ')}`)
+    }
+    return rows.length
+  } catch (e) {
+    console.error('[cron_runs] reap threw:', e)
+    return 0
+  }
+}
+
+/**
  * Record one run of `job`, whatever happens.
  *
  * The handler's return value is stored verbatim as `summary` — every cron
@@ -188,6 +255,10 @@ export async function recordRun<T>(
   const db = runsDb()
   const ctx: RunContext = { usage: new UsageTally() }
   let runId: string | null = null
+
+  // Sweep before opening. Every job that runs closes somebody else's abandoned
+  // row, so the more the platform is doing the sooner a killed run turns red.
+  await reapAbandonedRuns(db)
 
   try {
     const { data } = await db.from('cron_runs').insert({ job }).select('id').single()

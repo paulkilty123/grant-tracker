@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { formatYield, formatVerify } from './cron-runs'
+import { formatYield, formatVerify, reapAbandonedRuns } from './cron-runs'
 
 describe('formatYield', () => {
   // The exact summary process-discovery-queue wrote on 2026-08-11 23:05:45,
@@ -89,5 +89,70 @@ describe('formatVerify', () => {
     // keeps its single-line height. The armed-but-empty case still renders.
     expect(formatVerify({ armed: false, ranWork: false, checked: 0 })).toBeNull()
     expect(formatVerify({ checked: 0, verify: { evidence: {} } })).toBe('checked 0')
+  })
+})
+
+// A stand-in for the query builder, recording the predicate chain so the test
+// can assert WHICH rows would be touched. The bug this guards against is a reap
+// that is too eager, and that lives entirely in the predicates.
+type Call = { table?: string; update?: Record<string, unknown>; preds: string[] }
+function fakeDb(rows: { id: string; job: string }[], error: { message: string } | null = null) {
+  const calls: Call[] = []
+  let cur: Call
+  const chain = {
+    is(col: string, v: unknown)  { cur.preds.push(`is:${col}=${String(v)}`); return chain },
+    lt(col: string, v: unknown)  { cur.preds.push(`lt:${col}=${String(v)}`); return chain },
+    select()                     { return Promise.resolve({ data: error ? null : rows, error }) },
+  }
+  const db = {
+    from(table: string) {
+      return {
+        update(patch: Record<string, unknown>) {
+          cur = { table, update: patch, preds: [] }; calls.push(cur); return chain
+        },
+      }
+    },
+  }
+  return { db: db as unknown as Parameters<typeof reapAbandonedRuns>[0], calls }
+}
+
+describe('reapAbandonedRuns — the failure that cannot report itself', () => {
+  const NOW = new Date('2026-08-16T12:00:00.000Z')
+
+  it('closes an abandoned run as FAILED, not as some new fourth state', () => {
+    // ok=false is what the Pipeline page already renders red. Inventing a
+    // separate "abandoned" state would mean a second signal for someone to not
+    // watch; the whole point is that a killed job shows up in the place people
+    // already look.
+    const { db, calls } = fakeDb([{ id: 'r1', job: 'discover-sweep' }])
+    return reapAbandonedRuns(db, NOW).then(n => {
+      expect(n).toBe(1)
+      expect(calls[0].table).toBe('cron_runs')
+      expect(calls[0].update?.ok).toBe(false)
+      expect(calls[0].update?.finished_at).toBe(NOW.toISOString())
+      expect(String(calls[0].update?.error)).toMatch(/never reported back/)
+    })
+  })
+
+  it('only touches rows that are open AND older than fifteen minutes', () => {
+    // 300s is Vercel's hard cap, so fifteen minutes is five times the longest
+    // legitimate run. A false reap marks a healthy job failed, which is a worse
+    // lie than the silence it replaces.
+    const { db, calls } = fakeDb([])
+    return reapAbandonedRuns(db, NOW).then(() => {
+      expect(calls[0].preds).toEqual([
+        'is:ok=null',
+        'is:finished_at=null',
+        'lt:started_at=2026-08-16T11:45:00.000Z',
+      ])
+    })
+  })
+
+  it('returns zero and does not throw when the database refuses', async () => {
+    // Bookkeeping that can break the job it observes is worse than none. This
+    // runs at the top of every recordRun, so a throw here would take out every
+    // cron on the platform at once.
+    const { db } = fakeDb([], { message: 'permission denied' })
+    await expect(reapAbandonedRuns(db, NOW)).resolves.toBe(0)
   })
 })
