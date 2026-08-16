@@ -848,6 +848,41 @@ Everything else — amounts, eligibility, income caps, anything that *adds* or
 *widens* a claim — stays a proposal. The asymmetry is the safeguard: the engine
 may take things down on evidence, and may never put things up.
 
+#### Condition on arming, set by Paul 2026-08-16
+
+**A removal may not act on a deadline the page did not state in full. A
+year-less or otherwise inferred date must abstain, not close.**
+
+This is a precondition of arming `round_closed`, not a refinement to add later.
+
+The evidence is the Greggs Community Action Fund. Its page says *"currently open
+for applications until 28th August at 12 noon"*, with no year. The verifier
+resolved that to **2024-08-28**, which is in the past, and returned
+`round_closed`. The fund is open, and its deadline is twelve days away. Had this
+class been armed, an open fund would have been taken out of view automatically,
+on a date the funder never wrote.
+
+Measured on the rows the engine has read so far, and this is the part that makes
+it a condition rather than a caveat:
+
+- The `round_closed` verdict is a **deterministic function of the proposed
+  deadline falling in the past: 23 rows of 23, no exceptions.** There is no
+  independent "the page says closed" signal. Whatever error the date resolution
+  makes, the verdict inherits.
+- **6 of those 23 rest on a quote that states no year** (1 live, 5 already
+  archived). "Apply by Monday 13th July". "Applications are now open till
+  September 13th". Two of the six say the fund is *open* in the same sentence
+  the verdict used to close it.
+
+So the abstain rule is cheap and well targeted: it withholds automatic action
+from about a quarter of the class, and that quarter is where every observed
+false positive sits. A quote carrying a four-digit year, or a numeric date with
+a two-digit year like `12/08/26`, counts as stated in full. Anything else
+abstains and becomes a proposal.
+
+The same rule should gate `is_rolling: true → false`, which depends on the same
+date reading.
+
 ### Estimate
 
 Assuming the two decisions above go through:

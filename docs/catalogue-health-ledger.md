@@ -83,6 +83,31 @@ split of the 138 is `wrong_fund` 107, `no_funding_detail` 27, `fetch_failed` 3,
 that page". **These four rows need re-running before they are trusted**: they are
 a snapshot from 11 August, and the catalogue has moved since.
 
+**A3 caveat, added 2026-08-16: some of these are not closed.** The
+`round_closed` verdict is a **deterministic function of the proposed deadline
+falling in the past — 23 rows of 23, no exceptions**. There is no separate "the
+page says closed" signal, so any error in resolving the date is inherited whole
+by the verdict. A funder page that writes a deadline without a year ("until 28th
+August") can have it resolved to a past year and be judged closed while open.
+
+Measured on the rows the engine has read under v1 so far:
+
+| | rows | year stated in full | year inferred |
+|---|---:|---:|---:|
+| Live, `round_closed` | 10 | 9 | **1** |
+| Archived, `round_closed` | 13 | 8 | 5 |
+
+The one live inferred-year row was the Greggs Community Action Fund, open for
+another twelve days, now fixed. **A quarter of the class rests on an inferred
+year, and that quarter is where every observed false positive sits.**
+
+Two things follow. The **44 in the table above is a 2026-08-11 snapshot on a
+different basis** and cannot be split this way: the engine has produced only 29
+deadline proposals so far, so the 44 has not been re-read and its inferred-year
+share is unknown. And arming `round_closed` for unattended action now carries a
+condition set by Paul: **a removal may not act on a deadline the page did not
+state in full**. See §12 of `tranche-2-design.md`.
+
 **A6 is the biggest single number in this ledger.** `is_rolling` is set as
 `!deadline`, so a parse failure and a genuinely rolling fund are indistinguishable
 in the data and identical on screen. 380 of 682 live rows say "Rolling, apply any

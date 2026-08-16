@@ -95,6 +95,19 @@ version is that it is provable cheaply, before you commit any attention to it.
 
 ## Non-negotiables carried in
 
+**Approved by Paul, 16 August 2026**: run the requeue, print the class split
+before he spends attention, decide the sitting from the split. Bulk accept for
+"too strict" only, never for "too permissive".
+
+**And the rule the Greggs row forced, which generalises to this queue:** an
+inferred value may not drive an automatic action. There it was a year-less
+deadline resolved to a past year, which turned an open fund into a closed one.
+Here the equivalent is a proposed structure set the page did not actually
+enumerate — "non-profit organisations" is not an enumeration. A class 1
+auto-resolve must rest on the page naming the forms, not on the model expanding
+a vague phrase into the same set we happen to hold. Where it cannot, the row
+leaves class 1 and becomes a proposal like any other.
+
 - Class 3 and 4 never auto-apply, and never get a bulk accept.
 - An accepted proposal writes with an `admin:` source, because you decided it.
   An auto-resolved class 1 does **not**, or it pins a value no human reviewed
