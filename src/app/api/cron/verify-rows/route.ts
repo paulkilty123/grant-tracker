@@ -7,9 +7,23 @@
 // This is the route that changes that.
 //
 //   GET /api/cron/verify-rows            scheduled: honours VERIFY_ENABLED
+//   GET /api/cron/verify-rows?peek=true  ALWAYS report-only, never fetches a page
 //   GET /api/cron/verify-rows?run=true   manual: runs regardless of the flag
 //   GET /api/cron/verify-rows?limit=20   smaller batch
 //   GET /api/cron/verify-rows?ids=a,b    specific rows, ignores the queue order
+//
+// ─────────────────────────────────────────────────────────────────────────────
+// ?peek EXISTS BECAUSE THE FIRST VERSION HAD NO SAFE WAY TO ASK A QUESTION
+//
+// While disarmed, a bare GET reported the queue and cost nothing, so it read
+// like a status endpoint. The moment VERIFY_ENABLED was set that same URL became
+// a 60-row batch, and a poll loop watching for `armed: true` fired fifteen of
+// them in eight minutes: 840 row visits, £4.50, and 43% of it duplicated work.
+//
+// The lesson is not "be careful with the probe". It is that a route whose
+// behaviour flips from free to expensive on an env var has no honest status
+// check, so one has to be spelled out. ?peek always reports and never fetches,
+// whatever the flag says.
 //
 // ─────────────────────────────────────────────────────────────────────────────
 // WHAT IT WRITES, AND WHAT IT DELIBERATELY DOES NOT
@@ -136,6 +150,9 @@ export async function GET(req: NextRequest) {
   // which makes isCronCaller win for every bearer caller, so the caller identity
   // cannot be used for this.)
   const forced  = params.get('run') === 'true'
+  // Overrides everything, including ?run=true. There is no combination of
+  // parameters where ?peek=true spends money.
+  const peek    = params.get('peek') === 'true'
   const idsRaw  = params.get('ids')
   const ids     = idsRaw ? idsRaw.split(',').map(s => s.trim()).filter(Boolean) : []
   const limit   = Math.max(1, Math.min(Number(params.get('limit')) || BATCH, 200))
@@ -151,10 +168,42 @@ export async function GET(req: NextRequest) {
     // MODEL SPEND rather than user-visible writes, which is why a disarmed run
     // still reports the queue: "how much is waiting" is worth knowing every day
     // and costs nothing to answer.
-    if (!armed && !forced) {
+    if (peek || (!armed && !forced)) {
       return {
-        success: true, armed: false, ranWork: false, checked: 0, queue,
-        note: 'VERIFY_ENABLED is not true and ?run=true was not passed, so no page was fetched',
+        success: true, armed, ranWork: false, checked: 0, queue,
+        note: peek
+          ? 'peek: reported the queue and fetched nothing, whatever VERIFY_ENABLED says'
+          : 'VERIFY_ENABLED is not true and ?run=true was not passed, so no page was fetched',
+      }
+    }
+
+    // ── One run at a time ─────────────────────────────────────────────────────
+    //
+    // Selection is oldest-evidence-first and a stamp only lands when a row
+    // FINISHES, so two runs starting a minute apart both see the same unstamped
+    // rows and both pay to verify them. That is not hypothetical: fifteen
+    // overlapping manual runs on 16 August paid for 840 row visits and produced
+    // 476 distinct stamps, so 43% of the spend bought nothing.
+    //
+    // The scheduled runs are six hours apart and would not collide on their own.
+    // This exists so that a slow run, a manual trigger, or a retry cannot turn
+    // into duplicate spend — the guarantee should come from the route, not from
+    // the timetable happening to be generous.
+    const inflightSince = new Date(Date.now() - 15 * 60 * 1000).toISOString()
+    let inflight = db.from('cron_runs')
+      .select('id, started_at')
+      .eq('job', 'verify-rows')
+      .is('finished_at', null)
+      .gte('started_at', inflightSince)
+    if (ctx.runId) inflight = inflight.neq('id', ctx.runId)
+    const { data: openRuns } = await inflight
+    if ((openRuns ?? []).length > 0) {
+      const since = (openRuns as { started_at: string }[])[0].started_at
+      return {
+        success: true, armed, ranWork: false, checked: 0, queue,
+        skipped: 'another verify-rows run is already in flight',
+        inflightSince: since,
+        note: 'skipped to avoid paying twice for the same rows: selection is oldest-first and a stamp only lands when a row finishes',
       }
     }
 
