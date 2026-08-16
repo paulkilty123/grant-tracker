@@ -29,6 +29,8 @@ export const dynamic = 'force-dynamic'
 const QUEUE_STATES = ['captured', 'enriched', 'tagged', 'tagged_awaiting_review']
 
 import { needsEnrichment, STUB_BRIEF_SOURCES } from '@/lib/funder-brief'
+import { summariseEvidence } from '@/lib/admin/evidence-summary'
+import type { FieldEvidence } from '@/lib/field-evidence'
 
 const COLS = [
   // external_id is what the PUBLIC grant API keys on (grants-normalise sets
@@ -39,6 +41,9 @@ const COLS = [
   'amount_min', 'amount_max', 'deadline', 'is_rolling', 'next_open_date', 'deadline_cycle',
   'eligible_structures', 'impact_sectors', 'target_beneficiaries',
   'funder_brief', 'field_provenance', 'raw_data', 'needs_intervention_reason',
+  // What the funder's own page said, when the engine last read it. Every other
+  // column here is our bookkeeping; this is the only one from outside.
+  'field_evidence',
   'last_seen_at',
 ].join(', ')
 
@@ -138,6 +143,7 @@ export default async function ReviewPage() {
     external_id: string | null
     pipeline_state: string
     funder_brief: Record<string, unknown> | null
+    field_evidence: FieldEvidence | null
   }>
 
   // How many OTHER live rows sit on the same apply_url.
@@ -200,6 +206,7 @@ export default async function ReviewPage() {
       gateOutcome:   gate.outcome,
       diffs:         extractTagsDiff(r.field_provenance),
       brief:         summariseBrief(r.funder_brief),
+      evidence:      summariseEvidence(r.field_evidence),
       // Drives the "Needs enrichment" view — a stub brief, or none at all.
       needsEnrichment: needsEnrichment(r.funder_brief as Record<string, unknown> | null),
       // Set only for rows the gate itself published in the last 7 days, and

@@ -30,6 +30,7 @@ import { useRouter } from 'next/navigation'
 import { useToast } from '@/components/ui/Toast'
 import GrantDetailModal from '@/components/GrantDetailModal'
 import type { ReviewReason, FieldDiff } from '@/lib/admin/review-reasons'
+import type { EvidenceSummary } from '@/lib/admin/evidence-summary'
 // Type-only, so the merger's server dependencies are erased at build and this
 // stays a client component.
 import type { MergeRejection } from '@/lib/grant-merge'
@@ -71,6 +72,10 @@ export type QueueItem = {
     whatTheyFund: string | null
     citations: Record<string, { snippet: string; confidence: string } | null>
   } | null
+  /** What the funder's page said when the engine last read it. Null means no
+   *  page has ever been read for this row, which is a different thing from a
+   *  page that was read and said nothing. */
+  evidence: EvidenceSummary | null
   values: {
     amountMin: number | null
     amountMax: number | null
@@ -89,6 +94,101 @@ const SEV_STYLE: Record<string, { bg: string; ink: string; edge: string }> = {
 
 const display = { fontFamily: 'var(--font-space-grotesk)' } as const
 const gbp = (n: number | null) => (n === null ? '—' : `£${n.toLocaleString('en-GB')}`)
+
+/**
+ * What the funder's page actually said.
+ *
+ * Placed ABOVE the brief citations deliberately. Everything else on this screen
+ * is derived from data we already held; this is the only block sourced from
+ * outside, and a reviewer should meet it before they meet our own inferences.
+ *
+ * Three states, and the screen must never merge them:
+ *   never read       no page has been fetched for this row
+ *   read and silent  the page was fetched and does not address the field
+ *   contradicted     the page says something else, and here is the sentence
+ *
+ * Deliberately no accent colour. The accent budget on this page belongs to the
+ * actions, and a panel that shouts on every row stops meaning anything.
+ */
+function EvidencePanel({ evidence }: { evidence: EvidenceSummary | null }) {
+  const display = { fontFamily: 'var(--font-space-grotesk)' }
+
+  if (!evidence) {
+    return (
+      <div style={{
+        background: 'var(--cream)', borderRadius: 'var(--radius-input)',
+        padding: '10px 13px', fontSize: 12.5, color: 'var(--mid)', marginBottom: 9,
+      }}>
+        No page has been read for this row yet. Everything below is derived from what we already hold.
+      </div>
+    )
+  }
+
+  const when = evidence.checkedAt
+    ? new Date(evidence.checkedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+    : null
+
+  const tone: Record<string, { bg: string; fg: string; label: string }> = {
+    contradicted: { bg: 'var(--coral-pale)',   fg: 'var(--coral-deep)',      label: 'page disagrees' },
+    silent:       { bg: 'var(--amber-pale)',   fg: 'var(--amber-deep)',      label: 'page silent' },
+    confirmed:    { bg: 'var(--green-pale-1)', fg: 'var(--green-text-deep)', label: 'confirmed' },
+  }
+
+  return (
+    <div style={{
+      border: '1px solid var(--color-border)', borderRadius: 'var(--radius-card)',
+      padding: '11px 13px', marginBottom: 11,
+    }}>
+      {evidence.readUrl && (
+        <div style={{ fontSize: 11.5, color: 'var(--color-text-tertiary)', marginBottom: 9, wordBreak: 'break-all' }}>
+          {when ? `Read ${when} · ` : ''}{evidence.readUrl}
+          {evidence.outcome && evidence.outcome !== 'verified' ? ` · ${evidence.outcome}` : ''}
+        </div>
+      )}
+
+      {evidence.lines.length === 0 && (
+        <div style={{ fontSize: 12.5, color: 'var(--mid)' }}>
+          The page was read but stated none of the fields we check.
+        </div>
+      )}
+
+      {evidence.lines.map(line => (
+        <div key={line.field} style={{ marginBottom: 9 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
+            <span style={{ ...display, fontSize: 12.5, fontWeight: 500 }}>{line.label}</span>
+            <span style={{
+              ...display, fontSize: 10, fontWeight: 700, letterSpacing: '0.06em',
+              textTransform: 'uppercase', borderRadius: 999, padding: '2px 8px',
+              background: tone[line.verdict].bg, color: tone[line.verdict].fg,
+            }}>{tone[line.verdict].label}</span>
+            {/* Named only where it changes what a user is told. A silent amount
+                is a gap; a silent deadline is rendered to users as "Rolling". */}
+            {line.asserted && line.verdict !== 'confirmed' && (
+              <span style={{ fontSize: 11.5, color: 'var(--coral-deep)' }}>
+                we state this anyway
+              </span>
+            )}
+          </div>
+          {line.quote && (
+            <div style={{ fontSize: 12.5, lineHeight: 1.55, color: 'var(--mid)', marginTop: 3 }}>
+              <q>{line.quote}</q>
+            </div>
+          )}
+          {line.proposed !== undefined && (
+            <div style={{ fontSize: 11.5, color: 'var(--color-text-tertiary)', marginTop: 3 }}>
+              the page supports: {typeof line.proposed === 'object' ? JSON.stringify(line.proposed) : String(line.proposed)}
+            </div>
+          )}
+          {line.sourceUrl && line.sourceUrl !== evidence.readUrl && (
+            <div style={{ fontSize: 11, color: 'var(--color-text-tertiary)', marginTop: 2, wordBreak: 'break-all' }}>
+              from {line.sourceUrl}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  )
+}
 
 export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; gateWindowStart?: string }) {
   const router = useRouter()
@@ -1127,9 +1227,21 @@ function Row({
               </div>
             )}
 
+            {/* What a page ACTUALLY said, above everything derived from our own
+                data. Rendered outside the `item.brief` guard because a row with
+                no brief can still have been read. */}
+            <div>
+              <SectionLabel>Checked against the funder page</SectionLabel>
+              <EvidencePanel evidence={item.evidence} />
+            </div>
+
             {item.brief && (
               <div>
-                <SectionLabel>Evidence from the funder page</SectionLabel>
+                {/* Renamed from "Evidence from the funder page": these snippets
+                    come from the enrichment brief, not from a verification read,
+                    and two blocks both called evidence on the one screen that
+                    now distinguishes them was the wrong word in the wrong place. */}
+                <SectionLabel>From the funder brief</SectionLabel>
                 {item.brief.source === 'knowledge_fallback' && (
                   <p style={{
                     fontSize: 12.5, background: 'var(--coral-pale)', color: 'var(--coral-deep)',
