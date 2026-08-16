@@ -440,6 +440,48 @@ but whatever gets reviewed before arming gets bigger every day.
 
 ---
 
+# The review session: what is and is not ready
+
+Measured 16 August, against the live queue.
+
+**The queue is 163. The gate would publish 94 of them, 53 newly visible.**
+Blocked: 19 attention (10 `amount_ungrounded`, 7 `amount_pot_suspected`,
+2 `page_unreadable`), 50 hold (18 `link_dead`, 10 `no_brief`, 8
+`applicant_individual_only`, 7 `deadline_passed`, and a tail).
+
+**Nought of the 163 carries a single evidence stamp.** The engine is disarmed,
+so nothing in the queue has been read against its funder's page. Every reason on
+the review screen is derived from what the row already holds, not from what the
+funder says. The one genuine external check is the link, and that is in good
+shape because of the queue-first fix: of the 103 rows not yet public, 76 are
+`url_status = ok` and 59 were checked in the last three days. Eight have never
+been checked at all.
+
+**Of those 103, 48 claim rolling and 30 state no timing whatsoever.** So 78 of
+them assert or omit the one thing the surface turns into a claim, with nothing
+behind it.
+
+**The Review Inbox does not render `field_evidence`.** Confirmed by grep: the
+column appears in no file under `src/app` or `src/components`, and it is not in
+the review page's column list. So even after the engine runs, the review screen
+would look exactly as it does today. That is a piece of work, not a setting.
+
+## Recommended order
+
+1. Merge, so the announcement-date fix reaches the nightly job.
+2. Run the engine over the queue: 163 rows at ~60 a run, four runs a day, so
+   under a day and roughly £1.50.
+3. Build the evidence panel on the review row, so a decision has the quote and
+   the source URL beside it.
+4. Then the review session.
+5. Then arm, two-step, with `AUTO_PUBLISH_LIMIT=5`.
+
+At a cap of 5 and 41 already-live rows published first, the first eight or nine
+days change nothing a user can see while exercising the whole write path. That
+is the canary, and it is deliberately dull.
+
+---
+
 # Done, no longer waiting
 
 | Action | Status |
