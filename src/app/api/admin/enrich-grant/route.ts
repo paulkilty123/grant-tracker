@@ -20,6 +20,9 @@ export const maxDuration = 45 // seconds — requires Vercel Pro
 const ENRICH_VERSION    = 'v2'
 const PROVENANCE_SOURCE = `ai_enrich:${ENRICH_VERSION}`
 
+/** Named so the usage tally and the call site cannot drift apart. */
+const ENRICH_MODEL = 'claude-haiku-4-5-20251001'
+
 // Deterministic org-income gate parse runs alongside the LLM brief but writes
 // under its own source/trust (ai_extract = 50) so a verified gate survives the
 // daily crawl. Re-derived on every enrich so a removed gate clears itself.
@@ -562,14 +565,24 @@ Return ONLY valid JSON in this exact shape:
 NOTE: _deadline_cycle and its _citations entry are ONLY present when a recurring cycle is stated. Omit both if no cycle.`
 
   let brief: Record<string, unknown>
+  // Reported back to the caller so a cron can tally it. Enrichment was the one
+  // model-calling path with no cost visibility: `process-pipeline-queue` and
+  // `reenrich-stale` both reach the model through here, so their `cron_runs`
+  // rows recorded work done and nothing about what it cost.
+  let enrichUsage: { model: string; input_tokens: number; output_tokens: number } | null = null
   try {
     const msg = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
+      model: ENRICH_MODEL,
       // v2: brief + per-field citations + optional cycle ~doubles output.
       // 4096 gives generous headroom; Haiku 4.5 supports up to 8k.
       max_tokens: 4096,
       messages: [{ role: 'user', content: prompt }],
     })
+    enrichUsage = {
+      model:         ENRICH_MODEL,
+      input_tokens:  msg.usage.input_tokens,
+      output_tokens: msg.usage.output_tokens,
+    }
     const text = msg.content[0].type === 'text' ? msg.content[0].text : ''
     const jsonMatch = text.match(/\{[\s\S]*\}/)
     if (!jsonMatch) {
@@ -936,6 +949,9 @@ NOTE: _deadline_cycle and its _citations entry are ONLY present when a recurring
       brief,
       applied:  [...result.applied, ...incomeResult.applied, ...amountsApplied, ...investmentApplied],
       rejected: [...result.rejected, ...incomeResult.rejected, ...amountsRejected, ...investmentRejected],
+      // Cost of this call, for the caller to tally. Null only if the model was
+      // never reached, which the error paths above already return before here.
+      usage:    enrichUsage,
       _debug:   {
         primaryFetch:     primaryFetchDebug,
         fetchedFromUrl,
