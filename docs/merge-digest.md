@@ -35,7 +35,90 @@ the new version.
 
 # Waiting
 
-## `feat/verify-cadence`
+## `feat/eligibility-extraction`
+
+**What it does:** starts reading who can apply off the funder's own page, instead
+of trusting a model's reading of our own summary. Adds legal structures,
+exclusions and an income floor to what the engine checks.
+
+**Commit:** `38b866c`
+
+### The gap is not coverage, and it is worse than it sounded
+
+`funder_brief.who_can_apply` is populated on **917 of 963** eligible rows and only
+**14 live rows** lack it. So "we do not know who can apply" was never literally
+the problem. One level down it is sharper:
+
+| | |
+|---|---:|
+| Live rows whose `eligible_structures` came from `ai_classifier` | **370** |
+| Live rows with neither an income floor nor a ceiling | **561** of 642 |
+| Live rows carrying an income floor | **16** |
+
+`eligible_structures` is **the matcher's hard gate** — a structure mismatch caps
+the score at 44 — and `ai_classifier` reads our own stored description rather
+than the funder's page. So the filter deciding whether a fund is ever shown to a
+CIC is, across most of the catalogue, a model's reading of a model's summary.
+
+It is the quietest failure the product has. A wrong deadline is visible and
+someone complains. A wrong structure tag means the fund never appears, and nobody
+can see an absence.
+
+`min_org_income` was never extracted at all. Mustard Tree's file records three
+funds that excluded them on income alone and one, Fishmongers', that needs a
+**floor** to be right. A missing floor shows a fund to every organisation too
+small to win it.
+
+### The rule it turns on: silence is not exclusion
+
+A page saying "open to registered charities and CICs" has said nothing about
+unincorporated community groups. Wee Grants lost its `scio` tag to the opposite
+assumption and became invisible to its own core audience.
+
+There are exactly two routes to a removal — an explicit "X are not eligible", or
+a page that presents its list as complete — and nothing else narrows a row.
+Widening and narrowing are both proposals, neither is written, and the stamp says
+which it is so the decision can be made later without re-deriving it.
+
+### What six live rows showed
+
+- **A confirmation resting on an unrelated sentence.** Berkshire Community
+  Foundation's Grassroots Grants CONFIRMED a nine-form structure gate quoting
+  *"You do not meet our general eligibility criteria"* — lifted from the page's
+  exclusions list. That is more dangerous than no evidence because it survives
+  review: the quote is real, on the page, and beside the point. Now withheld,
+  with that sentence as the test.
+- **Real exclusions we do not carry.** Berkshire returned three, including
+  "applying as an individual" and "project based primarily outside Berkshire".
+  Joseph Rank returned "Grants cannot be paid to umbrella bodies".
+- **A false diagnosis of mine, corrected.** I read Joseph Rank's `scio` tag as a
+  wrong confirmation. The quote continues *"; OSCR in Scotland"* and my own probe
+  truncated it at 130 characters. The tag is right. The jurisdiction fix I wrote
+  for it stands on its own merits, but it fixed nothing that was broken.
+
+### Deploy gate
+
+```
+Regression: tsc clean. 302 tests pass (21 files), 27 of them new.
+            eslint clean on every changed file. No migration — every column
+            already exists.
+            Probed against six live production rows before and after each fix.
+Free-surface fingerprint: NOT APPLICABLE. No MCP route, tool, schema or response
+            shape is touched. No user-facing page is touched.
+Accent check: PASSED. No rendered string changes at all.
+Named rollback: 920c97f
+```
+
+**One thing to decide after merging.** Rows already read carry a due date months
+out, so eligibility would arrive at the speed of the slowest cadence.
+`scripts/requeue-for-eligibility.ts` makes them due once: **668 rows, ~£3.87,
+three days of scheduled runs.** It prints the price and writes nothing without
+`--apply`. Deliberately not automatic — a `deadline` confirmed under v1 is still
+confirmed, so nothing here should invalidate itself.
+
+---
+
+## `feat/verify-cadence` — MERGED 16 August as `920c97f`
 
 **What it does:** stops re-reading funder pages on a timer and starts re-reading
 them when the page itself says it is worth it. Joins the funder watchlist to the
