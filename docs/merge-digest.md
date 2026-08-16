@@ -203,7 +203,65 @@ surface asserts. Hard limits: 3 pages, 2 hops, 5 model calls, same domain, a
 seen set across hops, 500ms between requests to a host, and stop as soon as
 timing is answered so the common case costs nothing extra.
 
-### The acceptance test: half passed, and I want to be exact about which half
+### The acceptance test now passes, on the third attempt
+
+Both rows, 16 August, after the dated-cycle extraction (`01835e8`):
+
+| Row | Result |
+|---|---|
+| Movement for Good — £1,000 Draws | `is_rolling` **contradicted, proposes false** |
+| London LGBT+ Fund | full three-entry cycle, from which `nextCycleDeadline` derives **2027-08-12** |
+
+That second date is the one §9 of the design set as this row's definition of
+done. The engine reaches it on its own now.
+
+**What changed.** The extraction asked for one closing date; a draws page states
+three and it abstained. It now reads the whole schedule into `deadline_cycle`,
+with the funder's own labels, day and month only. And a dated schedule is treated
+as a **takedown**: once the page has named its rounds we are no longer guessing,
+so a cycle contradicts a rolling flag rather than merely withholding it. That is
+the difference between a row that stays wrong for ever and one that gets
+corrected, and it only ever moves a row from "claims open today" to "we do not
+say".
+
+The cycle is proposed, never written. `expire-grants` and the admin sweep already
+roll a deadline forward from `deadline_cycle`, so landing the cycle is enough,
+and a second copy of that maths is exactly how those two came to share a bug.
+
+### Two bugs the acceptance runs found, one of them live
+
+**A single date off a multi-round page is one of several.** Asked for "the"
+closing date, Movement for Good's homepage returned 18 October, from the £5,000
+Animals & Wildlife draw, for our £1,000 draws row. Worse, that answer made timing
+look *answered*, so the hop to the fund's own page stopped firing. A wrong date
+is not merely wrong: it suppresses the machinery that would have found the right
+one. A lone date from a page that plainly runs in rounds is now withheld.
+
+**An announcement date is not a deadline, and this one was live.** The
+opening-date fix filtered one word family and stopped there, because every cycle
+in the catalogue then carried at most an opens/closes pair. Real schedules have a
+third kind of date:
+
+```
+17 June       Fund Launches
+12 August     Application Window Closes
+30 November   Outcomes Communicated
+```
+
+The opening filter removed 17 June and then chose **30 November**, the day
+decisions are published. A fundraiser would have planned against a date three and
+a half months after applications shut. `nextCycleDeadline` is shared with
+`expire-grants`, which writes dates onto rows unattended at 02:00, so this was a
+live defect rather than an engine-only one. Now excluded: outcomes, decisions,
+announcements, notifications, panels, trustee meetings, shortlists, interviews,
+results, payments, reporting and completion. Unlabelled and neutrally labelled
+entries still count, so the 288 bare day/month cycles behave exactly as before.
+
+It is the same shape as the bug it sits beside, one class along, and worth naming
+as a pattern: **a denylist answers "is it this bad thing", when the question is
+"is it a deadline".**
+
+### The earlier attempt, kept because the reasoning still holds
 
 You set Movement for Good as the proof. Re-running `120e1d2a`:
 
@@ -267,23 +325,28 @@ to prevent this can never fire first. The general slice survives only because it
 runs exactly one query starting at elapsed zero, and even that took **247 of 270
 seconds** on the 15th. It is 23 seconds from the same cliff.
 
-**Recommended, not built:**
+**All three built, `b93bf42`:**
 
-1. **Split targeted into two cron entries** (`?slice=targeted-ace`,
-   `?slice=targeted-gla`), the shape `crawl-grants?batch=N` already uses, so
-   every invocation runs one query from elapsed zero. Alternate-day scheduling
-   makes this free: one funder a day rather than two every other day. ~30 min,
-   and it is the better fix because it removes the arithmetic rather than
-   correcting it.
-2. **Derive the abort from the remaining budget**, not a constant, so a future
-   overrun becomes a visible `ok: true, failed: 1` instead of an invisible
-   `ok IS NULL`. ~15 lines.
-3. **Nothing alerts on `ok IS NULL`.** A run killed by the platform cannot
-   self-report, so detection has to be external: a reaper query, or a line on
-   the Pipeline page for runs open longer than N minutes. Not sized. Without it
-   the next occurrence is again found only because somebody looked.
+1. **Split into one query per invocation.** `?slice=targeted-ace` on odd days,
+   `?slice=targeted-gla` on even ones, the shape `crawl-grants?batch=N` already
+   uses. Proved disjoint and jointly covering every day of the month. Removes the
+   arithmetic rather than correcting it, and alternate-day scheduling makes it
+   free: one funder a day instead of two every other day.
+2. **The abort is derived from the budget actually remaining**, never a constant,
+   so a future overrun returns through `recordRun` as a visible failure. The
+   look-ahead also gates on a 200s floor rather than a 60s mean, because a mean
+   cannot bound a worst case and using one as a ceiling is what let the doomed
+   query start.
+3. **The alarm.** `reapAbandonedRuns` runs at the top of every `recordRun`:
+   anything open longer than fifteen minutes, five times Vercel's hard cap, is
+   closed as `ok = false`, which the Pipeline page already renders red. No new
+   cron entry, no new schedule to forget, and with 38 jobs a day the detection
+   lag is minutes rather than the four days this one took. It reuses the existing
+   red rather than inventing a second signal nobody watches, and it can never
+   throw: bookkeeping that breaks the job it observes is worse than none.
 
-Say which of these you want and I will build it.
+   **Proved against production**: it found and closed the real 15 August row.
+   One open row before, none after.
 
 ---
 
@@ -362,7 +425,7 @@ is worse than mixed.
 | `AUTO_PUBLISH_LIMIT=0` means stop | **Proven.** `applyLimit: 0`, `armed: false`, `written: 0` on both the 14th and the 15th. |
 | Discovery slice split | **Proven.** The `general` slice ran both days and queued 13 then 11 social investment rows — the category that had never once been searched. |
 | Cycle-label opening dates | **Unproven, and may stay that way.** `expire-grants` ran clean both nights with `rolledCount: 0`. It selects `is_active = true`, and the rows that need a roll are mostly in the dead zone. It cannot prove itself until the drain runs. A green run of zero rows is not evidence. |
-| `validate-urls` queue-first | **Unproven.** Next scheduled run is Sunday 16 August, 03:00 UTC. First thing to check: `reviewQueue.checked` non-zero, `atLimit` true. |
+| `validate-urls` queue-first | **Proven, 16 August.** Before: `reviewQueue {checked: 0}`. After: `{candidates: 60, checked: 60, skipped: 0, atLimit: true, dead: 10}` — exactly the fingerprint predicted. It found **10 dead links** on its first run, among them Enable and Invest Grants and Access Growth Fund, two of the twelve rows §3.1 recommended pulling. |
 | Reject button | **Proven, incidentally.** Movement for Good Awards (`e05d267d`) is now `is_active = false`, `pipeline_state = 'rejected'`. It was still public on 13 August. |
 
 **One new defect.** The `discover-sweep` `targeted` slice started at 09:30 on
