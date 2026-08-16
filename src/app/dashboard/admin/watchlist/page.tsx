@@ -450,19 +450,25 @@ export default function WatchlistAdminPage() {
                       className={`rounded-lg border p-3 text-xs ${
                         alert.resolved
                           ? 'border-warm bg-stone-50 opacity-60'
-                          : alert.alert_type === 'page_down'
+                          : alert.alert_type === 'page_down' || alert.alert_type === 'listing_collapsed'
                           ? 'border-coral-mid bg-coral-pale'
                           : 'border-amber-200 bg-amber-50'
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2 mb-2">
                         <div className="flex items-center gap-1.5">
-                          {alert.alert_type === 'page_down'
+                          {alert.alert_type === 'page_down' || alert.alert_type === 'listing_collapsed'
                             ? <AlertTriangle className="h-3.5 w-3.5 text-coral-saturated flex-shrink-0" />
                             : <Bell className="h-3.5 w-3.5 text-amber-500 flex-shrink-0" />
                           }
+                          {/* A collapse is a takedown, a wall or a redesign, never a
+                              copy edit. Calling it "Listing changed" alongside a
+                              reordered news carousel is what let the one alert
+                              worth acting on sit unread with the other 386. */}
                           <span className="font-semibold text-charcoal">
-                            {alert.alert_type === 'page_down' ? 'Page down' : 'Listing changed'}
+                            {alert.alert_type === 'page_down'        ? 'Page down'
+                              : alert.alert_type === 'listing_collapsed' ? 'Listing emptied'
+                              : 'Listing changed'}
                           </span>
                           <span className="text-light">· {relativeTime(alert.detected_at)}</span>
                         </div>
@@ -477,7 +483,8 @@ export default function WatchlistAdminPage() {
                         )}
                       </div>
 
-                      {alert.alert_type === 'listing_changed' && alert.snapshot_before && (
+                      {(alert.alert_type === 'listing_changed' || alert.alert_type === 'listing_collapsed')
+                        && alert.snapshot_before && (
                         <div className="space-y-1.5">
                           <div>
                             <p className="text-[10px] font-semibold text-light uppercase mb-1">Before</p>
