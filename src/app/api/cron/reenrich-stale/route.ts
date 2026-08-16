@@ -37,7 +37,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
-import { recordRun } from '@/lib/admin/cron-runs'
+import { recordRun, usageFromAdminJson } from '@/lib/admin/cron-runs'
 
 export const dynamic     = 'force-dynamic'
 export const maxDuration = 270
@@ -186,7 +186,7 @@ export async function GET(req: NextRequest) {
   // we don't want that volume happening unsupervised during submission week.
   // Manual admin triggers (isAdminCaller=true) always run regardless.
   let httpStatus = 200
-  const payload = await recordRun('reenrich-stale', async () => {
+  const payload = await recordRun('reenrich-stale', async ctx => {
     if (isCronCaller && process.env.REENRICH_CRON_ENABLED !== 'true') {
       return {
         success: true,
@@ -361,6 +361,10 @@ export async function GET(req: NextRequest) {
         continue
       }
       result.enriched = true
+      // Enrichment happens over HTTP in a sibling route, so its cost only
+      // reaches this run because the route reports it back.
+      const enrichUsage = usageFromAdminJson(enrichRes.json)
+      if (enrichUsage) ctx.usage.add(enrichUsage.model, enrichUsage)
       const briefDebug = (enrichRes.json as { brief?: { _stale_dates?: unknown[] } })?.brief?._stale_dates
       result.stale_dates = Array.isArray(briefDebug) ? briefDebug.length : 0
 

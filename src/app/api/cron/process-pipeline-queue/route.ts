@@ -33,7 +33,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { recordRun } from '@/lib/admin/cron-runs'
+import { recordRun, usageFromAdminJson } from '@/lib/admin/cron-runs'
 
 export const dynamic     = 'force-dynamic'
 export const maxDuration = 270  // ~4.5 min, leaves buffer under 300s cap
@@ -115,6 +115,9 @@ type ChainResult = {
   swept:       boolean
   quarantined: boolean
   error?:      string
+  // Enrichment runs over HTTP in a sibling route, so its cost can only reach
+  // the run's tally by being carried back out of here.
+  usage?:      { model: string; input_tokens: number; output_tokens: number } | null
 }
 
 async function processOne(
@@ -131,6 +134,7 @@ async function processOne(
     return { ...result, quarantined: true, error: enrich.error }
   }
   result.enriched = true
+  result.usage = usageFromAdminJson(enrich.json)
 
   // Step 2: classify by explicit grant ID. include_review=true bypasses the
   // standard is_active=true filter so NR rows (which are is_active=false) get
@@ -171,7 +175,7 @@ export async function GET(req: NextRequest) {
   }
 
   let httpStatus = 200
-  const payload = await recordRun('process-pipeline-queue', async () => {
+  const payload = await recordRun('process-pipeline-queue', async ctx => {
     const db = adminClient()
 
     // Fetch captured rows that haven't been quarantined yet, newest arrival
@@ -227,7 +231,9 @@ export async function GET(req: NextRequest) {
         skippedForBudget = ids.length - results.length
         break
       }
-      results.push(await processOne(db, id))
+      const chain = await processOne(db, id)
+      if (chain.usage) ctx.usage.add(chain.usage.model, chain.usage)
+      results.push(chain)
     }
 
     const enriched    = results.filter(r => r.enriched).length

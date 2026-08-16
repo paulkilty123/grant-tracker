@@ -53,6 +53,31 @@ export class UsageTally {
 }
 
 /**
+ * Read the usage block an admin route reports back over HTTP.
+ *
+ * A cron that reaches the model through a sibling route (`process-pipeline-queue`
+ * and `reenrich-stale` both call `/api/admin/enrich-grant`) cannot see
+ * `response.usage` itself. The route returns it, this reads it, and the run
+ * tallies it exactly as if it had made the call directly.
+ *
+ * Returns null rather than throwing on any unexpected shape: a missing tally is
+ * an under-count, and an under-count must never fail the run that did the work.
+ */
+export function usageFromAdminJson(
+  json: unknown,
+): { model: string; input_tokens: number; output_tokens: number } | null {
+  const u = (json as { usage?: unknown } | null | undefined)?.usage
+  if (!u || typeof u !== 'object') return null
+  const { model, input_tokens: inTok, output_tokens: outTok } = u as Record<string, unknown>
+  if (typeof model !== 'string' || !model) return null
+  return {
+    model,
+    input_tokens:  typeof inTok  === 'number' ? inTok  : 0,
+    output_tokens: typeof outTok === 'number' ? outTok : 0,
+  }
+}
+
+/**
  * Discovery yield, by catalogue funding type.
  *
  * A DECLARED SHAPE, not a per-job field map. The Pipeline page renders this
