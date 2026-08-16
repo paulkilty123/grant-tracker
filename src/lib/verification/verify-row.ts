@@ -157,6 +157,10 @@ export type VerifyResult = {
   pagesRead?: string[]
   /** Set on multiple_funds: what the page actually covers, for a split decision. */
   fundsOnPage?: string[]
+  /** Set when a HOP landed on a multi-fund page. The row itself verified fine;
+   *  the detail it is missing lives on a page that serves several funds, so no
+   *  amount of re-reading will fill the gap. The fix is a catalogue split. */
+  splitCandidate?: { url: string; funds: string[] }
   usage?:    { input: number; output: number }
 }
 
@@ -177,8 +181,29 @@ const FUNDING_LINK = /\b(grants?|funding|apply|applying|application|eligib|crite
  */
 const TIMING_LINK = /\b(dates?|deadlines?|draws?|draw-dates|rounds?|closing|when-to-apply|key-dates|timetable|timeline|schedule|important-dates|application-process|apply-by)\b/i
 
-/** Obvious non-destinations, so we never wander into news or admin pages. */
-const LINK_NOISE = /\b(news|blog|privacy|cookie|terms|contact|about-us|careers|jobs|login|account|donate|shop|press|media|policy|accessibility|sitemap)\b/i
+/**
+ * Link text or href that suggests WHO, rather than what or when.
+ *
+ * MEASUREMENT ONLY until the hop scope widens. `who can apply` and `guidelines`
+ * are where the structure gate and the exclusions live on most funder sites,
+ * and neither scores on TIMING_LINK. Greggs Foundation is the worked case:
+ * greggsfoundation.org.uk links to /grants/, which FUNDING_LINK already finds —
+ * but Berkshire's exclusions sit on /eligibility-criteria/ and Joseph Rank's on
+ * /how-to-apply/guidelines/, which score 1 and 2 here against 0 for timing.
+ */
+const ELIGIBILITY_LINK = /\b(eligib|who-can-apply|who-we-fund|criteria|guidelines?|guidance|what-we-fund|what-we-don-?t-fund|exclusions?|restrictions?|requirements?|application-guidelines?)\b/i
+
+/**
+ * Obvious non-destinations, so we never wander into news or admin pages.
+ *
+ * `newsletters?` is spelled out because `\bnews\b` does not match it — the word
+ * boundary needs a non-word character after "news", and "l" is a word
+ * character. The measurement run on 16 August followed
+ * norfolkfoundation.com/our-impact/newsletter-sign-up and
+ * goodthingsfoundation.org/corporate-home/discover/newsletter.html, both of
+ * which this was written to stop.
+ */
+const LINK_NOISE = /\b(news|newsletters?|blog|privacy|cookie|terms|contact|about-us|careers|jobs|login|account|donate|shop|press|media|policy|accessibility|sitemap)\b/i
 
 /**
  * Candidate pages one level down, best first.
@@ -328,7 +353,7 @@ export function isFrontDoorUrl(url: string | null | undefined): boolean {
  * that was right about everything except when, which is the commonest and most
  * damaging gap, because the surface fills it in with the word "Rolling".
  */
-export type LinkWant = 'funding' | 'timing'
+export type LinkWant = 'funding' | 'timing' | 'detail'
 
 export function candidateLinks(
   pageSource: string, baseUrl: string, isMarkdown: boolean,
@@ -365,21 +390,34 @@ export function candidateLinks(
     if (seen.has(key)) continue
 
     const haystack = `${abs.pathname} ${rawText}`
-    const primary = want === 'timing' ? TIMING_LINK : FUNDING_LINK
-    if (LINK_NOISE.test(haystack) && !primary.test(abs.pathname) && !FUNDING_LINK.test(abs.pathname)) continue
+    const primary = want === 'timing' ? TIMING_LINK : want === 'detail' ? ELIGIBILITY_LINK : FUNDING_LINK
+
+    // Noise in the PATH is disqualifying and nothing overrides it. Noise in the
+    // link TEXT can be overridden by a path that names funding, because link
+    // text is often a sentence that happens to mention the newsletter.
+    //
+    // The override used to apply to both, and /apply/privacy-policy passed it:
+    // the path is noisy AND matches FUNDING_LINK on "apply", so the funding
+    // clause cancelled the noise clause. On 16 August a hop read Wise Music
+    // Foundation's privacy policy and returned a structure gate and an
+    // exclusions list from it. Production has never done this — the timing hop
+    // scores privacy pages at zero on TIMING_LINK — so the bug only becomes
+    // reachable when the trigger widens, which is what the measurement was for.
+    if (LINK_NOISE.test(abs.pathname)) continue
+    if (LINK_NOISE.test(rawText) && !primary.test(abs.pathname) && !FUNDING_LINK.test(abs.pathname)) continue
 
     const primaryHits = (haystack.match(primary) ?? []).length
     // A timing hop still accepts a funding page, at a discount: on many sites
     // the dates live on /grants rather than on a page that says "dates". It
     // must not accept ONLY funding pages, or the bias does nothing.
-    const fallbackHits = want === 'timing' ? (haystack.match(FUNDING_LINK) ?? []).length : 0
+    const fallbackHits = want === 'funding' ? 0 : (haystack.match(FUNDING_LINK) ?? []).length
     if (primaryHits === 0 && fallbackHits === 0) continue
 
     // Prefer a match in the path over one in link text, and shallower paths.
     const depth = abs.pathname.split('/').filter(Boolean).length
     const score = primaryHits * 4 + fallbackHits
       + (primary.test(abs.pathname) ? 5 : 0)
-      + (want === 'timing' && FUNDING_LINK.test(abs.pathname) ? 1 : 0)
+      + (want !== 'funding' && FUNDING_LINK.test(abs.pathname) ? 1 : 0)
       - depth
     seen.add(key)
     found.push({ url: abs.href, score })
@@ -735,6 +773,65 @@ export function timingAnswered(r: Pick<VerifyResult, 'evidence'>): boolean {
 }
 
 /**
+ * Fields whose absence is worth a second page under the wider scope.
+ *
+ * `eligible_structures` is here for the same reason `deadline` is: the surface
+ * ASSERTS it. A row tagged for four legal forms is telling a CIC it may apply,
+ * or telling it nothing, and the matcher treats the tag as a hard gate either
+ * way. Exclusions and the income thresholds are the two other fields that can
+ * send somebody to apply where they are barred.
+ *
+ * Grant AMOUNTS are deliberately absent, and not for the usual reason: the
+ * verifier does not extract them at all, so there is no silence to detect.
+ */
+export const DETAIL_FIELDS = ['eligible_structures', 'exclusions', 'max_org_income', 'min_org_income'] as const
+
+export function detailAnswered(r: Pick<VerifyResult, 'evidence'>): boolean {
+  return r.evidence.some(e => (DETAIL_FIELDS as readonly string[]).includes(e.field) && e.agrees !== null)
+}
+
+/**
+ * How wide the hop's trigger is. `timing` is what production does today: a
+ * second page is earned only by an unanswered deadline. `any` is the widening
+ * under measurement — an unanswered eligibility question earns one too.
+ */
+export type HopScope = 'timing' | 'any'
+
+/**
+ * Should this result send us one level down, and looking for what?
+ *
+ * Pulled out of the loop so it can be tested and so the widening is one
+ * argument rather than an edit. The order matters: a page with no funding
+ * detail at all is a worse starting point than a page missing one answer, and
+ * a multi-fund page is a catalogue finding rather than a data gap.
+ */
+export function decideHop(
+  current: Pick<VerifyResult, 'gate' | 'outcome' | 'evidence' | 'fundsOnPage'>,
+  rowTitle: string,
+  scope: HopScope = 'timing',
+): { want: LinkWant; why: string } | null {
+  const failure = (current.gate as { failure?: GateFailure }).failure
+  if (!current.gate.pass && failure === 'no_funding_detail') {
+    return { want: 'funding', why: 'the page carried no funding detail' }
+  }
+  if (current.outcome === 'multiple_funds'
+      && (current.fundsOnPage ?? []).some(f => namesMatch(rowTitle, f))) {
+    return { want: 'funding', why: 'the page covers several funds and one of them is ours' }
+  }
+  if (!(current.gate.pass && current.outcome === 'verified')) return null
+
+  // Stop early when the question is answered. The common case costs nothing
+  // extra, which is what makes this affordable at catalogue scale.
+  if (!timingAnswered(current)) {
+    return { want: 'timing', why: 'the page named this fund but said nothing about when to apply' }
+  }
+  if (scope === 'any' && !detailAnswered(current)) {
+    return { want: 'detail', why: 'the page named this fund but said nothing about who may apply' }
+  }
+  return null
+}
+
+/**
  * Fold a hop's findings into what we already have.
  *
  * A definite finding beats silence, and a later definite finding beats an
@@ -786,6 +883,9 @@ function foldResult(base: VerifyResult, hop: VerifyResult): VerifyResult {
 export async function verifyRow(
   row: VerifyRow,
   anthropic: Anthropic,
+  /** `hopOn` defaults to production behaviour. The wider scope is under
+   *  measurement and is passed only by scripts/measure-hop.ts. */
+  opts: { hopOn?: HopScope } = {},
 ): Promise<VerifyResult> {
   const base = {
     id: row.id, title: row.title, funder: row.funder, url: row.apply_url,
@@ -857,24 +957,9 @@ export async function verifyRow(
   let   current  = best as VerifyResult | null
 
   while (current && visited.length < MAX_PAGES && modelCalls < MAX_MODEL_CALLS) {
-    const failure = (current.gate as { failure?: GateFailure }).failure
-
-    let want: LinkWant | null = null
-    let why  = ''
-    if (!current.gate.pass && failure === 'no_funding_detail') {
-      want = 'funding'
-      why  = 'the page carried no funding detail'
-    } else if (current.outcome === 'multiple_funds'
-               && (current.fundsOnPage ?? []).some(f => namesMatch(row.title, f))) {
-      want = 'funding'
-      why  = 'the page covers several funds and one of them is ours'
-    } else if (current.gate.pass && current.outcome === 'verified' && !timingAnswered(current)) {
-      // Stop early when the timing question is answered. The common case costs
-      // nothing extra, which is what makes this affordable at catalogue scale.
-      want = 'timing'
-      why  = 'the page named this fund but said nothing about when to apply'
-    }
-    if (!want) break
+    const decision = decideHop(current, row.title, opts.hopOn)
+    if (!decision) break
+    const { want, why } = decision
 
     const scored = lastFetched
       ? candidateLinks(lastFetched.source, lastFetched.url, lastFetched.isMarkdown, want, visited)
@@ -905,6 +990,20 @@ export async function verifyRow(
       // what we had and record where we went, rather than downgrading a sound
       // verdict because one link was mis-scored.
       current.notes = [...current.notes, `followed ${target} because ${why}, and it did not describe this fund`]
+      current.usage = usage
+      break
+    }
+
+    // A hop that lands on a page covering several funds must not extract from
+    // it, even though the gate passes. Greggs Foundation is the case: our row
+    // points at the homepage, /grants/ is one click away and is the right
+    // destination, and it then describes two separate funds with different
+    // rules. Blending them onto one row is worse than the gap we started with,
+    // so the finding is a SPLIT, and the row keeps the silence it had.
+    if (deeper.outcome === 'multiple_funds') {
+      current.splitCandidate = { url: target, funds: deeper.fundsOnPage ?? [] }
+      current.notes = [...current.notes,
+        `followed ${target} because ${why}, and it covers ${(deeper.fundsOnPage ?? []).length} funds: extracted nothing, this row needs splitting`]
       current.usage = usage
       break
     }

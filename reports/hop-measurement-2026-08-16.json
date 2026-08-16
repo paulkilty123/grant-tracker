@@ -1,0 +1,2211 @@
+{
+  "population": {
+    "A": 202,
+    "B": 101,
+    "C": 43
+  },
+  "results": [
+    {
+      "id": "0114ad82-c985-4e59-9c5b-791cd5c3f1df",
+      "stratum": "A",
+      "title": "Alpkit Foundation",
+      "funder": "Alpkit Foundation",
+      "url": "https://alpkit.com/pages/foundation-apply",
+      "before": [
+        "deadline",
+        "is_invite_only",
+        "max_org_income"
+      ],
+      "verdict": "resolved_on_page_1",
+      "gained": [
+        "eligible_structures",
+        "exclusions"
+      ],
+      "pagesRead": [
+        "https://alpkit.com/pages/foundation-apply"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped",
+        "exclusions the page states and we do not hold: \"Holidays\"; \"Charity challenges\"; \"Commercially led travel expeditions\"; \"Scout Jamborees\"; \"Retrospective applications\"; \"Projects outside of the UK\""
+      ],
+      "quotes": [
+        {
+          "field": "eligible_structures",
+          "agrees": false,
+          "url": "https://alpkit.com/pages/foundation-apply",
+          "quote": "support in the region of \u00a350-\u00a3500 and can be financial, or in the form of equipment support. This is to community groups, individuals and organisations that encourage people to get outdoors"
+        },
+        {
+          "field": "exclusions",
+          "agrees": false,
+          "url": "https://alpkit.com/pages/foundation-apply",
+          "quote": "Sorry, we do not support - Holidays - Charity challenges - Commercially led travel expeditions - Scout Jamborees \u2013 due to the large number of participants involved in Scout Jamborees, this is not something we are able to support. - Retrospective applications \u2013 make sure you get your application in on time! - Currently we are unable to support projects outside of the UK"
+        }
+      ],
+      "verdict2": "resolved_on_page_1"
+    },
+    {
+      "id": "05d6dbdf-d370-4d34-9a5b-80540e3b06fa",
+      "stratum": "A",
+      "title": "The Alan and Babette Sainsbury Charitable Fund",
+      "funder": "Alan and Babette Sainsbury Charitable Fund",
+      "url": "https://abscharitablefund.org.uk/",
+      "before": [
+        "deadline",
+        "max_org_income"
+      ],
+      "verdict": "resolved_by_hop",
+      "gained": [
+        "eligible_structures"
+      ],
+      "pagesRead": [
+        "https://abscharitablefund.org.uk"
+      ],
+      "outcome": "verified",
+      "notes": [],
+      "quotes": [
+        {
+          "field": "eligible_structures",
+          "agrees": false,
+          "url": "https://abscharitablefund.org.uk/",
+          "quote": "We are comfortable funding non registered charities who have lived experience of the issues they address"
+        }
+      ],
+      "verdict2": "resolved_on_page_1"
+    },
+    {
+      "id": "0b19ebd6-86f5-4dff-a893-e29bd76fd18d",
+      "stratum": "A",
+      "title": "Barr Education and Training Fund",
+      "funder": "Foundation Scotland",
+      "url": "https://foundationscotland.org.uk/barr-education-and-training-fund",
+      "before": [
+        "deadline",
+        "still_listed",
+        "max_org_income"
+      ],
+      "verdict": "resolved_on_page_1",
+      "gained": [
+        "eligible_structures",
+        "exclusions"
+      ],
+      "pagesRead": [
+        "https://foundationscotland.org.uk/barr-education-and-training-fund"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped"
+      ],
+      "quotes": [
+        {
+          "field": "eligible_structures",
+          "agrees": false,
+          "url": "https://foundationscotland.org.uk/barr-education-and-training-fund",
+          "quote": "The fund is open to individuals aged 16 or over and living in the Barr Community Council area."
+        },
+        {
+          "field": "exclusions",
+          "agrees": true,
+          "url": "https://foundationscotland.org.uk/barr-education-and-training-fund",
+          "quote": "You cannot apply for funding for any costs incurred before a decision has been made on your application (retrospective funding). We will not fund training or equipment that your employer should provide for you or necessary for you to carry out your current job. Apprentices cannot apply for any cost that can be claimed back from their employer or another source."
+        }
+      ],
+      "verdict2": "resolved_on_page_1"
+    },
+    {
+      "id": "14296b43-41c3-43da-aeaa-87c20f385949",
+      "stratum": "A",
+      "title": "Funding opportunity: Migrants and Refugees (A B Charitable Trust)",
+      "funder": "A B Charitable Trust",
+      "url": "https://abcharitabletrust.org.uk/grant/migrants-and-refugees",
+      "before": [
+        "is_grant",
+        "is_rolling",
+        "max_org_income"
+      ],
+      "verdict": "resolved_on_page_1",
+      "gained": [
+        "is_grant"
+      ],
+      "pagesRead": [
+        "https://abcharitabletrust.org.uk/grant/migrants-and-refugees",
+        "https://abcharitabletrust.org.uk/how-we-fund"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "is_rolling: a value was offered without a quote we could find on the page, so it was dropped",
+        "followed https://abcharitabletrust.org.uk/how-we-fund because the page named this fund but said nothing about who may apply, and it did not describe this fund"
+      ],
+      "quotes": [
+        {
+          "field": "is_grant",
+          "agrees": true,
+          "url": "https://abcharitabletrust.org.uk/grant/migrants-and-refugees",
+          "quote": "Grants range in size, with most grants awarded being in the range \u00a310,000 to \u00a340,000"
+        }
+      ],
+      "verdict2": "resolved_on_page_1"
+    },
+    {
+      "id": "181c66e2-24d0-4ba5-addb-02ecc3c7c236",
+      "stratum": "A",
+      "title": "Rye Fund (via SCF Main Grants)",
+      "funder": "Sussex Community Foundation",
+      "url": "https://sussexcommunityfoundation.org/grants/how-to-apply/main-grants/rye-fund/",
+      "before": [
+        "deadline",
+        "deadline_cycle",
+        "max_org_income"
+      ],
+      "verdict": "resolved_by_hop",
+      "gained": [
+        "eligible_structures"
+      ],
+      "pagesRead": [
+        "https://sussexcommunityfoundation.org/grants/how-to-apply/main-grants/rye-fund"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped"
+      ],
+      "quotes": [
+        {
+          "field": "eligible_structures",
+          "agrees": true,
+          "url": "https://sussexcommunityfoundation.org/grants/how-to-apply/main-grants/rye-fund/",
+          "quote": "Grants are available for not-for-profit groups set up specifically to benefit local residents in Rye"
+        }
+      ],
+      "verdict2": "resolved_on_page_1"
+    },
+    {
+      "id": "1f86676a-1fca-4c4f-b1d1-291c20224947",
+      "stratum": "A",
+      "title": "Dudgeon Community STEM in Schools Fund",
+      "funder": "Norfolk Community Foundation",
+      "url": "https://www.norfolkfoundation.com/funding-support/grants/groups/dudgeon-community-fund/",
+      "before": [
+        "deadline",
+        "deadline_cycle",
+        "max_org_income"
+      ],
+      "verdict": "resolved_by_hop",
+      "gained": [
+        "eligible_structures",
+        "exclusions"
+      ],
+      "pagesRead": [
+        "https://www.norfolkfoundation.com/funding-support/grants/groups/dudgeon-community-fund",
+        "https://www.norfolkfoundation.com/our-impact/newsletter-sign-up"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "is_rolling: a value was offered without a quote we could find on the page, so it was dropped",
+        "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped",
+        "followed https://www.norfolkfoundation.com/our-impact/newsletter-sign-up/ because the page named this fund but said nothing about when to apply, and it did not describe this fund"
+      ],
+      "quotes": [
+        {
+          "field": "eligible_structures",
+          "agrees": false,
+          "url": "https://www.norfolkfoundation.com/funding-support/grants/groups/dudgeon-community-fund/",
+          "quote": "Applications can be made by: non-fee paying colleges and schools (up to and including year 13) charities and other not-for-profit organisations that are experienced in working with students, delivering activity in schools, and which meet NCF's general eligibility criteria. Who can apply? Charity, School, Social Enterprise/CIC, and Voluntary/Community Group"
+        },
+        {
+          "field": "exclusions",
+          "agrees": true,
+          "url": "https://www.norfolkfoundation.com/funding-support/grants/groups/dudgeon-community-fund/",
+          "quote": "The Fund will not cover costs associated with normal delivery of the curriculum. For example, funding could not support the purchasing of equipment to use in lessons. It can also not support the costs associated with a school's core funding, such as teacher salaries."
+        }
+      ],
+      "verdict2": "resolved_on_page_1"
+    },
+    {
+      "id": "22b5670a-dc7e-406a-aae4-e7926ea51d78",
+      "stratum": "A",
+      "title": "Baillie Gifford International Fund",
+      "funder": "Foundation Scotland",
+      "url": "https://foundationscotland.org.uk/apply-for-funding/funding-available/baillie-gifford-international-fund",
+      "before": [
+        "still_listed"
+      ],
+      "verdict": "resolved_on_page_1",
+      "gained": [
+        "eligible_structures",
+        "exclusions"
+      ],
+      "pagesRead": [
+        "https://foundationscotland.org.uk/apply-for-funding/funding-available/baillie-gifford-international-fund"
+      ],
+      "outcome": "round_closed",
+      "notes": [
+        "is_rolling contradicted: the page names dated rounds (12/8, 14/9, 17/11), so applications are not accepted at any time",
+        "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped"
+      ],
+      "quotes": [
+        {
+          "field": "eligible_structures",
+          "agrees": true,
+          "url": "https://foundationscotland.org.uk/apply-for-funding/funding-available/baillie-gifford-international-fund",
+          "quote": "applicants must be registered charities (i.e. registered with OSCR or the Charities Commission in the UK, or an equivalent overseas which will allow Foundation Scotland to complete the necessary due diligence and eligibility checks)"
+        },
+        {
+          "field": "exclusions",
+          "agrees": true,
+          "url": "https://foundationscotland.org.uk/apply-for-funding/funding-available/baillie-gifford-international-fund",
+          "quote": "Please note that for this fund, we cannot support unregistered organisations"
+        }
+      ],
+      "verdict2": "resolved_on_page_1"
+    },
+    {
+      "id": "277bbe32-d3e9-48a8-b826-ebc8fa354395",
+      "stratum": "A",
+      "title": "New Albion Community Wind Farm Fund",
+      "funder": "Northamptonshire Community Foundation",
+      "url": "https://www.ncf.uk.com/new-albion-wind-farm-fund",
+      "before": [
+        "is_rolling",
+        "max_org_income"
+      ],
+      "verdict": "resolved_on_page_1",
+      "gained": [
+        "eligible_structures",
+        "exclusions"
+      ],
+      "pagesRead": [
+        "https://www.ncf.uk.com/new-albion-wind-farm-fund"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped"
+      ],
+      "quotes": [
+        {
+          "field": "eligible_structures",
+          "agrees": false,
+          "url": "https://www.ncf.uk.com/new-albion-wind-farm-fund",
+          "quote": "Your group must be a small, locally managed, voluntary, community or self-help group."
+        },
+        {
+          "field": "exclusions",
+          "agrees": true,
+          "url": "https://www.ncf.uk.com/new-albion-wind-farm-fund",
+          "quote": "Please note that as a general exclusion we do not fund social enterprises with persons with significant control (PSC)."
+        }
+      ],
+      "verdict2": "resolved_on_page_1"
+    },
+    {
+      "id": "2b5a4026-5608-4b72-8849-137631789a90",
+      "stratum": "A",
+      "title": "Grassroots Grants",
+      "funder": "Berkshire Community Foundation",
+      "url": "https://berkshirecf.org/available-funding/grassroots-grant-round/",
+      "before": [
+        "deadline",
+        "deadline_cycle",
+        "max_org_income"
+      ],
+      "verdict": "resolved_by_hop",
+      "gained": [
+        "deadline",
+        "eligible_structures",
+        "exclusions"
+      ],
+      "pagesRead": [
+        "https://berkshirecf.org/available-funding/grassroots-grant-round",
+        "https://www.berkshirecf.org/available-funding",
+        "https://www.berkshirecf.org/who-can-apply"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "is_rolling: a value was offered without a quote we could find on the page, so it was dropped",
+        "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped",
+        "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped",
+        "read one level down: https://www.berkshirecf.org/available-funding (the page named this fund but said nothing about who may apply)",
+        "max_org_income withheld: the quote is not about organisational income \u2014 \"We cannot fund organisations that: Are holding more than 12 months unrestricted reserves Have an annual operating budget\"",
+        "exclusions the page states and we do not hold: \"Individuals\"; \"Projects primarily delivered outside of Berkshire\"; \"Retrospective costs (activities already completed)\"; \"Regional or national charities without a clearly defined Berkshire branch\"; \"Political or religious campaigning\"; \"Medical research\"; \"Large capital projects (including vehicles, property purchase or major building works over \u00a35,000)\"; \"One-off events such as award ceremonies (unless they directly address significant need and demonstrate clear outcomes)\"",
+        "read one level down: https://www.berkshirecf.org/who-can-apply/ (the page named this fund but said nothing about who may apply)"
+      ],
+      "quotes": [
+        {
+          "field": "deadline",
+          "agrees": false,
+          "url": "https://berkshirecf.org/available-funding/grassroots-grant-round/",
+          "quote": "Your application form must be completed on-line and submitted by end of February 2027 (TBC)"
+        },
+        {
+          "field": "eligible_structures",
+          "agrees": false,
+          "url": "https://www.berkshirecf.org/who-can-apply/",
+          "quote": "Be not for profit This includes: Registered charities Charitable Incorporated Organisations (CIOs) Community Interest Companies (CICs) Constituted voluntary or community groups operating on a non-profit basis"
+        },
+        {
+          "field": "exclusions",
+          "agrees": false,
+          "url": "https://www.berkshirecf.org/who-can-apply/",
+          "quote": "We are unable to fund: Individuals Projects primarily delivered outside of Berkshire Retrospective costs (activities already completed) Regional or national charities without a clearly defined Berkshire branch... We also do not fund: Political or religious campaigning Medical research Large capital projects (including vehicles, property purchase or major building works over \u00a35,000) One-off events such as award ceremonies (unless they directly address significant need and demonstrate clear outcomes)"
+        }
+      ],
+      "verdict2": "resolved_by_hop"
+    },
+    {
+      "id": "31807e92-d843-484f-bd73-f6524af16e99",
+      "stratum": "A",
+      "title": "Wise Music Foundation Grants",
+      "funder": "Wise Music Foundation",
+      "url": "https://wisemusicfoundation.com/apply/",
+      "before": [
+        "deadline",
+        "still_listed",
+        "is_invite_only"
+      ],
+      "verdict": "resolved_by_hop",
+      "gained": [
+        "eligible_structures",
+        "exclusions"
+      ],
+      "pagesRead": [
+        "https://wisemusicfoundation.com/apply",
+        "https://wisemusicfoundation.com/apply/privacy-policy"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "is_rolling: a value was offered without a quote we could find on the page, so it was dropped",
+        "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped",
+        "followed https://wisemusicfoundation.com/apply/privacy-policy/ because the page named this fund but said nothing about when to apply, and it did not describe this fund"
+      ],
+      "quotes": [
+        {
+          "field": "eligible_structures",
+          "agrees": true,
+          "url": "https://wisemusicfoundation.com/apply/",
+          "quote": "generally support smaller charities with an annual turnover of up to \u00a3500,000"
+        },
+        {
+          "field": "exclusions",
+          "agrees": true,
+          "url": "https://wisemusicfoundation.com/apply/",
+          "quote": "we do not donate to the same charity more than once in a calendar year"
+        }
+      ],
+      "verdict2": "resolved_on_page_1"
+    },
+    {
+      "id": "3585a7fa-7907-4f17-9020-0c6f36a21875",
+      "stratum": "A",
+      "title": "Arts-based Learning\u00a0Fund",
+      "funder": "Paul Hamlyn Foundation",
+      "url": "https://www.phf.org.uk/funding/arts-based-learning-fund",
+      "before": [
+        "deadline",
+        "still_listed",
+        "max_org_income"
+      ],
+      "verdict": "resolved_on_page_1",
+      "gained": [
+        "eligible_structures",
+        "exclusions"
+      ],
+      "pagesRead": [
+        "https://www.phf.org.uk/funding/arts-based-learning-fund"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped",
+        "exclusions the page states and we do not hold: \"work which is focused on developing pupils' creativity, through approaches that are not arts-based\""
+      ],
+      "quotes": [
+        {
+          "field": "eligible_structures",
+          "agrees": false,
+          "url": "https://www.phf.org.uk/funding/arts-based-learning-fund",
+          "quote": "Arts organisations can be charities, community organisations, social enterprises and not-for-profit companies active in the arts and culture sector"
+        },
+        {
+          "field": "exclusions",
+          "agrees": false,
+          "url": "https://www.phf.org.uk/funding/arts-based-learning-fund",
+          "quote": "we are not able to fund: applications from schools and other formal education settings (however primary schools may directly for the Teacher Development Fund ); applications from universities... work with formal education settings that are not state-funded... recently registered organisations which have not yet produced a set of accounts; work that is or should be a statutory entitlement... work that is therapeutic in its practice and intended outcomes; or work which is focused on developing pupils' creativity, through approaches that are not arts-based."
+        }
+      ],
+      "verdict2": "resolved_on_page_1"
+    },
+    {
+      "id": "3ca96f8d-8d53-4be5-99d8-f3a637d1fc5e",
+      "stratum": "A",
+      "title": "British Record Industry Trust (Brit Trust)",
+      "funder": "British Record Industry Trust (Brit Trust)",
+      "url": "https://brittrust.co.uk/brit-trust-grants/",
+      "before": [
+        "deadline",
+        "is_grant",
+        "deadline_cycle",
+        "max_org_income"
+      ],
+      "verdict": "resolved_by_hop",
+      "gained": [
+        "is_grant",
+        "exclusions"
+      ],
+      "pagesRead": [
+        "https://brittrust.co.uk/brit-trust-grants"
+      ],
+      "outcome": "verified",
+      "notes": [],
+      "quotes": [
+        {
+          "field": "is_grant",
+          "agrees": true,
+          "url": "https://brittrust.co.uk/brit-trust-grants/",
+          "quote": "BRIT Trust Grants"
+        },
+        {
+          "field": "exclusions",
+          "agrees": true,
+          "url": "https://brittrust.co.uk/brit-trust-grants/",
+          "quote": "The BRIT Trust regrets that it is not able to consider grants for individuals/scholarships nor make grants for any activity outside of the UK."
+        }
+      ],
+      "verdict2": "resolved_on_page_1"
+    },
+    {
+      "id": "469b52bf-f8b9-4b4a-b8cd-54789928562e",
+      "stratum": "A",
+      "title": "National Digital Inclusion Network membership",
+      "funder": "Good Things Foundation",
+      "url": "https://www.goodthingsfoundation.org/network",
+      "before": [
+        "deadline",
+        "still_listed",
+        "max_org_income"
+      ],
+      "verdict": "resolved_on_page_1",
+      "gained": [
+        "eligible_structures"
+      ],
+      "pagesRead": [
+        "https://www.goodthingsfoundation.org/network",
+        "https://www.goodthingsfoundation.org/corporate-home/discover/newsletter.html"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "scope verdict ignored: this row is classified \"in_kind\", which the catalogue carries deliberately",
+        "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped",
+        "followed https://www.goodthingsfoundation.org/corporate-home/discover/newsletter.html because the page named this fund but said nothing about when to apply, and it did not describe this fund"
+      ],
+      "quotes": [
+        {
+          "field": "eligible_structures",
+          "agrees": true,
+          "url": "https://www.goodthingsfoundation.org/network",
+          "quote": "As a registered charity, community interest company, social enterprise, community benefit or cooperative society? Yes - start your application to join the National Digital Inclusion Network! As a local authority or NHS Trust? Local authorities, NHS Trusts and other public services are welcome to join the Network. As a company? Organisations that work for the benefit of others, not for financial gain, are welcome to join the National Digital Inclusion Network. As an unincorporated association? Unincorporated associations are eligible to join the Network, as long as they can provide information about their approach to management and constitution."
+        }
+      ],
+      "verdict2": "resolved_on_page_1"
+    },
+    {
+      "id": "4d0ad2d5-8f94-4653-8b22-c08375207233",
+      "stratum": "A",
+      "title": "Warwick and Dominey Fund \u2013 Decarbonisation",
+      "funder": "Cambridgeshire Community Foundation",
+      "url": "https://www.cambscf.org.uk/funds/warwick-dominey-decarb/",
+      "before": [
+        "deadline",
+        "max_org_income"
+      ],
+      "verdict": "resolved_by_hop",
+      "gained": [
+        "eligible_structures"
+      ],
+      "pagesRead": [
+        "https://www.cambscf.org.uk/funds/warwick-dominey-decarb"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped"
+      ],
+      "quotes": [
+        {
+          "field": "eligible_structures",
+          "agrees": false,
+          "url": "https://www.cambscf.org.uk/funds/warwick-dominey-decarb/",
+          "quote": "Non-profit organisations"
+        }
+      ],
+      "verdict2": "resolved_on_page_1"
+    },
+    {
+      "id": "50343bc9-4d8e-4416-8aad-c9e3ed2300ac",
+      "stratum": "A",
+      "title": "Data First Aid",
+      "funder": "Pro Bono Economics",
+      "url": "https://pbe.co.uk/our-services/data-first-aid/",
+      "before": [
+        "deadline",
+        "still_listed",
+        "is_invite_only",
+        "max_org_income"
+      ],
+      "verdict": "resolved_by_hop",
+      "gained": [
+        "eligible_structures",
+        "exclusions"
+      ],
+      "pagesRead": [
+        "https://pbe.co.uk/our-services/data-first-aid"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped"
+      ],
+      "quotes": [
+        {
+          "field": "eligible_structures",
+          "agrees": true,
+          "url": "https://pbe.co.uk/our-services/data-first-aid/",
+          "quote": "Get free support from a dedicated volunteer economist who can help charities with data analysis or visualisation"
+        },
+        {
+          "field": "exclusions",
+          "agrees": true,
+          "url": "https://pbe.co.uk/our-services/data-first-aid/",
+          "quote": "However, we're not able to match volunteers for ongoing or open-ended support."
+        }
+      ],
+      "verdict2": "resolved_on_page_1"
+    },
+    {
+      "id": "5c3fcc0c-6ecb-41f4-aba7-0546867e5e9c",
+      "stratum": "A",
+      "title": "Small Grants",
+      "funder": "Two Ridings Community Foundation",
+      "url": "https://tworidingscf.org.uk/fund/small-grants-fund/",
+      "before": [
+        "deadline",
+        "is_grant",
+        "still_listed",
+        "is_invite_only"
+      ],
+      "verdict": "resolved_by_hop",
+      "gained": [
+        "is_grant",
+        "eligible_structures",
+        "exclusions"
+      ],
+      "pagesRead": [
+        "https://tworidingscf.org.uk/fund/small-grants-fund"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped"
+      ],
+      "quotes": [
+        {
+          "field": "is_grant",
+          "agrees": true,
+          "url": "https://tworidingscf.org.uk/fund/small-grants-fund/",
+          "quote": "You can apply for grants between \u00a3200 and \u00a32,500 for ongoing project costs, pilot projects, small capital expenditure or development needs of your organisation"
+        },
+        {
+          "field": "eligible_structures",
+          "agrees": true,
+          "url": "https://tworidingscf.org.uk/fund/small-grants-fund/",
+          "quote": "Be either a small voluntary organisation, community group, small charity or other type of not-for-profit organisation provided that the purpose of the grant is wholly charitable. (Please see our FAQs for additional requirements for CIC's and CBS's)"
+        },
+        {
+          "field": "exclusions",
+          "agrees": true,
+          "url": "https://tworidingscf.org.uk/fund/small-grants-fund/",
+          "quote": "Please see the guidance notes for specific exclusions of who or what cannot be funded."
+        }
+      ],
+      "verdict2": "resolved_on_page_1"
+    },
+    {
+      "id": "5ed5ccdf-f551-4f87-ae8a-514f843ac3c2",
+      "stratum": "A",
+      "title": "Football Foundation - Grass Pitch Maintenance Fund",
+      "funder": "Football Foundation - Grass Pitch Maintenance Fund",
+      "url": "https://footballfoundation.org.uk/grant/grass-pitch-maintenance-fund",
+      "before": [
+        "deadline",
+        "still_listed",
+        "max_org_income"
+      ],
+      "verdict": "resolved_on_page_1",
+      "gained": [
+        "eligible_structures",
+        "exclusions"
+      ],
+      "pagesRead": [
+        "https://footballfoundation.org.uk/grant/grass-pitch-maintenance-fund",
+        "https://footballfoundation.org.uk/search-results?terms%5B%5D=Looking+for+funding"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped",
+        "exclusions the page states and we do not hold: \"Site operators, such as education sites, that don't offer community use on the evenings/weekends\"",
+        "followed https://footballfoundation.org.uk/search-results?terms%5B%5D=Looking+for+funding because the page named this fund but said nothing about when to apply, and it did not describe this fund"
+      ],
+      "quotes": [
+        {
+          "field": "eligible_structures",
+          "agrees": false,
+          "url": "https://footballfoundation.org.uk/grant/grass-pitch-maintenance-fund",
+          "quote": "Grassroots football clubs* Leagues Charities Education sites (offering community usage on evenings and weekends) Town and Parish Councils (that host grassroots football clubs on council-owned sites) National League System (Steps 1-6) and Women's Football Pyramid (Tiers 1-4) clubs"
+        },
+        {
+          "field": "exclusions",
+          "agrees": false,
+          "url": "https://footballfoundation.org.uk/grant/grass-pitch-maintenance-fund",
+          "quote": "What we won't fund Routine maintenance works such as grass cutting, hedge cutting, line-marking and purchase of capital items The purchase of machinery items Machinery repair and maintenance costs Goalpost and net replacement Facility hire In-house staffing and/or volunteer groundsperson cost/salaries... Who is not eligible? Clubs, leagues or organisations without suitable security of tenure (details below) Clubs, leagues or organisations without a PitchPower Pitch Assessment Report Local Authorities without an eligible organisation that applies on their behalf (details below) Site operators, such as education sites, that don't offer community use on the evenings/weekends"
+        }
+      ],
+      "verdict2": "resolved_on_page_1"
+    },
+    {
+      "id": "61989785-35af-40d7-9961-011cf4711f44",
+      "stratum": "A",
+      "title": "William A Cadbury Charitable Trust Grants",
+      "funder": "William A Cadbury Charitable Trust",
+      "url": "https://wa-cadbury.org.uk/grants-policy/",
+      "before": [
+        "deadline",
+        "still_listed",
+        "deadline_cycle",
+        "is_invite_only",
+        "max_org_income"
+      ],
+      "verdict": "resolved_by_hop",
+      "gained": [
+        "eligible_structures"
+      ],
+      "pagesRead": [
+        "https://wa-cadbury.org.uk/grants-policy"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped"
+      ],
+      "quotes": [
+        {
+          "field": "eligible_structures",
+          "agrees": false,
+          "url": "https://wa-cadbury.org.uk/grants-policy/",
+          "quote": "The William Cadbury Charitable Trust supports charitable organisations based in the UK. If you are not registered with one of the three UK Charity Regulators, or are not a Community Interest Company limited by guarantee, or are applying as an individual we will not be able to help. UK bodies legally exempt from registration with the Charity Commission can apply and small grants are occasionally made to unregistered groups based in the West Midlands (who must nevertheless have a constitution, an elected committee and a bank account controlled by two or more committee members)."
+        }
+      ],
+      "verdict2": "resolved_on_page_1"
+    },
+    {
+      "id": "68f51f86-7411-4628-a2f2-af70c7215c67",
+      "stratum": "A",
+      "title": "Fidelio Charitable Trust",
+      "funder": "Fidelio Charitable Trust",
+      "url": "http://www.fideliocharitabletrust.org.uk/howtoapply.php",
+      "before": [
+        "deadline",
+        "is_grant",
+        "is_invite_only",
+        "max_org_income"
+      ],
+      "verdict": "followed_still_silent",
+      "gained": [],
+      "pagesRead": [
+        "http://www.fideliocharitabletrust.org.uk/howtoapply.php",
+        "http://www.fideliocharitabletrust.org.uk/application.php"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "is_rolling: a value was offered without a quote we could find on the page, so it was dropped",
+        "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped",
+        "followed http://www.fideliocharitabletrust.org.uk/application.php because the page named this fund but said nothing about when to apply, and it did not describe this fund"
+      ],
+      "quotes": [],
+      "verdict2": "followed_still_silent"
+    },
+    {
+      "id": "720c4571-5ecc-477f-b84f-cb49a7ea1c59",
+      "stratum": "A",
+      "title": "Henry Smith Foundation \u2014 Holiday Grants",
+      "funder": "Henry Smith Foundation",
+      "url": "https://henrysmith.foundation/grants/holiday-grants/",
+      "before": [
+        "deadline",
+        "is_invite_only"
+      ],
+      "verdict": "resolved_by_hop",
+      "gained": [
+        "eligible_structures",
+        "exclusions"
+      ],
+      "pagesRead": [
+        "https://henrysmith.foundation/grants/holiday-grants",
+        "https://henrysmith.foundation/grants"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "is_rolling: a value was offered without a quote we could find on the page, so it was dropped",
+        "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped",
+        "exclusions the page states and we do not hold: \"trips to high-cost destinations (e.g. expensive theme parks, sporting events)\"",
+        "followed https://henrysmith.foundation/grants/ because the page named this fund but said nothing about when to apply, and it did not describe this fund"
+      ],
+      "quotes": [
+        {
+          "field": "eligible_structures",
+          "agrees": true,
+          "url": "https://henrysmith.foundation/grants/holiday-grants/",
+          "quote": "We fund schools, youth groups, and non-profit organisations planning one-time trips for children aged 13 and under."
+        },
+        {
+          "field": "exclusions",
+          "agrees": false,
+          "url": "https://henrysmith.foundation/grants/holiday-grants/",
+          "quote": "We don't fund trips to high-cost destinations (e.g. expensive theme parks, sporting events), trips outside the UK, trips for children over 13 or for families, trips that have already happened or are less than 6 weeks away, or trips with educational, curriculum-based or religious objectives."
+        }
+      ],
+      "verdict2": "resolved_on_page_1"
+    },
+    {
+      "id": "7f128498-e43b-4578-975a-f1186854bae9",
+      "stratum": "A",
+      "title": "The Pargiter Trust Fund",
+      "funder": "Community Foundation Tyne & Wear and Northumberland",
+      "url": "https://www.communityfoundation.org.uk/grants/supporting-people-aged-over-65-to-be-independent-healthy-and-socially-included/",
+      "before": [
+        "max_org_income"
+      ],
+      "verdict": "resolved_by_hop",
+      "gained": [
+        "exclusions"
+      ],
+      "pagesRead": [
+        "https://www.communityfoundation.org.uk/grants/supporting-people-aged-over-65-to-be-independent-healthy-and-socially-included"
+      ],
+      "outcome": "verified",
+      "notes": [],
+      "quotes": [
+        {
+          "field": "exclusions",
+          "agrees": true,
+          "url": "https://www.communityfoundation.org.uk/grants/supporting-people-aged-over-65-to-be-independent-healthy-and-socially-included/",
+          "quote": "In addition to the Community Foundation's standard exclusions, the fund will not support: Activities which do not primarily benefit those aged over 65 The purchase of motor vehicles"
+        }
+      ],
+      "verdict2": "resolved_on_page_1"
+    },
+    {
+      "id": "89a22fca-ffc6-44f2-be88-78eb6d92cf9b",
+      "stratum": "A",
+      "title": "The 1989 Willan Charitable Trust",
+      "funder": "Community Foundation Tyne & Wear and Northumberland",
+      "url": "https://www.communityfoundation.org.uk/grants/the-1989-willan-charitable-trust/",
+      "before": [
+        "deadline",
+        "still_listed",
+        "is_invite_only"
+      ],
+      "verdict": "resolved_by_hop",
+      "gained": [
+        "eligible_structures",
+        "exclusions"
+      ],
+      "pagesRead": [
+        "https://www.communityfoundation.org.uk/grants/the-1989-willan-charitable-trust"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "is_rolling contradicted: the page names dated rounds (15/1, 15/4, 15/7, 15/10), so applications are not accepted at any time",
+        "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped"
+      ],
+      "quotes": [
+        {
+          "field": "eligible_structures",
+          "agrees": false,
+          "url": "https://www.communityfoundation.org.uk/grants/the-1989-willan-charitable-trust/",
+          "quote": "The 1989 Willan Charitable Trust Fund supports registered charities, exempted and excepted organisations"
+        },
+        {
+          "field": "exclusions",
+          "agrees": true,
+          "url": "https://www.communityfoundation.org.uk/grants/the-1989-willan-charitable-trust/",
+          "quote": "In addition to standard Community Foundation exclusions, the Fund will not normally consider grants for: \u2022 trips abroad \u2022 individuals, except Project Trust applications from residents of the benefit area \u2022 projects focused on heritage and the environment, scientific and/or medical research, unless these address deprivation and/or enrich local communities, improving local quality of life."
+        }
+      ],
+      "verdict2": "resolved_on_page_1"
+    },
+    {
+      "id": "8d98b098-984e-4ee1-a340-facede127492",
+      "stratum": "A",
+      "title": "Drapers' Charitable Fund",
+      "funder": "The Drapers' Company",
+      "url": "https://thedrapers.co.uk/drapers-charitable-fund/",
+      "before": [
+        "deadline",
+        "still_listed",
+        "is_invite_only",
+        "max_org_income"
+      ],
+      "verdict": "resolved_by_hop",
+      "gained": [
+        "still_listed",
+        "is_invite_only"
+      ],
+      "pagesRead": [
+        "https://thedrapers.co.uk/drapers-charitable-fund",
+        "https://thedrapers.co.uk/philanthropy/"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "is_rolling contradicted: the page names dated rounds (29/9, 1/12, 23/2, 27/4, 22/6), so applications are not accepted at any time",
+        "read one level down: https://thedrapers.co.uk/philanthropy/#Applying_for_a_Grant (the page named this fund but said nothing about who may apply)",
+        "nothing to follow, though the page named this fund but said nothing about who may apply"
+      ],
+      "quotes": [
+        {
+          "field": "still_listed",
+          "agrees": true,
+          "url": "https://thedrapers.co.uk/philanthropy/#Applying_for_a_Grant",
+          "quote": "Through this fund, we aim to improve the quality of life and expectations of people and communities in Greater London who are disadvantaged and socially excluded."
+        },
+        {
+          "field": "is_invite_only",
+          "agrees": true,
+          "url": "https://thedrapers.co.uk/drapers-charitable-fund/",
+          "quote": "If your project meets any of the following criteria, we look forward to hearing from you."
+        }
+      ],
+      "verdict2": "resolved_by_hop"
+    },
+    {
+      "id": "984ce6c8-50ff-4355-a40f-ce98008c35ad",
+      "stratum": "A",
+      "title": "Together for Service: Families Place-Based Grants",
+      "funder": "Armed Forces Covenant Fund Trust",
+      "url": "https://covenantfund.org.uk/programme/together-for-service-families-place-based-grants-programme/",
+      "before": [
+        "is_rolling",
+        "still_listed",
+        "max_org_income"
+      ],
+      "verdict": "resolved_by_hop",
+      "gained": [
+        "eligible_structures"
+      ],
+      "pagesRead": [
+        "https://covenantfund.org.uk/programme/together-for-service-families-place-based-grants-programme"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "is_rolling: a value was offered without a quote we could find on the page, so it was dropped",
+        "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped"
+      ],
+      "quotes": [
+        {
+          "field": "eligible_structures",
+          "agrees": false,
+          "url": "https://covenantfund.org.uk/programme/together-for-service-families-place-based-grants-programme/",
+          "quote": "We invite applications from: A registered charity, registered in the UK for at least three years at the time of application, with substantial recent experience of supporting armed forces communities. A local authority."
+        }
+      ],
+      "verdict2": "resolved_on_page_1"
+    },
+    {
+      "id": "a11fd956-15fd-4a19-9d4a-6c2eff06a434",
+      "stratum": "A",
+      "title": "National Lottery Awards for All Wales",
+      "funder": "National Lottery Community Fund",
+      "url": "https://www.tnlcommunityfund.org.uk/funding/funding-programmes/national-lottery-awards-for-all-wales",
+      "before": [
+        "deadline",
+        "max_org_income"
+      ],
+      "verdict": "followed_still_silent",
+      "gained": [],
+      "pagesRead": [
+        "https://www.tnlcommunityfund.org.uk/funding/funding-programmes/national-lottery-awards-for-all-wales",
+        "https://www.tnlcommunityfund.org.uk/funding/england"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "followed https://www.tnlcommunityfund.org.uk/funding/england because the page named this fund but said nothing about when to apply, and it did not describe this fund"
+      ],
+      "quotes": [],
+      "verdict2": "followed_still_silent"
+    },
+    {
+      "id": "aac5e1fe-dbd1-4428-8eab-efcc9cff30dd",
+      "stratum": "A",
+      "title": "Albert Hunt Trust",
+      "funder": "Albert Hunt Trust",
+      "url": "https://www.alberthunttrust.org.uk/faq/",
+      "before": [
+        "deadline",
+        "deadline_cycle",
+        "max_org_income"
+      ],
+      "verdict": "resolved_by_hop",
+      "gained": [
+        "eligible_structures"
+      ],
+      "pagesRead": [
+        "https://www.alberthunttrust.org.uk/faq"
+      ],
+      "outcome": "verified",
+      "notes": [],
+      "quotes": [
+        {
+          "field": "eligible_structures",
+          "agrees": true,
+          "url": "https://www.alberthunttrust.org.uk/faq/",
+          "quote": "You need to be a UK charity registered with the Charity Commission for England and Wales, the Scottish Charity Register or the Charity Commission for Northern Ireland."
+        }
+      ],
+      "verdict2": "resolved_on_page_1"
+    },
+    {
+      "id": "b1b1990e-368f-4080-bcd2-e65033a9b65e",
+      "stratum": "A",
+      "title": "Sussex Community Foundation \u2014 The Chagossian Fund",
+      "funder": "Sussex Community Foundation",
+      "url": "https://sussexcommunityfoundation.org/grants/how-to-apply/additional-grants/the-chagossian-fund/",
+      "before": [
+        "deadline",
+        "max_org_income"
+      ],
+      "verdict": "resolved_by_hop",
+      "gained": [
+        "eligible_structures"
+      ],
+      "pagesRead": [
+        "https://sussexcommunityfoundation.org/grants/how-to-apply/additional-grants/the-chagossian-fund"
+      ],
+      "outcome": "verified",
+      "notes": [],
+      "quotes": [
+        {
+          "field": "eligible_structures",
+          "agrees": true,
+          "url": "https://sussexcommunityfoundation.org/grants/how-to-apply/additional-grants/the-chagossian-fund/",
+          "quote": "This fund is particularly aimed at voluntary sector organisations, grassroots community groups and established local charities supporting Chagossian people living in Crawley and other parts of Sussex."
+        }
+      ],
+      "verdict2": "resolved_on_page_1"
+    },
+    {
+      "id": "ba33eb0c-e6d9-453c-b57e-21f23e925738",
+      "stratum": "A",
+      "title": "Champions for Children \u2014 Match Fundraising Programme",
+      "funder": "The Childhood Trust",
+      "url": "https://www.childhoodtrust.org.uk/apply-for-funding/",
+      "before": [
+        "deadline",
+        "deadline_cycle",
+        "is_invite_only"
+      ],
+      "verdict": "followed_still_silent",
+      "gained": [],
+      "pagesRead": [
+        "https://www.childhoodtrust.org.uk/apply-for-funding",
+        "https://childhoodtrust.org.uk/grant-making/open-funding-rounds/guidance-and-support"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "is_rolling: a value was offered without a quote we could find on the page, so it was dropped",
+        "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped",
+        "followed https://childhoodtrust.org.uk/grant-making/open-funding-rounds/guidance-and-support/ because the page named this fund but said nothing about when to apply, and it did not describe this fund"
+      ],
+      "quotes": [],
+      "verdict2": "followed_still_silent"
+    },
+    {
+      "id": "cd0828b8-86de-4690-87f1-a866bafcb3bd",
+      "stratum": "A",
+      "title": "The Leeds Digital Inclusion Fund",
+      "funder": "Leeds Community Foundation",
+      "url": "https://www.leedscf.org.uk/the-leeds-digital-inclusion-fund",
+      "before": [
+        "still_listed",
+        "is_invite_only",
+        "max_org_income"
+      ],
+      "verdict": "unreadable",
+      "gained": [],
+      "pagesRead": [
+        "https://www.leedscf.org.uk/the-leeds-digital-inclusion-fund"
+      ],
+      "outcome": "fixable_link",
+      "notes": [
+        "read through the reader proxy"
+      ],
+      "quotes": [],
+      "verdict2": "unreadable"
+    },
+    {
+      "id": "d87d92b9-1415-4ab9-a021-853ca441eb3b",
+      "stratum": "A",
+      "title": "Burton Wold Community Wind Farm Fund",
+      "funder": "Northamptonshire Community Foundation",
+      "url": "https://www.ncf.uk.com/burton-wold-wind-farm-fund",
+      "before": [
+        "is_rolling",
+        "is_invite_only",
+        "max_org_income"
+      ],
+      "verdict": "resolved_on_page_1",
+      "gained": [
+        "eligible_structures",
+        "exclusions"
+      ],
+      "pagesRead": [
+        "https://www.ncf.uk.com/burton-wold-wind-farm-fund"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "is_rolling: a value was offered without a quote we could find on the page, so it was dropped",
+        "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped"
+      ],
+      "quotes": [
+        {
+          "field": "eligible_structures",
+          "agrees": false,
+          "url": "https://www.ncf.uk.com/burton-wold-wind-farm-fund",
+          "quote": "Your group must be a small, locally managed, voluntary, community or self-help group. Parish Councils are also eligible to apply for non-statutory activity."
+        },
+        {
+          "field": "exclusions",
+          "agrees": true,
+          "url": "https://www.ncf.uk.com/burton-wold-wind-farm-fund",
+          "quote": "Please note that as a general exclusion we do not fund social enterprises with persons with significant control (PSC)."
+        }
+      ],
+      "verdict2": "resolved_on_page_1"
+    },
+    {
+      "id": "0268feff-4276-47d6-a0cc-ce55f702c697",
+      "stratum": "B",
+      "title": "Community Grants Programme",
+      "funder": "Westminster Foundation",
+      "url": "https://westminsterfoundation.org.uk/community-grants",
+      "before": [
+        "deadline",
+        "is_rolling",
+        "still_listed",
+        "max_org_income"
+      ],
+      "verdict": "resolved_on_page_1",
+      "gained": [
+        "eligible_structures"
+      ],
+      "pagesRead": [
+        "https://westminsterfoundation.org.uk/community-grants"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped",
+        "read through the reader proxy",
+        "nothing to follow, though the page named this fund but said nothing about when to apply"
+      ],
+      "quotes": [
+        {
+          "field": "eligible_structures",
+          "agrees": false,
+          "url": "https://westminsterfoundation.org.uk/community-grants",
+          "quote": "Charities registered with the Charity Commission or organisations with exclusively charitable objectives."
+        }
+      ],
+      "verdict2": "resolved_on_page_1"
+    },
+    {
+      "id": "0f6795e2-bdd9-4746-b1d8-88a6ea469824",
+      "stratum": "B",
+      "title": "Barbara Ward Children's Foundation",
+      "funder": "Barbara Ward Children's Foundation",
+      "url": "https://www.bwcf.org.uk/",
+      "before": [
+        "deadline",
+        "is_rolling",
+        "is_invite_only",
+        "max_org_income"
+      ],
+      "verdict": "unreadable",
+      "gained": [],
+      "pagesRead": [
+        "https://www.bwcf.org.uk",
+        "https://bwcf.org.uk/grants",
+        "https://bwcf.org.uk/grant-recipients"
+      ],
+      "outcome": "fixable_link",
+      "notes": [
+        "read through the reader proxy",
+        "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped",
+        "exclusions the page states and we do not hold: \"Grant requests which exceed more than 10% of a charities income\"",
+        "read one level down: https://bwcf.org.uk/grants/ (the page carried no funding detail)",
+        "followed https://bwcf.org.uk/grant-recipients/ because the page carried no funding detail, and it did not describe this fund"
+      ],
+      "quotes": [
+        {
+          "field": "max_org_income",
+          "agrees": false,
+          "url": "https://bwcf.org.uk/grants/",
+          "quote": "Applications will only be considered from those charities that have been registered in the UK for at least two years and whose income does not exceed \u00a31.5m."
+        },
+        {
+          "field": "eligible_structures",
+          "agrees": true,
+          "url": "https://bwcf.org.uk/grants/",
+          "quote": "Applications will only be considered from those charities that have been registered in the UK for at least two years"
+        },
+        {
+          "field": "exclusions",
+          "agrees": false,
+          "url": "https://bwcf.org.uk/grants/",
+          "quote": "Grants requests which exceed more than 10% of a charities income will not be considered."
+        }
+      ],
+      "verdict2": "unreadable"
+    },
+    {
+      "id": "1981a846-3cce-48d2-b568-033df30ca589",
+      "stratum": "B",
+      "title": "Integrate Donated Office Space",
+      "funder": "Integrate",
+      "url": "https://integratespace.co/charities",
+      "before": [
+        "deadline",
+        "is_rolling",
+        "still_listed",
+        "is_invite_only",
+        "max_org_income"
+      ],
+      "verdict": "resolved_on_page_1",
+      "gained": [
+        "is_invite_only",
+        "eligible_structures"
+      ],
+      "pagesRead": [
+        "https://integratespace.co/charities",
+        "https://integratespace.co/application-form"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "followed https://integratespace.co/application-form because the page named this fund but said nothing about when to apply, and it did not describe this fund"
+      ],
+      "quotes": [
+        {
+          "field": "is_invite_only",
+          "agrees": true,
+          "url": "https://integratespace.co/charities",
+          "quote": "Apply for charity workspace Enquire Here"
+        },
+        {
+          "field": "eligible_structures",
+          "agrees": true,
+          "url": "https://integratespace.co/charities",
+          "quote": "For Charities We believe that people who make the world better deserve more."
+        }
+      ],
+      "verdict2": "resolved_on_page_1"
+    },
+    {
+      "id": "21812fb7-2496-4dba-a2a0-3fca9ba64b14",
+      "stratum": "B",
+      "title": "Coventry, Solihull & Warwickshire Communities Fund",
+      "funder": "Heart of England Community Foundation",
+      "url": "https://www.heartofenglandcf.org/coventry-solihull-warwickshire-fund/",
+      "before": [
+        "deadline",
+        "is_rolling",
+        "is_invite_only",
+        "max_org_income"
+      ],
+      "verdict": "followed_still_silent",
+      "gained": [],
+      "pagesRead": [
+        "https://www.heartofenglandcf.org/coventry-solihull-warwickshire-fund",
+        "https://www.heartofenglandcf.org/applying-for-grants"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "followed https://www.heartofenglandcf.org/applying-for-grants/ because the page named this fund but said nothing about when to apply, and it did not describe this fund"
+      ],
+      "quotes": [],
+      "verdict2": "followed_still_silent"
+    },
+    {
+      "id": "2eb128b6-e14f-4f6f-a4da-8b7da56c48ca",
+      "stratum": "B",
+      "title": "National Lottery Heritage Fund \u2014 Heritage Places",
+      "funder": "National Lottery Heritage Fund",
+      "url": "https://www.heritagefund.org.uk/funding/strategic-initiatives/heritage-places",
+      "before": [
+        "deadline",
+        "is_rolling",
+        "deadline_cycle",
+        "max_org_income"
+      ],
+      "verdict": "resolved_on_page_1",
+      "gained": [
+        "eligible_structures"
+      ],
+      "pagesRead": [
+        "https://www.heritagefund.org.uk/funding/strategic-initiatives/heritage-places",
+        "https://www.heritagefund.org.uk/funding"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "is_rolling withheld: \"For grants of less than \u00a3250,000, decisions are made on a monthly basis by the staff in yo\" \u2014 the same page states dated windows, so \"open all year\" describes when nominations are taken, not when a round is open",
+        "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped",
+        "followed https://www.heritagefund.org.uk/funding because the page named this fund but said nothing about when to apply, and it did not describe this fund"
+      ],
+      "quotes": [
+        {
+          "field": "eligible_structures",
+          "agrees": false,
+          "url": "https://www.heritagefund.org.uk/funding/strategic-initiatives/heritage-places",
+          "quote": "we welcome applications from a range of not-for-profit organisations; for example, local authorities, museums and community organisations. We can also consider applications from private owners of a heritage asset for grants up to \u00a3250,000."
+        }
+      ],
+      "verdict2": "resolved_on_page_1"
+    },
+    {
+      "id": "373ce8d3-e424-4fbc-b2cc-1b4da8ce602d",
+      "stratum": "B",
+      "title": "Manchester Airport Community Trust Fund",
+      "funder": "Manchester Airports Group",
+      "url": "https://magcommunityfunds.smapply.org/",
+      "before": [
+        "deadline",
+        "is_rolling",
+        "max_org_income"
+      ],
+      "verdict": "resolved_by_hop",
+      "gained": [
+        "exclusions"
+      ],
+      "pagesRead": [
+        "https://magcommunityfunds.smapply.org"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped",
+        "exclusions the page states and we do not hold: \"hire\"; \"rent\"; \"training costs\"; \"salaries\"",
+        "nothing to follow, though the page named this fund but said nothing about when to apply"
+      ],
+      "quotes": [
+        {
+          "field": "exclusions",
+          "agrees": false,
+          "url": "https://magcommunityfunds.smapply.org/",
+          "quote": "Our funds all welcome applications for 'tangible items of lasting benefit to the community' and do not cover running costs, hire, rent, training costs, salaries or other consumables. This fund cannot pay for running costs, consumables, salaries, rent or maintenance."
+        }
+      ],
+      "verdict2": "resolved_on_page_1"
+    },
+    {
+      "id": "40c079d7-5be8-4eaf-9ad0-db4f59d34c71",
+      "stratum": "B",
+      "title": "The Wyseliot Rose Charitable Trust",
+      "funder": "The Wyseliot Rose Charitable Trust",
+      "url": "https://youngcamdenfoundation.org.uk/funding/the-wyseliot-rose-charitable-trust",
+      "before": [
+        "deadline",
+        "is_rolling",
+        "max_org_income"
+      ],
+      "verdict": "resolved_on_page_1",
+      "gained": [
+        "eligible_structures",
+        "exclusions"
+      ],
+      "pagesRead": [
+        "https://youngcamdenfoundation.org.uk/funding/the-wyseliot-rose-charitable-trust",
+        "https://youngcamdenfoundation.org.uk/funding"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped",
+        "exclusions the page states and we do not hold: \"Local charities\"",
+        "followed https://youngcamdenfoundation.org.uk/funding because the page named this fund but said nothing about when to apply, and it did not describe this fund"
+      ],
+      "quotes": [
+        {
+          "field": "eligible_structures",
+          "agrees": true,
+          "url": "https://youngcamdenfoundation.org.uk/funding/the-wyseliot-rose-charitable-trust",
+          "quote": "UK registered charities of 'national significance' can apply"
+        },
+        {
+          "field": "exclusions",
+          "agrees": false,
+          "url": "https://youngcamdenfoundation.org.uk/funding/the-wyseliot-rose-charitable-trust",
+          "quote": "The following are not eligible for funding: Individuals. Local charities."
+        }
+      ],
+      "verdict2": "resolved_on_page_1"
+    },
+    {
+      "id": "4f67eb88-7752-44bf-9c74-047046a80ed9",
+      "stratum": "B",
+      "title": "Islington Giving \u2014 The Disability Fund",
+      "funder": "Islington Giving",
+      "url": "https://islingtongiving.org.uk/apply-for-funding/grants-programmes/",
+      "before": [
+        "deadline",
+        "is_rolling",
+        "max_org_income"
+      ],
+      "verdict": "nothing_to_follow",
+      "gained": [],
+      "pagesRead": [
+        "https://islingtongiving.org.uk/apply-for-funding/grants-programmes"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "read through the reader proxy",
+        "nothing to follow, though the page named this fund but said nothing about when to apply"
+      ],
+      "quotes": [],
+      "verdict2": "nothing_to_follow"
+    },
+    {
+      "id": "57c520fd-c715-478b-8a6e-7c9907044d2a",
+      "stratum": "B",
+      "title": "Older People and Housing Programme",
+      "funder": "The Mercers' Company",
+      "url": "https://www.mercers.co.uk/philanthropy/older-people-and-housing",
+      "before": [
+        "deadline",
+        "is_rolling",
+        "max_org_income"
+      ],
+      "verdict": "followed_still_silent",
+      "gained": [],
+      "pagesRead": [
+        "https://www.mercers.co.uk/philanthropy/older-people-and-housing",
+        "https://www.mercers.co.uk/our-history/700-year-timeline"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "followed https://www.mercers.co.uk/our-history/700-year-timeline because the page named this fund but said nothing about when to apply, and it did not describe this fund"
+      ],
+      "quotes": [],
+      "verdict2": "followed_still_silent"
+    },
+    {
+      "id": "60206220-abaa-45e2-9534-bc6d41e94940",
+      "stratum": "B",
+      "title": "Trust for London \u2014 Poverty & Inequality Grants",
+      "funder": "Trust for London",
+      "url": "https://www.trustforlondon.org.uk/funding/",
+      "before": [
+        "deadline",
+        "is_grant",
+        "is_rolling",
+        "max_org_income"
+      ],
+      "verdict": "followed_still_silent",
+      "gained": [],
+      "pagesRead": [
+        "https://www.trustforlondon.org.uk/funding",
+        "https://www.trustforlondon.org.uk/funding/apply-for-funding"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "followed https://www.trustforlondon.org.uk/funding/apply-for-funding/ because the page named this fund but said nothing about when to apply, and it did not describe this fund"
+      ],
+      "quotes": [],
+      "verdict2": "followed_still_silent"
+    },
+    {
+      "id": "6fbf369d-2b80-40b8-9e94-f9635c0ead13",
+      "stratum": "B",
+      "title": "Breckland Council Inspiring Communities",
+      "funder": "Norfolk Community Foundation",
+      "url": "https://www.norfolkfoundation.com/funding-support/grants/groups/breckland-council-inspiring-communities/",
+      "before": [
+        "deadline",
+        "is_rolling",
+        "is_invite_only",
+        "max_org_income"
+      ],
+      "verdict": "resolved_by_hop",
+      "gained": [
+        "is_rolling",
+        "eligible_structures"
+      ],
+      "pagesRead": [
+        "https://www.norfolkfoundation.com/funding-support/grants/groups/breckland-council-inspiring-communities"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped"
+      ],
+      "quotes": [
+        {
+          "field": "is_rolling",
+          "agrees": true,
+          "url": "https://www.norfolkfoundation.com/funding-support/grants/groups/breckland-council-inspiring-communities/",
+          "quote": "During 2026/27 Inspiring Communities will operate over four funding rounds as follows"
+        },
+        {
+          "field": "eligible_structures",
+          "agrees": false,
+          "url": "https://www.norfolkfoundation.com/funding-support/grants/groups/breckland-council-inspiring-communities/",
+          "quote": "Who can apply? Charity, Faith organisation, Parish/Town Council, School, Social Enterprise/CIC, and Voluntary/Community Group"
+        }
+      ],
+      "verdict2": "resolved_on_page_1"
+    },
+    {
+      "id": "8a7c3b87-8539-47bf-aef1-889169c6a2f6",
+      "stratum": "B",
+      "title": "Peter Sell Award",
+      "funder": "Leslie Sell Charitable Trust",
+      "url": "https://lesliesellct.org.uk/the-peter-sell-annual-award/",
+      "before": [
+        "deadline",
+        "is_rolling",
+        "max_org_income"
+      ],
+      "verdict": "resolved_by_hop",
+      "gained": [
+        "exclusions"
+      ],
+      "pagesRead": [
+        "https://lesliesellct.org.uk/the-peter-sell-annual-award"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "is_rolling: a value was offered without a quote we could find on the page, so it was dropped",
+        "nothing to follow, though the page named this fund but said nothing about when to apply"
+      ],
+      "quotes": [
+        {
+          "field": "exclusions",
+          "agrees": true,
+          "url": "https://lesliesellct.org.uk/the-peter-sell-annual-award/",
+          "quote": "Please do not send in applications for this Award which fall within our normal grant criteria for groups or individuals."
+        }
+      ],
+      "verdict2": "resolved_on_page_1"
+    },
+    {
+      "id": "9f2bbfca-91ed-4f0e-a3d2-cf9e1486ce8d",
+      "stratum": "B",
+      "title": "Lush Charity Pot \u2014 Grants",
+      "funder": "Lush",
+      "url": "https://connectedvoice.org.uk/services/support-and-development/funding/lush-charity-pot-animal-protection-environment-and-human",
+      "before": [
+        "deadline",
+        "is_rolling",
+        "still_listed",
+        "max_org_income"
+      ],
+      "verdict": "resolved_on_page_1",
+      "gained": [
+        "eligible_structures"
+      ],
+      "pagesRead": [
+        "https://connectedvoice.org.uk/services/support-and-development/funding/lush-charity-pot-animal-protection-environment-and-human",
+        "https://connectedvoice.org.uk/our-programme"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "followed https://connectedvoice.org.uk/our-programme because the page named this fund but said nothing about when to apply, and it did not describe this fund"
+      ],
+      "quotes": [
+        {
+          "field": "eligible_structures",
+          "agrees": false,
+          "url": "https://connectedvoice.org.uk/services/support-and-development/funding/lush-charity-pot-animal-protection-environment-and-human",
+          "quote": "small not-for-profit organisations and campaign groups from the UK and around the world"
+        }
+      ],
+      "verdict2": "resolved_on_page_1"
+    },
+    {
+      "id": "a7e93d28-fc29-48ff-91fa-b06b1f30eafe",
+      "stratum": "B",
+      "title": "East Midlands Airport Community Fund Grant",
+      "funder": "East Midlands Airport",
+      "url": "https://www.active-together.org/fundingfinder/805",
+      "before": [
+        "deadline",
+        "is_rolling",
+        "still_listed",
+        "is_invite_only",
+        "max_org_income"
+      ],
+      "verdict": "resolved_on_page_1",
+      "gained": [
+        "still_listed",
+        "eligible_structures"
+      ],
+      "pagesRead": [
+        "https://www.active-together.org/fundingfinder/805",
+        "https://www.active-together.org/physical-activity-guidelines"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "is_rolling: a value was offered without a quote we could find on the page, so it was dropped",
+        "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped",
+        "followed https://www.active-together.org/physical-activity-guidelines because the page named this fund but said nothing about when to apply, and it did not describe this fund"
+      ],
+      "quotes": [
+        {
+          "field": "still_listed",
+          "agrees": true,
+          "url": "https://www.active-together.org/fundingfinder/805",
+          "quote": "Deadlines: Application Deadlines 05 October 2026 04 January 2027"
+        },
+        {
+          "field": "eligible_structures",
+          "agrees": false,
+          "url": "https://www.active-together.org/fundingfinder/805",
+          "quote": "Charities, community groups and not-for-profit community organisations within the EMA Area of Benefit can apply"
+        }
+      ],
+      "verdict2": "resolved_on_page_1"
+    },
+    {
+      "id": "b4dd4488-867a-48c2-9853-1250c43865f6",
+      "stratum": "B",
+      "title": "Schroder Charity Trust Grant Programmes",
+      "funder": "Schroder Charity Trust",
+      "url": "https://schrodercharitytrust.org/",
+      "before": [
+        "deadline",
+        "is_rolling",
+        "still_listed",
+        "deadline_cycle",
+        "is_invite_only",
+        "max_org_income"
+      ],
+      "verdict": "resolved_by_hop",
+      "gained": [
+        "still_listed",
+        "deadline_cycle",
+        "is_rolling"
+      ],
+      "pagesRead": [
+        "https://schrodercharitytrust.org",
+        "https://schrodercharitytrust.org/apply"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "deadline: a value was offered without a quote we could find on the page, so it was dropped",
+        "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped",
+        "followed https://schrodercharitytrust.org/apply/ because the page named this fund but said nothing about who may apply, and it did not describe this fund"
+      ],
+      "quotes": [
+        {
+          "field": "still_listed",
+          "agrees": true,
+          "url": "https://schrodercharitytrust.org/",
+          "quote": "The current application window is open from the 1 st July 2026."
+        },
+        {
+          "field": "deadline_cycle",
+          "agrees": true,
+          "url": "https://schrodercharitytrust.org/",
+          "quote": "The Schroder Charity Trust accept s applications towards two focussed grant programmes in two application windows each year. The current application window is open from the 1 st July 2026. The window will remain open until 5pm on the 28 th August 2026. Future a pplication window dates will be published on the Schroder Charity Trust website in due course."
+        },
+        {
+          "field": "is_rolling",
+          "agrees": true,
+          "url": "https://schrodercharitytrust.org/",
+          "quote": "The Schroder Charity Trust accept s applications towards two focussed grant programmes in two application windows each year."
+        }
+      ],
+      "verdict2": "resolved_on_page_1"
+    },
+    {
+      "id": "b7f40968-6892-4004-9bd7-ea2af8410635",
+      "stratum": "B",
+      "title": "Zoom for Nonprofits",
+      "funder": "Zoom",
+      "url": "https://www.zoom.com/en/zoom-cares/",
+      "before": [
+        "deadline",
+        "is_grant",
+        "is_rolling",
+        "still_listed",
+        "is_invite_only",
+        "max_org_income"
+      ],
+      "verdict": "resolved_by_hop",
+      "gained": [
+        "exclusions"
+      ],
+      "pagesRead": [
+        "https://www.zoom.com/en/zoom-cares",
+        "https://www.zoom.com/en/trust/acceptable-use-guidelines"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "scope verdict ignored: this row is classified \"in_kind\", which the catalogue carries deliberately",
+        "is_rolling: a value was offered without a quote we could find on the page, so it was dropped",
+        "max_org_income withheld: the quote is not about organisational income \u2014 \"Organizations with operating budgets of $10 million or less.\"",
+        "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped",
+        "eligible_structures withheld: the quote names no organisational form \u2014 \"Discount is available only to qualifying organizations with 501(c)(3) designation and to public libraries with a 501(c)(\"",
+        "exclusions the page states and we do not hold: \"Education organizations including K-12 schools, higher education institutions, administrative offices and boards of education, and teaching hospitals affiliated with higher education institutions and colleges\"; \"Healthcare organizations including public hospitals, private hospitals, specialty hospitals, hospital auxiliaries, HRSA/FQHC Health Centers and CMS Critical Access Hospitals, health clinics, hospice, nursing care, rehabilitation centers, health insurance, and group health plans\"; \"Government agencies\"; \"Other nonprofit designations like 501(c)(4), 501(c)(6), etc.\"",
+        "followed https://www.zoom.com/en/trust/acceptable-use-guidelines/ because the page named this fund but said nothing about when to apply, and it did not describe this fund"
+      ],
+      "quotes": [
+        {
+          "field": "exclusions",
+          "agrees": false,
+          "url": "https://www.zoom.com/en/zoom-cares/",
+          "quote": "The following organizations are ineligible based on Zoom's program policies. Organization types: The following organization types are not eligible to request a discount. Education organizations including K-12 schools, higher education institutions, administrative offices and boards of education, and teaching hospitals affiliated with higher education institutions and colleges Healthcare organizations including public hospitals, private hospitals, specialty hospitals, hospital auxiliaries, HRSA/FQHC Health Centers and CMS Critical Access Hospitals, health clinics, hospice, nursing care, rehabilitation centers, health insurance, and group health plans Government agencies Other nonprofit designations like 501(c)(4), 501(c)(6), etc."
+        }
+      ],
+      "verdict2": "resolved_on_page_1"
+    },
+    {
+      "id": "c740bb33-f49e-4c9f-b8db-110b767e985f",
+      "stratum": "B",
+      "title": "J N Derbyshire Trust",
+      "funder": "Forever Notts (Nottinghamshire Community Foundation)",
+      "url": "https://www.forevernotts.com/grant/j-n-derbyshire-trust/",
+      "before": [
+        "deadline",
+        "is_rolling",
+        "is_invite_only"
+      ],
+      "verdict": "resolved_by_hop",
+      "gained": [
+        "eligible_structures"
+      ],
+      "pagesRead": [
+        "https://www.forevernotts.com/grant/j-n-derbyshire-trust",
+        "https://www.forevernotts.com/grants"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "is_rolling: a value was offered without a quote we could find on the page, so it was dropped",
+        "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped",
+        "followed https://www.forevernotts.com/grants/ because the page named this fund but said nothing about when to apply, and it did not describe this fund"
+      ],
+      "quotes": [
+        {
+          "field": "eligible_structures",
+          "agrees": false,
+          "url": "https://www.forevernotts.com/grant/j-n-derbyshire-trust/",
+          "quote": "We only make grants to registered charities, or companies (e.g. CIC or a company Limited by Guarantee) who operate on a not-for-profit basis."
+        }
+      ],
+      "verdict2": "resolved_on_page_1"
+    },
+    {
+      "id": "ced26048-d908-4919-bc4b-0bdad1c2d155",
+      "stratum": "B",
+      "title": "Spacehive \u2014 Civic Crowdfunding with Council Match",
+      "funder": "Spacehive",
+      "url": "https://www.spacehive.com",
+      "before": [
+        "deadline",
+        "is_rolling",
+        "max_org_income"
+      ],
+      "verdict": "unreadable",
+      "gained": [],
+      "pagesRead": [
+        "https://www.spacehive.com"
+      ],
+      "outcome": "fixable_link",
+      "notes": [
+        "read through the reader proxy"
+      ],
+      "quotes": [],
+      "verdict2": "unreadable"
+    },
+    {
+      "id": "033b3ddf-fd0c-4aea-b440-7cb4c12be8d7",
+      "stratum": "C",
+      "title": "Arts Council of Wales \u2014 Create and Engage",
+      "funder": "Arts Council of Wales",
+      "url": "https://arts.wales/funding/individuals/create-and-engage",
+      "before": [
+        "deadline",
+        "is_rolling",
+        "still_listed",
+        "max_org_income"
+      ],
+      "verdict": "resolved_on_page_1",
+      "gained": [
+        "eligible_structures",
+        "exclusions"
+      ],
+      "pagesRead": [
+        "https://arts.wales/funding/individuals/create-and-engage",
+        "https://arts.wales/application-process",
+        "https://arts.wales/get-started"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "is_rolling withheld: \"\" \u2014 the same page states dated windows, so \"open all year\" describes when nominations are taken, not when a round is open",
+        "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped",
+        "exclusions the page states and we do not hold: \"projects that focus purely on recording, promotion and distribution (for musicians)\"; \"projects where the main discipline is film\"; \"schools (direct funding)\"",
+        "read one level down: https://arts.wales/application-process (the page named this fund but said nothing about when to apply)",
+        "followed https://arts.wales/get-started because the page named this fund but said nothing about when to apply, and it did not describe this fund"
+      ],
+      "quotes": [
+        {
+          "field": "eligible_structures",
+          "agrees": false,
+          "url": "https://arts.wales/funding/individuals/create-and-engage",
+          "quote": "Organisations and individuals can apply. Take a look at our eligibility criteria for organisations and our eligibility criteria for individuals to see if you are eligible."
+        },
+        {
+          "field": "exclusions",
+          "agrees": false,
+          "url": "https://arts.wales/funding/individuals/create-and-engage",
+          "quote": "We can't fund projects that are already happening. We won't accept your application if your project's start date comes before we've had the opportunity to assess your application. We can't fund schools directly through our lottery funding. Schools must apply to our Creative Learning programme. However, we don't fund projects that focus purely on recording, promotion and distribution. Your project must complement and enhance your usual programme of activity This means it should not be part of your core activity or include core costs."
+        }
+      ],
+      "verdict2": "resolved_on_page_1"
+    },
+    {
+      "id": "16bfa48f-f9e6-4f32-a431-23e2b732c3e7",
+      "stratum": "C",
+      "title": "Commissioned Rehabilitative Services General Grant Scheme",
+      "funder": "Ministry of Justice",
+      "url": "https://www.find-government-grants.service.gov.uk/grants/commissioned-rehabilitative-services-general-grant-scheme-1",
+      "before": [
+        "deadline",
+        "is_rolling",
+        "still_listed",
+        "max_org_income"
+      ],
+      "verdict": "resolved_by_hop",
+      "gained": [
+        "eligible_structures"
+      ],
+      "pagesRead": [
+        "https://www.find-government-grants.service.gov.uk/grants/commissioned-rehabilitative-services-general-grant-scheme-1",
+        "https://www.find-government-grants.service.gov.uk/grants",
+        "https://www.find-government-grants.service.gov.uk/grants?skip=10&amp;limit=10&amp;page=2"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "deadline withheld: \"Closing date : 29 March 2027, 5:00pm\" is one of several rounds this page lists, and which one belongs to this row is not stated",
+        "is_rolling: a value was offered without a quote we could find on the page, so it was dropped",
+        "deadline withheld: \"Closing date 29 March 2027, 5:00pm\" is one of several rounds this page lists, and which one belongs to this row is not stated",
+        "is_rolling: a value was offered without a quote we could find on the page, so it was dropped",
+        "read one level down: https://www.find-government-grants.service.gov.uk/grants (the page named this fund but said nothing about when to apply)",
+        "deadline withheld: \"Closing date 29 March 2027, 5:00pm\" is one of several rounds this page lists, and which one belongs to this row is not stated",
+        "read one level down: https://www.find-government-grants.service.gov.uk/grants?skip=10&amp;limit=10&amp;page=2 (the page named this fund but said nothing about when to apply)"
+      ],
+      "quotes": [
+        {
+          "field": "eligible_structures",
+          "agrees": false,
+          "url": "https://www.find-government-grants.service.gov.uk/grants?skip=10&amp;limit=10&amp;page=2",
+          "quote": "Who can apply Non-profit"
+        }
+      ],
+      "verdict2": "resolved_by_hop"
+    },
+    {
+      "id": "234937b8-fd66-4449-8322-9914c9bf8702",
+      "stratum": "C",
+      "title": "Central Social and Recreational Trust",
+      "funder": "Central Social and Recreational Trust",
+      "url": "https://www.csrt.info/how-to-apply/",
+      "before": [
+        "deadline",
+        "is_rolling",
+        "still_listed",
+        "is_invite_only",
+        "max_org_income"
+      ],
+      "verdict": "resolved_by_hop",
+      "gained": [
+        "eligible_structures",
+        "exclusions"
+      ],
+      "pagesRead": [
+        "https://www.csrt.info/how-to-apply",
+        "https://www.csrt.info/application-for-grant"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped",
+        "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped",
+        "read one level down: https://www.csrt.info/application-for-grant/ (the page named this fund but said nothing about when to apply)",
+        "nothing to follow, though the page named this fund but said nothing about when to apply"
+      ],
+      "quotes": [
+        {
+          "field": "eligible_structures",
+          "agrees": true,
+          "url": "https://www.csrt.info/application-for-grant/",
+          "quote": "Are you a registered charity? Yes No"
+        },
+        {
+          "field": "exclusions",
+          "agrees": true,
+          "url": "https://www.csrt.info/how-to-apply/",
+          "quote": "The Trustees will consider grants for equipment for the use of all members of the club. Individual items will not be considered i.e. personal items of kit such as gum shields, shorts, vests etc. ... but will not consider grants for individuals."
+        }
+      ],
+      "verdict2": "resolved_by_hop"
+    },
+    {
+      "id": "2d0a123a-2fbd-4fa8-930f-d361d0f21d49",
+      "stratum": "C",
+      "title": "Aviva Foundation \u2014 Communities Fund",
+      "funder": "Aviva Foundation",
+      "url": "https://communitiesfund.avivafoundation.org.uk/",
+      "before": [
+        "deadline",
+        "is_rolling",
+        "is_invite_only"
+      ],
+      "verdict": "resolved_by_hop",
+      "gained": [
+        "is_invite_only"
+      ],
+      "pagesRead": [
+        "https://communitiesfund.avivafoundation.org.uk",
+        "https://communitiesfund.avivafoundation.org.uk/eligibility-criteria",
+        "https://communitiesfund.avivafoundation.org.uk/"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "is_rolling withheld: \"You can apply for funding any time throughout the year.\" \u2014 it comes from https://communitiesfund.avivafoundation.org.uk/, which names no single fund, so it cannot establish that a round is open today",
+        "max_org_income: a value was offered without a quote we could find on the page, so it was dropped",
+        "read through the reader proxy",
+        "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped",
+        "read one level down: https://communitiesfund.avivafoundation.org.uk/eligibility-criteria (the page named this fund but said nothing about when to apply)",
+        "is_rolling withheld: \"You can apply for funding any time throughout the year.\" \u2014 it comes from https://communitiesfund.avivafoundation.org.uk/#ScrolltoVolunteers, which names no single fund, so it cannot establish that a round is open today",
+        "max_org_income: a value was offered without a quote we could find on the page, so it was dropped",
+        "read one level down: https://communitiesfund.avivafoundation.org.uk/#ScrolltoVolunteers (the page named this fund but said nothing about when to apply)"
+      ],
+      "quotes": [
+        {
+          "field": "is_invite_only",
+          "agrees": true,
+          "url": "https://communitiesfund.avivafoundation.org.uk/#ScrolltoVolunteers",
+          "quote": "Apply for funding and volunteers"
+        }
+      ],
+      "verdict2": "resolved_on_page_1"
+    },
+    {
+      "id": "4df3f20a-30a1-45e6-9663-5f2eed94d235",
+      "stratum": "C",
+      "title": "Brighton Soup",
+      "funder": "Brighton Soup",
+      "url": "https://brightonsoup.org.uk/apply/",
+      "before": [
+        "deadline",
+        "is_rolling",
+        "still_listed",
+        "deadline_cycle",
+        "max_org_income"
+      ],
+      "verdict": "followed_still_silent",
+      "gained": [],
+      "pagesRead": [
+        "https://brightonsoup.org.uk/apply",
+        "https://brightonsoup.org.uk/application-support"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "read one level down: https://brightonsoup.org.uk/application-support/ (the page named this fund but said nothing about when to apply)",
+        "nothing to follow, though the page named this fund but said nothing about when to apply"
+      ],
+      "quotes": [],
+      "verdict2": "followed_still_silent"
+    },
+    {
+      "id": "573f008c-93bf-4ab6-a347-4fd0aeab62ea",
+      "stratum": "C",
+      "title": "Sylvia Waddilove Foundation UK \u2014 Visual & Performing Arts Grants",
+      "funder": "Sylvia Waddilove Foundation UK",
+      "url": "https://pwwsolicitors.co.uk/charity-grants/waddilove-foundation-uk/",
+      "before": [
+        "deadline",
+        "is_rolling",
+        "deadline_cycle",
+        "is_invite_only",
+        "max_org_income"
+      ],
+      "verdict": "resolved_by_hop",
+      "gained": [
+        "eligible_structures"
+      ],
+      "pagesRead": [
+        "https://pwwsolicitors.co.uk/charity-grants/waddilove-foundation-uk",
+        "https://pwwsolicitors.co.uk/charity-grants",
+        "https://pwwsolicitors.co.uk/charity-grants/field-family-charitable-trust"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "is_rolling: a value was offered without a quote we could find on the page, so it was dropped",
+        "max_org_income: a value was offered without a quote we could find on the page, so it was dropped",
+        "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped",
+        "read one level down: https://pwwsolicitors.co.uk/charity-grants/ (the page named this fund but said nothing about when to apply)",
+        "followed https://pwwsolicitors.co.uk/charity-grants/field-family-charitable-trust/ because the page named this fund but said nothing about when to apply, and it did not describe this fund"
+      ],
+      "quotes": [
+        {
+          "field": "eligible_structures",
+          "agrees": false,
+          "url": "https://pwwsolicitors.co.uk/charity-grants/",
+          "quote": "The Sylvia Waddilove Foundation UK provides grants to charities and some not-for-profits"
+        }
+      ],
+      "verdict2": "resolved_by_hop"
+    },
+    {
+      "id": "5e37d1c3-0cc8-4b9a-9459-086a0d3027cc",
+      "stratum": "C",
+      "title": "Northern Cultural Regeneration Fund",
+      "funder": "Key Fund",
+      "url": "https://thekeyfund.co.uk/funding/northern-cultural-regeneration-fund/",
+      "before": [
+        "deadline",
+        "is_grant",
+        "is_rolling",
+        "max_org_income"
+      ],
+      "verdict": "resolved_by_hop",
+      "gained": [
+        "is_grant",
+        "eligible_structures"
+      ],
+      "pagesRead": [
+        "https://thekeyfund.co.uk/funding/northern-cultural-regeneration-fund",
+        "https://thekeyfund.co.uk/funding",
+        "https://thekeyfund.co.uk/apply"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "scope verdict ignored: this row is classified \"investment\", which the catalogue carries deliberately",
+        "read one level down: https://thekeyfund.co.uk/funding/ (the page named this fund but said nothing about when to apply)",
+        "followed https://thekeyfund.co.uk/apply/ because the page named this fund but said nothing about when to apply, and it did not describe this fund"
+      ],
+      "quotes": [
+        {
+          "field": "is_grant",
+          "agrees": true,
+          "url": "https://thekeyfund.co.uk/funding/",
+          "quote": "Investments up to \u00a3150k. Loans can only be used flexibly for capital or working capital."
+        },
+        {
+          "field": "eligible_structures",
+          "agrees": false,
+          "url": "https://thekeyfund.co.uk/funding/northern-cultural-regeneration-fund/",
+          "quote": "Businesses must be incorporated and operate within one of the 11 most Northern Local Enterprise Partnership areas"
+        }
+      ],
+      "verdict2": "resolved_by_hop"
+    },
+    {
+      "id": "757e41c3-07dd-4f84-9f4f-9588a4bcfd41",
+      "stratum": "C",
+      "title": "Yapp Charitable Trust",
+      "funder": "Yapp Charitable Trust",
+      "url": "https://yappcharitabletrust.org.uk/",
+      "before": [
+        "deadline",
+        "is_rolling",
+        "still_listed",
+        "max_org_income"
+      ],
+      "verdict": "resolved_by_hop",
+      "gained": [
+        "eligible_structures",
+        "exclusions"
+      ],
+      "pagesRead": [
+        "https://yappcharitabletrust.org.uk",
+        "https://yappcharitabletrust.org.uk/what-we-fund",
+        "https://yappcharitabletrust.org.uk/how-to-apply"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "max_org_income withheld: the quote is not about organisational income \u2014 \"We offer grants only to registered charities with a total annual expenditure of less than \u00a350,000.\"",
+        "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped",
+        "exclusions the page states and we do not hold: \"CICs\"",
+        "max_org_income withheld: the quote is not about organisational income \u2014 \"We only offer grants to registered charities with a total annual expenditure of less than \u00a350,000\"",
+        "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped",
+        "exclusions the page states and we do not hold: \"new work or projects\"; \"charities formally established for less than three years\"",
+        "read one level down: https://yappcharitabletrust.org.uk/what-we-fund/ (the page named this fund but said nothing about when to apply)",
+        "read one level down: https://yappcharitabletrust.org.uk/how-to-apply/ (the page named this fund but said nothing about when to apply)"
+      ],
+      "quotes": [
+        {
+          "field": "eligible_structures",
+          "agrees": true,
+          "url": "https://yappcharitabletrust.org.uk/how-to-apply/",
+          "quote": "we only fund charities that meet our eligibility criteria"
+        },
+        {
+          "field": "exclusions",
+          "agrees": false,
+          "url": "https://yappcharitabletrust.org.uk/what-we-fund/",
+          "quote": "We do not fund new work or projects. We only offer grants to registered charities that have been formally established for a minimum of three years."
+        }
+      ],
+      "verdict2": "resolved_by_hop"
+    },
+    {
+      "id": "7e2f1cd7-bc26-4028-afbd-5a42d5438322",
+      "stratum": "C",
+      "title": "Barrow Cadbury Trust Grants",
+      "funder": "Barrow Cadbury Trust",
+      "url": "https://barrowcadbury.org.uk/our-work/applying-for-funding/",
+      "before": [
+        "deadline",
+        "is_rolling",
+        "still_listed",
+        "is_invite_only",
+        "max_org_income"
+      ],
+      "verdict": "still_silent",
+      "gained": [],
+      "pagesRead": [
+        "https://barrowcadbury.org.uk/our-work/applying-for-funding"
+      ],
+      "outcome": "multiple_funds",
+      "notes": [
+        "page covers 6 programmes (Criminal Justice; Economic Justice; Migration; Fair by Design; The Connect Fund) and our row matches none of them cleanly"
+      ],
+      "quotes": [],
+      "verdict2": "still_silent"
+    },
+    {
+      "id": "86990306-2e6d-4561-901e-a4d0393941da",
+      "stratum": "C",
+      "title": "Hobson Charity \u2014 Grants for Relief of Poverty and Distress",
+      "funder": "The Hobson Charity",
+      "url": "https://www.hobsoncharity.org.uk/how-to-apply",
+      "before": [
+        "deadline",
+        "is_rolling",
+        "still_listed",
+        "max_org_income"
+      ],
+      "verdict": "resolved_by_hop",
+      "gained": [
+        "eligible_structures",
+        "exclusions"
+      ],
+      "pagesRead": [
+        "https://www.hobsoncharity.org.uk/how-to-apply",
+        "https://hobsoncharity.org.uk/how-to-apply",
+        "https://hobsoncharity.org.uk/safeguarding-requirements-for-grant-applicants"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "is_rolling withheld: \"One of our representatives might contact you but feedback is usually given within 30 days,\" \u2014 it comes from https://www.hobsoncharity.org.uk/how-to-apply, which names no single fund, so it cannot establish that a round is open today",
+        "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped",
+        "exclusions the page states and we do not hold: \"salaries\"",
+        "is_rolling withheld: \"The application process is mostly automated however you will need to upload a letter (as a\" \u2014 it comes from https://hobsoncharity.org.uk/how-to-apply/, which names no single fund, so it cannot establish that a round is open today",
+        "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped",
+        "exclusions the page states and we do not hold: \"salaries\"",
+        "read one level down: https://hobsoncharity.org.uk/how-to-apply/ (the page named this fund but said nothing about when to apply)",
+        "followed https://hobsoncharity.org.uk/safeguarding-requirements-for-grant-applicants/ because the page named this fund but said nothing about when to apply, and it did not describe this fund"
+      ],
+      "quotes": [
+        {
+          "field": "eligible_structures",
+          "agrees": true,
+          "url": "https://hobsoncharity.org.uk/how-to-apply/",
+          "quote": "We focus on registered charities within the boundaries of England & Wales"
+        },
+        {
+          "field": "exclusions",
+          "agrees": false,
+          "url": "https://hobsoncharity.org.uk/how-to-apply/",
+          "quote": "unless there are exceptional circumstances, salaries, people or core costs are not supported"
+        }
+      ],
+      "verdict2": "resolved_by_hop"
+    },
+    {
+      "id": "aa3d0b6c-2048-4007-beb2-25d400085dfe",
+      "stratum": "C",
+      "title": "Southover Manor Trust",
+      "funder": "Southover Manor Trust",
+      "url": "https://southovermanortrust.org.uk/",
+      "before": [
+        "deadline",
+        "is_rolling",
+        "still_listed",
+        "max_org_income"
+      ],
+      "verdict": "followed_still_silent",
+      "gained": [],
+      "pagesRead": [
+        "https://southovermanortrust.org.uk",
+        "https://southovermanortrust.org.uk/apply"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "is_rolling: a value was offered without a quote we could find on the page, so it was dropped",
+        "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped",
+        "is_rolling: a value was offered without a quote we could find on the page, so it was dropped",
+        "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped",
+        "read one level down: https://southovermanortrust.org.uk/apply/ (the page named this fund but said nothing about when to apply)",
+        "nothing to follow, though the page named this fund but said nothing about when to apply"
+      ],
+      "quotes": [],
+      "verdict2": "followed_still_silent"
+    },
+    {
+      "id": "b818a116-3579-4eb3-8808-b40abc38e393",
+      "stratum": "C",
+      "title": "Key Fund Flexible Finance",
+      "funder": "Key Fund",
+      "url": "https://thekeyfund.co.uk/funding/",
+      "before": [
+        "deadline",
+        "is_rolling",
+        "max_org_income"
+      ],
+      "verdict": "resolved_by_hop",
+      "gained": [
+        "eligible_structures",
+        "exclusions"
+      ],
+      "pagesRead": [
+        "https://thekeyfund.co.uk/funding",
+        "https://thekeyfund.co.uk/apply",
+        "https://thekeyfund.co.uk/apply/pre-investment-checklist"
+      ],
+      "outcome": "verified",
+      "notes": [
+        "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped",
+        "scope verdict ignored: this row is classified \"investment\", which the catalogue carries deliberately",
+        "is_rolling withheld: \"Our investment team is here to support you every step of the way.\" \u2014 it comes from https://thekeyfund.co.uk/apply/, which names no single fund, so it cannot establish that a round is open today",
+        "is_invite_only: a value was offered without a quote we could find on the page, so it was dropped",
+        "exclusions the page states and we do not hold: \"businesses not registered at Companies House\"",
+        "read one level down: https://thekeyfund.co.uk/apply/ (the page named this fund but said nothing about when to apply)",
+        "followed https://thekeyfund.co.uk/apply/pre-investment-checklist/ because the page named this fund but said nothing about when to apply, and it did not describe this fund"
+      ],
+      "quotes": [
+        {
+          "field": "eligible_structures",
+          "agrees": false,
+          "url": "https://thekeyfund.co.uk/funding/",
+          "quote": "This fund is for established community and social enterprises"
+        },
+        {
+          "field": "exclusions",
+          "agrees": false,
+          "url": "https://thekeyfund.co.uk/apply/",
+          "quote": "Your business or social enterprise is based in the North of England or Midlands. Your business is, or intends to become, a legal company registered at companies house. Your business has a direct social mission at its heart. You have been declined by a mainstream bank."
+        }
+      ],
+      "verdict2": "resolved_by_hop"
+    }
+  ]
+}

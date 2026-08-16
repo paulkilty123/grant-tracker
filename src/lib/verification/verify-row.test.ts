@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { isFrontDoorUrl, timingAnswered, foldEvidence, candidateLinks, statesDatedWindows } from './verify-row'
+import { isFrontDoorUrl, timingAnswered, detailAnswered, decideHop, foldEvidence, candidateLinks, statesDatedWindows } from './verify-row'
+import type { VerifyResult } from './verify-row'
 
 /**
  * The front-door guard decides whether the engine is allowed to certify that a
@@ -193,5 +194,107 @@ describe('statesDatedWindows — a rolling claim cannot stand beside dated round
 
   it('counts distinct dates, so one date repeated is not a schedule', () => {
     expect(statesDatedWindows('Round closes 12 August. Remember: 12 August. Deadline 12 August.')).toBe(false)
+  })
+})
+
+// ── The hop trigger ─────────────────────────────────────────────────────────
+//
+// MEASUREMENT SCAFFOLDING. `hopOn: 'any'` is not what production runs; these
+// tests exist so the widening can be measured without an edit, and so the
+// default is demonstrably unchanged.
+
+describe('decideHop', () => {
+  const verified = (evidence: ReturnType<typeof ev>[]): Pick<VerifyResult, 'gate' | 'outcome' | 'evidence' | 'fundsOnPage'> =>
+    ({ gate: { pass: true, fund_on_page: 'Our Fund' }, outcome: 'verified', evidence })
+
+  it('does not hop when timing is answered and the scope is timing', () => {
+    // The false-first half of the pair below: this is today's behaviour, and it
+    // is why 229 read rows carry 627 silences the engine has never gone back for.
+    const r = verified([ev('deadline', true, 'Applications close 14 April.'), ev('eligible_structures', null)])
+    expect(decideHop(r, 'Our Fund', 'timing')).toBeNull()
+  })
+
+  it('hops for an unanswered eligibility question once the scope widens', () => {
+    const r = verified([ev('deadline', true, 'Applications close 14 April.'), ev('eligible_structures', null)])
+    expect(decideHop(r, 'Our Fund', 'any')).toEqual({
+      want: 'detail',
+      why:  'the page named this fund but said nothing about who may apply',
+    })
+  })
+
+  it('still prefers timing when both are unanswered', () => {
+    // Timing is the field the surface fills in with the word "Rolling", so a
+    // wrong answer there is visible to a user in a way a missing structure tag
+    // is not. It keeps first call on the one hop we are willing to pay for.
+    const r = verified([ev('deadline', null), ev('eligible_structures', null)])
+    expect(decideHop(r, 'Our Fund', 'any')?.want).toBe('timing')
+  })
+
+  it('asks for nothing when both are answered, under either scope', () => {
+    const r = verified([ev('is_rolling', true, 'Applications are accepted year round.'), ev('exclusions', false, 'We do not fund individuals.')])
+    expect(decideHop(r, 'Our Fund', 'timing')).toBeNull()
+    expect(decideHop(r, 'Our Fund', 'any')).toBeNull()
+  })
+
+  it('treats a contradiction as an answer, not a gap', () => {
+    // agrees:false means the page spoke and disagreed with us. That is the most
+    // informative outcome there is; hopping after it would be paying to
+    // second-guess a fact we just sourced.
+    const r = verified([ev('deadline', true, 'Closes 1 May.'), ev('eligible_structures', false, 'Open to CICs.')])
+    expect(detailAnswered(r)).toBe(true)
+    expect(decideHop(r, 'Our Fund', 'any')).toBeNull()
+  })
+
+  it('sends a detail-free page after funding detail regardless of scope', () => {
+    const r = { gate: { pass: false as const, failure: 'no_funding_detail' as const, detail: '' }, outcome: 'fixable_link' as const, evidence: [] }
+    expect(decideHop(r, 'Our Fund', 'timing')?.want).toBe('funding')
+    expect(decideHop(r, 'Our Fund', 'any')?.want).toBe('funding')
+  })
+})
+
+describe('link noise, after the 16 August measurement run', () => {
+  const page = (hrefs: string[]) =>
+    hrefs.map(h => `<a href="${h}">Read more</a>`).join('\n')
+
+  it('will not follow a policy page that sits under a funding path', () => {
+    // The live case: wisemusicfoundation.com/apply/privacy-policy was followed
+    // and returned an eligible_structures list and an exclusions list. Both
+    // were sourced from a privacy policy.
+    const out = candidateLinks(
+      page(['/apply/privacy-policy', '/grants/cookie-policy', '/funding/contact-us']),
+      'https://wisemusicfoundation.com/apply', false, 'detail',
+    )
+    expect(out).toEqual([])
+  })
+
+  it('will not follow a newsletter', () => {
+    // Two of them in one run of sixty. `\bnews\b` never matched "newsletter".
+    const out = candidateLinks(
+      page(['/our-impact/newsletter-sign-up', '/discover/newsletter.html']),
+      'https://www.norfolkfoundation.com/', false, 'detail',
+    )
+    expect(out).toEqual([])
+  })
+
+  it('still follows the page that holds the answer', () => {
+    // The guard must not be so wide it takes the destination with it: Berkshire
+    // resolved a deadline, a structure gate and three exclusions off these two.
+    const out = candidateLinks(
+      page(['/available-funding', '/who-can-apply', '/newsletter']),
+      'https://www.berkshirecf.org/', false, 'detail',
+    )
+    expect(out).toContain('https://www.berkshirecf.org/who-can-apply')
+    expect(out).not.toContain('https://www.berkshirecf.org/newsletter')
+  })
+
+  it('lets a funding path win when only the LINK TEXT is noisy', () => {
+    // "Sign up to our newsletter for news of our grants" pointing at /grants is
+    // a bad sentence attached to a good destination. Text noise is overridable;
+    // path noise is not.
+    const out = candidateLinks(
+      '<a href="/grants/eligibility">News of our grants: eligibility criteria</a>',
+      'https://example.org/', false, 'detail',
+    )
+    expect(out).toEqual(['https://example.org/grants/eligibility'])
   })
 })
