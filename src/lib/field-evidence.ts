@@ -103,7 +103,10 @@ export const EVIDENCE_FIELDS = [
   'deadline_cycle',
   'is_rolling',
   'max_org_income',
+  'min_org_income',
   'is_invite_only',
+  'eligible_structures',
+  'exclusions',
   'still_listed',
   'is_grant',
 ] as const

@@ -39,9 +39,17 @@ const FIELDS: { key: string; label: string; asserted: boolean }[] = [
   { key: 'is_rolling',     label: 'Rolling',        asserted: true  },
   { key: 'deadline',       label: 'Deadline',       asserted: true  },
   { key: 'deadline_cycle', label: 'Rounds',         asserted: true  },
+  // ASSERTED, AND THE QUIETEST OF THE LOT. `eligible_structures` is a hard gate
+  // in the matcher: a structure mismatch caps the score at 44, so a wrong or
+  // missing tag does not misinform anybody, it removes the fund from their
+  // results entirely. Nobody can see an absence to complain about it, which is
+  // why it sits with the claims rather than with the gaps.
+  { key: 'eligible_structures', label: 'Who can apply', asserted: true },
   // Not asserted: absent renders as absent.
+  { key: 'exclusions',     label: 'Exclusions',      asserted: false },
   { key: 'is_invite_only', label: 'Invitation only', asserted: false },
   { key: 'max_org_income', label: 'Income cap',      asserted: false },
+  { key: 'min_org_income', label: 'Income floor',    asserted: false },
   { key: 'still_listed',   label: 'Still listed',    asserted: false },
   { key: 'is_grant',       label: 'In scope',        asserted: false },
 ]
