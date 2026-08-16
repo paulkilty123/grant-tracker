@@ -1573,15 +1573,66 @@ function todayISO(): string {
   return new Date().toISOString().split('T')[0]
 }
 
+/** Shift an ISO date by whole days without letting a timezone near it. */
+function shiftISODate(iso: string, days: number): string {
+  const [y, m, d] = iso.split('-').map(Number)
+  return new Date(Date.UTC(y, m - 1, d) + days * 86_400_000).toISOString().split('T')[0]
+}
+
+/**
+ * A closing date, as the day an applicant can still apply.
+ *
+ * MIDNIGHT IS THE BOUNDARY, NOT A DAY YOU CAN APPLY ON.
+ *
+ * gov.uk publishes `grantApplicationCloseDate: "2026-09-23T00:00"` for a grant
+ * whose own page reads "Closing date: 22 September 2026, 11:59pm (Midnight)".
+ * The instant is the end of the 22nd expressed as the start of the 23rd. Taking
+ * the date part verbatim handed the applicant a day that does not exist, and it
+ * did so on 65 rows.
+ *
+ * The direction matters more than the count. Every other date error in this
+ * catalogue makes us look wrong; this one makes a fundraiser submit late and be
+ * refused, on our word. So an exact midnight resolves to the day before.
+ *
+ * READ AS WALL CLOCK, NOT THROUGH `new Date()`. The old implementation went via
+ * `toISOString()`, which is a UTC conversion, so the answer depended on the
+ * server's timezone: identical input yielded the 23rd on Vercel (UTC) and the
+ * 22nd on a BST laptop. The ISO branch below never constructs a Date from the
+ * input at all, so the same string gives the same day everywhere. Non-ISO
+ * inputs (the four text-scraping callers, e.g. "May 14, 2026") keep the old
+ * path, which is correct for a bare date under UTC.
+ */
 function parseDeadline(raw: unknown): string | null {
   if (!raw) return null
-  const d = new Date(String(raw))
-  if (isNaN(d.getTime())) return null
-  const iso = d.toISOString().split('T')[0]
+  const s = String(raw).trim()
+  if (!s) return null
+
+  let iso: string
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2}))?/)
+  if (m) {
+    const [, y, mo, d, hh, mi] = m
+    iso = `${y}-${mo}-${d}`
+    if (hh === '00' && mi === '00') iso = shiftISODate(iso, -1)
+  } else {
+    // Text dates from the four scraping callers, e.g. "May 14, 2030". `new
+    // Date` reads these as LOCAL midnight, so the old `toISOString()` (a UTC
+    // conversion) moved them a day EARLIER on any positive-offset server: the
+    // test for this line failed with 2030-05-13 on a BST laptop. Production
+    // runs UTC so it was right by accident. Read the local components back
+    // instead and the wall-clock date the string named survives intact.
+    const dt = new Date(s)
+    if (isNaN(dt.getTime())) return null
+    const p = (n: number) => String(n).padStart(2, '0')
+    iso = `${dt.getFullYear()}-${p(dt.getMonth() + 1)}-${p(dt.getDate())}`
+  }
+
   // Discard only dates strictly before today (yesterday or earlier)
   if (iso < todayISO()) return null
   return iso
 }
+
+/** Exported for tests only. The crawl calls the module-local binding. */
+export const __parseDeadlineForTests = parseDeadline
 
 /**
  * Heading text that is a closing-date label rather than a programme name.
