@@ -99,7 +99,16 @@ function adminClient(): SupabaseClient {
 const SELECT_COLS =
   'id, title, funder, funding_type, apply_url, deadline, deadline_cycle, is_rolling, max_org_income, is_invite_only'
 
-type QueueCounts = { eligible: number; neverChecked: number; band0: number; excluded: number }
+type QueueCounts = {
+  eligible: number; neverChecked: number; band0: number; excluded: number
+  /** Live rows asserting timing with no quoted confirmation behind it. THE
+   *  number: it says what the product can honestly claim today. Reported whole,
+   *  not just the part currently due, because a row resting inside its cooldown
+   *  is no better evidenced for resting. */
+  liveUnbacked: number
+  /** How many of those the next run may actually re-read. */
+  liveUnbackedDue: number
+}
 
 async function queueCounts(db: SupabaseClient): Promise<QueueCounts | null> {
   const { data, error } = await db.rpc('verify_batch_counts')
@@ -110,6 +119,8 @@ async function queueCounts(db: SupabaseClient): Promise<QueueCounts | null> {
     neverChecked: Number(r.never_checked),
     band0:        Number(r.band0),
     excluded:     Number(r.excluded),
+    liveUnbacked:    Number(r.live_unbacked),
+    liveUnbackedDue: Number(r.live_unbacked_due),
   }
 }
 
