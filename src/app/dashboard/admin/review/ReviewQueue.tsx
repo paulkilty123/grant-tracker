@@ -83,6 +83,8 @@ export type QueueItem = {
     isRolling: boolean
     structures: string[]
     sectors: string[]
+    /** Which of the four Find Funding tabs this row lands in. */
+    fundingType: string | null
   }
 }
 
@@ -91,6 +93,19 @@ const SEV_STYLE: Record<string, { bg: string; ink: string; edge: string }> = {
   check:    { bg: 'var(--amber-pale)', ink: 'var(--amber-deep)', edge: 'var(--amber-saturated)' },
   changed:  { bg: 'var(--blue-pale)',  ink: 'var(--blue-deep)',  edge: 'var(--blue-saturated)' },
 }
+
+/**
+ * The four tabs on Find Funding, and the only values the classifier may set
+ * (VALID_FUNDING_TYPES in lib/classify.ts). Duplicated as a label map rather
+ * than imported because that module pulls the whole taxonomy and this is a
+ * client component.
+ */
+const FUNDING_TYPES: { value: string; label: string }[] = [
+  { value: 'grant',      label: 'Grant' },
+  { value: 'programme',  label: 'Programme' },
+  { value: 'investment', label: 'Investment' },
+  { value: 'in_kind',    label: 'In-kind' },
+]
 
 const display = { fontFamily: 'var(--font-space-grotesk)' } as const
 const gbp = (n: number | null) => (n === null ? '—' : `£${n.toLocaleString('en-GB')}`)
@@ -383,6 +398,28 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
     setBusyId(null)
     if (!ok) return
     toast.success(`${diff.field} reverted`)
+    router.refresh()
+  }, [patch, router, toast])
+
+  /**
+   * Set the funding type by hand.
+   *
+   * There was no way to do this anywhere in the product. A government grant
+   * classified as a programme because its page said "commission" could only be
+   * corrected by someone with database access, which is not a review workflow.
+   *
+   * Writes the ONE field, so update-grant pins it. That is the correct use of a
+   * pin under this file's rule: the reviewer is overruling the classifier, and
+   * without the pin ai_classifier (trust 60) would be free to set it back on
+   * the next re-tag and quietly undo them.
+   */
+  const setFundingType = useCallback(async (item: QueueItem, next: string) => {
+    setBusyId(item.id)
+    const ok = await patch(item.id, { funding_type: next }, 'Changing the funding type')
+    setBusyId(null)
+    if (!ok) return
+    const label = FUNDING_TYPES.find(t => t.value === next)?.label ?? next
+    toast.success(`Funding type set to ${label}`)
     router.refresh()
   }, [patch, router, toast])
 
@@ -776,6 +813,7 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
                 onPublish={() => publish(item)}
                 onReject={() => reject(item)}
                 onRevert={(d) => revertField(item, d)}
+                onSetFundingType={(t) => setFundingType(item, t)}
                 onReRead={() => reRead(item)}
                 onReClassify={() => reClassify(item)}
                 onFixLink={() => fixLink(item)}
@@ -997,7 +1035,7 @@ function RefusalNotice({
 }
 
 function Row({
-  item, open, busy, busyLabel, onToggle, onPublish, onReject, onRevert,
+  item, open, busy, busyLabel, onToggle, onPublish, onReject, onRevert, onSetFundingType,
   onReRead, onReClassify, onFixLink, rejections, onOverride,
 }: {
   item: QueueItem
@@ -1008,6 +1046,7 @@ function Row({
   onPublish: () => void
   onReject: () => void
   onRevert: (d: FieldDiff) => void
+  onSetFundingType: (fundingType: string) => void
   onReRead: () => void
   onReClassify: () => void
   onFixLink: () => void
@@ -1301,6 +1340,25 @@ function Row({
                 <Val k="Deadline">{item.values.deadline ?? (item.values.isRolling ? 'Rolling' : 'none')}</Val>
                 <Val k="Eligibility">{item.values.structures.join(', ') || 'none'}</Val>
                 <Val k="Sectors">{item.values.sectors.join(', ') || 'none'}</Val>
+                <Val k="Funding type">
+                  <span style={{ display: 'inline-flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <strong style={{ ...display, fontSize: 12 }}>
+                      {FUNDING_TYPES.find(t => t.value === item.values.fundingType)?.label
+                        ?? item.values.fundingType ?? 'none'}
+                    </strong>
+                    {FUNDING_TYPES.filter(t => t.value !== item.values.fundingType).map(t => (
+                      <button
+                        key={t.value}
+                        onClick={() => onSetFundingType(t.value)}
+                        disabled={busy}
+                        style={miniBtn}
+                        title={`Record this as ${t.label} and pin it`}
+                      >
+                        {t.label}
+                      </button>
+                    ))}
+                  </span>
+                </Val>
               </div>
             </div>
 
