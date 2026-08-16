@@ -74,6 +74,18 @@ export type EvidenceStamp = {
    * the grant.
    */
   proposed?:  unknown
+  /**
+   * Consecutive reads that left this row's timing unknown. Carried only on the
+   * `_page_read` stamp, where it is the whole state behind shape C's backoff:
+   * a page that says nothing about timing today will not say it next fortnight,
+   * so the gap doubles — 14, 28, 56, 112, 180 — and any answer resets it to
+   * zero. See `computeCadence` in verification/verify-cadence.ts.
+   *
+   * It lives here rather than in its own column because it is a property of the
+   * reading, not of the grant, and because the stamp is already written on every
+   * visit by the one code path that knows the answer.
+   */
+  silent_streak?: number
 }
 
 export type FieldEvidence = Record<string, EvidenceStamp>
@@ -88,6 +100,7 @@ export type FieldEvidence = Record<string, EvidenceStamp>
  */
 export const EVIDENCE_FIELDS = [
   'deadline',
+  'deadline_cycle',
   'is_rolling',
   'max_org_income',
   'is_invite_only',
@@ -139,6 +152,8 @@ function stampOf(evidence: FieldEvidence | null | undefined, field: string): Evi
     agrees:     typeof stamp.agrees === 'boolean' ? stamp.agrees : null,
     ...('proposed' in stamp ? { proposed: stamp.proposed } : {}),
     ...(typeof stamp.note === 'string' ? { note: stamp.note } : {}),
+    ...(typeof stamp.silent_streak === 'number' && Number.isFinite(stamp.silent_streak)
+      ? { silent_streak: stamp.silent_streak } : {}),
   }
 }
 
@@ -234,6 +249,8 @@ export type EvidenceInput = {
   proposed?:  unknown
   /** Free text for a page-read stamp. Never a substitute for a quote. */
   note?:      string
+  /** Consecutive silent reads. Page-read stamp only. See `EvidenceStamp`. */
+  silent_streak?: number
 }
 
 export type BuiltPatch = {
@@ -278,6 +295,9 @@ export function buildEvidencePatch(
       // proposal either, or the row would hold a value nothing stands behind.
       ...(agrees === false && input.proposed !== undefined ? { proposed: input.proposed } : {}),
       ...(input.note ? { note: input.note } : {}),
+      // Zero is meaningful — it is how "the page answered, start the backoff
+      // over" is recorded — so this tests for a number rather than truthiness.
+      ...(typeof input.silent_streak === 'number' ? { silent_streak: input.silent_streak } : {}),
     }
   }
 

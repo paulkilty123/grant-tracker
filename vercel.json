@@ -113,6 +113,10 @@
       "schedule": "0 4 * * 0,3"
     },
     {
+      "path": "/api/cron/classify-alerts",
+      "schedule": "30 5 * * *"
+    },
+    {
       "path": "/api/cron/crawl-cf-funds?batch=1",
       "schedule": "0 5 * * 1"
     },

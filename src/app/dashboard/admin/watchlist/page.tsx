@@ -33,6 +33,19 @@ type Alert = {
   snapshot_before: string | null
   snapshot_after: string | null
   resolved: boolean
+  /** What the diff means, from classify-alerts. Report-only: nothing acts on it
+   *  until the first week has been hand-sampled. */
+  classification: string | null
+  classification_quote: string | null
+}
+
+/** Label and tint for a classification chip. Neutral for cosmetic, because the
+ *  point of the chip is to make the OTHER two findable in a long list. */
+const CLASSIFICATION_CHIP: Record<string, { label: string; className: string }> = {
+  funding_change: { label: 'Funding change', className: 'bg-emerald-50 text-forest' },
+  page_gone:      { label: 'Page gone',      className: 'bg-coral-pale text-coral-deep' },
+  cosmetic:       { label: 'Cosmetic',       className: 'bg-stone-100 text-mid' },
+  unclear:        { label: 'Unclear',        className: 'bg-stone-100 text-light' },
 }
 
 const REGION_COLOURS: Record<string, string> = {
@@ -450,21 +463,39 @@ export default function WatchlistAdminPage() {
                       className={`rounded-lg border p-3 text-xs ${
                         alert.resolved
                           ? 'border-warm bg-stone-50 opacity-60'
-                          : alert.alert_type === 'page_down'
+                          : alert.alert_type === 'page_down' || alert.alert_type === 'listing_collapsed'
                           ? 'border-coral-mid bg-coral-pale'
                           : 'border-amber-200 bg-amber-50'
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2 mb-2">
                         <div className="flex items-center gap-1.5">
-                          {alert.alert_type === 'page_down'
+                          {alert.alert_type === 'page_down' || alert.alert_type === 'listing_collapsed'
                             ? <AlertTriangle className="h-3.5 w-3.5 text-coral-saturated flex-shrink-0" />
                             : <Bell className="h-3.5 w-3.5 text-amber-500 flex-shrink-0" />
                           }
+                          {/* A collapse is a takedown, a wall or a redesign, never a
+                              copy edit. Calling it "Listing changed" alongside a
+                              reordered news carousel is what let the one alert
+                              worth acting on sit unread with the other 386. */}
                           <span className="font-semibold text-charcoal">
-                            {alert.alert_type === 'page_down' ? 'Page down' : 'Listing changed'}
+                            {alert.alert_type === 'page_down'        ? 'Page down'
+                              : alert.alert_type === 'listing_collapsed' ? 'Listing emptied'
+                              : 'Listing changed'}
                           </span>
                           <span className="text-light">· {relativeTime(alert.detected_at)}</span>
+                          {/* What the diff actually means. The one line that
+                              turns 387 unread alerts into a list you can scan:
+                              without it, a reordered news carousel and a closed
+                              fund look identical from here. */}
+                          {alert.classification && CLASSIFICATION_CHIP[alert.classification] && (
+                            <span
+                              className={`rounded-md px-1.5 py-0.5 text-[10px] font-semibold ${CLASSIFICATION_CHIP[alert.classification].className}`}
+                              title={alert.classification_quote ?? undefined}
+                            >
+                              {CLASSIFICATION_CHIP[alert.classification].label}
+                            </span>
+                          )}
                         </div>
                         {!alert.resolved && (
                           <button
@@ -477,7 +508,8 @@ export default function WatchlistAdminPage() {
                         )}
                       </div>
 
-                      {alert.alert_type === 'listing_changed' && alert.snapshot_before && (
+                      {(alert.alert_type === 'listing_changed' || alert.alert_type === 'listing_collapsed')
+                        && alert.snapshot_before && (
                         <div className="space-y-1.5">
                           <div>
                             <p className="text-[10px] font-semibold text-light uppercase mb-1">Before</p>
@@ -495,6 +527,11 @@ export default function WatchlistAdminPage() {
                       )}
                       {alert.alert_type === 'page_down' && (
                         <p className="text-[10px] text-coral-deep">{alert.snapshot_after}</p>
+                      )}
+                      {alert.classification_quote && (
+                        <p className="text-[10px] text-mid mt-1.5 italic">
+                          &ldquo;{alert.classification_quote}&rdquo;
+                        </p>
                       )}
                       {alert.resolved && (
                         <p className="text-[10px] text-light mt-1 italic">Marked as reviewed</p>

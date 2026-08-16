@@ -5,6 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { recordRun } from '@/lib/admin/cron-runs'
+import { hasCollapsed, flagRowsForUrl } from '@/lib/watchlist-signals'
 
 export const dynamic     = 'force-dynamic'
 // Was 60s, which with a 12s per-site timeout and a sequential loop meant the
@@ -15,7 +16,15 @@ export const maxDuration = 270
 // Fetch ceiling; the wall-clock budget below decides how many actually get
 // checked. Over-fetching is deliberate so a run of fast-responding sites can use
 // its whole budget rather than idling.
-const BATCH_LIMIT    = 120
+//
+// 2026-08-16: raised from 120. The cron runs Sundays and Wednesdays, so 120 a
+// run cycled 239 active entries in exactly 7 days with no headroom at all.
+// Auto-enrolling the 50 between-rounds rows (migration 057) took the list to
+// 288, which at 120 would stretch the cycle past a fortnight and mean a
+// between-rounds funder could reopen and close again before we looked. The last
+// two runs finished in 126s and 146s against a 240s budget, so the wall clock —
+// which is the real limit, not this number — has the room.
+const BATCH_LIMIT    = 150
 const TIME_BUDGET_MS = 240_000
 
 function getAdminClient() {
@@ -66,13 +75,20 @@ type WatchlistEntry = {
   name: string
   listing_url: string
   last_fingerprint: string | null
+  last_count: number | null
 }
 
 type CheckResult = {
   name: string
-  status: 'ok' | 'baseline' | 'changed' | 'error'
+  status: 'ok' | 'baseline' | 'changed' | 'collapsed' | 'error'
   detail?: string
+  /** How many catalogue rows this change pushed to the front of the verify queue. */
+  flagged?: number
 }
+
+// `hasCollapsed` and `flagRowsForUrl` live in @/lib/watchlist-signals — a route
+// file may only export its handlers and segment config, so a helper declared
+// here could never be imported by a test.
 
 export async function GET(req: NextRequest) {
   const cronSecret = process.env.CRON_SECRET
@@ -105,7 +121,7 @@ export async function GET(req: NextRequest) {
     // weeks instead of never.
     const { data: entries, error } = await supabase
       .from('funder_watchlist')
-      .select('id, name, listing_url, last_fingerprint')
+      .select('id, name, listing_url, last_fingerprint, last_count')
       .eq('status', 'active')
       .order('last_checked', { ascending: true, nullsFirst: true })
       .limit(BATCH_LIMIT)
@@ -175,12 +191,19 @@ export async function GET(req: NextRequest) {
         }
 
         if (fingerprint !== entry.last_fingerprint) {
-          // Something changed — raise an alert for admin review
+          // A page that lost most of its content is a different event from a
+          // page that edited a sentence, and it is the one signal here that is
+          // mechanically precise. Named separately so the feed can be triaged
+          // and so the admin screen does not call a takedown a "listing change".
+          const collapsed = hasCollapsed(entry.last_count, count)
+
           await supabase.from('watchlist_alerts').insert({
             watchlist_id:    entry.id,
-            alert_type:      'listing_changed',
+            alert_type:      collapsed ? 'listing_collapsed' : 'listing_changed',
             snapshot_before: entry.last_fingerprint,
-            snapshot_after:  fingerprint,
+            snapshot_after:  collapsed
+              ? `${entry.last_count ?? 0} items → ${count}\n\n${fingerprint}`
+              : fingerprint,
           })
           await supabase.from('funder_watchlist').update({
             last_checked:     ranAt,
@@ -188,7 +211,16 @@ export async function GET(req: NextRequest) {
             last_count:       count,
             last_error:       null,
           }).eq('id', entry.id)
-          results.push({ name: entry.name, status: 'changed' })
+
+          const flagged = await flagRowsForUrl(
+            supabase, entry.listing_url, collapsed ? 'listing_collapsed' : 'watchlist_change',
+          )
+          results.push({
+            name: entry.name,
+            status: collapsed ? 'collapsed' : 'changed',
+            detail: collapsed ? `${entry.last_count ?? 0} items → ${count}` : undefined,
+            flagged,
+          })
         } else {
           await supabase.from('funder_watchlist').update({
             last_checked: ranAt,
@@ -216,11 +248,17 @@ export async function GET(req: NextRequest) {
 
     return {
       ranAt,
-      checked:  results.length,
-      baseline: results.filter(r => r.status === 'baseline').length,
-      ok:       results.filter(r => r.status === 'ok').length,
-      changed:  results.filter(r => r.status === 'changed').length,
-      errors:   results.filter(r => r.status === 'error').length,
+      checked:   results.length,
+      baseline:  results.filter(r => r.status === 'baseline').length,
+      ok:        results.filter(r => r.status === 'ok').length,
+      changed:   results.filter(r => r.status === 'changed').length,
+      collapsed: results.filter(r => r.status === 'collapsed').length,
+      errors:    results.filter(r => r.status === 'error').length,
+      // Catalogue rows this run pushed to the front of the verification queue.
+      // The number that says whether the watchlist is reaching the catalogue at
+      // all: for most of its life it has been raising alerts about funders whose
+      // rows had no way of hearing about them.
+      queued:    results.reduce((n, r) => n + (r.flagged ?? 0), 0),
       skippedForBudget,
       elapsedMs: Date.now() - startedAt,
       results,
