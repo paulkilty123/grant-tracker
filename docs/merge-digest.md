@@ -482,6 +482,37 @@ is the canary, and it is deliberately dull.
 
 ---
 
+# Waiting on you: the cadence design
+
+`docs/verify-cadence-design.md`, proposal only, nothing built. Two corrections
+to the brief are in it and both change what is worth building:
+
+- **`check-watchlist` is not daily.** Sundays and Wednesdays, 120 entries a run,
+  239 active, so a **7-day full cycle with zero headroom**.
+- **It does not cover the catalogue.** 54 of 963 eligible rows (5.6%) have an
+  exact-URL watchlist entry, 261 (27%) share a host, and **134 of 239 watchlist
+  entries map to no eligible row at all**. There is no foreign key and no code
+  joins them. It is a discovery instrument, not a mirror of the catalogue.
+- **The change signal is mostly cosmetic.** ~14 of 17 changes on 16 August were
+  news carousels, jobs boards, blog lists, a maintenance banner and a typo fix.
+  Essex Community Foundation has fired 14 times in 24 cycles.
+- **387 alerts, none ever resolved**, growing ~54 a week.
+
+So the watchlist earns a targeted role rather than the general one, and the
+single most valuable item in the design is a join that was never built: **44 rows
+sit in `between_rounds_scheduled` and exactly one is watched**, because the
+manual admin button enrols them and the automatic transition in `grant-merge.ts`
+does not.
+
+The three shapes, sized: **198** evidenced always-open (180 days), **474** dated
+(windows around the dates, no clock), **402** read but silent on timing
+(14 → 28 → 56 → 112 → 180, reset on any answer).
+
+Recommended order is in §6 and is deliberately not the order of interest: the
+silent backoff first, because it is the smallest change and saves the most reads.
+
+---
+
 # Done, no longer waiting
 
 | Action | Status |
