@@ -33,6 +33,19 @@ type Alert = {
   snapshot_before: string | null
   snapshot_after: string | null
   resolved: boolean
+  /** What the diff means, from classify-alerts. Report-only: nothing acts on it
+   *  until the first week has been hand-sampled. */
+  classification: string | null
+  classification_quote: string | null
+}
+
+/** Label and tint for a classification chip. Neutral for cosmetic, because the
+ *  point of the chip is to make the OTHER two findable in a long list. */
+const CLASSIFICATION_CHIP: Record<string, { label: string; className: string }> = {
+  funding_change: { label: 'Funding change', className: 'bg-emerald-50 text-forest' },
+  page_gone:      { label: 'Page gone',      className: 'bg-coral-pale text-coral-deep' },
+  cosmetic:       { label: 'Cosmetic',       className: 'bg-stone-100 text-mid' },
+  unclear:        { label: 'Unclear',        className: 'bg-stone-100 text-light' },
 }
 
 const REGION_COLOURS: Record<string, string> = {
@@ -471,6 +484,18 @@ export default function WatchlistAdminPage() {
                               : 'Listing changed'}
                           </span>
                           <span className="text-light">· {relativeTime(alert.detected_at)}</span>
+                          {/* What the diff actually means. The one line that
+                              turns 387 unread alerts into a list you can scan:
+                              without it, a reordered news carousel and a closed
+                              fund look identical from here. */}
+                          {alert.classification && CLASSIFICATION_CHIP[alert.classification] && (
+                            <span
+                              className={`rounded-md px-1.5 py-0.5 text-[10px] font-semibold ${CLASSIFICATION_CHIP[alert.classification].className}`}
+                              title={alert.classification_quote ?? undefined}
+                            >
+                              {CLASSIFICATION_CHIP[alert.classification].label}
+                            </span>
+                          )}
                         </div>
                         {!alert.resolved && (
                           <button
@@ -502,6 +527,11 @@ export default function WatchlistAdminPage() {
                       )}
                       {alert.alert_type === 'page_down' && (
                         <p className="text-[10px] text-coral-deep">{alert.snapshot_after}</p>
+                      )}
+                      {alert.classification_quote && (
+                        <p className="text-[10px] text-mid mt-1.5 italic">
+                          &ldquo;{alert.classification_quote}&rdquo;
+                        </p>
                       )}
                       {alert.resolved && (
                         <p className="text-[10px] text-light mt-1 italic">Marked as reviewed</p>
