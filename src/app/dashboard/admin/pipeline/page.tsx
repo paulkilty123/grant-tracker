@@ -6,7 +6,7 @@
 
 import { getAdminDb } from '@/lib/admin/admin-db'
 import { jobSchedules, nextDueForJob, overdueAfter, runCostGBP, type UsageEntry } from '@/lib/admin/cron-schedule'
-import { formatYield } from '@/lib/admin/cron-runs'
+import { formatYield, formatVerify } from '@/lib/admin/cron-runs'
 
 export const dynamic = 'force-dynamic'
 
@@ -165,9 +165,12 @@ export default async function PipelinePage() {
                   {/* Second line only when the job reported a yield, so every
                       other row keeps its single-line height. */}
                   {(() => {
-                    const y = formatYield(r.run?.summary ?? null)
-                    return y
-                      ? <div style={{ color: 'var(--color-text-tertiary, #8A8986)', fontSize: 11.5, marginTop: 2 }}>{y}</div>
+                    // Yield for the jobs that produce rows, verification for the
+                    // job that checks them. Both key on the summary carrying the
+                    // shape, never on the job's name.
+                    const second = formatYield(r.run?.summary ?? null) ?? formatVerify(r.run?.summary ?? null)
+                    return second
+                      ? <div style={{ color: 'var(--color-text-tertiary, #8A8986)', fontSize: 11.5, marginTop: 2 }}>{second}</div>
                       : null
                   })()}
                 </td>

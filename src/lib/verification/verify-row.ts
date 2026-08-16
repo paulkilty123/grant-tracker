@@ -1,4 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
+import type { EvidenceInput } from '../field-evidence'
+import { isOpeningEntry, type CycleEntry } from '../deadline-cycle'
 
 /**
  * One visit per row: fetch the funder's page, decide whether it is usable, and
@@ -65,6 +67,7 @@ export type VerifyRow = {
   funding_type?:   string | null
   apply_url:       string | null
   deadline:        string | null
+  deadline_cycle:  unknown
   is_rolling:      boolean | null
   max_org_income:  number | null
   is_invite_only:  boolean | null
@@ -84,6 +87,7 @@ export type Fact<T> = { value: T | null; quote: string | null }
 
 export type Extraction = {
   deadline:       Fact<string>   // ISO yyyy-mm-dd
+  deadline_cycle: Fact<CycleEntry[]>
   is_rolling:     Fact<boolean>
   max_org_income: Fact<number>
   is_invite_only: Fact<boolean>
@@ -117,11 +121,24 @@ export type VerifyResult = {
   proposals: Proposal[]      // fields to change, each with its quote
   confirmed: string[]        // page agrees with what we hold — stamp as checked
   notFound:  string[]        // page does not address it — leave null
+  /**
+   * The same three findings in the shape `field_evidence` stores, one entry per
+   * field the page was asked about: agrees true (confirmed), false (a proposal
+   * is owed) or null (the page said nothing). This is the record that used to be
+   * discarded — `confirmed` named the fields but dropped their quotes, so a run
+   * that agreed with every stored value left no trace at all and the gate could
+   * never tell "verified" from "never looked at".
+   */
+  evidence:  EvidenceInput[]
   notes:     string[]
   /** Set on round_closed: the passed date the page states, and its quote. */
   closedRound?: { deadline: string; quote: string }
   /** Set when the answer came from a page one level down from apply_url. */
   followedUrl?: string
+  /** Every page this run actually read, apply_url first. One URL per row was
+   *  the old limit and the reason evidence could not say where a fact came
+   *  from; this is the row-level companion to per-field source_url. */
+  pagesRead?: string[]
   /** Set on multiple_funds: what the page actually covers, for a split decision. */
   fundsOnPage?: string[]
   usage?:    { input: number; output: number }
@@ -133,6 +150,16 @@ const PAGE_CAP = 12000
 
 /** Link text or href that suggests the funding detail lives one level down. */
 const FUNDING_LINK = /\b(grants?|funding|apply|applying|application|eligib|criteria|programmes?|how-we-fund|how-to-apply|open-funds?|our-funds?|what-we-fund|guidelines)\b/i
+
+/**
+ * Link text or href that suggests WHEN, rather than what or who.
+ *
+ * A row that already has funding detail and lacks dates is looking for a
+ * different page from one that has nothing at all. Movement for Good's
+ * /draw-dates scores zero on the funding vocabulary above and is the whole
+ * answer to the question that row gets wrong.
+ */
+const TIMING_LINK = /\b(dates?|deadlines?|draws?|draw-dates|rounds?|closing|when-to-apply|key-dates|timetable|timeline|schedule|important-dates|application-process|apply-by)\b/i
 
 /** Obvious non-destinations, so we never wander into news or admin pages. */
 const LINK_NOISE = /\b(news|blog|privacy|cookie|terms|contact|about-us|careers|jobs|login|account|donate|shop|press|media|policy|accessibility|sitemap)\b/i
@@ -180,12 +207,125 @@ function sameSite(a: string, b: string): boolean {
   return norm(a) === norm(b)
 }
 
-export function candidateLinks(pageSource: string, baseUrl: string, isMarkdown: boolean): string[] {
+/**
+ * Path segments that name a category rather than a fund. A URL made only of
+ * these is an index page: it tells you the funder gives grants, not what the
+ * rules of any particular one are.
+ */
+const GENERIC_SEGMENT = new RegExp(
+  '^(' + [
+    'home', 'index', 'en', 'en-gb', 'en-us', 'uk',
+    'grant', 'grants', 'grant-funding', 'funding', 'fund', 'funds',
+    'our-funds', 'our-fund', 'our-funding', 'our-grants', 'our-work',
+    'what-we-fund', 'who-we-fund', 'what-we-do',
+    'apply', 'apply-now', 'applying', 'application', 'applications',
+    'apply-for-funding', 'applying-for-funding', 'apply-for-a-grant',
+    'funding-programmes', 'grant-programmes', 'open-funds', 'live-funds',
+    'how-to-apply', 'how-we-fund', 'get-funding', 'get-involved',
+    'programme', 'programmes', 'program', 'programs',
+    'support', 'charities', 'for-charities', 'community',
+  ].join('|') + ')$', 'i',
+)
+
+/**
+ * Is this the funder's front door rather than a page about one fund?
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * WHY THIS EXISTS. Learned 2026-08-15, on the engine's first live stamping run.
+ *
+ * Movement for Good's homepage produced `is_rolling: true` with the quote
+ * "Nominations open all year". The quote is real, it is on the page, and it is
+ * grounded. It is also wrong about the thing the surface renders: nominations
+ * are collected all year, awards are made in six dated draws, and our own
+ * catalogue holds a sibling row with a dated deadline that proves it. The draw
+ * dates live on a subpage the engine never reads, because the hop only fires
+ * when the first page has NO funding detail at all, and that homepage is rich
+ * in funding detail.
+ *
+ * So a front door does not merely fail to answer the timing question. It
+ * produces a confident, citable, WRONG answer to it, which is worse than
+ * silence: a gate that requires evidence would have found some.
+ *
+ * The rule this supports is narrow and one-directional — see the `is_rolling`
+ * handling in runModel. A front door may still take a claim DOWN. It may never
+ * put one up.
+ *
+ * Judged on the twelve rows §3.1 of the tranche 2 design lists: bare domains
+ * (movementforgood.com/, asdafoundation.org/, sibgroup.org.uk/) and single
+ * generic segments (/our-funds/, /our-funding/, /en-gb) are front doors;
+ * /local-community-fund, /live-funds/london-fund/ and /our-work/growth-fund/
+ * are not. Two segments where the first is generic still count as specific,
+ * because the second segment is doing the naming.
+ */
+/** A day-and-month date token, with or without a range and an ordinal. */
+const DATE_TOKEN = /\b\d{1,2}(?:st|nd|rd|th)?\s*(?:[-–—/]\s*\d{1,2}(?:st|nd|rd|th)?\s*)?(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b/gi
+
+/** Language that means "this happens in rounds", as opposed to continuously. */
+const ROUND_WORD = /\b(draws?|rounds?|windows?|cohorts?|closes?|closing|deadlines?|opens? (?:on|for)|application window|panel meets?)\b/i
+
+/**
+ * Does the page state dated application or award windows?
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * WHY. Learned 2026-08-15, on the acceptance test for multi-page sourcing.
+ *
+ * The hop worked: from movementforgood.com the engine found /draws/1000, the
+ * right page, and quoted "Draw 2 7-11 September 100 x £1,000 awards". And it
+ * STILL certified is_rolling as true, from the sentence "Nominations open all
+ * year" sitting on that same page. Both sentences are true. Nominations are
+ * collected continuously; awards are decided in dated draws. Only one of them
+ * describes what the surface renders, which is a claim that you can apply and
+ * be considered today.
+ *
+ * So reaching the right page is necessary and not sufficient. This is the third
+ * instance in this file of the same defect — a real sentence, accurate about its
+ * own subject, wrong about the field it was offered for — after cash-at-bank
+ * for income and staged applications for invitation-only. The pattern holds:
+ * extract in the model, decide in code.
+ *
+ * Two signals, both required, because either alone over-fires: a page needs at
+ * least two day-and-month dates AND the vocabulary of rounds. "Founded in 1948"
+ * and a single "closes 14 April" are not enough on their own.
+ */
+export function statesDatedWindows(pageText: string): boolean {
+  if (!pageText) return false
+  const dates = new Set((pageText.match(DATE_TOKEN) ?? []).map(d => d.toLowerCase().replace(/\s+/g, ' ')))
+  return dates.size >= 2 && ROUND_WORD.test(pageText)
+}
+
+export function isFrontDoorUrl(url: string | null | undefined): boolean {
+  if (!url) return false
+  let u: URL
+  try { u = new URL(url) } catch { return false }
+  const segments = u.pathname
+    .split('/')
+    .filter(Boolean)
+    .map(s => s.replace(/\.(html?|php|aspx?|jsp)$/i, ''))
+  if (segments.length === 0) return true          // a bare domain is always a front door
+  if (segments.length > 2)   return false         // deep enough that something is being named
+  return segments.every(s => GENERIC_SEGMENT.test(s))
+}
+
+/**
+ * What the hop is looking for. `funding` is the original behaviour: the first
+ * page had nothing at all, so find the page that does. `timing` is for a page
+ * that was right about everything except when, which is the commonest and most
+ * damaging gap, because the surface fills it in with the word "Rolling".
+ */
+export type LinkWant = 'funding' | 'timing'
+
+export function candidateLinks(
+  pageSource: string, baseUrl: string, isMarkdown: boolean,
+  want: LinkWant = 'funding',
+  alreadySeen: readonly string[] = [],
+): string[] {
   let base: URL
   try { base = new URL(baseUrl) } catch { return [] }
 
   const found: { url: string; score: number }[] = []
-  const seen = new Set<string>([base.href.replace(/\/$/, '')])
+  // The seen set spans hops, not just this page, so a two-hop walk cannot
+  // circle back to a page it has already spent a model call on.
+  const seen = new Set<string>([base.href.replace(/\/$/, ''), ...alreadySeen])
 
   const pattern = isMarkdown
     ? /\[([^\]]{0,120})\]\(([^)\s]+)\)/g            // [text](href) from the reader proxy
@@ -209,13 +349,22 @@ export function candidateLinks(pageSource: string, baseUrl: string, isMarkdown: 
     if (seen.has(key)) continue
 
     const haystack = `${abs.pathname} ${rawText}`
-    if (LINK_NOISE.test(haystack) && !FUNDING_LINK.test(abs.pathname)) continue
-    const hits = (haystack.match(FUNDING_LINK) ?? []).length
-    if (hits === 0) continue
+    const primary = want === 'timing' ? TIMING_LINK : FUNDING_LINK
+    if (LINK_NOISE.test(haystack) && !primary.test(abs.pathname) && !FUNDING_LINK.test(abs.pathname)) continue
+
+    const primaryHits = (haystack.match(primary) ?? []).length
+    // A timing hop still accepts a funding page, at a discount: on many sites
+    // the dates live on /grants rather than on a page that says "dates". It
+    // must not accept ONLY funding pages, or the bias does nothing.
+    const fallbackHits = want === 'timing' ? (haystack.match(FUNDING_LINK) ?? []).length : 0
+    if (primaryHits === 0 && fallbackHits === 0) continue
 
     // Prefer a match in the path over one in link text, and shallower paths.
     const depth = abs.pathname.split('/').filter(Boolean).length
-    const score = hits * 2 + (FUNDING_LINK.test(abs.pathname) ? 3 : 0) - depth
+    const score = primaryHits * 4 + fallbackHits
+      + (primary.test(abs.pathname) ? 5 : 0)
+      + (want === 'timing' && FUNDING_LINK.test(abs.pathname) ? 1 : 0)
+      - depth
     seen.add(key)
     found.push({ url: abs.href, score })
   }
@@ -327,7 +476,9 @@ export function excerpt(text: string, cap = PAGE_CAP): string {
 }
 
 export type Fetched =
-  | { text: string; via: 'direct' | 'proxy'; links: string[] }
+  /** `source` is the raw page, kept so a later hop can re-score its links for a
+   *  different question. `links` is the funding-biased default. */
+  | { text: string; via: 'direct' | 'proxy'; links: string[]; source: string; url: string }
   | { error: string }
 
 export async function fetchPage(url: string, forceProxy = false): Promise<Fetched> {
@@ -337,7 +488,7 @@ export async function fetchPage(url: string, forceProxy = false): Promise<Fetche
     const text = isMarkdown
       ? excerpt(raw.replace(/\s{2,}/g, ' ').trim())
       : stripHtml(raw)
-    return { text, via, links }
+    return { text, via, links, source: raw, url }
   }
 
   if (!forceProxy) {
@@ -423,11 +574,25 @@ STEP 2 — FACTS. Only if the gate passed. For each, give the value AND a verbat
 quote of the sentence it came from. If the page does not state it, use
 {"value": null, "quote": null}. NEVER infer, never use outside knowledge.
 
-  "deadline"       : closing date as yyyy-mm-dd, or null. Do NOT judge whether it
-                     has passed; just report the date the page states.
+  "deadline"       : the closing date FOR THIS FUND as yyyy-mm-dd, or null. Do NOT
+                     judge whether it has passed; just report the date the page
+                     states. If the page lists several rounds or several
+                     different funds, do NOT pick one of their dates for this
+                     field — put the rounds in deadline_cycle and leave this
+                     null.
+  "deadline_cycle" : the page's whole schedule, when it names more than one round
+                     or draw, as a list. Otherwise null. Each entry:
+                       {"day":7,"month":9,"label":"Draw 2 closes"}
+                     Use the day and month only, never the year: this describes a
+                     repeating cycle. Label each entry with the page's own words,
+                     and say whether it opens or closes, because an opening date
+                     is not a deadline. A range like "7-11 September" closes on
+                     the LAST day, so day 11.
   "is_rolling"     : true ONLY if the page explicitly says applications are
-                     accepted year round / on a rolling basis. Absence of a
-                     deadline is NOT evidence of rolling — use null.
+                     accepted year round / on a rolling basis, AND names no dated
+                     rounds. A page that says nominations run all year and then
+                     lists dated draws is NOT rolling: the draws are the rounds.
+                     Absence of a deadline is NOT evidence of rolling — use null.
   "max_org_income" : maximum applicant organisation annual income/turnover as a
                      plain number of pounds (e.g. 500000), or null.
   "is_invite_only" : true if the page says applications are by invitation, or
@@ -450,7 +615,8 @@ quote of the sentence it came from. If the page does not state it, use
 
 Shape:
 {"gate":{"funds_on_page":string[],"our_fund_is_one_of_them":bool,"fund_on_page":string|null,"describes_our_fund":bool,"has_funding_detail":bool},
- "facts":{"deadline":{"value":null,"quote":null},"is_rolling":{"value":null,"quote":null},
+ "facts":{"deadline":{"value":null,"quote":null},"deadline_cycle":{"value":null,"quote":null},
+ "is_rolling":{"value":null,"quote":null},
  "max_org_income":{"value":null,"quote":null},"is_invite_only":{"value":null,"quote":null},
  "still_listed":{"value":true,"quote":null},"is_grant":{"value":true,"quote":null}}}`
 }
@@ -474,6 +640,94 @@ function quoteIsGrounded(quote: string | null, pageText: string): boolean {
   return norm(pageText).includes(q.slice(0, Math.min(q.length, 120)))
 }
 
+// ── Multi-page sourcing ──────────────────────────────────────────────────────
+//
+// Not a crawler. A bounded second and third read, fired by a MISSING ANSWER
+// rather than by a failed page.
+//
+// The original hop fired under exactly one condition: the page we read was the
+// right fund's page and contained no funding detail at all. That is a narrow
+// door and it was the wrong door for the case in front of us. Movement for
+// Good's homepage is not detail-free — it describes the awards, the nomination
+// process, the causes — so it passes the gate, the hop never fires, and the draw
+// dates on /draw-dates are never read. The engine then returns a confident
+// "verified" on a page that does not contain the answer to the question that
+// matters. Same shape for Asda Foundation, Power to Change and Social
+// Investment Business: rich front doors, detail one level down.
+//
+// Every limit below is hard, and the reason is that "fetch more, generally" is
+// exactly the failure mode a second hop invites.
+
+/** Pages read per row, including apply_url. Two hops reaches
+ *  "homepage → funding → this fund". Three would be a crawl. */
+const MAX_PAGES = 3
+
+/** Circuit breaker, not a target. Counts proxy retries too. */
+const MAX_MODEL_CALLS = 5
+
+/** We are reading three pages now, not one. */
+const HOST_GAP_MS = 500
+
+/**
+ * Is the timing question answered?
+ *
+ * Deadline and rolling are alternatives, not both required: a row with a
+ * confirmed closing date does not also need a confirmed rolling flag. Amount is
+ * deliberately not here — an absent amount renders as absent and misleads
+ * nobody, so it does not earn a fetch. Keeping the trigger tied to what the
+ * SURFACE ASSERTS is what stops this becoming a general appetite for more pages.
+ */
+export function timingAnswered(r: Pick<VerifyResult, 'evidence'>): boolean {
+  return r.evidence.some(e => (e.field === 'deadline' || e.field === 'is_rolling') && e.agrees !== null)
+}
+
+/**
+ * Fold a hop's findings into what we already have.
+ *
+ * A definite finding beats silence, and a later definite finding beats an
+ * earlier one. The ordering is not arbitrary: the hop only happened BECAUSE the
+ * earlier page did not answer, and the later page was chosen for being more
+ * specific about the thing that was missing. Where both pages are silent the
+ * result stays silent, which is the honest answer.
+ */
+export function foldEvidence(into: EvidenceInput[], from: EvidenceInput[]): EvidenceInput[] {
+  const byField = new Map(into.map(e => [e.field, e]))
+  for (const e of from) {
+    const existing = byField.get(e.field)
+    if (!existing || (existing.agrees === null && e.agrees !== null) || e.agrees !== null) {
+      byField.set(e.field, e)
+    }
+  }
+  return Array.from(byField.values())
+}
+
+function foldResult(base: VerifyResult, hop: VerifyResult): VerifyResult {
+  const evidence = foldEvidence(base.evidence, hop.evidence)
+
+  // Proposals follow the evidence: a field the hop settled is the hop's
+  // proposal, and a field it stayed silent on keeps whatever we had.
+  const hopFields  = new Set(hop.evidence.filter(e => e.agrees !== null).map(e => e.field))
+  const proposals  = [
+    ...base.proposals.filter(p => !hopFields.has(p.field)),
+    ...hop.proposals,
+  ]
+  const confirmed = Array.from(new Set(
+    evidence.filter(e => e.agrees === true).map(e => e.field),
+  ))
+  const notFound = evidence.filter(e => e.agrees === null).map(e => e.field)
+
+  return {
+    ...base,
+    // A hop that reads a closed round settles the outcome; otherwise the first
+    // page's verdict stands, because the hop was a supplement to it.
+    outcome:     hop.outcome === 'round_closed' ? 'round_closed' : base.outcome,
+    closedRound: hop.closedRound ?? base.closedRound,
+    evidence, proposals, confirmed, notFound,
+    notes: [...base.notes, ...hop.notes],
+    usage: hop.usage ?? base.usage,
+  }
+}
+
 // ── Public entry point ───────────────────────────────────────────────────────
 
 export async function verifyRow(
@@ -483,7 +737,7 @@ export async function verifyRow(
   const base = {
     id: row.id, title: row.title, funder: row.funder, url: row.apply_url,
     proposals: [] as Proposal[], confirmed: [] as string[], notFound: [] as string[],
-    notes: [] as string[],
+    evidence: [] as EvidenceInput[], notes: [] as string[],
   }
 
   if (!row.apply_url) {
@@ -493,6 +747,8 @@ export async function verifyRow(
   let usage = { input: 0, output: 0 }
   let best: VerifyResult | null = null
   let followedFrom: string[] = []
+  let modelCalls = 0
+  let lastFetched: { source: string; url: string; isMarkdown: boolean; links: string[] } | null = null
 
   // How far an attempt got. A retry that fails at the fetch must never replace a
   // first attempt that actually read the page — otherwise a dead reader proxy
@@ -521,7 +777,11 @@ export async function verifyRow(
     }
 
     if (followedFrom.length === 0) followedFrom = fetched.links
-    const result = await runModel(row, fetched.text, anthropic, base)
+    lastFetched = { source: fetched.source, url: fetched.url, isMarkdown: fetched.via === 'proxy', links: fetched.links }
+    // The reader proxy is a transport, not a source: the fact still came from
+    // the funder's own page, so that is the URL the evidence cites.
+    modelCalls++
+    const result = await runModel(row, fetched.text, anthropic, base, row.apply_url)
     usage = { input: usage.input + (result.usage?.input ?? 0), output: usage.output + (result.usage?.output ?? 0) }
     result.usage = usage
     if (fetched.via === 'proxy') result.notes = [...result.notes, 'read through the reader proxy']
@@ -533,26 +793,80 @@ export async function verifyRow(
     if (!process.env.READER_PROXY_URL) break
   }
 
-  // Still nothing usable, but the landing page pointed somewhere. Follow the
-  // single best candidate one level down and try again. One extra hop only:
-  // the aim is /grants from a homepage, not a crawl.
-  if (best && !(best as VerifyResult).gate.pass) {
-    const failure = ((best as VerifyResult).gate as { failure?: GateFailure }).failure
-    if (failure === 'no_funding_detail' && followedFrom.length > 0) {
-      const target = followedFrom[0]
-      const fetched = await fetchPage(target)
-      if (!('error' in fetched) && fetched.text.length >= 200) {
-        const deeper = await runModel(row, fetched.text, anthropic, base)
-        usage = { input: usage.input + (deeper.usage?.input ?? 0), output: usage.output + (deeper.usage?.output ?? 0) }
-        deeper.usage = usage
-        deeper.notes = [...deeper.notes, `read one level down: ${target}`]
-        deeper.followedUrl = target
-        keep(deeper)
-      }
+  // ── The hops ───────────────────────────────────────────────────────────────
+  //
+  // Three conditions, any of which fires. The first is the original behaviour.
+  // The second is the one Movement for Good needed: the page was RIGHT and the
+  // answer was elsewhere, which the single old condition could never detect,
+  // because it only asked whether the gate had failed.
+  const norm     = (u: string) => u.replace(/\/$/, '').split('#')[0]
+  const visited  = [norm(row.apply_url)]
+  let   current  = best as VerifyResult | null
+
+  while (current && visited.length < MAX_PAGES && modelCalls < MAX_MODEL_CALLS) {
+    const failure = (current.gate as { failure?: GateFailure }).failure
+
+    let want: LinkWant | null = null
+    let why  = ''
+    if (!current.gate.pass && failure === 'no_funding_detail') {
+      want = 'funding'
+      why  = 'the page carried no funding detail'
+    } else if (current.outcome === 'multiple_funds'
+               && (current.fundsOnPage ?? []).some(f => namesMatch(row.title, f))) {
+      want = 'funding'
+      why  = 'the page covers several funds and one of them is ours'
+    } else if (current.gate.pass && current.outcome === 'verified' && !timingAnswered(current)) {
+      // Stop early when the timing question is answered. The common case costs
+      // nothing extra, which is what makes this affordable at catalogue scale.
+      want = 'timing'
+      why  = 'the page named this fund but said nothing about when to apply'
     }
+    if (!want) break
+
+    const scored = lastFetched
+      ? candidateLinks(lastFetched.source, lastFetched.url, lastFetched.isMarkdown, want, visited)
+      : []
+    const target = scored[0] ?? followedFrom.find(l => !visited.includes(norm(l)))
+    if (!target) {
+      current.notes = [...current.notes, `nothing to follow, though ${why}`]
+      break
+    }
+
+    // Politeness: this is three requests to one host now, not one.
+    await new Promise(r => setTimeout(r, HOST_GAP_MS))
+    visited.push(norm(target))
+
+    const fetched = await fetchPage(target)
+    if ('error' in fetched || fetched.text.length < 200) {
+      current.notes = [...current.notes, `followed ${target} and could not read it`]
+      break
+    }
+    lastFetched = { source: fetched.source, url: fetched.url, isMarkdown: fetched.via === 'proxy', links: fetched.links }
+
+    modelCalls++
+    const deeper = await runModel(row, fetched.text, anthropic, base, target)
+    usage = { input: usage.input + (deeper.usage?.input ?? 0), output: usage.output + (deeper.usage?.output ?? 0) }
+
+    if (!deeper.gate.pass) {
+      // A hop that lands on the wrong fund is not a finding about our row. Keep
+      // what we had and record where we went, rather than downgrading a sound
+      // verdict because one link was mis-scored.
+      current.notes = [...current.notes, `followed ${target} because ${why}, and it did not describe this fund`]
+      current.usage = usage
+      break
+    }
+
+    current = foldResult(current, deeper)
+    current.usage       = usage
+    current.followedUrl = target
+    current.notes = [...current.notes, `read one level down: ${target} (${why})`]
   }
 
-  return best ?? { ...base, outcome: 'fixable_link', gate: { pass: false, failure: 'fetch_failed', detail: 'no attempt completed' } }
+  if (current) {
+    current.pagesRead = visited
+    return current
+  }
+  return { ...base, outcome: 'fixable_link', gate: { pass: false, failure: 'fetch_failed', detail: 'no attempt completed' } }
 }
 
 async function runModel(
@@ -560,6 +874,8 @@ async function runModel(
   pageText: string,
   anthropic: Anthropic,
   base: Omit<VerifyResult, 'outcome' | 'gate'>,
+  /** The page these facts came from — stamped onto every piece of evidence. */
+  sourceUrl: string | null,
 ): Promise<VerifyResult> {
   const res = await anthropic.messages.create({
     model: MODEL,
@@ -631,18 +947,60 @@ async function runModel(
   const confirmed: string[] = []
   const notFound: string[] = []
   const notes: string[] = []
+  const evidence: EvidenceInput[] = []
+
+  /**
+   * Record what the page said about a field, whatever it said.
+   *
+   * Every path that pushes to `confirmed`, `proposals` or `notFound` also lands
+   * here, so a field the model was asked about always ends with exactly one
+   * stamp. `agrees: null` is the honest reading of every notFound path,
+   * including the withheld ones — a quote about cash at bank is not evidence
+   * about organisational income, so the row is left saying we do not know.
+   */
+  const stamp = (field: string, agrees: boolean | null, quote: string | null, proposed?: unknown, note?: string) => {
+    evidence.push({ field, agrees, quote: agrees === null ? null : quote, source_url: sourceUrl, proposed, note })
+  }
 
   const consider = (field: string, extracted: { value: unknown; quote: string | null }, current: unknown, coerce: (v: unknown) => unknown) => {
-    if (extracted.value === null || extracted.value === undefined) { notFound.push(field); return }
-    if (!extracted.quote) { notFound.push(field); notes.push(`${field}: a value was offered without a quote we could find on the page, so it was dropped`); return }
+    if (extracted.value === null || extracted.value === undefined) { notFound.push(field); stamp(field, null, null); return }
+    if (!extracted.quote) { notFound.push(field); stamp(field, null, null); notes.push(`${field}: a value was offered without a quote we could find on the page, so it was dropped`); return }
     const next = coerce(extracted.value)
-    if (next === null) { notFound.push(field); return }
-    if (next === current) { confirmed.push(field); return }
+    if (next === null) { notFound.push(field); stamp(field, null, null); return }
+    if (next === current) { confirmed.push(field); stamp(field, true, extracted.quote); return }
     proposals.push({ field, from: current, to: next, quote: extracted.quote, verdict: 'confirmed' })
+    stamp(field, false, extracted.quote, next)
   }
 
   const asDate = (v: unknown) => (typeof v === 'string' && ISO_DATE.test(v) ? v : null)
   const asBool = (v: unknown) => (typeof v === 'boolean' ? v : null)
+  /**
+   * Coerce the page's schedule into `deadline_cycle`'s shape.
+   *
+   * Day and month only, never a year: the column describes a repeating cycle,
+   * and `nextCycleDeadline` supplies the year by rolling forward. An entry with
+   * an out-of-range day or month is dropped rather than clamped — 31 February is
+   * how a plausible-looking wrong date gets written onto a live row, and the
+   * roll-forward maths already carries a guard against exactly that.
+   */
+  const asCycle = (v: unknown): CycleEntry[] | null => {
+    if (!Array.isArray(v) || v.length === 0) return null
+    const out: CycleEntry[] = []
+    for (const raw of v) {
+      if (!raw || typeof raw !== 'object') continue
+      const e = raw as { day?: unknown; month?: unknown; label?: unknown }
+      const day   = Number(e.day)
+      const month = Number(e.month)
+      if (!Number.isInteger(day) || !Number.isInteger(month)) continue
+      if (day < 1 || day > 31 || month < 1 || month > 12) continue
+      out.push({ day, month, ...(typeof e.label === 'string' && e.label.trim() ? { label: e.label.trim() } : {}) })
+    }
+    // One entry is not a cycle. A single date belongs in `deadline`, and
+    // promoting it here would turn a one-off round into a claim that the fund
+    // repeats every year, which is a claim the page did not make.
+    return out.length >= 2 ? out : null
+  }
+
   const asMoney = (v: unknown) => {
     const n = typeof v === 'number' ? v : Number(String(v).replace(/[£,\s]/g, ''))
     return Number.isFinite(n) && n > 0 ? Math.round(n) : null
@@ -673,18 +1031,27 @@ async function runModel(
   if (isGrant.value === false) {
     if (row.funding_type && KNOWN_TYPES.has(row.funding_type)) {
       notes.push(`scope verdict ignored: this row is classified "${row.funding_type}", which the catalogue carries deliberately`)
+      stamp('is_grant', null, null)
     } else if (!isGrant.quote) {
       notes.push('the model judged this not to be funding but quoted nothing; verdict withheld')
+      stamp('is_grant', null, null)
     } else {
-      return { ...base, usage, gate, outcome: 'not_a_grant', notes: [isGrant.quote] }
+      stamp('is_grant', false, isGrant.quote)
+      return { ...base, usage, gate, outcome: 'not_a_grant', evidence, notes: [isGrant.quote] }
     }
+  } else {
+    stamp('is_grant', isGrant.value === true && isGrant.quote ? true : null, isGrant.quote)
   }
   if (stillListed.value === false) {
     if (!stillListed.quote) {
       notes.push('the model judged this fund no longer listed but quoted nothing; verdict withheld')
+      stamp('still_listed', null, null)
     } else {
-      return { ...base, usage, gate, outcome: 'no_longer_listed', notes: [stillListed.quote] }
+      stamp('still_listed', false, stillListed.quote)
+      return { ...base, usage, gate, outcome: 'no_longer_listed', evidence, notes: [stillListed.quote] }
     }
+  } else {
+    stamp('still_listed', stillListed.value === true && stillListed.quote ? true : null, stillListed.quote)
   }
 
   // A deadline the page states in the PAST is not a deadline to write, it is
@@ -697,13 +1064,118 @@ async function runModel(
   const extractedDeadline = asDate(deadlineFact.value)
   const todayISO = new Date().toISOString().slice(0, 10)
   let closedRound: { deadline: string; quote: string } | undefined
-  if (extractedDeadline && deadlineFact.quote && extractedDeadline < todayISO) {
+  // The schedule is read BEFORE the single deadline, because whether a lone date
+  // can be trusted depends on whether the page turned out to run in rounds.
+  const cycleFact = fact('deadline_cycle')
+  const pageCycle = asCycle(cycleFact.value)
+
+  // A SINGLE DATE OFF A MULTI-ROUND PAGE IS ONE OF SEVERAL, AND WE CANNOT TELL
+  // WHICH. Movement for Good's homepage lists every draw; asked for "the"
+  // closing date it returned 18 October, from the £5,000 Animals & Wildlife
+  // draw, for our £1,000 draws row. Worse, that answer made the timing question
+  // look answered, so the hop to the fund's own page stopped firing — a wrong
+  // date is not merely wrong, it suppresses the machinery that would have found
+  // the right one.
+  //
+  // So when the page plainly runs in rounds and the model could not structure
+  // them, the lone date is withheld and timing stays unanswered, which is what
+  // sends the reader one level down.
+  if (extractedDeadline && deadlineFact.quote && !pageCycle && statesDatedWindows(pageText)) {
+    notFound.push('deadline')
+    stamp('deadline', null, null, undefined, 'a single date off a page that runs in rounds')
+    notes.push(`deadline withheld: "${deadlineFact.quote.slice(0, 80)}" is one of several rounds this page lists, and which one belongs to this row is not stated`)
+  } else if (extractedDeadline && deadlineFact.quote && extractedDeadline < todayISO) {
     closedRound = { deadline: extractedDeadline, quote: deadlineFact.quote }
     notFound.push('deadline')
+    // The page DID address timing, and what it said contradicts a row that
+    // presents itself as open. That is evidence, not silence — stamping it null
+    // here would let a closed round sit unverified-but-unremarkable forever.
+    stamp('deadline', false, deadlineFact.quote, extractedDeadline)
   } else {
     consider('deadline', deadlineFact, row.deadline, asDate)
   }
-  consider('is_rolling',     fact('is_rolling'),     row.is_rolling,     asBool)
+  // A FRONT DOOR MAY TAKE A CLAIM DOWN. IT MAY NEVER PUT ONE UP.
+  //
+  // `is_rolling = true` is the one field where the surface turns our data into a
+  // positive claim about today: it renders the word "Rolling", which says you
+  // can apply and be considered now. A funder's index page is systematically
+  // the wrong place to establish that — it says the funder gives money all year
+  // without saying that any particular round is open, and the engine will quote
+  // it happily. Movement for Good is the worked case; see isFrontDoorUrl.
+  //
+  // So from a front door a `true` is withheld, whether it would have CONFIRMED
+  // the stored value or PROPOSED setting it. A `false` is untouched, because
+  // that only ever removes an assertion, which is strictly safer than the status
+  // quo. Withheld means agrees:null — we looked and cannot say — not agrees:false.
+  //
+  // Remove this once multi-page sourcing lands and the timing page is actually
+  // read. Until then it is the difference between an unverified row and a
+  // wrongly certified one.
+  // ── The page's whole schedule ──────────────────────────────────────────────
+  //
+  // A page that names several rounds was previously unreadable: the extraction
+  // asked for one closing date, Movement for Good's draws page states three, and
+  // it abstained. So the engine could reach the right page, quote the draw dates
+  // under another field, and still return nothing about timing.
+  //
+  // The cycle is proposed, never written here. `expire-grants` and the admin
+  // sweep already roll a deadline forward from `deadline_cycle` — including the
+  // opening-date fix — so landing the cycle is enough; duplicating that maths
+  // here would be a second copy to keep in step, which is how those two came to
+  // share a bug in the first place.
+  const sameCycle  = (a: CycleEntry[] | null, b: unknown) => {
+    const norm = (c: unknown) => Array.isArray(c)
+      ? JSON.stringify((c as CycleEntry[]).map(e => [e.day, e.month]).sort())
+      : null
+    return norm(a) !== null && norm(a) === norm(b)
+  }
+  if (pageCycle && cycleFact.quote) {
+    if (sameCycle(pageCycle, row.deadline_cycle)) {
+      confirmed.push('deadline_cycle')
+      stamp('deadline_cycle', true, cycleFact.quote)
+    } else {
+      proposals.push({ field: 'deadline_cycle', from: row.deadline_cycle, to: pageCycle, quote: cycleFact.quote, verdict: 'confirmed' })
+      stamp('deadline_cycle', false, cycleFact.quote, pageCycle)
+    }
+  } else if (cycleFact.value) {
+    // Offered, but not a usable cycle: fewer than two valid entries, or no quote.
+    notFound.push('deadline_cycle')
+    stamp('deadline_cycle', null, null)
+  }
+
+  const rollingFact = fact('is_rolling')
+
+  // A DATED SCHEDULE IS A TAKEDOWN, AND TAKEDOWNS ARE ALLOWED.
+  //
+  // The guards below withhold a rolling claim they cannot stand behind, which
+  // leaves the row unverified. That is safe but it is not a correction, and on
+  // its own it means Movement for Good stays wrong for ever. Once the page has
+  // actually named its rounds, we are no longer guessing: dated rounds and
+  // "applications accepted at any time" cannot both be true, and the rounds
+  // carry the quote. So this contradicts rather than withholds — it only ever
+  // moves a row from "claims open today" to "we do not say", which is strictly
+  // safer than the status quo and is the asymmetry §12 of the design sets out.
+  if (pageCycle && cycleFact.quote && row.is_rolling === true) {
+    const closing = pageCycle.filter(e => !isOpeningEntry(e))
+    const shown   = (closing.length > 0 ? closing : pageCycle)
+      .map(e => `${e.day}/${e.month}`).join(', ')
+    proposals.push({ field: 'is_rolling', from: true, to: false, quote: cycleFact.quote, verdict: 'confirmed' })
+    stamp('is_rolling', false, cycleFact.quote, false)
+    notes.push(`is_rolling contradicted: the page names dated rounds (${shown}), so applications are not accepted at any time`)
+  } else {
+  const rollingBlock =
+      rollingFact.value !== true                 ? null
+    : isFrontDoorUrl(sourceUrl)                  ? `it comes from ${sourceUrl}, which names no single fund, so it cannot establish that a round is open today`
+    : statesDatedWindows(pageText)               ? 'the same page states dated windows, so "open all year" describes when nominations are taken, not when a round is open'
+    : null
+  if (rollingBlock) {
+    notFound.push('is_rolling')
+    stamp('is_rolling', null, null, undefined, 'rolling not confirmable from this page')
+    notes.push(`is_rolling withheld: "${(rollingFact.quote ?? '').slice(0, 90)}" — ${rollingBlock}`)
+  } else {
+    consider('is_rolling', rollingFact, row.is_rolling, asBool)
+  }
+  }
   // Only propose an income cap when the sentence is about organisational income
   // or turnover. Wax Chandlers' "less than £200k in cash at bank" is a real
   // sentence with a real number that means something else entirely.
@@ -712,6 +1184,7 @@ async function runModel(
   const CASH_CONCEPT   = /\b(cash at bank|cash and investments|balance sheet|reserves|in the bank)\b/i
   if (incomeFact.quote && (!INCOME_CONCEPT.test(incomeFact.quote) || CASH_CONCEPT.test(incomeFact.quote))) {
     notFound.push('max_org_income')
+    stamp('max_org_income', null, null)
     notes.push(`max_org_income withheld: the quote is not about organisational income — "${incomeFact.quote.slice(0, 120)}"`)
   } else {
     consider('max_org_income', incomeFact, row.max_org_income, asMoney)
@@ -725,6 +1198,7 @@ async function runModel(
   if (inviteFact.value === true && inviteFact.quote
       && (!TRUE_INVITE.test(inviteFact.quote) || TWO_STAGE.test(inviteFact.quote))) {
     notFound.push('is_invite_only')
+    stamp('is_invite_only', null, null)
     notes.push(`is_invite_only withheld: the quote describes a staged or selective process, not an invitation-only fund — "${inviteFact.quote.slice(0, 120)}"`)
   } else {
     consider('is_invite_only', inviteFact, row.is_invite_only, asBool)
@@ -733,6 +1207,6 @@ async function runModel(
   return {
     ...base, usage, gate,
     outcome: closedRound ? 'round_closed' : 'verified',
-    proposals, confirmed, notFound, notes, closedRound,
+    proposals, confirmed, notFound, evidence, notes, closedRound,
   }
 }

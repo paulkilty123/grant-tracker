@@ -47,9 +47,49 @@ export type CycleEntry = { day: number; month: number; label?: string }
 const OPENING_LABEL =
   /\b(opens?|opening|reopens?|reopening|launch(?:es|ed|ing)?|starts?|starting|registration|register)\b/i
 
+/**
+ * Labels for dates that are neither an opening nor a deadline: what the funder
+ * does AFTER the window shuts.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * WHY, 2026-08-16. The opening-date fix filtered a denylist of one word family
+ * and stopped there, because every cycle in the catalogue at the time carried at
+ * most an opens/closes pair. The verification engine now extracts a page's WHOLE
+ * schedule, and real schedules have a third kind of date. The London LGBT+ Fund
+ * reads:
+ *
+ *   17 June  Fund Launches
+ *   12 August  Application Window Closes
+ *   30 November  Outcomes Communicated
+ *
+ * The opening filter removed 17 June and then chose 30 November, the day
+ * decisions are announced, as the deadline. A fundraiser would have planned
+ * against a date three and a half months after applications shut.
+ *
+ * This is the same defect as the one it is sitting beside, one class along, and
+ * it is worth naming: a denylist answers "is it this bad thing", when the
+ * question is "is it a deadline". `expire-grants` learned this already for the
+ * prose parser and carries NON_APP_DATE_CUES for it; the structured path never
+ * got the equivalent.
+ */
+const NON_DEADLINE_LABEL =
+  /\b(outcome|outcomes|decision|decisions|announce(?:d|ment|ments)?|notif(?:y|ied|ication)|award(?:ed|s)?\s+(?:made|announced)|panel|board|trustees?\s+meet|shortlist(?:ed|ing)?|interview|result(?:s)?|paid|payment|report(?:s|ing)?\s+due|complet(?:e|ed|ion)|project\s+(?:starts?|ends?))\b/i
+
 /** Is this entry a date the window opens, rather than a date it closes? */
 export function isOpeningEntry(entry: CycleEntry): boolean {
   return typeof entry.label === 'string' && OPENING_LABEL.test(entry.label)
+}
+
+/** Is this entry something that happens after the window shuts? */
+export function isPostDecisionEntry(entry: CycleEntry): boolean {
+  return typeof entry.label === 'string' && NON_DEADLINE_LABEL.test(entry.label)
+}
+
+/** Could this entry be a closing date? Unlabelled and neutrally labelled
+ *  entries stay in, which preserves the behaviour of the 288 bare {day, month}
+ *  cycles that already mean "deadline". */
+export function isDeadlineCandidate(entry: CycleEntry): boolean {
+  return !isOpeningEntry(entry) && !isPostDecisionEntry(entry)
 }
 
 /**
@@ -69,8 +109,9 @@ export function nextCycleDeadline(
   if (!cycle || cycle.length === 0) return null
 
   // Closing dates only. An entry with no label stays in: most cycles are bare
-  // {day, month} pairs that already mean "deadline".
-  const candidates = cycle.filter(e => !isOpeningEntry(e))
+  // {day, month} pairs that already mean "deadline". Openings and
+  // after-the-fact events are both excluded — see NON_DEADLINE_LABEL.
+  const candidates = cycle.filter(isDeadlineCandidate)
   if (candidates.length === 0) return null
 
   const today       = new Date(`${todayISO}T00:00:00Z`)

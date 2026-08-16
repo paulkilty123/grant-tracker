@@ -66,7 +66,27 @@ const MAX_QUERIES = 5
  *   general  — exactly ONE rotated thematic query, ~246s
  *   (none)   — every query, budget-limited. Manual use and backwards compatible.
  */
-type Slice = 'targeted' | 'general' | 'all'
+/**
+ * One query per invocation, always starting from elapsed zero.
+ *
+ * `targeted` used to mean BOTH blocked funders in one run, and on 2026-08-15
+ * that killed the function. Arts Council England took 192 seconds against a
+ * hardcoded estimate of 60; the look-ahead check then did 192 + 60 = 252,
+ * decided it fitted inside the 270s budget, and launched a GLA query that could
+ * never finish. Vercel killed the parent at 300s, `recordRun` never reached its
+ * close, and the run recorded `ok IS NULL` — invisible unless someone looked.
+ *
+ * The real defect was arithmetic, not the estimate: with a fixed 250s abort, any
+ * query starting later than 50s in has `start + 250s > 300s`, so THE TIMEOUT
+ * THAT EXISTS TO PREVENT THIS CAN NEVER FIRE FIRST. The general slice survived
+ * only because it runs one query from a standing start, and even that took 247
+ * of its 270 seconds on the 15th.
+ *
+ * So the fix is to remove the arithmetic rather than correct it, the same shape
+ * `crawl-grants?batch=N` already uses. Alternate-day scheduling makes it free:
+ * one funder a day rather than two every other day.
+ */
+type Slice = 'targeted-ace' | 'targeted-gla' | 'targeted' | 'general' | 'all'
 
 /** Must match discover-grants' MODEL. Usage is attributed per model, and a
  *  wrong name here would price the run against the wrong rate card. */
@@ -95,6 +115,13 @@ const EST_MS = { targeted: 60_000, general: 255_000 }
  * at elapsed zero, which is why they never ran.
  */
 const BUDGET_MS = 270_000
+
+/**
+ * No query is worth starting with less than this left, whatever the estimate
+ * says. Arts Council England has been measured at 60s and at 192s; an estimate
+ * that is a mean cannot bound a worst case, so the floor does the bounding.
+ */
+const MIN_QUERY_MS = 200_000
 
 type QuerySpec = { query: string; fundingType: DiscoveryFundingType; domains?: string[] }
 
@@ -127,7 +154,11 @@ function buildQueue(dayOfYear: number, slice: Slice): QuerySpec[] {
     for (const query of DEFAULT_QUERIES[type]) general.push({ query, fundingType: type })
   }
 
-  if (slice === 'targeted') return blocked
+  // One named funder per invocation. `targeted` is kept as the manual
+  // everything-at-once escape hatch; no cron uses it.
+  if (slice === 'targeted-ace') return blocked.slice(0, 1)
+  if (slice === 'targeted-gla') return blocked.slice(1, 2)
+  if (slice === 'targeted')     return blocked
 
   // Step by 1, not by MAX_QUERIES. The general slice now takes one query per
   // run, so a daily cron walks the whole set in `general.length` days and
@@ -194,8 +225,8 @@ export async function GET(req: NextRequest) {
     const dayOfYear = Math.floor((Date.now() - Date.UTC(new Date().getUTCFullYear(), 0, 0)) / 86_400_000)
 
     const rawSlice = req.nextUrl.searchParams.get('slice')
-    const slice: Slice =
-      rawSlice === 'targeted' || rawSlice === 'general' ? rawSlice : 'all'
+    const KNOWN: Slice[] = ['targeted-ace', 'targeted-gla', 'targeted', 'general']
+    const slice: Slice = (KNOWN as string[]).includes(rawSlice ?? '') ? rawSlice as Slice : 'all'
 
     const queue = buildQueue(dayOfYear, slice)
 
@@ -212,7 +243,11 @@ export async function GET(req: NextRequest) {
     for (const spec of queue) {
       // Look AHEAD, not just back. Checking elapsed time alone is what let a 246s
       // general query start at the 68s mark and blow past the function cap.
-      const est = spec.domains?.length ? EST_MS.targeted : EST_MS.general
+      // Gate on the cap that will actually be ENFORCED, not on an average. A
+      // 60s mean must never be used as a ceiling: the measured spread on the
+      // targeted query is 60s to 192s, and using the mean is what let a query
+      // start that could not finish.
+      const est = Math.max(spec.domains?.length ? EST_MS.targeted : EST_MS.general, MIN_QUERY_MS)
       if (Date.now() - start + est > BUDGET_MS) {
         skipped.push({
           query: spec.query,
@@ -230,7 +265,12 @@ export async function GET(req: NextRequest) {
             Authorization: `Bearer ${process.env.ADMIN_SECRET}`,
           },
           body: JSON.stringify(spec),
-          signal: AbortSignal.timeout(250_000),
+          // Derived from what is actually LEFT, never a constant. A fixed 250s
+          // abort on a query starting at the 192s mark could not fire before
+          // Vercel's own 300s kill, so the guard was decorative exactly when it
+          // was needed. This way an overrun always returns through recordRun and
+          // shows as `ok: true, failed: 1` rather than as an invisible open row.
+          signal: AbortSignal.timeout(Math.max(5_000, BUDGET_MS - (Date.now() - start))),
         })
         const json = await res.json().catch(() => ({})) as Record<string, unknown>
 

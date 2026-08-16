@@ -102,3 +102,49 @@ describe('nextCycleDeadline — the boring guards', () => {
     expect(nextCycleDeadline(fore, '2026-09-08')).toBe('2027-01-11')
   })
 })
+
+// The verification engine now extracts a page's WHOLE schedule, and real
+// schedules carry a third kind of date: what the funder does after the window
+// shuts. The opening filter alone chose one of those.
+const LGBT_FUND_FULL: CycleEntry[] = [
+  { day: 17, month: 6,  label: 'Fund Launches' },
+  { day: 12, month: 8,  label: 'Application Window Closes' },
+  { day: 30, month: 11, label: 'Outcomes Communicated' },
+]
+
+describe('nextCycleDeadline — an announcement date is not a deadline either', () => {
+  it('does not plan a fundraiser against the day decisions are published', () => {
+    // Read verbatim off lgbtfund.org.uk on 16 Aug 2026. With only the opening
+    // filter this returned 2026-11-30, three and a half months after
+    // applications actually shut.
+    expect(nextCycleDeadline(LGBT_FUND_FULL, '2026-08-16')).toBe('2027-08-12')
+  })
+
+  it('excludes the whole family, not just the one word that bit us', () => {
+    const after = (label: string) =>
+      nextCycleDeadline([{ day: 1, month: 3, label: 'Closes' }, { day: 2, month: 3, label }], '2026-01-01')
+    for (const label of [
+      'Outcomes Communicated', 'Decisions announced', 'Applicants notified',
+      'Panel meets', 'Trustees meet', 'Shortlisted applicants interviewed',
+      'Results published', 'Grants paid', 'Reporting due', 'Project completion',
+    ]) {
+      expect(after(label), label).toBe('2026-03-01')
+    }
+  })
+
+  it('still keeps unlabelled and neutrally labelled entries', () => {
+    // The 288 bare {day, month} cycles must behave exactly as before, and a
+    // neutral label must not be read as a rejection.
+    expect(nextCycleDeadline([{ day: 1, month: 3 }, { day: 1, month: 9 }], '2026-05-01')).toBe('2026-09-01')
+    expect(nextCycleDeadline([{ day: 1, month: 9, label: 'Spring round' }], '2026-05-01')).toBe('2026-09-01')
+  })
+
+  it('returns null rather than a wrong date when every entry is excluded', () => {
+    // Null means "cannot be computed" and the caller treats it as unknown.
+    // Inventing a date from an announcement is the failure this prevents.
+    expect(nextCycleDeadline([
+      { day: 17, month: 6, label: 'Applications open' },
+      { day: 30, month: 11, label: 'Outcomes communicated' },
+    ], '2026-08-16')).toBe(null)
+  })
+})

@@ -115,7 +115,125 @@ export function formatYield(summary: Record<string, unknown> | null | undefined)
   return bits.join(' · ')
 }
 
+/** The shape `verify-rows` reports. Declared here, beside the renderer. */
+type RunVerify = {
+  outcomes?:     Record<string, number>
+  evidence?:     { confirmed?: number; contradicted?: number; silent?: number; unquoted?: number }
+  proposals?:    number
+  fixableLinks?: number
+  failures?:     number
+}
+
+/**
+ * One line of verification result for the Pipeline page, or null if this run did
+ * not report any.
+ *
+ * Keyed on the summary carrying the shape rather than on the job's name, the
+ * same as `formatYield`, so a second verifier would render without the page
+ * learning about it.
+ *
+ * `unread` is deliberately named, and deliberately not called "missing". It
+ * counts fields the page was asked about and said nothing about, which is the
+ * most useful number here: it measures how far a single-page read actually
+ * gets, and it is the number that should fall when multi-page sourcing lands. A
+ * run that checked 60 rows and learned nothing from any of them would otherwise
+ * look identical to one that verified them all.
+ */
+export function formatVerify(summary: Record<string, unknown> | null | undefined): string | null {
+  const v = summary?.verify as RunVerify | undefined
+  if (!v || typeof v !== 'object') return null
+
+  const checked = typeof summary?.checked === 'number' ? summary.checked : null
+  const e       = v.evidence ?? {}
+  const bits: string[] = []
+
+  if (checked !== null) bits.push(`checked ${checked}`)
+  const ev = [
+    e.confirmed    ? `${e.confirmed} confirmed`       : null,
+    e.contradicted ? `${e.contradicted} contradicted` : null,
+    e.silent       ? `${e.silent} unread`             : null,
+  ].filter(Boolean)
+  if (ev.length > 0) bits.push(ev.join(', '))
+  if (v.proposals)    bits.push(`${v.proposals} proposal${v.proposals === 1 ? '' : 's'}`)
+  if (v.fixableLinks) bits.push(`${v.fixableLinks} link${v.fixableLinks === 1 ? '' : 's'} to fix`)
+  if (v.failures)     bits.push(`${v.failures} failed`)
+  // A run that ran out of clock says so on the line, not only in the JSON.
+  if (summary?.stoppedEarly === true) {
+    const left = typeof summary?.remaining === 'number' ? `, ${summary.remaining} left` : ''
+    bits.push(`stopped on the clock${left}`)
+  }
+
+  return bits.length > 0 ? bits.join(' · ') : null
+}
+
 type RunContext = { usage: UsageTally }
+
+/**
+ * The longest any run can legitimately still be open.
+ *
+ * Vercel's hard function cap is 300s, so a row open for fifteen minutes is not
+ * slow, it is dead. The margin is deliberately generous: a false reap would mark
+ * a healthy job as failed, which is a worse lie than the silence it replaces.
+ */
+const ABANDONED_AFTER_MS = 15 * 60 * 1000
+
+/**
+ * Close runs that started and never reported back.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * WHY THIS CANNOT LIVE INSIDE recordRun's OWN ERROR HANDLING.
+ *
+ * `finish()` is reached on a normal return or a thrown error. A run killed by
+ * the platform is neither: the process is gone, so no `catch`, no `finally`, and
+ * no amount of care inside the handler can write that row. `ok IS NULL` is the
+ * correct signature and the migration documents it as such.
+ *
+ * The consequence is that the one failure mode nobody can self-report was also
+ * the one nothing reported. On 2026-08-15 `discover-sweep` was killed at exactly
+ * 300s by Vercel; the row sat open, the Pipeline page showed "no reply" in
+ * amber, and it was found four days later only because somebody went looking.
+ *
+ * So detection has to come from outside the run, and the cheapest outside is the
+ * next run of any job at all. No new cron entry, no new schedule to forget, and
+ * with 38 jobs a day the detection lag is minutes rather than days. It writes
+ * `ok = false`, which the Pipeline page already renders red — the alarm reuses
+ * the existing signal rather than inventing a second one nobody watches.
+ *
+ * NEVER THROWS. Same rule as the rest of this file: bookkeeping that can break
+ * the job it observes is worse than no bookkeeping.
+ */
+export async function reapAbandonedRuns(
+  db: SupabaseClient,
+  now: Date = new Date(),
+): Promise<number> {
+  const cutoff = new Date(now.getTime() - ABANDONED_AFTER_MS).toISOString()
+  try {
+    const { data, error } = await db
+      .from('cron_runs')
+      .update({
+        ok:          false,
+        finished_at: now.toISOString(),
+        error:       'never reported back: killed or timed out. The process died before it could record anything, so there is no summary and no error from the job itself. Check the platform runtime log for the window around started_at.',
+      })
+      .is('ok', null)
+      .is('finished_at', null)
+      .lt('started_at', cutoff)
+      .select('id, job')
+
+    if (error) {
+      console.error('[cron_runs] reap failed:', error.message)
+      return 0
+    }
+    const rows = (data ?? []) as { job: string }[]
+    if (rows.length > 0) {
+      console.error(`[cron_runs] reaped ${rows.length} abandoned run(s): ${rows.map(r => r.job).join(', ')}`)
+    }
+    return rows.length
+  } catch (e) {
+    console.error('[cron_runs] reap threw:', e)
+    return 0
+  }
+}
 
 /**
  * Record one run of `job`, whatever happens.
@@ -137,6 +255,10 @@ export async function recordRun<T>(
   const db = runsDb()
   const ctx: RunContext = { usage: new UsageTally() }
   let runId: string | null = null
+
+  // Sweep before opening. Every job that runs closes somebody else's abandoned
+  // row, so the more the platform is doing the sooner a killed run turns red.
+  await reapAbandonedRuns(db)
 
   try {
     const { data } = await db.from('cron_runs').insert({ job }).select('id').single()

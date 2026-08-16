@@ -5,6 +5,10 @@
       "schedule": "0 2 * * *"
     },
     {
+      "path": "/api/cron/verify-rows",
+      "schedule": "0 1,7,13,19 * * *"
+    },
+    {
       "path": "/api/cron/check-coming-soon",
       "schedule": "0 7 * * *"
     },
@@ -133,8 +137,12 @@
       "schedule": "0 8 * * 1,4"
     },
     {
-      "path": "/api/cron/discover-sweep?slice=targeted",
+      "path": "/api/cron/discover-sweep?slice=targeted-ace",
       "schedule": "30 8 */2 * *"
+    },
+    {
+      "path": "/api/cron/discover-sweep?slice=targeted-gla",
+      "schedule": "30 8 2-30/2 * *"
     },
     {
       "path": "/api/cron/discover-sweep?slice=general",
