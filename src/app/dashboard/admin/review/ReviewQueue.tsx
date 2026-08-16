@@ -890,6 +890,14 @@ function askFor(item: QueueItem): Ask {
     line: 'The amount may be the whole fund rather than what one applicant can ask for. Check the page, then keep or re-read.',
     primary: 'reread', label: reread,
   }
+  // Amounts are gap-fill only: enrich-grant writes one when the stored value is
+  // NULL and otherwise raises this flag instead of overwriting. So a re-read
+  // will NOT correct the figure, and the line has to say so or it sends you
+  // round a loop that cannot change anything.
+  if (has('amount_under_stated')) return {
+    line: 'The page names a larger amount than the one stored. A re-read will not change it, because a stored amount is never overwritten automatically. Edit the figure by hand if the page is right, otherwise keep the row.',
+    primary: 'publish', label: keep,
+  }
   if (has('no_amount') || has('no_deadline') || has('amount_zero') ||
       has('sectors_missing') || has('amount_ungrounded') || has('amount_inverted')) return {
     line: 'Key details are missing or look wrong, so this will match poorly. A re-read is the usual fix.',
