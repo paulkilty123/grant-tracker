@@ -44,6 +44,16 @@ const argOf = (name: string) => {
 }
 const LIMIT = Number(argOf('--limit') ?? 45)
 const ONLY  = argOf('--stratum')
+/**
+ * Re-run against exactly the rows a previous report covered.
+ *
+ * Needed because the sample is drawn from a population the verify cron is
+ * actively changing — it runs at 01, 07, 13 and 19 UTC, and every row it reads
+ * moves between strata. Without this, a before-and-after comparison of a link
+ * fix would be comparing two different sets of funders and calling the
+ * difference an improvement.
+ */
+const PAIR  = argOf('--pair')
 
 const db = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
@@ -159,12 +169,28 @@ async function main() {
   // because each draw costs money.
   const want: Record<Stratum, number> = { A: Math.round(LIMIT * 0.5), B: Math.round(LIMIT * 0.3), C: LIMIT - Math.round(LIMIT * 0.5) - Math.round(LIMIT * 0.3) }
   const sample: { row: Row; stratum: Stratum }[] = []
-  for (const s of STRATA) {
-    if (ONLY && ONLY !== s) continue
-    const src = pool[s]
-    const n = Math.min(want[s], src.length)
-    const step = Math.max(1, Math.floor(src.length / n))
-    for (let i = 0; i < n; i++) sample.push({ row: src[i * step], stratum: s })
+  if (PAIR) {
+    const prev = JSON.parse(readFileSync(PAIR, 'utf8')) as { results: { id: string; stratum: Stratum }[] }
+    const byId = new Map<string, Row>()
+    for (const s of STRATA) for (const r of pool[s]) byId.set(r.id, r)
+    let missing = 0
+    for (const p of prev.results) {
+      const row = byId.get(p.id)
+      if (!row) { missing++; continue }
+      sample.push({ row, stratum: p.stratum })   // the ORIGINAL stratum, not today's
+    }
+    // Said out loud rather than silently shrinking the denominator: a row the
+    // cron re-read since the first pass has left its stratum and cannot be
+    // paired.
+    if (missing > 0) console.log(`  ${missing} of ${prev.results.length} rows have left their stratum since the first pass and are not re-run`)
+  } else {
+    for (const s of STRATA) {
+      if (ONLY && ONLY !== s) continue
+      const src = pool[s]
+      const n = Math.min(want[s], src.length)
+      const step = Math.max(1, Math.floor(src.length / n))
+      for (let i = 0; i < n; i++) sample.push({ row: src[i * step], stratum: s })
+    }
   }
   console.log(`\nsampling ${sample.length} rows\n`)
 
@@ -213,7 +239,7 @@ async function main() {
   console.log(`\n  ${inTok} in / ${outTok} out tokens = £${(cost * 0.79).toFixed(2)} at Haiku 4.5`)
   console.log(`  per row: £${((cost * 0.79) / Math.max(1, results.length)).toFixed(4)}`)
 
-  const out = resolve(HERE, '..', 'reports', `hop-measurement-${new Date().toISOString().slice(0, 10)}.json`)
+  const out = resolve(HERE, '..', 'reports', `hop-measurement-${new Date().toISOString().slice(0, 10)}${PAIR ? '-rerun' : ''}.json`)
   writeFileSync(out, JSON.stringify({ population: Object.fromEntries(STRATA.map(s => [s, pool[s].length])), results }, null, 2))
   console.log(`\nwrote ${out}`)
 }
