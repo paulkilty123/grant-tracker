@@ -33,12 +33,28 @@ The verifier already writes a `proposed` value next to every disagreement. Set
 `C` = what we hold, `P` = what the page supports. Every disagreement falls into
 exactly one class by set relation, with no judgement required to sort it:
 
-| Class | Relation | What it means | Who decides |
+**Correction, 16 August, after reading the engine rather than assuming.** The
+first draft of this section proposed computing a set relation on the review
+screen. That work already exists. `compareStructures` in `verify-row.ts` returns
+`confirmed | widens | narrows | widens and narrows`, and line 1444 writes the
+direction into the evidence note as *"the page widens what we hold"*. The note
+is persisted on every disagreement, without exception, so the classes are a
+**direct read of stored evidence**:
+
+| Class | Stored signal | What it means | Who decides |
 |---|---|---|---|
-| **1. Same meaning** | `P ≡ C` after normalising | Wording differs, sets agree | **Nobody.** Auto-resolved, stamped as confirmed |
-| **2. We are too strict** | `C ⊂ P` | Page admits more than we do | **Bulk accept** per transition, sample checked |
-| **3. We are too permissive** | `P ⊂ C` | Page admits fewer than we do | **Paul, grouped.** Never bulk, never automatic |
-| **4. Conflict** | Partial or no overlap | Genuine disagreement | **Paul, individually,** with the quote |
+| **1. Confirmed** | `agrees: true` | Page supports what we hold | **Nobody.** Recorded, never queued |
+| **2. We are too strict** | note: *widens* | Page admits more than we do | **Bulk accept** per transition, sample checked |
+| **3. We are too permissive** | note: *narrows* | Page admits fewer than we do | **Paul, grouped.** Never bulk, never automatic |
+| **4. Conflict** | note: *widens and narrows* | Genuine disagreement | **Paul, individually,** with the quote |
+
+Reading it rather than recomputing it matters for more than saved effort. The
+engine's comparison already handles what a naive set relation gets wrong: it
+decides whether "registered charities" also covers CIOs and SCIOs by reading the
+page's own jurisdiction, and falls back to our `location_tag` only where the page
+is silent. A fresh comparison written for the review screen would re-introduce
+the exact bug that logic exists to fix, where a page naming the Charity
+Commission of England and Wales confirmed a row tagged `scio`.
 
 The asymmetry between 2 and 3 is the whole design. Class 2 failing means a
 fundraiser never sees a fund they could have won; the fix only ever adds
