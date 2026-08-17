@@ -119,6 +119,11 @@ const POLICY: Record<ReviewReasonCode, 'block' | 'info'> = {
   // `page_says_round_closed` is raised ONLY where the page stated the year in
   // full (see YEAR_STATED_RE in review-reasons). A round_closed verdict resting
   // on an inferred year never becomes a reason at all, so it cannot block.
+  // The write-up quotes a round that has closed and there is no current deadline
+  // to correct it, so the deadline slot renders empty or "Rolling, apply any
+  // time" beside prose saying applications have shut. Nothing on the card is
+  // true about when to apply, which is wrong rather than merely incomplete.
+  no_current_timing:      'block',
   page_says_delisted:     'block',
   page_says_not_funding:  'block',
   page_says_round_closed: 'block',
@@ -132,7 +137,7 @@ const POLICY: Record<ReviewReasonCode, 'block' | 'info'> = {
   amount_under_stated:        'info',
   multi_round_uncaptured:     'info',
   link_unverified:            'info',  // see note 2 in the header — 57/60 never checked
-  stale_dates:                'info',
+  stale_dates:                'info',   // prose untidy, but the deadline on the card is right
   stale_enrichment:           'info',
   eligibility_missing:        'info',  // see note 1 — honest only because the surface now says so
   // A re-read changed this row's tags. It blocked at 'critical' severity, i.e.

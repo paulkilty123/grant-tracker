@@ -112,3 +112,60 @@ describe('the gate blocks on them', () => {
     expect(BLOCKING_CODES).toContain('page_says_round_closed')
   })
 })
+
+/**
+ * A past date in the write-up means two different things depending on whether a
+ * current deadline exists. The queue used to treat them alike and then say
+ * "Nothing looks wrong with this one" beside a "Date already past" chip.
+ */
+describe('a past date in the write-up', () => {
+  const withStale = (extra: Partial<ReviewRow>): ReviewRow => ({
+    ...row({}),
+    funder_brief: {
+      who_can_apply: 'Charities',
+      last_enriched: TODAY,
+      _stale_dates: [{ field: 'decision_timeline', phrase: 'Applications close 28 April 2026', matched_date: '2026-04' }],
+    },
+    ...extra,
+  })
+
+  it('is informational when a current deadline is still on the card', () => {
+    const c = codes(withStale({ deadline: '2027-01-01' }))
+    expect(c).toContain('stale_dates')
+    expect(c).not.toContain('no_current_timing')
+  })
+
+  it('blocks when no deadline is recorded at all', () => {
+    const c = codes(withStale({ deadline: null, is_rolling: false }))
+    expect(c).toContain('no_current_timing')
+    expect(c).not.toContain('stale_dates')
+  })
+
+  it('blocks, and says so plainly, when the card claims to be rolling', () => {
+    const rs = deriveReviewReasons(withStale({ deadline: null, is_rolling: true }), TODAY)
+    const hit = rs.find(r => r.code === 'no_current_timing')
+    expect(hit).toBeDefined()
+    expect(hit!.severity).toBe('critical')
+    expect(hit!.detail).toContain('Rolling, apply any time')
+  })
+
+  it('does not double-count a stored deadline that has itself passed', () => {
+    // deadline_passed already blocks that row; raising both would report one
+    // fault twice and make the queue look worse than it is.
+    const c = codes(withStale({ deadline: '2020-01-01' }))
+    expect(c).toContain('deadline_passed')
+    expect(c).not.toContain('no_current_timing')
+    expect(c).not.toContain('stale_dates')
+  })
+
+  it('raises neither when the write-up quotes no stale date', () => {
+    const c = codes(row({}))
+    expect(c).not.toContain('stale_dates')
+    expect(c).not.toContain('no_current_timing')
+  })
+
+  it('no_current_timing blocks at the gate, stale_dates does not', () => {
+    expect(BLOCKING_CODES).toContain('no_current_timing')
+    expect(BLOCKING_CODES).not.toContain('stale_dates')
+  })
+})

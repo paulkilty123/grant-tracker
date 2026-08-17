@@ -923,6 +923,11 @@ function askFor(item: QueueItem): Ask {
     primary: 'reread', label: reread,
   }
 
+  if (has('no_current_timing')) return {
+    line: 'The only date we hold has passed, and there is no current one, so the card tells a user nothing true about when to apply. A re-read picks up the next round.',
+    primary: 'reread', label: reread,
+  }
+
   if (has('link_dead')) return {
     line: 'The application link is dead, so anyone who clicks through lands on nothing. Fix the link, or reject the row.',
     primary: 'fixlink', label: 'Fix the link',
@@ -966,6 +971,13 @@ function askFor(item: QueueItem): Ask {
   }
   if (has('link_unverified')) return {
     line: 'The link has not been checked lately. Open it to confirm it still works, then keep the row.',
+    primary: 'publish', label: keep,
+  }
+  // Informational, but it must not reach the "nothing looks wrong" fallback while
+  // a "Date already past" chip is on screen. The deadline is right; the prose is
+  // stale, and saying so is the difference between a warning and a contradiction.
+  if (has('stale_dates')) return {
+    line: 'The deadline on this row is current, but the write-up still quotes an older date. Keep it, or re-read to tidy the wording.',
     primary: 'publish', label: keep,
   }
   if (item.diffs.length > 0) return {
