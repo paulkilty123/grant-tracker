@@ -590,8 +590,13 @@ export function deriveReviewReasons(row: ReviewRow, todayISO?: string): ReviewRe
     const n = asArray(brief?._ungrounded_amounts).length
     reasons.push({
       code: 'amount_ungrounded', severity: 'check',
-      label: 'Amount not in the text',
-      detail: `${n} ${plural(n, 'figure', 'figures')} appear in the write-up with no matching wording on the page`,
+      label: 'Amount not in what we quoted',
+      // "no matching wording on the page" sent a reviewer to the funder's site
+      // to check a figure that was there. The guard never looks at the page: it
+      // compares the write-up against the citation snippet and the stored
+      // description. So the finding is about OUR text, not the funder's, and
+      // saying otherwise costs a site visit per row.
+      detail: `${n} ${plural(n, 'figure', 'figures')} in the write-up ${plural(n, 'is', 'are')} not supported by the quote or description we hold — often a figure the model worked out rather than read`,
     })
   }
   // A past date in the write-up means one of two very different things, and

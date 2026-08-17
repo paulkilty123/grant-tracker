@@ -510,6 +510,22 @@ MULTI-AREA RULES:
   the umbrella name.
 - Don't tag the funder's HEAD OFFICE location — tag where APPLICANTS can be based.
 
+NEVER CALCULATE A FIGURE. THIS IS THE ONE ABSOLUTE RULE.
+
+Every number you write must appear on the page, as written. You may not derive,
+infer, multiply, or apportion one. If a page says "£25k - £250k (40% grant)", the
+page states TWO figures and a percentage. It does NOT state £10,000, £100,000,
+£15,000 or £150,000, and writing "the grant portion therefore ranges from £10,000
+to £100,000" is a fabrication even though the arithmetic is correct — a
+fundraiser reads it as the funder's own words, and it is not.
+
+The word "therefore" in a sentence about money means you have got this wrong.
+
+This applies to every field: award sizes, income caps, percentages of a pot,
+loan/grant splits, interest, durations. If the page gives a range and a
+percentage, state the range and the percentage and stop. Say what is stated and
+let the reader do their own arithmetic.
+
 COMMON ERRORS TO AVOID:
 
 - Writing a regional geographic_focus but leaving location_tag null or "UK".
@@ -534,7 +550,7 @@ Return ONLY valid JSON in this exact shape:
   "priorities": "Current funding priorities or themes they care about most",
   "strong_application": "What makes a strong or successful application to this funder",
   "exclusions": "What they explicitly will NOT fund or who cannot apply",
-  "typical_award": "The amount a SINGLE applicant can receive for THIS grant (per-grant size or range). Do NOT substitute: (a) the applicant's INCOME-ELIGIBILITY threshold — e.g. 'open to orgs with income £150k–£1m' is who can apply, NOT the award size; (b) the funder's TOTAL annual distribution, cumulative giving, or overall fund pot — e.g. 'distributes £1m a year across all grants' / 'over £2.7m since 2005' is context, NOT the grant size; (c) a DIFFERENT product's amounts (a separate loan/fund). State the per-grant figure only. If the source gives no per-grant size (only a total pot or income band), say so explicitly rather than substituting that number.",
+  "typical_award": "The amount a SINGLE applicant can receive for THIS grant (per-grant size or range). Do NOT substitute: (a) the applicant's INCOME-ELIGIBILITY threshold — e.g. 'open to orgs with income £150k–£1m' is who can apply, NOT the award size; (b) the funder's TOTAL annual distribution, cumulative giving, or overall fund pot — e.g. 'distributes £1m a year across all grants' / 'over £2.7m since 2005' is context, NOT the grant size; (c) a DIFFERENT product's amounts (a separate loan/fund). State the per-grant figure only. If the source gives no per-grant size (only a total pot or income band), say so explicitly rather than substituting that number. (d) any figure you WORKED OUT — see the never-calculate rule above. If the page says a range and a grant percentage, give both verbatim; do not apply one to the other.",
   "decision_timeline": "How long decisions take, when trustees meet, or application windows. ONLY include dates relevant to APPLYING — drop project-completion dates, end-of-grant reporting deadlines, and other post-award milestones unless the source uses them as the application deadline. Bias TIGHT.",
   "open_status": "EXACTLY ONE OF: 'open' (currently accepting applications), 'closed' (round explicitly closed, e.g. 'this fund is currently closed', 'applications are now closed'), 'between_rounds' (closed now, will reopen — e.g. 'next round opens in autumn 2026'), or 'unknown' (source is silent on current status). Look for explicit open/closed banners on the page. Default to 'unknown' when not stated.",
   "how_to_apply": "Key steps in the application process",
