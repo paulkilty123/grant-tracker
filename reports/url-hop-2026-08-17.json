@@ -1,0 +1,284 @@
+{
+  "ranAt": "2026-08-17T16:25:58.810Z",
+  "source": "ai_audit:url_hop:v1",
+  "before": {
+    "named": 375,
+    "live": 649
+  },
+  "proposed": 2,
+  "abstained": 29,
+  "failed": 0,
+  "pages": 96,
+  "ledger": [
+    {
+      "id": "d33aa458-0eb8-473a-8b28-547cd8557a71",
+      "title": "Fredericks Foundation — Community Business Loans",
+      "outcome": "no proposal",
+      "funding_index_url": "https://www.fredericksfoundation.org/",
+      "apply_url": "https://www.fredericksfoundation.org/",
+      "why": "nothing to follow, though the page loads but does not describe this fund"
+    },
+    {
+      "id": "d4182e66-f88d-4d50-a331-318167045de6",
+      "title": "Nuffield Foundation — Research & Innovation Grants",
+      "outcome": "no proposal",
+      "funding_index_url": "https://www.nuffieldfoundation.org/funding",
+      "apply_url": "https://www.nuffieldfoundation.org/funding",
+      "why": "followed https://www.nuffieldfoundation.org/funding-for-research/strategic-fund because the page loads but does not describe this fund, and it did not describe this fund"
+    },
+    {
+      "id": "d4c4eceb-c3f6-482c-af93-8023bd0d05ff",
+      "title": "Historic England — Listed Places of Worship Grant Scheme",
+      "outcome": "no proposal",
+      "funding_index_url": null,
+      "apply_url": "https://historicengland.org.uk/advice/planning/consents/grants/",
+      "why": "followed https://historicengland.org.uk/advice/caring-for-heritage/places-of-worship/ because the page loads but does not describe this fund, and it did not describe this fund"
+    },
+    {
+      "id": "d5da3c99-fdf2-4a8d-9778-ff5935fb747c",
+      "title": "Neighbourly — Surplus Food, Product Donations and Corporate Grant Funds",
+      "outcome": "no proposal",
+      "funding_index_url": null,
+      "apply_url": "https://www.neighbourly.com/goodcause/new",
+      "why": "nothing to follow, though the page loads but does not describe this fund"
+    },
+    {
+      "id": "d881ca00-a65b-4326-a918-34e75ea648a0",
+      "title": "Social Firms Wales",
+      "outcome": "no proposal",
+      "funding_index_url": "https://www.socialfirmswales.co.uk/",
+      "apply_url": "https://www.socialfirmswales.co.uk/",
+      "why": "followed https://www.socialfirmswales.co.uk/funding/contracts because the page loads but does not describe this fund, and it did not describe this fund"
+    },
+    {
+      "id": "d90693a5-fdfa-42ca-a049-f7adaea2aff4",
+      "title": "Historic England — Heritage at Risk Grants",
+      "outcome": "no proposal",
+      "funding_index_url": null,
+      "apply_url": "https://historicengland.org.uk/advice/heritage-at-risk/",
+      "why": "followed https://historicengland.org.uk/listing/heritage-at-risk/buildings-at-risk/ because the page loads but does not describe this fund, and it did not describe this fund"
+    },
+    {
+      "id": "daa4106b-4ccd-4b0b-b82a-420f46c5f41b",
+      "title": "Main Fund",
+      "outcome": "no proposal",
+      "funding_index_url": null,
+      "apply_url": "https://educationalopportunity.org.uk/home/grants/main-fund/",
+      "why": "read through the reader proxy"
+    },
+    {
+      "id": "db1bf0ef-7ba5-406a-95f3-d45da71384fd",
+      "title": "Nesta Innovation Challenges — Prize Competitions",
+      "outcome": "no proposal",
+      "funding_index_url": null,
+      "apply_url": "https://challengeworks.org/about-challenge-prizes/our-challenge-prizes/",
+      "why": "followed https://challengeworks.org/about-challenge-prizes/prize-ideas/ because the page loads but does not describe this fund, and it did not describe this fund"
+    },
+    {
+      "id": "dd88b889-6926-42e8-9e8f-954b3b9e5af4",
+      "title": "Sigrid Rausing Trust — Grants",
+      "outcome": "no proposal",
+      "funding_index_url": "https://www.sigrid-rausing-trust.org/",
+      "apply_url": "https://www.sigrid-rausing-trust.org/",
+      "why": "followed https://www.sigrid-rausing-trust.org/programme/chairs-fund/ because the page loads but does not describe this fund, and it did not describe this fund"
+    },
+    {
+      "id": "e0055d56-8e59-49fb-bece-8cd38a91cea1",
+      "title": "Swire Charitable Trust — Core Grant Programme",
+      "outcome": "no proposal",
+      "funding_index_url": null,
+      "apply_url": "https://www.swirecharitabletrust.org.uk/our-funding/eligibility-test/",
+      "why": "nothing to follow, though the page loads but does not describe this fund"
+    },
+    {
+      "id": "e0dddc2b-3275-41cd-9daf-982aed9798b8",
+      "title": "Hampstead Wells and Camden Trust",
+      "outcome": "no proposal",
+      "funding_index_url": "https://hwct.org.uk/",
+      "apply_url": "https://hwct.org.uk/",
+      "why": "followed https://hwct.org.uk/what-we-fund/ because the page carried no funding detail, and it covers 2 funds: extracted nothing, this row needs splitting"
+    },
+    {
+      "id": "e316f5e1-0dcb-4952-b835-02ea3326d38e",
+      "title": "Northern Ireland Screen — Production Fund",
+      "outcome": "no proposal",
+      "funding_index_url": "https://www.northernirelandscreen.co.uk/funding/",
+      "apply_url": "https://www.northernirelandscreen.co.uk/funding/",
+      "why": "nothing to follow, though the page loads but does not describe this fund"
+    },
+    {
+      "id": "e38ac17b-5035-44b4-bfcc-faf1090d13c7",
+      "title": "SWEF Enterprise Fund",
+      "outcome": "no proposal",
+      "funding_index_url": "https://eastendcf.org/grants/",
+      "apply_url": "https://eastendcf.org/grants/",
+      "why": "nothing to follow, though the page loads but does not describe this fund"
+    },
+    {
+      "id": "e42b9811-5acf-4472-8ff2-a08db6f9a356",
+      "title": "Small Grants Scheme",
+      "outcome": "no proposal",
+      "funding_index_url": null,
+      "apply_url": "https://www.merchant-taylors.co.uk/mtf-small-grants-scheme-application",
+      "why": "read one level down: https://www.merchant-taylors.co.uk/philanthropy/foundation-funding-application (the page carried no funding detail)"
+    },
+    {
+      "id": "e72200b0-f3df-44d2-85bc-a55b5d2aa0a4",
+      "title": "Harold Hyam Wingate Foundation — Music & Performing Arts",
+      "outcome": "no proposal",
+      "funding_index_url": "https://wingate.org.uk/apply/",
+      "apply_url": "https://wingate.org.uk/apply/",
+      "why": "nothing to follow, though the page loads but does not describe this fund"
+    },
+    {
+      "id": "e9a5df1f-3d3a-4ee0-be95-bd150d38fd7e",
+      "title": "Grant Funding Programme",
+      "outcome": "no proposal",
+      "funding_index_url": null,
+      "apply_url": "https://www.morrisonsfoundation.com/grant-funding-request/",
+      "why": "no candidate named this fund"
+    },
+    {
+      "id": "eae4707d-3f42-41e9-b31a-48618b09b2f8",
+      "title": "Ethical Property Affordable Charity Workspace",
+      "outcome": "no proposal",
+      "funding_index_url": "https://www.ethicalproperty.co.uk/",
+      "apply_url": "https://www.ethicalproperty.co.uk/",
+      "why": "nothing to follow, though the page loads but does not describe this fund"
+    },
+    {
+      "id": "eb92a796-0c71-4aee-bb3c-5c6796fd1727",
+      "title": "Theatre Breakthrough Fund (North)",
+      "outcome": "no proposal",
+      "funding_index_url": null,
+      "apply_url": "https://www.artscouncil.org.uk/theatre-breakthrough-fund-north",
+      "why": "nothing to follow, though the page loads but does not describe this fund"
+    },
+    {
+      "id": "ebe92869-c346-408b-a466-1c28861986e6",
+      "title": "Resonance — National Homelessness Property Fund",
+      "outcome": "no proposal",
+      "funding_index_url": null,
+      "apply_url": "https://resonance.ltd.uk/impact-property-funds",
+      "why": "read one level down: https://resonance.ltd.uk/get-investment/social-enterprise-property (the page loads but does not describe this fund)"
+    },
+    {
+      "id": "ed047490-107e-4805-8ea2-6cd85520b3ae",
+      "title": "Clore Social Leadership Programme",
+      "outcome": "no proposal",
+      "funding_index_url": "https://cloresocialleadership.org.uk/page/Skills_Development",
+      "apply_url": "https://cloresocialleadership.org.uk/",
+      "why": "followed https://cloresocialleadership.org.uk/page/Social_Prescribing_Leadership_Programme because the page loads but does not describe this fund, and it did not describe this fund"
+    },
+    {
+      "id": "ef0fb22e-9a43-4042-b50b-5ceb3dc9c1ce",
+      "title": "Rufford Foundation — Small Grants for Nature Conservation",
+      "outcome": "no proposal",
+      "funding_index_url": "https://www.rufford.org/",
+      "apply_url": "https://www.rufford.org/",
+      "why": "nothing to follow, though the page carried no funding detail"
+    },
+    {
+      "id": "ef68a7d7-4448-4a2e-8f44-341ef2c3148b",
+      "title": "Bolton Housing Partnership — Community Investment Grants",
+      "outcome": "no proposal",
+      "funding_index_url": null,
+      "apply_url": "https://services.boltoncvs.org.uk/user/login",
+      "why": "nothing to follow, though the page loads but does not describe this fund"
+    },
+    {
+      "id": "f06351b9-42a7-460c-a9fa-3af50bffb9c2",
+      "title": "General and Small Grants (Learning Disability)",
+      "funder": "Baily Thomas Charitable Fund",
+      "outcome": "proposed",
+      "from": "https://www.bailythomas.org.uk/grants/general-programme",
+      "to": "https://www.bailythomas.org.uk/grants/general-programme/general-guidelines",
+      "fundOnPage": "General programme",
+      "nameMatch": "substring",
+      "fieldsAnswered": [
+        "deadline_cycle",
+        "eligible_structures",
+        "exclusions"
+      ],
+      "titleIsJustFunder": false,
+      "confidence": 7,
+      "why": "the page calls it \"General programme\" (substring match) and answers deadline_cycle, eligible_structures, exclusions",
+      "funding_index_url": null,
+      "error": null
+    },
+    {
+      "id": "f0dd61fe-c828-4ff4-9c25-d738e33032db",
+      "title": "Youth Endowment Fund",
+      "outcome": "no proposal",
+      "funding_index_url": "https://www.youthendowmentfund.org.uk/",
+      "apply_url": "https://www.youthendowmentfund.org.uk/",
+      "why": "followed https://youthendowmentfund.org.uk/funding/ because the page carried no funding detail, and it covers 4 funds: extracted nothing, this row needs splitting"
+    },
+    {
+      "id": "f14ca7b1-4e12-48b0-b59c-31b64e602b61",
+      "title": "Forever Manchester — Community Grants",
+      "outcome": "no proposal",
+      "funding_index_url": "https://forevermanchester.com/funding/",
+      "apply_url": "https://forevermanchester.com/funding/",
+      "why": "page covers 16 programmes (Voicescape Community Fund; Lead the Change CDL Fund; Zuto Make A Difference Fund; DF Capital Foundation Together Energy Fund; Manchester Building Society Community Fund) and our row matches none of them cleanly"
+    },
+    {
+      "id": "f1cd5881-e810-4928-875c-17071197523f",
+      "title": "Sported Foundation — Organisational Development Grants",
+      "outcome": "no proposal",
+      "funding_index_url": "https://sported.org.uk/funding/",
+      "apply_url": "https://sported.org.uk/funding/",
+      "why": "followed https://sported.org.uk/our-story/ because the page loads but does not describe this fund, and it did not describe this fund"
+    },
+    {
+      "id": "f206d5f2-cc76-433a-aeb6-94f4b39c3ee5",
+      "title": "Improving life chances in Tyne & Wear and Northumberland",
+      "outcome": "no proposal",
+      "funding_index_url": null,
+      "apply_url": "https://www.communityfoundation.org.uk/grants/reeds-grassroots/",
+      "why": "followed https://www.communityfoundation.org.uk/grants/reeds-grassroots/ because the page loads but does not describe this fund, and it did not describe this fund"
+    },
+    {
+      "id": "f3c80850-b852-4de7-8708-91e3f1fc8255",
+      "title": "Groundwork — Just About Managing Fund",
+      "outcome": "no proposal",
+      "funding_index_url": "https://www.groundwork.org.uk/funding/",
+      "apply_url": "https://www.groundwork.org.uk/funding/",
+      "why": "followed https://www.groundwork.org.uk/yorkshire/about/recruitment/ because the page loads but does not describe this fund, and it did not describe this fund"
+    },
+    {
+      "id": "f635ceba-ed4a-4d76-8260-fe10bf6adf0e",
+      "title": "Shoosmiths Foundation",
+      "outcome": "no proposal",
+      "funding_index_url": null,
+      "apply_url": "https://www.shoosmiths.com/impact/responsible-business/community-impact",
+      "why": "nothing to follow, though the page carried no funding detail"
+    },
+    {
+      "id": "f82fa6ae-3589-4076-9bfa-7ba891f40cbf",
+      "title": "Renew Community Fund",
+      "outcome": "no proposal",
+      "funding_index_url": null,
+      "apply_url": "https://gmet.org.uk/apply-funding/other-funding-opportunities",
+      "why": "nothing to follow, though the page loads but does not describe this fund"
+    },
+    {
+      "id": "fab5ab12-9098-4e07-8647-722374e2126e",
+      "title": "Idlewild Trust Conservation Grants",
+      "funder": "Idlewild Trust",
+      "outcome": "proposed",
+      "from": "https://www.idlewildtrust.org.uk/apply-grant",
+      "to": "https://www.idlewildtrust.org.uk/apply-grant/faqs",
+      "fundOnPage": "Conservation Programme",
+      "nameMatch": "substring",
+      "fieldsAnswered": [
+        "eligible_structures"
+      ],
+      "titleIsJustFunder": false,
+      "confidence": 2,
+      "why": "the page calls it \"Conservation Programme\" (substring match) and answers eligible_structures",
+      "funding_index_url": "https://www.idlewildtrust.org.uk/our-programmes",
+      "error": null
+    }
+  ]
+}

@@ -1,0 +1,69 @@
+GRANT TRACKER - NEEDS REVIEW AUDIT
+Date: 2026-04-07
+Total Grants: 96
+
+QUICK ACTION ITEMS:
+===================
+
+1. DEACTIVATE IMMEDIATELY (2 grants):
+   - dd307785-6c27-4c1a-a19a-8c9572550b55 | 10,000 Small Businesses (Goldman Sachs)
+   - a1f5fc6e-08ca-4ef2-8c74-8cf5efbcc565 | TiE Women Program 2026 (TiE Global)
+   
+   Reason: US-focused/equity competition, not UK civil society grants
+
+2. FIX OR DEACTIVATE (16 grants with bad URLs):
+   
+   Note: Some of these may still be excellent fundersonce the correct URL is found.
+   Priority: Research and update application URLs for major funders first
+   
+   - 18dcac42 | Growth Impact Fund
+   - 124a6b30 | Big Issue Invest
+   - d33aa458 | Fredericks Foundation
+   - 6492a3f7 | Runnymede Trust
+   - 9881ceae | Woodward Charitable Trust
+   - 65ddb4f5 | Sainsbury Family Charitable Trusts — Linbury Trust
+   - 85286aab | The True Colours Trust
+   - 3a7ce03a | The Climate Change Collaboration
+   - 05d6dbdf | The Alan and Babette Sainsbury Charitable Fund
+   - e2b9494b | Aurora Trust
+   - 3b836a87 | Gatsby Charitable Foundation
+   - 9f370210 | Tesco Stronger Starts
+   - 497400aa | Morrisons Foundation
+   - e045020f | Rowing Foundation
+   - 19593b12 | Go! London Fund
+   - 47ff81ff | Entrepreneurs' Award in Social Innovation
+
+3. REVIEW FOR RELEVANCE (71 valid grants):
+   
+   Organized by source in the full audit report.
+   These all have legitimate URLs and UK focus.
+   Mark civil_society_relevant = true/false as appropriate.
+
+COVERAGE BY SOURCE:
+===================
+- catalogue-seed: 16 grants
+- manual: 26 grants
+- seed: 12 grants
+- gemini_deep_research: 6 grants
+- tyne_wear_cf: 3 grants
+- young_camden_foundation: 3 grants
+- gov_uk: 2 grants
+- london_cf: 1 grant
+- scraped: 1 grant
+- foundation_scotland: 1 grant
+
+PROGRAMME VARIANTS (7 grants - low priority):
+===================
+Same funder, different programme types - can batch review:
+- Esmée Fairbairn Foundation (3 variants: Arts/Social/Natural)
+- Clothworkers Foundation (2 variants: Revenue/Capital)
+- HPC Community Fund (2 variants: Open/Small)
+
+KEY INSIGHTS:
+=============
+- No exact duplicates with approved grants
+- Scraper already filters well (only 2 truly irrelevant)
+- Most bad URLs are from major trusts that don't expose specific application pages
+- 71 grants are genuinely good candidates for review
+- Largest batch is from manual sources (26) - review these for quality/accuracy
+

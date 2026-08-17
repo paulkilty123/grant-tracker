@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Grant Tracker — Dashboard: surfacing projects & applications</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.7.0/dist/tabler-icons.min.css">
+<style>
+  :root{
+    --ink:#1a1a1a; --muted:#6b756f; --faint:#a8a293;
+    --card-border:#ece7da; --hair:#f1ece1; --cream:#faf7f2;
+    --greenlink:#4e8636; --greenbtn:#5f9c34; --bar:#7cb342; --bartrack:#efe9dd;
+    --pale:#eaf3de; --paleText:#3b6d11;
+    --gold-bg:#f3ece0; --gold:#c47f1a;
+    --coral-bg:#f8e3da; --coral:#c0492a;
+    --neutral-bg:#f1ece1; --neutral:#8a857a;
+    --stepbg:#27500a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:#efe9dd; font-family:'Plus Jakarta Sans',system-ui,sans-serif; color:var(--ink); line-height:1.6;}
+  .wrap{max-width:980px; margin:0 auto; padding:48px 24px 96px;}
+  h1,h2,h3{font-family:'Space Grotesk',sans-serif; font-weight:600; line-height:1.15; margin:0;}
+  h1{font-size:32px;}
+  .route{font-family:ui-monospace,monospace; font-size:13px; color:var(--muted); margin-top:8px;}
+  .lead{font-size:16px; color:var(--muted); max-width:720px; margin:14px 0 0;}
+  .doc{background:#fff; border:1px solid var(--card-border); border-radius:18px; padding:28px; margin-top:28px;}
+  .doc h2{font-size:22px; margin-bottom:6px;}
+  .doc h3{font-size:16px; margin:22px 0 6px;}
+  .doc p{font-size:15px; color:#3a3a38; margin:8px 0;}
+  .doc code{font-family:ui-monospace,monospace; font-size:13px; background:#f3efe7; padding:1px 6px; border-radius:5px; color:#5b4b2e;}
+  .changes{background:#fff; border:1px solid var(--card-border); border-left:3px solid var(--gold); border-radius:0 12px 12px 0; padding:16px 20px; margin:16px 0;}
+  .changes ul{margin:0; padding-left:18px;}
+  .changes li{font-size:14px; color:#3a3a38; margin:7px 0;}
+  .frame{background:var(--cream); border:1px solid var(--card-border); border-radius:18px; padding:24px; margin-top:16px;}
+  .eyebrow{font-family:'Space Grotesk',sans-serif; font-size:12px; font-weight:600; letter-spacing:.04em; color:var(--faint); margin-bottom:12px;}
+  .note{font-size:12.5px; color:var(--faint); line-height:1.6;}
+  .ywcard{background:#fff; border:1px solid var(--card-border); border-radius:22px; padding:26px;}
+  .ywhead{display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;}
+  .ywtitle{font-size:21px; font-weight:600; color:var(--ink);}
+  .glink{font-size:14px; font-weight:600; color:var(--greenlink); cursor:pointer; font-family:'Space Grotesk',sans-serif;}
+  .row{display:flex; align-items:center; gap:14px; padding:14px 0;}
+  .mono{width:40px; height:40px; border-radius:11px; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:600; flex-shrink:0; font-family:'Space Grotesk',sans-serif;}
+  .rtitle{font-size:15px; font-weight:500; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .prog{height:6px; background:var(--bartrack); border-radius:99px; overflow:hidden; max-width:150px; flex:1;}
+  .prog>i{display:block; height:100%; background:var(--bar);}
+  .pill{font-size:11px; font-weight:600; padding:3px 10px; border-radius:999px; white-space:nowrap; font-family:'Space Grotesk',sans-serif;}
+  .footer{margin-top:40px; font-size:13px; color:var(--muted); text-align:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Dashboard — surfacing projects &amp; applications</h1>
+  <div class="route">/dashboard</div>
+  <p class="lead">The dashboard predates the project→application workflow: it currently shows matches, top matches, pipeline and deadlines, but represents applications only as a number in the greeting and projects not at all. This adds a "Your work" band so the home screen opens on what the user is actually doing. For the Next.js + Tailwind codebase; styling matches the live dashboard (large rounded cards, green text-link actions, coral accents).</p>
+
+  <!-- ===================== SPEC ===================== -->
+  <div class="doc">
+    <h2>What changes</h2>
+    <div class="changes"><ul>
+      <li><strong>Add a "Your work" band</strong> as the first two-column row, directly under the greeting and above "Worth your attention". Existing panels (matches, top matches, pipeline, deadlines) are unchanged and shift down.</li>
+      <li><strong>Continue writing card</strong> — the user's in-progress applications with writing progress (n of m · %) and nearest deadline (overdue/soon flagged coral). Rows are click-through to the editor; header has a "View all N →" link. No filled buttons (matches the live panel style).</li>
+      <li><strong>Your projects card</strong> — each project's match-readiness and "N funders fit", with a "View all →" link and a "+ New project" green text link.</li>
+      <li><strong>Reword the greeting summary</strong> to lead with the work: e.g. "2 projects ready to match · 7 applications in progress · 2 deadlines this week".</li>
+      <li><strong>Empty state</strong> (no projects and no applications): the band collapses to a single "Start your first project" card — see mockup. Steers to the project route as primary, with a direct-application secondary link.</li>
+    </ul></div>
+
+    <h3>Reading order</h3>
+    <p>Top → bottom: <strong>your work</strong> (resume) → <strong>matches</strong> (discover) → <strong>pipeline &amp; deadlines</strong> (track). For a returning user, resuming in-flight work beats scanning new matches, so the band earns the top slot.</p>
+
+    <h3>States</h3>
+    <p><strong>Populated:</strong> two cards (mockup A). <strong>All-empty:</strong> single card (mockup B). <strong>Partial — projects but no applications:</strong> left card shows projects; right card reads "No applications yet — pick a funder from a project to start". <strong>Partial — applications but no projects:</strong> left card shows applications; right card prompts "Describe a project to match more funders".</p>
+
+    <h3>Style tokens (match live dashboard)</h3>
+    <p class="note">Cards: white, 1px <code>#ece7da</code> border, radius <code>22px</code>, padding ~26px. Card heading: Space Grotesk 21px/600. Actions: green text links <code>#4e8636</code> with " →" (no filled buttons in panels). Progress bar: <code>#7cb342</code> on <code>#efe9dd</code>. Deadline/overdue pill: text <code>#c0492a</code> on <code>#f8e3da</code>. Monograms: applications use pale-green <code>#eaf3de</code>/<code>#3b6d11</code>; projects use <code>#f3ece0</code>/<code>#c47f1a</code>. Empty-state primary button: <code>#5f9c34</code> filled (an empty/onboarding exception to the no-button rule).</p>
+  </div>
+
+  <!-- ===================== MOCKUP A: POPULATED ===================== -->
+  <div class="eyebrow" style="margin-top:34px;">MOCKUP A · POPULATED — FIRST TWO-COLUMN ROW</div>
+  <div class="frame">
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:24px;">
+
+      <div class="ywcard">
+        <div class="ywhead"><span class="ywtitle">Continue writing</span><span class="glink">View all 7 →</span></div>
+        <div class="row" style="border-bottom:1px solid var(--hair);">
+          <div class="mono" style="background:var(--pale); color:var(--paleText);">NL</div>
+          <div style="flex:1; min-width:0;">
+            <div class="rtitle">National Lottery Awards for All England</div>
+            <div style="display:flex; align-items:center; gap:10px; margin-top:6px;"><div class="prog"><i style="width:44%"></i></div><span style="font-size:12px; color:var(--neutral);">4 of 9 · 44%</span></div>
+          </div>
+          <span class="pill" style="color:var(--coral); background:var(--coral-bg);">Closes 6d</span>
+        </div>
+        <div class="row" style="padding-bottom:4px;">
+          <div class="mono" style="background:var(--pale); color:var(--paleText);">PH</div>
+          <div style="flex:1; min-width:0;">
+            <div class="rtitle">Youth Fund · Paul Hamlyn Foundation</div>
+            <div style="display:flex; align-items:center; gap:10px; margin-top:6px;"><div class="prog"><i style="width:13%"></i></div><span style="font-size:12px; color:var(--neutral);">1 of 8 · 13%</span></div>
+          </div>
+          <span class="pill" style="color:var(--neutral); background:var(--neutral-bg);">In progress</span>
+        </div>
+      </div>
+
+      <div class="ywcard">
+        <div class="ywhead"><span class="ywtitle">Your projects</span><span class="glink">View all →</span></div>
+        <div class="row" style="border-bottom:1px solid var(--hair);">
+          <div class="mono" style="background:var(--gold-bg); color:var(--gold);"><i class="ti ti-bulb" style="font-size:19px;"></i></div>
+          <div style="flex:1; min-width:0;">
+            <div class="rtitle">Sea Change: surf and wellbeing programme</div>
+            <div style="font-size:12.5px; color:var(--neutral); margin-top:5px; display:flex; align-items:center; gap:8px;"><span style="display:inline-flex; align-items:center; gap:4px; color:var(--paleText); font-weight:500;"><i class="ti ti-circle-check"></i>Ready to match</span><span>· 8 funders fit</span></div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="mono" style="background:var(--gold-bg); color:var(--gold);"><i class="ti ti-bulb" style="font-size:19px;"></i></div>
+          <div style="flex:1; min-width:0;">
+            <div class="rtitle">Women's empowerment and employability</div>
+            <div style="font-size:12.5px; color:var(--neutral); margin-top:5px; display:flex; align-items:center; gap:8px;"><span style="display:inline-flex; align-items:center; gap:4px; color:var(--paleText); font-weight:500;"><i class="ti ti-circle-check"></i>Ready to match</span><span>· 8 funders fit</span></div>
+          </div>
+        </div>
+        <div style="padding-top:8px;"><span class="glink">+ New project</span></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===================== PLACEMENT ===================== -->
+  <div class="eyebrow" style="margin-top:34px;">PLACEMENT — WHERE IT SITS</div>
+  <div class="frame">
+    <div style="display:flex; align-items:center; gap:16px; margin-bottom:14px; font-size:12px; color:var(--muted);">
+      <span style="display:inline-flex; align-items:center; gap:6px;"><span style="width:12px; height:12px; border-radius:3px; background:var(--pale); border:1.5px solid var(--greenlink);"></span>New</span>
+      <span style="display:inline-flex; align-items:center; gap:6px;"><span style="width:12px; height:12px; border-radius:3px; background:#fff; border:1px solid #d8cfbd;"></span>Exists today</span>
+    </div>
+    <div style="background:#fff; border:1px solid #d8cfbd; border-radius:10px; padding:10px 14px; margin-bottom:10px; font-size:13px;">Greeting + one-line summary <span style="color:var(--greenlink);">(reworded to lead with your work)</span></div>
+    <div style="border:1.5px solid var(--greenlink); background:#e9f1ed; border-radius:10px; padding:10px 14px; margin-bottom:14px;"><span style="font-size:11px; font-weight:600; letter-spacing:.04em; color:var(--greenlink);">NEW · YOUR WORK BAND (Continue writing · Your projects)</span></div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+      <div style="background:#fff; border:1px solid #d8cfbd; border-radius:10px; padding:12px; font-size:13px;">Worth your attention <span class="note">· matches</span></div>
+      <div style="background:#fff; border:1px solid #d8cfbd; border-radius:10px; padding:12px; font-size:13px;">Top matches for you</div>
+    </div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+      <div style="background:#fff; border:1px solid #d8cfbd; border-radius:10px; padding:12px; font-size:13px;">Pipeline</div>
+      <div style="background:#fff; border:1px solid #d8cfbd; border-radius:10px; padding:12px; font-size:13px;">Upcoming deadlines</div>
+    </div>
+  </div>
+
+  <!-- ===================== MOCKUP B: EMPTY ===================== -->
+  <div class="eyebrow" style="margin-top:34px;">MOCKUP B · EMPTY STATE — NO PROJECTS OR APPLICATIONS YET</div>
+  <div class="frame">
+    <div style="background:#fff; border:1px solid var(--card-border); border-radius:22px; padding:30px; display:grid; grid-template-columns:1.4fr 1fr; gap:30px; align-items:center;">
+      <div>
+        <div style="width:46px; height:46px; border-radius:13px; background:var(--pale); color:var(--paleText); display:flex; align-items:center; justify-content:center; font-size:23px; margin-bottom:16px;"><i class="ti ti-bulb"></i></div>
+        <div style="font-size:22px; font-weight:600; color:var(--ink); margin-bottom:8px; font-family:'Space Grotesk';">Start your first project</div>
+        <div style="font-size:14.5px; color:var(--muted); line-height:1.6; margin-bottom:20px; max-width:420px;">Describe what you need funded once. We'll match it against the <span style="color:var(--ink); font-weight:500;">81 funders that already fit your organisation</span>, then help you build a tailored application for each one you choose.</div>
+        <div style="display:flex; align-items:center; gap:18px; flex-wrap:wrap;">
+          <button style="display:inline-flex; align-items:center; gap:8px; background:var(--greenbtn); color:#fff; border:none; font-family:'Space Grotesk'; font-size:14.5px; font-weight:600; padding:12px 20px; border-radius:11px; cursor:pointer;"><i class="ti ti-bulb"></i>Describe a project</button>
+          <span class="glink">Know which funder to apply to? Start a direct application →</span>
+        </div>
+      </div>
+      <div style="background:#faf8f2; border:1px solid var(--hair); border-radius:16px; padding:22px;">
+        <div style="display:flex; align-items:flex-start; gap:12px; margin-bottom:16px;"><span style="width:26px; height:26px; border-radius:999px; background:var(--stepbg); color:#fff; font-size:12px; font-weight:600; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-family:'Space Grotesk';">1</span><div><div style="font-size:13.5px; font-weight:500;">Describe it once</div><div style="font-size:12px; color:var(--neutral);">A few sentences or paste an old plan.</div></div></div>
+        <div style="display:flex; align-items:flex-start; gap:12px; margin-bottom:16px;"><span style="width:26px; height:26px; border-radius:999px; background:var(--stepbg); color:#fff; font-size:12px; font-weight:600; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-family:'Space Grotesk';">2</span><div><div style="font-size:13.5px; font-weight:500;">See who fits</div><div style="font-size:12px; color:var(--neutral);">We rank funders against your project.</div></div></div>
+        <div style="display:flex; align-items:flex-start; gap:12px;"><span style="width:26px; height:26px; border-radius:999px; background:var(--stepbg); color:#fff; font-size:12px; font-weight:600; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-family:'Space Grotesk';">3</span><div><div style="font-size:13.5px; font-weight:500;">Apply to each</div><div style="font-size:12px; color:var(--neutral);">Build a tailored application per funder.</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== OPEN DECISION ===================== -->
+  <div class="doc">
+    <h2>Open decision — Pipeline vs "Continue writing"</h2>
+    <p>The existing Pipeline panel (Identified / Applying / Submitted / Won, by £ value) and the new "Continue writing" card both touch applications, with overlapping language ("Applying" stage vs "in progress" applications). They are different things: <strong>Pipeline = where each opportunity sits and its value; Continue writing = the actual answer-writing in flight.</strong></p>
+    <p>Recommendation: keep both but relate them — e.g. a one-line caption on Pipeline ("tracking value by stage") and on Continue writing ("answers you're drafting"), and make the Pipeline "Applying" tile link through to the relevant applications. Decide this before wiring up the band so they aren't built as two unrelated things. Do not merge them yet.</p>
+  </div>
+
+  <div class="footer">Dashboard · "Your work" band · prepared for code-session implementation · no app code changed.</div>
+
+</div>
+</body>
+</html>

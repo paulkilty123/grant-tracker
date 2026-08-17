@@ -1,0 +1,175 @@
+================================================================================
+GRANT TRACKER NEEDS-REVIEW AUDIT - FILE INDEX
+Date: 2026-04-07
+Scope: 96 grants (is_active=true AND civil_society_relevant IS NULL)
+================================================================================
+
+START HERE
+==========
+
+README_AUDIT.md
+  ├─ Complete guide to all audit documents
+  ├─ What each file contains
+  ├─ How to use them
+  └─ Reading time: 2 minutes
+
+AUDIT DOCUMENTS (in order of use)
+==================================
+
+1. AUDIT_SUMMARY.txt (Executive Summary)
+   ├─ Findings overview (2 + 16 + 7 + 71 grants)
+   ├─ Actionable recommendations
+   ├─ Implementation timeline
+   └─ Reading time: 5 minutes
+
+2. AUDIT_QUICK_REFERENCE.txt (Action Items)
+   ├─ IDs of 2 grants to deactivate
+   ├─ IDs of 16 grants with bad URLs
+   ├─ IDs of 7 programme variants
+   └─ Source distribution table
+
+3. AUDIT_SQL_REFERENCE.md (Database Operations)
+   ├─ SQL to deactivate irrelevant grants
+   ├─ SQL patterns for URL updates
+   ├─ SQL to bulk-mark grants as reviewed
+   ├─ URL research guidance (16 funders)
+   └─ Copy-paste ready
+
+4. needs-review-audit.md (Detailed Report)
+   ├─ Section 1: 2 Irrelevant programmes with reasons
+   ├─ Section 2: 16 Bad URLs with current values
+   ├─ Section 3: 7 Programme variants with notes
+   ├─ Section 4: 71 Valid grants organized by source
+   │  • 10 source types
+   │  • Title, funder, URL, description for each
+   │  • Organized for batch review
+   └─ Appendix: Audit methodology
+
+QUICK STATS
+===========
+
+Total Audited: 96 grants
+
+Breakdown:
+  Irrelevant: 2 (2%)
+  Bad URLs: 16 (17%)
+  Variants: 7 (7%)
+  Valid: 71 (74%)
+
+Sources Included:
+  Manual: 26
+  Catalogue-Seed: 16
+  Seed: 12
+  Gemini Deep Research: 6
+  Tyne & Wear CF: 3
+  Young Camden Foundation: 3
+  Gov UK: 2
+  London CF: 1
+  Scraped: 1
+  Foundation Scotland: 1
+
+WORKFLOW
+========
+
+STEP 1: Read README_AUDIT.md (2 min)
+  └─ Understand what needs to be done
+
+STEP 2: Review AUDIT_SUMMARY.txt (5 min)
+  └─ See all findings and action plan
+
+STEP 3: Use AUDIT_QUICK_REFERENCE.txt (ongoing)
+  └─ Look up IDs for SQL queries
+
+STEP 4: Execute AUDIT_SQL_REFERENCE.md (varies)
+  └─ Run SQL commands to update database
+  └─ Deactivate 2 irrelevant programmes first
+  └─ Research/fix 16 bad URLs
+  └─ Bulk-mark reviewed grants
+
+STEP 5: Reference needs-review-audit.md (ongoing)
+  └─ Review individual grant details
+  └─ Make civil_society_relevant decisions
+  └─ Organized by source for batch processing
+
+FILE PURPOSES AT A GLANCE
+=========================
+
+Need to...              Use this file...
+─────────────────────────────────────────────────────────────
+Understand the audit    README_AUDIT.md
+Get action items        AUDIT_QUICK_REFERENCE.txt
+Execute database ops    AUDIT_SQL_REFERENCE.md
+Review grant details    needs-review-audit.md Section 4
+See methodology         needs-review-audit.md Appendix
+Look up a specific ID   AUDIT_QUICK_REFERENCE.txt
+Deactivate grants       AUDIT_SQL_REFERENCE.md Section 1
+Update URLs             AUDIT_SQL_REFERENCE.md Section 2
+Mark grants reviewed    AUDIT_SQL_REFERENCE.md Section 3
+Export for review       AUDIT_SQL_REFERENCE.md Section 5
+
+FINDINGS SUMMARY
+================
+
+1. DEACTIVATE IMMEDIATELY (2 grants)
+   ├─ Goldman Sachs 10,000 Small Businesses (US-focused)
+   └─ TiE Women Program 2026 (equity competition, not grants)
+   
+   Action: Use SQL in AUDIT_SQL_REFERENCE.md Section 1
+
+2. FIX OR DEACTIVATE (16 grants)
+   ├─ All have generic homepage URLs (no specific path)
+   ├─ Examples: https://growthimpactfund.org.uk/
+   └─ Research correct /apply, /grants, /funding pages
+   
+   Action: See AUDIT_SQL_REFERENCE.md Section 2 for guidance
+
+3. BATCH REVIEW BY FUNDER (7 grants)
+   ├─ Esmée Fairbairn Foundation (3 variants)
+   ├─ Clothworkers Foundation (2 variants)
+   └─ Somerset Community Foundation HPC Fund (2 variants)
+   
+   Action: Review as groups to ensure consistency
+
+4. REVIEW FOR RELEVANCE (71 grants)
+   ├─ All have valid URLs and UK focus
+   ├─ Mark civil_society_relevant = true/false
+   └─ Largest batch from manual sources (26 grants)
+   
+   Action: Use needs-review-audit.md Section 4
+
+NEXT STEPS
+==========
+
+Step 1 (TODAY):
+  • Read this file and README_AUDIT.md
+  • Read AUDIT_SUMMARY.txt
+  
+Step 2 (TODAY/TOMORROW):
+  • Copy SQL from AUDIT_SQL_REFERENCE.md Section 1
+  • Deactivate 2 irrelevant programmes
+  
+Step 3 (THIS WEEK):
+  • Research 16 bad URLs (15 min each)
+  • Update database with corrected URLs
+  • Begin reviewing 71 valid grants
+  
+Step 4 (ONGOING):
+  • Complete relevance review of all 71
+  • Batch-mark by source for efficiency
+  • Track URL corrections
+
+CONTACT
+=======
+
+All IDs reference the 'id' column in scraped_grants table.
+All SQL is ready to copy-paste into Supabase query editor.
+All descriptions are from the 'description' field (first 200 chars).
+
+Questions? See:
+  • Individual grant details in needs-review-audit.md
+  • SQL patterns in AUDIT_SQL_REFERENCE.md
+  • Methodology in needs-review-audit.md Appendix
+
+================================================================================
+END OF INDEX
+================================================================================

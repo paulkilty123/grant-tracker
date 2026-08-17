@@ -1,0 +1,27 @@
+{
+  "ranAt": "2026-08-17T15:55:20.131Z",
+  "record": [
+    {
+      "title": "Pilotlight 360",
+      "to": "https://www.pilotlight.org.uk/charities/apply-for-support",
+      "why": "the hop replaced the correct apply page with a volunteer recruitment page",
+      "id": "c1caaf02-8461-4393-8ba1-c81096cded8a",
+      "wrongUrl": "https://www.pilotlight.org.uk/become-a-pilotlighter",
+      "applied": [
+        "apply_url"
+      ],
+      "ok": true
+    },
+    {
+      "title": "The Julia Rausing Trust — Grants",
+      "to": "https://juliarausingtrust.org/",
+      "why": "the hop matched a news post about a different fund, Julia Rausing Sky Arts Bursaries",
+      "id": "c94379cc-bd70-482c-a3cd-76d406e9908f",
+      "wrongUrl": "https://www.juliarausingtrust.org/new-partnership-with-sky-foundation-to-fund-julia-rausing-sky-arts-bursaries/",
+      "applied": [
+        "apply_url"
+      ],
+      "ok": true
+    }
+  ]
+}

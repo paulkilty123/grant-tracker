@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Grant Tracker — Component Library</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   GRANT TRACKER — DESIGN TOKENS
+   ============================================================ */
+
+:root {
+  /* Text colours (semantic) */
+  --color-text-primary: #2C2C2A;
+  --color-text-secondary: #5F5E5A;
+  --color-text-tertiary: #8A8986;
+
+  /* Greens (primary brand) */
+  --green-lime: #8ECB3C;          /* primary CTAs, match bars, hero accents */
+  --green-mid: #639922;            /* button hover, filled states, "Applying" border */
+  --green-deep: #173404;           /* sidebar, utility buttons, final CTA block */
+  --green-pale-1: #F1F7E4;         /* default pale-green surface */
+  --green-pale-2: #EAF3DE;         /* Applying column, done states */
+  --green-pale-3: #C0DD97;         /* Submitted column, progress accents */
+  --green-pale-hover: #FAFCF5;     /* hover on pale-green-adjacent surfaces */
+  --green-text-deep: #3B6D11;      /* text on pale-green backgrounds */
+  --green-text-nav: #97C459;       /* nav labels on deep forest */
+
+  /* Cream (secondary surfaces) */
+  --cream-1: #F5F1E8;              /* Identified column, stats bar, neutral tags */
+
+  /* Coral (Programmes + Declined + urgent deadlines) */
+  --coral-pale: #FAECE7;           /* Programmes pale bg, Declined column */
+  --coral-mid: #F5C4B3;            /* Programmes icon badge */
+  --coral-saturated: #D85A30;      /* Programmes border when selected, required asterisks */
+  --coral-deep: #993C1D;           /* deep coral text */
+  --coral-deepest: #4A1B0C;        /* deepest coral text (amounts on coral bg) */
+
+  /* Blue (Social Investment only) */
+  --blue-pale: #E6F1FB;
+  --blue-mid: #B5D4F4;
+  --blue-saturated: #378ADD;
+  --blue-deep: #0C447C;
+  --blue-deepest: #042C53;
+
+  /* Amber (In-Kind + helper/assistant + warnings) */
+  --amber-pale: #FAEEDA;
+  --amber-mid: #FAC775;
+  --amber-saturated: #BA7517;
+  --amber-deep: #854F0B;
+  --amber-deepest: #412402;
+
+  /* Neutrals */
+  --bg-page: #FAFAF7;
+  --bg-pill-neutral: #F1F0EA;
+  --border-light: rgba(0, 0, 0, 0.06);
+  --border-med: rgba(0, 0, 0, 0.08);
+  --border-input: rgba(0, 0, 0, 0.14);
+  --border-subtle: rgba(0, 0, 0, 0.10);
+  --toggle-off: #D9D6CB;
+
+  /* Typography */
+  --font-heading: 'Space Grotesk', 'Archivo', system-ui, -apple-system, sans-serif;
+  --font-body: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-serif: 'DM Serif Display', Georgia, serif;  /* reserved for 2 specific uses only */
+
+  /* Radii */
+  --radius-input: 10px;
+  --radius-card: 14px;
+  --radius-modal: 16px;
+  --radius-pill: 999px;
+  --radius-icon-badge: 8px;
+
+  /* Shadows */
+  --shadow-segment-active: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-modal: 0 24px 60px rgba(0, 0, 0, 0.18);
+  --shadow-sticky-footer: 0 -2px 10px rgba(0, 0, 0, 0.03);
+}
+
+/* ============================================================
+   BASE RESETS
+   ============================================================ */
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-text-primary);
+  background: var(--bg-page);
+}
+
+button { font-family: inherit; cursor: pointer; }
+
+/* ============================================================
+   PAGE LAYOUT FOR THIS REFERENCE DOC
+   ============================================================ */
+
+.doc { max-width: 1200px; margin: 0 auto; padding: 48px 32px 96px; }
+
+.doc-header {
+  background: var(--green-deep); color: #F1F7E4;
+  padding: 40px 32px; border-radius: var(--radius-card);
+  margin-bottom: 40px;
+}
+.doc-header h1 { font-family: var(--font-heading); font-size: 32px; font-weight: 500; margin: 0 0 10px; letter-spacing: -0.02em; }
+.doc-header h1 em { font-style: normal; color: var(--green-lime); }
+.doc-header p { font-size: 14px; color: var(--green-pale-3); margin: 0; max-width: 640px; line-height: 1.6; }
+
+.doc-section { margin-bottom: 64px; }
+.doc-section-head { margin-bottom: 24px; padding-bottom: 12px; border-bottom: 0.5px solid var(--border-med); }
+.doc-section-head h2 { font-family: var(--font-heading); font-size: 24px; font-weight: 500; margin: 0 0 6px; letter-spacing: -0.02em; }
+.doc-section-head p { font-size: 13px; color: var(--color-text-secondary); margin: 0; }
+
+.doc-group { margin-bottom: 32px; }
+.doc-group h3 { font-family: var(--font-heading); font-size: 15px; font-weight: 500; margin: 0 0 4px; color: var(--color-text-primary); }
+.doc-group .caption { font-size: 12px; color: var(--color-text-secondary); margin: 0 0 14px; }
+.doc-group code { font-family: 'SF Mono', Menlo, monospace; font-size: 11px; background: var(--cream-1); padding: 2px 6px; border-radius: 4px; color: var(--color-text-primary); }
+
+.doc-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; margin-bottom: 16px; }
+
+.doc-surface { background: #fff; border: 0.5px solid var(--border-med); border-radius: var(--radius-card); padding: 24px; }
+.doc-surface-dark { background: var(--green-deep); padding: 24px; border-radius: var(--radius-card); }
+
+/* ============================================================
+   1. PALETTE SWATCHES
+   ============================================================ */
+
+.swatch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+.swatch { border-radius: 10px; overflow: hidden; border: 0.5px solid var(--border-med); }
+.swatch-color { height: 72px; }
+.swatch-meta { padding: 10px 12px; background: #fff; }
+.swatch-name { font-family: var(--font-heading); font-size: 12px; font-weight: 500; margin: 0 0 2px; color: var(--color-text-primary); }
+.swatch-hex { font-family: 'SF Mono', Menlo, monospace; font-size: 11px; color: var(--color-text-secondary); margin: 0; }
+
+/* ============================================================
+   2. TYPOGRAPHY
+   ============================================================ */
+
+.type-sample { margin-bottom: 24px; padding: 16px 20px; background: #fff; border-radius: 10px; border: 0.5px solid var(--border-med); }
+.type-label { font-family: var(--font-body); font-size: 11px; font-weight: 500; color: var(--color-text-secondary); letter-spacing: 0.08em; text-transform: uppercase; margin: 0 0 8px; }
+.type-label code { text-transform: none; letter-spacing: 0; background: var(--cream-1); padding: 1px 6px; border-radius: 4px; font-size: 10px; margin-left: 4px; }
+
+.type-hero { font-family: var(--font-heading); font-size: 56px; font-weight: 500; letter-spacing: -0.02em; line-height: 1.05; margin: 0; }
+.type-hero em { font-style: normal; color: var(--green-lime); }
+.type-h1 { font-family: var(--font-heading); font-size: 36px; font-weight: 500; letter-spacing: -0.02em; margin: 0; }
+.type-h1 em { font-style: normal; color: var(--green-lime); }
+.type-h2 { font-family: var(--font-heading); font-size: 28px; font-weight: 500; letter-spacing: -0.02em; margin: 0; }
+.type-h3 { font-family: var(--font-heading); font-size: 20px; font-weight: 500; letter-spacing: -0.01em; margin: 0; }
+.type-h4 { font-family: var(--font-heading); font-size: 16px; font-weight: 500; margin: 0; }
+.type-body { font-family: var(--font-body); font-size: 14px; line-height: 1.55; margin: 0; }
+.type-small { font-family: var(--font-body); font-size: 13px; color: var(--color-text-secondary); margin: 0; }
+.type-caption { font-family: var(--font-body); font-size: 11px; color: var(--color-text-secondary); letter-spacing: 0.08em; text-transform: uppercase; font-weight: 500; margin: 0; }
+.type-serif { font-family: var(--font-serif); font-size: 48px; line-height: 1.1; color: var(--color-text-primary); margin: 0; }
+
+/* ============================================================
+   3. BUTTONS
+   ============================================================ */
+
+.btn { font-family: inherit; font-size: 14px; font-weight: 500; padding: 11px 22px; border-radius: var(--radius-pill); border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+.btn svg { width: 14px; height: 14px; }
+
+/* Primary — lime, for hero CTAs and conversion moments */
+.btn-primary { background: var(--green-lime); color: var(--green-deep); }
+.btn-primary:hover { background: #7BB82F; }
+
+/* Utility — deep forest, for repetitive step transitions */
+.btn-utility { background: var(--green-deep); color: #F1F7E4; }
+.btn-utility:hover { background: #0F2703; }
+
+/* Secondary — outlined neutral */
+.btn-secondary { background: transparent; color: var(--color-text-primary); border: 0.5px solid var(--border-input); }
+.btn-secondary:hover { background: var(--bg-page); border-color: var(--color-text-secondary); }
+
+/* Tertiary — faint outlined (lowest emphasis) */
+.btn-tertiary { background: transparent; color: var(--color-text-secondary); border: 0.5px solid var(--border-subtle); font-size: 13px; padding: 9px 16px; }
+.btn-tertiary:hover { background: var(--bg-page); color: var(--color-text-primary); }
+
+/* Small variants */
+.btn-sm { font-size: 12px; padding: 7px 14px; }
+.btn-sm svg { width: 12px; height: 12px; }
+
+/* Danger (used in danger zone sections only) */
+.btn-danger { background: transparent; color: var(--coral-deep); border: 0.5px solid rgba(153, 60, 29, 0.3); font-size: 12px; padding: 8px 16px; }
+.btn-danger:hover { background: var(--coral-pale); }
+
+/* Text-only green link */
+.btn-link { background: transparent; border: none; padding: 0; font-family: var(--font-body); font-size: 13px; font-weight: 500; color: var(--green-mid); cursor: pointer; display: inline-flex; align-items: center; gap: 5px; text-decoration: underline; text-decoration-color: rgba(99, 153, 34, 0.3); text-underline-offset: 3px; }
+.btn-link:hover { text-decoration-color: var(--green-mid); }
+
+/* ============================================================
+   4. PILLS & TAGS
+   ============================================================ */
+
+.tag { display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-body); font-size: 11px; font-weight: 500; padding: 4px 10px; border-radius: var(--radius-pill); }
+.tag svg { width: 10px; height: 10px; }
+
+/* Four funding-type categoricals */
+.tag-green { background: var(--green-pale-1); color: var(--green-text-deep); }
+.tag-coral { background: var(--coral-pale); color: var(--coral-deep); }
+.tag-blue { background: var(--blue-pale); color: var(--blue-deep); }
+.tag-amber { background: var(--amber-pale); color: var(--amber-deep); }
+
+/* Neutral metadata tags */
+.tag-sector { background: var(--cream-1); color: var(--color-text-secondary); }
+.tag-location { background: var(--bg-pill-neutral); color: var(--color-text-secondary); }
+
+/* Count pills (small, contextual) */
+.count-pill { font-family: var(--font-body); font-size: 11px; font-weight: 500; padding: 3px 10px; border-radius: var(--radius-pill); display: inline-flex; align-items: center; gap: 6px; }
+.count-pill-green { background: var(--green-pale-1); color: var(--green-text-deep); }
+.count-pill-coral { background: var(--coral-pale); color: var(--coral-deep); }
+
+/* "You're in" cohort pill with dot */
+.cohort-pill { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-body); font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; padding: 7px 13px; border-radius: var(--radius-pill); background: var(--green-pale-1); color: var(--green-text-deep); }
+.cohort-pill::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--green-lime); }
+
+/* ============================================================
+   5. SEGMENTED CONTROLS (view toggles, sort, tabs)
+   ============================================================ */
+
+.segmented { display: inline-flex; background: var(--bg-pill-neutral); border-radius: var(--radius-pill); padding: 3px; gap: 2px; }
+.segmented button { font-family: var(--font-body); font-size: 12px; font-weight: 500; padding: 7px 14px; border-radius: var(--radius-pill); border: none; background: transparent; color: var(--color-text-secondary); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.segmented button.active { background: #fff; color: var(--color-text-primary); box-shadow: var(--shadow-segment-active); }
+.segmented button .count { font-size: 11px; background: var(--green-pale-1); color: var(--green-text-deep); padding: 1px 6px; border-radius: var(--radius-pill); }
+.segmented button.active .count { background: var(--green-lime); color: var(--green-deep); }
+
+/* ============================================================
+   6. TOGGLES
+   ============================================================ */
+
+.toggle { position: relative; width: 44px; height: 24px; border-radius: var(--radius-pill); background: var(--toggle-off); cursor: pointer; transition: background 0.15s; display: inline-block; }
+.toggle.on { background: var(--green-mid); }
+.toggle-thumb { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: left 0.15s; }
+.toggle.on .toggle-thumb { left: 23px; }
+
+.toggle-sm { position: relative; width: 36px; height: 20px; border-radius: var(--radius-pill); background: var(--toggle-off); cursor: pointer; transition: background 0.15s; display: inline-block; }
+.toggle-sm.on { background: var(--green-mid); }
+.toggle-sm-thumb { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: left 0.15s; }
+.toggle-sm.on .toggle-sm-thumb { left: 18px; }
+
+/* ============================================================
+   7. FORM FIELDS
+   ============================================================ */
+
+.field { margin-bottom: 16px; }
+.field-label-row { display: flex; align-items: baseline; gap: 4px; margin-bottom: 6px; }
+.field-label { font-family: var(--font-body); font-size: 13px; font-weight: 500; color: var(--color-text-primary); }
+.field-required { color: var(--coral-saturated); font-size: 13px; }
+.field-optional { font-family: var(--font-body); font-size: 11px; color: var(--color-text-tertiary); font-weight: 400; }
+.field-input { font-family: var(--font-body); width: 100%; font-size: 14px; padding: 11px 14px; border-radius: var(--radius-input); border: 0.5px solid var(--border-input); background: #fff; color: var(--color-text-primary); }
+.field-input:focus { outline: none; border-color: var(--green-mid); }
+.field-input::placeholder { color: var(--color-text-tertiary); }
+.field-input.prefilled { background: var(--green-pale-hover); border-color: rgba(57, 109, 17, 0.25); }
+.field-help { font-family: var(--font-body); font-size: 12px; color: var(--color-text-secondary); margin: 5px 0 0; line-height: 1.5; }
+.field-textarea { font-family: var(--font-body); width: 100%; font-size: 14px; padding: 12px 14px; border-radius: var(--radius-input); border: 0.5px solid var(--border-input); background: #fff; color: var(--color-text-primary); min-height: 100px; resize: vertical; line-height: 1.5; }
+
+/* Prefilled badge */
+.prefilled-badge { font-family: var(--font-body); font-size: 11px; font-weight: 500; color: var(--green-text-deep); display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; background: var(--green-pale-1); border-radius: var(--radius-pill); }
+.prefilled-badge svg { width: 10px; height: 10px; }
+
+/* Currency prefix wrapper */
+.input-prefix-wrap { position: relative; }
+.input-prefix { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-family: var(--font-body); font-size: 14px; color: var(--color-text-secondary); pointer-events: none; }
+.input-prefix + .field-input { padding-left: 26px; }
+
+/* ============================================================
+   8. ICON BADGES (for section headers, cards)
+   ============================================================ */
+
+.icon-badge { border-radius: var(--radius-icon-badge); display: inline-flex; align-items: center; justify-content: center; }
+.icon-badge-sm { width: 24px; height: 24px; }
+.icon-badge-sm svg { width: 12px; height: 12px; }
+.icon-badge-md { width: 32px; height: 32px; }
+.icon-badge-md svg { width: 14px; height: 14px; }
+.icon-badge-lg { width: 44px; height: 44px; border-radius: 12px; }
+.icon-badge-lg svg { width: 20px; height: 20px; }
+
+.icon-badge-green { background: var(--green-pale-1); color: var(--green-text-deep); }
+.icon-badge-coral { background: var(--coral-pale); color: var(--coral-deep); }
+.icon-badge-blue { background: var(--blue-pale); color: var(--blue-deep); }
+.icon-badge-amber { background: var(--amber-pale); color: var(--amber-deep); }
+.icon-badge-cream { background: var(--cream-1); color: var(--color-text-secondary); }
+.icon-badge-filled-green { background: var(--green-pale-3); color: var(--green-deep); }
+
+/* ============================================================
+   9. MATCH BAR
+   ============================================================ */
+
+.match-score { display: flex; flex-direction: column; align-items: flex-end; min-width: 110px; }
+.match-score-pct { font-family: var(--font-heading); font-size: 22px; font-weight: 500; color: var(--green-deep); letter-spacing: -0.02em; line-height: 1; }
+.match-bar-track { width: 100%; height: 4px; border-radius: 2px; background: rgba(57, 109, 17, 0.15); margin-top: 8px; overflow: hidden; }
+.match-bar-fill { height: 100%; border-radius: 2px; background: var(--green-lime); }
+.match-label { font-family: var(--font-body); font-size: 10px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--green-text-deep); margin-top: 6px; }
+
+.match-reasons { display: flex; flex-direction: column; gap: 6px; }
+.match-reason { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-body); font-size: 13px; color: var(--green-deep); line-height: 1.4; }
+.match-reason svg { width: 12px; height: 12px; flex-shrink: 0; color: var(--green-mid); }
+
+.match-panel { background: var(--green-pale-1); padding: 14px 22px; display: grid; grid-template-columns: 1fr auto; gap: 20px; align-items: center; border-top: 0.5px solid rgba(57, 109, 17, 0.15); }
+
+/* ============================================================
+   10. FUNDING TYPE TILES (4-category selector)
+   ============================================================ */
+
+.ft-tile { position: relative; padding: 18px 18px 16px; border-radius: 12px; border: 1.5px solid; cursor: pointer; background: #fff; }
+.ft-tile-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+.ft-tile-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+.ft-tile-icon svg { width: 16px; height: 16px; }
+.ft-tile-check { width: 20px; height: 20px; border-radius: 50%; display: none; align-items: center; justify-content: center; }
+.ft-tile.selected .ft-tile-check { display: flex; }
+.ft-tile-check svg { width: 11px; height: 11px; color: #fff; }
+.ft-tile h4 { font-family: var(--font-heading); font-size: 15px; font-weight: 500; margin: 0 0 3px; }
+.ft-tile p { font-family: var(--font-body); font-size: 12px; line-height: 1.4; margin: 0; }
+
+/* Green — Grants */
+.ft-tile-green { border-color: rgba(57, 109, 17, 0.15); }
+.ft-tile-green.selected { border-color: var(--green-mid); background: var(--green-pale-1); }
+.ft-tile-green .ft-tile-icon { background: var(--green-pale-3); color: var(--green-text-deep); }
+.ft-tile-green .ft-tile-check { background: var(--green-mid); }
+.ft-tile-green h4 { color: var(--green-deep); }
+.ft-tile-green p { color: var(--green-text-deep); }
+
+/* Coral — Programmes */
+.ft-tile-coral { border-color: rgba(153, 60, 29, 0.15); }
+.ft-tile-coral.selected { border-color: var(--coral-saturated); background: var(--coral-pale); }
+.ft-tile-coral .ft-tile-icon { background: var(--coral-mid); color: var(--coral-deep); }
+.ft-tile-coral .ft-tile-check { background: var(--coral-deep); }
+.ft-tile-coral h4 { color: var(--coral-deepest); }
+.ft-tile-coral p { color: var(--coral-deep); }
+
+/* Blue — Social Investment */
+.ft-tile-blue { border-color: rgba(55, 138, 221, 0.15); }
+.ft-tile-blue.selected { border-color: var(--blue-saturated); background: var(--blue-pale); }
+.ft-tile-blue .ft-tile-icon { background: var(--blue-mid); color: var(--blue-deep); }
+.ft-tile-blue .ft-tile-check { background: #185FA5; }
+.ft-tile-blue h4 { color: var(--blue-deepest); }
+.ft-tile-blue p { color: var(--blue-deep); }
+
+/* Amber — In-Kind */
+.ft-tile-amber { border-color: rgba(186, 117, 23, 0.15); }
+.ft-tile-amber.selected { border-color: var(--amber-saturated); background: var(--amber-pale); }
+.ft-tile-amber .ft-tile-icon { background: var(--amber-mid); color: var(--amber-deep); }
+.ft-tile-amber .ft-tile-check { background: var(--amber-deep); }
+.ft-tile-amber h4 { color: var(--amber-deepest); }
+.ft-tile-amber p { color: var(--amber-deep); }
+
+/* ============================================================
+   11. PIPELINE STAGE LADDER
+   ============================================================ */
+
+.pl-ladder { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.pl-stage { padding: 14px 14px; border-radius: 10px; }
+.pl-stage-label { font-family: var(--font-body); font-size: 10px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; margin: 0 0 6px; }
+.pl-stage-value { font-family: var(--font-heading); font-size: 22px; font-weight: 500; letter-spacing: -0.02em; line-height: 1; margin: 0 0 4px; }
+.pl-stage-count { font-family: var(--font-body); font-size: 11px; margin: 0; }
+
+.pl-stage-identified { background: var(--cream-1); }
+.pl-stage-identified .pl-stage-label { color: var(--color-text-secondary); }
+.pl-stage-identified .pl-stage-value { color: var(--color-text-primary); }
+.pl-stage-identified .pl-stage-count { color: var(--color-text-secondary); }
+
+.pl-stage-applying { background: var(--green-pale-2); }
+.pl-stage-applying .pl-stage-label { color: var(--green-text-deep); }
+.pl-stage-applying .pl-stage-value { color: var(--green-deep); }
+.pl-stage-applying .pl-stage-count { color: var(--green-text-deep); }
+
+.pl-stage-submitted { background: var(--green-pale-3); }
+.pl-stage-submitted .pl-stage-label { color: var(--green-deep); }
+.pl-stage-submitted .pl-stage-value { color: var(--green-deep); }
+.pl-stage-submitted .pl-stage-count { color: var(--green-text-deep); }
+
+.pl-stage-won { background: var(--green-mid); }
+.pl-stage-won .pl-stage-label { color: #DDEEBF; }
+.pl-stage-won .pl-stage-value { color: var(--green-pale-1); }
+.pl-stage-won .pl-stage-count { color: var(--green-pale-3); }
+
+.pl-stage-declined { background: var(--coral-pale); }
+.pl-stage-declined .pl-stage-label { color: var(--coral-deep); }
+.pl-stage-declined .pl-stage-value { color: var(--coral-deepest); }
+.pl-stage-declined .pl-stage-count { color: var(--coral-deep); }
+
+/* ============================================================
+   12. PRIORITY ROWS (for sectors/beneficiaries)
+   ============================================================ */
+
+.priority-list { display: flex; flex-direction: column; gap: 6px; }
+.priority-row { background: var(--green-pale-1); border-radius: 10px; padding: 10px 12px; display: flex; align-items: center; gap: 12px; }
+.priority-rank { display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-body); font-size: 11px; font-weight: 500; padding: 3px 9px; border-radius: var(--radius-pill); text-transform: uppercase; letter-spacing: 0.05em; }
+.priority-rank-primary { background: var(--green-mid); color: var(--green-pale-1); }
+.priority-rank-secondary { background: var(--green-pale-3); color: var(--green-deep); }
+.priority-rank-tertiary { background: var(--green-pale-2); color: var(--green-text-deep); }
+.priority-rank-n { background: transparent; color: var(--color-text-secondary); border: 0.5px solid var(--border-input); padding: 3px 10px; }
+.priority-name { font-family: var(--font-body); font-size: 14px; color: var(--color-text-primary); font-weight: 500; flex: 1; }
+.priority-actions { display: flex; gap: 2px; }
+.priority-btn { width: 26px; height: 26px; border-radius: 7px; background: transparent; border: none; color: var(--color-text-secondary); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.priority-btn svg { width: 13px; height: 13px; }
+
+/* ============================================================
+   13. CARDS (opportunity, pipeline)
+   ============================================================ */
+
+.card-opp { background: #fff; border-radius: var(--radius-card); border: 0.5px solid var(--border-med); overflow: hidden; }
+.card-opp-body { padding: 20px 22px; }
+.card-opp-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.card-opp-title { font-family: var(--font-heading); font-size: 18px; font-weight: 500; letter-spacing: -0.01em; margin: 0 0 3px; color: var(--color-text-primary); }
+.card-opp-funder { font-family: var(--font-body); font-size: 13px; color: var(--color-text-primary); margin: 0 0 8px; font-weight: 500; }
+.card-opp-desc { font-family: var(--font-body); font-size: 13px; color: var(--color-text-secondary); line-height: 1.5; margin: 0 0 14px; }
+.card-opp-meta { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; padding: 12px 0 0; border-top: 0.5px solid var(--border-light); }
+.card-opp-meta-label { font-family: var(--font-body); font-size: 10px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-text-tertiary); margin: 0 0 3px; }
+.card-opp-meta-value { font-family: var(--font-heading); font-size: 13px; font-weight: 500; color: var(--color-text-primary); margin: 0; line-height: 1.3; }
+.card-opp-meta-amount { color: var(--green-text-deep); }
+
+/* Pipeline mini-card */
+.card-pipe { background: #fff; border-radius: 10px; padding: 12px 13px; border: 0.5px solid var(--border-light); cursor: pointer; position: relative; }
+.card-pipe-type { display: inline-flex; font-family: var(--font-body); font-size: 9px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; padding: 2px 7px; border-radius: var(--radius-pill); margin-bottom: 8px; }
+.card-pipe-title { font-family: var(--font-heading); font-size: 13px; font-weight: 500; color: var(--color-text-primary); margin: 0 0 2px; line-height: 1.25; }
+.card-pipe-funder { font-family: var(--font-body); font-size: 11px; color: var(--color-text-secondary); margin: 0 0 10px; }
+.card-pipe-meta { display: flex; justify-content: space-between; align-items: center; font-family: var(--font-body); font-size: 11px; padding-top: 8px; border-top: 0.5px solid var(--border-light); }
+.card-pipe-amount { font-family: var(--font-heading); font-weight: 500; color: var(--green-text-deep); font-size: 12px; }
+.card-pipe-deadline { display: inline-flex; align-items: center; gap: 4px; color: var(--color-text-secondary); }
+.card-pipe-deadline svg { width: 10px; height: 10px; }
+.card-pipe-deadline.urgent { color: var(--coral-deep); font-weight: 500; }
+.card-pipe-action { display: flex; align-items: center; gap: 6px; padding-top: 8px; margin-top: 8px; border-top: 0.5px solid var(--border-light); font-family: var(--font-body); font-size: 11px; font-weight: 500; color: var(--green-mid); cursor: pointer; }
+.card-pipe-action svg { width: 11px; height: 11px; }
+
+/* ============================================================
+   14. PROGRESS BAR (profile completion, writing progress)
+   ============================================================ */
+
+.progress-card { background: var(--green-pale-1); border-radius: var(--radius-card); padding: 20px 22px; display: flex; gap: 20px; align-items: center; }
+.progress-body { flex: 1; }
+.progress-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.progress-label { font-family: var(--font-heading); font-size: 15px; font-weight: 500; color: var(--color-text-primary); margin: 0; }
+.progress-pct { font-family: var(--font-heading); font-size: 14px; font-weight: 500; color: var(--green-text-deep); }
+.progress-bar-track { height: 6px; border-radius: 3px; background: rgba(57, 109, 17, 0.15); overflow: hidden; margin-bottom: 8px; }
+.progress-bar-fill { height: 100%; background: var(--green-lime); border-radius: 3px; }
+.progress-detail { font-family: var(--font-body); font-size: 12px; color: var(--green-text-deep); margin: 0; }
+
+/* ============================================================
+   15. BANNERS
+   ============================================================ */
+
+.banner-amber { background: var(--cream-1); border-radius: var(--radius-card); padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.banner-amber-text { display: flex; align-items: center; gap: 10px; flex: 1; }
+.banner-amber-icon { width: 28px; height: 28px; border-radius: var(--radius-icon-badge); background: var(--amber-pale); color: var(--amber-deep); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.banner-amber-icon svg { width: 14px; height: 14px; }
+.banner-amber-body { font-family: var(--font-body); font-size: 13px; color: var(--color-text-primary); line-height: 1.4; }
+.banner-amber-body strong { font-weight: 500; color: var(--amber-deep); }
+
+/* ============================================================
+   16. STICKY FOOTER
+   ============================================================ */
+
+.sticky-footer { position: fixed; bottom: 0; left: 0; right: 0; padding: 14px 28px; background: #fff; border-top: 0.5px solid var(--border-med); display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-sticky-footer); z-index: 10; }
+.footer-status { font-family: var(--font-body); font-size: 13px; color: var(--color-text-secondary); display: inline-flex; align-items: center; gap: 6px; }
+.footer-status svg { width: 12px; height: 12px; color: var(--green-mid); }
+
+/* ============================================================
+   HELPERS FOR THIS DOC ONLY
+   ============================================================ */
+
+.kbd { font-family: 'SF Mono', Menlo, monospace; font-size: 10px; background: #fff; padding: 2px 6px; border-radius: 4px; border: 0.5px solid var(--border-med); color: var(--color-text-secondary); }
+
+</style>
+</head>
+<body>
+
+<div class="doc">
+
+  <!-- DOC HEADER -->
+  <div class="doc-header">
+    <h1>Grant Tracker — <em>Component Library</em></h1>
+    <p>Every design token, primitive, and composite component used across Grant Tracker. Use this alongside <code style="background: rgba(241,247,228,0.15); color: #F1F7E4; padding: 2px 6px; border-radius: 4px;">grant-tracker-design-spec.md</code> to build any page with consistent styling. All CSS variables are defined at the top of the stylesheet.</p>
+  </div>
+
+  <!-- ============================================
+       PALETTE
+       ============================================ -->
+  <div class="doc-section">
+    <div class="doc-section-head">
+      <h2>1. Palette</h2>
+      <p>Reference these hex values exactly. Use CSS variables defined at top of stylesheet.</p>
+    </div>
+
+    <div class="doc-group">
+      <h3>Greens (primary brand)</h3>
+      <p class="caption">Lime for CTAs, deep forest for utility, pale tones for surfaces.</p>
+      <div class="swatch-grid">
+        <div class="swatch"><div class="swatch-color" style="background: #8ECB3C;"></div><div class="swatch-meta"><p class="swatch-name">Lime</p><p class="swatch-hex">#8ECB3C · --green-lime</p></div></div>
+        <div class="swatch"><div class="swatch-color" style="background: #639922;"></div><div class="swatch-meta"><p class="swatch-name">Mid green</p><p class="swatch-hex">#639922 · --green-mid</p></div></div>
+        <div class="swatch"><div class="swatch-color" style="background: #173404;"></div><div class="swatch-meta"><p class="swatch-name">Deep forest</p><p class="swatch-hex">#173404 · --green-deep</p></div></div>
+        <div class="swatch"><div class="swatch-color" style="background: #F1F7E4;"></div><div class="swatch-meta"><p class="swatch-name">Pale green 1</p><p class="swatch-hex">#F1F7E4 · --green-pale-1</p></div></div>
+        <div class="swatch"><div class="swatch-color" style="background: #EAF3DE;"></div><div class="swatch-meta"><p class="swatch-name">Pale green 2</p><p class="swatch-hex">#EAF3DE · --green-pale-2</p></div></div>
+        <div class="swatch"><div class="swatch-color" style="background: #C0DD97;"></div><div class="swatch-meta"><p class="swatch-name">Pale green 3</p><p class="swatch-hex">#C0DD97 · --green-pale-3</p></div></div>
+      </div>
+    </div>
+
+    <div class="doc-group">
+      <h3>Cream & neutrals</h3>
+      <div class="swatch-grid">
+        <div class="swatch"><div class="swatch-color" style="background: #F5F1E8;"></div><div class="swatch-meta"><p class="swatch-name">Cream</p><p class="swatch-hex">#F5F1E8 · --cream-1</p></div></div>
+        <div class="swatch"><div class="swatch-color" style="background: #FAFAF7;"></div><div class="swatch-meta"><p class="swatch-name">Page background</p><p class="swatch-hex">#FAFAF7 · --bg-page</p></div></div>
+        <div class="swatch"><div class="swatch-color" style="background: #F1F0EA;"></div><div class="swatch-meta"><p class="swatch-name">Pill neutral bg</p><p class="swatch-hex">#F1F0EA · --bg-pill-neutral</p></div></div>
+      </div>
+    </div>
+
+    <div class="doc-group">
+      <h3>Coral (Programmes / Declined / urgent)</h3>
+      <div class="swatch-grid">
+        <div class="swatch"><div class="swatch-color" style="background: #FAECE7;"></div><div class="swatch-meta"><p class="swatch-name">Pale coral</p><p class="swatch-hex">#FAECE7 · --coral-pale</p></div></div>
+        <div class="swatch"><div class="swatch-color" style="background: #F5C4B3;"></div><div class="swatch-meta"><p class="swatch-name">Mid coral</p><p class="swatch-hex">#F5C4B3 · --coral-mid</p></div></div>
+        <div class="swatch"><div class="swatch-color" style="background: #D85A30;"></div><div class="swatch-meta"><p class="swatch-name">Coral saturated</p><p class="swatch-hex">#D85A30 · --coral-saturated</p></div></div>
+        <div class="swatch"><div class="swatch-color" style="background: #993C1D;"></div><div class="swatch-meta"><p class="swatch-name" style="color: #fff;">Deep coral</p><p class="swatch-hex">#993C1D · --coral-deep</p></div></div>
+      </div>
+    </div>
+
+    <div class="doc-group">
+      <h3>Blue (Social Investment only)</h3>
+      <div class="swatch-grid">
+        <div class="swatch"><div class="swatch-color" style="background: #E6F1FB;"></div><div class="swatch-meta"><p class="swatch-name">Pale blue</p><p class="swatch-hex">#E6F1FB · --blue-pale</p></div></div>
+        <div class="swatch"><div class="swatch-color" style="background: #B5D4F4;"></div><div class="swatch-meta"><p class="swatch-name">Mid blue</p><p class="swatch-hex">#B5D4F4 · --blue-mid</p></div></div>
+        <div class="swatch"><div class="swatch-color" style="background: #378ADD;"></div><div class="swatch-meta"><p class="swatch-name">Blue saturated</p><p class="swatch-hex">#378ADD · --blue-saturated</p></div></div>
+        <div class="swatch"><div class="swatch-color" style="background: #0C447C;"></div><div class="swatch-meta"><p class="swatch-name" style="color: #fff;">Deep blue</p><p class="swatch-hex">#0C447C · --blue-deep</p></div></div>
+      </div>
+    </div>
+
+    <div class="doc-group">
+      <h3>Amber (In-Kind / helper / warnings)</h3>
+      <div class="swatch-grid">
+        <div class="swatch"><div class="swatch-color" style="background: #FAEEDA;"></div><div class="swatch-meta"><p class="swatch-name">Pale amber</p><p class="swatch-hex">#FAEEDA · --amber-pale</p></div></div>
+        <div class="swatch"><div class="swatch-color" style="background: #FAC775;"></div><div class="swatch-meta"><p class="swatch-name">Mid amber</p><p class="swatch-hex">#FAC775 · --amber-mid</p></div></div>
+        <div class="swatch"><div class="swatch-color" style="background: #BA7517;"></div><div class="swatch-meta"><p class="swatch-name" style="color: #fff;">Amber saturated</p><p class="swatch-hex">#BA7517 · --amber-saturated</p></div></div>
+        <div class="swatch"><div class="swatch-color" style="background: #854F0B;"></div><div class="swatch-meta"><p class="swatch-name" style="color: #fff;">Deep amber</p><p class="swatch-hex">#854F0B · --amber-deep</p></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================
+       TYPOGRAPHY
+       ============================================ -->
+  <div class="doc-section">
+    <div class="doc-section-head">
+      <h2>2. Typography</h2>
+      <p>Three faces, each with a specific role. Never substitute.</p>
+    </div>
+
+    <div class="type-sample">
+      <p class="type-label">Hero heading <code>Space Grotesk 500 · 56px · -0.02em · line 1.05</code></p>
+      <h1 class="type-hero"><em>Funding,</em> matched for you.</h1>
+    </div>
+
+    <div class="type-sample">
+      <p class="type-label">H1 — page heading <code>Space Grotesk 500 · 36px · -0.02em</code></p>
+      <h1 class="type-h1">Plans that respect <em>your budget.</em></h1>
+    </div>
+
+    <div class="type-sample">
+      <p class="type-label">H2 — section heading <code>Space Grotesk 500 · 28px · -0.02em</code></p>
+      <h2 class="type-h2">About your organisation</h2>
+    </div>
+
+    <div class="type-sample">
+      <p class="type-label">H3 — card / modal heading <code>Space Grotesk 500 · 20px · -0.01em</code></p>
+      <h3 class="type-h3">Stronger Starts</h3>
+    </div>
+
+    <div class="type-sample">
+      <p class="type-label">H4 — small card title <code>Space Grotesk 500 · 16px</code></p>
+      <h4 class="type-h4">This week's deadlines</h4>
+    </div>
+
+    <div class="type-sample">
+      <p class="type-label">Body <code>Plus Jakarta Sans 400 · 14px · line 1.55</code></p>
+      <p class="type-body">Brighton Community CIC is a community interest company creating social change through music, supporting the development of emerging talent across Sussex.</p>
+    </div>
+
+    <div class="type-sample">
+      <p class="type-label">Small / secondary <code>Plus Jakarta Sans 400 · 13px · secondary colour</code></p>
+      <p class="type-small">A complete profile means better grant matches and more relevant alerts.</p>
+    </div>
+
+    <div class="type-sample">
+      <p class="type-label">Caption / eyebrow <code>Plus Jakarta Sans 500 · 11px · 0.08em letter-spacing · uppercase</code></p>
+      <p class="type-caption">Funding type</p>
+    </div>
+
+    <div class="type-sample">
+      <p class="type-label">Decorative serif <code>DM Serif Display 400 · 48px</code> · <strong>used in ONLY TWO places: invite welcome page + About section founder quote</strong></p>
+      <p class="type-serif">Welcome, Paul.</p>
+    </div>
+  </div>
+
+  <!-- ============================================
+       BUTTONS
+       ============================================ -->
+  <div class="doc-section">
+    <div class="doc-section-head">
+      <h2>3. Buttons</h2>
+      <p>Four tiers of emphasis. Use the right one for the job.</p>
+    </div>
+
+    <div class="doc-group">
+      <h3>Primary — lime green</h3>
+      <p class="caption">For hero CTAs and conversion moments. Sparingly. "Apply to join", "Finish &amp; see my matches", "Add to pipeline", "Save changes".</p>
+      <div class="doc-row">
+        <button class="btn btn-primary">Apply to join <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+        <button class="btn btn-primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add to pipeline</button>
+        <button class="btn btn-primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Save changes</button>
+      </div>
+    </div>
+
+    <div class="doc-group">
+      <h3>Utility — deep forest green</h3>
+      <p class="caption">For repeated utility actions that shouldn't shout. "Continue", "Search", "Done", "Apply at [funder]".</p>
+      <div class="doc-row">
+        <button class="btn btn-utility">Continue <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+        <button class="btn btn-utility">Search <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+        <button class="btn btn-utility">Done</button>
+      </div>
+    </div>
+
+    <div class="doc-group">
+      <h3>Secondary — outlined neutral</h3>
+      <p class="caption">Supporting actions alongside primary. "Save for later", "Cancel", "Visit funder".</p>
+      <div class="doc-row">
+        <button class="btn btn-secondary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg> Save for later</button>
+        <button class="btn btn-secondary">Cancel</button>
+        <button class="btn btn-secondary">Discard</button>
+      </div>
+    </div>
+
+    <div class="doc-group">
+      <h3>Tertiary — faint outlined</h3>
+      <p class="caption">Lowest emphasis on a card. "Visit funder" when Save and Add-to-pipeline are also present.</p>
+      <div class="doc-row">
+        <button class="btn btn-tertiary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Visit funder</button>
+      </div>
+    </div>
+
+    <div class="doc-group">
+      <h3>Text / link</h3>
+      <p class="caption">For inline links like "Show all 2,847 grants", "View all deadlines →", "See all matches →".</p>
+      <div class="doc-row">
+        <button class="btn-link">Show all 2,847 grants</button>
+        <button class="btn-link">View all deadlines →</button>
+      </div>
+    </div>
+
+    <div class="doc-group">
+      <h3>Danger — in danger-zone sections only</h3>
+      <div class="doc-row">
+        <button class="btn btn-danger">Pause account</button>
+        <button class="btn btn-danger">Delete account</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================
+       TAGS & PILLS
+       ============================================ -->
+  <div class="doc-section">
+    <div class="doc-section-head">
+      <h2>4. Tags &amp; pills</h2>
+      <p>Four funding-type categoricals + neutral metadata tags + count pills + cohort pill.</p>
+    </div>
+
+    <div class="doc-group">
+      <h3>Funding type pills (the 4-colour system)</h3>
+      <p class="caption">Use consistently on opportunity cards, pipeline cards, dashboard matches, filter tabs.</p>
+      <div class="doc-row">
+        <span class="tag tag-green">Grant</span>
+        <span class="tag tag-coral">Programme</span>
+        <span class="tag tag-blue">Investment</span>
+        <span class="tag tag-amber">In-Kind</span>
+      </div>
+    </div>
+
+    <div class="doc-group">
+      <h3>Neutral metadata tags</h3>
+      <p class="caption">For sector, funder type, location — things that aren't in the 4-category system.</p>
+      <div class="doc-row">
+        <span class="tag tag-sector">Arts &amp; Culture</span>
+        <span class="tag tag-sector">Lottery</span>
+        <span class="tag tag-location"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> England</span>
+      </div>
+    </div>
+
+    <div class="doc-group">
+      <h3>Count pills</h3>
+      <div class="doc-row">
+        <span class="count-pill count-pill-green">8 new since Monday</span>
+        <span class="count-pill count-pill-coral">2 urgent</span>
+      </div>
+    </div>
+
+    <div class="doc-group">
+      <h3>Cohort / "You're in" pill</h3>
+      <p class="caption">Use on marketing hero, invite welcome page, account identity strip, dashboard welcome banner.</p>
+      <div class="doc-row">
+        <span class="cohort-pill">Founding cohort</span>
+        <span class="cohort-pill">You're in</span>
+        <span class="cohort-pill">222 matches ready</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================
+       SEGMENTED CONTROLS
+       ============================================ -->
+  <div class="doc-section">
+    <div class="doc-section-head">
+      <h2>5. Segmented controls</h2>
+      <p>For view toggles, sorts, and settings tabs. Never use for primary category navigation (that's what the 4 funding-type tab cards are for).</p>
+    </div>
+
+    <div class="doc-group">
+      <h3>Browse / Saved toggle (Find Funding)</h3>
+      <div class="doc-row">
+        <div class="segmented">
+          <button class="active">Browse</button>
+          <button>Saved <span class="count">13</span></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="doc-group">
+      <h3>Sort</h3>
+      <div class="doc-row">
+        <div class="segmented">
+          <button class="active">Best match</button>
+          <button>Newest</button>
+          <button>Closing soon</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="doc-group">
+      <h3>Settings tabs</h3>
+      <div class="doc-row">
+        <div class="segmented">
+          <button class="active">Profile</button>
+          <button>Notifications</button>
+          <button>Account</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================
+       TOGGLES
+       ============================================ -->
+  <div class="doc-section">
+    <div class="doc-section-head">
+      <h2>6. Toggles</h2>
+    </div>
+
+    <div class="doc-group">
+      <h3>Standard toggle (44×24)</h3>
+      <p class="caption">For master settings, section-level preferences.</p>
+      <div class="doc-row" style="align-items: center;">
+        <span class="toggle off"><span class="toggle-thumb"></span></span>
+        <span class="toggle on"><span class="toggle-thumb"></span></span>
+      </div>
+    </div>
+
+    <div class="doc-group">
+      <h3>Small inline toggle (36×20)</h3>
+      <p class="caption">For individual rows within settings lists.</p>
+      <div class="doc-row" style="align-items: center;">
+        <span class="toggle-sm off"><span class="toggle-sm-thumb"></span></span>
+        <span class="toggle-sm on"><span class="toggle-sm-thumb"></span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================
+       FORM FIELDS
+       ============================================ -->
+  <div class="doc-section">
+    <div class="doc-section-head">
+      <h2>7. Form fields</h2>
+      <p>Inputs, labels, prefilled states, help text.</p>
+    </div>
+
+    <div class="doc-surface" style="max-width: 560px;">
+
+      <div class="field">
+        <div class="field-label-row">
+          <label class="field-label">Organisation name</label>
+          <span class="field-required">*</span>
+        </div>
+        <input class="field-input" type="text" placeholder="e.g. Brighton Community CIC">
+      </div>
+
+      <div class="field">
+        <div class="field-label-row">
+          <label class="field-label">Legal structure</label>
+          <span class="field-required">*</span>
+          <span class="prefilled-badge" style="margin-left: auto;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Pre-filled</span>
+        </div>
+        <input class="field-input prefilled" type="text" value="Community Interest Company (CIC)">
+        <p class="field-help">Drives eligibility — we filter out funding your structure can't apply for.</p>
+      </div>
+
+      <div class="field">
+        <div class="field-label-row">
+          <label class="field-label">Amount requested</label>
+          <span class="field-optional">optional</span>
+        </div>
+        <div class="input-prefix-wrap">
+          <span class="input-prefix">£</span>
+          <input class="field-input" type="text" value="1,500">
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Notes</label>
+        <textarea class="field-textarea" placeholder="Key dates, application requirements, questions to answer, anything that helps future-you…"></textarea>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============================================
+       ICON BADGES
+       ============================================ -->
+  <div class="doc-section">
+    <div class="doc-section-head">
+      <h2>8. Icon badges</h2>
+      <p>Coloured containers for icons. Three sizes, four palette variants + neutral. Never use outline-only icons without a badge.</p>
+    </div>
+
+    <div class="doc-group">
+      <h3>Small (24×24) — for inline uses</h3>
+      <div class="doc-row" style="align-items: center;">
+        <span class="icon-badge icon-badge-sm icon-badge-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+        <span class="icon-badge icon-badge-sm icon-badge-coral"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg></span>
+        <span class="icon-badge icon-badge-sm icon-badge-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg></span>
+        <span class="icon-badge icon-badge-sm icon-badge-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg></span>
+        <span class="icon-badge icon-badge-sm icon-badge-cream"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg></span>
+      </div>
+    </div>
+
+    <div class="doc-group">
+      <h3>Medium (32×32) — for card headers, settings rows</h3>
+      <div class="doc-row" style="align-items: center;">
+        <span class="icon-badge icon-badge-md icon-badge-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+        <span class="icon-badge icon-badge-md icon-badge-coral"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+        <span class="icon-badge icon-badge-md icon-badge-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg></span>
+        <span class="icon-badge icon-badge-md icon-badge-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg></span>
+      </div>
+    </div>
+
+    <div class="doc-group">
+      <h3>Large (44×44) — for master cards and banners</h3>
+      <div class="doc-row" style="align-items: center;">
+        <span class="icon-badge icon-badge-lg icon-badge-filled-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>
+        <span class="icon-badge icon-badge-lg icon-badge-filled-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================
+       MATCH BAR + PANEL
+       ============================================ -->
+  <div class="doc-section">
+    <div class="doc-section-head">
+      <h2>9. Match score &amp; panel</h2>
+      <p>Thin green bar under percentage. Pale-green panel with reasons + score.</p>
+    </div>
+
+    <div class="doc-group">
+      <h3>Match score (compact, for card corners)</h3>
+      <div class="doc-surface">
+        <div class="match-score" style="align-items: flex-start;">
+          <div class="match-score-pct">83%</div>
+          <div class="match-bar-track" style="width: 120px;"><div class="match-bar-fill" style="width: 83%;"></div></div>
+          <div class="match-label">Strong match</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="doc-group">
+      <h3>Match panel (under opportunity card)</h3>
+      <p class="caption">Three reasons left, percentage + bar right. Pale green bg with thin green border top.</p>
+      <div class="match-panel" style="border-radius: 10px; border-top: none;">
+        <div class="match-reasons">
+          <div class="match-reason">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Eligible in England — local community focus aligns
+          </div>
+          <div class="match-reason">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Arts &amp; Creative sector matches your primary focus
+          </div>
+          <div class="match-reason">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Your CIC structure is explicitly eligible
+          </div>
+        </div>
+        <div class="match-score">
+          <div class="match-score-pct">83%</div>
+          <div class="match-bar-track"><div class="match-bar-fill" style="width: 83%;"></div></div>
+          <div class="match-label">Strong match</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================
+       FUNDING TYPE TILES
+       ============================================ -->
+  <div class="doc-section">
+    <div class="doc-section-head">
+      <h2>10. Funding type tiles</h2>
+      <p>Four tiles using the 4-colour categorical system. Used in onboarding Step 3 and Profile Grant Preferences.</p>
+    </div>
+
+    <div class="doc-surface">
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; max-width: 560px;">
+
+        <div class="ft-tile ft-tile-green selected">
+          <div class="ft-tile-top">
+            <div class="ft-tile-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V10"/><path d="M19 21V10"/><path d="M9 21V10"/><path d="M15 21V10"/><path d="M3 10h18"/><path d="M12 3 3 8v2h18V8z"/></svg>
+            </div>
+            <div class="ft-tile-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+          </div>
+          <h4>Grants &amp; Awards</h4>
+          <p>Non-repayable cash from trusts, foundations, lottery &amp; government</p>
+        </div>
+
+        <div class="ft-tile ft-tile-coral selected">
+          <div class="ft-tile-top">
+            <div class="ft-tile-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/></svg>
+            </div>
+            <div class="ft-tile-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+          </div>
+          <h4>Programmes</h4>
+          <p>Accelerators, incubators, fellowships &amp; support cohorts</p>
+        </div>
+
+        <div class="ft-tile ft-tile-blue">
+          <div class="ft-tile-top">
+            <div class="ft-tile-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 7 13.5 15.5l-5-5L2 17"/><path d="M16 7h6v6"/></svg>
+            </div>
+            <div class="ft-tile-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+          </div>
+          <h4>Social investment</h4>
+          <p>Loans, patient capital &amp; blended finance</p>
+        </div>
+
+        <div class="ft-tile ft-tile-amber selected">
+          <div class="ft-tile-top">
+            <div class="ft-tile-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            </div>
+            <div class="ft-tile-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+          </div>
+          <h4>In-kind support</h4>
+          <p>Mentoring, workspace, software, pro bono</p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================
+       PIPELINE STAGE LADDER
+       ============================================ -->
+  <div class="doc-section">
+    <div class="doc-section-head">
+      <h2>11. Pipeline stage ladder</h2>
+      <p>5 tiles using tonal green ladder with soft coral for Declined. Used on Pipeline page columns, Dashboard pipeline card, and Pipeline edit modal stage selector.</p>
+    </div>
+
+    <div class="doc-surface">
+      <div class="pl-ladder">
+        <div class="pl-stage pl-stage-identified">
+          <p class="pl-stage-label">Identified</p>
+          <p class="pl-stage-value">£62k</p>
+          <p class="pl-stage-count">4 opportunities</p>
+        </div>
+        <div class="pl-stage pl-stage-applying">
+          <p class="pl-stage-label">Applying</p>
+          <p class="pl-stage-value">£45k</p>
+          <p class="pl-stage-count">2 opportunities</p>
+        </div>
+        <div class="pl-stage pl-stage-submitted">
+          <p class="pl-stage-label">Submitted</p>
+          <p class="pl-stage-value">£72k</p>
+          <p class="pl-stage-count">3 opportunities</p>
+        </div>
+        <div class="pl-stage pl-stage-won">
+          <p class="pl-stage-label">Won</p>
+          <p class="pl-stage-value">£8k</p>
+          <p class="pl-stage-count">1 opportunity</p>
+        </div>
+        <div class="pl-stage pl-stage-declined">
+          <p class="pl-stage-label">Declined</p>
+          <p class="pl-stage-value">£15k</p>
+          <p class="pl-stage-count">1 opportunity</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================
+       PRIORITY LIST
+       ============================================ -->
+  <div class="doc-section">
+    <div class="doc-section-head">
+      <h2>12. Priority list (sector / beneficiary ranking)</h2>
+      <p>Used in Profile settings for ranking selected sectors and beneficiaries.</p>
+    </div>
+
+    <div class="doc-surface">
+      <div class="priority-list">
+        <div class="priority-row">
+          <span class="priority-rank priority-rank-primary">Primary</span>
+          <span class="priority-name">Young People &amp; Youth</span>
+          <div class="priority-actions">
+            <button class="priority-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <button class="priority-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+          </div>
+        </div>
+        <div class="priority-row">
+          <span class="priority-rank priority-rank-secondary">Secondary</span>
+          <span class="priority-name">Arts &amp; Creative Industries</span>
+          <div class="priority-actions">
+            <button class="priority-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></button>
+            <button class="priority-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <button class="priority-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+          </div>
+        </div>
+        <div class="priority-row">
+          <span class="priority-rank priority-rank-tertiary">Tertiary</span>
+          <span class="priority-name">Education &amp; Skills</span>
+          <div class="priority-actions">
+            <button class="priority-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></button>
+            <button class="priority-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <button class="priority-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+          </div>
+        </div>
+        <div class="priority-row">
+          <span class="priority-rank priority-rank-n">#4</span>
+          <span class="priority-name">Community Dev &amp; Spaces</span>
+          <div class="priority-actions">
+            <button class="priority-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></button>
+            <button class="priority-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <button class="priority-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================
+       PROGRESS CARD
+       ============================================ -->
+  <div class="doc-section">
+    <div class="doc-section-head">
+      <h2>13. Progress card</h2>
+      <p>Used on Profile for completion progress. Green (never amber).</p>
+    </div>
+
+    <div class="doc-surface">
+      <div class="progress-card">
+        <span class="icon-badge icon-badge-lg icon-badge-filled-green">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </span>
+        <div class="progress-body">
+          <div class="progress-top">
+            <p class="progress-label">Getting there</p>
+            <p class="progress-pct">64% complete</p>
+          </div>
+          <div class="progress-bar-track"><div class="progress-bar-fill" style="width: 64%;"></div></div>
+          <p class="progress-detail">Still to fill in: <strong style="font-weight: 500;">Legal structure · Organisation stage · Years operating · Grant size range</strong></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================
+       BANNERS
+       ============================================ -->
+  <div class="doc-section">
+    <div class="doc-section-head">
+      <h2>14. Banners</h2>
+      <p>Amber for helper/warning moments. Never use red.</p>
+    </div>
+
+    <div class="doc-group">
+      <h3>Amber banner (cream background variant)</h3>
+      <p class="caption">Used on Profile for re-import prompt, on Deadlines for missing-deadlines prompt.</p>
+      <div class="banner-amber">
+        <div class="banner-amber-text">
+          <div class="banner-amber-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          </div>
+          <p class="banner-amber-body">Updated your website? Re-import from <strong>audioactive.org</strong> to refresh your profile automatically.</p>
+        </div>
+        <button class="btn btn-sm btn-secondary" style="color: var(--amber-deep); border-color: rgba(133, 79, 11, 0.3);">Re-import</button>
+      </div>
+    </div>
+
+    <div class="doc-group">
+      <h3>Amber banner (on Profile-off)</h3>
+      <p class="caption">Used on Find Funding when user turns off profile filtering.</p>
+      <div class="banner-amber" style="background: var(--amber-pale);">
+        <div class="banner-amber-text">
+          <div class="banner-amber-icon" style="background: #FAC775;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+          <p class="banner-amber-body"><strong>Profile filters are off.</strong> You're seeing every UK funding opportunity, including ones you may not be eligible to apply for.</p>
+        </div>
+        <button class="btn btn-sm btn-utility">
+          Turn profile back on
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================
+       CARDS
+       ============================================ -->
+  <div class="doc-section">
+    <div class="doc-section-head">
+      <h2>15. Opportunity card</h2>
+      <p>Full card with tags, meta row, match panel. Used in Find Funding results.</p>
+    </div>
+
+    <div class="card-opp" style="max-width: 840px;">
+      <div class="card-opp-body">
+        <div class="card-opp-tags">
+          <span class="tag tag-green">Grant</span>
+          <span class="tag tag-sector">Arts &amp; Culture</span>
+          <span class="tag tag-sector">Lottery</span>
+          <span class="tag tag-location"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> England</span>
+        </div>
+        <h3 class="card-opp-title">Supporting Grassroots Music</h3>
+        <p class="card-opp-funder">Arts Council England</p>
+        <p class="card-opp-desc">Funding for live music venues, festivals and community music organisations working to support grassroots music in England.</p>
+        <div class="card-opp-meta">
+          <div>
+            <p class="card-opp-meta-label">Amount</p>
+            <p class="card-opp-meta-value card-opp-meta-amount">£10k – £100k</p>
+          </div>
+          <div>
+            <p class="card-opp-meta-label">Deadline</p>
+            <p class="card-opp-meta-value">Rolling</p>
+          </div>
+          <div>
+            <p class="card-opp-meta-label">Eligible</p>
+            <p class="card-opp-meta-value">CIC, CIO &amp; charity</p>
+          </div>
+          <div>
+            <p class="card-opp-meta-label">Restriction</p>
+            <p class="card-opp-meta-value">Restricted use</p>
+          </div>
+        </div>
+      </div>
+      <div class="match-panel">
+        <div class="match-reasons">
+          <div class="match-reason">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Eligible in England — local community focus aligns
+          </div>
+          <div class="match-reason">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Arts &amp; Creative sector matches your primary focus
+          </div>
+        </div>
+        <div class="match-score">
+          <div class="match-score-pct">83%</div>
+          <div class="match-bar-track"><div class="match-bar-fill" style="width: 83%;"></div></div>
+          <div class="match-label">Strong match</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="doc-section">
+    <div class="doc-section-head">
+      <h2>16. Pipeline card (compact, for kanban columns)</h2>
+    </div>
+
+    <div class="doc-surface">
+      <div style="max-width: 280px;">
+        <div class="card-pipe">
+          <span class="card-pipe-type tag-coral">Programme</span>
+          <h4 class="card-pipe-title">Stronger Starts</h4>
+          <p class="card-pipe-funder">Tesco</p>
+          <div class="card-pipe-meta">
+            <span class="card-pipe-amount">Up to £2k</span>
+            <span class="card-pipe-deadline urgent">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              3 days
+            </span>
+          </div>
+          <div class="card-pipe-action">
+            Mark submitted
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================
+       FINAL NOTES
+       ============================================ -->
+  <div class="doc-section">
+    <div class="doc-section-head">
+      <h2>17. Implementation notes</h2>
+    </div>
+
+    <div class="doc-surface">
+      <h3 style="font-family: var(--font-heading); font-size: 15px; font-weight: 500; margin: 0 0 12px;">Modals</h3>
+      <p class="caption" style="margin-bottom: 16px;">All modals use <code>rgba(23, 52, 4, 0.4)</code> — deep forest green at 40% opacity — for the backdrop. Never generic black. Max-width 640px. 16px radius. Follows the same header/body/footer structure as the Pipeline edit modal.</p>
+
+      <h3 style="font-family: var(--font-heading); font-size: 15px; font-weight: 500; margin: 0 0 12px;">Sticky footers</h3>
+      <p class="caption" style="margin-bottom: 16px;">Used on Profile and Notifications settings pages. Fixed bottom, full width, white bg, 0.5px top border, light shadow <code>0 -2px 10px rgba(0,0,0,0.03)</code>. Status indicator left ("All changes saved" with green check), actions right.</p>
+
+      <h3 style="font-family: var(--font-heading); font-size: 15px; font-weight: 500; margin: 0 0 12px;">Sidebar</h3>
+      <p class="caption" style="margin-bottom: 16px;">Deep forest green background <code>#173404</code>. Pale-green nav labels. Active state: slightly lighter green panel <code>#27500A</code> with pale green text and lime icon. Sidebar is HIDDEN during the entire onboarding flow (only the wordmark shows top-left).</p>
+
+      <h3 style="font-family: var(--font-heading); font-size: 15px; font-weight: 500; margin: 0 0 12px;">Page backgrounds</h3>
+      <p class="caption" style="margin-bottom: 16px;">All pages use <code>#FAFAF7</code> as the main background. Card surfaces are white <code>#fff</code>. Never use pure white as page background.</p>
+
+      <h3 style="font-family: var(--font-heading); font-size: 15px; font-weight: 500; margin: 0 0 12px;">Hover states</h3>
+      <p class="caption" style="margin-bottom: 16px;">Drag handles and remove (× or ⋮) actions on pipeline cards should have opacity 0 by default and 0.6–1 on hover. Don't show them persistently — creates visual noise.</p>
+
+      <h3 style="font-family: var(--font-heading); font-size: 15px; font-weight: 500; margin: 0 0 12px;">Never-do list</h3>
+      <ul style="font-family: var(--font-body); font-size: 13px; color: var(--color-text-secondary); line-height: 1.7; padding-left: 20px; margin: 0;">
+        <li>Never use pure red. Coral (for declined/urgent) is the only red-family colour in the system.</li>
+        <li>Never use blue outside Social Investment contexts. A blue location pin would collide with the system.</li>
+        <li>Never use amber for counts or progress — amber is reserved for helper and warning states.</li>
+        <li>Never use DM Serif Display outside the two approved places (invite welcome + marketing About quote).</li>
+        <li>Never use generic black modal backdrops — always deep forest green at 40% opacity.</li>
+        <li>Never show a "0" as a dashboard value. Use friendly empty-state copy instead.</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

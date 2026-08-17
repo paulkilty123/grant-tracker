@@ -1,0 +1,161 @@
+================================================================================
+GRANT TRACKER - COMPREHENSIVE AUDIT OF "NEEDS REVIEW" GRANTS
+================================================================================
+Date: 2026-04-07
+Audit Scope: All grants with is_active=true AND civil_society_relevant IS NULL
+Total Grants Audited: 96
+
+================================================================================
+FINDINGS SUMMARY
+================================================================================
+
+1. IRRELEVANT PROGRAMMES (DEACTIVATE IMMEDIATELY): 2 grants
+   
+   - Goldman Sachs 10,000 Small Businesses (dd307785)
+     * Reason: US-focused programme targeting US entrepreneurs
+     * Action: SET is_active = false
+   
+   - TiE Women Program 2026 (a1f5fc6e)
+     * Reason: Global startup accelerator with equity stakes, not grant funding
+     * Action: SET is_active = false
+
+2. BAD/GENERIC URLs (NEEDS CORRECTION): 16 grants
+   
+   These point to homepage only, not specific application pages.
+   Action: Either find correct application page URL OR mark as_active = false
+   
+   List:
+   - Growth Impact Fund (18dcac42)
+   - Big Issue Invest (124a6b30)
+   - Fredericks Foundation (d33aa458)
+   - Runnymede Trust (6492a3f7)
+   - Woodward Charitable Trust (9881ceae)
+   - Sainsbury Family Charitable Trusts — Linbury Trust (65ddb4f5)
+   - The True Colours Trust (85286aab)
+   - The Climate Change Collaboration (3a7ce03a)
+   - The Alan and Babette Sainsbury Charitable Fund (05d6dbdf)
+   - Aurora Trust (e2b9494b)
+   - Gatsby Charitable Foundation (3b836a87)
+   - Tesco Stronger Starts (9f370210)
+   - Morrisons Foundation (497400aa)
+   - Rowing Foundation (e045020f)
+   - Go! London Fund (19593b12)
+   - Entrepreneurs' Award in Social Innovation (47ff81ff)
+
+3. PROGRAMME VARIANTS FROM SAME FUNDER (LOWER PRIORITY): 7 grants
+   
+   These are valid but represent multiple funding streams from same funder.
+   While worth reviewing, prioritise standalone grants first.
+   
+   Esmée Fairbairn Foundation (3 variants):
+   - Arts, Culture & Heritage (732a41ad)
+   - Social Change (af98107b)
+   - Natural World (6bee86de)
+   
+   Clothworkers Foundation (2 variants):
+   - Revenue Grants (89f063ec)
+   - Capital Grants (b32669f0)
+   
+   HPC Community Fund via Somerset CF (2 variants):
+   - Open Grants (a4008675)
+   - Small Grants (9cf129d2)
+
+4. VALID FOR CIVIL_SOCIETY_RELEVANT REVIEW: 71 grants
+   
+   These have:
+   - Legitimate, UK-focused application URLs
+   - Clear relevance to UK civil society sector
+   - No obvious irrelevance flags
+   
+   Recommended action: Review each and mark civil_society_relevant = true/false
+   
+   Distribution by source:
+   - manual: 26 grants (largest batch)
+   - catalogue-seed: 16 grants
+   - seed: 12 grants
+   - gemini_deep_research: 6 grants
+   - tyne_wear_cf: 3 grants
+   - young_camden_foundation: 3 grants
+   - gov_uk: 2 grants
+   - london_cf: 1 grant
+   - scraped: 1 grant
+   - foundation_scotland: 1 grant
+
+================================================================================
+AUDIT METHODOLOGY
+================================================================================
+
+Checks performed:
+1. Bad/Generic URLs: Identified grants pointing to homepage with no path
+2. Relevance Filtering: Flagged US-only and equity/startup programmes
+3. Duplicate Detection: Checked for title matches (none found with approved)
+4. Variant Identification: Found same-funder programme sets
+5. Source Verification: Confirmed URL legitimacy and UK focus
+
+Key Findings:
+- NO exact duplicates with approved grants
+- Scraper already filters well (only 2 truly irrelevant in 96)
+- Most bad URLs are from major trusts with restricted public application pages
+- 74% of grants are ready for immediate relevance review
+- Manual sources (26 grants) should be quality-checked for accuracy
+
+================================================================================
+RECOMMENDED ACTION PLAN
+================================================================================
+
+IMMEDIATE (Today):
+1. Deactivate 2 irrelevant programmes using SQL in AUDIT_SQL_REFERENCE.md
+2. Review 16 bad URLs - research correct application pages for major funders
+   (Some of these may be excellent funders once URL is fixed)
+
+SHORT TERM (This week):
+3. Process 71 valid grants through relevance review
+4. Batch-review 7 programme variants (handle by funder to ensure consistency)
+5. Decide on remaining 16 with bad URLs (fix vs deactivate)
+
+MEDIUM TERM (Over time):
+6. Maintain URL corrections in a tracking sheet
+7. Consider automating URL discovery for major known funders
+8. Flag scraper issues if certain patterns emerge
+
+================================================================================
+KEY FILES GENERATED
+================================================================================
+
+1. needs-review-audit.md (19K)
+   - Comprehensive report with all 96 grants organized by category
+   - Detailed breakdown by source with descriptions
+   - Full methodology documentation
+
+2. AUDIT_QUICK_REFERENCE.txt (2.4K)
+   - Quick lookup for action items
+   - ID references for database queries
+   - Coverage summary
+
+3. AUDIT_SQL_REFERENCE.md (5.0K)
+   - Ready-to-use SQL commands for:
+     * Deactivating irrelevant programmes
+     * Updating URLs
+     * Bulk-marking grants as reviewed
+     * Exporting lists for external review
+
+4. AUDIT_SUMMARY.txt (this file)
+   - Executive overview
+   - Action plan
+   - Key statistics
+
+================================================================================
+CONTACT/NOTES
+================================================================================
+
+For URL research on grants with bad URLs:
+- Most major foundations have /apply, /grants, /funding, or /apply-for-funding
+- Some (like Gatsby) have restricted applications - check carefully
+- Community Foundations typically have specific fund pages
+
+For questions on specific grants:
+- See detailed descriptions in needs-review-audit.md Section 4
+- IDs in all files reference the grants_unique_id in Supabase
+
+Next audit recommended: After processing all 71 valid grants and fixing bad URLs
+

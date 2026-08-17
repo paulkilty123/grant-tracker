@@ -1,0 +1,147 @@
+{
+  "compiled_at": "2026-05-21",
+  "purpose": "Candidate funds discovered during the 2026-05-21 borough audit. Each was surfaced from a single targeted web search, not yet verified against the live funder page or against existing catalogue rows (some may dedupe with national funder rows already catalogued). Paste-enrich each through the admin Needs Review queue; default is_active=false until the user has reviewed and confirmed.",
+  "ingest_protocol_reminders": [
+    "Default is_active=false on manual SQL inserts (per memory: New grants default to is_active=false / Needs Review).",
+    "Verify URL with a live fetch before inserting (per memory: Coverage-claim honesty check).",
+    "Check whether the row dedupes against an existing scraped_grants entry by funder name BEFORE inserting.",
+    "Most discovered funds are annual cycles currently between rounds — set next_open_date and open_status='between_rounds' rather than is_active=true."
+  ],
+  "candidates": [
+    {
+      "discovered_for_borough": "Newham",
+      "funder": "London Borough of Newham (administered with Genting Casino)",
+      "title": "Genting Good Causes Fund 2025/26",
+      "apply_url": "https://www.newham.gov.uk/news/article/1526/genting-good-causes-fund-2025-26",
+      "amount_max": 5000,
+      "location_tag": "Newham",
+      "funding_type": "grant",
+      "open_status": "between_rounds",
+      "round_history": "Opened 9 Feb 2026, closed 8 Mar 2026. Annual cycle.",
+      "next_open_date": "February 2027",
+      "eligible_structures": ["registered_charity", "cio", "unincorporated"],
+      "notes": "Up to £5,000 for not-for-profits, voluntary, community and faith groups, schools and charities based in Newham."
+    },
+    {
+      "discovered_for_borough": "Newham",
+      "funder": "London Borough of Newham",
+      "title": "Neighbourhood Small Grants Programme",
+      "apply_url": "https://www.newham.gov.uk/community-parks-leisure/funding-community-projects-1/5",
+      "amount_max": 1000,
+      "location_tag": "Newham",
+      "funding_type": "grant",
+      "open_status": "unknown",
+      "notes": "£10,000 allocated per neighbourhood with grants up to £1,000 each. Small/emerging/local community groups."
+    },
+    {
+      "discovered_for_borough": "Croydon",
+      "funder": "Croydon Voluntary Action / Croydon Council",
+      "title": "Croydon Community Grant Fund",
+      "apply_url": "https://cvalive.org.uk/news/2025/croydon-community-grant-fund/",
+      "amount_min": 1000,
+      "amount_max": 5000,
+      "location_tag": "Croydon",
+      "funding_type": "grant",
+      "open_status": "unknown",
+      "notes": "Two-stage: bid first for up to £1,000, then successful groups can bid again for up to £5,000."
+    },
+    {
+      "discovered_for_borough": "Croydon",
+      "funder": "One Croydon Alliance",
+      "title": "One Croydon Alliance Community Funding",
+      "apply_url": "https://www.croydon.gov.uk/community-and-safety/advice-and-funding-community-groups/funding-opportunities",
+      "amount_min": 1000,
+      "amount_max": 5000,
+      "location_tag": "Croydon",
+      "funding_type": "grant",
+      "open_status": "unknown",
+      "notes": "Funds local voluntary and community groups for projects reducing social isolation and loneliness. Recurrent + one-off available."
+    },
+    {
+      "discovered_for_borough": "Westminster",
+      "funder": "Westminster City Council",
+      "title": "Westminster Community Contribution Fund",
+      "apply_url": "https://www.westminster.gov.uk/community-contribution-fund-application-guidelines",
+      "location_tag": "Westminster",
+      "funding_type": "grant",
+      "open_status": "between_rounds",
+      "round_history": "Eligibility quiz open 27 Feb – 27 Mar 2026; applications due 3 Apr 2026.",
+      "next_open_date": "February 2027",
+      "notes": "Annual cycle. Find current amounts on the guidelines page."
+    },
+    {
+      "discovered_for_borough": "Westminster",
+      "funder": "Westminster City Council",
+      "title": "Westminster Community Fund",
+      "apply_url": "https://www.westminster.gov.uk/leisure-libraries-and-community/grant-funding-opportunities",
+      "amount_max": 25000,
+      "location_tag": "Westminster",
+      "funding_type": "grant",
+      "open_status": "between_rounds",
+      "round_history": "Open 27 Feb – 27 Mar 2026.",
+      "next_open_date": "February 2027",
+      "notes": "Up to £25,000. Themes: young people reaching potential, rough sleeping, social isolation/loneliness."
+    },
+    {
+      "discovered_for_borough": "Westminster",
+      "funder": "Westminster City Council",
+      "title": "Westminster Climate Fund",
+      "apply_url": "https://www.westminster.gov.uk/leisure-libraries-and-community/grant-funding-opportunities",
+      "location_tag": "Westminster",
+      "funding_type": "grant",
+      "open_status": "between_rounds",
+      "round_history": "Closed 13 Mar 2026.",
+      "next_open_date": "February 2027",
+      "impact_sectors": ["environment"]
+    },
+    {
+      "discovered_for_borough": "Havering",
+      "funder": "Havering Together (£250k from City Bridge Foundation)",
+      "title": "Havering Together",
+      "apply_url": "https://www.havering.gov.uk/news/article/1755/funding-boost-to-help-havering-communities",
+      "location_tag": "Havering",
+      "funding_type": "grant",
+      "open_status": "unknown",
+      "notes": "Borough-wide giving initiative funded by City Bridge. Aims to unlock funding for grassroots Havering initiatives. Verify whether catalogue should list this as its own programme or as a backer of the existing Havering Community Chest."
+    },
+    {
+      "discovered_for_borough": "Waltham Forest",
+      "funder": "London Borough of Waltham Forest",
+      "title": "Fellowship Fund",
+      "apply_url": "https://talk.walthamforest.gov.uk/fellowship-fund/",
+      "amount_max": 9500,
+      "location_tag": "Waltham Forest",
+      "funding_type": "grant",
+      "open_status": "unknown",
+      "notes": "Two streams: collaboration grants up to £9,500 (4-6 orgs together); development grants up to £2,000. Activities May 2026 – Mar 2027.",
+      "impact_sectors": ["creative", "community"]
+    },
+    {
+      "discovered_for_borough": "City of London",
+      "funder": "City of London Corporation",
+      "title": "Central Grants Programme — Stronger Communities",
+      "apply_url": "https://www.cityoflondon.gov.uk/about-us/working-with-community/central-grants-programme/stronger-communities",
+      "amount_min": 500,
+      "location_tag": "City of London",
+      "funding_type": "grant",
+      "open_status": "open",
+      "is_rolling": true,
+      "notes": "Rolling programme, no deadline. Small Grants scheme for £3,000 or less; minimum £500. Decisions within 8-12 weeks. Applies to City of London + housing estates City Corp runs in wider London."
+    },
+    {
+      "discovered_for_borough": null,
+      "funder": "Ofcom",
+      "title": "Community Radio Fund",
+      "apply_url": "https://www.ofcom.org.uk/tv-radio-and-on-demand/community-radio/community-radio-fund",
+      "amount_min": 5000,
+      "amount_max": 100000,
+      "location_tag": "UK",
+      "funding_type": "grant",
+      "open_status": "between_rounds",
+      "round_history": "2025-26 round closed 5 Oct 2025; awards announced Feb 2026 (47 stations, total £1.004m, range £7.5k–£39.8k). Historically two rounds/year; 2025-26 ran a single combined round.",
+      "next_open_date": "TBC — between rounds",
+      "eligible_structures": ["registered_charity", "cio", "cic_guarantee", "cooperative"],
+      "notes": "Existing catalogue row id=c7d1a002-1c18-4a35-87b4-3ff4ad451681. funder_brief.source='manual_seed' — should be re-enriched + next_open_date populated. NOT a new candidate; this is a pre-existing row that needs updating."
+    }
+  ]
+}

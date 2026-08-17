@@ -365,6 +365,46 @@ Nothing in this ledger counts rows produced by the discovery flow from
 
 ---
 
+## Community foundations: a scheduled feed, not a split
+
+**Ruled by Paul, 2026-08-17. This is the design; none of it is built.**
+
+17 of the 48 generic rows are community foundations — one row each called
+"— Grants" or "— Community Grants", standing in for a funder that runs 5 to 20
+named funds. They are **not** to be split the way City Bridge was.
+
+The answer is a **scheduled feed per foundation**:
+
+- each CF's funding-index page is monitored, as the watchlist already monitors
+  index pages
+- a named fund **over £5,000** is ingested as its own row
+- anything smaller stays under the foundation
+
+**£5,000 is a real floor, not a tidy number.** One of Paul's cohort charities
+will not apply for anything under it, so smaller funds are noise in a match list
+— and CF funds are frequently £500 to £2,000, open for a few weeks, and
+geographically tiny. Splitting all 17 without the floor would add hundreds of
+rows that go stale within a month, which is the opposite of the problem this
+work exists to fix.
+
+Most of the machinery is already there: **82 index pages were banked on
+2026-08-17** into `funding_index_url` (migration 061), and `funder_watchlist`
+already watches listing pages and enrols rows on entering
+`between_rounds_scheduled`. What is missing is the per-foundation schedule and
+the £5k ingestion rule.
+
+**September work.** It supersedes the older "one row per community foundation"
+convention only in that the front-door row stays AND large named funds rise out
+of it; the convention itself is not being reversed.
+
+> Related and already done: the National Lottery Community Fund was the other
+> shape — three nation-level rows that looked generic and turned out to sit on
+> top of a funder split long ago, with ~20 live programme rows already in the
+> catalogue. The three were withdrawn rather than split. Dedup found that;
+> staging would have created twelve duplicates.
+
+---
+
 ## Maintenance
 
 Update on each merge that closes a row, and re-measure the whole table at each

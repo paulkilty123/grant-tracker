@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Grant Tracker — Application answer editor redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.7.0/dist/tabler-icons.min.css">
+<style>
+  :root{
+    --forest:#1f5c52; --gold:#e8a030; --green:#6aa84f;
+    --ink:#1a1a1a; --muted:#6b756f; --faint:#9a9486;
+    --line:#e8e1d4; --line-soft:#e0d9ca; --fill:#faf9f5;
+    --good-bg:#eaf3de; --good-fg:#3b6d11;
+    --warn-bg:#faeeda; --warn-fg:#854f0b;
+    --bad-bg:#fcebeb; --bad-fg:#a32d2d;
+    --neutral-bg:#f1ece2; --neutral-fg:#6b756f;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:#efe9dd; font-family:'Plus Jakarta Sans',system-ui,sans-serif; color:var(--ink); line-height:1.6;}
+  .wrap{max-width:920px; margin:0 auto; padding:48px 24px 96px;}
+  h1,h2,h3{font-family:'Space Grotesk',sans-serif; font-weight:500; line-height:1.15; margin:0;}
+  h1{font-size:32px;}
+  .route{font-family:ui-monospace,monospace; font-size:13px; color:var(--muted); margin-top:8px;}
+  .lead{font-size:16px; color:var(--muted); max-width:680px; margin:14px 0 0;}
+  .doc{background:#fff; border:1px solid var(--line); border-radius:16px; padding:28px; margin-top:28px;}
+  .doc h2{font-size:22px; margin-bottom:6px;}
+  .doc h3{font-size:16px; margin:22px 0 6px;}
+  .doc p{font-size:15px; color:#3a3a38; margin:8px 0;}
+  .doc code{font-family:ui-monospace,monospace; font-size:13px; background:#f3efe7; padding:1px 6px; border-radius:5px; color:#5b4b2e;}
+  .changes{background:#fff; border:1px solid var(--line); border-left:3px solid var(--gold); border-radius:0 12px 12px 0; padding:16px 20px; margin:18px 0;}
+  .changes ul{margin:0; padding-left:18px;}
+  .changes li{font-size:14px; color:#3a3a38; margin:7px 0;}
+  .badgeset{display:flex; flex-wrap:wrap; gap:8px; margin:12px 0 4px;}
+  .b{font-size:12px; font-weight:600; padding:3px 9px; border-radius:6px; font-family:'Space Grotesk',sans-serif; display:inline-flex; align-items:center; gap:5px;}
+  .b.good{color:var(--good-fg); background:var(--good-bg);}
+  .b.warn{color:var(--warn-fg); background:var(--warn-bg);}
+  .b.bad{color:var(--bad-fg); background:var(--bad-bg);}
+  .b.neu{color:var(--neutral-fg); background:var(--neutral-bg);}
+  .note{font-size:13px; color:var(--muted);}
+  .frame{background:#faf7f2; border:1px solid var(--line); border-radius:16px; padding:22px; margin-top:18px;}
+  .mock{font-family:'Space Grotesk',sans-serif;}
+  .eyebrow{font-family:'Space Grotesk',sans-serif; font-size:12px; font-weight:600; letter-spacing:.04em; color:var(--faint); margin-bottom:10px;}
+  .pillrow{display:flex; flex-wrap:wrap; gap:7px;}
+  .card{background:#fff; border:1px solid var(--line); border-radius:12px;}
+  .btn{display:inline-flex; align-items:center; gap:7px; font-family:'Space Grotesk',sans-serif; font-size:14px; font-weight:500; padding:10px 16px; border-radius:10px; border:none; cursor:pointer;}
+  .btn.primary{background:var(--forest); color:#fff;}
+  .btn.ghost{background:#fff; color:var(--ink); border:1px solid var(--line-soft);}
+  .ring{position:relative; flex-shrink:0;}
+  .ring svg{transform:rotate(-90deg);}
+  .ring .v{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-weight:600;}
+  .footer{margin-top:40px; font-size:13px; color:var(--muted); text-align:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Application answer editor — redesign</h1>
+  <div class="route">/dashboard/applications/[id] · per question</div>
+  <p class="lead">A draft-first flow for writing a single application answer, in three states: empty → drafted → checked. The problem today is that the empty textarea is the visual centre while "draft a starting version" is a small link beneath it — so it's unclear where to start. For the Next.js + Tailwind codebase; no app code changed.</p>
+
+  <!-- ===================== SPEC ===================== -->
+  <div class="doc">
+    <h2>What changes</h2>
+    <div class="changes"><ul>
+      <li><strong>Lead with the draft action.</strong> When an answer is empty, replace the empty textarea with a "Start with a draft" panel: primary "Draft a starting version" button, the 3-step path (Draft → Review &amp; check → Make it yours), and "write it from scratch" as a quiet secondary link. Icon is <code>ti-file-pencil</code> (document + pencil) — not sparkles/wand.</li>
+      <li><strong>Score/tips panel is inert until there is content</strong> — no premature "Check this answer" on an empty answer; it reads "appears once you've drafted or written".</li>
+      <li><strong>After drafting:</strong> the draft fills the editor with a "Draft — review and make it yours" badge; primary action becomes "Check this answer"; "Redraft" sits alongside; editing happens directly in the box.</li>
+      <li><strong>After checking:</strong> score chip and ring are <em>tier-coloured</em> (4.5/10 = amber chip, coral ring — not green), with a one-line reason ("capped by an unresolved placeholder").</li>
+      <li><strong>Link flags to the text.</strong> "Jump to next fix (n of m)" steps through gaps; placeholders render <em>inline</em> in the answer as a highlighted gold block ("needs your input"), instead of raw <code>**markdown**</code> at the bottom.</li>
+      <li><strong>Sentence case</strong> throughout (your answer, tips to improve, next best fix, guide). A step indicator shows where the user is in the flow.</li>
+    </ul></div>
+
+    <h3>Tokens used on this screen</h3>
+    <p class="note">Primary action: forest <code>#1f5c52</code> filled, one per state. Headings/UI: Space Grotesk. Body: Plus Jakarta Sans. Status badges (one system):</p>
+    <div class="badgeset">
+      <span class="b good">within limit / done</span>
+      <span class="b warn">needs attention</span>
+      <span class="b bad">blocking gap</span>
+      <span class="b neu">neutral / not started</span>
+    </div>
+    <p class="note">Score tiers: ~7+ green, ~4–6 amber, &lt;4 coral/red. The ring colour matches the chip.</p>
+  </div>
+
+  <!-- ===================== MOCKUPS ===================== -->
+  <div class="frame"><div class="mock">
+
+    <div class="eyebrow">A · EMPTY — WHERE A USER STARTS</div>
+    <div class="card" style="padding:18px; margin-bottom:22px;">
+      <div style="display:flex; align-items:flex-start; gap:12px; margin-bottom:14px;">
+        <div style="width:26px; height:26px; border-radius:50%; background:var(--forest); color:#fff; font-size:13px; font-weight:600; display:flex; align-items:center; justify-content:center; flex-shrink:0;">1</div>
+        <div style="font-size:16px; font-weight:500; line-height:1.35;">Tell us about your organisation: who you are, your mission, and the communities you work with.</div>
+      </div>
+      <div style="display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; margin-bottom:18px; padding-left:38px;"><span style="font-size:12px; color:var(--muted);">A strong answer covers:</span><span style="font-size:12px; color:#3a3a38;">who you are · communities you serve · how you work · focus on young people · track record</span></div>
+      <div style="display:grid; grid-template-columns:1.7fr 1fr; gap:16px;">
+        <div style="border:1px solid var(--line-soft); border-radius:10px; background:var(--fill); padding:22px; text-align:center;">
+          <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:16px;"><span class="b" style="color:var(--forest); background:#e3efe9;">1 Draft</span><i class="ti ti-arrow-right" style="color:#c3bcaa;"></i><span class="b neu">2 Review &amp; check</span><i class="ti ti-arrow-right" style="color:#c3bcaa;"></i><span class="b neu">3 Make it yours</span></div>
+          <div style="width:48px; height:48px; border-radius:12px; background:#e3efe9; color:var(--forest); display:flex; align-items:center; justify-content:center; font-size:24px; margin:0 auto 12px;"><i class="ti ti-file-pencil"></i></div>
+          <div style="font-size:16px; font-weight:500; margin-bottom:6px;">Start with a draft</div>
+          <div style="font-size:13px; color:var(--muted); line-height:1.55; max-width:340px; margin:0 auto 16px;">We'll write a first version from your project and saved material. You review it, check the score, then edit it into your own voice.</div>
+          <button class="btn primary"><i class="ti ti-file-pencil"></i>Draft a starting version</button>
+          <div style="font-size:13px; color:var(--muted); margin-top:12px;">or <span style="color:var(--forest); text-decoration:underline;">write it from scratch</span></div>
+        </div>
+        <div style="border:1px solid #ece5d8; border-radius:10px; background:#fcfbf8; padding:16px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;">
+          <div style="width:40px; height:40px; border-radius:50%; border:2px dashed #d8cfbd; display:flex; align-items:center; justify-content:center; color:#b3ac9c; font-size:18px; margin-bottom:10px;"><i class="ti ti-gauge"></i></div>
+          <div style="font-size:13px; font-weight:500; color:var(--muted); margin-bottom:4px;">Tips &amp; score</div>
+          <div style="font-size:12px; color:var(--faint); line-height:1.5;">Appear here once you've drafted or written an answer.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="eyebrow">B · AFTER DRAFTING — REVIEW, CHECK, THEN EDIT</div>
+    <div class="card" style="padding:18px; margin-bottom:22px;">
+      <div style="display:flex; align-items:flex-start; gap:12px; margin-bottom:16px;">
+        <div style="width:26px; height:26px; border-radius:50%; background:var(--forest); color:#fff; font-size:13px; font-weight:600; display:flex; align-items:center; justify-content:center; flex-shrink:0;">1</div>
+        <div style="font-size:16px; font-weight:500; line-height:1.35;">Tell us about your organisation: who you are, your mission, and the communities you work with.</div>
+      </div>
+      <div style="display:grid; grid-template-columns:1.7fr 1fr; gap:16px;">
+        <div>
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;"><span style="font-size:13px; font-weight:500; color:var(--muted);">Your answer</span><span class="b" style="color:var(--forest); background:#e3efe9;"><i class="ti ti-file-pencil"></i> Draft — review and make it yours</span></div>
+          <div style="border:1px solid var(--line-soft); border-radius:10px; padding:12px; background:#fff; font-size:13px; color:#3a3a38; line-height:1.6;">Sea Change is a Brighton-based youth wellbeing charity founded in 2019. Our mission is to reach young people on long mental-health waiting lists with active, outdoor support. We work with 13–18 year olds across Brighton &amp; Hove experiencing anxiety, low mood and isolation…</div>
+          <div style="display:flex; gap:8px; margin-top:10px; align-items:center;"><button class="btn ghost" style="font-size:12px; padding:7px 12px;"><i class="ti ti-refresh"></i>Redraft</button><span style="font-size:12px; color:var(--faint);">Edit directly above — it's yours now.</span></div>
+        </div>
+        <div>
+          <div style="font-size:13px; font-weight:500; color:var(--muted); margin-bottom:8px;">Tips to improve</div>
+          <button class="btn primary" style="width:100%; justify-content:center; font-size:13px; padding:10px 14px; margin-bottom:12px;"><i class="ti ti-circle-check"></i>Check this answer</button>
+          <div style="border:1px solid #f0e6cf; background:#fdf8ee; border-radius:9px; padding:11px; text-align:center;"><div style="font-size:12px; color:var(--warn-fg); line-height:1.5;">Check your draft to score it against this funder and get specific fixes.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="eyebrow">C · AFTER CHECKING — FIX AND REFINE</div>
+    <div class="card" style="padding:18px;">
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px; font-size:11px;"><span class="b good"><i class="ti ti-check"></i> Draft</span><i class="ti ti-arrow-right" style="color:#c3bcaa;"></i><span class="b" style="color:var(--forest); background:#e3efe9;">Review &amp; check</span><i class="ti ti-arrow-right" style="color:#c3bcaa;"></i><span class="b neu">Make it yours</span></div>
+      <div style="display:flex; align-items:flex-start; gap:12px; margin-bottom:14px;">
+        <div style="width:26px; height:26px; border-radius:50%; background:var(--forest); color:#fff; font-size:13px; font-weight:600; display:flex; align-items:center; justify-content:center; flex-shrink:0;">1</div>
+        <div style="font-size:16px; font-weight:500; line-height:1.35;">Tell us about your organisation: who you are, your mission, and the communities you work with.</div>
+      </div>
+      <div class="pillrow" style="margin-bottom:14px; padding-left:38px;"><span class="b warn">Score 4.5 / 10</span><span class="b good">290 of 300 words</span><span class="b warn">1 placeholder to fill</span><span class="b bad">4 gaps to fix</span></div>
+      <div style="display:grid; grid-template-columns:1.7fr 1fr; gap:16px;">
+        <div>
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;"><span style="font-size:13px; font-weight:500; color:var(--muted);">Your answer</span><button class="btn" style="color:var(--bad-fg); border:1px solid #f0c9c9; background:#fff; font-size:12px; padding:6px 11px;"><i class="ti ti-arrow-down-circle"></i>Jump to next fix (1 of 5)</button></div>
+          <div style="border:1px solid var(--line-soft); border-radius:10px; padding:14px; background:#fff; font-size:13px; color:#3a3a38; line-height:1.7;">
+            <p style="margin:0 0 10px;">Asian Community Concern (ACC) is a community interest company based in Southall, in the London Borough of Ealing. Our mission is to stimulate the development of community projects in multi-racial urban areas by training leaders from within the community itself.</p>
+            <p style="margin:0;">We work primarily with South Asian and wider ethnic minority residents of Southall and Ealing, with a focus on women and young people.</p>
+            <div style="margin-top:12px; border:1px solid #f0d9ad; background:#fdf3e0; border-left:3px solid var(--gold); border-radius:0 8px 8px 0; padding:10px 12px;"><div style="display:flex; align-items:center; gap:6px; font-size:11px; font-weight:600; color:var(--warn-fg); margin-bottom:3px;"><i class="ti ti-alert-triangle"></i>Placeholder — needs your input before submitting</div><div style="font-size:12px; color:#7a5a1e; line-height:1.5;">State what proportion of ACC's activity serves young people aged 14–25 (this funder requires a majority youth focus).</div></div>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:13px; font-weight:500; color:var(--muted); margin-bottom:10px;">Tips to improve</div>
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px;">
+            <div class="ring" style="width:52px; height:52px;"><svg viewBox="0 0 36 36" width="52" height="52"><circle cx="18" cy="18" r="16" fill="none" stroke="#f3e7e3" stroke-width="4"/><circle cx="18" cy="18" r="16" fill="none" stroke="#d85a30" stroke-width="4" stroke-dasharray="100" stroke-dashoffset="55" stroke-linecap="round"/></svg><div class="v" style="font-size:14px;">4.5</div></div>
+            <div style="flex:1;"><div style="font-size:12px; color:var(--muted); margin-bottom:6px;">out of 10 · capped by an unresolved placeholder</div><button class="btn ghost" style="font-size:12px; padding:7px 11px;"><i class="ti ti-refresh"></i>Check again</button></div>
+          </div>
+          <div style="border:1px solid #f0e6cf; background:#fdf8ee; border-radius:9px; padding:12px;"><div style="display:flex; align-items:center; gap:6px; font-size:11px; font-weight:600; color:var(--warn-fg); margin-bottom:5px;"><i class="ti ti-flag"></i>Next best fix</div><div style="font-size:13px; font-weight:500; margin-bottom:4px;">Resolve the eligibility placeholder first</div><div style="font-size:12px; color:#5f5e5a; line-height:1.55;">It's a blocking issue and caps your score. Confirm the proportion of your activity serving young people aged 14–25 and state it plainly. If youth work isn't the majority of what you do, check with the funder before submitting.</div><div style="font-size:12px; color:var(--forest); margin-top:10px;">3 more tips · 4 gaps · open all →</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div></div>
+
+  <div class="footer">Application answer editor · draft → review → check · prepared for code-session implementation · no app code changed.</div>
+
+</div>
+</body>
+</html>
