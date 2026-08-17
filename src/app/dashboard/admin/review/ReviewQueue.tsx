@@ -36,6 +36,7 @@ import type { EvidenceSummary } from '@/lib/admin/evidence-summary'
 import type { MergeRejection } from '@/lib/grant-merge'
 import {
   SECTIONS, sectionOf, evidenceRank, planLine, EVIDENCE_RANK_LABEL,
+  arrivalOrigin, isNewArrival, ORIGIN_LABEL, NEW_ARRIVAL_DAYS,
   type SectionId,
 } from '@/lib/admin/review-sections'
 
@@ -70,6 +71,10 @@ export type QueueItem = {
   gateOutcome: 'publish' | 'hold' | 'attention'
   /** Reason codes that actually block publication, resolved on the server. */
   blockingCodes: string[]
+  /** When this row first entered the catalogue. Drives the arrivals view. */
+  firstSeenAt: string | null
+  /** Raw source string — mapped to an origin for display, never shown raw. */
+  source: string | null
   diffs: FieldDiff[]
   brief: {
     source: string | null
@@ -245,6 +250,10 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
   const [view, setView] = useState<'all' | 'live' | 'hidden' | 'unenriched' | 'autopublished'>('hidden')
   /** Bulk selection, per section. Cleared whenever the view or filters change. */
   const [selected, setSelected] = useState<Set<string>>(new Set())
+  /** How each section is ordered. Evidence strength is the default because it
+   *  answers "what can I safely accept"; newest-first answers "what just
+   *  arrived", which is a different question and now has its own section. */
+  const [sortBy, setSortBy] = useState<'evidence' | 'newest'>('evidence')
   /** Funding type as a FILTER, never as a grouping — as a grouping it gives one
    *  pile of grants and four piles anyone would clear in a minute. */
   const [typeFilter, setTypeFilter] = useState<string | null>(null)
@@ -311,17 +320,40 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
    * kind — a receipt, or a cross-cutting filter — and sections would be a
    * grouping over rows that do not share a shape.
    */
+  const byNewest = (a: QueueItem, b: QueueItem) =>
+    String(b.firstSeenAt ?? '').localeCompare(String(a.firstSeenAt ?? ''))
+  const bySafest = (a: QueueItem, b: QueueItem) =>
+    evidenceRank(a.evidence) - evidenceRank(b.evidence) || a.title.localeCompare(b.title)
+
   const sectioned = useMemo(() => {
     const bucket = new Map<SectionId, QueueItem[]>()
     for (const s of SECTIONS) bucket.set(s.id, [])
     for (const item of shown) bucket.get(sectionOf(item.blockingCodes))!.push(item)
-    for (const sec of SECTIONS) {
-      bucket.get(sec.id)!.sort((a: QueueItem, b: QueueItem) =>
-        evidenceRank(a.evidence) - evidenceRank(b.evidence) ||
-        a.title.localeCompare(b.title))
-    }
+    const cmp = sortBy === 'newest' ? byNewest : bySafest
+    for (const sec of SECTIONS) bucket.get(sec.id)!.sort(cmp)
     return bucket
-  }, [shown])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shown, sortBy])
+
+  /**
+   * What has ARRIVED, as opposed to what is wrong.
+   *
+   * Every other cut on this screen is by defect, which shows the backlog and
+   * hides the intake — Paul, 2026-08-17: "I can see the backlog but not the
+   * intake." This is the only view of the flow: how many funds are coming in,
+   * from where, and how fast they clear.
+   *
+   * Deliberately CROSS-CUTTING rather than exclusive. A new arrival stays in
+   * whatever action section it belongs to as well, because removing it would
+   * quietly shrink "ready to publish" and hide publishable work behind a
+   * recency filter. The heading says so, so the same row appearing twice reads
+   * as two answers to two questions rather than a duplicate.
+   */
+  const newArrivals = useMemo(
+    () => shown.filter(i => isNewArrival(i.firstSeenAt)).sort(byNewest),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [shown],
+  )
 
   /** Live to users AND carrying something they could be misled by. Pinned above
    *  the sections rather than demoted to a chip: these are the only rows on the
@@ -789,6 +821,32 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
         </div>
       )}
 
+      {/* A STANDING ALERT, ABOVE EVERY FILTER.
+          It first shipped inside the not-live sections, which was wrong in a way
+          only using it revealed: selecting "Not live yet 107" and being shown 38
+          rows that ARE live contradicts the filter you just chose. These rows
+          belong to no filter — they are the only ones on the screen where a
+          person is being misled right now, so they sit above the controls and
+          are never scoped by them. It shrinks to nothing when empty. */}
+      {liveAndWrong.length > 0 && (
+        <div style={{
+          border: '0.5px solid var(--coral-saturated)', background: 'var(--coral-pale)',
+          borderRadius: 'var(--radius-card)', padding: '11px 15px', marginBottom: 16,
+          display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: '4px 10px',
+        }}>
+          <strong style={{ ...display, fontSize: 13.5, color: 'var(--coral-deep)' }}>
+            {liveAndWrong.length} live to users and wrong
+          </strong>
+          <span style={{ fontSize: 13, color: 'var(--coral-deep)', opacity: 0.9 }}>
+            People can see these now. Everything else on this screen is invisible, so its cost is delay.
+          </span>
+          <button
+            onClick={() => { setView('live'); setFilter(null); setSelected(new Set()) }}
+            style={{ ...ghostBtn, marginLeft: 'auto', color: 'var(--coral-deep)' }}
+          >Show them</button>
+        </div>
+      )}
+
       {/* Whether users can see it, chosen first — it changes what the reason
           counts below even mean. "Not live yet" is the old Needs Review. */}
       <div style={{
@@ -885,23 +943,27 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
                   onClick={() => { setTypeFilter(t.value); setSelected(new Set()) }}
                   label={t.label} n={byView.filter(i => i.values.fundingType === t.value).length} />
           ))}
+          <span style={{ flex: '1 1 auto' }} />
+          <span style={{
+            ...display, fontSize: 10.5, fontWeight: 500, letterSpacing: '0.08em',
+            textTransform: 'uppercase', color: 'var(--color-text-tertiary)', marginRight: 2,
+          }}>Sort</span>
+          <Chip active={sortBy === 'evidence'} onClick={() => setSortBy('evidence')} label="Safest first" n={-1} />
+          <Chip active={sortBy === 'newest'}   onClick={() => setSortBy('newest')}   label="Newest first" n={-1} />
         </div>
       )}
 
       {view === 'hidden' ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 26 }}>
-          {/* PINNED, and it shrinks to nothing when empty rather than being a
-              chip. Everything below is invisible to users, so its cost is delay;
-              these are the only rows where a person is being misled today. */}
-          {liveAndWrong.length > 0 && (
+          {newArrivals.length > 0 && (
             <section>
               <BandHeading
-                label={`Live to users, and wrong — ${liveAndWrong.length}`}
-                detail="People can see these now. Fixing one changes what they see today."
+                label={`New arrivals — ${newArrivals.length} in the last ${NEW_ARRIVAL_DAYS} days`}
+                detail="What has come in, rather than what is wrong. These also appear below under what they need — this is a second answer to a different question, not a duplicate."
               />
               <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-                {liveAndWrong.map(item => (
-                  <Row key={item.id} item={item} open={openId === item.id} busy={busyId === item.id}
+                {newArrivals.map(item => (
+                  <Row key={`new-${item.id}`} item={item} open={openId === item.id} busy={busyId === item.id}
                        onToggle={() => setOpenId(openId === item.id ? null : item.id)}
                        busyLabel={busyLabel} onPublish={() => publish(item)} onReject={() => reject(item)}
                        onRevert={(d) => revertField(item, d)} onSetFundingType={(t) => setFundingType(item, t)}
@@ -1077,6 +1139,8 @@ function BandHeading({ label, detail }: { label: string; detail: string }) {
   )
 }
 
+/** `n` below zero renders no tally: a sort chip is a mode, not a count, and a
+ *  number beside one would read as "how many are sorted". */
 function Chip({ active, onClick, label, n }: { active: boolean; onClick: () => void; label: string; n: number }) {
   return (
     <button
@@ -1091,7 +1155,9 @@ function Chip({ active, onClick, label, n }: { active: boolean; onClick: () => v
       }}
     >
       {label}
-      <span style={{ fontVariantNumeric: 'tabular-nums', opacity: 0.72, fontSize: 11.5 }}>{n}</span>
+      {n >= 0 && (
+        <span style={{ fontVariantNumeric: 'tabular-nums', opacity: 0.72, fontSize: 11.5 }}>{n}</span>
+      )}
     </button>
   )
 }
@@ -1360,6 +1426,15 @@ function Row({
             <div style={{ color: 'var(--color-text-secondary)', fontSize: 12.5 }}>{item.funder}</div>
             </div>
           </div>
+          {/* Where it came from and when. Every other pill on this card says
+              what is wrong with the row; these two say where it came from,
+              which is the only intake signal on the screen. */}
+          {item.firstSeenAt && (
+            <Pill bg="var(--bg-pill-neutral)" ink="var(--color-text-tertiary)">
+              {ORIGIN_LABEL[arrivalOrigin(item.source)]} ·{' '}
+              {new Date(item.firstSeenAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+            </Pill>
+          )}
           {/* The sort axis, named. Without it the order looks arbitrary and the
               "accept down to a line and stop where you get uneasy" reading —
               which is the whole point of sorting by evidence — is invisible. */}

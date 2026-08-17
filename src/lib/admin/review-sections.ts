@@ -196,3 +196,48 @@ export function planLine(opts: {
 
   return parts.join(' ')
 }
+
+
+/**
+ * Where a row came from, collapsed to the three origins that mean something to
+ * a person watching intake.
+ *
+ * `source` carries 30-odd values, most of them the name of the scraper that
+ * found the row — `gov_uk`, `tyne_wear_cf`, `arts_council_wales`. Those are
+ * useful for debugging a crawler and useless for the question Paul is actually
+ * asking, which is "where are new funds coming from": something we went looking
+ * for, something a scheduled crawl brought back, or something a person typed.
+ *
+ * Anything unrecognised is CRAWL rather than manual. A new scraper added next
+ * month should read as machine intake without anyone remembering to update this
+ * list; only the handful of sources a human can actually be responsible for are
+ * named, and misfiling one of those as manual would overstate how much of the
+ * catalogue a person curated.
+ */
+export type ArrivalOrigin = 'discovery' | 'crawl' | 'manual'
+
+const DISCOVERY = /^(discovery_queue|deep_search|research_batch|discovery|gemini)/i
+const MANUAL    = /^(manual|catalogue-seed|seed|admin)/i
+
+export function arrivalOrigin(source: string | null): ArrivalOrigin {
+  if (!source) return 'crawl'
+  if (DISCOVERY.test(source)) return 'discovery'
+  if (MANUAL.test(source)) return 'manual'
+  return 'crawl'
+}
+
+export const ORIGIN_LABEL: Record<ArrivalOrigin, string> = {
+  discovery: 'Discovery',
+  crawl:     'Crawl',
+  manual:    'Added by hand',
+}
+
+/** Rows first seen within this many days count as new arrivals. */
+export const NEW_ARRIVAL_DAYS = 7
+
+export function isNewArrival(firstSeenAt: string | null, now: Date = new Date()): boolean {
+  if (!firstSeenAt) return false
+  const t = Date.parse(firstSeenAt)
+  if (Number.isNaN(t)) return false
+  return now.getTime() - t <= NEW_ARRIVAL_DAYS * 24 * 60 * 60 * 1000
+}

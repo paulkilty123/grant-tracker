@@ -45,6 +45,9 @@ const COLS = [
   // column here is our bookkeeping; this is the only one from outside.
   'field_evidence',
   'last_seen_at',
+  // Intake. Every other cut on this screen is by what is WRONG with a row;
+  // these two are the only way to see what is arriving and from where.
+  'first_seen_at', 'source',
 ].join(', ')
 
 export default async function ReviewPage() {
@@ -209,6 +212,8 @@ export default async function ReviewPage() {
       // blocking set lives in publish-gate.ts, which pulls server modules — so
       // it is resolved on the server and passed down as plain strings.
       blockingCodes: gate.blocking.map(b => b.code),
+      firstSeenAt:   (r as { first_seen_at?: string | null }).first_seen_at ?? null,
+      source:        (r as { source?: string | null }).source ?? null,
       diffs:         extractTagsDiff(r.field_provenance),
       brief:         summariseBrief(r.funder_brief),
       evidence:      summariseEvidence(r.field_evidence),

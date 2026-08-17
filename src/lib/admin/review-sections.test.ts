@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { sectionOf, evidenceRank, planLine, SECTIONS } from './review-sections'
+import { sectionOf, evidenceRank, planLine, SECTIONS, arrivalOrigin, isNewArrival } from './review-sections'
 import { BLOCKING_CODES } from './publish-gate'
 import type { EvidenceSummary } from './evidence-summary'
 
@@ -125,5 +125,52 @@ describe('planLine', () => {
     const s = planLine({ ready: 1, bySection: { ...empty }, liveAndWrong: 1 })
     expect(s).toContain('1 row is ready')
     expect(s).toContain('1 row is live to users and wrong')
+  })
+})
+
+describe('arrivalOrigin — the three origins that mean something', () => {
+  it('reads the things we went looking for as discovery', () => {
+    for (const s of ['discovery_queue', 'deep_search', 'research_batch', 'discovery:gemini'])
+      expect(arrivalOrigin(s), s).toBe('discovery')
+  })
+
+  it('reads a person typing as manual', () => {
+    for (const s of ['manual', 'manual_ingest_scotland_2026-05-18', 'catalogue-seed', 'seed:legacy'])
+      expect(arrivalOrigin(s), s).toBe('manual')
+  })
+
+  it('reads every scraper name as crawl', () => {
+    for (const s of ['gov_uk', 'tyne_wear_cf', 'arts_council_wales', 'homeless_link', 'foundation_scotland'])
+      expect(arrivalOrigin(s), s).toBe('crawl')
+  })
+
+  it('defaults an unknown or absent source to crawl, not manual', () => {
+    // A scraper added next month must read as machine intake without anyone
+    // remembering this list; calling it manual would overstate how much of the
+    // catalogue a person actually curated.
+    expect(arrivalOrigin('some_new_scraper_2027')).toBe('crawl')
+    expect(arrivalOrigin(null)).toBe('crawl')
+    expect(arrivalOrigin('')).toBe('crawl')
+  })
+})
+
+describe('isNewArrival', () => {
+  const now = new Date('2026-08-17T12:00:00Z')
+
+  it('counts a row first seen today', () => {
+    expect(isNewArrival('2026-08-17T09:00:00Z', now)).toBe(true)
+  })
+
+  it('counts one at the edge of the window', () => {
+    expect(isNewArrival('2026-08-10T12:00:00Z', now)).toBe(true)
+  })
+
+  it('excludes one just outside it', () => {
+    expect(isNewArrival('2026-08-10T11:59:00Z', now)).toBe(false)
+  })
+
+  it('is false rather than throwing on missing or malformed dates', () => {
+    expect(isNewArrival(null, now)).toBe(false)
+    expect(isNewArrival('not a date', now)).toBe(false)
   })
 })
