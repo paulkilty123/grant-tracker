@@ -1,0 +1,167 @@
+{
+  "ranAt": "2026-08-17T11:33:38.471Z",
+  "source": "system:removal_actuator:v1",
+  "moved": 8,
+  "record": [
+    {
+      "id": "0f418b9f-c0d4-45db-a332-f234103b68ac",
+      "title": "The UK Youth Fund",
+      "quote": "This fund has now closed to applications.",
+      "before": {
+        "pipeline_state": "archived"
+      },
+      "after": {
+        "is_active": false,
+        "pipeline_state": "between_rounds_scheduled",
+        "rejection_reason": null
+      },
+      "applied": [
+        "is_active",
+        "pipeline_state",
+        "rejection_reason"
+      ],
+      "error": null,
+      "ok": true
+    },
+    {
+      "id": "6198ac98-f639-4192-ad44-613566654064",
+      "title": "Innovate UK Women in Innovation Awards",
+      "quote": "Opportunity status: Closed",
+      "before": {
+        "pipeline_state": "archived"
+      },
+      "after": {
+        "is_active": false,
+        "pipeline_state": "between_rounds_scheduled",
+        "rejection_reason": null
+      },
+      "applied": [
+        "is_active",
+        "pipeline_state",
+        "rejection_reason"
+      ],
+      "error": null,
+      "ok": true
+    },
+    {
+      "id": "39e09339-ca23-4c69-ba13-13997221fd54",
+      "title": "Local Community Spaces Fund",
+      "quote": "The application window for this fund has now closed. Thank you to all groups that applied.",
+      "before": {
+        "pipeline_state": "archived"
+      },
+      "after": {
+        "is_active": false,
+        "pipeline_state": "between_rounds_scheduled",
+        "rejection_reason": null
+      },
+      "applied": [
+        "is_active",
+        "pipeline_state",
+        "rejection_reason"
+      ],
+      "error": null,
+      "ok": true
+    },
+    {
+      "id": "25d4e63a-cd45-4144-bb73-1eb0ccda1dec",
+      "title": "Science Museum Group Wroughton Solar Park Sustainable Futures Grants",
+      "quote": "This programme is currently closed for applications.",
+      "before": {
+        "pipeline_state": "archived"
+      },
+      "after": {
+        "is_active": false,
+        "pipeline_state": "between_rounds_scheduled",
+        "rejection_reason": null
+      },
+      "applied": [
+        "is_active",
+        "pipeline_state",
+        "rejection_reason"
+      ],
+      "error": null,
+      "ok": true
+    },
+    {
+      "id": "4698410f-5b87-4660-9064-8e424b2785e4",
+      "title": "Digital Inclusion Fund",
+      "quote": "Current status Closed",
+      "before": {
+        "pipeline_state": "archived"
+      },
+      "after": {
+        "is_active": false,
+        "pipeline_state": "between_rounds_scheduled",
+        "rejection_reason": null
+      },
+      "applied": [
+        "is_active",
+        "pipeline_state",
+        "rejection_reason"
+      ],
+      "error": null,
+      "ok": true
+    },
+    {
+      "id": "68dd6c2e-2476-45c9-be0e-5f8e8490ed10",
+      "title": "Bright Futures Fund",
+      "quote": "The latest round of the Bright Futures Fund, in partnership with Forever Manchester, is NOW CLOSED to applications.",
+      "before": {
+        "pipeline_state": "archived"
+      },
+      "after": {
+        "is_active": false,
+        "pipeline_state": "between_rounds_scheduled",
+        "rejection_reason": null
+      },
+      "applied": [
+        "is_active",
+        "pipeline_state",
+        "rejection_reason"
+      ],
+      "error": null,
+      "ok": true
+    },
+    {
+      "id": "6c7e1998-5ad7-46ee-9f93-a1379f8a8043",
+      "title": "Crowdfunder - Cost Of Living Resilience Fund",
+      "quote": "Applications to this fund are now closed.",
+      "before": {
+        "pipeline_state": "archived"
+      },
+      "after": {
+        "is_active": false,
+        "pipeline_state": "between_rounds_scheduled",
+        "rejection_reason": null
+      },
+      "applied": [
+        "is_active",
+        "pipeline_state",
+        "rejection_reason"
+      ],
+      "error": null,
+      "ok": true
+    },
+    {
+      "id": "717a8aef-adb6-4cfa-a04e-10675f95917a",
+      "title": "Grants to Charities",
+      "quote": "Our grant-giving activities are on pause while we finalise a new funding policy.",
+      "before": {
+        "pipeline_state": "archived"
+      },
+      "after": {
+        "is_active": false,
+        "pipeline_state": "between_rounds_scheduled",
+        "rejection_reason": null
+      },
+      "applied": [
+        "is_active",
+        "pipeline_state",
+        "rejection_reason"
+      ],
+      "error": null,
+      "ok": true
+    }
+  ]
+}

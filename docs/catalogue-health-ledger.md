@@ -62,9 +62,9 @@ should reach zero first.
 |---|---|---:|---|---|---|
 | A1 | Live rows with empty `eligible_structures`, rendered as "eligible ✓" | **20** | **yes** | `fix/eligibility-honest-surface` | Pushed, awaiting go |
 | A2 | Rows whose page does not describe our fund (`fixable_link`) | **138** | **yes** | Verification engine home, tranche 2 | Proposal in progress |
-| A3 | Rows the engine found closed, still live (`round_closed`) | **44** | **yes** | Same | Same |
-| A4 | Rows the engine found are not funding (`not_a_grant`) | **38** | **yes** | Same, then archive | Same |
-| A5 | Rows the engine found delisted (`no_longer_listed`) | **13** | **yes** | Same, then archive | Same |
+| A3 | Rows the engine found closed, still live (`round_closed`) | **2** | yes | **Engine armed 2026-08-17. 8 acted, 2 held by the abstain rule** | **Done bar the 2** |
+| A4 | Rows the engine found are not funding (`not_a_grant`) | **0** | — | Verdict reworded out of existence; no live row carries it | **Closed** |
+| A5 | Rows the engine found delisted (`no_longer_listed`) | **2** | yes | **Engine armed 2026-08-17. 8 archived, 2 held** | **Done bar the 2** |
 | A6 | Live rows asserting "Rolling" with no evidence (`is_rolling = !deadline`) | **380** | **yes** | Verification engine, **explicit goal of its first scheduled runs** | Tranche 2 |
 | A7 | Live rows with no timing information at all | **137** | **yes** | Verification engine, highest-risk recheck class | Tranche 2 |
 | A8 | Live rows with a brief written from model memory, not the page | **8** | **yes** | Re-enrich; blocked on some by pins (D1) | Not scheduled |
@@ -74,7 +74,29 @@ should reach zero first.
 | A12 | Live rows with `deadline` pinned to NULL by an unrelated form save | **15** | **yes** | Unpin; part of the D1 cleanup | Not scheduled |
 | A13 | Duplicate live rows on title + funder | **2** | **yes** | Manual merge | Not scheduled |
 
-**A2 to A5 note.** These are the 2026-08-11 verification run, after its same-day
+**A3 to A5 superseded, 2026-08-17.** The engine was armed on the removal classes
+and the figures above are now live counts, not the 11 August snapshot. 25 rows
+were corrected in the first pass: 8 archived, 8 sent out of view and onto the
+watchlist, 9 rolling flags unset. 25 more were held by the abstain rule, four of
+them cases where acting would have been wrong — Greggs is still live. The
+actions, their quotes and the reversal ledger are in the merge digest and
+`reports/removals-2026-08-17.json`.
+
+**A4 is closed for a different reason than it looks.** The `not_a_grant` verdict
+was reworded after 25 of the original 38 turned out to be `investment` rows, which
+the catalogue carries deliberately. No live row carries the verdict today, so
+there is nothing to act on and nothing to review.
+
+**Noted 2026-08-17, not scheduled: the cycle filter misses post-decision dates.**
+`verify-row.ts:1311` filters opening entries out of a page's cycle before
+concluding it runs in rounds, but not the dates trustees meet. Drapers'
+Charitable Fund and William A Cadbury are rolling funds whose committee diaries
+were read as application deadlines; the removal actuator guards against it, so
+nothing acted on them, but the extractor still records the wrong thing.
+`isPostDecisionEntry` in `deadline-cycle.ts` already exists for exactly this one
+level down. Post-September.
+
+**A2 note.** This is the 2026-08-11 verification run, after its same-day
 re-runs: `reports/verification-combined-2026-08-11.json`, 642 rows, 409 verified.
 The frequently quoted **198** is the pre-re-run figure from
 `reports/verification-run-2026-08-11.json` and should be retired. The gate-failure

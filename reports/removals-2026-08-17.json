@@ -1,0 +1,580 @@
+{
+  "ranAt": "2026-08-17T11:16:17.530Z",
+  "source": "system:removal_actuator:v1",
+  "corrected": 25,
+  "ledger": [
+    {
+      "id": "600db8c5-dc40-43c4-9b2c-e812b018bdad",
+      "title": "Joseph Rank Trust",
+      "klass": "rolling_unset",
+      "quote": "With effect 10th August the Trust are not accepting grant applications due to the high volume already received. The next Trustees meeting is in January 2027 - please send in your application after 26th October 2026.",
+      "sourceUrl": "https://www.ranktrust.org/rank-trust-grants.htm",
+      "before": {
+        "is_active": true,
+        "pipeline_state": "published",
+        "is_rolling": true
+      },
+      "after": {
+        "is_rolling": false
+      },
+      "applied": [
+        "is_rolling"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "id": "0f418b9f-c0d4-45db-a332-f234103b68ac",
+      "title": "The UK Youth Fund",
+      "klass": "no_longer_listed",
+      "quote": "This fund has now closed to applications.",
+      "sourceUrl": "https://www.ukyouth.org/what-we-do/the-uk-youth-fund/",
+      "before": {
+        "is_active": true,
+        "pipeline_state": "published",
+        "is_rolling": false
+      },
+      "after": {
+        "is_active": false,
+        "pipeline_state": "archived",
+        "rejection_reason": "no_longer_listed: This fund has now closed to applications."
+      },
+      "applied": [
+        "is_active",
+        "pipeline_state",
+        "rejection_reason"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "id": "6198ac98-f639-4192-ad44-613566654064",
+      "title": "Innovate UK Women in Innovation Awards",
+      "klass": "no_longer_listed",
+      "quote": "Opportunity status: Closed",
+      "sourceUrl": "https://www.ukri.org/opportunity/women-in-innovation-awards-2025-to-2026/",
+      "before": {
+        "is_active": true,
+        "pipeline_state": "published",
+        "is_rolling": false
+      },
+      "after": {
+        "is_active": false,
+        "pipeline_state": "archived",
+        "rejection_reason": "no_longer_listed: Opportunity status: Closed"
+      },
+      "applied": [
+        "is_active",
+        "pipeline_state",
+        "rejection_reason"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "id": "a68daf0e-a49e-45e9-9de6-b4861d15a5de",
+      "title": "THE LOCAL FUND for the Harrogate District",
+      "klass": "round_closed",
+      "quote": "Deadline: 05/05/2026",
+      "sourceUrl": "https://tworidingscf.org.uk/apply-for-funding/",
+      "before": {
+        "is_active": true,
+        "pipeline_state": "published",
+        "is_rolling": false
+      },
+      "after": {
+        "is_active": false,
+        "pipeline_state": "between_rounds_scheduled"
+      },
+      "applied": [
+        "is_active",
+        "pipeline_state"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "id": "87669e69-56c6-4a29-b129-753db21b54aa",
+      "title": "Postcode Society Trust Grants",
+      "klass": "rolling_unset",
+      "quote": "Funding round dates for 2026 are: Round 1: 9am 23rd February - 12 noon 2nd March - Now Closed Round 2: 9am 26th May - 12 noon 2nd June - Now Closed Round 3: 9am 25th August - 12 noon 1st September",
+      "sourceUrl": "https://www.postcodesocietytrust.org.uk/apply-for-a-grant",
+      "before": {
+        "is_active": true,
+        "pipeline_state": "published",
+        "is_rolling": true
+      },
+      "after": {
+        "is_rolling": false
+      },
+      "applied": [
+        "is_rolling"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "id": "2eb1fe4f-b5cf-4c21-95b1-7dfdf4a9dab0",
+      "title": "The Bromley Trust — Human Rights",
+      "klass": "round_closed",
+      "quote": "The application deadline will be 9 March 2026.",
+      "sourceUrl": "https://www.thebromleytrust.org.uk/human-rights/",
+      "before": {
+        "is_active": true,
+        "pipeline_state": "published",
+        "is_rolling": false
+      },
+      "after": {
+        "is_active": false,
+        "pipeline_state": "between_rounds_scheduled"
+      },
+      "applied": [
+        "is_active",
+        "pipeline_state"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "id": "39e09339-ca23-4c69-ba13-13997221fd54",
+      "title": "Local Community Spaces Fund",
+      "klass": "no_longer_listed",
+      "quote": "The application window for this fund has now closed. Thank you to all groups that applied.",
+      "sourceUrl": "https://asdafoundation.org/our-grants/local-community-spaces-fund/",
+      "before": {
+        "is_active": true,
+        "pipeline_state": "published",
+        "is_rolling": false
+      },
+      "after": {
+        "is_active": false,
+        "pipeline_state": "archived",
+        "rejection_reason": "no_longer_listed: The application window for this fund has now closed. Thank you to all groups that applied."
+      },
+      "applied": [
+        "is_active",
+        "pipeline_state",
+        "rejection_reason"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "id": "22b5670a-dc7e-406a-aae4-e7926ea51d78",
+      "title": "Baillie Gifford International Fund",
+      "klass": "round_closed",
+      "quote": "Deadline for enquiry forms : 12/08/26",
+      "sourceUrl": "https://foundationscotland.org.uk/apply-for-funding/funding-available/baillie-gifford-international-fund",
+      "before": {
+        "is_active": true,
+        "pipeline_state": "published",
+        "is_rolling": true
+      },
+      "after": {
+        "is_active": false,
+        "pipeline_state": "between_rounds_scheduled"
+      },
+      "applied": [
+        "is_active",
+        "pipeline_state"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "id": "25d4e63a-cd45-4144-bb73-1eb0ccda1dec",
+      "title": "Science Museum Group Wroughton Solar Park Sustainable Futures Grants",
+      "klass": "no_longer_listed",
+      "quote": "This programme is currently closed for applications.",
+      "sourceUrl": "https://www.wscf.org.uk/grants-and-support/groups/science-museum-wroughton-solar-park-community-benefit-fund-large-grant/",
+      "before": {
+        "is_active": true,
+        "pipeline_state": "published",
+        "is_rolling": false
+      },
+      "after": {
+        "is_active": false,
+        "pipeline_state": "archived",
+        "rejection_reason": "no_longer_listed: This programme is currently closed for applications."
+      },
+      "applied": [
+        "is_active",
+        "pipeline_state",
+        "rejection_reason"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "id": "9d1b13f1-607d-48b1-80df-80e127cd8933",
+      "title": "Annandale and Nithsdale Community Benefit Company",
+      "klass": "rolling_unset",
+      "quote": "Application deadline: 05/01/26 Decisions : 18/03/26 Application deadline: 02/04/26 Decisions w/c: 25/05/26 Application deadline: 03/09/26 Decisions w/c: 26/10/26",
+      "sourceUrl": "https://foundationscotland.org.uk/ancbc",
+      "before": {
+        "is_active": true,
+        "pipeline_state": "published",
+        "is_rolling": true
+      },
+      "after": {
+        "is_rolling": false
+      },
+      "applied": [
+        "is_rolling"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "id": "32e9cb1d-4e0d-4554-a4c3-569bc4e0b9fb",
+      "title": "Active Spaces Fund",
+      "klass": "rolling_unset",
+      "quote": "The deadlines for funding requests under £100,000 are listed below, along with when you can expect to hear the outcome of your application. Application deadline Application outcome (less than £100,000) Application outcome (more than £100,000) 11 December 2025 End of February 2026 End of April 2026 25 March 2026 End of May 2026 End of July 2026 8 July 2026 End of September 2026 End of October 2026 23 September 2026 End of November 2026 End of December 2026",
+      "sourceUrl": "https://www.londonmarathonfoundation.org/active-spaces-fund",
+      "before": {
+        "is_active": true,
+        "pipeline_state": "published",
+        "is_rolling": true
+      },
+      "after": {
+        "is_rolling": false
+      },
+      "applied": [
+        "is_rolling"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "id": "4698410f-5b87-4660-9064-8e424b2785e4",
+      "title": "Digital Inclusion Fund",
+      "klass": "no_longer_listed",
+      "quote": "Current status Closed",
+      "sourceUrl": "https://suffolkcf.org.uk/grants/digital-inclusion-fund/",
+      "before": {
+        "is_active": true,
+        "pipeline_state": "published",
+        "is_rolling": false
+      },
+      "after": {
+        "is_active": false,
+        "pipeline_state": "archived",
+        "rejection_reason": "no_longer_listed: Current status Closed"
+      },
+      "applied": [
+        "is_active",
+        "pipeline_state",
+        "rejection_reason"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "id": "be050793-3afa-4705-b435-038727a4806f",
+      "title": "QFUTURES Community Fund (East Yorkshire)",
+      "klass": "round_closed",
+      "quote": "Deadline: 02/03/2026",
+      "sourceUrl": "https://tworidingscf.org.uk/apply-for-funding/",
+      "before": {
+        "is_active": true,
+        "pipeline_state": "published",
+        "is_rolling": false
+      },
+      "after": {
+        "is_active": false,
+        "pipeline_state": "between_rounds_scheduled"
+      },
+      "applied": [
+        "is_active",
+        "pipeline_state"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "id": "b06af7a3-a1be-4572-a259-70260f20d8b6",
+      "title": "Hull Community Fund",
+      "klass": "rolling_unset",
+      "quote": "The deadline for all applications is noon on the 7 th September 2026.",
+      "sourceUrl": "https://tworidingscf.org.uk/fund/hull-community-fund/",
+      "before": {
+        "is_active": true,
+        "pipeline_state": "published",
+        "is_rolling": true
+      },
+      "after": {
+        "is_rolling": false
+      },
+      "applied": [
+        "is_rolling"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "id": "083b94ba-9461-447e-805b-07fc0387c8fe",
+      "title": "WCIT Charity Grants",
+      "klass": "round_closed",
+      "quote": "The next deadline is 5pm on August 14, 2026",
+      "sourceUrl": "https://wcitcharity.org.uk/apply-for-a-grant/",
+      "before": {
+        "is_active": true,
+        "pipeline_state": "published",
+        "is_rolling": true
+      },
+      "after": {
+        "is_active": false,
+        "pipeline_state": "between_rounds_scheduled"
+      },
+      "applied": [
+        "is_active",
+        "pipeline_state"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "id": "68dd6c2e-2476-45c9-be0e-5f8e8490ed10",
+      "title": "Bright Futures Fund",
+      "klass": "no_longer_listed",
+      "quote": "The latest round of the Bright Futures Fund, in partnership with Forever Manchester, is NOW CLOSED to applications.",
+      "sourceUrl": "https://forevermanchester.com/fund/bright-futures-fund/",
+      "before": {
+        "is_active": true,
+        "pipeline_state": "published",
+        "is_rolling": false
+      },
+      "after": {
+        "is_active": false,
+        "pipeline_state": "archived",
+        "rejection_reason": "no_longer_listed: The latest round of the Bright Futures Fund, in partnership with Forever Manchester, is NOW CLOSED to applications."
+      },
+      "applied": [
+        "is_active",
+        "pipeline_state",
+        "rejection_reason"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "id": "6344f1bf-cc8a-4410-a4b6-f15e200559f5",
+      "title": "JRCT — Power & Accountability Programme",
+      "klass": "rolling_unset",
+      "quote": "The expression of interest stage has now closed (deadline 13 July). Only those new applicants who have completed the expression of interest stage and been invited to submit a full application will be eligible to apply in September. Our next grant round is in September 2026.",
+      "sourceUrl": "https://www.jrct.org.uk/power-and-accountability",
+      "before": {
+        "is_active": true,
+        "pipeline_state": "published",
+        "is_rolling": true
+      },
+      "after": {
+        "is_rolling": false
+      },
+      "applied": [
+        "is_rolling"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "id": "095948ab-ab11-48e1-8dfa-7c2af7b43709",
+      "title": "Bettys and Taylors Group Community Fund",
+      "klass": "round_closed",
+      "quote": "Deadline: 04/06/2026",
+      "sourceUrl": "https://tworidingscf.org.uk/apply-for-funding/",
+      "before": {
+        "is_active": true,
+        "pipeline_state": "published",
+        "is_rolling": false
+      },
+      "after": {
+        "is_active": false,
+        "pipeline_state": "between_rounds_scheduled"
+      },
+      "applied": [
+        "is_active",
+        "pipeline_state"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "id": "6c7e1998-5ad7-46ee-9f93-a1379f8a8043",
+      "title": "Crowdfunder - Cost Of Living Resilience Fund",
+      "klass": "no_longer_listed",
+      "quote": "Applications to this fund are now closed.",
+      "sourceUrl": "https://www.crowdfunder.co.uk/funds/cost-of-living-resilience-fund",
+      "before": {
+        "is_active": true,
+        "pipeline_state": "published",
+        "is_rolling": true
+      },
+      "after": {
+        "is_active": false,
+        "pipeline_state": "archived",
+        "rejection_reason": "no_longer_listed: Applications to this fund are now closed."
+      },
+      "applied": [
+        "is_active",
+        "pipeline_state",
+        "rejection_reason"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "id": "16ca7f38-6f44-4602-b35b-0136091026ad",
+      "title": "QFUTURES Community Fund (North Yorkshire)",
+      "klass": "round_closed",
+      "quote": "Deadline: 02/03/2026",
+      "sourceUrl": "https://tworidingscf.org.uk/apply-for-funding/",
+      "before": {
+        "is_active": true,
+        "pipeline_state": "tagged_awaiting_review",
+        "is_rolling": false
+      },
+      "after": {
+        "is_active": false,
+        "pipeline_state": "between_rounds_scheduled"
+      },
+      "applied": [
+        "is_active",
+        "pipeline_state"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "id": "717a8aef-adb6-4cfa-a04e-10675f95917a",
+      "title": "Grants to Charities",
+      "klass": "no_longer_listed",
+      "quote": "Our grant-giving activities are on pause while we finalise a new funding policy.",
+      "sourceUrl": "https://www.ironmongers.org/helping-charitable-organisations",
+      "before": {
+        "is_active": true,
+        "pipeline_state": "published",
+        "is_rolling": true
+      },
+      "after": {
+        "is_active": false,
+        "pipeline_state": "archived",
+        "rejection_reason": "no_longer_listed: Our grant-giving activities are on pause while we finalise a new funding policy."
+      },
+      "applied": [
+        "is_active",
+        "pipeline_state",
+        "rejection_reason"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "id": "80780415-2429-42f4-8ee4-3f0525f7c5ed",
+      "title": "Evelyn Partners Merseyside Charitable Fund",
+      "klass": "round_closed",
+      "quote": "Deadline 30th March 2026",
+      "sourceUrl": "https://cfmerseyside.org.uk/grants/evelyn-partners-merseyside-charitable-fund",
+      "before": {
+        "is_active": true,
+        "pipeline_state": "published",
+        "is_rolling": false
+      },
+      "after": {
+        "is_active": false,
+        "pipeline_state": "between_rounds_scheduled"
+      },
+      "applied": [
+        "is_active",
+        "pipeline_state"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "id": "8bb0acde-a49f-4a86-995a-9f19b23115f0",
+      "title": "JRCT — Sustainable Future Programme",
+      "klass": "rolling_unset",
+      "quote": "Our 2026 dates Programme Account registration closing date Application deadline closing date* Decision by week commencing Round one All programmes: Northern Ireland, Power and Accountability, Peace and Security, Rights and Justice, Sustainable Future Monday, February 16, 2026 Monday, March 2, 2026, 10am* w/c June 22, 2026 Round two All programmes: Northern Ireland, Power and Accountability**, Peace and Security, Rights and Justice**, Sustainable Future Wednesday, August 19, 2026 Wednesday, September 2, 2026, 10am* w/c December 7, 2026",
+      "sourceUrl": "https://www.jrct.org.uk/when-to-apply",
+      "before": {
+        "is_active": true,
+        "pipeline_state": "published",
+        "is_rolling": true
+      },
+      "after": {
+        "is_rolling": false
+      },
+      "applied": [
+        "is_rolling"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "id": "af3eed37-f766-4e08-8880-541c4c36f28b",
+      "title": "Joseph Rowntree Reform Trust",
+      "klass": "rolling_unset",
+      "quote": "Outline proposals – no later than 10am on Monday 24 August 2026; Final applications – 10am on Tuesday 1 September 2026. Decisions made on Friday 2 October; earliest grant start date Monday 12 October 2026 Outline proposals – no later than 10am on Monday 2 November 2026; Final applications – 10am on Monday 9 November 2026. Decisions made on Friday 11 December; earliest grant start date Monday 4 January 2027",
+      "sourceUrl": "https://www.jrrt.org.uk/apply-for-a-grant/important-dates/",
+      "before": {
+        "is_active": true,
+        "pipeline_state": "published",
+        "is_rolling": true
+      },
+      "after": {
+        "is_rolling": false
+      },
+      "applied": [
+        "is_rolling"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "id": "f999cba2-95c7-4c48-940a-611ecd0e6514",
+      "title": "South Lanarkshire Renewable Energy Fund",
+      "klass": "rolling_unset",
+      "quote": "Deadlines for main grant applications You must submit your application by one of the dates below. Decisions are made at the following committee meeting. Application deadline Committee date 20 January 2026 17 March 2026 7 April 2026 2 June 2026 7 July 2026 1 September 2026 15 September 2026 10 November 2026 8 December 2026 2 February 2027",
+      "sourceUrl": "https://www.southlanarkshire.gov.uk/info/200321/community_grants_and_funding/744/renewable_energy_fund_grants/4",
+      "before": {
+        "is_active": true,
+        "pipeline_state": "published",
+        "is_rolling": true
+      },
+      "after": {
+        "is_rolling": false
+      },
+      "applied": [
+        "is_rolling"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    }
+  ]
+}
