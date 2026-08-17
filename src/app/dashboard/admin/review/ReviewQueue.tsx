@@ -26,6 +26,7 @@
 // calcifying.
 
 import { Fragment, useMemo, useState, useCallback } from 'react'
+import { Check, RefreshCw, Link2, ExternalLink, Eye, X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useToast } from '@/components/ui/Toast'
 import GrantDetailModal from '@/components/GrantDetailModal'
@@ -118,6 +119,36 @@ const FUNDING_TYPES: { value: string; label: string }[] = [
   { value: 'investment', label: 'Investment' },
   { value: 'in_kind',    label: 'In-kind' },
 ]
+
+/**
+ * The four funding-type colours, straight from the design system.
+ *
+ * They were already defined and this screen was not using them — every pill
+ * rendered the same neutral grey, so the one axis with an agreed palette looked
+ * identical to metadata. Duplicated as literals rather than imported because
+ * the tokens live in a CSS file and this needs them as values.
+ */
+const TYPE_TONE: Record<string, { bg: string; ink: string }> = {
+  grant:      { bg: '#F1F7E4', ink: '#3B6D11' },
+  programme:  { bg: '#FAECE7', ink: '#993C1D' },
+  investment: { bg: '#E6F1FB', ink: '#0C447C' },
+  in_kind:    { bg: '#FAEEDA', ink: '#854F0B' },
+}
+
+/**
+ * Evidence strength as a scale, not a label.
+ *
+ * This is the axis the sections are sorted on, so the colour has to run in the
+ * same direction as the sort: safest reads calm, "the page is about a different
+ * fund" reads like the problem it is. Without it the sort order is legible only
+ * by reading every pill.
+ */
+const EVIDENCE_TONE: Record<0 | 1 | 2 | 3, { bg: string; ink: string }> = {
+  0: { bg: 'var(--green-pale-2, #F1F7E4)', ink: 'var(--green-deep, #173404)' },
+  1: { bg: 'var(--bg-pill-neutral)',       ink: 'var(--color-text-tertiary)' },
+  2: { bg: 'var(--amber-pale)',            ink: 'var(--amber-deep)' },
+  3: { bg: 'var(--coral-pale)',            ink: 'var(--coral-deep)' },
+}
 
 /**
  * Everything the screen can show, as ONE axis.
@@ -834,9 +865,9 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
             {picked.length > 0 && (
               <>
                 <span style={{ ...display, fontSize: 12.5, color: 'var(--color-text-secondary)' }}>{picked.length} selected</span>
-                {nav === 'ready' && <button style={primaryBtn} disabled={busyId !== null} onClick={() => bulk(picked, 'publish')}>Publish {picked.length}</button>}
-                {(nav === 'reading' || nav === 'link') && <button style={secondaryBtn} disabled={busyId !== null} onClick={() => bulk(picked, 'reread')}>Re-read {picked.length}</button>}
-                {nav === 'untruthful' && <button style={dangerBtn} disabled={busyId !== null} onClick={() => bulk(picked, 'reject')}>Reject {picked.length}</button>}
+                {nav === 'ready' && <button style={{ ...primaryBtn, ...btnRow }} disabled={busyId !== null} onClick={() => bulk(picked, 'publish')}><Check size={14} strokeWidth={2.5} />Publish {picked.length}</button>}
+                {(nav === 'reading' || nav === 'link') && <button style={{ ...secondaryBtn, ...btnRow }} disabled={busyId !== null} onClick={() => bulk(picked, 'reread')}><RefreshCw size={14} strokeWidth={2.25} />Re-read {picked.length}</button>}
+                {nav === 'untruthful' && <button style={{ ...dangerBtn, ...btnRow }} disabled={busyId !== null} onClick={() => bulk(picked, 'reject')}><X size={14} strokeWidth={2.5} />Reject {picked.length}</button>}
                 <button style={ghostBtn} onClick={() => setSelected(new Set())}>Clear</button>
               </>
             )}
@@ -1251,13 +1282,19 @@ function Row({
           {/* The sort axis, named. Without it the order looks arbitrary and the
               "accept down to a line and stop where you get uneasy" reading —
               which is the whole point of sorting by evidence — is invisible. */}
-          <Pill bg="var(--bg-pill-neutral)" ink="var(--color-text-tertiary)">
+          <Pill
+            bg={EVIDENCE_TONE[evidenceRank(item.evidence)].bg}
+            ink={EVIDENCE_TONE[evidenceRank(item.evidence)].ink}
+          >
             {EVIDENCE_RANK_LABEL[evidenceRank(item.evidence)]}
           </Pill>
           {/* Funding type as a LABEL on the card, so the tab a row lands in is
               visible without grouping the screen by it. */}
           {item.values.fundingType && (
-            <Pill bg="var(--bg-pill-neutral)" ink="var(--color-text-secondary)">
+            <Pill
+              bg={(TYPE_TONE[item.values.fundingType] ?? TYPE_TONE.grant).bg}
+              ink={(TYPE_TONE[item.values.fundingType] ?? TYPE_TONE.grant).ink}
+            >
               {FUNDING_TYPES.find(t => t.value === item.values.fundingType)?.label ?? item.values.fundingType}
             </Pill>
           )}
@@ -1365,27 +1402,41 @@ function Row({
         {/* Always visible. The previous version put every action behind an
             un-signposted click on the title, so the page read as a list of
             problems with no way to act on any of them. */}
+        {/* FIVE IDENTICAL WHITE BUTTONS ASKED THE READER TO PARSE FIVE LABELS.
+            Two of them CHANGE the row and two only OPEN something to look at,
+            which is the distinction that decides whether a click is safe. They
+            are now separated by weight — solid outline for the two that act,
+            quiet ghost for the two that show — with an icon each so the shape is
+            recognisable before the word is read. A thin rule marks the seam. */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', marginTop: 13 }}>
-          <button onClick={run} disabled={busy} style={primaryBtn}>
+          <button onClick={run} disabled={busy} style={{ ...primaryBtn, ...btnRow }}>
+            {ask.primary === 'publish' ? <Check size={14} strokeWidth={2.5} />
+              : ask.primary === 'fixlink' ? <Link2 size={14} strokeWidth={2.5} />
+              : <RefreshCw size={14} strokeWidth={2.5} />}
             {busy ? `${busyLabel ?? 'Working'}…` : ask.label}
           </button>
           {ask.primary !== 'reread' && (
-            <button onClick={onReRead} disabled={busy} style={secondaryBtn}>Re-read the page</button>
+            <button onClick={onReRead} disabled={busy} style={{ ...secondaryBtn, ...btnRow }}>
+              <RefreshCw size={14} strokeWidth={2.25} />Re-read the page
+            </button>
           )}
           {ask.primary !== 'fixlink' && (
-            <button onClick={onFixLink} disabled={busy} style={secondaryBtn}>Fix the link</button>
+            <button onClick={onFixLink} disabled={busy} style={{ ...secondaryBtn, ...btnRow }}>
+              <Link2 size={14} strokeWidth={2.25} />Fix the link
+            </button>
           )}
+          <span aria-hidden style={{ width: 1, alignSelf: 'stretch', background: 'var(--border-subtle)', margin: '0 2px' }} />
           {item.applyUrl && (
-            <a href={item.applyUrl} target="_blank" rel="noopener noreferrer" style={secondaryBtn}>
-              Open funder page
+            <a href={item.applyUrl} target="_blank" rel="noopener noreferrer" style={{ ...lookBtn, ...btnRow }}>
+              <ExternalLink size={14} strokeWidth={2.25} />Open funder page
             </a>
           )}
           {/* The genuine user-facing component against the genuine public API,
               the same way the Grant detail page does it. Deciding "is this good
               enough to show someone" without being able to see what they get
               meant leaving the queue for the detail page on every row. */}
-          <button onClick={() => setPreview(true)} disabled={busy} style={secondaryBtn}>
-            See what a user sees
+          <button onClick={() => setPreview(true)} disabled={busy} style={{ ...lookBtn, ...btnRow }}>
+            <Eye size={14} strokeWidth={2.25} />See what a user sees
           </button>
           {item.linkSharedWith > 0 && (
             <span style={{
@@ -1401,7 +1452,9 @@ function Row({
           <button onClick={onToggle} style={ghostBtn} aria-expanded={open}>
             {open ? 'Hide details' : 'Details'} {open ? '⌃' : '⌄'}
           </button>
-          <button onClick={onReject} disabled={busy} style={dangerBtn}>Reject</button>
+          <button onClick={onReject} disabled={busy} style={{ ...dangerBtn, ...btnRow }}>
+            <X size={14} strokeWidth={2.5} />Reject
+          </button>
         </div>
 
         {/* Outside `open`, on purpose. A refused write means the row is showing
@@ -1617,6 +1670,25 @@ const ghostBtn: React.CSSProperties = {
   borderRadius: 'var(--radius-input)', padding: '8px 12px', cursor: 'pointer',
   border: '0.5px solid transparent', background: 'transparent',
   color: 'var(--color-text-secondary)',
+}
+/** Icon and label on one baseline. Applied to every action button so the icon
+ *  never shifts the text off centre. */
+const btnRow: React.CSSProperties = {
+  display: 'inline-flex', alignItems: 'center', gap: 6, lineHeight: 1,
+}
+/**
+ * The "just show me" variant.
+ *
+ * Opening the funder's page and previewing what a user sees change nothing, and
+ * rendering them in the same solid outline as Re-read and Fix the link made all
+ * four look equally consequential. Quieter, so the two buttons that WRITE stand
+ * out from the two that only look.
+ */
+const lookBtn: React.CSSProperties = {
+  fontFamily: 'var(--font-space-grotesk)', fontSize: 12.5, fontWeight: 500,
+  borderRadius: 'var(--radius-input)', padding: '8px 13px', cursor: 'pointer',
+  border: '0.5px solid transparent', background: 'var(--bg-pill-neutral)',
+  color: 'var(--color-text-secondary)', textDecoration: 'none',
 }
 const dangerBtn: React.CSSProperties = {
   fontFamily: 'var(--font-space-grotesk)', fontSize: 12.5, fontWeight: 600,
