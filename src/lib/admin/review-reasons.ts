@@ -22,6 +22,7 @@
 
 import { readGrantFlags, type GrantFlag } from '@/lib/grant-flags'
 import { readStamp, PAGE_READ_KEY, type FieldEvidence } from '@/lib/field-evidence'
+import { abstainReason } from '@/lib/verification/abstain'
 import { FEEDBACK_QUEUE_SOURCE } from '@/lib/feedback/triage'
 
 /** Matches cron/reenrich-stale's STALE_AFTER_DAYS. Keep in step. */
@@ -178,17 +179,19 @@ export type ReviewRow = {
 }
 
 /**
- * A year the funder actually wrote: four digits, or two inside a numeric date
- * like 12/08/26.
- *
  * Paul's condition, 2026-08-16: a removal may not act on a deadline the page did
  * not state in full. `round_closed` is a deterministic function of the proposed
  * deadline falling in the past (23 rows of 23), so a year-less date resolved to
  * a wrong past year turns an open fund into a closed one. Greggs' Community
  * Action Fund is the proof: its page says "until 28th August", the verifier read
  * 2024, and the fund is open. Six of those 23 rest on an inferred year.
+ *
+ * The regex moved to `src/lib/verification/abstain.ts` on 2026-08-17, when the
+ * removal actuator became its second caller. The gate and the actuator MUST
+ * abstain on exactly the same rows: two copies would drift the first time
+ * either was edited, and the gate would then block rows the actuator had
+ * already acted on, or worse, wave through rows it had refused.
  */
-const YEAR_STATED_RE = /\d{4}|\d{1,2}[/.-]\d{1,2}[/.-]\d{2}\b/
 
 const SEVERITY_ORDER: Record<ReviewSeverity, number> = { critical: 0, check: 1, changed: 2 }
 
@@ -335,14 +338,16 @@ export function deriveReviewReasons(row: ReviewRow, todayISO?: string): ReviewRe
       break
     }
     case 'round_closed': {
-      // ABSTAIN where the year was inferred. See YEAR_STATED_RE above: acting on
-      // a date the funder never wrote is how an open fund gets taken down.
-      const dl = readStamp(row.field_evidence, 'deadline')
-      if (dl?.quote && YEAR_STATED_RE.test(dl.quote)) {
+      // ABSTAIN where the year was inferred, or where the sentence describes the
+      // fund opening rather than closing. Acting on a date the funder never
+      // wrote is how an open fund gets taken down, and this gate must hold the
+      // same rows as the removal actuator — same function, one definition.
+      const quote = readStamp(row.field_evidence, 'deadline')?.quote
+      if (quote && !abstainReason({ quote, requireYear: true })) {
         reasons.push({
           code: 'page_says_round_closed', severity: 'critical',
           label: 'Page says this round has closed',
-          detail: `the funder's page says "${dl.quote}"`,
+          detail: `the funder's page says "${quote}"`,
         })
       }
       break
