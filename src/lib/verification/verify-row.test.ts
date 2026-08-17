@@ -298,3 +298,38 @@ describe('link noise, after the 16 August measurement run', () => {
     expect(out).toEqual(['https://example.org/grants/eligibility'])
   })
 })
+
+/**
+ * `wrong_fund` is the biggest defect class in the catalogue — 190 live rows on
+ * 2026-08-17 — and until this it never earned a second page, because correcting
+ * a URL read as ADDING a claim and so waited for a human.
+ *
+ * Paul retired that framing the same day: the line is verifiable versus
+ * judgement, not add versus remove. "Does this page name this fund?" is a test,
+ * so the engine may answer it.
+ */
+describe('decideHop — the page loads but is the wrong fund', () => {
+  const wrongFund: Pick<VerifyResult, 'gate' | 'outcome' | 'evidence' | 'fundsOnPage'> = {
+    gate:     { pass: false, failure: 'wrong_fund', detail: 'page is about something else' },
+    outcome:  'fixable_link',
+    evidence: [],
+  }
+
+  it('hops, looking for the page that does name the fund', () => {
+    expect(decideHop(wrongFund, 'Our Fund', 'timing')).toEqual({
+      want: 'funding',
+      why:  'the page loads but does not describe this fund',
+    })
+  })
+
+  it('hops under both scopes — it is not part of the eligibility widening', () => {
+    expect(decideHop(wrongFund, 'Our Fund', 'any')?.want).toBe('funding')
+  })
+
+  it('does NOT hop for a fetch failure — a second page cannot fix a dead host', () => {
+    for (const failure of ['fetch_failed', 'no_content'] as const) {
+      const r = { ...wrongFund, gate: { pass: false as const, failure, detail: '' } }
+      expect(decideHop(r, 'Our Fund', 'timing'), failure).toBeNull()
+    }
+  })
+})

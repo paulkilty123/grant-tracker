@@ -157,6 +157,41 @@ export type VerifyResult = {
   pagesRead?: string[]
   /** Set on multiple_funds: what the page actually covers, for a split decision. */
   fundsOnPage?: string[]
+  /**
+   * Set when the row's `apply_url` was WRONG and a hop found the page that
+   * actually names this fund.
+   *
+   * This is the one correction the engine may make to a URL, and it exists
+   * because the test behind it is objective rather than a judgement: the
+   * candidate is on the same host, and the funder's own page names the fund we
+   * hold. Paul redrew the line on 2026-08-17 — "verifiable versus judgement, not
+   * add versus remove" — and "does this page name this fund?" is testable, so it
+   * sits on the engine's side of it.
+   *
+   * `from` is kept so every change is reversible, and because a wrong
+   * `apply_url` is very often the funder's INDEX page, which is worth recording
+   * rather than discarding.
+   */
+  urlCorrection?: {
+    from:        string
+    to:          string
+    /** What the candidate page called the fund. The sentence that justifies it. */
+    fundOnPage:  string
+  }
+  /**
+   * The funder's funding-INDEX page: the page that lists their funds, as
+   * distinct from `apply_url` which points at one of them.
+   *
+   * Captured opportunistically, because a URL hunt is the one moment both URLs
+   * are in hand. Two ways it is recognised: the page we started on was a front
+   * door (`isFrontDoorUrl`), or a hop landed on a page covering several funds.
+   *
+   * Paul, 2026-08-17: "the structural fix after launch is a funder-level record
+   * with an index page and fund rows hanging off it, and watching those index
+   * pages is how new rounds get found without paying for search. Don't build any
+   * of that now, just don't throw away the URLs while you're in there."
+   */
+  fundingIndexUrl?: string
   /** Set when a HOP landed on a multi-fund page. The row itself verified fine;
    *  the detail it is missing lives on a page that serves several funds, so no
    *  amount of re-reading will fill the gap. The fix is a catalogue split. */
@@ -355,15 +390,42 @@ export function isFrontDoorUrl(url: string | null | undefined): boolean {
  */
 export type LinkWant = 'funding' | 'timing' | 'detail'
 
+/**
+ * Words that carry no identity: every other fund in the catalogue has them.
+ * Stripped before a title is used to score links, or "Grants" would match
+ * every link on the site equally.
+ */
+const TITLE_NOISE = /\b(the|a|an|of|for|and|to|in|our|we|fund|funds|funding|grant|grants|programme|programmes|program|scheme|trust|foundation|charity|charitable|award|awards|round|one|two)\b/g
+
+/** The distinctive words in a fund's title, longest first. */
+export function titleTokens(title: string): string[] {
+  return Array.from(new Set(
+    title.toLowerCase().replace(/[^a-z0-9]+/g, ' ').replace(TITLE_NOISE, ' ')
+      .split(/\s+/).filter(w => w.length >= 4),
+  )).sort((a, b) => b.length - a.length).slice(0, 6)
+}
+
 export function candidateLinks(
   pageSource: string, baseUrl: string, isMarkdown: boolean,
   want: LinkWant = 'funding',
   alreadySeen: readonly string[] = [],
+  /**
+   * The fund we are hunting for.
+   *
+   * WITHOUT THIS THE HUNT SCORES ON GENERIC WORDS AND PICKS THE WRONG PAGE.
+   * Measured on the first twelve `wrong_fund` rows: the top-scored candidate for
+   * Arts Council of Northern Ireland's Lottery Grants was
+   * `/funding/other-funders`, which matches FUNDING_LINK twice and names nothing.
+   * The signal that actually finds a named fund is the fund's own name, and it
+   * was the one thing the scorer never looked at.
+   */
+  titleHint?: string,
 ): string[] {
   let base: URL
   try { base = new URL(baseUrl) } catch { return [] }
 
   const found: { url: string; score: number }[] = []
+  const tokens = titleHint ? titleTokens(titleHint) : []
   // The seen set spans hops, not just this page, so a two-hop walk cannot
   // circle back to a page it has already spent a model call on.
   const seen = new Set<string>([base.href.replace(/\/$/, ''), ...alreadySeen])
@@ -411,19 +473,31 @@ export function candidateLinks(
     // the dates live on /grants rather than on a page that says "dates". It
     // must not accept ONLY funding pages, or the bias does nothing.
     const fallbackHits = want === 'funding' ? 0 : (haystack.match(FUNDING_LINK) ?? []).length
-    if (primaryHits === 0 && fallbackHits === 0) continue
+
+    // The fund's own name outranks everything. A link naming it is admissible
+    // even with no generic funding word in it at all — "Lottery Project Funding"
+    // does not have to also say "grants" to be the right page.
+    const hay = haystack.toLowerCase()
+    const nameHits = tokens.filter(t => hay.includes(t)).length
+    const nameInPath = tokens.filter(t => abs.pathname.toLowerCase().includes(t)).length
+
+    if (primaryHits === 0 && fallbackHits === 0 && nameHits === 0) continue
 
     // Prefer a match in the path over one in link text, and shallower paths.
     const depth = abs.pathname.split('/').filter(Boolean).length
     const score = primaryHits * 4 + fallbackHits
       + (primary.test(abs.pathname) ? 5 : 0)
       + (want !== 'funding' && FUNDING_LINK.test(abs.pathname) ? 1 : 0)
+      + nameHits * 10 + nameInPath * 8
       - depth
     seen.add(key)
-    found.push({ url: abs.href, score })
+    // Fragment stripped: a `#tab4` link is the SAME page, and following one
+    // spends a model call to re-read what we have already read. Waterloo
+    // Foundation's tabbed homepage did exactly that.
+    found.push({ url: abs.href.split('#')[0], score })
   }
 
-  return found.sort((a, b) => b.score - a.score).map(f => f.url).slice(0, 3)
+  return found.sort((a, b) => b.score - a.score).map(f => f.url).slice(0, 5)
 }
 
 async function fetchDirect(url: string): Promise<string> {
@@ -751,7 +825,19 @@ function quoteIsGrounded(quote: string | null, pageText: string): boolean {
 
 /** Pages read per row, including apply_url. Two hops reaches
  *  "homepage → funding → this fund". Three would be a crawl. */
+/**
+ * Pages read per row. Three is right for the timing hop, which is looking for
+ * one answer and gives up cheaply.
+ *
+ * A URL hunt is a different shape: the top-scored link is often not the fund,
+ * and the whole value is in trying the next one rather than abandoning the row.
+ * Measured on the first twelve rows, one candidate each produced one correction
+ * out of twelve — five of the eleven abstains had a plausible second candidate
+ * the loop never reached. `MAX_PAGES_URL_HUNT` buys those attempts and nothing
+ * else: it applies only when the first page failed with `wrong_fund`.
+ */
 const MAX_PAGES = 3
+const MAX_PAGES_URL_HUNT = 5
 
 /** Circuit breaker, not a target. Counts proxy retries too. */
 const MAX_MODEL_CALLS = 5
@@ -813,6 +899,22 @@ export function decideHop(
   const failure = (current.gate as { failure?: GateFailure }).failure
   if (!current.gate.pass && failure === 'no_funding_detail') {
     return { want: 'funding', why: 'the page carried no funding detail' }
+  }
+  // THE BIGGEST CLASS IN THE CATALOGUE, AND IT NEVER HOPPED.
+  //
+  // `wrong_fund` means the link loads and our fund is not on it — 190 live rows
+  // on 2026-08-17, the largest single defect class there is, and the one Paul's
+  // spot check kept surfacing by hand. It was excluded from the hop for the same
+  // reason it was excluded from the removal actuator: correcting a URL reads as
+  // ADDING a claim, so it waited for a human.
+  //
+  // That framing was retired on 2026-08-17. The test is objective — same host,
+  // and the candidate page names the fund we hold — so it belongs to the engine.
+  // A row whose page describes a different fund is precisely the row a second
+  // page is most likely to fix, because the funder almost always still lists it
+  // one click away.
+  if (!current.gate.pass && failure === 'wrong_fund') {
+    return { want: 'funding', why: 'the page loads but does not describe this fund' }
   }
   if (current.outcome === 'multiple_funds'
       && (current.fundsOnPage ?? []).some(f => namesMatch(rowTitle, f))) {
@@ -956,13 +1058,29 @@ export async function verifyRow(
   const visited  = [norm(row.apply_url)]
   let   current  = best as VerifyResult | null
 
-  while (current && visited.length < MAX_PAGES && modelCalls < MAX_MODEL_CALLS) {
+  // Captured BEFORE the loop. `current` is replaced by foldResult on every hop,
+  // so the first page's verdict is gone by the time a candidate is judged, and
+  // a URL correction is only legitimate if the page we STARTED on was wrong.
+  // Read off `current` rather than `best`: `best` is only ever assigned inside
+  // the `keep` closure, so control-flow analysis still has it as `null` here.
+  const startedWrongFund = !!current && !current.gate.pass
+    && (current.gate as { failure?: GateFailure }).failure === 'wrong_fund'
+  let   correction: VerifyResult['urlCorrection']
+  /** A page found to cover several funds during a hunt — the funder's index. */
+  let   indexUrl: string | undefined
+  /** The page the hunt scores links from. Normally the last page read, but a
+   *  failed URL candidate must not become the new origin — the links worth
+   *  trying next are still the ones on the page we started from. */
+  const originFetched = lastFetched
+  const pageBudget = startedWrongFund ? MAX_PAGES_URL_HUNT : MAX_PAGES
+
+  while (current && visited.length < pageBudget && modelCalls < MAX_MODEL_CALLS) {
     const decision = decideHop(current, row.title, opts.hopOn)
     if (!decision) break
     const { want, why } = decision
 
     const scored = lastFetched
-      ? candidateLinks(lastFetched.source, lastFetched.url, lastFetched.isMarkdown, want, visited)
+      ? candidateLinks(lastFetched.source, lastFetched.url, lastFetched.isMarkdown, want, visited, row.title)
       : []
     const target = scored[0] ?? followedFrom.find(l => !visited.includes(norm(l)))
     if (!target) {
@@ -991,6 +1109,11 @@ export async function verifyRow(
       // verdict because one link was mis-scored.
       current.notes = [...current.notes, `followed ${target} because ${why}, and it did not describe this fund`]
       current.usage = usage
+      // ON A URL HUNT, A MISS IS NOT A STOP. The top-scored link being wrong is
+      // the ordinary case, not a signal to abandon the row. Restore the origin
+      // so the next iteration scores the SAME page's remaining links — `visited`
+      // now excludes this one — rather than the dead end we just read.
+      if (startedWrongFund) { lastFetched = originFetched; continue }
       break
     }
 
@@ -1005,7 +1128,34 @@ export async function verifyRow(
       current.notes = [...current.notes,
         `followed ${target} because ${why}, and it covers ${(deeper.fundsOnPage ?? []).length} funds: extracted nothing, this row needs splitting`]
       current.usage = usage
+      // A PAGE COVERING MANY FUNDS IS THE FUNDER'S INDEX, WHICH IS THE THING WE
+      // WERE ASKED TO KEEP. Waterloo Foundation's lists 22, Arts Council of
+      // Northern Ireland's 18. On a URL hunt that is progress, not a dead end:
+      // our fund is very likely one click from here, so carry on scoring from
+      // it. Extraction still does not happen — blending 22 funds onto one row is
+      // worse than the gap — but the index is recorded either way.
+      if (startedWrongFund) {
+        indexUrl ??= target
+        lastFetched = { source: fetched.source, url: fetched.url, isMarkdown: fetched.via === 'proxy', links: fetched.links }
+        continue
+      }
       break
+    }
+
+    // THE URL CORRECTION, and the only condition under which one is recorded.
+    //
+    // The row we started from failed the gate with `wrong_fund` — the page loads
+    // and our fund is not on it — and this candidate PASSED the gate, on the
+    // same host, naming the fund. Both halves are objective: `sameSite` is
+    // enforced in candidateLinks, and `fund_on_page` is the model reporting what
+    // the page calls the fund, which `namesMatch` then has to agree with.
+    //
+    // Abstain rather than guess is the default and costs nothing to honour: if
+    // no candidate passes the gate, the loop above has already broken out with a
+    // note and no correction is set.
+    const named = deeper.gate.pass ? (deeper.gate as { fund_on_page: string | null }).fund_on_page : null
+    if (startedWrongFund && !correction && named && namesMatch(row.title, named)) {
+      correction = { from: row.apply_url, to: target, fundOnPage: named }
     }
 
     current = foldResult(current, deeper)
@@ -1016,6 +1166,11 @@ export async function verifyRow(
 
   if (current) {
     current.pagesRead = visited
+    if (correction) current.urlCorrection = correction
+    // A discovered multi-fund page wins over the starting URL: it was proven to
+    // list funds, whereas a front door is only inferred to from its shape.
+    const index = indexUrl ?? (isFrontDoorUrl(row.apply_url) ? row.apply_url : undefined)
+    if (index) current.fundingIndexUrl = index
     return current
   }
   return { ...base, outcome: 'fixable_link', gate: { pass: false, failure: 'fetch_failed', detail: 'no attempt completed' } }
