@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { sectionOf, evidenceRank, SECTIONS, arrivalOrigin, isNewArrival, rootCauseOf, explainedBy } from './review-sections'
+import { sectionOf, evidenceRank, SECTIONS, arrivalOrigin, isNewArrival, rootCauseOf, explainedBy, isIncomplete } from './review-sections'
 import { BLOCKING_CODES } from './publish-gate'
 import type { EvidenceSummary } from './evidence-summary'
 
@@ -177,5 +177,40 @@ describe('rootCauseOf / explainedBy — one cause, not six consequences', () => 
   it('leaves a row with independent problems showing all of them', () => {
     expect(rootCauseOf(['amount_pot_suspected', 'deadline_implausible'])).toBeNull()
     expect(explainedBy(null, ['amount_pot_suspected', 'deadline_implausible'])).toEqual([])
+  })
+})
+
+describe('unblocked is not the same claim as ready to publish', () => {
+  // Paul's test, 17 August: "everything in ready to publish should be something
+  // I'd click publish on without reading further."
+  it('keeps a row with no warnings at all in ready', () => {
+    expect(sectionOf([], [])).toBe('ready')
+    expect(sectionOf([], ['link_unverified'])).toBe('ready')
+  })
+
+  it('moves an unblocked but incomplete row to reading', () => {
+    for (const c of ['eligibility_missing', 'no_deadline', 'no_amount',
+                     'sectors_missing', 'beneficiaries_generic_only'])
+      expect(sectionOf([], [c]), c).toBe('reading')
+  })
+
+  it('does not treat an unchecked link as incomplete', () => {
+    // A homepage link is not a defect, and no re-read fills in "we have not looked".
+    expect(isIncomplete(['link_unverified'])).toBe(false)
+  })
+
+  it('still routes a blocked row by its blocking code, not its gaps', () => {
+    expect(sectionOf(['link_dead'], ['link_dead', 'eligibility_missing'])).toBe('link')
+  })
+
+  it('names several absences as one unread page', () => {
+    // Three chips — no eligibility, no deadline, no beneficiaries — is one cause.
+    const codes = ['eligibility_missing', 'no_deadline', 'beneficiaries_generic_only']
+    expect(rootCauseOf(codes)).toBe('incomplete_read')
+    expect(explainedBy('incomplete_read', codes)).toHaveLength(3)
+  })
+
+  it('does not invent a cause from a single absence', () => {
+    expect(rootCauseOf(['no_deadline'])).toBeNull()
   })
 })

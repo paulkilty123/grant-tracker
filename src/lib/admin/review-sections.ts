@@ -45,11 +45,11 @@ export type SectionId = 'ready' | 'link' | 'reading' | 'judgement' | 'untruthful
 
 export const SECTIONS: { id: SectionId; label: string; detail: string }[] = [
   { id: 'ready',      label: 'Ready to publish',
-    detail: 'Nothing on these is blocking. Accepting one changes what users can find today.' },
+    detail: 'No warnings at all. Publish without reading further — that is the bar for being in here.' },
   { id: 'link',       label: 'The link is dead, or the page is not about this fund',
     detail: 'A link that goes nowhere, or loads a page describing something else. A homepage is not a problem and is not here.' },
   { id: 'reading',    label: 'Needs reading',
-    detail: 'Nobody, human or machine, has read the funder’s page for these. No judgement is possible until something has.' },
+    detail: 'The page has not been read, or was read and left gaps a fundraiser needs — eligibility, dates, who it is for.' },
   { id: 'judgement',  label: 'Needs your judgement',
     detail: 'The page was read and what it says is genuinely arguable. These are the ones only you can settle.' },
   { id: 'untruthful', label: 'Nothing truthful to show',
@@ -110,8 +110,11 @@ const SECTION_PRIORITY: SectionId[] = ['untruthful', 'link', 'reading', 'judgeme
  * server (`gate.blocking`) because the blocking set lives in `publish-gate.ts`,
  * which pulls server modules that must not reach a client component.
  */
-export function sectionOf(blockingCodes: readonly string[]): SectionId {
-  if (blockingCodes.length === 0) return 'ready'
+export function sectionOf(blockingCodes: readonly string[], allCodes: readonly string[] = blockingCodes): SectionId {
+  // Unblocked is not the same claim as ready. A row the gate would publish but
+  // which tells a fundraiser nothing about who may apply is not something
+  // anyone would click publish on unread — it needs the page reading.
+  if (blockingCodes.length === 0) return isIncomplete(allCodes) ? 'reading' : 'ready'
   const hit = new Set<SectionId>()
   for (const code of blockingCodes) {
     const s = CODE_SECTION[code as ReviewReasonCode]
@@ -240,9 +243,44 @@ const CONSEQUENCE: ReadonlySet<string> = new Set([
   'stale_enrichment', 'amount_ungrounded',
 ])
 
-/** The one cause worth stating, or null when the row has no single explanation. */
+/**
+ * Absences a re-read would fill.
+ *
+ * None of these BLOCKS publication — the gate is right that a row can be honest
+ * while incomplete, since absence renders as absence. But "unblocked" and "ready
+ * to publish" are different claims, and the section was making the second while
+ * only checking the first: it said "nothing blocking" over a card carrying three
+ * warnings and the line "this fund currently matches nobody".
+ *
+ * Paul's test, 2026-08-17: "everything in ready to publish should be something
+ * I'd click publish on without reading further. If it isn't, it belongs
+ * elsewhere." A row with no eligibility fails that test, so it goes to READING,
+ * where a re-read is what it actually needs.
+ *
+ * `link_unverified` is deliberately absent: an unchecked link is not an absence
+ * a re-read fills, and a link landing on a funder's homepage is not a defect.
+ */
+const INCOMPLETE: ReadonlySet<string> = new Set([
+  'eligibility_missing', 'no_deadline', 'no_amount',
+  'sectors_missing', 'beneficiaries_generic_only', 'stale_enrichment',
+])
+
+/** Is this row unblocked but too thin to publish without reading it first? */
+export function isIncomplete(codes: readonly string[]): boolean {
+  return codes.some(c => INCOMPLETE.has(c))
+}
+
+/**
+ * The one cause worth stating, or null when the row has no single explanation.
+ *
+ * `incomplete_read` is synthetic — no reason code by that name exists. Several
+ * absences on one row are not several problems; they are one page nobody has
+ * read properly, and stating them as three chips makes the reviewer infer the
+ * cause the screen already knows.
+ */
 export function rootCauseOf(codes: readonly string[]): string | null {
   for (const c of ROOT_CAUSES) if (codes.includes(c)) return c
+  if (codes.filter(c => INCOMPLETE.has(c)).length >= 2) return 'incomplete_read'
   return null
 }
 

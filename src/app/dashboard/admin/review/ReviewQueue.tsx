@@ -37,7 +37,7 @@ import type { MergeRejection } from '@/lib/grant-merge'
 import {
   SECTIONS, sectionOf, evidenceRank, EVIDENCE_RANK_LABEL,
   arrivalOrigin, isNewArrival, ORIGIN_LABEL, NEW_ARRIVAL_DAYS,
-  rootCauseOf, explainedBy,
+  rootCauseOf, explainedBy, isIncomplete,
   type SectionId,
 } from '@/lib/admin/review-sections'
 
@@ -359,7 +359,9 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
   const sectioned = useMemo(() => {
     const bucket = new Map<SectionId, QueueItem[]>()
     for (const s of SECTIONS) bucket.set(s.id, [])
-    for (const item of shown) bucket.get(sectionOf(item.blockingCodes))!.push(item)
+    for (const item of shown) {
+      bucket.get(sectionOf(item.blockingCodes, item.reasons.map(r => r.code)))!.push(item)
+    }
     const cmp = sortBy === 'newest' ? byNewest : bySafest
     for (const sec of SECTIONS) bucket.get(sec.id)!.sort(cmp)
     return bucket
@@ -780,17 +782,6 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
         Review queue
       </h1>
 
-      {/* THREE NUMBERS. Not a paragraph — if the screen needs explaining, the
-          layout is wrong. Each is a link to the thing it counts. */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 22 }}>
-        <Stat n={liveAndWrong.length} label="live and wrong" tone="alert"
-              active={nav === 'liveandwrong'} onClick={() => go('liveandwrong')} />
-        <Stat n={sectionCounts.ready ?? 0} label="ready to publish"
-              active={nav === 'ready'} onClick={() => go('ready')} />
-        <Stat n={newArrivals.length} label="new this week"
-              active={nav === 'new'} onClick={() => go('new')} />
-      </div>
-
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(210px, 240px) 1fr', gap: 26, alignItems: 'start' }}>
 
         {/* ── The rail. Sections ARE the navigation. ────────────────────── */}
@@ -979,6 +970,21 @@ type Ask = { line: string; primary: 'publish' | 'reread' | 'fixlink'; label: str
  */
 function askFor(item: QueueItem): Ask {
   const has = (c: string) => item.reasons.some(r => r.code === c)
+  const codes = item.reasons.map(r => r.code)
+
+  // NOTHING BLOCKING AND NOTHING MISSING — SO OFFER THE BUTTON THE SECTION IS
+  // NAMED AFTER. "Ready to publish" used to show "Re-read the page" as its green
+  // primary action, because askFor ranked absences above the absence of any
+  // problem at all. The whole point of the section is the publish button.
+  if (item.blockingCodes.length === 0 && !isIncomplete(codes)) {
+    return {
+      line: item.isActive
+        ? 'Nothing on this row is blocking and nothing is missing. Keeping it live needs no further reading.'
+        : 'Nothing on this row is blocking and nothing is missing. It can go live as it stands.',
+      primary: 'publish',
+      label: item.isActive ? 'Looks right, keep it live' : 'Publish it',
+    }
+  }
   // 141 of 172 rows in this queue are already live, so "Publish" is the wrong
   // word for most of them. It is a confirmation, not a reveal.
   const keep = item.isActive ? 'Looks right, keep it live' : 'Looks right, publish it'
@@ -1618,29 +1624,6 @@ const dangerBtn: React.CSSProperties = {
   border: '0.5px solid transparent', background: 'transparent', color: 'var(--coral-deep)',
 }
 
-/** A headline number. Three of these replace two paragraphs of prose. */
-function Stat({ n, label, onClick, active, tone }: {
-  n: number; label: string; onClick: () => void; active: boolean; tone?: 'alert'
-}) {
-  const alert = tone === 'alert' && n > 0
-  return (
-    <button
-      onClick={onClick}
-      aria-pressed={active}
-      style={{
-        ...display, cursor: 'pointer', textAlign: 'left',
-        borderRadius: 'var(--radius-card)', padding: '10px 16px',
-        border: `0.5px solid ${active ? 'var(--green-deep)' : alert ? 'var(--coral-saturated)' : 'var(--border-subtle)'}`,
-        background: alert ? 'var(--coral-pale)' : 'var(--color-surface)',
-        color: alert ? 'var(--coral-deep)' : 'var(--color-text-primary)',
-        minWidth: 128,
-      }}
-    >
-      <div style={{ fontSize: 22, fontWeight: 500, lineHeight: 1.1, fontVariantNumeric: 'tabular-nums' }}>{n}</div>
-      <div style={{ fontSize: 12, opacity: 0.85 }}>{label}</div>
-    </button>
-  )
-}
 
 function RailHeading({ children }: { children: React.ReactNode }) {
   return (

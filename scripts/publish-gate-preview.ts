@@ -16,6 +16,7 @@ import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { deriveReviewReasons, type ReviewRow } from '../src/lib/admin/review-reasons'
 import { gateDecision } from '../src/lib/admin/publish-gate'
+import { sectionOf } from '../src/lib/admin/review-sections'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 for (const line of readFileSync(resolve(HERE, '..', '.env.local'), 'utf8').split('\n')) {
@@ -64,6 +65,19 @@ async function main() {
       for (const b of decision.blocking) newlyBlockedBy[b.code] = (newlyBlockedBy[b.code] ?? 0) + 1
     }
   }
+
+  // How the not-live queue divides under the review sections. Ready must mean
+  // "publish without reading further", so the split is worth checking rather
+  // than assuming.
+  const sec: Record<string, number> = {}
+  for (const r of rows) {
+    if (r.is_active === true) continue
+    const reasons = deriveReviewReasons(r, today)
+    const d = gateDecision(r, reasons)
+    const id = sectionOf(d.blocking.map(b => b.code), reasons.map(x => x.code))
+    sec[id] = (sec[id] ?? 0) + 1
+  }
+  console.log('not-live by section:', sec)
 
   console.log(`queue: ${rows.length} rows`)
   console.log('outcomes:', counts)
