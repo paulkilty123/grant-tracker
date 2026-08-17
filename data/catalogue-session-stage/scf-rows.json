@@ -1,0 +1,219 @@
+{
+  "compiled_at": "2026-05-26",
+  "source_session": "catalogue-session-2026-05-26",
+  "source": "manual ingest from sussexcommunityfoundation.org/grants/how-to-apply/main-grants/ and /how-to-apply/additional-grants/",
+  "ingest_protocol_reminders": [
+    "external_id prefix is `staged-scf-` so post-submission SCF scraper does not collide / overwrite (Paul's 2026-05-26 ask).",
+    "Default is_active=false on insert — review via Needs Review queue before activating.",
+    "Manual rows persist past next crawl as long as scraper does not produce a row with the same external_id. Post-submission scraper should namespace under `scf-<slug>` (no prefix) so they coexist.",
+    "url_status='unchecked' on insert. Admin sets 'ok' on activation after URL verification.",
+    "civil_society_relevant=true and applicant_type='organisation' for all rows except Westdene (individual-only, excluded from this staging).",
+    "Source page does NOT host per-fund detail URLs. All four geographic sub-funds share Main Grants application portal. apply_url is the Main Grants page (or Additional Grants page for Chagossian) so users land on substantive descriptive content rather than the bare login portal."
+  ],
+  "rows": [
+    {
+      "external_id": "staged-scf-main-grants",
+      "title": "Sussex Community Foundation — Main Grants",
+      "funder": "Sussex Community Foundation",
+      "funder_type": "community_foundation",
+      "funding_type": "grant",
+      "amount_min": 1000,
+      "amount_max": 10000,
+      "deadline": "2026-06-05",
+      "is_rolling": false,
+      "is_local": true,
+      "is_active": false,
+      "url_status": "unchecked",
+      "apply_url": "https://sussexcommunityfoundation.org/grants/how-to-apply/main-grants/",
+      "source": "sussex_community_foundation",
+      "description": "Sussex Community Foundation Main Grants supports grassroots and community organisations across Sussex delivering vital local work. Average award just over £5,000. Grants cover core operational costs and project expenses for up to one year. Applications are matched to relevant funds within four priority areas (Tackling Poverty, Improving Health, Reaching Potential, Acting on Climate) and to geographic sub-funds (Brighton & Hove Legacy, Gatwick Foundation, Lewes, Rye) where applicable — single application form covers all.",
+      "eligibility_criteria": [
+        "Not-for-profit volunteer-led organisations",
+        "Annual income not exceeding £2 million",
+        "Preference for organisations led by and supporting people from underrepresented communities",
+        "Preference for small-to-medium-sized groups",
+        "Working in Sussex"
+      ],
+      "eligible_structures": ["registered_charity", "cio", "cic_guarantee", "cic_shares", "unincorporated", "ltd_guarantee", "cooperative"],
+      "applicant_type": "organisation",
+      "civil_society_relevant": true,
+      "impact_sectors": ["community", "health", "education", "environment"],
+      "beneficiary_groups": ["people_in_poverty", "general_public"],
+      "location_tag": "Sussex",
+      "diversity_tags": ["underrepresented_communities"],
+      "raw_data": {
+        "priority_areas": ["Tackling Poverty", "Improving Health", "Reaching Potential", "Acting on Climate"],
+        "shared_application_portal": "https://sussexcf.my.site.com/fundseekerportal/s/login",
+        "annual_cycle": true,
+        "sub_funds_in_round": ["brighton_hove_legacy", "gatwick_foundation", "lewes", "rye"]
+      }
+    },
+    {
+      "external_id": "staged-scf-bh-legacy-fund",
+      "title": "Brighton & Hove Legacy Fund (via SCF Main Grants)",
+      "funder": "Sussex Community Foundation",
+      "funder_type": "community_foundation",
+      "funding_type": "grant",
+      "amount_min": 1000,
+      "amount_max": 10000,
+      "deadline": "2026-06-05",
+      "is_rolling": false,
+      "is_local": true,
+      "is_active": false,
+      "url_status": "unchecked",
+      "apply_url": "https://sussexcommunityfoundation.org/grants/how-to-apply/main-grants/",
+      "source": "sussex_community_foundation",
+      "description": "Brighton & Hove Legacy Fund operates within Sussex Community Foundation's Main Grants programme with a specific focus on Children and Young People in Brighton & Hove. Single Main Grants application covers eligibility for this fund where the project is Brighton & Hove-based and serves children or young people. Amount and timing follow Main Grants (£1,000–£10,000, deadline 5 June 2026).",
+      "eligibility_criteria": [
+        "Project must serve children and/or young people",
+        "Geographic focus: Brighton & Hove",
+        "Not-for-profit volunteer-led organisations",
+        "Annual income not exceeding £2 million",
+        "Preference for organisations led by and supporting people from underrepresented communities"
+      ],
+      "eligible_structures": ["registered_charity", "cio", "cic_guarantee", "cic_shares", "unincorporated", "ltd_guarantee", "cooperative"],
+      "applicant_type": "organisation",
+      "civil_society_relevant": true,
+      "impact_sectors": ["young_people", "education", "community"],
+      "beneficiary_groups": ["children", "young_people"],
+      "target_beneficiaries": ["children", "young_people"],
+      "location_tag": "Brighton and Hove",
+      "diversity_tags": ["underrepresented_communities"],
+      "raw_data": {
+        "parent_programme": "scf_main_grants",
+        "shared_application_portal": "https://sussexcf.my.site.com/fundseekerportal/s/login",
+        "annual_cycle": true,
+        "cohort_relevance_note": "Headline row for Brighton youth-arts queries. Matches Member A (ThirdSpace Theatre, Brighton CIC, creative + young people)."
+      }
+    },
+    {
+      "external_id": "staged-scf-gatwick-foundation-fund",
+      "title": "Gatwick Foundation Fund (via SCF Main Grants)",
+      "funder": "Sussex Community Foundation",
+      "funder_type": "community_foundation",
+      "funding_type": "grant",
+      "amount_min": 1000,
+      "amount_max": 10000,
+      "deadline": "2026-06-05",
+      "is_rolling": false,
+      "is_local": true,
+      "is_active": false,
+      "url_status": "unchecked",
+      "apply_url": "https://sussexcommunityfoundation.org/grants/how-to-apply/main-grants/",
+      "source": "sussex_community_foundation",
+      "description": "Gatwick Foundation Fund operates within SCF Main Grants for projects in communities affected by Gatwick Airport. Single Main Grants application covers eligibility. Amount and timing follow Main Grants (£1,000–£10,000, deadline 5 June 2026).",
+      "eligibility_criteria": [
+        "Geographic focus: communities affected by Gatwick Airport",
+        "Not-for-profit volunteer-led organisations",
+        "Annual income not exceeding £2 million"
+      ],
+      "eligible_structures": ["registered_charity", "cio", "cic_guarantee", "cic_shares", "unincorporated", "ltd_guarantee", "cooperative"],
+      "applicant_type": "organisation",
+      "civil_society_relevant": true,
+      "impact_sectors": ["community", "environment"],
+      "location_tag": "Gatwick area",
+      "raw_data": {
+        "parent_programme": "scf_main_grants",
+        "shared_application_portal": "https://sussexcf.my.site.com/fundseekerportal/s/login",
+        "annual_cycle": true
+      }
+    },
+    {
+      "external_id": "staged-scf-lewes-fund",
+      "title": "Lewes Fund (via SCF Main Grants)",
+      "funder": "Sussex Community Foundation",
+      "funder_type": "community_foundation",
+      "funding_type": "grant",
+      "amount_min": 1000,
+      "amount_max": 10000,
+      "deadline": "2026-06-05",
+      "is_rolling": false,
+      "is_local": true,
+      "is_active": false,
+      "url_status": "unchecked",
+      "apply_url": "https://sussexcommunityfoundation.org/grants/how-to-apply/main-grants/",
+      "source": "sussex_community_foundation",
+      "description": "Lewes Fund operates within SCF Main Grants for projects in the Lewes district. Single Main Grants application covers eligibility. Amount and timing follow Main Grants (£1,000–£10,000, deadline 5 June 2026).",
+      "eligibility_criteria": [
+        "Geographic focus: Lewes district",
+        "Not-for-profit volunteer-led organisations",
+        "Annual income not exceeding £2 million"
+      ],
+      "eligible_structures": ["registered_charity", "cio", "cic_guarantee", "cic_shares", "unincorporated", "ltd_guarantee", "cooperative"],
+      "applicant_type": "organisation",
+      "civil_society_relevant": true,
+      "impact_sectors": ["community"],
+      "location_tag": "Lewes",
+      "raw_data": {
+        "parent_programme": "scf_main_grants",
+        "shared_application_portal": "https://sussexcf.my.site.com/fundseekerportal/s/login",
+        "annual_cycle": true
+      }
+    },
+    {
+      "external_id": "staged-scf-rye-fund",
+      "title": "Rye Fund (via SCF Main Grants)",
+      "funder": "Sussex Community Foundation",
+      "funder_type": "community_foundation",
+      "funding_type": "grant",
+      "amount_min": 1000,
+      "amount_max": 10000,
+      "deadline": "2026-06-05",
+      "is_rolling": false,
+      "is_local": true,
+      "is_active": false,
+      "url_status": "unchecked",
+      "apply_url": "https://sussexcommunityfoundation.org/grants/how-to-apply/main-grants/",
+      "source": "sussex_community_foundation",
+      "description": "Rye Fund operates within SCF Main Grants for projects in the Rye area of East Sussex. Single Main Grants application covers eligibility. Amount and timing follow Main Grants (£1,000–£10,000, deadline 5 June 2026).",
+      "eligibility_criteria": [
+        "Geographic focus: Rye and surrounding area",
+        "Not-for-profit volunteer-led organisations",
+        "Annual income not exceeding £2 million"
+      ],
+      "eligible_structures": ["registered_charity", "cio", "cic_guarantee", "cic_shares", "unincorporated", "ltd_guarantee", "cooperative"],
+      "applicant_type": "organisation",
+      "civil_society_relevant": true,
+      "impact_sectors": ["community"],
+      "location_tag": "Rye",
+      "raw_data": {
+        "parent_programme": "scf_main_grants",
+        "shared_application_portal": "https://sussexcf.my.site.com/fundseekerportal/s/login",
+        "annual_cycle": true
+      }
+    },
+    {
+      "external_id": "staged-scf-chagossian-fund",
+      "title": "The Chagossian Fund",
+      "funder": "Sussex Community Foundation",
+      "funder_type": "community_foundation",
+      "funding_type": "grant",
+      "amount_min": null,
+      "amount_max": null,
+      "deadline": null,
+      "is_rolling": false,
+      "is_local": true,
+      "is_active": false,
+      "url_status": "unchecked",
+      "apply_url": "https://sussexcommunityfoundation.org/grants/how-to-apply/additional-grants/",
+      "source": "sussex_community_foundation",
+      "description": "Operates within SCF Additional Grants programme. Supports voluntary sector organisations, charities and community groups supporting Chagossian people living in Crawley and other parts of Sussex.",
+      "eligibility_criteria": [
+        "Supporting Chagossian people in Crawley or elsewhere in Sussex",
+        "Voluntary sector organisations, charities, community groups"
+      ],
+      "eligible_structures": ["registered_charity", "cio", "cic_guarantee", "cic_shares", "unincorporated", "ltd_guarantee"],
+      "applicant_type": "organisation",
+      "civil_society_relevant": true,
+      "impact_sectors": ["community"],
+      "beneficiary_groups": ["refugees_migrants", "ethnic_minorities"],
+      "target_beneficiaries": ["refugees_migrants", "ethnic_minorities"],
+      "location_tag": "Crawley",
+      "raw_data": {
+        "parent_programme": "scf_additional_grants",
+        "status_at_staging": "open",
+        "amount_and_deadline_unknown": "Source page does not state amount range or deadline; ingest as null pending admin verification at activation time."
+      }
+    }
+  ]
+}

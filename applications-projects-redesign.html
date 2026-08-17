@@ -1,0 +1,528 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Grant Tracker — Applications &amp; Projects redesign handoff</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.7.0/dist/tabler-icons.min.css">
+<style>
+  :root{
+    --forest:#1f5c52; --gold:#e8a030; --warm:#e8ddd0; --cream:#faf7f2;
+    --green:#6aa84f;
+    --ink:#1a1a1a; --muted:#6b756f; --faint:#9a9486;
+    --line:#e8e1d4; --line-soft:#e0d9ca; --fill:#faf9f5;
+    --good-bg:#eaf3de; --good-fg:#3b6d11;
+    --warn-bg:#faeeda; --warn-fg:#854f0b;
+    --bad-bg:#fcebeb; --bad-fg:#a32d2d;
+    --neutral-bg:#f1ece2; --neutral-fg:#6b756f;
+    --r-sm:8px; --r-md:10px; --r-lg:12px; --r-xl:16px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:#efe9dd; font-family:'Plus Jakarta Sans',system-ui,sans-serif; color:var(--ink); line-height:1.6;}
+  .wrap{max-width:1040px; margin:0 auto; padding:48px 24px 96px;}
+  h1,h2,h3,h4{font-family:'Space Grotesk',sans-serif; font-weight:500; line-height:1.15; margin:0;}
+  h1{font-size:34px;}
+  .lead{font-size:16px; color:var(--muted); max-width:680px; margin:10px 0 0;}
+  .doc{background:#fff; border:1px solid var(--line); border-radius:var(--r-xl); padding:32px; margin-top:28px;}
+  .doc h2{font-size:24px; margin-bottom:6px;}
+  .doc h3{font-size:18px; margin:26px 0 6px;}
+  .doc p{font-size:15px; color:#3a3a38; margin:8px 0;}
+  .doc code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:13px; background:#f3efe7; padding:1px 6px; border-radius:5px; color:#5b4b2e;}
+  .tokrow{display:flex; flex-wrap:wrap; gap:10px; margin:14px 0;}
+  .swatch{display:flex; align-items:center; gap:9px; border:1px solid var(--line); border-radius:var(--r-md); padding:8px 12px; font-size:13px;}
+  .chip{width:22px; height:22px; border-radius:6px; border:1px solid rgba(0,0,0,.08);}
+  .badgeset{display:flex; flex-wrap:wrap; gap:8px; margin:12px 0;}
+  .b{font-size:12px; font-weight:600; padding:3px 9px; border-radius:6px; font-family:'Space Grotesk',sans-serif;}
+  .b.good{color:var(--good-fg); background:var(--good-bg);}
+  .b.warn{color:var(--warn-fg); background:var(--warn-bg);}
+  .b.bad{color:var(--bad-fg); background:var(--bad-bg);}
+  .b.neu{color:var(--neutral-fg); background:var(--neutral-bg);}
+  .screen{margin-top:48px;}
+  .screen > .meta{margin-bottom:14px;}
+  .screen .tag{display:inline-block; font-family:'Space Grotesk',sans-serif; font-size:12px; font-weight:600; letter-spacing:.04em; color:var(--forest); background:#e3efe9; padding:4px 10px; border-radius:6px;}
+  .screen h3{font-size:20px; margin:10px 0 4px;}
+  .screen .route{font-family:ui-monospace,monospace; font-size:13px; color:var(--muted);}
+  .changes{background:#fff; border:1px solid var(--line); border-left:3px solid var(--gold); border-radius:0 var(--r-lg) var(--r-lg) 0; padding:14px 18px; margin:14px 0 18px;}
+  .changes ul{margin:0; padding-left:18px;}
+  .changes li{font-size:14px; color:#3a3a38; margin:5px 0;}
+  .frame{background:var(--cream); border:1px solid var(--line); border-radius:var(--r-xl); padding:22px; overflow:hidden;}
+  .mock{font-family:'Space Grotesk',sans-serif;}
+  .pillrow{display:flex; flex-wrap:wrap; gap:7px;}
+  .note{font-size:13px; color:var(--muted);}
+  .footer{margin-top:48px; font-size:13px; color:var(--muted); text-align:center;}
+  /* mock primitives */
+  .btn{display:inline-flex; align-items:center; gap:7px; font-family:'Space Grotesk',sans-serif; font-size:14px; font-weight:500; padding:10px 16px; border-radius:var(--r-md); border:none; cursor:pointer;}
+  .btn.primary{background:var(--forest); color:#fff;}
+  .btn.outline{background:#fff; color:var(--forest); border:1px solid var(--forest);}
+  .btn.ghost{background:#fff; color:var(--ink); border:1px solid var(--line-soft);}
+  .card{background:#fff; border:1px solid var(--line); border-radius:var(--r-lg);}
+  .row{display:flex; align-items:center; gap:16px; padding:16px 18px; cursor:pointer;}
+  .mono{width:44px; height:44px; border-radius:var(--r-md); display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:600; flex-shrink:0;}
+  .prog{height:6px; background:#eee7da; border-radius:99px; overflow:hidden;}
+  .prog > i{display:block; height:100%; background:var(--green); border-radius:99px;}
+  .stat{background:#fff; border:1px solid var(--line); border-radius:var(--r-md); padding:12px 14px;}
+  .stat b{font-size:22px; font-weight:500; display:block; font-family:'Space Grotesk',sans-serif;}
+  .stat span{font-size:12px; color:var(--muted);}
+  .dash{border:1px dashed #d8cfbd; border-radius:var(--r-lg); padding:16px; display:flex; align-items:center; justify-content:center; gap:8px; color:var(--faint); font-size:14px; cursor:pointer;}
+  .qrow{display:flex; align-items:center; justify-content:space-between; padding:13px 16px;}
+  .qnum{width:24px; height:24px; border-radius:50%; background:var(--neutral-bg); color:var(--muted); font-size:12px; font-weight:600; display:flex; align-items:center; justify-content:center;}
+  .ring{position:relative; flex-shrink:0;}
+  .ring svg{transform:rotate(-90deg);}
+  .ring .v{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-weight:600;}
+  input,textarea{font-family:'Space Grotesk',sans-serif;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Applications &amp; Projects — visual redesign</h1>
+  <p class="lead">A consistent design language for the Applications and Projects sections, with rendered mockups and an implementation brief. Built to be handed to a code session for the Next.js + Tailwind codebase. No code in the app has been changed.</p>
+
+  <!-- ===================== DESIGN SYSTEM ===================== -->
+  <div class="doc">
+    <h2>1 · Design system</h2>
+    <p>These rules resolve the inconsistencies found across the audit (mixed primary-button colours, three stepper treatments, a zoo of badge styles, overused uppercase, and two unrelated progress-bar styles). Apply them globally first, then the per-screen changes fall out cheaply.</p>
+
+    <h3>Brand tokens (already in <code>globals.css</code>)</h3>
+    <div class="tokrow">
+      <div class="swatch"><span class="chip" style="background:#1f5c52"></span> forest <code>#1f5c52</code></div>
+      <div class="swatch"><span class="chip" style="background:#e8a030"></span> gold <code>#e8a030</code></div>
+      <div class="swatch"><span class="chip" style="background:#6aa84f"></span> progress green <code>#6aa84f</code></div>
+      <div class="swatch"><span class="chip" style="background:#e8ddd0"></span> warm <code>#e8ddd0</code></div>
+      <div class="swatch"><span class="chip" style="background:#faf7f2; border-color:#ddd"></span> cream <code>#faf7f2</code></div>
+    </div>
+    <p>Type: <strong>Space Grotesk</strong> for headings/UI, <strong>Plus Jakarta Sans</strong> for body — unchanged.</p>
+    <p class="note">Accent colours are limited to forest, gold, and the progress green. Do not introduce sage/teal as an accent — it is not part of this palette.</p>
+
+    <h3>Primary action — one colour</h3>
+    <p>Exactly one filled primary per screen, always forest <code>#1f5c52</code>. Everything secondary is white with a 1px outline. The lime green is demoted to <em>progress fills only</em> — never a button. This kills the current lime/forest/outline button confusion.</p>
+    <div style="display:flex; gap:10px; margin-top:8px;">
+      <button class="btn primary"><i class="ti ti-plus"></i>Primary</button>
+      <button class="btn outline"><i class="ti ti-pencil-plus"></i>Secondary</button>
+      <button class="btn ghost"><i class="ti ti-dots"></i>Tertiary</button>
+    </div>
+
+    <h3>Status badges — one system</h3>
+    <p>Same pill shape (radius 6px, 12px / weight 600). Colour encodes meaning, applied everywhere (list rows, eligibility, match tiers, answer flags, question states):</p>
+    <div class="badgeset">
+      <span class="b good">Looks eligible</span>
+      <span class="b good">Good match</span>
+      <span class="b good">Ready to match</span>
+      <span class="b warn">Partial match</span>
+      <span class="b warn">32 words over</span>
+      <span class="b warn">14 placeholders</span>
+      <span class="b bad">7 gaps to fix</span>
+      <span class="b neu">Not started</span>
+      <span class="b neu">In progress</span>
+    </div>
+    <p class="note">green = good / eligible / done · gold = needs attention · red = blocking gaps · grey = neutral/not started.</p>
+
+    <h3>Stepper — one pattern, both creation routes</h3>
+    <p>The project-creation route currently has no stepper while the funder-form route does. Use the same numbered 1–2–3 stepper on both so the two flows read as one product. Spec shown on the wizard mockup below.</p>
+
+    <h3>Progress bar — one treatment</h3>
+    <p>Always a labelled inline bar: count on the left, percentage on the right, 6px track, green fill. Used identically in list rows, the editor header, and project "described" state. Retire the full-width top hairline.</p>
+
+    <h3>Micro-labels — sentence case</h3>
+    <p>Drop the uppercase section labels in the editor (WHAT THEY FUND, YOUR MATERIAL, TIPS TO IMPROVE, NEXT BEST FIX). Per the existing rule, uppercase is reserved for the match-module structural labels and calendar day headers only. Everywhere else uses sentence case.</p>
+
+    <h3>List row &amp; card rhythm</h3>
+    <p>One row template across applications, projects and funder matches: <code>icon/monogram → title + status badge → meta line → progress/score → chevron</code>. Delete moves to hover-only. Cards: white, 1px <code>#e8e1d4</code> border, radius 12px.</p>
+  </div>
+
+  <!-- ===================== SECTION ARCHITECTURE ===================== -->
+  <div class="doc">
+    <h2>2 · Section architecture &amp; creation funnel (decided)</h2>
+    <p>Keep Projects and Applications as <strong>two distinct sections, framed as a sequence (define → write)</strong> — not merged. A project is "what I need funded" and spawns many applications ("the form for each funder"). Merging would bury the genuinely useful flat worklist of live applications, and break standalone applications (the funder-form route and general proposals).</p>
+
+    <h3>Creation funnel — honest per-section buttons (retire the fork)</h3>
+    <p>Today "New application" opens a fork where one card, "A project that needs funding", routes to <code>/dashboard/projects/new</code> and creates a <em>project</em>. The label says application; the outcome is a project — the single most confusing thing in the flow. Fix: <strong>"New application" → straight to the funder form; "New project" → the describe box.</strong> Each button does exactly what it says; remove the chooser fork.</p>
+
+    <h3>Discovery via empty states + cross-nudge</h3>
+    <p>Move the guidance the fork used to provide into empty states: the Applications empty state carries "Applying to more than one funder? Start with a project →"; the Projects empty state explains describe-once-apply-many. Keep a persistent one-line cross-nudge on the Applications list even when populated, and a "save this as a reusable project?" prompt on a standalone application. (Protects against users skipping projects.)</p>
+
+    <h3>Back-link — do this as well</h3>
+    <p>Project → "Applications from this project" already exists. Add the reverse: an application shows <strong>"Part of: [project name]"</strong> with a link back. Turns two flat lists into a navigable hierarchy.</p>
+
+    <h3>Keep shared layout, differentiate content</h3>
+    <p>Do <em>not</em> diverge the two landing-page layouts — the shared row template is a learnability asset (learn it once, applies to both). Differentiate via content/foregrounding (the stat tiles already do this), not layout.</p>
+  </div>
+
+  <!-- ===================== SCREEN 1: APPLICATIONS LIST ===================== -->
+  <div class="screen">
+    <div class="meta">
+      <span class="tag">SCREEN 1</span>
+      <h3>Applications — landing</h3>
+      <div class="route">/dashboard/applications</div>
+    </div>
+    <div class="changes"><ul>
+      <li>Add a 4-tile status strip (In progress / Submitted / Won / Deadline soon) so the page leads with state instead of one lonely row.</li>
+      <li>Promote "New application" to a filled forest primary; add a dashed "start new" affordance under the list to fill the empty space.</li>
+      <li>Enrich the row: funder monogram, status badge, deadline chip, inline-labelled progress; delete becomes hover-only.</li>
+      <li>Collapse "How it works" into a disclosure with high-contrast numbered badges.</li>
+    </ul></div>
+    <div class="frame"><div class="mock">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:20px;">
+        <div><div style="font-size:28px; font-weight:500;">Applications</div><div style="font-size:14px; color:var(--muted); max-width:460px; margin-top:6px;">Grant Tracker shows what each funder looks for and what a strong answer covers — you write it in your own words.</div></div>
+        <button class="btn primary"><i class="ti ti-plus"></i>New application</button>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:22px;">
+        <div class="stat"><b style="color:var(--forest)">1</b><span>In progress</span></div>
+        <div class="stat"><b>0</b><span>Submitted</span></div>
+        <div class="stat"><b>0</b><span>Won</span></div>
+        <div class="stat"><b style="color:#c47f1a">1</b><span>Deadline soon</span></div>
+      </div>
+      <div style="font-family:'Space Grotesk'; font-size:12px; font-weight:600; letter-spacing:.04em; color:var(--faint); margin-bottom:10px;">IN PROGRESS</div>
+      <div class="card row">
+        <div class="mono" style="background:#e3efe9; color:var(--forest)">NL</div>
+        <div style="flex:1; min-width:0;">
+          <div style="display:flex; align-items:center; gap:8px;"><span style="font-size:16px; font-weight:500;">National Lottery Awards for All England</span><span class="b" style="color:var(--forest); background:#e3efe9;">In progress</span></div>
+          <div style="font-size:13px; color:var(--muted); margin-top:3px; display:flex; gap:12px;"><span>National Lottery Community Fund</span><span style="color:#c47f1a; display:inline-flex; gap:4px; align-items:center;"><i class="ti ti-clock"></i>Closes 31 May</span></div>
+        </div>
+        <div style="width:150px;"><div style="display:flex; justify-content:space-between; font-size:12px; color:var(--muted); margin-bottom:5px;"><span>4 of 9 written</span><span style="color:var(--forest); font-weight:500;">44%</span></div><div class="prog"><i style="width:44%"></i></div></div>
+        <i class="ti ti-chevron-right" style="color:#b3ac9c; font-size:20px;"></i>
+      </div>
+      <div class="dash" style="margin-top:14px;"><i class="ti ti-plus"></i>Start a new application</div>
+    </div></div>
+  </div>
+
+  <!-- ===================== SCREEN 2: PROJECTS LIST ===================== -->
+  <div class="screen">
+    <div class="meta">
+      <span class="tag">SCREEN 2</span>
+      <h3>Projects — landing</h3>
+      <div class="route">/dashboard/projects</div>
+    </div>
+    <div class="changes"><ul>
+      <li>Same row template as Applications, for cross-section consistency.</li>
+      <li>Carry a summary meta line on each project: readiness state · budget · "8 funders fit".</li>
+      <li>Filled forest "New project"; dashed "describe a new project" affordance; "How it works" as a disclosure.</li>
+    </ul></div>
+    <div class="frame"><div class="mock">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:20px;">
+        <div><div style="font-size:28px; font-weight:500;">Projects</div><div style="font-size:14px; color:var(--muted); max-width:470px; margin-top:6px;">Describe what needs funding once, match it against the catalogue, and carry it into every application you build.</div></div>
+        <button class="btn primary"><i class="ti ti-plus"></i>New project</button>
+      </div>
+      <div style="font-family:'Space Grotesk'; font-size:12px; font-weight:600; letter-spacing:.04em; color:var(--faint); margin-bottom:10px;">YOUR PROJECTS</div>
+      <div class="card row">
+        <div class="mono" style="background:#f3edf7; color:#7a4fb7"><i class="ti ti-bulb" style="font-size:20px;"></i></div>
+        <div style="flex:1; min-width:0;">
+          <div style="display:flex; align-items:center; gap:8px;"><span style="font-size:16px; font-weight:500;">Women's empowerment and employability programme</span><span class="b" style="color:#7a4fb7; background:#f3edf7;">Programme</span></div>
+          <div style="font-size:13px; color:var(--muted); margin-top:3px; display:flex; gap:12px;"><span style="color:var(--forest); display:inline-flex; gap:4px; align-items:center;"><i class="ti ti-circle-check"></i>Ready to match</span><span>£18,000</span><span style="display:inline-flex; gap:4px; align-items:center;"><i class="ti ti-users-group"></i>8 funders fit</span></div>
+        </div>
+        <div style="width:130px;"><div style="display:flex; justify-content:space-between; font-size:12px; color:var(--muted); margin-bottom:5px;"><span>Described</span><span style="color:var(--forest); font-weight:500;">90%</span></div><div class="prog"><i style="width:90%"></i></div></div>
+        <i class="ti ti-chevron-right" style="color:#b3ac9c; font-size:20px;"></i>
+      </div>
+      <div class="dash" style="margin-top:14px;"><i class="ti ti-plus"></i>Describe a new project</div>
+    </div></div>
+  </div>
+
+  <!-- ===================== SCREEN 3: CREATION WIZARD ===================== -->
+  <div class="screen">
+    <div class="meta">
+      <span class="tag">SCREEN 3</span>
+      <h3>Creation wizard (shared shell)</h3>
+      <div class="route">/dashboard/applications/new · /dashboard/projects/new</div>
+    </div>
+    <div class="changes"><ul>
+      <li>Step 0 is the starting-point picker (below); choosing a card enters the numbered stepper (second mockup).</li>
+      <li>One numbered stepper component used by both creation routes.</li>
+      <li>Picker cards keep the softened "Start here if unsure" hint on the project route — no hard "Recommended"; icon + accent per card; tag chips replace the grey footnote.</li>
+      <li>Each step's content sits in consistent white cards; single forest "Continue" with arrow; tertiary actions as text links.</li>
+      <li><strong>Open:</strong> the "STEP 1 OF 3" eyebrow and "START HERE IF UNSURE" badge are uppercase — this conflicts with the sentence-case rule in §1. Decide whether small eyebrow/badge labels are an allowed exception, or convert them to sentence case.</li>
+    </ul></div>
+
+    <div class="frame" style="margin-bottom:14px;"><div class="mock">
+      <div style="font-family:'Space Grotesk'; font-size:13px; font-weight:600; letter-spacing:.04em; color:var(--forest); margin-bottom:6px;">STEP 1 OF 3</div>
+      <div style="font-size:28px; font-weight:500; line-height:1.1; margin-bottom:6px;">New application</div>
+      <div style="font-size:16px; color:var(--muted); margin-bottom:24px;">What are you starting with?</div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:18px;">
+        <div style="position:relative; background:#fff; border:1.5px solid var(--forest); border-radius:16px; padding:24px;">
+          <div style="position:absolute; top:-11px; left:24px; display:inline-flex; align-items:center; gap:5px; background:#e3efe9; color:var(--forest); font-size:11px; font-weight:600; letter-spacing:.03em; padding:4px 10px; border-radius:6px; border:1px solid var(--forest);"><i class="ti ti-compass"></i>START HERE IF UNSURE</div>
+          <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:16px;">
+            <div style="width:46px; height:46px; border-radius:12px; background:#e3efe9; color:var(--forest); display:flex; align-items:center; justify-content:center; font-size:24px;"><i class="ti ti-bulb"></i></div>
+            <div style="width:30px; height:30px; border-radius:50%; background:var(--forest); color:#fff; display:flex; align-items:center; justify-content:center;"><i class="ti ti-arrow-right"></i></div>
+          </div>
+          <div style="font-size:19px; font-weight:500; margin-bottom:8px;">A project that needs funding</div>
+          <div style="font-size:14px; color:#5f6963; line-height:1.55; margin-bottom:18px;">Describe what you want funded once. We'll check which funders fit and build a tailored application for each one you choose.</div>
+          <div class="pillrow"><span class="b" style="color:var(--forest); background:#e3efe9;"><i class="ti ti-users-group"></i> Multiple funders</span><span class="b" style="color:var(--forest); background:#e3efe9;"><i class="ti ti-sparkles"></i> Auto-matched</span></div>
+        </div>
+        <div style="position:relative; background:#fff; border:1px solid #e2dccf; border-radius:16px; padding:24px;">
+          <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:16px;">
+            <div style="width:46px; height:46px; border-radius:12px; background:#f5ede0; color:#c47f1a; display:flex; align-items:center; justify-content:center; font-size:24px;"><i class="ti ti-file-text"></i></div>
+            <div style="width:30px; height:30px; border-radius:50%; background:#f1ece2; color:#8a857a; display:flex; align-items:center; justify-content:center;"><i class="ti ti-arrow-right"></i></div>
+          </div>
+          <div style="font-size:19px; font-weight:500; margin-bottom:8px;">A funder's application form</div>
+          <div style="font-size:14px; color:#5f6963; line-height:1.55; margin-bottom:18px;">Know who you're applying to? Pick the funder, paste their questions and start writing straight away.</div>
+          <div class="pillrow"><span class="b warn"><i class="ti ti-clock"></i> Deadline close</span><span class="b warn"><i class="ti ti-target"></i> Single funder</span></div>
+        </div>
+      </div>
+    </div></div>
+
+    <div class="frame"><div class="mock">
+      <div style="display:flex; align-items:center; gap:6px; color:#7a857f; font-size:13px; font-weight:500; margin-bottom:14px;"><i class="ti ti-arrow-left"></i><span>Applications</span></div>
+      <div style="font-size:24px; font-weight:500; margin-bottom:18px;">New application</div>
+      <div style="display:flex; align-items:center; margin-bottom:24px;">
+        <div style="display:flex; align-items:center; gap:8px;"><div style="width:26px; height:26px; border-radius:50%; background:var(--forest); color:#fff; font-size:13px; font-weight:600; display:flex; align-items:center; justify-content:center;">1</div><span style="font-size:14px; font-weight:500;">Set up</span></div>
+        <div style="flex:1; height:2px; background:#e0d9ca; margin:0 12px;"></div>
+        <div style="display:flex; align-items:center; gap:8px;"><div style="width:26px; height:26px; border-radius:50%; background:#fff; border:1.5px solid #d8cfbd; color:var(--faint); font-size:13px; font-weight:600; display:flex; align-items:center; justify-content:center;">2</div><span style="font-size:14px; color:var(--faint);">Check questions</span></div>
+        <div style="flex:1; height:2px; background:#e0d9ca; margin:0 12px;"></div>
+        <div style="display:flex; align-items:center; gap:8px;"><div style="width:26px; height:26px; border-radius:50%; background:#fff; border:1.5px solid #d8cfbd; color:var(--faint); font-size:13px; font-weight:600; display:flex; align-items:center; justify-content:center;">3</div><span style="font-size:14px; color:var(--faint);">Build</span></div>
+      </div>
+      <div class="card" style="padding:20px; margin-bottom:14px;">
+        <div style="font-size:16px; font-weight:500;">Who are you applying to?</div>
+        <div style="font-size:13px; color:var(--muted); margin:4px 0 14px;">Choose a funder from the catalogue — we'll use everything we know about them and check your eligibility before you write.</div>
+        <div style="position:relative;"><i class="ti ti-search" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--faint);"></i><input placeholder="Search the catalogue by grant or funder name" style="width:100%; padding:11px 12px 11px 36px; border:1px solid var(--line-soft); border-radius:9px; font-size:14px; background:var(--fill);"></div>
+        <div style="font-size:13px; color:var(--forest); margin-top:10px;">Can't find them? Enter the funder manually</div>
+      </div>
+      <div class="card" style="padding:20px; margin-bottom:18px;">
+        <div style="font-size:16px; font-weight:500;">Paste the application questions</div>
+        <div style="font-size:13px; color:var(--muted); margin:4px 0 14px;">Copy them straight from the funder's form — numbering, word limits and all. We'll sort them into a checklist you can correct.</div>
+        <textarea style="width:100%; min-height:110px; padding:12px; border:1px solid var(--line-soft); border-radius:9px; font-size:14px; background:var(--fill); color:var(--faint); resize:vertical;">1. Tell us about your organisation (max 300 words)
+2. What do you want to do with this funding? (max 500 words)
+3. Who will benefit, and how do you know they need it?</textarea>
+      </div>
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <span style="font-size:13px; color:var(--forest);">No question list? Start from an outline</span>
+        <button class="btn primary">Continue<i class="ti ti-arrow-right"></i></button>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- ===================== SCREEN 4: APPLICATION EDITOR ===================== -->
+  <div class="screen">
+    <div class="meta">
+      <span class="tag">SCREEN 4</span>
+      <h3>Application editor</h3>
+      <div class="route">/dashboard/applications/[id]</div>
+    </div>
+    <div class="changes"><ul>
+      <li>Header: title, funder, single eligibility badge; actions as ghost / icon / one forest primary (Mark complete).</li>
+      <li>Inline-labelled progress bar replaces the top hairline.</li>
+      <li>"What we know about this funder" as a calm disclosure (sentence case).</li>
+      <li>Active question card: unified flag badges (score green, over-limit/placeholder gold, gaps red); score ring + "Next best fix" in a quiet gold-tinted panel — no uppercase headers.</li>
+      <li>Remaining questions as compact rows with one status badge each.</li>
+    </ul></div>
+    <div class="frame"><div class="mock">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:14px;">
+        <div style="min-width:0;">
+          <div style="display:flex; align-items:center; gap:6px; color:#7a857f; font-size:13px; font-weight:500; margin-bottom:8px;"><i class="ti ti-arrow-left"></i><span>Applications</span></div>
+          <div style="font-size:22px; font-weight:500;">National Lottery Awards for All England</div>
+          <div style="font-size:13px; color:var(--muted); margin-top:4px; display:flex; align-items:center; gap:8px;">National Lottery Community Fund <span class="b good"><i class="ti ti-circle-check"></i> Looks eligible</span></div>
+        </div>
+        <div style="display:flex; gap:8px; flex-shrink:0;">
+          <button class="btn ghost" style="font-size:13px; padding:9px 13px;"><i class="ti ti-file-text"></i>Work in Word</button>
+          <button class="btn ghost" style="font-size:13px; padding:9px 11px; color:var(--muted);"><i class="ti ti-dots"></i></button>
+          <button class="btn primary" style="font-size:13px; padding:9px 14px;"><i class="ti ti-check"></i>Mark complete</button>
+        </div>
+      </div>
+      <div class="card" style="padding:10px 14px; display:flex; align-items:center; gap:12px; margin-bottom:18px;">
+        <span style="font-size:13px; color:var(--muted); white-space:nowrap;">4 of 9 written</span>
+        <div class="prog" style="flex:1;"><i style="width:44%"></i></div>
+        <span style="font-size:13px; font-weight:500; color:var(--forest);">44%</span>
+      </div>
+      <div class="card" style="padding:14px 16px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; margin-bottom:14px;">
+        <div style="display:flex; align-items:center; gap:10px;"><i class="ti ti-info-circle" style="color:var(--forest); font-size:18px;"></i><div><div style="font-size:14px; font-weight:500;">What we know about this funder</div><div style="font-size:12px; color:var(--muted);">Priorities, exclusions and what a strong answer covers.</div></div></div>
+        <i class="ti ti-chevron-down" style="color:#b3ac9c; font-size:18px;"></i>
+      </div>
+      <div class="card" style="padding:18px; margin-bottom:14px;">
+        <div style="display:flex; align-items:flex-start; gap:12px; margin-bottom:14px;">
+          <div style="width:26px; height:26px; border-radius:50%; background:#e3efe9; color:var(--forest); font-size:13px; font-weight:600; display:flex; align-items:center; justify-content:center; flex-shrink:0;">1</div>
+          <div><div style="font-size:16px; font-weight:500;">What would you like to do?</div><div style="font-size:13px; color:var(--muted); margin-top:2px;">Ideas to cover: what you'll do, the difference it makes, who benefits… <span style="color:var(--forest)">Show full question</span></div></div>
+        </div>
+        <div class="pillrow" style="margin-bottom:16px;">
+          <span class="b good">Score 7.4 / 10</span><span class="b warn">32 words over limit</span><span class="b warn">1 placeholder</span><span class="b bad">7 gaps to fix</span>
+        </div>
+        <div style="display:grid; grid-template-columns:1.7fr 1fr; gap:16px;">
+          <div>
+            <div style="font-size:13px; font-weight:500; color:var(--muted); margin-bottom:8px;">Your answer</div>
+            <div style="border:1px solid var(--line-soft); border-radius:9px; padding:12px; background:var(--fill); font-size:13px; color:#3a3a38; line-height:1.6;">Asian Community Concern will run the Stepping Forward programme from our base in Southall, Ealing. A continuation and expansion of existing outreach, formalised into three linked strands: weekly conversational English, fortnightly wellbeing circles, and employability workshops…</div>
+          </div>
+          <div>
+            <div style="font-size:13px; font-weight:500; color:var(--muted); margin-bottom:8px;">Tips to improve</div>
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+              <div class="ring" style="width:42px; height:42px;"><svg viewBox="0 0 36 36" width="42" height="42"><circle cx="18" cy="18" r="16" fill="none" stroke="#eee7da" stroke-width="4"/><circle cx="18" cy="18" r="16" fill="none" stroke="#6aa84f" stroke-width="4" stroke-dasharray="100" stroke-dashoffset="26" stroke-linecap="round"/></svg><div class="v" style="font-size:11px;">7.4</div></div>
+              <button class="btn ghost" style="font-size:12px; padding:7px 11px;"><i class="ti ti-refresh"></i>Check again</button>
+            </div>
+            <div style="border:1px solid #f0e6cf; background:#fdf8ee; border-radius:9px; padding:11px;">
+              <div style="font-size:11px; font-weight:600; color:var(--warn-fg); margin-bottom:4px; font-family:'Space Grotesk';">Next best fix</div>
+              <div style="font-size:12px; color:#5f5e5a; line-height:1.5;">Fill the placeholder on local Ealing data — a specific figure makes the case far more concisely than a general description.</div>
+              <div style="font-size:12px; color:var(--forest); margin-top:8px;">3 more tips · 7 gaps →</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <div class="card qrow"><div style="display:flex; align-items:center; gap:12px;"><span class="qnum">2</span><span style="font-size:14px;">How does your project meet our funding priorities?</span></div><span class="b warn">58 words over</span></div>
+        <div class="card qrow"><div style="display:flex; align-items:center; gap:12px;"><span class="qnum">4</span><span style="font-size:14px;">Tell us how much money you need to run your project.</span></div><span class="b warn">14 placeholders</span></div>
+        <div class="card qrow"><div style="display:flex; align-items:center; gap:12px;"><span class="qnum" style="color:var(--faint)">5</span><span style="font-size:14px;">What costs would you like us to fund?</span></div><span class="b neu">Not started</span></div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- ===================== SCREEN 5: PROJECT DETAIL ===================== -->
+  <div class="screen">
+    <div class="meta">
+      <span class="tag">SCREEN 5</span>
+      <h3>Project detail — funders that fit</h3>
+      <div class="route">/dashboard/projects/[id]</div>
+    </div>
+    <div class="changes"><ul>
+      <li>"Described" progress + missing-items use the standard inline progress + gold attention cues.</li>
+      <li>Funder-fit list sorted by match; each card leads with a score ring and a single match-tier badge (good = green, partial = gold).</li>
+      <li>Top match gets the one filled primary "Start application"; the rest are outline — strongest option is visually obvious.</li>
+      <li>Amount and deadline inline; deadline in gold when close.</li>
+    </ul></div>
+    <div class="frame"><div class="mock">
+      <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:4px;"><div style="font-size:18px; font-weight:500;">Funders that fit this project</div><span style="font-size:13px; color:var(--forest);">Draft a general proposal instead</span></div>
+      <div style="font-size:13px; color:var(--muted); margin-bottom:16px;">Sorted by match. Your organisation covers eligibility; this project covers relevance.</div>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div class="card" style="padding:14px 16px; display:flex; align-items:center; gap:14px;">
+          <div class="ring" style="width:46px; height:46px;"><svg viewBox="0 0 36 36" width="46" height="46"><circle cx="18" cy="18" r="16" fill="none" stroke="#eee7da" stroke-width="4"/><circle cx="18" cy="18" r="16" fill="none" stroke="#6aa84f" stroke-width="4" stroke-dasharray="100" stroke-dashoffset="28" stroke-linecap="round"/></svg><div class="v" style="font-size:12px;">72</div></div>
+          <div style="flex:1; min-width:0;"><div style="display:flex; align-items:center; gap:8px;"><span style="font-size:15px; font-weight:500;">Rosa — Stand With Us Fund</span><span class="b good">Good match</span></div><div style="font-size:13px; color:var(--muted); margin-top:2px;">Rosa UK Fund for Women &amp; Girls · £25k–£28k · <span style="color:#c47f1a;">Deadline 22 Jun</span></div></div>
+          <button class="btn primary" style="font-size:13px; padding:9px 14px;"><i class="ti ti-pencil-plus"></i>Start application</button>
+        </div>
+        <div class="card" style="padding:14px 16px; display:flex; align-items:center; gap:14px;">
+          <div class="ring" style="width:46px; height:46px;"><svg viewBox="0 0 36 36" width="46" height="46"><circle cx="18" cy="18" r="16" fill="none" stroke="#eee7da" stroke-width="4"/><circle cx="18" cy="18" r="16" fill="none" stroke="#e8a030" stroke-width="4" stroke-dasharray="100" stroke-dashoffset="33" stroke-linecap="round"/></svg><div class="v" style="font-size:12px;">67</div></div>
+          <div style="flex:1; min-width:0;"><div style="display:flex; align-items:center; gap:8px;"><span style="font-size:15px; font-weight:500;">VRU Stronger Futures 3.0</span><span class="b warn">Partial match</span></div><div style="font-size:13px; color:var(--muted); margin-top:2px;">London Community Foundation · £80k–£200k</div></div>
+          <button class="btn outline" style="font-size:13px; padding:9px 14px;"><i class="ti ti-pencil-plus"></i>Start application</button>
+        </div>
+        <div class="card" style="padding:14px 16px; display:flex; align-items:center; gap:14px;">
+          <div class="ring" style="width:46px; height:46px;"><svg viewBox="0 0 36 36" width="46" height="46"><circle cx="18" cy="18" r="16" fill="none" stroke="#eee7da" stroke-width="4"/><circle cx="18" cy="18" r="16" fill="none" stroke="#e8a030" stroke-width="4" stroke-dasharray="100" stroke-dashoffset="35" stroke-linecap="round"/></svg><div class="v" style="font-size:12px;">65</div></div>
+          <div style="flex:1; min-width:0;"><div style="display:flex; align-items:center; gap:8px;"><span style="font-size:15px; font-weight:500;">Local Trust — Place-Based Social Action Fund</span><span class="b warn">Partial match</span></div><div style="font-size:13px; color:var(--muted); margin-top:2px;">Local Trust · £25k–£150k</div></div>
+          <button class="btn outline" style="font-size:13px; padding:9px 14px;"><i class="ti ti-pencil-plus"></i>Start application</button>
+        </div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- ===================== SCREEN 6: ANSWER EDITOR ===================== -->
+  <div class="screen">
+    <div class="meta">
+      <span class="tag">SCREEN 6</span>
+      <h3>Application answer editor — three states</h3>
+      <div class="route">/dashboard/applications/[id] · per question</div>
+    </div>
+    <div class="changes"><ul>
+      <li><strong>Lead with the draft action.</strong> When an answer is empty, the empty textarea is replaced by a "Start with a draft" panel: primary "Draft a starting version" button, the 3-step path (Draft → Review &amp; check → Make it yours), and "write it from scratch" as a quiet secondary link. Icon is <code>ti-file-pencil</code> (document + pencil) — not sparkles/wand.</li>
+      <li><strong>Score/tips panel is inert until there is content</strong> — no premature "Check this answer" on an empty answer; it reads "appears once you've drafted or written".</li>
+      <li><strong>After drafting:</strong> the draft fills the editor with a "Draft — review and make it yours" badge; primary action becomes "Check this answer"; "Redraft" sits alongside; editing happens directly in the box.</li>
+      <li><strong>After checking:</strong> score chip and ring are <em>tier-coloured</em> (4.5/10 = amber chip, coral ring — not green), with a one-line reason ("capped by an unresolved placeholder").</li>
+      <li><strong>Link flags to the text.</strong> "Jump to next fix (n of m)" steps through gaps; placeholders render <em>inline</em> in the answer as a highlighted gold block ("needs your input"), instead of raw <code>**markdown**</code> at the bottom.</li>
+      <li>Sentence case throughout (your answer, tips to improve, next best fix, guide). A step indicator shows where the user is in the flow.</li>
+    </ul></div>
+    <div class="frame"><div class="mock">
+
+      <div style="font-family:'Space Grotesk',sans-serif; font-size:12px; font-weight:600; letter-spacing:.04em; color:var(--faint); margin-bottom:10px;">A · EMPTY — WHERE A USER STARTS</div>
+      <div class="card" style="padding:18px; margin-bottom:20px;">
+        <div style="display:flex; align-items:flex-start; gap:12px; margin-bottom:14px;">
+          <div style="width:26px; height:26px; border-radius:50%; background:var(--forest); color:#fff; font-size:13px; font-weight:600; display:flex; align-items:center; justify-content:center; flex-shrink:0;">1</div>
+          <div style="font-size:16px; font-weight:500; line-height:1.35;">Tell us about your organisation: who you are, your mission, and the communities you work with.</div>
+        </div>
+        <div style="display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; margin-bottom:18px; padding-left:38px;"><span style="font-size:12px; color:var(--muted);">A strong answer covers:</span><span style="font-size:12px; color:#3a3a38;">who you are · communities you serve · how you work · focus on young people · track record</span></div>
+        <div style="display:grid; grid-template-columns:1.7fr 1fr; gap:16px;">
+          <div style="border:1px solid var(--line-soft); border-radius:10px; background:var(--fill); padding:22px; text-align:center;">
+            <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:16px;"><span class="b" style="color:var(--forest); background:#e3efe9;">1 Draft</span><i class="ti ti-arrow-right" style="color:#c3bcaa;"></i><span class="b neu">2 Review &amp; check</span><i class="ti ti-arrow-right" style="color:#c3bcaa;"></i><span class="b neu">3 Make it yours</span></div>
+            <div style="width:48px; height:48px; border-radius:12px; background:#e3efe9; color:var(--forest); display:flex; align-items:center; justify-content:center; font-size:24px; margin:0 auto 12px;"><i class="ti ti-file-pencil"></i></div>
+            <div style="font-size:16px; font-weight:500; margin-bottom:6px;">Start with a draft</div>
+            <div style="font-size:13px; color:var(--muted); line-height:1.55; max-width:340px; margin:0 auto 16px;">We'll write a first version from your project and saved material. You review it, check the score, then edit it into your own voice.</div>
+            <button class="btn primary"><i class="ti ti-file-pencil"></i>Draft a starting version</button>
+            <div style="font-size:13px; color:var(--muted); margin-top:12px;">or <span style="color:var(--forest); text-decoration:underline;">write it from scratch</span></div>
+          </div>
+          <div style="border:1px solid #ece5d8; border-radius:10px; background:#fcfbf8; padding:16px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;">
+            <div style="width:40px; height:40px; border-radius:50%; border:2px dashed #d8cfbd; display:flex; align-items:center; justify-content:center; color:#b3ac9c; font-size:18px; margin-bottom:10px;"><i class="ti ti-gauge"></i></div>
+            <div style="font-size:13px; font-weight:500; color:var(--muted); margin-bottom:4px;">Tips &amp; score</div>
+            <div style="font-size:12px; color:var(--faint); line-height:1.5;">Appear here once you've drafted or written an answer.</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="font-family:'Space Grotesk',sans-serif; font-size:12px; font-weight:600; letter-spacing:.04em; color:var(--faint); margin-bottom:10px;">B · AFTER DRAFTING — REVIEW, CHECK, THEN EDIT</div>
+      <div class="card" style="padding:18px; margin-bottom:20px;">
+        <div style="display:flex; align-items:flex-start; gap:12px; margin-bottom:16px;">
+          <div style="width:26px; height:26px; border-radius:50%; background:var(--forest); color:#fff; font-size:13px; font-weight:600; display:flex; align-items:center; justify-content:center; flex-shrink:0;">1</div>
+          <div style="font-size:16px; font-weight:500; line-height:1.35;">Tell us about your organisation: who you are, your mission, and the communities you work with.</div>
+        </div>
+        <div style="display:grid; grid-template-columns:1.7fr 1fr; gap:16px;">
+          <div>
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;"><span style="font-size:13px; font-weight:500; color:var(--muted);">Your answer</span><span class="b" style="color:var(--forest); background:#e3efe9;"><i class="ti ti-file-pencil"></i> Draft — review and make it yours</span></div>
+            <div style="border:1px solid var(--line-soft); border-radius:10px; padding:12px; background:#fff; font-size:13px; color:#3a3a38; line-height:1.6;">Sea Change is a Brighton-based youth wellbeing charity founded in 2019. Our mission is to reach young people on long mental-health waiting lists with active, outdoor support. We work with 13–18 year olds across Brighton &amp; Hove experiencing anxiety, low mood and isolation…</div>
+            <div style="display:flex; gap:8px; margin-top:10px; align-items:center;"><button class="btn ghost" style="font-size:12px; padding:7px 12px;"><i class="ti ti-refresh"></i>Redraft</button><span style="font-size:12px; color:var(--faint);">Edit directly above — it's yours now.</span></div>
+          </div>
+          <div>
+            <div style="font-size:13px; font-weight:500; color:var(--muted); margin-bottom:8px;">Tips to improve</div>
+            <button class="btn primary" style="width:100%; justify-content:center; font-size:13px; padding:10px 14px; margin-bottom:12px;"><i class="ti ti-circle-check"></i>Check this answer</button>
+            <div style="border:1px solid #f0e6cf; background:#fdf8ee; border-radius:9px; padding:11px; text-align:center;"><div style="font-size:12px; color:var(--warn-fg); line-height:1.5;">Check your draft to score it against this funder and get specific fixes.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="font-family:'Space Grotesk',sans-serif; font-size:12px; font-weight:600; letter-spacing:.04em; color:var(--faint); margin-bottom:10px;">C · AFTER CHECKING — FIX AND REFINE</div>
+      <div class="card" style="padding:18px;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px; font-size:11px;"><span class="b good"><i class="ti ti-check"></i> Draft</span><i class="ti ti-arrow-right" style="color:#c3bcaa;"></i><span class="b" style="color:var(--forest); background:#e3efe9;">Review &amp; check</span><i class="ti ti-arrow-right" style="color:#c3bcaa;"></i><span class="b neu">Make it yours</span></div>
+        <div style="display:flex; align-items:flex-start; gap:12px; margin-bottom:14px;">
+          <div style="width:26px; height:26px; border-radius:50%; background:var(--forest); color:#fff; font-size:13px; font-weight:600; display:flex; align-items:center; justify-content:center; flex-shrink:0;">1</div>
+          <div style="font-size:16px; font-weight:500; line-height:1.35;">Tell us about your organisation: who you are, your mission, and the communities you work with.</div>
+        </div>
+        <div class="pillrow" style="margin-bottom:14px; padding-left:38px;"><span class="b warn">Score 4.5 / 10</span><span class="b good">290 of 300 words</span><span class="b warn">1 placeholder to fill</span><span class="b bad">4 gaps to fix</span></div>
+        <div style="display:grid; grid-template-columns:1.7fr 1fr; gap:16px;">
+          <div>
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;"><span style="font-size:13px; font-weight:500; color:var(--muted);">Your answer</span><button class="btn" style="color:var(--bad-fg); border:1px solid #f0c9c9; background:#fff; font-size:12px; padding:6px 11px;"><i class="ti ti-arrow-down-circle"></i>Jump to next fix (1 of 5)</button></div>
+            <div style="border:1px solid var(--line-soft); border-radius:10px; padding:14px; background:#fff; font-size:13px; color:#3a3a38; line-height:1.7;">
+              <p style="margin:0 0 10px;">Asian Community Concern (ACC) is a community interest company based in Southall, in the London Borough of Ealing. Our mission is to stimulate the development of community projects in multi-racial urban areas by training leaders from within the community itself.</p>
+              <p style="margin:0;">We work primarily with South Asian and wider ethnic minority residents of Southall and Ealing, with a focus on women and young people.</p>
+              <div style="margin-top:12px; border:1px solid #f0d9ad; background:#fdf3e0; border-left:3px solid var(--gold); border-radius:0 8px 8px 0; padding:10px 12px;"><div style="display:flex; align-items:center; gap:6px; font-size:11px; font-weight:600; color:var(--warn-fg); margin-bottom:3px;"><i class="ti ti-alert-triangle"></i>Placeholder — needs your input before submitting</div><div style="font-size:12px; color:#7a5a1e; line-height:1.5;">State what proportion of ACC's activity serves young people aged 14–25 (this funder requires a majority youth focus).</div></div>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:13px; font-weight:500; color:var(--muted); margin-bottom:10px;">Tips to improve</div>
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px;">
+              <div class="ring" style="width:52px; height:52px;"><svg viewBox="0 0 36 36" width="52" height="52"><circle cx="18" cy="18" r="16" fill="none" stroke="#f3e7e3" stroke-width="4"/><circle cx="18" cy="18" r="16" fill="none" stroke="#d85a30" stroke-width="4" stroke-dasharray="100" stroke-dashoffset="55" stroke-linecap="round"/></svg><div class="v" style="font-size:14px;">4.5</div></div>
+              <div style="flex:1;"><div style="font-size:12px; color:var(--muted); margin-bottom:6px;">out of 10 · capped by an unresolved placeholder</div><button class="btn ghost" style="font-size:12px; padding:7px 11px;"><i class="ti ti-refresh"></i>Check again</button></div>
+            </div>
+            <div style="border:1px solid #f0e6cf; background:#fdf8ee; border-radius:9px; padding:12px;"><div style="display:flex; align-items:center; gap:6px; font-size:11px; font-weight:600; color:var(--warn-fg); margin-bottom:5px;"><i class="ti ti-flag"></i>Next best fix</div><div style="font-size:13px; font-weight:500; margin-bottom:4px;">Resolve the eligibility placeholder first</div><div style="font-size:12px; color:#5f5e5a; line-height:1.55;">It's a blocking issue and caps your score. Confirm the proportion of your activity serving young people aged 14–25 and state it plainly. If youth work isn't the majority of what you do, check with the funder before submitting.</div><div style="font-size:12px; color:var(--forest); margin-top:10px;">3 more tips · 4 gaps · open all →</div></div>
+          </div>
+        </div>
+      </div>
+
+    </div></div>
+  </div>
+
+  <!-- ===================== NOT YET MOCKED ===================== -->
+  <div class="doc">
+    <h2>3 · Not yet mocked (need confirmation)</h2>
+    <p>These states require submitting a form to reach, so they weren't captured in the audit. The wizard shell above is designed so they slot in consistently. Flag if you want exact mockups:</p>
+    <p>• Wizard <strong>step 2 (Check the questions)</strong> and <strong>step 3 (Build)</strong> — <code>/dashboard/applications/new</code><br>
+       • New-project steps after "Describe your project" — <code>/dashboard/projects/new</code><br>
+       • "Draft a general proposal" output<br>
+       • True empty states (zero applications / zero projects)</p>
+    <h3>Open decision</h3>
+    <p>Match-tier colours here use green (good) / gold (partial). Memory notes an existing tier palette elsewhere of green-strong / dusty-teal-partial / slate-weak. Pick one and apply it consistently to both the funder-fit cards and the dashboard match cards.</p>
+  </div>
+
+  <!-- ===================== FOLLOW-UP IMPROVEMENTS ===================== -->
+  <div class="doc">
+    <h2>4 · Follow-up improvements (post-implementation)</h2>
+    <p>Tweaks on top of the shipped landing pages. Same routes: <code>/dashboard/applications</code> and <code>/dashboard/projects</code>.</p>
+
+    <h3>"How it works" — fix step-number contrast</h3>
+    <p>The shipped step badges use a pale green number on a pale green circle and are nearly invisible. Make each badge a <strong>filled forest circle (#1f5c52) with a white number</strong>, and connect the steps with a thin <code>#e3efe9</code> rule so they read as a sequence. Drop the per-step bordered card — the row of connected badges is enough. (Rendered mockup provided separately.)</p>
+
+    <h3>Row delete icon — hover only</h3>
+    <p>The trash icon is always visible on each row. Show it on row hover/focus only; the chevron already signals interactivity. Reduces noise and accidental-delete risk.</p>
+
+    <h3>Third stat tile — make it earn its place</h3>
+    <p>"1 Project" / "1 Application" just restates the row count. Replace with an actionable count, e.g. Applications: <em>In progress · Submitted · Deadline soon</em>; Projects: <em>Ready to match · Funded · In draft</em>.</p>
+
+    <h3>Progress-bar label parity</h3>
+    <p>The Applications row shows progress context inline ("4 of 9 written"); the Projects row's bar shows only "90%". Add "90% described" so both bars read identically.</p>
+  </div>
+
+  <div class="footer">Design handoff · Applications &amp; Projects · prepared for code-session implementation · no app code changed.</div>
+
+</div>
+</body>
+</html>

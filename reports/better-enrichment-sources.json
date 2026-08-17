@@ -1,0 +1,23 @@
+[
+  {
+    "id": "6f5fad07-d56e-496c-a9f7-b68967bd7fe0",
+    "funder": "Wigan Council",
+    "from": "https://supportingcommunitiesfund.wigan.gov.uk/",
+    "better": "https://supportingcommunitiesfund.wigan.gov.uk/Checklist",
+    "gain": "criteria cues 0 -> 0, text 1020 -> 3203 chars"
+  },
+  {
+    "id": "7815b35d-2d6f-4178-ae07-a09d43144985",
+    "funder": "Edward Holt Trust",
+    "from": "https://www.edwardholttrust.org.uk/grant-application",
+    "better": "https://www.edwardholttrust.org.uk/funding",
+    "gain": "criteria cues 0 -> 5, text 600 -> 1317 chars"
+  },
+  {
+    "id": "dcaa5778-a036-4ae0-b380-42a78cb580a4",
+    "funder": "The Cadogan Charity",
+    "from": "https://funding.scot/funds/a0Rb0000003i0OjEAI/the-cadogan-charity?page=1&funder=001b000000StB0gAAF",
+    "better": "https://funding.scot/search",
+    "gain": "criteria cues 2 -> 4, text 9047 -> 13880 chars"
+  }
+]

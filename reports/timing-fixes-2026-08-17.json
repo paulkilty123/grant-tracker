@@ -1,0 +1,131 @@
+{
+  "ranAt": "2026-08-17T16:27:02.165Z",
+  "source": "ai_audit:timing_fix:v1",
+  "ok": 4,
+  "record": [
+    {
+      "id": "e0a27a78-3cfd-44e3-aebf-59d41d576894",
+      "title": "HCF Grants",
+      "fields": {
+        "deadline": "2026-08-24",
+        "is_rolling": false
+      },
+      "quote": "Autumn 2026 Round: Now open. Deadline 5pm 24th August 2026.",
+      "before": {
+        "title": "HCF Grants",
+        "is_rolling": true,
+        "deadline": null,
+        "is_invite_only": false
+      },
+      "applied": [],
+      "rejected": [
+        {
+          "field": "deadline",
+          "reason": "lower_trust",
+          "attempted": "2026-08-24",
+          "attemptedTrust": 60,
+          "blockedBy": {
+            "source": "admin:paulkilty1@gmail.com",
+            "set_at": "2026-07-08T10:30:30.294Z",
+            "pinned": false,
+            "trust": 100
+          }
+        },
+        {
+          "field": "is_rolling",
+          "reason": "pinned",
+          "attempted": false,
+          "attemptedTrust": 60,
+          "blockedBy": {
+            "source": "admin:paulkilty1@gmail.com",
+            "set_at": "2026-07-08T10:30:30.294Z",
+            "pinned": true,
+            "trust": 100
+          }
+        }
+      ],
+      "error": null,
+      "ok": false
+    },
+    {
+      "id": "05d6dbdf-d370-4d34-9a5b-80540e3b06fa",
+      "title": "The Alan and Babette Sainsbury Charitable Fund",
+      "fields": {
+        "is_rolling": false
+      },
+      "quote": "WE DO NOT ACCEPT UNSOLICITED APPLICATIONS",
+      "before": {
+        "title": "The Alan and Babette Sainsbury Charitable Fund",
+        "is_rolling": true,
+        "deadline": null,
+        "is_invite_only": true
+      },
+      "applied": [
+        "is_rolling"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "id": "e2b9494b-b4af-4e29-9843-df8a3980aa3c",
+      "title": "Aurora Trust",
+      "fields": {
+        "is_rolling": false
+      },
+      "quote": "The Aurora Trust does not generally accept unsolicited applications.",
+      "before": {
+        "title": "Aurora Trust",
+        "is_rolling": true,
+        "deadline": null,
+        "is_invite_only": true
+      },
+      "applied": [
+        "is_rolling"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "id": "b9dd4a92-ace3-4223-8190-7d8e949537d2",
+      "title": "The Linbury Trust",
+      "fields": {
+        "is_rolling": false
+      },
+      "quote": "The Linbury Trust does not accept unsolicited enquires or applications.",
+      "before": {
+        "title": "The Linbury Trust",
+        "is_rolling": true,
+        "deadline": null,
+        "is_invite_only": true
+      },
+      "applied": [
+        "is_rolling"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "id": "4317a983-3349-41ac-ade4-367dbec4b59b",
+      "title": "The Mark Leonard Trust",
+      "fields": {
+        "is_rolling": false
+      },
+      "quote": "The Trust has a proactive grant process and does not accept unsolicited applications.",
+      "before": {
+        "title": "The Mark Leonard Trust",
+        "is_rolling": true,
+        "deadline": null,
+        "is_invite_only": true
+      },
+      "applied": [
+        "is_rolling"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    }
+  ]
+}

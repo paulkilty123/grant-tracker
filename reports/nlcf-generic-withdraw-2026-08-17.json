@@ -1,0 +1,78 @@
+{
+  "ranAt": "2026-08-17T16:45:03.458Z",
+  "source": "system:nlcf_generic_withdraw_2026-08-17",
+  "ok": 3,
+  "record": [
+    {
+      "id": "551d5f3a-6068-41b6-885e-19cf6a58da18",
+      "title": "NLCF — Northern Ireland",
+      "covered": [
+        "Awards for All NI",
+        "Strengthening Communities",
+        "Dormant Assets for All",
+        "Climate Action Fund Food Systems"
+      ],
+      "before": {
+        "title": "National Lottery Community Fund — Northern Ireland",
+        "is_active": true,
+        "pipeline_state": "published"
+      },
+      "after": {
+        "is_active": false,
+        "pipeline_state": "captured"
+      },
+      "applied": [
+        "is_active",
+        "pipeline_state"
+      ],
+      "ok": true
+    },
+    {
+      "id": "c88b0b0d-1a99-43a5-b9bf-e381eaebf824",
+      "title": "NLCF — Scotland",
+      "covered": [
+        "Awards for All Scotland",
+        "Community Action",
+        "Young Start Main Grants",
+        "Strengthening Organisations"
+      ],
+      "before": {
+        "title": "National Lottery Community Fund — Scotland",
+        "is_active": true,
+        "pipeline_state": "published"
+      },
+      "after": {
+        "is_active": false,
+        "pipeline_state": "captured"
+      },
+      "applied": [
+        "is_active",
+        "pipeline_state"
+      ],
+      "ok": true
+    },
+    {
+      "id": "d502db74-61eb-4ae3-84c2-41b3c506dd53",
+      "title": "NLCF — Wales",
+      "covered": [
+        "Awards for All Wales",
+        "People and Places",
+        "Supporting Great Ideas"
+      ],
+      "before": {
+        "title": "National Lottery Community Fund — Wales",
+        "is_active": true,
+        "pipeline_state": "published"
+      },
+      "after": {
+        "is_active": false,
+        "pipeline_state": "captured"
+      },
+      "applied": [
+        "is_active",
+        "pipeline_state"
+      ],
+      "ok": true
+    }
+  ]
+}

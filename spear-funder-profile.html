@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spear — Funder Profile</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --forest: #1a1a2e;
+      --spear-purple: #6b46c1;
+      --spear-purple-light: #7c3aed;
+      --spear-dark: #111118;
+      --spear-off: #f7f7f2;
+      --spear-warm: #f0ede8;
+      --text-dark: #1a1a1a;
+      --text-mid: #444;
+      --text-light: #777;
+      --gold: #e8a030;
+      --sage: #2d8a7a;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--spear-off);
+      color: var(--text-dark);
+      line-height: 1.6;
+    }
+
+    /* ── HEADER / HERO ────────────────────────────────────── */
+    .hero {
+      position: relative;
+      min-height: 520px;
+      background: var(--spear-dark);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .hero-image {
+      position: absolute;
+      inset: 0;
+      background-image: url('https://www.spear.org.uk/wp-content/uploads/2023/09/spear-hero.jpg');
+      background-size: cover;
+      background-position: center top;
+      opacity: 0.45;
+    }
+
+    .hero-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        135deg,
+        rgba(17,17,24,0.82) 0%,
+        rgba(107,70,193,0.35) 100%
+      );
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      padding: 48px 56px 52px;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+      flex: 1;
+    }
+
+    .hero-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .org-identity {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .org-logo {
+      width: 72px;
+      height: 72px;
+      border-radius: 16px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      flex-shrink: 0;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+    }
+
+    .org-logo img {
+      width: 56px;
+      object-fit: contain;
+    }
+
+    .org-name-block h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2.6rem;
+      color: #fff;
+      letter-spacing: -0.5px;
+      line-height: 1.1;
+    }
+
+    .org-name-block .tagline {
+      font-size: 1rem;
+      color: rgba(255,255,255,0.7);
+      margin-top: 4px;
+      font-weight: 400;
+    }
+
+    .badge-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 2px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .badge-charity {
+      background: rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.85);
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .badge-established {
+      background: rgba(107,70,193,0.5);
+      color: #d8c8ff;
+      border: 1px solid rgba(107,70,193,0.6);
+    }
+
+    .badge-verified {
+      background: rgba(45,138,122,0.45);
+      color: #a0ddd5;
+      border: 1px solid rgba(45,138,122,0.5);
+    }
+
+    .profile-meta-top {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+    }
+
+    .gt-badge {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 10px;
+      padding: 8px 14px;
+      color: rgba(255,255,255,0.6);
+      font-size: 0.75rem;
+    }
+
+    .gt-badge strong {
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .gt-logo-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--sage);
+    }
+
+    .hero-mission {
+      max-width: 640px;
+    }
+
+    .hero-mission blockquote {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.7rem;
+      color: #fff;
+      line-height: 1.35;
+      font-style: italic;
+    }
+
+    .hero-mission blockquote::before {
+      content: '"';
+      font-size: 3rem;
+      color: var(--spear-purple-light);
+      line-height: 0;
+      vertical-align: -0.4em;
+      margin-right: 2px;
+    }
+
+    /* ── IMPACT STATS STRIP ───────────────────────────────── */
+    .stats-strip {
+      background: #fff;
+      border-bottom: 1px solid #ece9e3;
+      padding: 0 56px;
+    }
+
+    .stats-inner {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+    }
+
+    .stat-item {
+      padding: 28px 24px 28px 0;
+      border-right: 1px solid #ece9e3;
+    }
+
+    .stat-item:last-child { border-right: none; padding-right: 0; }
+    .stat-item:first-child { padding-left: 0; }
+
+    .stat-number {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2.2rem;
+      color: var(--text-dark);
+      line-height: 1;
+      display: flex;
+      align-items: baseline;
+      gap: 3px;
+    }
+
+    .stat-number span.plus {
+      font-size: 1.3rem;
+      color: var(--spear-purple);
+    }
+
+    .stat-number span.pct {
+      font-size: 1.3rem;
+      color: var(--sage);
+    }
+
+    .stat-label {
+      font-size: 0.82rem;
+      color: var(--text-light);
+      margin-top: 4px;
+      font-weight: 400;
+    }
+
+    .stat-source {
+      font-size: 0.7rem;
+      color: #bbb;
+      margin-top: 2px;
+    }
+
+    /* ── MAIN BODY ────────────────────────────────────────── */
+    .main-body {
+      padding: 48px 56px;
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 40px;
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    .left-col { display: flex; flex-direction: column; gap: 36px; }
+    .right-col { display: flex; flex-direction: column; gap: 28px; }
+
+    /* ── SECTION BLOCKS ───────────────────────────────────── */
+    .section-block {
+      background: #fff;
+      border-radius: 16px;
+      padding: 32px;
+      border: 1px solid #ece9e3;
+    }
+
+    .section-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-light);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #ece9e3;
+    }
+
+    h2.section-heading {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.4rem;
+      color: var(--text-dark);
+      margin-bottom: 12px;
+      line-height: 1.2;
+    }
+
+    /* ── WHAT THEY DO ─────────────────────────────────────── */
+    .what-they-do p {
+      font-size: 1.05rem;
+      color: var(--text-mid);
+      line-height: 1.7;
+    }
+
+    /* ── IMPACT HIGHLIGHTS ────────────────────────────────── */
+    .impact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 4px;
+    }
+
+    .impact-card {
+      background: var(--spear-warm);
+      border-radius: 12px;
+      padding: 20px;
+      border: 1px solid #e5e0d8;
+    }
+
+    .impact-card .ic-num {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2rem;
+      color: var(--text-dark);
+      line-height: 1;
+    }
+
+    .impact-card .ic-num em {
+      font-size: 1.1rem;
+      color: var(--spear-purple);
+      font-style: normal;
+    }
+
+    .impact-card .ic-label {
+      font-size: 0.85rem;
+      color: var(--text-mid);
+      margin-top: 6px;
+      line-height: 1.4;
+    }
+
+    /* ── PROGRAMME ────────────────────────────────────────── */
+    .programme-block {
+      background: linear-gradient(135deg, #1a1a2e 0%, #2d1b69 100%);
+      border-radius: 16px;
+      padding: 32px;
+      color: #fff;
+    }
+
+    .programme-block .section-label {
+      color: rgba(255,255,255,0.5);
+    }
+
+    .programme-block .section-label::after {
+      background: rgba(255,255,255,0.15);
+    }
+
+    .programme-block h2 {
+      color: #fff;
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.4rem;
+      margin-bottom: 14px;
+    }
+
+    .programme-block p {
+      color: rgba(255,255,255,0.75);
+      font-size: 0.95rem;
+      line-height: 1.7;
+    }
+
+    .programme-steps {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 20px;
+    }
+
+    .programme-step {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      padding: 16px;
+    }
+
+    .programme-step .ps-num {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #a78bfa;
+      margin-bottom: 4px;
+    }
+
+    .programme-step .ps-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .programme-step .ps-desc {
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.6);
+      margin-top: 4px;
+      line-height: 1.5;
+    }
+
+    /* ── GRADUATE QUOTE ───────────────────────────────────── */
+    .quote-block {
+      background: var(--spear-warm);
+      border-radius: 16px;
+      padding: 32px;
+      border-left: 4px solid var(--spear-purple);
+      border: 1px solid #e5e0d8;
+      border-left: 4px solid var(--spear-purple-light);
+    }
+
+    .quote-block blockquote {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.2rem;
+      font-style: italic;
+      color: var(--text-dark);
+      line-height: 1.5;
+    }
+
+    .quote-attrib {
+      margin-top: 14px;
+      font-size: 0.82rem;
+      color: var(--text-light);
+      font-weight: 500;
+    }
+
+    .quote-attrib strong {
+      color: var(--text-dark);
+    }
+
+    /* ── RIGHT COLUMN CARDS ───────────────────────────────── */
+    .info-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 24px;
+      border: 1px solid #ece9e3;
+    }
+
+    .info-card .section-label { margin-bottom: 12px; }
+
+    .info-row {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .info-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #f0ede8;
+    }
+
+    .info-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .info-item .ii-label {
+      font-size: 0.78rem;
+      color: var(--text-light);
+      font-weight: 500;
+      flex-shrink: 0;
+      padding-top: 1px;
+    }
+
+    .info-item .ii-value {
+      font-size: 0.88rem;
+      color: var(--text-dark);
+      font-weight: 500;
+      text-align: right;
+      line-height: 1.4;
+    }
+
+    /* ── SECTOR TAGS ──────────────────────────────────────── */
+    .tag-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 500;
+    }
+
+    .tag-primary {
+      background: #ede9ff;
+      color: #5b21b6;
+      border: 1px solid #c4b5fd;
+    }
+
+    .tag-secondary {
+      background: #f0fdf9;
+      color: #0f766e;
+      border: 1px solid #99f6e4;
+    }
+
+    .tag-tertiary {
+      background: var(--spear-warm);
+      color: var(--text-mid);
+      border: 1px solid #e5e0d8;
+    }
+
+    .tag-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      opacity: 0.5;
+    }
+
+    /* ── GEO BLOCK ────────────────────────────────────────── */
+    .geo-block {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      margin-top: 4px;
+    }
+
+    .geo-icon {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      background: #f0fdf9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+      border: 1px solid #c6f0e8;
+    }
+
+    .geo-text strong {
+      font-size: 0.9rem;
+      color: var(--text-dark);
+      display: block;
+    }
+
+    .geo-text span {
+      font-size: 0.8rem;
+      color: var(--text-light);
+    }
+
+    /* ── FUNDING SEEK ─────────────────────────────────────── */
+    .funding-seek-card {
+      background: linear-gradient(135deg, #6b46c1 0%, #4c1d95 100%);
+      border-radius: 16px;
+      padding: 24px;
+      color: #fff;
+    }
+
+    .funding-seek-card .section-label {
+      color: rgba(255,255,255,0.5);
+    }
+
+    .funding-seek-card .section-label::after {
+      background: rgba(255,255,255,0.15);
+    }
+
+    .funding-seek-card h3 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.1rem;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+
+    .funding-type-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .ft-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.85);
+    }
+
+    .ft-icon {
+      width: 28px; height: 28px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+
+    /* ── CONTACT FOOTER ───────────────────────────────────── */
+    .contact-footer {
+      grid-column: 1 / -1;
+      background: var(--spear-dark);
+      border-radius: 16px;
+      padding: 32px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 24px;
+      color: #fff;
+    }
+
+    .cf-left h3 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.3rem;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+
+    .cf-left p {
+      font-size: 0.88rem;
+      color: rgba(255,255,255,0.6);
+    }
+
+    .cf-right {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 12px 22px;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: opacity 0.15s;
+    }
+
+    .btn:hover { opacity: 0.85; }
+
+    .btn-primary {
+      background: var(--spear-purple-light);
+      color: #fff;
+    }
+
+    .btn-outline {
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.8);
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    /* ── GT FOOTER ────────────────────────────────────────── */
+    .gt-footer {
+      text-align: center;
+      padding: 28px 56px 40px;
+      font-size: 0.75rem;
+      color: #bbb;
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    .gt-footer a { color: var(--sage); text-decoration: none; }
+
+    /* ── RECENT AWARD BANNER ──────────────────────────────── */
+    .award-banner {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: 12px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-top: 4px;
+    }
+
+    .award-icon { font-size: 1.3rem; flex-shrink: 0; }
+
+    .award-text strong {
+      display: block;
+      font-size: 0.88rem;
+      color: #92400e;
+    }
+
+    .award-text span {
+      font-size: 0.8rem;
+      color: #b45309;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 900px) {
+      .main-body { grid-template-columns: 1fr; padding: 28px 20px; }
+      .hero-content { padding: 32px 24px 40px; }
+      .stats-strip { padding: 0 24px; }
+      .stats-inner { grid-template-columns: repeat(2, 1fr); }
+      .stat-item { border-right: none; }
+      .impact-grid { grid-template-columns: 1fr; }
+      .programme-steps { grid-template-columns: 1fr; }
+      .contact-footer { flex-direction: column; text-align: center; }
+      .org-name-block h1 { font-size: 1.8rem; }
+      .hero-mission blockquote { font-size: 1.3rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── HERO ─────────────────────────────────────────────── -->
+  <div class="hero">
+    <div class="hero-image"></div>
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+
+      <div class="hero-top">
+        <div class="org-identity">
+          <div class="org-logo">
+            <img src="https://www.spear.org.uk/wp-content/uploads/2023/09/spear-logo-dark.png"
+                 onerror="this.style.display='none'; this.parentElement.innerHTML='<span style=\'font-family:DM Serif Display,serif;font-size:1.5rem;font-weight:700;color:#1a1a2e\'>S</span>'"
+                 alt="Spear logo" />
+          </div>
+          <div class="org-name-block">
+            <h1>Spear</h1>
+            <p class="tagline">Powering potential in young people</p>
+            <div class="badge-row" style="margin-top: 10px;">
+              <span class="badge badge-charity">Registered Charity</span>
+              <span class="badge badge-established">20+ years</span>
+              <span class="badge badge-verified">✓ 100% profile</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="profile-meta-top">
+          <div class="gt-badge">
+            <div class="gt-logo-dot"></div>
+            <span>Verified on <strong>Grant Tracker</strong></span>
+          </div>
+          <div style="font-size:0.72rem; color:rgba(255,255,255,0.4); text-align:right; margin-top:4px;">
+            Profile last updated April 2026
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-mission">
+        <blockquote>
+          Spear coaches young people to break down barriers so they can thrive in work and life.
+        </blockquote>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── STATS STRIP ───────────────────────────────────────── -->
+  <div class="stats-strip">
+    <div class="stats-inner">
+      <div class="stat-item">
+        <div class="stat-number">1,200<span class="plus">+</span></div>
+        <div class="stat-label">lives changed each year</div>
+        <div class="stat-source">Source: Impact Report 2024</div>
+      </div>
+      <div class="stat-item" style="padding-left:24px;">
+        <div class="stat-number">18</div>
+        <div class="stat-label">centres across the UK</div>
+        <div class="stat-source">Active programme sites</div>
+      </div>
+      <div class="stat-item" style="padding-left:24px;">
+        <div class="stat-number">70<span class="pct">%</span></div>
+        <div class="stat-label">in work or study a year on</div>
+        <div class="stat-source">And rising year-on-year</div>
+      </div>
+      <div class="stat-item" style="padding-left:24px;">
+        <div class="stat-number">20<span class="plus">+</span></div>
+        <div class="stat-label">years of proven impact</div>
+        <div class="stat-source">Formerly Resurgo</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MAIN BODY ─────────────────────────────────────────── -->
+  <div class="main-body">
+
+    <!-- LEFT COLUMN -->
+    <div class="left-col">
+
+      <!-- What they do -->
+      <div class="section-block what-they-do">
+        <div class="section-label">About</div>
+        <h2 class="section-heading">Who We Are</h2>
+        <p>
+          Spear is a national youth employment charity dedicated to transforming the lives of
+          young people aged 16–24 who face significant barriers to work. Through intensive coaching,
+          mentoring, and employer connections, Spear equips participants not just with job-readiness
+          skills, but with the confidence and resilience to sustain employment and grow in life.
+        </p>
+        <p style="margin-top:14px;">
+          Operating from 18 centres across the UK, Spear's evidence-based programme has supported
+          over 1,200 young people a year — many of whom come from communities with high unemployment,
+          poverty, or disadvantage — into sustainable work and further education.
+        </p>
+
+        <div class="award-banner" style="margin-top:20px;">
+          <div class="award-icon">🏆</div>
+          <div class="award-text">
+            <strong>Recent award — £160,000 grant (March 2026)</strong>
+            <span>Spear named one of five Global Recipients, enabling expansion of its coaching model to reach more unemployed young people across the UK.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Programme -->
+      <div class="programme-block">
+        <div class="section-label">The Programme</div>
+        <h2>How the Spear Programme Works</h2>
+        <p>
+          Spear's core programme combines group coaching, one-to-one support, and employer
+          engagement to move young people from unemployment to sustainable employment.
+        </p>
+        <div class="programme-steps">
+          <div class="programme-step">
+            <div class="ps-num">Step 1</div>
+            <div class="ps-title">Enrol & Assess</div>
+            <div class="ps-desc">Young person joins; barriers and goals are mapped with a personal coach.</div>
+          </div>
+          <div class="programme-step">
+            <div class="ps-num">Step 2</div>
+            <div class="ps-title">Intensive Coaching</div>
+            <div class="ps-desc">Group and 1:1 sessions build confidence, resilience, and job-readiness.</div>
+          </div>
+          <div class="programme-step">
+            <div class="ps-num">Step 3</div>
+            <div class="ps-title">Employer Connect</div>
+            <div class="ps-desc">Mock interviews, employer introductions, and job application support.</div>
+          </div>
+          <div class="programme-step">
+            <div class="ps-num">Step 4</div>
+            <div class="ps-title">In-Work Support</div>
+            <div class="ps-desc">Continued coaching for 12 months after placement to sustain employment.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Impact detail -->
+      <div class="section-block">
+        <div class="section-label">Impact</div>
+        <h2 class="section-heading">Measured Outcomes</h2>
+        <div class="impact-grid">
+          <div class="impact-card">
+            <div class="ic-num">70<em>%</em></div>
+            <div class="ic-label">of graduates in sustained work or study 12 months on</div>
+          </div>
+          <div class="impact-card">
+            <div class="ic-num">1,200<em>+</em></div>
+            <div class="ic-label">young people supported into employment annually</div>
+          </div>
+          <div class="impact-card">
+            <div class="ic-num">18</div>
+            <div class="ic-label">active delivery centres across England</div>
+          </div>
+          <div class="impact-card">
+            <div class="ic-num">20<em>+</em></div>
+            <div class="ic-label">years operating — deep-rooted, proven model</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Graduate quote -->
+      <div class="quote-block">
+        <div class="section-label">Participant Voice</div>
+        <blockquote>
+          "I believe the tools Spear gave me have massively changed the course of my life forever."
+        </blockquote>
+        <div class="quote-attrib"><strong>Matt</strong> — Spear Programme Ambassador</div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="right-col">
+
+      <!-- Org credentials -->
+      <div class="info-card">
+        <div class="section-label">Organisation</div>
+        <div class="info-row">
+          <div class="info-item">
+            <span class="ii-label">Legal structure</span>
+            <span class="ii-value">Registered Charity<br/>(Ltd by Guarantee)</span>
+          </div>
+          <div class="info-item">
+            <span class="ii-label">Stage</span>
+            <span class="ii-value">Established · 20+ years</span>
+          </div>
+          <div class="info-item">
+            <span class="ii-label">Beneficiaries</span>
+            <span class="ii-value">Young people 16–24<br/>People in poverty</span>
+          </div>
+          <div class="info-item">
+            <span class="ii-label">Website</span>
+            <span class="ii-value">
+              <a href="https://www.spear.org.uk" style="color:var(--sage); text-decoration:none; font-size:0.82rem;">
+                spear.org.uk ↗
+              </a>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sectors -->
+      <div class="info-card">
+        <div class="section-label">Impact Sectors</div>
+        <div class="tag-group">
+          <span class="tag tag-primary"><span class="tag-dot"></span>Employment &amp; Livelihoods</span>
+          <span class="tag tag-secondary"><span class="tag-dot"></span>Young People &amp; Youth</span>
+          <span class="tag tag-secondary"><span class="tag-dot"></span>Education &amp; Skills</span>
+          <span class="tag tag-tertiary"><span class="tag-dot"></span>Community Dev &amp; Spaces</span>
+        </div>
+      </div>
+
+      <!-- Geographic reach -->
+      <div class="info-card">
+        <div class="section-label">Geographic Reach</div>
+        <div class="geo-block">
+          <div class="geo-icon">🇬🇧</div>
+          <div class="geo-text">
+            <strong>National (England)</strong>
+            <span>18 delivery centres · Local &amp; national grants eligible</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Funding seek -->
+      <div class="funding-seek-card">
+        <div class="section-label">Funding Interests</div>
+        <h3>What Spear is seeking</h3>
+        <div class="funding-type-list">
+          <div class="ft-item">
+            <div class="ft-icon">🏅</div>
+            Grants &amp; Awards
+          </div>
+          <div class="ft-item">
+            <div class="ft-icon">📈</div>
+            Social Investment
+          </div>
+          <div class="ft-item">
+            <div class="ft-icon">🤝</div>
+            In-Kind Support
+          </div>
+        </div>
+        <div style="margin-top:18px; padding-top:16px; border-top:1px solid rgba(255,255,255,0.15); font-size:0.78rem; color:rgba(255,255,255,0.55);">
+          Open to Trusts &amp; Foundations, Corporate, Government, and Lottery funders.
+        </div>
+      </div>
+
+      <!-- Second quote -->
+      <div class="section-block" style="padding:20px 24px;">
+        <div class="section-label">Participant Voice</div>
+        <p style="font-family:'DM Serif Display',serif; font-size:1rem; font-style:italic; color:var(--text-dark); line-height:1.5;">
+          "Before Spear, I never imagined having the confidence to work in this kind of role."
+        </p>
+        <p style="font-size:0.78rem; color:var(--text-light); margin-top:10px;"><strong style="color:var(--text-dark);">Jada</strong> — Teaching Assistant</p>
+      </div>
+
+    </div>
+
+    <!-- CONTACT FOOTER -->
+    <div class="contact-footer">
+      <div class="cf-left">
+        <h3>Interested in supporting Spear?</h3>
+        <p>Get in touch to discuss funding opportunities, partnerships, or to request a full impact report.</p>
+      </div>
+      <div class="cf-right">
+        <a href="https://www.spear.org.uk/trusts-and-foundations" class="btn btn-outline">View Funding Page ↗</a>
+        <a href="mailto:fundraising@spear.org.uk" class="btn btn-primary">Contact the Team</a>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── GT FOOTER ──────────────────────────────────────────── -->
+  <div class="gt-footer">
+    Profile powered by <a href="https://grant-tracker-kappa.vercel.app">Grant Tracker</a> ·
+    Data verified April 2026 ·
+    <a href="https://www.spear.org.uk">spear.org.uk</a>
+  </div>
+
+</body>
+</html>

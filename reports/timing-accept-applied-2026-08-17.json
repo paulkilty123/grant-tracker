@@ -1,0 +1,288 @@
+{
+  "ranAt": "2026-08-17T16:36:00.901Z",
+  "source": "ai_audit:timing_accept:v1",
+  "ok": 9,
+  "record": [
+    {
+      "group": "A — dated rounds, rolling off",
+      "id": "81c50185-6ad9-4b77-b10f-c0677d14f03a",
+      "title": "Achlachan Wind Farm Community Fund",
+      "fields": {
+        "is_rolling": false,
+        "deadline_cycle": [
+          {
+            "day": 15,
+            "month": 3,
+            "label": "Application deadline"
+          },
+          {
+            "day": 15,
+            "month": 6,
+            "label": "Application deadline"
+          },
+          {
+            "day": 15,
+            "month": 9,
+            "label": "Application deadline"
+          },
+          {
+            "day": 15,
+            "month": 12,
+            "label": "Application deadline"
+          }
+        ]
+      },
+      "quote": "Application deadlines: 15th March, 15th June, 15th September, 15th December",
+      "before": {
+        "is_rolling": true,
+        "deadline": null,
+        "deadline_cycle": null
+      },
+      "applied": [
+        "is_rolling",
+        "deadline_cycle"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "group": "A — dated rounds, rolling off",
+      "id": "f1fdcd6e-152a-403f-a1ac-f7838fbe9ebc",
+      "title": "sportscotland — Facilities Investment",
+      "fields": {
+        "is_rolling": false,
+        "deadline_cycle": [
+          {
+            "day": 1,
+            "month": 4,
+            "label": "Application deadline"
+          },
+          {
+            "day": 1,
+            "month": 9,
+            "label": "Application deadline"
+          }
+        ]
+      },
+      "quote": "Deadlines for submission of Sport Facilities Fund applications are 5pm on the 1st April and 1st September each year.",
+      "before": {
+        "is_rolling": true,
+        "deadline": null,
+        "deadline_cycle": null
+      },
+      "applied": [
+        "is_rolling",
+        "deadline_cycle"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "group": "A — dated rounds, rolling off",
+      "id": "c80591fa-fdf6-4e2d-97a5-c14020cff1bb",
+      "title": "Grants for Good Fund",
+      "fields": {
+        "is_rolling": false,
+        "deadline_cycle": [
+          {
+            "day": 15,
+            "month": 3,
+            "label": "Window closes"
+          },
+          {
+            "day": 15,
+            "month": 6,
+            "label": "Window closes"
+          },
+          {
+            "day": 15,
+            "month": 9,
+            "label": "Window closes"
+          },
+          {
+            "day": 15,
+            "month": 12,
+            "label": "Window closes"
+          }
+        ]
+      },
+      "quote": "Our four application windows run as follows: December 16th – March 15th, March 16th – June 15th, June 16th – September 15th, September 16th – December 15th",
+      "before": {
+        "is_rolling": true,
+        "deadline": null,
+        "deadline_cycle": null
+      },
+      "applied": [
+        "is_rolling",
+        "deadline_cycle"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "group": "A — dated rounds, rolling off",
+      "id": "b6add755-6f1c-453b-9cfe-54e6b88b3f6d",
+      "title": "Ernest Kleinwort — Medium Grants",
+      "fields": {
+        "is_rolling": false
+      },
+      "quote": "Applications accepted online four times a year during the following date ranges",
+      "before": {
+        "is_rolling": true,
+        "deadline": null,
+        "deadline_cycle": null
+      },
+      "applied": [
+        "is_rolling"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "group": "A — dated rounds, rolling off",
+      "id": "3665afff-c092-41c1-83e9-fb67b8d4d563",
+      "title": "Community Grants (Hampton Fund)",
+      "fields": {
+        "is_rolling": false
+      },
+      "quote": "Our Trustees meet four times a year … Application submission deadlines",
+      "before": {
+        "is_rolling": true,
+        "deadline": null,
+        "deadline_cycle": [
+          {
+            "day": null,
+            "label": "March trustee meeting",
+            "month": 3
+          },
+          {
+            "day": null,
+            "label": "June trustee meeting",
+            "month": 6
+          },
+          {
+            "day": null,
+            "label": "September trustee meeting",
+            "month": 9
+          },
+          {
+            "day": null,
+            "label": "December trustee meeting",
+            "month": 12
+          }
+        ]
+      },
+      "applied": [
+        "is_rolling"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "group": "A — dated rounds, rolling off",
+      "id": "057225d1-6b86-4341-b2df-766f3851ee62",
+      "title": "Community Grant Programme (National Grid)",
+      "fields": {
+        "is_rolling": false
+      },
+      "quote": "We accept applications on a quarterly basis. See timeline below.",
+      "before": {
+        "is_rolling": true,
+        "deadline": null,
+        "deadline_cycle": [
+          {
+            "day": 30,
+            "label": "Q1 Application window opens",
+            "month": 4
+          },
+          {
+            "day": 30,
+            "label": "Q2 Application window opens",
+            "month": 7
+          },
+          {
+            "day": 31,
+            "label": "Q3 Application window opens",
+            "month": 10
+          },
+          {
+            "day": 31,
+            "label": "Q4 Application window opens",
+            "month": 1
+          }
+        ]
+      },
+      "applied": [
+        "is_rolling"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "group": "B — confirmed rolling",
+      "id": "0114ad82-c985-4e59-9c5b-791cd5c3f1df",
+      "title": "Alpkit Foundation",
+      "fields": {
+        "is_rolling": true
+      },
+      "quote": "Applications are reviewed on a rolling basis every couple of months",
+      "before": {
+        "is_rolling": false,
+        "deadline": null,
+        "deadline_cycle": null
+      },
+      "applied": [
+        "is_rolling"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "group": "B — confirmed rolling",
+      "id": "1a99b534-f6f5-4792-937d-361f6a0ba067",
+      "title": "The Access Foundation",
+      "fields": {
+        "is_rolling": true
+      },
+      "quote": "There are no application deadlines.",
+      "before": {
+        "is_rolling": false,
+        "deadline": null,
+        "deadline_cycle": null
+      },
+      "applied": [
+        "is_rolling"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "group": "B — confirmed rolling",
+      "id": "894fb8eb-5a6b-4549-98ff-3951c016c623",
+      "title": "Sixpenny Wood Wind Farm Fund",
+      "fields": {
+        "is_rolling": true
+      },
+      "quote": "You can apply at any time (funds allowing).",
+      "before": {
+        "is_rolling": false,
+        "deadline": null,
+        "deadline_cycle": null
+      },
+      "applied": [
+        "is_rolling"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    }
+  ]
+}

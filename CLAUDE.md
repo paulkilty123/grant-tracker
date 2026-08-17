@@ -100,6 +100,43 @@ to a file in the scratchpad and use `git commit -F <file>`.
 
 ---
 
+## A passing check is not the same as the thing being right
+
+Twice in two weeks a check has been written against a **proxy** for the property
+we cared about, passed honestly, and let something wrong through. Both times the
+proxy was the easy thing to measure and the real property was one question
+further on.
+
+| We checked | It admits | The real test |
+|---|---|---|
+| the extraction carries a quote | a quote that does not support the claim | does the quote *say* the thing |
+| the page names the fund | an FAQ, a news item, a grants-awarded list | could a fundraiser landing there **apply** |
+
+**The rule: state the check as a sentence about the user, then see whether your
+condition actually tests it.** "The page names the fund" is a sentence about the
+page. "A fundraiser landing here could apply" is a sentence about the user, and
+it is the one that matters.
+
+Two things follow, both learned the expensive way on 2026-08-17:
+
+1. **Do not judge by appearance when you can judge by evidence.** Ranking the
+   first twelve URL corrections by how the URL *looked* got three of them
+   backwards: `/faqs-for-applicants/` answered timing and eligibility, while
+   `/topics-and-guidance/accelerated-growth-programme` — which looks like exactly
+   the right page — answered neither. `carriesApplicationDetail()` in
+   `verify-row.ts` is the encoded version.
+2. **A floor beats a ranking.** If nothing clears the bar, change nothing and
+   leave the row flagged. Paul: *"A homepage I know is wrong beats an FAQ page
+   that looks fixed — don't let the 190 get cleared without being cleared."* A
+   wrong row in the queue costs a review; a row that looks fixed costs a user.
+
+And when a metric rests on the proxy, **re-baseline it on the real test even
+though the number drops**. "Names the fund" was 412 of 649; "could actually
+apply" was 368. The 44 in between were the whole problem, and the first number
+was hiding them.
+
+---
+
 ## Design System
 
 ### Fonts

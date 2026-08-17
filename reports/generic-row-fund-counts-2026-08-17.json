@@ -1,0 +1,465 @@
+{
+  "ranAt": "2026-08-17T16:48:19.074Z",
+  "rows": [
+    {
+      "id": "d2083d32-698f-4620-a3c4-5ff597a565c8",
+      "title": "7Stars Foundation",
+      "funder": "7Stars Foundation",
+      "apply_url": "https://the7starsfoundation.co.uk/apply-for-funding",
+      "funding_index_url": null,
+      "funds": [
+        "Project Funding",
+        "Shine Bright Long Term Funding",
+        "Child Poverty",
+        "Social Impact Funding",
+        "Josh's Fund",
+        "Individual Funding",
+        "Apprenticeships"
+      ],
+      "count": 7,
+      "one_fund_only": false
+    },
+    {
+      "id": "a94ae453-629b-46ca-a21e-11606403bfc9",
+      "title": "A B Charitable Trust Funding",
+      "funder": "A B Charitable Trust",
+      "apply_url": "https://abcharitabletrust.org.uk/how-we-fund",
+      "funding_index_url": null,
+      "funds": [
+        "Open Programme",
+        "Special Initiatives",
+        "Anchor Programme"
+      ],
+      "count": 3,
+      "one_fund_only": false
+    },
+    {
+      "id": "6af68514-45b9-4a2c-9fc3-e58402c2eccc",
+      "title": "Allen Lane Foundation",
+      "funder": "Allen Lane Foundation",
+      "apply_url": "https://allenlane.org.uk/applying-for-funding/",
+      "funding_index_url": null,
+      "funds": [
+        "Asylum Seekers and Refugees",
+        "Gypsy, Roma & Traveller Communities",
+        "Offenders and Ex-offenders",
+        "Older People",
+        "People affected by Violence or Abuse",
+        "People with mental health problems",
+        "Young People's Programme"
+      ],
+      "count": 7,
+      "one_fund_only": false
+    },
+    {
+      "id": "80b8dd93-8f34-49ce-a616-3b7fd4e5ada9",
+      "title": "Anton Jurgens Charitable Trust",
+      "funder": "Anton Jurgens Charitable Trust",
+      "apply_url": "https://ajct.org.uk/en",
+      "funding_index_url": null,
+      "funds": [],
+      "count": 0,
+      "one_fund_only": true
+    },
+    {
+      "id": "5b7a141a-5ee2-4f80-80d6-fa6937cff37b",
+      "title": "Arnold Clark Community Fund",
+      "funder": "Arnold Clark",
+      "apply_url": "https://www.arnoldclark.com/community-fund",
+      "funding_index_url": null,
+      "funds": [
+        "Gear Up For Sport",
+        "Community Support",
+        "Cost-of-Living Support"
+      ],
+      "count": 3,
+      "one_fund_only": false
+    },
+    {
+      "id": "cb9780e6-9898-4913-9f41-aa7034908269",
+      "title": "B&Q Foundation — Home Improvement & Home-Starter Kits Funds",
+      "funder": "B&Q Foundation",
+      "apply_url": "https://bqfoundation.org.uk/apply-for-a-grant/",
+      "funding_index_url": null,
+      "funds": [
+        "Home Improvement",
+        "Home-Starter Kit"
+      ],
+      "count": 2,
+      "one_fund_only": false
+    },
+    {
+      "id": "72739682-6794-487d-95dc-fac4d4ce3f1f",
+      "title": "Charity Bank Loans for Social Purpose",
+      "funder": "Charity Bank",
+      "apply_url": "https://charitybank.org/loans",
+      "funding_index_url": null,
+      "error": "could not read page"
+    },
+    {
+      "id": "94b70915-331b-48ef-8d4e-094881d3812a",
+      "title": "Charles Hayward Foundation Grants",
+      "funder": "Charles Hayward Foundation",
+      "apply_url": "https://charleshaywardfoundation.org.uk/",
+      "funding_index_url": null,
+      "funds": [
+        "Social & Criminal Justice",
+        "Overseas",
+        "Heritage & Conservation",
+        "Older People"
+      ],
+      "count": 4,
+      "one_fund_only": false
+    },
+    {
+      "id": "574fc073-bca6-4b01-95c0-a7dc8627c3e0",
+      "title": "Dulverton Trust Grants",
+      "funder": "Dulverton Trust",
+      "apply_url": "https://www.dulverton.org/#apply",
+      "funding_index_url": null,
+      "funds": [
+        "Youth Opportunities",
+        "General Welfare",
+        "Heritage",
+        "Conservation",
+        "Kenya and Uganda",
+        "International Stability and Reconstruction"
+      ],
+      "count": 6,
+      "one_fund_only": false
+    },
+    {
+      "id": "595ccabb-817c-48a1-9f3d-de394d09a458",
+      "title": "Forte Charitable Foundation — Small & Major Grants",
+      "funder": "Forte Charitable Foundation",
+      "apply_url": "https://www.fortecharitablefoundation.org.uk/our-grants",
+      "funding_index_url": "https://www.fortecharitablefoundation.org.uk/our-grants",
+      "funds": [
+        "Small Grants",
+        "Major Grants"
+      ],
+      "count": 2,
+      "one_fund_only": false
+    },
+    {
+      "id": "49ff8ed7-c7a9-432d-aeb7-9acf2afb8b0a",
+      "title": "Garfield Weston Foundation — General Grants",
+      "funder": "Garfield Weston Foundation",
+      "apply_url": "https://garfieldweston.org/for-grant-applicants/how-to-apply/",
+      "funding_index_url": null,
+      "funds": [],
+      "count": 0,
+      "one_fund_only": true
+    },
+    {
+      "id": "129a6434-75e8-489c-876d-5cf40560f0f0",
+      "title": "Greater Manchester Mayor's Charity — Grants Programmes",
+      "funder": "Greater Manchester Mayor's Charity",
+      "apply_url": "https://www.gmmayorscharity.org.uk/apply",
+      "funding_index_url": null,
+      "funds": [
+        "Seeding the Christmas Big Give",
+        "Autumn Small Grants Programme",
+        "Spring/Summer Small Grants Programme",
+        "Live Well Communities Fund",
+        "Emergency Response stream"
+      ],
+      "count": 5,
+      "one_fund_only": false
+    },
+    {
+      "id": "451a841b-c264-43f3-9724-e7b22dad1627",
+      "title": "Happy Days Children's Charity",
+      "funder": "Happy Days Children's Charity",
+      "apply_url": "https://www.happydayscharity.org/applications",
+      "funding_index_url": null,
+      "funds": [
+        "Family Day Trips",
+        "Family Holiday Breaks",
+        "Group Day Trips & Visiting Theatre",
+        "Group Day Trips for Children in Care",
+        "Group Activity Holidays"
+      ],
+      "count": 5,
+      "one_fund_only": false
+    },
+    {
+      "id": "fc678f81-2c43-46f9-83e8-fe962c65b730",
+      "title": "Historic England — Grants for Heritage",
+      "funder": "Historic England",
+      "apply_url": "https://historicengland.org.uk/services-skills/grants/",
+      "funding_index_url": null,
+      "error": "could not read page"
+    },
+    {
+      "id": "6df1b665-ae45-435c-b07f-f56ccb582d5a",
+      "title": "Annual Funding Round",
+      "funder": "Jerwood Foundation",
+      "apply_url": "https://jerwood.org/funding/",
+      "funding_index_url": null,
+      "funds": [
+        "Annual Funding Round"
+      ],
+      "count": 1,
+      "one_fund_only": true
+    },
+    {
+      "id": "19593b12-93e1-4207-a0a6-909fb03d0ad3",
+      "title": "Go! London Fund",
+      "funder": "Mayor of London",
+      "apply_url": "https://golondon.org.uk/",
+      "funding_index_url": "https://golondon.org.uk/",
+      "funds": [
+        "Foundation",
+        "Young Entrepreneurs",
+        "Match. Trade. Grow.",
+        "Open Innovation Challenges"
+      ],
+      "count": 4,
+      "one_fund_only": false
+    },
+    {
+      "id": "497400aa-4785-41b3-ae15-88e35fe38845",
+      "title": "Morrisons Foundation",
+      "funder": "Morrisons Foundation",
+      "apply_url": "https://www.morrisonsfoundation.com/",
+      "funding_index_url": "https://www.morrisonsfoundation.com/",
+      "error": "could not read page"
+    },
+    {
+      "id": "3745ad11-a75d-4152-b604-9c95bc21915d",
+      "title": "Network for Social Change — Grants",
+      "funder": "Network for Social Change",
+      "apply_url": "https://www.thenetworkforsocialchange.org.uk/how-we-fund/",
+      "funding_index_url": "https://www.thenetworkforsocialchange.org.uk/how-we-fund/",
+      "funds": [
+        "Fast Track",
+        "Pools",
+        "Major Projects"
+      ],
+      "count": 3,
+      "one_fund_only": false
+    },
+    {
+      "id": "ec9ece5f-4d9b-48fc-a117-8347391f5197",
+      "title": "Percy Bilton Charity Grants",
+      "funder": "Percy Bilton Charity",
+      "apply_url": "https://www.percy-bilton-charity.org/applyOrg",
+      "funding_index_url": null,
+      "funds": [
+        "Large Grants",
+        "Small Grants"
+      ],
+      "count": 2,
+      "one_fund_only": false
+    },
+    {
+      "id": "970ce070-6fea-44fc-bfea-a7317776681a",
+      "title": "Reach Volunteering — TrusteeWorks",
+      "funder": "Reach Volunteering",
+      "apply_url": "https://reachvolunteering.org.uk/build-dynamic-trustee-board",
+      "funding_index_url": null,
+      "funds": [],
+      "count": 0,
+      "one_fund_only": false
+    },
+    {
+      "id": "e9d845c7-8138-43f3-b4bf-88e3adad003a",
+      "title": "Salford CVS — Grants Programmes",
+      "funder": "Salford CVS",
+      "apply_url": "https://www.salfordcvs.co.uk/funding",
+      "funding_index_url": null,
+      "funds": [
+        "Third Sector Fund",
+        "Arts and Culture Fund",
+        "Elevate Salford",
+        "Achieve Asset Fund",
+        "GM Inspire",
+        "Answer Cancer",
+        "Household Support Fund",
+        "Healthy Holidays Fund",
+        "Family Hubs Fund",
+        "Broughton Boost Fund",
+        "Living Well Fund",
+        "Short Break Care",
+        "Shaping Care Fund",
+        "Family Cooking Fund",
+        "Hate Crime Awareness"
+      ],
+      "count": 15,
+      "one_fund_only": false
+    },
+    {
+      "id": "57c4802f-2d34-4d89-969e-a21f9ef397db",
+      "title": "SSE — All Programmes",
+      "funder": "School for Social Entrepreneurs",
+      "apply_url": "https://www.the-sse.org/learning-support/programmes/",
+      "funding_index_url": null,
+      "funds": [
+        "Trading for Good",
+        "Social Investment Gateway Programme",
+        "Trading for Good: Community Business",
+        "Trading for Good: Bury",
+        "Trading for Good: Milton Keynes",
+        "Trading for Good: Stockport"
+      ],
+      "count": 6,
+      "one_fund_only": false
+    },
+    {
+      "id": "bdde7a73-084d-47ab-a503-2efba8c90d07",
+      "title": "Sir James Reckitt Charity — General Grants",
+      "funder": "Sir James Reckitt Charity",
+      "apply_url": "https://www.thesirjamesreckittcharity.org.uk/apply",
+      "funding_index_url": null,
+      "funds": [],
+      "count": 0,
+      "one_fund_only": true
+    },
+    {
+      "id": "01aa47c7-4db6-4f51-a129-66ab25e3b548",
+      "title": "St Giles & St George Education Charity",
+      "funder": "St Giles & St George Education Charity",
+      "apply_url": "https://stgilesandstgeorge.org.uk/education/",
+      "funding_index_url": null,
+      "funds": [
+        "Small Grants",
+        "Project Grants",
+        "Community Investment Grants",
+        "Strategic Grants"
+      ],
+      "count": 4,
+      "one_fund_only": false
+    },
+    {
+      "id": "b98c7493-ff5c-42f4-ab1d-b205940e550c",
+      "title": "TechSoup UK Donated & Discounted Technology",
+      "funder": "TechSoup UK",
+      "apply_url": "https://www.techsoup.uk/product-catalog",
+      "funding_index_url": null,
+      "error": "could not read page"
+    },
+    {
+      "id": "7873fc4e-1763-4f49-9121-40cbfdb2916c",
+      "title": "Grants for Disability and Vulnerable People",
+      "funder": "The Eveson Trust",
+      "apply_url": "https://www.eveson.org.uk/",
+      "funding_index_url": null,
+      "funds": [
+        "Capital Grants",
+        "Medical Research",
+        "Enhance Grants"
+      ],
+      "count": 3,
+      "one_fund_only": false
+    },
+    {
+      "id": "3b8727a4-faa4-49b7-a162-c46212af731b",
+      "title": "Fishmongers' Company — Charitable Grants",
+      "funder": "The Fishmongers' Company",
+      "apply_url": "https://fishmongers.org.uk/grants/",
+      "funding_index_url": null,
+      "funds": [],
+      "count": 0,
+      "one_fund_only": true
+    },
+    {
+      "id": "85f9af1e-b1cb-4796-8a7c-163aabec2037",
+      "title": "Gannochy Trust — Perth & Kinross Grants",
+      "funder": "The Gannochy Trust",
+      "apply_url": "https://www.gannochytrust.org.uk/our-grants/applying-for-grant-funding/",
+      "funding_index_url": null,
+      "funds": [
+        "Youth Panel Fund"
+      ],
+      "count": 1,
+      "one_fund_only": false
+    },
+    {
+      "id": "68897a94-9b29-460c-856b-2f74d72f4da0",
+      "title": "The Portal Trust",
+      "funder": "The Portal Trust",
+      "apply_url": "https://portaltrust.org/",
+      "funding_index_url": null,
+      "funds": [
+        "Funding for organisations",
+        "Funding for individuals"
+      ],
+      "count": 2,
+      "one_fund_only": false
+    },
+    {
+      "id": "1ffe7161-587d-48ce-86a2-39a94a9120ad",
+      "title": "The Weavers' Company Charitable Funds",
+      "funder": "The Weavers' Company",
+      "apply_url": "https://www.weavers.org.uk/charity/charitable-grants/guidelines/",
+      "funding_index_url": null,
+      "funds": [
+        "Small Grants Programme",
+        "Main Grants Programme"
+      ],
+      "count": 2,
+      "one_fund_only": false
+    },
+    {
+      "id": "6c5b16b7-0c43-4b03-9e68-e551603c6a26",
+      "title": "Business Loans",
+      "funder": "Triodos Bank UK",
+      "apply_url": "https://www.triodos.co.uk/business-lending",
+      "funding_index_url": null,
+      "funds": [
+        "Business loans up to £1m",
+        "Business loans over £1m",
+        "Raising capital for impact organisations"
+      ],
+      "count": 3,
+      "one_fund_only": false
+    },
+    {
+      "id": "d7358629-ddba-41f5-b8db-669e5b1dc23e",
+      "title": "Variety Club - Equipment Grants",
+      "funder": "Variety Club",
+      "apply_url": "https://www.variety.org.uk/how-can-we-help/equipment-grants-for-children/",
+      "funding_index_url": null,
+      "funds": [
+        "Wheelchairs for children",
+        "Sunshine Coaches",
+        "Variety Great Days Out",
+        "Organisation grants",
+        "The Variety Children's Hospital",
+        "Access Interns",
+        "Voices for Change"
+      ],
+      "count": 7,
+      "one_fund_only": false
+    },
+    {
+      "id": "b4552ae7-42bd-44c2-b42a-e3e0a05271f4",
+      "title": "Variety — The Children's Charity",
+      "funder": "Variety, the Children's Charity",
+      "apply_url": "https://www.variety.org.uk/grants/",
+      "funding_index_url": null,
+      "funds": [
+        "Equipment grants for children",
+        "Wheelchair grants for children"
+      ],
+      "count": 2,
+      "one_fund_only": false
+    },
+    {
+      "id": "e84785f4-a275-4f0b-9bf5-0c2924003319",
+      "title": "W F Southall Trust — Grants",
+      "funder": "W F Southall Trust",
+      "apply_url": "https://southalltrust.org/",
+      "funding_index_url": null,
+      "funds": [
+        "Quaker Work & Witness",
+        "Peace & Reconciliation",
+        "Environmental Action",
+        "Social Action"
+      ],
+      "count": 4,
+      "one_fund_only": false
+    }
+  ]
+}
