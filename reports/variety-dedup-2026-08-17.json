@@ -1,0 +1,21 @@
+{
+  "ranAt": "2026-08-17T17:03:29.309Z",
+  "source": "system:variety_dedup_2026-08-17",
+  "before": {
+    "id": "d7358629-ddba-41f5-b8db-669e5b1dc23e",
+    "title": "Variety Club - Equipment Grants",
+    "funder": "Variety Club",
+    "apply_url": "https://www.variety.org.uk/how-can-we-help/equipment-grants-for-children/",
+    "amount_max": 5000,
+    "deadline": "2026-09-01"
+  },
+  "after": {
+    "id": "d7358629-ddba-41f5-b8db-669e5b1dc23e",
+    "title": "Variety Club - Equipment Grants",
+    "funder": "Variety, the Children's Charity"
+  },
+  "applied": [
+    "funder"
+  ],
+  "ok": true
+}
