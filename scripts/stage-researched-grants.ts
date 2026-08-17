@@ -37,7 +37,18 @@ for (const line of readFileSync(resolve(HERE, '..', '.env.local'), 'utf8').split
   if (m) process.env[m[1]] ??= m[2].trim().replace(/^["']|["']$/g, '')
 }
 
-const SOURCE = `system:research-manchester-homelessness-2026-07-28`
+// Overridable so this script serves more than the one batch it was written for.
+// Default unchanged, so a re-run of the July batch behaves identically.
+// MUST stay non-`admin:` whatever is passed — see trap 2 above.
+const SOURCE = process.argv.find(a => a.startsWith('--source='))?.slice('--source='.length)
+  ?? 'system:research-manchester-homelessness-2026-07-28'
+if (SOURCE.startsWith('admin:')) {
+  console.error('refusing an admin: source — nothing staged here has been reviewed by a human yet')
+  process.exit(1)
+}
+
+/** Prefix for the generated `external_id`. Overridable for the same reason. */
+const ID_PREFIX = process.argv.find(a => a.startsWith('--prefix='))?.slice('--prefix='.length) ?? 'research'
 
 interface Candidate {
   funder: string
@@ -119,7 +130,7 @@ async function main() {
 
     seenThisRun.add(tk); seenThisRun.add(uk)
 
-    const externalId = `research-${norm(c.funder).replace(/\s+/g, '-')}-${norm(c.title).replace(/\s+/g, '-')}`.slice(0, 100)
+    const externalId = `${ID_PREFIX}-${norm(c.funder).replace(/\s+/g, '-')}-${norm(c.title).replace(/\s+/g, '-')}`.slice(0, 100)
     const row: Record<string, unknown> = {
       external_id:  externalId,
       source:       'research_batch',
@@ -148,7 +159,7 @@ async function main() {
       } : null,
       is_active:  false,          // review gate — never live on insert
       url_status: 'unchecked',
-      raw_data:   { research_note: c.source_note ?? null, staged_on: '2026-07-28' },
+      raw_data:   { research_note: c.source_note ?? null, staged_on: new Date().toISOString().slice(0, 10), staged_by: SOURCE },
     }
     toInsert.push({ ...stampNewGrant(row, SOURCE), _sameFunder: sameFunder })
   }

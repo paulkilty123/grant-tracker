@@ -1,0 +1,56 @@
+[
+  {
+    "funder": "City Bridge Foundation",
+    "title": "City Bridge Foundation — Climate & Environmental Justice (Round One)",
+    "apply_url": "https://www.citybridgefoundation.org.uk/funding/climate-and-environmental-justice/round-one",
+    "funder_type": "trust_foundation",
+    "funding_type": "grant",
+    "description": "Five-year core grants for community-led organisations working with Londoners most affected by climate-related harm and environmental challenges, through place-based resilience, community organising and influence, or storytelling and narrative change. £5.6m available in Round One.",
+    "amount_min": 125000,
+    "amount_max": 450000,
+    "deadline": "2026-09-08",
+    "is_rolling": false,
+    "location_tag": "London",
+    "who_can_apply": "UK-registered charities, CIOs, charitable companies limited by guarantee, registered charitable industrial and provident societies, charitable community benefit societies, CICs, and constituted voluntary organisations with a fiscal host. Work must benefit people living in London's 32 boroughs or the City of London. Annual income must be between £50,000 and £1.5m.",
+    "what_they_fund": "Core five-year grants of £125,000 to £450,000 for community-led climate and environmental justice work in Greater London. Excludes individuals, schools and statutory bodies, political parties, organisations without community leadership, work treating climate as a purely technical issue, and one-off or short-term projects without a systems-change focus.",
+    "source_note": "Staged 2026-08-17 from Paul's spot check. Deadline quoted verbatim from the funder's page: '12 noon on Tuesday, 8 September 2026'. Income band 50k-1.5m is stated as an exclusion on the same page and needs structuring into min_org_income / max_org_income at review."
+  },
+  {
+    "funder": "City Bridge Foundation",
+    "title": "City Bridge Foundation — Economic Justice",
+    "apply_url": "https://www.citybridgefoundation.org.uk/funding/economic-justice",
+    "funder_type": "trust_foundation",
+    "funding_type": "grant",
+    "description": "City Bridge Foundation's Economic Justice funding programme for London. Not yet open to applications.",
+    "is_rolling": false,
+    "deadline": null,
+    "next_open_date": "Opening in 2026",
+    "location_tag": "London",
+    "source_note": "Staged 2026-08-17. The funder's page states 'Opening in 2026' with no date. Deliberately no deadline and no rolling claim — the page states neither. Entering between_rounds_scheduled at review would put City Bridge on the funder watchlist so the opening is caught."
+  },
+  {
+    "funder": "City Bridge Foundation",
+    "title": "City Bridge Foundation — Racial Justice",
+    "apply_url": "https://www.citybridgefoundation.org.uk/funding/racial-justice",
+    "funder_type": "trust_foundation",
+    "funding_type": "grant",
+    "description": "City Bridge Foundation's Racial Justice funding programme for London. Not yet open to applications.",
+    "is_rolling": false,
+    "deadline": null,
+    "next_open_date": "Opening in 2026",
+    "location_tag": "London",
+    "source_note": "Staged 2026-08-17. The funder's page states 'Opening in 2026' with no date. Same treatment as Economic Justice."
+  },
+  {
+    "funder": "City Bridge Foundation",
+    "title": "City Bridge Foundation — Access to Justice",
+    "apply_url": "https://www.citybridgefoundation.org.uk/funding/access-to-justice",
+    "funder_type": "trust_foundation",
+    "funding_type": "grant",
+    "description": "Supporting social welfare advice, social action and systems change in London. Round One is closed to applications.",
+    "is_rolling": false,
+    "deadline": null,
+    "location_tag": "London",
+    "source_note": "Staged 2026-08-17. The funder's page says 'Round One funding is now closed' and states no reopening date, so next_open_date is deliberately left null rather than invented."
+  }
+]
