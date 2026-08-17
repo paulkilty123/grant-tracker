@@ -62,16 +62,19 @@ import {
  * known rule rather than "whatever the gate did that week".
  */
 /**
- * `c2.1`, 2026-08-17: added `page_describes_different_fund` and `no_funder` to
- * the blocking set. Deliberately NOT called `c3` — that name is reserved for the
- * policy §3 of `tranche-2-design.md` specifies, which is a different and larger
- * change. This is a two-code addition to c2, and the version moves so
- * `publish_gate_decisions` rows stay comparable either side of it.
+ * `c2.1`, 2026-08-17: added `page_describes_different_fund` and `no_funder`.
+ * `c2.2`, 2026-08-17: added `never_verified` — nothing publishes that the
+ * verification engine has never read.
+ *
+ * Deliberately NOT called `c3` — that name is reserved for the policy §3 of
+ * `tranche-2-design.md` specifies, which is a different and larger change. These
+ * are additions to c2, and the version moves so `publish_gate_decisions` rows
+ * stay comparable either side of each one.
  *
  * Per the standing rule in the merge digest, a policy-version change should
  * force a dry run before the first armed run under the new version.
  */
-export const GATE_POLICY_VERSION = 'c2.1'
+export const GATE_POLICY_VERSION = 'c2.2'
 
 /**
  * Every reason code, classified. `block` = the row asserts something wrong or
@@ -147,6 +150,12 @@ const POLICY: Record<ReviewReasonCode, 'block' | 'info'> = {
   // Nothing says who is giving the money. Three press releases scraped as funds
   // shared this and nothing else.
   no_funder:              'block',
+
+  // The engine has never read this row's page. Added 2026-08-17: this is the
+  // rule that makes verification a precondition of publishing rather than a
+  // commentary on it. Distinct from `no_brief`, which asks whether an AI brief
+  // exists, not whether the funder's page was ever checked.
+  never_verified:         'block',
 
   // ── Incomplete but honest: absence renders as absence ──
   no_amount:                  'info',

@@ -230,3 +230,42 @@ describe('a row with no funder cannot publish', () => {
     expect(codes(row({}))).not.toContain('no_funder')
   })
 })
+
+/**
+ * The rule that makes the verification engine load-bearing: a row cannot go in
+ * front of a user unless the engine has actually read the page it points at.
+ *
+ * The gap it closes was found the day it was written. The City Bridge Climate
+ * row was staged behind the review gate with a hand-written brief, so `no_brief`
+ * stayed silent, and the armed publisher would have made it live the next
+ * morning with nobody having checked the URL resolved to the fund it claimed.
+ */
+describe('nothing publishes that was never read', () => {
+  it('blocks a row with no page-read stamp at all', () => {
+    const cs = codes(row({}))
+    expect(cs).toContain('never_verified')
+    expect(BLOCKING_CODES).toContain('never_verified')
+  })
+
+  it('blocks a row whose field_evidence is null', () => {
+    const r = { ...row({}), field_evidence: null } as ReviewRow
+    expect(codes(r)).toContain('never_verified')
+  })
+
+  it('is silent once the engine has read the page, whatever it found', () => {
+    for (const note of ['verified', 'round_closed', 'no_longer_listed', 'fixable_link: wrong_fund']) {
+      const cs = codes(row({
+        _page_read: { note, checked_at: TODAY, by: 'verify:v2', agrees: null, quote: null, source_url: null },
+      }))
+      expect(cs, note).not.toContain('never_verified')
+    }
+  })
+
+  it('is NOT the same test as no_brief — a hand-written brief does not satisfy it', () => {
+    // Exactly the City Bridge Climate shape: brief present, page never read.
+    const r = { ...row({}), funder_brief: { who_can_apply: 'London charities', what_they_fund: 'Climate work' } } as ReviewRow
+    const cs = codes(r)
+    expect(cs).not.toContain('no_brief')
+    expect(cs).toContain('never_verified')
+  })
+})

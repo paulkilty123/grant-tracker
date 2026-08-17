@@ -130,6 +130,7 @@ export type ReviewReasonCode =
   | 'page_says_round_closed'
   | 'page_describes_different_fund'
   | 'no_funder'
+  | 'never_verified'
 
 export type ReviewReason = {
   code:     ReviewReasonCode
@@ -369,6 +370,35 @@ export function deriveReviewReasons(row: ReviewRow, todayISO?: string): ReviewRe
       code: 'no_funder', severity: 'critical',
       label: 'No funder on the row',
       detail: 'nothing says who is giving the money, so this cannot go in front of a user',
+    })
+  }
+
+  // NOTHING PUBLISHES THAT THE ENGINE HAS NEVER READ.
+  //
+  // This is what makes the verification engine load-bearing rather than
+  // advisory. It has read 637 of 670 live rows and produced verdicts for six
+  // days; until now a row could go in front of a user without the engine ever
+  // having looked at its page, and several of the defects Paul found by hand on
+  // 17 August were exactly that.
+  //
+  // It is NOT the same test as `no_brief`, which is why that one did not catch
+  // it. `no_brief` asks whether an AI brief was written; this asks whether the
+  // funder's own page was ever fetched and compared against the row. The City
+  // Bridge Climate row proved the gap on the day it was staged: it carried a
+  // hand-written brief, so `no_brief` stayed silent, and it would have published
+  // itself the next morning with nobody having checked the URL resolved to the
+  // fund it claimed.
+  //
+  // Cost of the rule, measured before adding it: it blocks ONE not-yet-live row
+  // today — the one just staged. Every already-live row it touches becomes
+  // `attention`, never a retraction, so nothing disappears. A staged row waits
+  // only until the engine's next run reaches it, and never-checked rows are at
+  // the front of that queue.
+  if (!pageRead) {
+    reasons.push({
+      code: 'never_verified', severity: 'critical',
+      label: 'The funder’s page has never been read',
+      detail: 'no verification run has compared this row against the page it points at',
     })
   }
 
