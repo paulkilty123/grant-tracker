@@ -397,6 +397,52 @@ the £5k ingestion rule.
 convention only in that the front-door row stays AND large named funds rise out
 of it; the convention itself is not being reversed.
 
+### The feed must handle funds that have no page of their own
+
+**This is the design constraint, and it is not the City Bridge shape.** Measured
+2026-08-17 by enumerating 215 funds across 23 generic rows:
+
+| | |
+|---|---:|
+| funds found | 215 |
+| clear the £5,000 floor | 51 |
+| correctly under the floor | 41 |
+| no amount stated on the index page | 123 |
+| **clear the floor AND have their own page** | **1** |
+
+**47 of the 51 that clear the floor are listed by name on the index page with no
+link of their own.** Salford CVS 13, Community Foundation North East 9, Norfolk
+7, Somerset 7, Suffolk 7. That is how the sites are built, not a gap in
+extraction, and splitting them would have produced 47 rows all pointing at the
+same URL — the generic entry with extra steps.
+
+Paul, 2026-08-17, on seeing that: *"Don't split. Everything else goes to
+September as the scheduled feed, which is now clearly the right shape rather
+than the fallback."*
+
+**So the feed cannot assume a fund has a page.** A CF fund row's link will
+usually be the **foundation's index**, and the fund's identity has to come from
+its **name, amount and dates** instead. Three things follow for whoever builds
+it:
+
+1. **`apply_url` is not the identity.** Several rows under one foundation will
+   share it. Dedup must key on funder + fund name, not on URL — the existing
+   `stage-researched-grants.ts` dedup keys on BOTH and would reject every fund
+   after the first.
+2. **The publish gate will block them.** `page_describes_different_fund` fires
+   when the engine reads an index page and does not find that specific fund on
+   it, which is exactly what will happen. Either the gate needs a notion of "row
+   legitimately shares its funder's index", or these rows never publish.
+3. **Staleness has no per-fund signal.** With no page to re-read, the only
+   freshness evidence is the index page changing. That is precisely what
+   `funding_index_url` (migration 061) and `funder_watchlist` are for, and it is
+   why the 82 index pages banked on 2026-08-17 are the seed rather than a
+   by-product.
+
+The City Bridge case worked because its five funds are large, long-running and
+separately paged — the opposite of this on all three counts. Do not generalise
+from it.
+
 > Related and already done: the National Lottery Community Fund was the other
 > shape — three nation-level rows that looked generic and turned out to sit on
 > top of a funder split long ago, with ~20 live programme rows already in the

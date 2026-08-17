@@ -1,0 +1,2064 @@
+{
+  "ranAt": "2026-08-17T17:05:56.218Z",
+  "floor": 5000,
+  "funders": [
+    {
+      "id": "6af68514-45b9-4a2c-9fc3-e58402c2eccc",
+      "title": "Allen Lane Foundation",
+      "funder": "Allen Lane Foundation",
+      "apply_url": "https://allenlane.org.uk/applying-for-funding/",
+      "funding_index_url": null,
+      "via": "direct",
+      "collapsed_size_bands": false,
+      "note": "Seven separately named programmes identified. No grant size ranges stated on this page. No direct URLs provided for individual programmes. Processing time noted as 2-6 months overall.",
+      "funds": [
+        {
+          "name": "Asylum Seekers and Refugees Programme",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": "Trustees meet February, June, and October; applications processed year-round with initial response within 2-3 weeks; October meeting now closed",
+          "amount_known": false
+        },
+        {
+          "name": "Gypsy, Roma & Traveller Communities Programme",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": "Trustees meet February, June, and October; applications processed year-round with initial response within 2-3 weeks; October meeting now closed",
+          "amount_known": false
+        },
+        {
+          "name": "Offenders and Ex-offenders Programme",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": "Trustees meet February, June, and October; applications processed year-round with initial response within 2-3 weeks; October meeting now closed",
+          "amount_known": false
+        },
+        {
+          "name": "Older People Programme",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": "Trustees meet February, June, and October; applications processed year-round with initial response within 2-3 weeks; October meeting now closed",
+          "amount_known": false
+        },
+        {
+          "name": "People affected by Violence or Abuse Programme",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": "Trustees meet February, June, and October; applications processed year-round with initial response within 2-3 weeks; October meeting now closed",
+          "amount_known": false
+        },
+        {
+          "name": "People with Mental Health Problems Programme",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": "Trustees meet February, June, and October; applications processed year-round with initial response within 2-3 weeks; October meeting now closed",
+          "amount_known": false
+        },
+        {
+          "name": "Young People's Programme",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": "Trustees meet February, June, and October; applications processed year-round with initial response within 2-3 weeks; October meeting now closed",
+          "amount_known": false
+        }
+      ],
+      "own_row": 0,
+      "under_floor": 0,
+      "unknown_amount": 7
+    },
+    {
+      "id": "5373485f-109c-4ef7-9af1-c59312bbc63f",
+      "title": "Bedfordshire & Luton Community Foundation — Community Grants",
+      "funder": "Bedfordshire and Luton Community Foundation",
+      "apply_url": "https://blcf.org.uk/apply-for-a-grant/",
+      "funding_index_url": null,
+      "via": "direct",
+      "collapsed_size_bands": false,
+      "note": "Jane Cart Trust appears multiple times in the page navigation for different geographic areas (Central Beds, Bedford Borough, All Bedfordshire) but is listed as one fund with multiple geographic variants. Treated as a single fund. No individual fund pages or grant amounts are linked/stated on this page.",
+      "funds": [
+        {
+          "name": "Whitbread Plc. Chairman's Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "London Luton Airport Community Trust Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Frank Branston Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "London Luton Airport Greener Future Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "SWEF Enterprise Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "New Horizons Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "The Healthier, Wealthier and Happier Communities Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Luton Citizens' Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Luton Rising Youth Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Luton Innovation & Collaboration Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Community Trust Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Small Grants Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "The Living Well Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Near Neighbours",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Safer Bedfordshire Community Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Knife Angel Legacy Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "UKSPF Culture Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Big Local",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Luton Arts Programme: Luton Create Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Stability Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "EVOLVE Women's Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        }
+      ],
+      "own_row": 0,
+      "under_floor": 0,
+      "unknown_amount": 21
+    },
+    {
+      "id": "72739682-6794-487d-95dc-fac4d4ce3f1f",
+      "title": "Charity Bank Loans for Social Purpose",
+      "funder": "Charity Bank",
+      "apply_url": "https://charitybank.org/loans",
+      "funding_index_url": null,
+      "via": "proxy",
+      "collapsed_size_bands": false,
+      "note": "Four separately named loan products identified. The first two represent different size bands but are distinct named funds with separate URLs and slightly different support structures.",
+      "funds": [
+        {
+          "name": "Loans over £750,000",
+          "url": "https://www.charitybank.org/loans/loans-over-750000/",
+          "amount_min": 750000,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": true
+        },
+        {
+          "name": "Loans up to £750,000",
+          "url": "https://www.charitybank.org/loans/loans-up-to-750000/",
+          "amount_min": 150000,
+          "amount_max": 750000,
+          "timing": null,
+          "amount_known": true
+        },
+        {
+          "name": "Green Loans",
+          "url": "https://www.charitybank.org/loans/green-loans/",
+          "amount_min": 150000,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": true
+        },
+        {
+          "name": "Development Finance",
+          "url": "https://www.charitybank.org/loans/development-finance/",
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        }
+      ],
+      "own_row": 3,
+      "under_floor": 0,
+      "unknown_amount": 1
+    },
+    {
+      "id": "94b70915-331b-48ef-8d4e-094881d3812a",
+      "title": "Charles Hayward Foundation Grants",
+      "funder": "Charles Hayward Foundation",
+      "apply_url": "https://charleshaywardfoundation.org.uk/",
+      "funding_index_url": null,
+      "via": "direct",
+      "collapsed_size_bands": false,
+      "note": "Four separately named funding categories identified. No URLs provided as links on this page. Grant amounts not stated. Heritage & Conservation category is currently closed.",
+      "funds": [
+        {
+          "name": "Social & Criminal Justice",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Overseas",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Heritage & Conservation",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": "CURRENTLY CLOSED",
+          "amount_known": false
+        },
+        {
+          "name": "Older People",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        }
+      ],
+      "own_row": 0,
+      "under_floor": 0,
+      "unknown_amount": 4
+    },
+    {
+      "id": "c9529d16-b9c0-433c-88f4-dd627e18543a",
+      "title": "Open Grants Programmes",
+      "funder": "Community Foundation for Merseyside",
+      "apply_url": "https://cfmerseyside.org.uk/our-grants?grant-category=open#grants",
+      "funding_index_url": null,
+      "via": "direct",
+      "collapsed_size_bands": false,
+      "note": "These are the separately named funds listed on the 'Available Grants' page with their own entries. The page also describes many additional funds managed by CFM (1892 Foundation, 23 Foundation, etc.), but these appear to be managed funds without their own dedicated application entries on this page.",
+      "funds": [
+        {
+          "name": "The Halton Foundation",
+          "url": null,
+          "amount_min": 1500,
+          "amount_max": 1500,
+          "timing": "Deadline: Monday 14th September; Decision: Mid-November",
+          "amount_known": true
+        },
+        {
+          "name": "Alfred Shaw Trust Fund – Individuals",
+          "url": null,
+          "amount_min": 500,
+          "amount_max": 500,
+          "timing": "Decision within 6 weeks of submission",
+          "amount_known": true
+        },
+        {
+          "name": "Alice's WonderDance Foundation",
+          "url": null,
+          "amount_min": 2000,
+          "amount_max": 2000,
+          "timing": "Deadline: 2nd October 2026",
+          "amount_known": true
+        },
+        {
+          "name": "Alice's WonderDance Foundation – Individuals",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 250,
+          "timing": null,
+          "amount_known": true
+        },
+        {
+          "name": "The Halton Foundation – Individuals",
+          "url": null,
+          "amount_min": 350,
+          "amount_max": 350,
+          "timing": "Decision within 6 weeks of submission",
+          "amount_known": true
+        },
+        {
+          "name": "The Halton Foundation Learning Fund",
+          "url": null,
+          "amount_min": 500,
+          "amount_max": 500,
+          "timing": null,
+          "amount_known": true
+        },
+        {
+          "name": "John Goore Fund",
+          "url": null,
+          "amount_min": 1000,
+          "amount_max": 1000,
+          "timing": null,
+          "amount_known": true
+        },
+        {
+          "name": "John Goore Fund – Individuals",
+          "url": null,
+          "amount_min": 1000,
+          "amount_max": 1000,
+          "timing": null,
+          "amount_known": true
+        },
+        {
+          "name": "Joseph Harley Fund – Individuals",
+          "url": null,
+          "amount_min": 500,
+          "amount_max": 500,
+          "timing": null,
+          "amount_known": true
+        },
+        {
+          "name": "Olivia Rae Foundation – Individuals",
+          "url": null,
+          "amount_min": 500,
+          "amount_max": 500,
+          "timing": null,
+          "amount_known": true
+        },
+        {
+          "name": "Sefton Education & Learning Fund – Individuals",
+          "url": null,
+          "amount_min": 500,
+          "amount_max": 500,
+          "timing": null,
+          "amount_known": true
+        }
+      ],
+      "own_row": 0,
+      "under_floor": 11,
+      "unknown_amount": 0
+    },
+    {
+      "id": "12269ada-77e7-4e89-9db0-0d95414bb483",
+      "title": "Community Foundation for Northern Ireland Grants",
+      "funder": "Community Foundation for Northern Ireland",
+      "apply_url": "https://communityfoundationni.org/achieving-impact/available-grants/",
+      "funding_index_url": null,
+      "via": "direct",
+      "collapsed_size_bands": false,
+      "note": "Three separately named funds identified. No individual fund pages linked from this page. The SWEF Enterprise Fund offers two distinct grants with different eligibility criteria (start-up vs established businesses) and cannot be collapsed as a single fund with size bands.",
+      "funds": [
+        {
+          "name": "The Randal Foundation Small Grant",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 3000,
+          "timing": "Ongoing - No Deadline",
+          "amount_known": true
+        },
+        {
+          "name": "SWEF Enterprise Fund Start-Up Grant",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 500,
+          "timing": "Ongoing - No Deadline",
+          "amount_known": true
+        },
+        {
+          "name": "SWEF Enterprise Fund Business Grant",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 2000,
+          "timing": "Ongoing - No Deadline",
+          "amount_known": true
+        }
+      ],
+      "own_row": 0,
+      "under_floor": 3,
+      "unknown_amount": 0
+    },
+    {
+      "id": "a6d972cc-5260-4479-ae49-3656264d0ce8",
+      "title": "Community Foundation for Surrey Grants",
+      "funder": "Community Foundation for Surrey",
+      "apply_url": "https://www.cfsurrey.org.uk/apply",
+      "funding_index_url": null,
+      "via": "direct",
+      "collapsed_size_bands": false,
+      "note": "Clearer Care and Heritage For All Fund excluded as currently closed to applications. Grants for Individuals comprises five separate funds but no individual fund names provided on this page.",
+      "funds": [
+        {
+          "name": "Main Grants Round 2 (2026-27)",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": "EOIs open 9am 25/05/26, deadline 5pm 02/07/26, applications deadline 5pm 01/09/26, decisions week of 14/12/26",
+          "amount_known": false
+        },
+        {
+          "name": "Strategic Transformation Programme 2 (2026-27)",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": "EOIs open 9am 25/05/26, deadline 5pm 02/07/26, applications deadline 5pm 01/09/26, decisions week of 14/12/26",
+          "amount_known": false
+        },
+        {
+          "name": "Creative Wellbeing Programme",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": "EOIs open 9am 25/05/26, deadline 5pm 02/07/26, applications deadline 5pm 01/09/26, decisions week of 14/12/26",
+          "amount_known": false
+        },
+        {
+          "name": "Grants for Individuals",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": "Rolling programmes without deadlines",
+          "amount_known": false
+        },
+        {
+          "name": "Surrey Care Leavers Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": "Currently closed",
+          "amount_known": false
+        },
+        {
+          "name": "Crisis Funding",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": "Rolling programme, no deadlines",
+          "amount_known": false
+        },
+        {
+          "name": "Mental Health Scale-Up Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": "EOIs currently closed",
+          "amount_known": false
+        },
+        {
+          "name": "Area Funds",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 2500,
+          "timing": null,
+          "amount_known": true
+        }
+      ],
+      "own_row": 0,
+      "under_floor": 1,
+      "unknown_amount": 7
+    },
+    {
+      "id": "f375d0d1-f7e5-4393-a078-8b3ab3cec3b4",
+      "title": "Community Foundation North East — Grants",
+      "funder": "Community Foundation North East",
+      "apply_url": "https://www.communityfoundation.org.uk/apply/",
+      "funding_index_url": null,
+      "via": "direct",
+      "collapsed_size_bands": false,
+      "note": "The SWEF Enterprise Fund appears twice with different max grant sizes (£500 for start-up grants, £2000 for business development grants). These are treated as separate funds as they have distinct purposes, not merely size bands of the same fund.",
+      "funds": [
+        {
+          "name": "Nadara Sisters and North Steads Wind Farm Community Benefit Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 20000,
+          "timing": "Closing Date: 21/09/2026",
+          "amount_known": true
+        },
+        {
+          "name": "RWE Renewables Kiln Pit Hill Wind Farm Community Benefit Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 15000,
+          "timing": "Closing Date: 28/09/2026",
+          "amount_known": true
+        },
+        {
+          "name": "The EDF Energy Green Rigg Windfarm Community Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 5000,
+          "timing": "Closing Date: 14/09/2026",
+          "amount_known": true
+        },
+        {
+          "name": "The Pargiter Trust Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 10000,
+          "timing": "Closing Date: 31/08/2026",
+          "amount_known": true
+        },
+        {
+          "name": "The Tyne & Wear High Sheriff's Awards",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 1000,
+          "timing": "Closing Date: 19/10/2026",
+          "amount_known": true
+        },
+        {
+          "name": "Northumberland High Sheriff Awards Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 1000,
+          "timing": "Closing Date: 26/10/2026",
+          "amount_known": true
+        },
+        {
+          "name": "The Henderson Family Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 1000,
+          "timing": "Rolling grant",
+          "amount_known": true
+        },
+        {
+          "name": "The Ted Weekes Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 4000,
+          "timing": "Rolling grant",
+          "amount_known": true
+        },
+        {
+          "name": "Newcastle Culture Investment Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 12000,
+          "timing": "Rolling grant",
+          "amount_known": true
+        },
+        {
+          "name": "The Curtin PARP Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 7000,
+          "timing": "Rolling grant",
+          "amount_known": true
+        },
+        {
+          "name": "The Community Infrastructure Levy (CIL) Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 25000,
+          "timing": "Rolling grant",
+          "amount_known": true
+        },
+        {
+          "name": "The Brian Roycroft Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 1000,
+          "timing": "Rolling grant",
+          "amount_known": true
+        },
+        {
+          "name": "The 1989 Willan Charitable Trust",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 10000,
+          "timing": "Rolling grant",
+          "amount_known": true
+        },
+        {
+          "name": "The Platten Family Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 10000,
+          "timing": "Rolling grant",
+          "amount_known": true
+        },
+        {
+          "name": "The SWEF Enterprise Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 2000,
+          "timing": "Rolling grant",
+          "amount_known": true
+        },
+        {
+          "name": "The Taylor Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 1000,
+          "timing": "Rolling grant",
+          "amount_known": true
+        }
+      ],
+      "own_row": 9,
+      "under_floor": 7,
+      "unknown_amount": 0
+    },
+    {
+      "id": "523da313-e449-46a1-8647-c5a51e58b304",
+      "title": "Cornwall Community Foundation — Community Grants",
+      "funder": "Cornwall Community Foundation",
+      "apply_url": "https://cornwallcommunityfoundation.com/cornwall-charity-grants/grants/",
+      "funding_index_url": null,
+      "via": "direct",
+      "collapsed_size_bands": false,
+      "note": "Seven separately named funds identified. No size band collapsing required as each fund has distinct naming and criteria.",
+      "funds": [
+        {
+          "name": "The Gerald Curgenven Will Trust – Three Parish Fund – Individuals",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 1000,
+          "timing": "Applications by: 02/09/2026, Decision date: Mid October",
+          "amount_known": true
+        },
+        {
+          "name": "The Gerald Curgenven Will Trust – Three Parish Fund – Groups",
+          "url": null,
+          "amount_min": 1000,
+          "amount_max": 5000,
+          "timing": "Applications by: 02/09/2026, Decision date: Mid October",
+          "amount_known": true
+        },
+        {
+          "name": "The \"Financial Shock\" Crisis Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 3000,
+          "timing": "Applications by: 01/01/2027, Decision date: Rolling",
+          "amount_known": true
+        },
+        {
+          "name": "Caledonia Investments Charitable Foundation Fund",
+          "url": null,
+          "amount_min": 5000,
+          "amount_max": 20000,
+          "timing": "Applications by: 02/09/2026, Decision date: End of November",
+          "amount_known": true
+        },
+        {
+          "name": "North Petherwin Community Fund",
+          "url": null,
+          "amount_min": 250,
+          "amount_max": 1000,
+          "timing": "Applications by: 09/09/2026, Decision date: Mid October",
+          "amount_known": true
+        },
+        {
+          "name": "Papillon Fund",
+          "url": null,
+          "amount_min": 250,
+          "amount_max": 1000,
+          "timing": "Applications by: 09/09/2026, Decision date: Mid-October",
+          "amount_known": true
+        },
+        {
+          "name": "Young and Talented – Creative Writing Awards",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 1000,
+          "timing": "Applications by: 07/09/2026, Decision date: TBC",
+          "amount_known": true
+        }
+      ],
+      "own_row": 2,
+      "under_floor": 5,
+      "unknown_amount": 0
+    },
+    {
+      "id": "094397c0-1d2c-47dc-b112-c15d3d14bfd4",
+      "title": "Cumbria Community Foundation — Community Grants",
+      "funder": "Cumbria Community Foundation",
+      "apply_url": "https://www.cumbriafoundation.org/apply-for-a-grant/",
+      "funding_index_url": null,
+      "via": "direct",
+      "collapsed_size_bands": false,
+      "note": "This page does not provide detailed fund information including grant amounts or deadlines. Fund names were extracted from navigation menus and programme listings. Applicants would need to access individual fund pages through the portal or contact the foundation for specific details.",
+      "funds": [
+        {
+          "name": "Winter Warmth Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Cultural Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Cumbria Home from Home Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Bedrock",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Bedrock Awards",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Together for Good",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Family Wellbeing",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Financial Wellbeing",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Positive Enterprise",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Spark",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "West Cumbria Mental Health Match Funding Challenge",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Age Friendly South Lakeland",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Age Friendly Premises Award",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Better Tomorrows Award",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Brighter Futures",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        }
+      ],
+      "own_row": 0,
+      "under_floor": 0,
+      "unknown_amount": 15
+    },
+    {
+      "id": "574fc073-bca6-4b01-95c0-a7dc8627c3e0",
+      "title": "Dulverton Trust Grants",
+      "funder": "Dulverton Trust",
+      "apply_url": "https://www.dulverton.org/#apply",
+      "funding_index_url": null,
+      "via": "direct",
+      "collapsed_size_bands": false,
+      "note": "International Stability and Reconstruction not listed as it is invitation-only. No grant amounts or deadlines are stated on this page.",
+      "funds": [
+        {
+          "name": "Youth Opportunities",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "General Welfare",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Heritage",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Conservation",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Kenya and Uganda",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        }
+      ],
+      "own_row": 0,
+      "under_floor": 0,
+      "unknown_amount": 5
+    },
+    {
+      "id": "f14ca7b1-4e12-48b0-b59c-31b64e602b61",
+      "title": "Forever Manchester — Community Grants",
+      "funder": "Forever Manchester",
+      "apply_url": "https://forevermanchester.com/funding/",
+      "funding_index_url": "https://forevermanchester.com/funding/",
+      "via": "direct",
+      "collapsed_size_bands": false,
+      "note": "This page lists 16 separately named funds. Only Voicescape Community Fund has a deadline stated on this page. No grant amounts are specified for any fund on this page. All funds listed are marked as either 'open for applications' or 'not currently open for applications' but no URLs to individual fund pages are provided on this page.",
+      "funds": [
+        {
+          "name": "Voicescape Community Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": "Closes: August 27, 2026 12 Noon",
+          "amount_known": false
+        },
+        {
+          "name": "Lead the Change CDL Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Zuto Make A Difference Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "DF Capital Foundation Together Energy Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Manchester Building Society Community Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "The NextGen Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Comic Relief and Sainsbury's Holiday Activity and Food Programme",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Stagecoach Greater Manchester Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Bright Futures Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Connecting Communities at Christmas 2025",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Kellogg's Breakfast Club Grants Programme",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Cellnex Digital Inclusion Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Forever Manchester Awards",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "NHS Charities Together Community Partnership Grants Programme",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Greater Manchester Circle Funerals Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Autotrader Digital Inclusion Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        }
+      ],
+      "own_row": 0,
+      "under_floor": 0,
+      "unknown_amount": 16
+    },
+    {
+      "id": "8f57f2a0-685d-489f-9267-ac9f79b073a7",
+      "title": "Herefordshire Community Foundation — Community Grants (Community Chest)",
+      "funder": "Herefordshire Community Foundation",
+      "apply_url": "https://www.herefordshirecf.org/apply-for-a-grant/",
+      "funding_index_url": null,
+      "via": "direct",
+      "collapsed_size_bands": false,
+      "note": "The page mentions multiple separately named funds with their own application forms but does not provide URLs, grant amounts, or deadlines for any of them. The 'main form' referenced is used for unspecified funds beyond those listed above.",
+      "funds": [
+        {
+          "name": "Small Sparks Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "HCF Emergency Relief Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Surviving Winter",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Household Support Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Fuel Poverty Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        }
+      ],
+      "own_row": 0,
+      "under_floor": 0,
+      "unknown_amount": 5
+    },
+    {
+      "id": "fc678f81-2c43-46f9-83e8-fe962c65b730",
+      "title": "Historic England — Grants for Heritage",
+      "funder": "Historic England",
+      "apply_url": "https://historicengland.org.uk/services-skills/grants/",
+      "funding_index_url": null,
+      "via": "proxy",
+      "collapsed_size_bands": false,
+      "note": "Heritage at Risk Capital Fund Projects excluded as it describes past/completed funding (£15 million to 37 sites), not an open fund applicants can apply to.",
+      "funds": [
+        {
+          "name": "The Historic England Grant",
+          "url": "https://historicengland.org.uk/services-skills/grants/",
+          "amount_min": 1000,
+          "amount_max": 500000,
+          "timing": null,
+          "amount_known": true
+        },
+        {
+          "name": "Grants for War Memorials",
+          "url": "https://historicengland.org.uk/advice/grants/what-we-fund/war-memorials/",
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Supporting Local Authority Statutory Action",
+          "url": "https://historicengland.org.uk/advice/grants/what-we-fund/supporting-local-authority-statutory-action/",
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Calls for Proposals",
+          "url": "https://historicengland.org.uk/advice/grants/what-we-fund/proposals/",
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Everyday Heritage Grants",
+          "url": "https://historicengland.org.uk/campaigns/help-write-history/everyday-heritage-grants/",
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Community Research Grants",
+          "url": "https://historicengland.org.uk/listing/national-blue-plaque-scheme/grants/",
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        }
+      ],
+      "own_row": 1,
+      "under_floor": 0,
+      "unknown_amount": 5
+    },
+    {
+      "id": "5772cd18-ed5f-4b2e-a3cc-5325ac8689bb",
+      "title": "Kent Community Foundation Grants",
+      "funder": "Kent Community Foundation",
+      "apply_url": "https://www.kentcf.org.uk/funding/",
+      "funding_index_url": null,
+      "via": "direct",
+      "collapsed_size_bands": false,
+      "note": "The page lists funding categories by priority area (Mental health and wellbeing, Children/young people/families, Crisis and basic needs, Connected communities, Environment) and by applicant type (organisations, individuals, social enterprises) but does not name separate funds within these categories. Only KSELF and SWEF are named as distinct funds. No specific URLs, deadlines, or amount ranges are provided for most funds on this page.",
+      "funds": [
+        {
+          "name": "Kent Social Enterprise Loan Fund (KSELF)",
+          "url": null,
+          "amount_min": 10000,
+          "amount_max": 100000,
+          "timing": null,
+          "amount_known": true
+        },
+        {
+          "name": "SWEF business grants",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        }
+      ],
+      "own_row": 1,
+      "under_floor": 0,
+      "unknown_amount": 1
+    },
+    {
+      "id": "4c9dbc46-e952-4491-9703-82cf5b2af56f",
+      "title": "Leeds Community Foundation Grants",
+      "funder": "Leeds Community Foundation",
+      "apply_url": "https://www.leedscf.org.uk/open-grants/",
+      "funding_index_url": null,
+      "via": "direct",
+      "collapsed_size_bands": false,
+      "note": "The Leeds Fund mentions 'Small and Microgrants' but these are presented as components of one fund, not separately named funds with distinct criteria, so collapsed as one entry. No absolute URLs provided on page for any funds.",
+      "funds": [
+        {
+          "name": "The Leeds Digital Inclusion Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 10000,
+          "timing": "Deadline 01/09/2026 at 12 noon; Decisions December 2026",
+          "amount_known": true
+        },
+        {
+          "name": "Jimbo's Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": "September",
+          "amount_known": false
+        },
+        {
+          "name": "The Leeds Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": "September",
+          "amount_known": false
+        },
+        {
+          "name": "The Hannah Corne Green Futures Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": "September",
+          "amount_known": false
+        },
+        {
+          "name": "The BG Campbell Trust Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        }
+      ],
+      "own_row": 1,
+      "under_floor": 0,
+      "unknown_amount": 4
+    },
+    {
+      "id": "497400aa-4785-41b3-ae15-88e35fe38845",
+      "title": "Morrisons Foundation",
+      "funder": "Morrisons Foundation",
+      "apply_url": "https://www.morrisonsfoundation.com/",
+      "funding_index_url": "https://www.morrisonsfoundation.com/",
+      "error": "unreadable direct and via proxy"
+    },
+    {
+      "id": "c90fec54-7a88-486a-bb7f-d711784dc498",
+      "title": "Norfolk Community Foundation — Grants for Groups",
+      "funder": "Norfolk Community Foundation",
+      "apply_url": "https://www.norfolkfoundation.com/funding-support/grants/groups/",
+      "funding_index_url": null,
+      "via": "direct",
+      "collapsed_size_bands": false,
+      "note": "The Borough Council of King's Lynn & West Norfolk Small Grants Scheme has two size bands (revenue grants up to £2,500 and capital grants up to £10,000) but these are different grant types with different purposes, not the same fund with size variations, so retained as one entry with range. No URLs were linked on this page for individual funds. North Pickenham Windfarm Community Fund shows 'Maximum Grant £3,000 +' but no upper limit specified, so amount_max is null.",
+      "funds": [
+        {
+          "name": "Borough Council of King's Lynn & West Norfolk Small Grants Scheme",
+          "url": null,
+          "amount_min": 2500,
+          "amount_max": 10000,
+          "timing": "Deadline 1 September 2026",
+          "amount_known": true
+        },
+        {
+          "name": "Breckland Council Inspiring Communities",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 5000,
+          "timing": "Deadline 15 October 2026",
+          "amount_known": true
+        },
+        {
+          "name": "Connecting Older People Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 10000,
+          "timing": "Deadline 21 September 2026",
+          "amount_known": true
+        },
+        {
+          "name": "Dudgeon Community STEM in Schools Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 10000,
+          "timing": "Deadline 14 September 2026",
+          "amount_known": true
+        },
+        {
+          "name": "North Pickenham Windfarm Community Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Saracen's Norfolk Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 5000,
+          "timing": null,
+          "amount_known": true
+        },
+        {
+          "name": "Sheringham Shoal Community Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Subs for Clubs",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 1000,
+          "timing": null,
+          "amount_known": true
+        },
+        {
+          "name": "Villages Windfarm Community Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 5000,
+          "timing": null,
+          "amount_known": true
+        },
+        {
+          "name": "Weston Windfarm Community Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 5000,
+          "timing": null,
+          "amount_known": true
+        }
+      ],
+      "own_row": 7,
+      "under_floor": 1,
+      "unknown_amount": 2
+    },
+    {
+      "id": "e9d845c7-8138-43f3-b4bf-88e3adad003a",
+      "title": "Salford CVS — Grants Programmes",
+      "funder": "Salford CVS",
+      "apply_url": "https://www.salfordcvs.co.uk/funding",
+      "funding_index_url": null,
+      "via": "direct",
+      "collapsed_size_bands": false,
+      "note": "15 separately named funds identified. No individual fund pages are linked from this overview. Two funds show 'TBC' for size (Household Support Fund, Hate Crime Awareness). No deadlines or timing information provided.",
+      "funds": [
+        {
+          "name": "Third Sector Fund",
+          "url": null,
+          "amount_min": 750000,
+          "amount_max": 750000,
+          "timing": null,
+          "amount_known": true
+        },
+        {
+          "name": "Arts and Culture Fund",
+          "url": null,
+          "amount_min": 209000,
+          "amount_max": 209000,
+          "timing": null,
+          "amount_known": true
+        },
+        {
+          "name": "Elevate Salford",
+          "url": null,
+          "amount_min": 150000,
+          "amount_max": 150000,
+          "timing": null,
+          "amount_known": true
+        },
+        {
+          "name": "Achieve Asset Fund",
+          "url": null,
+          "amount_min": 112200,
+          "amount_max": 112200,
+          "timing": null,
+          "amount_known": true
+        },
+        {
+          "name": "GM Inspire",
+          "url": null,
+          "amount_min": 102000,
+          "amount_max": 102000,
+          "timing": null,
+          "amount_known": true
+        },
+        {
+          "name": "Answer Cancer",
+          "url": null,
+          "amount_min": 100000,
+          "amount_max": 100000,
+          "timing": null,
+          "amount_known": true
+        },
+        {
+          "name": "Household Support Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Healthy Holidays Fund",
+          "url": null,
+          "amount_min": 90000,
+          "amount_max": 90000,
+          "timing": null,
+          "amount_known": true
+        },
+        {
+          "name": "Family Hubs Fund",
+          "url": null,
+          "amount_min": 75000,
+          "amount_max": 75000,
+          "timing": null,
+          "amount_known": true
+        },
+        {
+          "name": "Broughton Boost Fund",
+          "url": null,
+          "amount_min": 75000,
+          "amount_max": 75000,
+          "timing": null,
+          "amount_known": true
+        },
+        {
+          "name": "Living Well Fund",
+          "url": null,
+          "amount_min": 70000,
+          "amount_max": 70000,
+          "timing": null,
+          "amount_known": true
+        },
+        {
+          "name": "Short Break Care",
+          "url": null,
+          "amount_min": 60000,
+          "amount_max": 60000,
+          "timing": null,
+          "amount_known": true
+        },
+        {
+          "name": "Shaping Care Fund",
+          "url": null,
+          "amount_min": 40000,
+          "amount_max": 40000,
+          "timing": null,
+          "amount_known": true
+        },
+        {
+          "name": "Family Cooking Fund",
+          "url": null,
+          "amount_min": 30000,
+          "amount_max": 30000,
+          "timing": null,
+          "amount_known": true
+        },
+        {
+          "name": "Hate Crime Awareness",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        }
+      ],
+      "own_row": 13,
+      "under_floor": 0,
+      "unknown_amount": 2
+    },
+    {
+      "id": "05fcaae0-a3d3-43b7-87b8-69d951b45c24",
+      "title": "Somerset Community Foundation Grants",
+      "funder": "Somerset Community Foundation",
+      "apply_url": "https://www.somersetcf.org.uk/grants-and-funding/grants-and-funding-for-groups/",
+      "funding_index_url": null,
+      "via": "direct",
+      "collapsed_size_bands": true,
+      "note": "HPC Community Fund collapsed: 'Small Grants' (£10,000 or less) and 'Open Grants' (over £10,000 per year) are the same fund with different size bands. No absolute URLs provided as none were linked in the source page.",
+      "funds": [
+        {
+          "name": "Somerset Crisis and Resilience Alliance",
+          "url": null,
+          "amount_min": 40000,
+          "amount_max": 80000,
+          "timing": "Apply by Friday 4 September 2026, by 5pm (expressions of interest only). Decision by end of September.",
+          "amount_known": true
+        },
+        {
+          "name": "HPC Community Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": "Open year-round. Next deadline Monday 7 September 2026, at 5pm. Decisions made every 3 months (next decision late October 2026). Applications over £50,000 take around 8 months.",
+          "amount_known": false
+        },
+        {
+          "name": "Oake Sunshine Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 2000,
+          "timing": "Apply by Mon 12th October 2026. Decision in Late November 2026.",
+          "amount_known": true
+        },
+        {
+          "name": "Somerset Social Investment Programme",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 40000,
+          "timing": "Apply by Friday 21 August 2026. Decision by end of September 2026.",
+          "amount_known": true
+        },
+        {
+          "name": "Somerset Older People's Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 10000,
+          "timing": "Closed. Expected to re-open: TBC",
+          "amount_known": true
+        },
+        {
+          "name": "Waste Not Somerset Fund",
+          "url": null,
+          "amount_min": 5000,
+          "amount_max": 10000,
+          "timing": "Closed. Expected to re-open: Autumn 2026",
+          "amount_known": true
+        },
+        {
+          "name": "Stronger Communities Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 5000,
+          "timing": "Closed. Expected to re-open: TBC",
+          "amount_known": true
+        },
+        {
+          "name": "WCS Pickford Trust Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 2000,
+          "timing": "Closed. Expected to re-open: TBC",
+          "amount_known": true
+        },
+        {
+          "name": "Supporting Care Leavers",
+          "url": null,
+          "amount_min": 10000,
+          "amount_max": 75000,
+          "timing": "Closed. Expected to re-open: Autumn 2026",
+          "amount_known": true
+        },
+        {
+          "name": "Festive Fund for Somerset",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 500,
+          "timing": "Closed. Expected to re-open: Early 2027",
+          "amount_known": true
+        },
+        {
+          "name": "Mendip Hills Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 2000,
+          "timing": "Closed. Expected to re-open: Autumn 2026",
+          "amount_known": true
+        },
+        {
+          "name": "The Gooch Charitable Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 50000,
+          "timing": "Closed. Expected to re-open: Autumn 2026",
+          "amount_known": true
+        },
+        {
+          "name": "Churchstanton Community Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": "Closed. Expected to re-open: April 2027",
+          "amount_known": false
+        },
+        {
+          "name": "Wessex Water Environment Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 2000,
+          "timing": "Closed. Expected to re-open: September 2026",
+          "amount_known": true
+        },
+        {
+          "name": "Wessex Water Community Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 4000,
+          "timing": "Closed. Expected to re-open date not specified",
+          "amount_known": true
+        }
+      ],
+      "own_row": 7,
+      "under_floor": 6,
+      "unknown_amount": 2
+    },
+    {
+      "id": "5c396ce2-92b2-40c2-96d0-2c334009acbf",
+      "title": "Suffolk Community Foundation Grants",
+      "funder": "Suffolk Community Foundation",
+      "apply_url": "https://www.suffolkcf.org.uk/grants/",
+      "funding_index_url": null,
+      "via": "direct",
+      "collapsed_size_bands": false,
+      "note": "Closed funds (Cancer Community Partnership Fund, Centenary Fund, Digital Inclusion Fund, East of England Co-op Community Cares Fund, Food & Drink Fund, Suffolk Police & Crime Commissioner's Fund, Surviving Winter 25/26) and now-closed funds are excluded. No absolute URLs provided as links were not included in the page text.",
+      "funds": [
+        {
+          "name": "Central Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 5000,
+          "timing": "Open all year round",
+          "amount_known": true
+        },
+        {
+          "name": "Edward and Ivy Rose Hood Grantmaking Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 6000,
+          "timing": "Now open for Expressions of Interest",
+          "amount_known": true
+        },
+        {
+          "name": "Fonnereau Road Health Foundation Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 5000,
+          "timing": "Now open",
+          "amount_known": true
+        },
+        {
+          "name": "Martineau Care Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 1000,
+          "timing": "Open all year round",
+          "amount_known": true
+        },
+        {
+          "name": "Pargiter Trust Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 5000,
+          "timing": "Now open",
+          "amount_known": true
+        },
+        {
+          "name": "Sizewell C Community Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": "Open all year round",
+          "amount_known": false
+        },
+        {
+          "name": "Stimulus Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 1000,
+          "timing": "Open all year round",
+          "amount_known": true
+        },
+        {
+          "name": "Stronger Suffolk: VCFSE Support Programme",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": "Now open",
+          "amount_known": false
+        },
+        {
+          "name": "Suffolk Carers Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 30000,
+          "timing": "Now open",
+          "amount_known": true
+        },
+        {
+          "name": "Suffolk Sports Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 2000,
+          "timing": "Now open",
+          "amount_known": true
+        },
+        {
+          "name": "David & Jill Simpson Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 5000,
+          "timing": "Opening Spring 2027",
+          "amount_known": true
+        },
+        {
+          "name": "Harwich Haven Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 5000,
+          "timing": "Opens September 2026",
+          "amount_known": true
+        },
+        {
+          "name": "High Sheriff's Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 2000,
+          "timing": "Opens January 2027",
+          "amount_known": true
+        },
+        {
+          "name": "Lovewell Blake Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 2000,
+          "timing": "Opening Spring 2027",
+          "amount_known": true
+        },
+        {
+          "name": "Port Community Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 2000,
+          "timing": "Opens September 2026",
+          "amount_known": true
+        },
+        {
+          "name": "Women and Girls' Fund",
+          "url": null,
+          "amount_min": null,
+          "amount_max": 2000,
+          "timing": "Opens December 2026",
+          "amount_known": true
+        }
+      ],
+      "own_row": 7,
+      "under_floor": 7,
+      "unknown_amount": 2
+    },
+    {
+      "id": "b98c7493-ff5c-42f4-ab1d-b205940e550c",
+      "title": "TechSoup UK Donated & Discounted Technology",
+      "funder": "TechSoup UK",
+      "apply_url": "https://www.techsoup.uk/product-catalog",
+      "funding_index_url": null,
+      "via": "proxy",
+      "collapsed_size_bands": false,
+      "note": "This is a product catalogue page listing 20+ individually named donated and discounted technology products/programmes. Each has its own distinct name and URL. No grant size ranges or deadlines are stated on this page. Three AWS offerings are listed separately by nonprofit size tier (Smaller, Medium-Sized, Larger), and two Bitdefender offerings differ by device count, so these are retained as separate entries per the rules.",
+      "funds": [
+        {
+          "name": "Amazon Web Services Credits for Smaller Nonprofits",
+          "url": "https://www.techsoup.uk/content/amazon-web-services-credits-smaller-nonprofits?origin=product-catalog",
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Adobe Creative Cloud for Individuals Pro Plan 1-Year Membership – Access to Discounted Rates",
+          "url": "https://www.techsoup.uk/content/adobe-creative-cloud-individuals-pro-plan-1-year-membership-%E2%80%93-access-discounted-rates?origin=product-catalog",
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Cisco Meraki MR46 Wi-Fi 6 Wireless Access Point with 5-Year License",
+          "url": "https://www.techsoup.uk/content/cisco-meraki-mr46-wi-fi-6-wireless-access-point-5-year-license?origin=product-catalog",
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Autodesk AutoCAD, 1-Year Subscription",
+          "url": "https://www.techsoup.uk/node/6143?origin=product-catalog",
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Hootsuite for Nonprofits",
+          "url": "https://www.techsoup.uk/node/6185?origin=product-catalog",
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Dell Technologies for Charities – Access to Discounted Rates",
+          "url": "https://www.techsoup.uk/content/dell-technologies-charities-%E2%80%93-access-discounted-rates?origin=product-catalog",
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Cisco Meraki MX85 Security Appliance with 5-Year License",
+          "url": "https://www.techsoup.uk/node/6127?origin=product-catalog",
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Cisco Meraki MX68 Security Appliance with 5-Year License",
+          "url": "https://www.techsoup.uk/node/6206?origin=product-catalog",
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Microsoft 365 Nonprofit Cloud Subscription",
+          "url": "https://www.techsoup.uk/node/3384?origin=product-catalog",
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "TechSoup Courses",
+          "url": "https://www.techsoup.uk/content/techsoup-courses?origin=product-catalog",
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Office Standard (Discounted) – No Software Assurance",
+          "url": "https://www.techsoup.uk/content/office-standard-discounted-%E2%80%93-no-software-assurance?origin=product-catalog",
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Asana Starter or Advanced, 1-Year Subscription, Access to Discounted Rates",
+          "url": "https://www.techsoup.uk/content/asana-starter-or-advanced-1-year-subscription-access-discounted-rates?origin=product-catalog",
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Amazon Web Services Credit for Medium-Sized Nonprofits",
+          "url": "https://www.techsoup.uk/node/6171?origin=product-catalog",
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Office 365 - Nonprofit Cloud Subscription",
+          "url": "https://www.techsoup.uk/node/3385?origin=product-catalog",
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "OnBoard Board Management Software, 1-Year Subscription - Access to Discounted Rates",
+          "url": "https://www.techsoup.uk/content/onboard-board-management-software-1-year-subscription-access-discounted-rates?origin=product-catalog",
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Lenovo Discount Programme, Access to Discounted Rates",
+          "url": "https://www.techsoup.uk/content/lenovo-discount-programme-access-discounted-rates?origin=product-catalog",
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Bitdefender GravityZone Business Security, 25 Devices",
+          "url": "https://www.techsoup.uk/content/bitdefender-gravityzone-business-security-25-devices?origin=product-catalog",
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Microsoft Nonprofit Cloud Subscription Add-Ons – Storage",
+          "url": "https://www.techsoup.uk/node/6189?origin=product-catalog",
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Bitdefender GravityZone Business Security, 50 Devices",
+          "url": "https://www.techsoup.uk/node/6173?origin=product-catalog",
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Amazon Web Services Credit for Larger Nonprofits",
+          "url": "https://www.techsoup.uk/node/6173?origin=product-catalog",
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        }
+      ],
+      "own_row": 0,
+      "under_floor": 0,
+      "unknown_amount": 20
+    },
+    {
+      "id": "e84785f4-a275-4f0b-9bf5-0c2924003319",
+      "title": "W F Southall Trust — Grants",
+      "funder": "W F Southall Trust",
+      "apply_url": "https://southalltrust.org/",
+      "funding_index_url": null,
+      "via": "direct",
+      "collapsed_size_bands": false,
+      "note": "The page lists four separately named funding areas. No URLs, grant amounts, or specific deadlines are provided on this page; the FAQ mentions application deadlines exist but they are not detailed here.",
+      "funds": [
+        {
+          "name": "Quaker Work & Witness",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Peace & Reconciliation",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Environmental Action & Sustainability",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        },
+        {
+          "name": "Social Action",
+          "url": null,
+          "amount_min": null,
+          "amount_max": null,
+          "timing": null,
+          "amount_known": false
+        }
+      ],
+      "own_row": 0,
+      "under_floor": 0,
+      "unknown_amount": 4
+    }
+  ]
+}
