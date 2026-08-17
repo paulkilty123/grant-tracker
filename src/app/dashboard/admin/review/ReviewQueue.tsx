@@ -36,6 +36,7 @@ import type { EvidenceSummary } from '@/lib/admin/evidence-summary'
 // stays a client component.
 import type { MergeRejection } from '@/lib/grant-merge'
 import { REJECT_REASONS, formatRejectReason } from '@/lib/admin/reject-reasons'
+import { EDITABLE_STRUCTURES, structureLabel, isLegacyStructure } from '@/lib/admin/legal-structures'
 import {
   SECTIONS, sectionOf, evidenceRank, EVIDENCE_RANK_LABEL,
   arrivalOrigin, isNewArrival, ORIGIN_LABEL, NEW_ARRIVAL_DAYS,
@@ -643,6 +644,31 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
   // always "read the page again", and for a bad apply_url, "fix the link first".
   // Without these the queue diagnosed problems and offered no treatment.
 
+  /**
+   * Set who may apply.
+   *
+   * The card showed "Registered charity, Cic guarantee +4" and nothing on this
+   * screen could open the +4 or change it — so eligibility, the field that
+   * decides who sees a fund at all, was the one thing a reviewer could read
+   * least and edit not at all.
+   *
+   * Writes the whole array, because that is what the column is. It PINS, which
+   * is right and deliberate: unlike Accept, which confirms a machine value and
+   * deliberately leaves provenance alone, choosing the structures is a human
+   * decision and should outrank a later classifier pass.
+   */
+  const setStructures = useCallback(async (item: QueueItem, next: string[]) => {
+    setBusyId(item.id)
+    setBusyLabel('Saving who can apply')
+    const ok = await patch(item.id, { eligible_structures: next }, 'Saving who can apply', ['eligible_structures'])
+    setBusyId(null)
+    setBusyLabel(null)
+    if (!ok) return
+    noteAction(item.id, `Who can apply set to ${next.length} ${next.length === 1 ? 'structure' : 'structures'}`)
+    toast.success('Who can apply saved')
+    router.refresh()
+  }, [patch, router, toast, noteAction])
+
   const runJob = useCallback(async (
     id: string,
     url: string,
@@ -1198,6 +1224,7 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
                      onToggle={() => setOpenId(openId === item.id ? null : item.id)}
                      busyLabel={busyLabel} onPublish={() => publish(item)} onReject={(code, note) => reject(item, code, note)}
                      onRevert={(d) => revertField(item, d)} onSetFundingType={(t) => setFundingType(item, t)}
+                     onSetStructures={(next) => setStructures(item, next)}
                      onReRead={() => reRead(item)} onReClassify={() => reClassify(item)}
                      onFixLink={() => fixLink(item)} onAddSource={() => addSource(item)} onWatch={() => watchBetweenRounds(item)}
                      rejections={refusals[item.id] ?? []}
@@ -1443,7 +1470,8 @@ function RefusalNotice({
 
 function Row({
   item, open, busy, busyLabel, onToggle, onPublish, onReject, onRevert, onSetFundingType,
-  onReRead, onReClassify, onFixLink, onAddSource, onWatch, rejections, onOverride, selected, onSelect,
+  onReRead, onReClassify, onFixLink, onAddSource, onWatch, onSetStructures,
+  rejections, onOverride, selected, onSelect,
 }: {
   item: QueueItem
   /** Undefined outside the sectioned view, where bulk select does not apply. */
@@ -1457,6 +1485,7 @@ function Row({
   onReject: (code: string, note: string) => void
   onRevert: (d: FieldDiff) => void
   onSetFundingType: (fundingType: string) => void
+  onSetStructures: (next: string[]) => void
   onReRead: () => void
   onReClassify: () => void
   onFixLink: () => void
@@ -1676,8 +1705,11 @@ function Row({
               : item.values.nextOpenDate ? `Opens ${item.values.nextOpenDate}`
               : <em style={{ color: 'var(--amber-deep)' }}>not recorded</em>)}</span>
           <span><b style={{ ...display, fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--color-text-tertiary)' }}>Eligible </b>
+            {/* ALL OF THEM. A "+4" on the field that decides who can see a fund
+                is unreadable and unverifiable, and this is the field a reviewer
+                most needs to check. */}
             {item.values.structures.length
-              ? `${item.values.structures.slice(0, 2).map(prettyTag).join(', ')}${item.values.structures.length > 2 ? ` +${item.values.structures.length - 2}` : ''}`
+              ? item.values.structures.map(structureLabel).join(', ')
               : <em style={{ color: 'var(--amber-deep)' }}>nobody — no structures recorded</em>}</span>
         </div>
 
@@ -1970,7 +2002,52 @@ function Row({
                   that changes which tab the row lands in. */}
               <SectionLabel>Recorded, with the controls</SectionLabel>
               <div style={{ fontSize: 12.5, display: 'grid', gap: 4 }}>
-                <Val k="All eligible structures">{item.values.structures.map(prettyTag).join(', ') || 'none'}</Val>
+                <Val k="Who can apply">
+                  <span style={{ display: 'block' }}>
+                    {/* Toggles, not a comma list. Eligibility is the field that
+                        decides who sees a fund, and it was the only one on this
+                        screen a reviewer could neither read in full nor change. */}
+                    <span style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 6 }}>
+                      {EDITABLE_STRUCTURES.map(o => {
+                        const on = item.values.structures.includes(o.code)
+                        return (
+                          <button
+                            key={o.code}
+                            disabled={busy}
+                            title={o.hint}
+                            onClick={() => onSetStructures(
+                              on ? item.values.structures.filter(c => c !== o.code)
+                                 : [...item.values.structures, o.code])}
+                            style={{
+                              ...display, fontSize: 11.5, fontWeight: 500, cursor: 'pointer',
+                              borderRadius: 999, padding: '4px 10px',
+                              border: `0.5px solid ${on ? 'transparent' : 'var(--border-subtle)'}`,
+                              background: on ? 'var(--green-deep)' : 'transparent',
+                              color: on ? 'var(--green-pale-2)' : 'var(--color-text-secondary)',
+                            }}
+                          >
+                            {on ? '✓ ' : ''}{o.label}
+                          </button>
+                        )
+                      })}
+                    </span>
+                    {/* Values no longer offered. Shown so they can be replaced
+                        rather than left to drift unnoticed. */}
+                    {item.values.structures.filter(isLegacyStructure).map(c => (
+                      <span key={c} style={{ fontSize: 11.5, color: 'var(--amber-deep)' }}>
+                        Also holds “{structureLabel(c)}”, which is a legacy value — replace it with one above.{' '}
+                        <button disabled={busy}
+                                onClick={() => onSetStructures(item.values.structures.filter(x => x !== c))}
+                                style={{ ...miniBtn, padding: '2px 8px' }}>Remove</button>
+                      </span>
+                    ))}
+                    {item.values.structures.length === 0 && (
+                      <span style={{ fontSize: 11.5, color: 'var(--amber-deep)' }}>
+                        Nothing selected, so this fund currently matches nobody.
+                      </span>
+                    )}
+                  </span>
+                </Val>
                 <Val k="All sectors">{item.values.sectors.map(prettyTag).join(', ') || 'none'}</Val>
                 <Val k="Beneficiaries">{item.values.beneficiaries.map(prettyTag).join(', ') || 'none'}</Val>
                 {item.sources.length > 0 && (
