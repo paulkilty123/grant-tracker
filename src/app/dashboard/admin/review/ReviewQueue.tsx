@@ -677,6 +677,41 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
     router.refresh()
   }, [patch, router, toast, noteAction])
 
+  /**
+   * Set what one applicant can ask for.
+   *
+   * The queue could flag an amount as wrong — "stored amount_max £10,000 is 3.1x
+   * the per-applicant figure derived from the text" — and offered no way to
+   * correct it. The only routes were Put it back, which only exists if a job
+   * changed the field, and leaving the queue for the Catalogue page.
+   *
+   * NULL IS A REAL VALUE HERE, not an empty form. A fund whose page states no
+   * per-applicant figure should hold none: absence renders as absence, and a
+   * made-up ceiling is worse than a blank. Clearing both boxes stores null.
+   *
+   * Writes PIN, deliberately. Enrichment is gap-fill only on amounts — it writes
+   * when the stored value is NULL and otherwise raises a flag — so a human
+   * figure would survive anyway; pinning makes that explicit rather than
+   * incidental.
+   */
+  const setAmount = useCallback(async (item: QueueItem, min: number | null, max: number | null) => {
+    if (min !== null && max !== null && min > max) {
+      toast.error('The minimum is above the maximum. Nothing saved.')
+      return
+    }
+    setBusyId(item.id)
+    setBusyLabel('Saving the amount')
+    const ok = await patch(item.id, { amount_min: min, amount_max: max }, 'Saving the amount')
+    setBusyId(null)
+    setBusyLabel(null)
+    if (!ok) return
+    noteAction(item.id, min === null && max === null
+      ? 'Amount cleared — no figure recorded'
+      : `Amount set to ${gbp(min)} to ${gbp(max)}`)
+    toast.success('Amount saved')
+    router.refresh()
+  }, [patch, router, toast, noteAction])
+
   const runJob = useCallback(async (
     id: string,
     url: string,
@@ -1233,6 +1268,7 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
                      busyLabel={busyLabel} onPublish={() => publish(item)} onReject={(code, note) => reject(item, code, note)}
                      onRevert={(d) => revertField(item, d)} onSetFundingType={(t) => setFundingType(item, t)}
                      onSetStructures={(next) => setStructures(item, next)}
+                     onSetAmount={(min, max) => setAmount(item, min, max)}
                      onReRead={() => reRead(item)} onReClassify={() => reClassify(item)}
                      onFixLink={() => fixLink(item)} onAddSource={() => addSource(item)} onWatch={() => watchBetweenRounds(item)}
                      rejections={refusals[item.id] ?? []}
@@ -1478,7 +1514,7 @@ function RefusalNotice({
 
 function Row({
   item, open, busy, busyLabel, onToggle, onPublish, onReject, onRevert, onSetFundingType,
-  onReRead, onReClassify, onFixLink, onAddSource, onWatch, onSetStructures,
+  onReRead, onReClassify, onFixLink, onAddSource, onWatch, onSetStructures, onSetAmount,
   rejections, onOverride, selected, onSelect,
 }: {
   item: QueueItem
@@ -1494,6 +1530,7 @@ function Row({
   onRevert: (d: FieldDiff) => void
   onSetFundingType: (fundingType: string) => void
   onSetStructures: (next: string[]) => void
+  onSetAmount: (min: number | null, max: number | null) => void
   onReRead: () => void
   onReClassify: () => void
   onFixLink: () => void
@@ -1508,6 +1545,9 @@ function Row({
   const [rejecting, setRejecting] = useState(false)
   const [rejectCode, setRejectCode] = useState(REJECT_REASONS[0].code)
   const [rejectNote, setRejectNote] = useState('')
+  /** Amount boxes. Seeded from the row, empty string meaning "no figure". */
+  const [amtMin, setAmtMin] = useState(item.values.amountMin === null ? '' : String(item.values.amountMin))
+  const [amtMax, setAmtMax] = useState(item.values.amountMax === null ? '' : String(item.values.amountMax))
   const worst = item.reasons.reduce<string>((acc, r) => {
     if (acc === 'critical' || r.severity === 'critical') return 'critical'
     if (acc === 'check' || r.severity === 'check') return 'check'
@@ -2010,6 +2050,38 @@ function Row({
                   that changes which tab the row lands in. */}
               <SectionLabel>Recorded, with the controls</SectionLabel>
               <div style={{ fontSize: 12.5, display: 'grid', gap: 4 }}>
+                <Val k="Amount one applicant can ask for">
+                  <span style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
+                    <input
+                      value={amtMin} onChange={e => setAmtMin(e.target.value.replace(/[^0-9]/g, ''))}
+                      inputMode="numeric" placeholder="min" aria-label="Minimum amount"
+                      style={amountBox}
+                    />
+                    <span style={{ color: 'var(--color-text-tertiary)', fontSize: 12 }}>to</span>
+                    <input
+                      value={amtMax} onChange={e => setAmtMax(e.target.value.replace(/[^0-9]/g, ''))}
+                      inputMode="numeric" placeholder="max" aria-label="Maximum amount"
+                      style={amountBox}
+                    />
+                    <button
+                      disabled={busy}
+                      onClick={() => onSetAmount(
+                        amtMin === '' ? null : Number(amtMin),
+                        amtMax === '' ? null : Number(amtMax))}
+                      style={{ ...miniBtn, ...btnRow }}
+                    >Save</button>
+                    {/* Clearing is a real answer. A fund whose page states no
+                        per-applicant figure should hold none — a made-up ceiling
+                        is worse than a blank. */}
+                    {(item.values.amountMin !== null || item.values.amountMax !== null) && (
+                      <button
+                        disabled={busy}
+                        onClick={() => { setAmtMin(''); setAmtMax(''); onSetAmount(null, null) }}
+                        style={{ ...miniBtn, ...btnRow }}
+                      >No figure stated</button>
+                    )}
+                  </span>
+                </Val>
                 <Val k="Who can apply">
                   <span style={{ display: 'block' }}>
                     {/* Toggles, not a comma list. Eligibility is the field that
@@ -2169,6 +2241,11 @@ const ghostBtn: React.CSSProperties = {
 }
 /** Icon and label on one baseline. Applied to every action button so the icon
  *  never shifts the text off centre. */
+const amountBox: React.CSSProperties = {
+  fontFamily: 'var(--font-space-grotesk)', fontSize: 12.5, padding: '4px 8px', width: 92,
+  border: '0.5px solid var(--border-subtle)', borderRadius: 8,
+  background: 'var(--color-surface)', color: 'var(--color-text-primary)',
+}
 const btnRow: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', gap: 6, lineHeight: 1,
 }
