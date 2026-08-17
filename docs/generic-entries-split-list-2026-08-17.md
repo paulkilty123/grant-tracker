@@ -1,5 +1,24 @@
 # Generic entries: which funders are hiding several funds
 
+> **RESOLVED 17 August: do not split.** Enumerating the funds behind these rows
+> found 215 funds, of which 51 clear the £5,000 floor and **1** clears it while
+> also having its own page. The other 47 are named on an index page with no link
+> of their own, so splitting would have made 47 rows sharing one URL.
+>
+> **Staged: one row** — Charity Bank Green Loans, inactive and flagged (no
+> timing on its page). **Everything else is September**, as the scheduled feed;
+> the design constraint that follows from this measurement is written up in
+> `catalogue-health-ledger.md`.
+>
+> **TechSoup UK is dropped from the split set entirely.** Its 20 "funds" are
+> donated and discounted software, not a fund set. The row stays as the in-kind
+> entry it is.
+>
+> Two corrections to the counts below, found when checking before staging rather
+> than after: Historic England's qualifying fund turned out to point at the same
+> URL as its own umbrella, and two of Charity Bank's three are size bands of one
+> lending product already covered by the existing row.
+
 **For Paul, 17 August 2026. Counts fetched once, nothing split.**
 Source data: `reports/generic-row-fund-counts-2026-08-17.json`.
 

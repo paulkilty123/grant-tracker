@@ -1,0 +1,16 @@
+[
+  {
+    "funder": "Charity Bank",
+    "title": "Charity Bank — Green Loans",
+    "apply_url": "https://www.charitybank.org/loans/green-loans/",
+    "funder_type": "loan",
+    "funding_type": "investment",
+    "description": "Loans from Charity Bank for charities and social enterprises funding energy efficiency, renewable generation and other environmental improvements to their buildings or operations. Repayable finance, not a grant.",
+    "amount_min": 150000,
+    "amount_max": null,
+    "deadline": null,
+    "is_rolling": false,
+    "location_tag": "UK",
+    "source_note": "Staged 2026-08-17. The only fund of 215 enumerated across 23 generic rows that clears the £5,000 floor AND has its own page distinct from its funder's umbrella. FLAGGED, NOT PUBLISHABLE: the page states no timing, so it fails the evidenced-timing condition. Amount is a floor with no stated ceiling. Charity Bank's other two 'funds' are size bands of the same lending product and are already covered by the existing umbrella row."
+  }
+]
