@@ -204,6 +204,11 @@ export default async function ReviewPage() {
       // could be misled by. Those sort above everything else, because every
       // hour they sit here is an hour somebody can act on bad data.
       gateOutcome:   gate.outcome,
+      // The codes that BLOCK, computed here rather than in the client. The
+      // section grouping needs to know which reasons hold a row back, and the
+      // blocking set lives in publish-gate.ts, which pulls server modules — so
+      // it is resolved on the server and passed down as plain strings.
+      blockingCodes: gate.blocking.map(b => b.code),
       diffs:         extractTagsDiff(r.field_provenance),
       brief:         summariseBrief(r.funder_brief),
       evidence:      summariseEvidence(r.field_evidence),

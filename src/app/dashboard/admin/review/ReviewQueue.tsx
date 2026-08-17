@@ -34,6 +34,10 @@ import type { EvidenceSummary } from '@/lib/admin/evidence-summary'
 // Type-only, so the merger's server dependencies are erased at build and this
 // stays a client component.
 import type { MergeRejection } from '@/lib/grant-merge'
+import {
+  SECTIONS, sectionOf, evidenceRank, planLine, EVIDENCE_RANK_LABEL,
+  type SectionId,
+} from '@/lib/admin/review-sections'
 
 export type QueueItem = {
   /** Brief is a stub (or absent) — drives the "Needs enrichment" view. */
@@ -64,6 +68,8 @@ export type QueueItem = {
    *   'publish'   — nothing blocking; the gate can take this one itself.
    */
   gateOutcome: 'publish' | 'hold' | 'attention'
+  /** Reason codes that actually block publication, resolved on the server. */
+  blockingCodes: string[]
   diffs: FieldDiff[]
   brief: {
     source: string | null
@@ -231,7 +237,17 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
   //   'autopublished' is the odd one out: not work, but the record of what the
   //   gate did without asking. Those rows are published and live, so they are
   //   in none of the queue states and disappear from every other view here.
-  const [view, setView] = useState<'all' | 'live' | 'hidden' | 'unenriched' | 'autopublished'>('all')
+  // 'hidden' — the not-live queue — is the DEFAULT and the primary view. It is
+  // where catalogue quality is decided, and it used to be the third chip in a
+  // row of five. The rows a user can see and be misled by are not demoted by
+  // this: they keep a pinned band above the sections, which shrinks to nothing
+  // when it is empty.
+  const [view, setView] = useState<'all' | 'live' | 'hidden' | 'unenriched' | 'autopublished'>('hidden')
+  /** Bulk selection, per section. Cleared whenever the view or filters change. */
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+  /** Funding type as a FILTER, never as a grouping — as a grouping it gives one
+   *  pile of grants and four piles anyone would clear in a minute. */
+  const [typeFilter, setTypeFilter] = useState<string | null>(null)
 
   const liveAll = useMemo(() => items.filter(i => !done.has(i.id)), [items, done])
 
@@ -282,7 +298,55 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
     return Array.from(m.entries()).sort((a, b) => b[1].n - a[1].n)
   }, [byView])
 
-  const shown = filter ? byView.filter(i => i.reasons.some(r => r.code === filter)) : byView
+  // Funding type filters every view. Applied before the sections are built so a
+  // section count always describes what is actually under it.
+  const byViewTyped = typeFilter ? byView.filter(i => i.values.fundingType === typeFilter) : byView
+
+  const shown = filter ? byViewTyped.filter(i => i.reasons.some(r => r.code === filter)) : byViewTyped
+
+  /**
+   * The five sections, in order, each sorted safest-evidence-first.
+   *
+   * Only built for the primary view. The other views are lists of a different
+   * kind — a receipt, or a cross-cutting filter — and sections would be a
+   * grouping over rows that do not share a shape.
+   */
+  const sectioned = useMemo(() => {
+    const bucket = new Map<SectionId, QueueItem[]>()
+    for (const s of SECTIONS) bucket.set(s.id, [])
+    for (const item of shown) bucket.get(sectionOf(item.blockingCodes))!.push(item)
+    for (const sec of SECTIONS) {
+      bucket.get(sec.id)!.sort((a: QueueItem, b: QueueItem) =>
+        evidenceRank(a.evidence) - evidenceRank(b.evidence) ||
+        a.title.localeCompare(b.title))
+    }
+    return bucket
+  }, [shown])
+
+  /** Live to users AND carrying something they could be misled by. Pinned above
+   *  the sections rather than demoted to a chip: these are the only rows on the
+   *  screen where somebody is being misled right now. */
+  const liveAndWrong = useMemo(
+    () => {
+      const rows = pending.filter(i => i.gateOutcome === 'attention')
+      const typed = typeFilter ? rows.filter(i => i.values.fundingType === typeFilter) : rows
+      return typed.sort((a, b) => evidenceRank(a.evidence) - evidenceRank(b.evidence) || a.title.localeCompare(b.title))
+    },
+    [pending, typeFilter],
+  )
+
+  const sectionCounts = useMemo(() => {
+    const out = {} as Record<SectionId, number>
+    for (const s of SECTIONS) out[s.id] = sectioned.get(s.id)?.length ?? 0
+    return out
+  }, [sectioned])
+
+  const plan = planLine({
+    ready: sectionCounts.ready ?? 0,
+    bySection: sectionCounts,
+    liveAndWrong: liveAndWrong.length,
+  })
+
   const liveToUsers = pending.filter(i => i.isActive).length
   const notLiveCount = pending.length - liveToUsers
   const unenrichedCount = pending.filter(i => i.needsEnrichment).length
@@ -384,10 +448,11 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
       ['is_active', 'pipeline_state'],
     )
     setBusyId(null)
-    if (!ok) return
+    if (!ok) return false
     setDone(d => new Set(d).add(item.id))
     toast.success(`Published ${item.title}`)
     router.refresh()
+    return true
   }, [patch, router, toast])
 
   const revertField = useCallback(async (item: QueueItem, diff: FieldDiff) => {
@@ -574,6 +639,7 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
     router.refresh()
   }, [patch, router, toast])
 
+
   /**
    * Reject — the emergency brake, so it may never fail quietly.
    *
@@ -617,6 +683,36 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
     toast.success(`Rejected. "${item.title}" is no longer visible to users, and the reason is recorded.`)
     router.refresh()
   }, [patch, router, toast])
+
+  /**
+   * Act on a selected group.
+   *
+   * Sequential, not parallel: every one of these actions writes through
+   * `patch`, which asserts what the server says it applied, and firing thirty
+   * of them at once would interleave the busy state and the toasts into
+   * something nobody could read. A group of thirty is a few seconds either way.
+   *
+   * Reports what LANDED, not what was attempted. A bulk action that says
+   * "published 30" when the trust ladder refused nine of them is the exact
+   * failure the single-row path was rebuilt to stop, and doing it thirty at a
+   * time would make it thirty times harder to notice.
+   */
+  const bulk = useCallback(async (ids: string[], action: 'publish' | 'reread' | 'reject') => {
+    const rows = ids
+      .map(id => pending.find(i => i.id === id))
+      .filter((i): i is QueueItem => Boolean(i))
+    let ok = 0
+    for (const item of rows) {
+      const done = action === 'publish' ? await publish(item)
+        : action === 'reject' ? await reject(item)
+        : await reRead(item)
+      if (done !== false) ok++
+    }
+    setSelected(new Set())
+    const verb = action === 'publish' ? 'published' : action === 'reject' ? 'rejected' : 're-read'
+    if (ok === rows.length) toast.success(`${ok} ${verb}.`)
+    else toast.error(`${ok} of ${rows.length} ${verb}. The rest did not take — see the messages above.`)
+  }, [pending, publish, reject, reRead, toast])
 
   return (
     <main style={{ padding: '30px 24px 80px', maxWidth: 1180, margin: '0 auto' }}>
@@ -759,7 +855,134 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
         </div>
       )}
 
-      {shown.length === 0 ? (
+      {/* THE PLAN LINE. A screen that opens with a list asks "where do I start";
+          one that opens with a sentence answers it. Computed, never written by
+          hand, and it carries the live-and-wrong count so it describes the whole
+          screen rather than just the queue below it. */}
+      {view === 'hidden' && (
+        <p style={{
+          ...display, fontSize: 14.5, lineHeight: 1.55, margin: '0 0 18px',
+          color: 'var(--color-text-primary)',
+        }}>{plan}</p>
+      )}
+
+      {/* Funding type as a FILTER. As a section it gives one pile of grants and
+          four piles anyone would clear in a minute; as a chip it costs nothing
+          and gives the view on demand. */}
+      {view === 'hidden' && (
+        <div style={{
+          display: 'flex', flexWrap: 'wrap', gap: 7, alignItems: 'center',
+          paddingBottom: 12, borderBottom: '0.5px solid var(--border-subtle)', marginBottom: 16,
+        }}>
+          <span style={{
+            ...display, fontSize: 10.5, fontWeight: 500, letterSpacing: '0.08em',
+            textTransform: 'uppercase', color: 'var(--color-text-tertiary)', marginRight: 2,
+          }}>Funding type</span>
+          <Chip active={typeFilter === null} onClick={() => { setTypeFilter(null); setSelected(new Set()) }}
+                label="All" n={byView.length} />
+          {FUNDING_TYPES.map(t => (
+            <Chip key={t.value} active={typeFilter === t.value}
+                  onClick={() => { setTypeFilter(t.value); setSelected(new Set()) }}
+                  label={t.label} n={byView.filter(i => i.values.fundingType === t.value).length} />
+          ))}
+        </div>
+      )}
+
+      {view === 'hidden' ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 26 }}>
+          {/* PINNED, and it shrinks to nothing when empty rather than being a
+              chip. Everything below is invisible to users, so its cost is delay;
+              these are the only rows where a person is being misled today. */}
+          {liveAndWrong.length > 0 && (
+            <section>
+              <BandHeading
+                label={`Live to users, and wrong — ${liveAndWrong.length}`}
+                detail="People can see these now. Fixing one changes what they see today."
+              />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+                {liveAndWrong.map(item => (
+                  <Row key={item.id} item={item} open={openId === item.id} busy={busyId === item.id}
+                       onToggle={() => setOpenId(openId === item.id ? null : item.id)}
+                       busyLabel={busyLabel} onPublish={() => publish(item)} onReject={() => reject(item)}
+                       onRevert={(d) => revertField(item, d)} onSetFundingType={(t) => setFundingType(item, t)}
+                       onReRead={() => reRead(item)} onReClassify={() => reClassify(item)}
+                       onFixLink={() => fixLink(item)} rejections={refusals[item.id] ?? []}
+                       onOverride={(r) => override(item.id, r)} />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {SECTIONS.map(sec => {
+            const rows = sectioned.get(sec.id) ?? []
+            if (rows.length === 0) return null
+            const ids = rows.map(r => r.id)
+            const allPicked = ids.every(id => selected.has(id))
+            const pickedHere = ids.filter(id => selected.has(id))
+            return (
+              <section key={sec.id}>
+                <BandHeading label={`${sec.label} — ${rows.length}`} detail={sec.detail} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '0 0 10px' }}>
+                  <label style={{ ...display, fontSize: 12.5, display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', color: 'var(--color-text-secondary)' }}>
+                    <input type="checkbox" checked={allPicked}
+                           onChange={() => setSelected(prev => {
+                             const next = new Set(prev)
+                             if (allPicked) ids.forEach(id => next.delete(id))
+                             else ids.forEach(id => next.add(id))
+                             return next
+                           })} />
+                    Select all {rows.length}
+                  </label>
+                  {pickedHere.length > 0 && (
+                    <>
+                      <span style={{ ...display, fontSize: 12.5, color: 'var(--color-text-secondary)' }}>
+                        {pickedHere.length} selected
+                      </span>
+                      {sec.id === 'ready' && (
+                        <button style={primaryBtn} disabled={busyId !== null}
+                                onClick={() => bulk(pickedHere, 'publish')}>Publish {pickedHere.length}</button>
+                      )}
+                      {(sec.id === 'reading' || sec.id === 'link') && (
+                        <button style={secondaryBtn} disabled={busyId !== null}
+                                onClick={() => bulk(pickedHere, 'reread')}>Re-read {pickedHere.length} pages</button>
+                      )}
+                      {sec.id === 'untruthful' && (
+                        <button style={dangerBtn} disabled={busyId !== null}
+                                onClick={() => bulk(pickedHere, 'reject')}>Reject {pickedHere.length}</button>
+                      )}
+                      <button style={ghostBtn} onClick={() => setSelected(new Set())}>Clear</button>
+                    </>
+                  )}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+                  {rows.map(item => (
+                    <Row key={item.id} item={item} open={openId === item.id} busy={busyId === item.id}
+                         selected={selected.has(item.id)}
+                         onSelect={(next) => setSelected(prev => {
+                           const s2 = new Set(prev)
+                           if (next) s2.add(item.id); else s2.delete(item.id)
+                           return s2
+                         })}
+                         onToggle={() => setOpenId(openId === item.id ? null : item.id)}
+                         busyLabel={busyLabel} onPublish={() => publish(item)} onReject={() => reject(item)}
+                         onRevert={(d) => revertField(item, d)} onSetFundingType={(t) => setFundingType(item, t)}
+                         onReRead={() => reRead(item)} onReClassify={() => reClassify(item)}
+                         onFixLink={() => fixLink(item)} rejections={refusals[item.id] ?? []}
+                         onOverride={(r) => override(item.id, r)} />
+                  ))}
+                </div>
+              </section>
+            )
+          })}
+
+          {shown.length === 0 && liveAndWrong.length === 0 && (
+            <p style={{ color: 'var(--color-text-secondary)', fontSize: 14 }}>
+              Nothing waiting that is not already live. The not-live queue is empty.
+            </p>
+          )}
+        </div>
+      ) : shown.length === 0 ? (
+
         <p style={{ color: 'var(--color-text-secondary)', fontSize: 14 }}>
           {q.trim() !== '' && liveAll.length > 0
             ? `Nothing in the queue matches “${q.trim()}”. It may be published already — Catalogue searches every row, whatever its state.`
@@ -1067,9 +1290,12 @@ function RefusalNotice({
 
 function Row({
   item, open, busy, busyLabel, onToggle, onPublish, onReject, onRevert, onSetFundingType,
-  onReRead, onReClassify, onFixLink, rejections, onOverride,
+  onReRead, onReClassify, onFixLink, rejections, onOverride, selected, onSelect,
 }: {
   item: QueueItem
+  /** Undefined outside the sectioned view, where bulk select does not apply. */
+  selected?: boolean
+  onSelect?: (next: boolean) => void
   open: boolean
   busy: boolean
   busyLabel: string | null
@@ -1110,7 +1336,19 @@ function Row({
       <div style={{ padding: '14px 17px', minWidth: 0 }}>
 
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 14px', alignItems: 'baseline', justifyContent: 'space-between' }}>
-          <div style={{ minWidth: 0 }}>
+          <div style={{ minWidth: 0, display: 'flex', alignItems: 'baseline', gap: 9 }}>
+            {/* Only rendered in the sectioned view. Grouping without a way to act
+                on a group is just tidier scrolling. */}
+            {onSelect && (
+              <input
+                type="checkbox"
+                checked={selected === true}
+                onChange={e => onSelect(e.target.checked)}
+                aria-label={`Select ${item.title}`}
+                style={{ cursor: 'pointer', flexShrink: 0 }}
+              />
+            )}
+            <div style={{ minWidth: 0 }}>
             {/* Straight through to the full record. The queue deliberately shows
                 only what is needed to decide; everything else lives on detail. */}
             <a
@@ -1120,7 +1358,21 @@ function Row({
               {item.title}
             </a>
             <div style={{ color: 'var(--color-text-secondary)', fontSize: 12.5 }}>{item.funder}</div>
+            </div>
           </div>
+          {/* The sort axis, named. Without it the order looks arbitrary and the
+              "accept down to a line and stop where you get uneasy" reading —
+              which is the whole point of sorting by evidence — is invisible. */}
+          <Pill bg="var(--bg-pill-neutral)" ink="var(--color-text-tertiary)">
+            {EVIDENCE_RANK_LABEL[evidenceRank(item.evidence)]}
+          </Pill>
+          {/* Funding type as a LABEL on the card, so the tab a row lands in is
+              visible without grouping the screen by it. */}
+          {item.values.fundingType && (
+            <Pill bg="var(--bg-pill-neutral)" ink="var(--color-text-secondary)">
+              {FUNDING_TYPES.find(t => t.value === item.values.fundingType)?.label ?? item.values.fundingType}
+            </Pill>
+          )}
           {item.autoPublishedAt && (
             <Pill bg="var(--bg-pill-neutral)" ink="var(--color-text-secondary)">
               Gate published {new Date(item.autoPublishedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}

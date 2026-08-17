@@ -1,0 +1,198 @@
+/**
+ * Grouping the review queue by the ACTION a row needs, not by the code that
+ * flagged it.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * WHY THIS REPLACES 18 CHIPS
+ *
+ * "Why held" listed every reason code as its own filter. That is a faithful
+ * rendering of the data and a poor rendering of the work: a reviewer does not
+ * think "show me amount_ungrounded", they think "which of these can I publish,
+ * and which need me to go and read something". Eighteen chips is a list of
+ * causes where five sections is a plan.
+ *
+ * Paul, 2026-08-17, specifying the groups: ready to publish · needs reading ·
+ * needs my judgement · link is dead or points at the wrong fund · nothing
+ * truthful to show.
+ *
+ * THE LINK SECTION IS NARROWER THAN THE CHIPS IT REPLACES, and deliberately:
+ *
+ *   > A link landing on a funder's homepage is fine and shouldn't appear as a
+ *   > problem; only dead links and pages that aren't about the fund belong there.
+ *
+ * So `link_unverified` is NOT here. It means "we have not checked", not "it is
+ * broken" — 57 of its 60 rows were `url_status = 'unchecked'` — and the publish
+ * gate already declines to block on it for that reason.
+ *
+ * Three placements that are judgements rather than lookups, all confirmed by
+ * Paul on 2026-08-17:
+ *
+ *   page_unreadable  → READING, not links. A page we cannot fetch is usually a
+ *                      bot wall, and the reader proxy clears about sixteen such
+ *                      hosts. Filing it as a dead link is the false-dead problem
+ *                      this catalogue has already had once.
+ *   quarantined      → READING. The automated chain stopped; the fix is to clear
+ *                      the reason and re-run it, not to make a decision.
+ *   deadline_passed  → JUDGEMENT. A past date with a live round behind it is a
+ *                      correction; without one it is a removal. The abstain rule
+ *                      exists because that difference needs a person.
+ */
+
+import type { ReviewReasonCode } from './review-reasons'
+import type { EvidenceSummary } from './evidence-summary'
+
+export type SectionId = 'ready' | 'link' | 'reading' | 'judgement' | 'untruthful'
+
+export const SECTIONS: { id: SectionId; label: string; detail: string }[] = [
+  { id: 'ready',      label: 'Ready to publish',
+    detail: 'Nothing on these is blocking. Accepting one changes what users can find today.' },
+  { id: 'link',       label: 'The link is dead, or the page is not about this fund',
+    detail: 'A link that goes nowhere, or loads a page describing something else. A homepage is not a problem and is not here.' },
+  { id: 'reading',    label: 'Needs reading',
+    detail: 'Nobody, human or machine, has read the funder’s page for these. No judgement is possible until something has.' },
+  { id: 'judgement',  label: 'Needs your judgement',
+    detail: 'The page was read and what it says is genuinely arguable. These are the ones only you can settle.' },
+  { id: 'untruthful', label: 'Nothing truthful to show',
+    detail: 'The row cannot be made honest as it stands — no funder, or the page says the fund is gone.' },
+]
+
+/**
+ * Which section a blocking code belongs to.
+ *
+ * Order of the lookup does not matter; `sectionOf` resolves a row carrying
+ * several codes by SECTION PRIORITY, not by which code came first.
+ */
+const CODE_SECTION: Partial<Record<ReviewReasonCode, SectionId>> = {
+  // ── The link is dead or wrong ──
+  link_dead:                     'link',
+  page_describes_different_fund: 'link',
+
+  // ── Nothing has read the page ──
+  never_verified:  'reading',
+  no_brief:        'reading',
+  page_unreadable: 'reading',
+  quarantined:     'reading',
+  stale_enrichment:'reading',
+
+  // ── Nothing truthful to show ──
+  no_funder:              'untruthful',
+  page_says_delisted:     'untruthful',
+  page_says_not_funding:  'untruthful',
+  page_says_round_closed: 'untruthful',
+  no_current_timing:      'untruthful',
+
+  // ── Everything else that blocks is a judgement ──
+  deadline_passed:        'judgement',
+  deadline_implausible:   'judgement',
+  amount_ungrounded:      'judgement',
+  amount_pot_suspected:   'judgement',
+  amount_under_stated:    'judgement',
+  amount_inverted:        'judgement',
+  amount_zero:            'judgement',
+  multi_round_uncaptured: 'judgement',
+  applicant_not_social_sector: 'judgement',
+  applicant_individual_only:   'judgement',
+  user_flagged:           'judgement',
+  tags_changed:           'judgement',
+}
+
+/**
+ * Most-blocking-first. A row with a dead link AND a shaky amount is a link
+ * problem: fixing the amount cannot help while the link goes nowhere, so
+ * putting it under judgement would ask for a decision that changes nothing.
+ */
+const SECTION_PRIORITY: SectionId[] = ['untruthful', 'link', 'reading', 'judgement']
+
+/**
+ * Which section this row belongs in.
+ *
+ * Takes the BLOCKING codes only, as plain strings. They are resolved on the
+ * server (`gate.blocking`) because the blocking set lives in `publish-gate.ts`,
+ * which pulls server modules that must not reach a client component.
+ */
+export function sectionOf(blockingCodes: readonly string[]): SectionId {
+  if (blockingCodes.length === 0) return 'ready'
+  const hit = new Set<SectionId>()
+  for (const code of blockingCodes) {
+    const s = CODE_SECTION[code as ReviewReasonCode]
+    if (s) hit.add(s)
+  }
+  for (const s of SECTION_PRIORITY) if (hit.has(s)) return s
+  // A blocking code with no mapping is a judgement rather than a silent drop:
+  // an unmapped code must never make a row vanish from the screen.
+  return 'judgement'
+}
+
+/**
+ * How strong the evidence behind a row is, safest first.
+ *
+ * Paul, 2026-08-17: "sort by evidence strength — page confirms us, page silent,
+ * page contradicts us, page is about a different fund. Safest at the top, so I
+ * can accept down to a line and stop where I get uneasy."
+ *
+ * The axis is only meaningful because 647 of 649 live rows have now been read.
+ * A year ago every row would have scored `silent` and the sort would have been
+ * decoration.
+ *
+ * A row that both confirms and contradicts ranks as CONTRADICTS. The riskier
+ * signal decides, because the purpose of the order is to let someone stop
+ * reading when they get uneasy — and a row with a contradiction in it should
+ * appear below the point where that happens, not above it.
+ */
+export function evidenceRank(ev: EvidenceSummary | null): 0 | 1 | 2 | 3 {
+  if (!ev) return 1
+  if (ev.outcome === 'fixable_link: wrong_fund') return 3
+  if ((ev.counts?.contradicted ?? 0) > 0) return 2
+  if ((ev.counts?.confirmed ?? 0) > 0) return 0
+  return 1
+}
+
+export const EVIDENCE_RANK_LABEL: Record<0 | 1 | 2 | 3, string> = {
+  0: 'page confirms us',
+  1: 'page silent',
+  2: 'page contradicts us',
+  3: 'page is about a different fund',
+}
+
+/**
+ * The plan sentence at the top of the screen.
+ *
+ * Written as a computed fact rather than a slogan: it names what is publishable
+ * now, what the single biggest blocker is, and how many rows a person can
+ * currently see and be misled by. Paul asked for the live-and-wrong count to be
+ * in it "so the sentence reads as a plan for the whole screen rather than just
+ * the queue".
+ */
+export function planLine(opts: {
+  ready: number
+  bySection: Record<SectionId, number>
+  liveAndWrong: number
+}): string {
+  const { ready, bySection, liveAndWrong } = opts
+  const parts: string[] = []
+
+  parts.push(ready === 0
+    ? 'Nothing is ready to publish.'
+    : `${ready} row${ready === 1 ? ' is' : 's are'} ready to publish.`)
+
+  // The biggest blocker, named. "Clear X and N become publishable" is the whole
+  // reason to group by action rather than by cause.
+  const blockers = (['link', 'reading', 'judgement', 'untruthful'] as SectionId[])
+    .map(id => ({ id, n: bySection[id] ?? 0 }))
+    .filter(b => b.n > 0)
+    .sort((a, b) => b.n - a.n)
+  const top = blockers[0]
+  if (top) {
+    const what = top.id === 'link' ? 'the link issues'
+      : top.id === 'reading' ? 'the unread pages'
+      : top.id === 'judgement' ? 'the judgement calls'
+      : 'the untruthful rows'
+    parts.push(`Clearing ${what} would make ${top.n} more publishable.`)
+  }
+
+  if (liveAndWrong > 0) {
+    parts.push(`${liveAndWrong} row${liveAndWrong === 1 ? ' is' : 's are'} live to users and wrong — those are the only ones misleading anybody right now.`)
+  }
+
+  return parts.join(' ')
+}
