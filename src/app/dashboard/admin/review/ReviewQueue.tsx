@@ -913,29 +913,37 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
         Review queue
       </h1>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(210px, 240px) 1fr', gap: 26, alignItems: 'start' }}>
+      {/* TOP NAV, NOT A RAIL.
+          The rail took a fixed 240px column off every card on the page, and the
+          cards are where the reading happens. Groups stack — label on its own
+          line above its pills, never inline beside them — so the three questions
+          the nav answers stay separate: what is misleading someone now, what is
+          waiting, and what cuts across both. */}
+      <div style={{
+        background: 'var(--color-surface, #fff)',
+        border: '0.5px solid var(--border-subtle)',
+        borderRadius: 'var(--radius-card)',
+        padding: '14px 16px', marginBottom: 24,
+      }}>
+        <NavGroup label="Needs attention">
+          <Tab id="liveandwrong" nav={nav} onGo={go} n={liveAndWrong.length} tone="alert" />
+        </NavGroup>
 
-        {/* ── The rail. Sections ARE the navigation. ────────────────────── */}
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: 18, position: 'sticky', top: 18 }}>
-          <RailItem id="liveandwrong" nav={nav} onGo={go} n={liveAndWrong.length} tone="alert" />
+        <NavGroup label="Not live yet" count={byView.length} divided>
+          {SECTIONS.map(sec => (
+            <Tab key={sec.id} id={sec.id} nav={nav} onGo={go} n={sectionCounts[sec.id] ?? 0} />
+          ))}
+        </NavGroup>
 
-          <div>
-            <RailHeading>Not live yet — {byView.length}</RailHeading>
-            {SECTIONS.map(sec => (
-              <RailItem key={sec.id} id={sec.id} nav={nav} onGo={go} n={sectionCounts[sec.id] ?? 0} />
-            ))}
-          </div>
+        <NavGroup label="Views" divided>
+          <Tab id="new"           nav={nav} onGo={go} n={newArrivals.length} />
+          <Tab id="unenriched"    nav={nav} onGo={go} n={unenrichedCount} />
+          <Tab id="autopublished" nav={nav} onGo={go} n={autoPubCount} />
+        </NavGroup>
+      </div>
 
-          <div>
-            <RailHeading>Views</RailHeading>
-            <RailItem id="new"           nav={nav} onGo={go} n={newArrivals.length} />
-            <RailItem id="unenriched"    nav={nav} onGo={go} n={unenrichedCount} />
-            <RailItem id="autopublished" nav={nav} onGo={go} n={autoPubCount} />
-          </div>
-        </nav>
-
-        {/* ── The body. One section at a time. ──────────────────────────── */}
-        <div style={{ minWidth: 0 }}>
+      {/* ── The body. One section at a time, now the full container width. ── */}
+      <div style={{ minWidth: 0 }}>
           <h2 style={{ ...display, fontSize: 17, fontWeight: 500, margin: '0 0 3px' }}>
             {navMeta.label} <span style={{ color: 'var(--color-text-tertiary)', fontWeight: 400 }}>{rows.length}</span>
           </h2>
@@ -1046,7 +1054,6 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
               ))}
             </div>
           )}
-        </div>
       </div>
     </main>
   )
@@ -1927,40 +1934,61 @@ const dangerBtn: React.CSSProperties = {
   borderRadius: 'var(--radius-input)', padding: '8px 16px', cursor: 'pointer',
   border: '0.5px solid transparent', background: 'transparent', color: 'var(--coral-deep)',
 }
-
-
-function RailHeading({ children }: { children: React.ReactNode }) {
+/**
+ * One labelled group of tabs.
+ *
+ * The label sits on its own line ABOVE its pills, never inline beside them. Put
+ * inline it reads as another pill and the group stops being a group.
+ */
+function NavGroup({ label, count, divided, children }: {
+  label: string; count?: number; divided?: boolean; children: React.ReactNode
+}) {
   return (
     <div style={{
-      ...display, fontSize: 10.5, fontWeight: 500, letterSpacing: '0.08em',
-      textTransform: 'uppercase', color: 'var(--color-text-tertiary)',
-      padding: '0 0 6px 10px',
-    }}>{children}</div>
+      display: 'flex', flexDirection: 'column', gap: 10,
+      ...(divided ? {
+        marginTop: 14, paddingTop: 14, borderTop: '0.5px solid var(--border-subtle)',
+      } : {}),
+    }}>
+      <div style={{
+        ...display, fontSize: 11, fontWeight: 700, letterSpacing: '0.06em',
+        textTransform: 'uppercase', color: 'var(--color-text-tertiary)', whiteSpace: 'nowrap',
+      }}>
+        {label}{count !== undefined && <span> — {count}</span>}
+      </div>
+      {/* Wraps within its own group. Groups never merge into one row, or the
+          three questions the nav separates would run back together. */}
+      <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+        {children}
+      </div>
+    </div>
   )
 }
 
-/** One rail entry: name, count, and the one line that says what it is. */
-function RailItem({ id, nav, onGo, n, tone }: {
+/** One navigation pill. Same click behaviour the rail had — this is a
+ *  relocation, not a change in what anything does. */
+function Tab({ id, nav, onGo, n, tone }: {
   id: NavId; nav: NavId; onGo: (id: NavId) => void; n: number; tone?: 'alert'
 }) {
   const active = nav === id
   const alert = tone === 'alert' && n > 0
-  const meta = NAV_META[id]
   return (
     <button
       onClick={() => onGo(id)}
       aria-current={active ? 'page' : undefined}
       style={{
-        ...display, display: 'block', width: '100%', textAlign: 'left', cursor: 'pointer',
-        border: 0, borderRadius: 10, padding: '7px 10px', marginBottom: 2,
-        background: active ? 'var(--green-deep)' : 'transparent',
-        color: active ? 'var(--green-pale-2)' : alert ? 'var(--coral-deep)' : 'var(--color-text-primary)',
+        ...display, display: 'inline-flex', alignItems: 'center', gap: 8,
+        padding: '9px 14px', borderRadius: 999, cursor: 'pointer',
+        border: '0.5px solid transparent', fontSize: 14.5, fontWeight: 600,
+        whiteSpace: 'nowrap',
+        background: active ? 'var(--green-deep)'
+          : alert ? 'var(--coral-pale)' : 'var(--bg-pill-neutral)',
+        color: active ? 'var(--green-pale-2)'
+          : alert ? 'var(--coral-deep)' : 'var(--color-text-secondary)',
       }}
     >
-      <span style={{ display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 13.5, fontWeight: 500 }}>
-        <span>{meta.label}</span>
-        <span style={{ fontVariantNumeric: 'tabular-nums', opacity: 0.75 }}>{n}</span>
-      </span>
+      {NAV_META[id].label}
+      <span style={{ fontSize: 13, fontWeight: 700, opacity: 0.7, fontVariantNumeric: 'tabular-nums' }}>{n}</span>
     </button>
   )
 }
