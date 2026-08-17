@@ -43,6 +43,10 @@ const COLS = [
   // What a USER sees at a glance. The queue showed none of it on the card, so
   // judging a row meant opening it or trusting the reason chips.
   'funder_type', 'location_tag', 'is_local',
+  // Extra source pages already saved on the row. Carried so the queue can APPEND
+  // to them: /api/admin/enrich-grant replaces grant_sources wholesale, so
+  // sending only a new one would delete every source added before it.
+  'grant_sources',
   'funder_brief', 'field_provenance', 'raw_data', 'needs_intervention_reason',
   // What the funder's own page said, when the engine last read it. Every other
   // column here is our bookkeeping; this is the only one from outside.
@@ -216,6 +220,12 @@ export default async function ReviewPage() {
       // it is resolved on the server and passed down as plain strings.
       blockingCodes: gate.blocking.map(b => b.code),
       firstSeenAt:   (r as { first_seen_at?: string | null }).first_seen_at ?? null,
+      sources: (((r as unknown as { grant_sources?: unknown }).grant_sources ?? []) as unknown[])
+        .map(x => {
+          const o = (x ?? {}) as Record<string, unknown>
+          return { label: String(o.label ?? ''), url: String(o.url ?? ''), text: String(o.text ?? '') }
+        })
+        .filter(x => x.url || x.text),
       source:        (r as { source?: string | null }).source ?? null,
       diffs:         extractTagsDiff(r.field_provenance),
       brief:         summariseBrief(r.funder_brief),

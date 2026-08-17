@@ -26,7 +26,7 @@
 // calcifying.
 
 import { Fragment, useMemo, useState, useCallback } from 'react'
-import { Check, RefreshCw, Link2, ExternalLink, Eye, X, MapPin } from 'lucide-react'
+import { Check, RefreshCw, Link2, ExternalLink, Eye, X, MapPin, FilePlus } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useToast } from '@/components/ui/Toast'
 import GrantDetailModal from '@/components/GrantDetailModal'
@@ -77,6 +77,8 @@ export type QueueItem = {
   firstSeenAt: string | null
   /** Raw source string — mapped to an origin for display, never shown raw. */
   source: string | null
+  /** Extra source pages already recorded for this row. */
+  sources: { label: string; url: string; text: string }[]
   diffs: FieldDiff[]
   brief: {
     source: string | null
@@ -677,6 +679,55 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
     router.refresh()
   }, [classify, router, toast])
 
+  /**
+   * Add a SECOND page to read, rather than replacing the first.
+   *
+   * Distinct from Fix the link, and the distinction matters: Fix the link says
+   * "the page we had was wrong, here is the right one", and overwrites
+   * `apply_url`. This says "the page we had is right but incomplete, and the
+   * eligibility lives over here" — which is the commonest shape in the Needs
+   * reading section, where a fund page links its rules to a separate guidelines
+   * page. The Weavers' Company was the first of them.
+   *
+   * APPENDS. `/api/admin/enrich-grant` writes `grant_sources` wholesale from
+   * whatever it is handed, so sending only the new source would silently delete
+   * every source added before it.
+   */
+  const addSource = useCallback(async (item: QueueItem) => {
+    const next = window.prompt(
+      `Extra page to read for "${item.title}"\n\n`
+      + 'Use this when the fund page is right but does not carry the detail — eligibility '
+      + 'or dates on a separate guidelines page, say. It is read ALONGSIDE the existing link, '
+      + 'not instead of it.\n\nPaste the URL:',
+      '',
+    )
+    const url = next?.trim()
+    if (!url) return
+    if (!/^https?:\/\/\S+$/i.test(url)) {
+      toast.error('That is not a URL. Paste the full address, starting http.')
+      return
+    }
+    if (item.sources.some(s => s.url.trim() === url)) {
+      toast.error('That page is already recorded as a source for this row.')
+      return
+    }
+
+    const merged = [...item.sources, { label: '', url, text: '' }]
+      // Same usability bar the detail page applies: a source with neither a real
+      // URL nor 50-plus characters of pasted text is dropped by the API anyway.
+      .filter(s => s.text.trim().length > 50 || s.url.trim().length > 5)
+
+    if (!await runJob(item.id, '/api/admin/enrich-grant',
+      { grantId: item.id, additionalSources: merged }, 'Reading both pages')) return
+    if (!await classify(item.id, 'Re-tagging from both pages')) {
+      toast.error('Both pages were read and the summary updated, but re-tagging failed. Try Re-tag on its own.')
+      router.refresh()
+      return
+    }
+    toast.success(`Source added — read alongside the fund page, and re-tagged`)
+    router.refresh()
+  }, [runJob, classify, router, toast])
+
   const fixLink = useCallback(async (item: QueueItem) => {
     const next = window.prompt(
       `Application link for "${item.title}"\n\nThe page could not be read, which is usually a wrong or moved URL. Paste the correct one and it will be re-read straight away.`,
@@ -949,7 +1000,8 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
                      busyLabel={busyLabel} onPublish={() => publish(item)} onReject={() => reject(item)}
                      onRevert={(d) => revertField(item, d)} onSetFundingType={(t) => setFundingType(item, t)}
                      onReRead={() => reRead(item)} onReClassify={() => reClassify(item)}
-                     onFixLink={() => fixLink(item)} rejections={refusals[item.id] ?? []}
+                     onFixLink={() => fixLink(item)} onAddSource={() => addSource(item)}
+                     rejections={refusals[item.id] ?? []}
                      onOverride={(r) => override(item.id, r)} />
               ))}
             </div>
@@ -1193,7 +1245,7 @@ function RefusalNotice({
 
 function Row({
   item, open, busy, busyLabel, onToggle, onPublish, onReject, onRevert, onSetFundingType,
-  onReRead, onReClassify, onFixLink, rejections, onOverride, selected, onSelect,
+  onReRead, onReClassify, onFixLink, onAddSource, rejections, onOverride, selected, onSelect,
 }: {
   item: QueueItem
   /** Undefined outside the sectioned view, where bulk select does not apply. */
@@ -1210,6 +1262,7 @@ function Row({
   onReRead: () => void
   onReClassify: () => void
   onFixLink: () => void
+  onAddSource: () => void
   rejections: MergeRejection[]
   onOverride: (r: MergeRejection) => void
 }) {
@@ -1479,6 +1532,12 @@ function Row({
               <Link2 size={14} strokeWidth={2.25} />Fix the link
             </button>
           )}
+          {/* Sits beside Fix the link because both answer "where should this
+              row's facts come from" — one replaces the page, one adds a second. */}
+          <button onClick={onAddSource} disabled={busy} style={{ ...secondaryBtn, ...btnRow }}>
+            <FilePlus size={14} strokeWidth={2.25} />
+            Add a source page{item.sources.length > 0 ? ` (${item.sources.length})` : ''}
+          </button>
           <span aria-hidden style={{ width: 1, alignSelf: 'stretch', background: 'var(--border-subtle)', margin: '0 2px' }} />
           {item.applyUrl && (
             <a href={item.applyUrl} target="_blank" rel="noopener noreferrer" style={{ ...lookBtn, ...btnRow }}>
@@ -1635,6 +1694,20 @@ function Row({
                 <Val k="All eligible structures">{item.values.structures.map(prettyTag).join(', ') || 'none'}</Val>
                 <Val k="All sectors">{item.values.sectors.map(prettyTag).join(', ') || 'none'}</Val>
                 <Val k="Beneficiaries">{item.values.beneficiaries.map(prettyTag).join(', ') || 'none'}</Val>
+                {item.sources.length > 0 && (
+                  <Val k="Extra source pages">
+                    <span style={{ display: 'grid', gap: 2 }}>
+                      {item.sources.map((src, i) => (
+                        <span key={`${src.url}-${i}`}>
+                          {src.url
+                            ? <a href={src.url} target="_blank" rel="noopener noreferrer"
+                                 style={{ color: 'var(--color-text-primary)' }}>{src.url}</a>
+                            : `pasted text, ${src.text.trim().length} characters`}
+                        </span>
+                      ))}
+                    </span>
+                  </Val>
+                )}
                 <Val k="Funding type">
                   <span style={{ display: 'inline-flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
                     <strong style={{ ...display, fontSize: 12 }}>
