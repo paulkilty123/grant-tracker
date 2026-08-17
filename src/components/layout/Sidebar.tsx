@@ -31,6 +31,7 @@ import {
   BarChart3,
   Lightbulb,
   Library,
+  Mail,
 } from 'lucide-react'
 
 interface Props {
@@ -105,6 +106,7 @@ const ADMIN_NAV = [
   { href: '/dashboard/admin/quality',      label: 'Tagging Quality',     Icon: BarChart3     },
   { href: '/dashboard/admin/cohort-match-audit', label: 'Cohort Matches', Icon: User          },
   { href: '/dashboard/admin/users',        label: 'Users',               Icon: Users         },
+  { href: '/dashboard/admin/waitlist',     label: 'Waitlist',            Icon: Mail          },
 ]
 
 export default function Sidebar({ org, userEmail, companionSurface = false }: Props) {
