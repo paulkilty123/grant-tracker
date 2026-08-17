@@ -152,6 +152,14 @@ type QueueCounts = {
   timingUnknownLive: number
   /** Rows an outside signal says have changed, waiting at the front. */
   flagged: number
+  /** Live rows the admin queue calls archived, rejected, or awaiting a human.
+   *  Two columns disagreeing about the same row: the site shows it, the queue
+   *  believes it is gone. Until 060 these were excluded from verification
+   *  outright, so 29 live rows had never been read and the coverage number could
+   *  not reach its own total with nothing saying why. They are read now; the
+   *  desync itself still wants settling, so this stays on the line until it is
+   *  zero rather than being fixed silently. */
+  liveStateConflict: number
 }
 
 async function queueCounts(db: SupabaseClient): Promise<QueueCounts | null> {
@@ -168,6 +176,7 @@ async function queueCounts(db: SupabaseClient): Promise<QueueCounts | null> {
     timingUnknown:     Number(r.timing_unknown),
     timingUnknownLive: Number(r.timing_unknown_live),
     flagged:           Number(r.flagged),
+    liveStateConflict: Number(r.live_state_conflict),
   }
 }
 

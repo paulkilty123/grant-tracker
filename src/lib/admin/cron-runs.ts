@@ -157,6 +157,8 @@ type RunQueue = {
   timingUnknown?:     number
   timingUnknownLive?: number
   flagged?:           number
+  /** Live rows the admin queue calls archived, rejected, or awaiting a human. */
+  liveStateConflict?: number
 }
 
 /**
@@ -223,6 +225,11 @@ export function formatVerify(summary: Record<string, unknown> | null | undefined
     if (typeof q.flagged === 'number' && q.flagged > 0) gaps.push(`${q.flagged} flagged`)
     if (typeof q.liveUnbacked === 'number')  gaps.push(`${q.liveUnbacked} claimed`)
     if (typeof q.timingUnknown === 'number') gaps.push(`${q.timingUnknown} unknown`)
+    // Rendered at zero for the same reason as the two above. This one is a
+    // defect rather than a gap: a row cannot honestly be both on the site and
+    // archived, and until 060 the disagreement also removed it from
+    // verification, so the count sat at 29 with nothing on any screen saying so.
+    if (typeof q.liveStateConflict === 'number') gaps.push(`${q.liveStateConflict} in two states`)
     if (gaps.length > 0) bits.push(`queue: ${gaps.join(', ')}`)
   }
   // A run that ran out of clock says so on the line, not only in the JSON.
