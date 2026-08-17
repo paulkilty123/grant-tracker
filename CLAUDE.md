@@ -38,7 +38,14 @@ Push auth is a personal-access token embedded in `remote.origin.url` (see `git r
 
 **After every push:** Vercel auto-deploys from GitHub `main` (~1 min). Verify on the live site.
 
-**Branch discipline for build work:** build work happens on the feature branch (e.g. `agent/v1-core`) — commits and pushes to that branch are Claude's to make freely, no need to check in first. Nothing merges into `main`, and nothing pushes to `main`, except on Paul's explicit go, through the standing deploy gate: regression suites, accent check, free-surface fingerprint, named rollback. `main` is the production branch Vercel deploys from — treat a push to it as the deploy trigger it is, not a routine save.
+**Branch discipline for build work:** build work happens on the feature branch (e.g. `agent/v1-core`) — commits and pushes to that branch are Claude's to make freely, no need to check in first. `main` is the production branch Vercel deploys from — treat a push to it as the deploy trigger it is, not a routine save. **Every merge to `main` passes the standing deploy gate, with no exceptions: regression suites, accent check, free-surface fingerprint, named rollback.**
+
+**Who decides the merge (revised 2026-08-17).** The gate is what protects production. Paul's approval adds something on top of it only where a judgement is involved that the checks cannot make. So:
+
+- **Merge without asking**, then say it is done and why: admin-only surfaces, docs, tests, tooling. Anything with no user-visible surface, where the gate is green.
+- **Ask first**, with the cost or the row count stated: anything that changes what users see, spends money, alters production data at scale, or rests on a judgement about the product.
+
+> Why this changed. The old rule was "nothing merges without an explicit go", full stop. On 16 August that produced five approval round trips in one evening, all five answered yes, and at one point four finished branches stacked up waiting to be cleared in a batch. For a doc or an admin screen with the gate green, the yes carried no information — it was a queue handed to Paul, not a gate doing work. The split above keeps the decision where a decision exists. When unsure which side a change falls on, ask: the cost of asking is a round trip, the cost of not asking is a production surprise.
 
 > History: until 2026-06-22 the repo lived in iCloud-synced `~/Documents`, which corrupted `.git` and forced a `/tmp/gg` copy-and-reset ritual to commit. Moving it to `~/dev` fixed the root cause; the ritual is retired. Don't move it back under Documents/Desktop.
 
@@ -281,7 +288,7 @@ Deferred post-beta:
 
 ## Rules
 
-1. **Commit after every file change.** On a feature branch, push freely too. `main` only moves on Paul's explicit go (see Git → Branch discipline) — Vercel deploys from `main` only.
+1. **Commit after every file change.** On a feature branch, push freely too. Merging to `main` follows the split in Git → Branch discipline: admin-only, docs and tests go in on a green gate and are reported afterwards; anything user-visible, costly, data-changing at scale, or a product judgement is Paul's call first. Vercel deploys from `main` only, and the deploy gate runs on every merge either way.
 2. **TypeScript clean before every push.** `npx tsc --noEmit` must produce no output.
 3. **Minimal changes.** Fix the stated problem. Don't refactor surrounding code unless asked.
 4. **Verify on live site** after every merge/push to `main` (~1 min Vercel deploy).
