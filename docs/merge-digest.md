@@ -35,6 +35,59 @@ the new version.
 
 # Waiting
 
+## `fix/gate-requires-a-page-read` — MERGED 17 August as `f6e0039`
+
+**What it does:** nothing publishes that the verification engine has never read.
+Policy `c2.2`, live and confirmed.
+
+This is the rule that makes the engine load-bearing rather than advisory. It had
+been producing verdicts for six days while a row could still reach a user
+without the engine ever looking at the page it points at.
+
+**Found by falling into it the same afternoon.** The City Bridge Climate row was
+staged behind the review gate for Paul to activate, carrying a hand-written
+brief. Because it had a brief, `no_brief` stayed silent, and the newly armed
+publisher would have made it live the next morning with nobody having checked
+that the URL resolved to the fund it claimed. "Staged for review" and an armed
+publisher were in direct conflict and the gate did not notice.
+
+`never_verified` is deliberately not the same test as `no_brief`: that one asks
+whether an AI brief exists, this asks whether the funder's page was ever fetched
+and compared against the row. A hand-authored brief satisfies the first and says
+nothing about the second.
+
+**Measured before adding it, and confirmed live after:**
+
+```
+newly-visible if armed   22 → 21     exactly one row newly held
+attention                34 → 33     no live row newly flagged, nothing retracted
+alreadyVisible            0          backlog fully cleared earlier today
+```
+
+All four staged City Bridge rows are now `hold`. The Climate one is held by
+`never_verified` **alone** — the other three were already held by `no_brief` —
+so that rule is the only thing that stopped it publishing unreviewed.
+
+Already-live rows can only become `attention` under this gate, never a
+retraction, and the ~12 live rows the engine has not reached sit in `published`,
+which auto-publish does not evaluate. A staged row now waits only until the
+engine's next run reaches it, and never-checked rows are at the front of that
+queue.
+
+### Deploy gate
+
+```
+Regression: tsc clean. 384 tests pass (24 files), 4 of them new. eslint clean.
+            No migration.
+Free-surface fingerprint: NOT APPLICABLE. No MCP route, tool or schema touched.
+Accent check: PASSED. No rendered string changes.
+Named rollback: c22a197
+Post-deploy: probed live, policyVersion c2.2, newlyVisible 21, and the four
+            City Bridge rows verified as `hold` in publish_gate_decisions.
+```
+
+---
+
 ## `fix/publish-gate-wrong-fund` — MERGED 17 August as `3758eb2`, and ARMED
 
 > **State now.** Policy `c2.1` live. `AUTO_PUBLISH_ENABLED=true`,
