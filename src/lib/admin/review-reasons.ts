@@ -128,6 +128,8 @@ export type ReviewReasonCode =
   | 'page_says_delisted'
   | 'page_says_not_funding'
   | 'page_says_round_closed'
+  | 'page_describes_different_fund'
+  | 'no_funder'
 
 export type ReviewReason = {
   code:     ReviewReasonCode
@@ -154,6 +156,9 @@ export type FieldDiff = {
 export type ReviewRow = {
   id:                        string
   title?:                    string | null
+  /** Who is giving the money. A row without one is not publishable — see
+   *  `no_funder`. */
+  funder?:                   string | null
   is_active?:                boolean | null
   url_status?:               string | null
   url_quality_score?:        number | null
@@ -318,6 +323,55 @@ export function deriveReviewReasons(row: ReviewRow, todayISO?: string): ReviewRe
   // closed, because a tagging diff outranked the funder's own words. 20 rows
   // carrying one of these verdicts were visible to users when this was found.
   const pageRead = readStamp(row.field_evidence, PAGE_READ_KEY)
+
+  // A GATE FAILURE IS STORED AS A COMPOSITE AND THE SWITCH BELOW COULD NOT SEE IT.
+  //
+  // The route writes `"fixable_link: wrong_fund"` into the same `note` the
+  // switch reads, so none of its bare-outcome cases ever matched, no reason was
+  // emitted, and the gate published the row. Found 2026-08-17 in the pre-arming
+  // dry run: **30 of the 51 rows the gate would newly publish carried a
+  // `fixable_link:` verdict, 29 of them `wrong_fund`** — rows where the engine
+  // had already read the page and reported that our fund is not on it.
+  //
+  // That is the A2 defect arriving through the front door. Publishing them sends
+  // a fundraiser to a page that does not describe the fund they clicked, which is
+  // the same harm as a dead link and harder to spot, because the page loads.
+  //
+  // ONLY `wrong_fund` RAISES ANYTHING HERE. The other three gate failures are
+  // about our ability to READ the page, not about the page contradicting the
+  // row: `fetch_failed` and `no_content` are usually transient or a bot wall,
+  // and `no_funding_detail` means the right page carried no detail, which is
+  // thinness rather than wrongness. Blocking on those would freeze the queue on
+  // a WAF outage, which is the mistake `link_unverified` already documents one
+  // section down — absence of evidence is not evidence of a dead link.
+  //
+  // A first draft raised a `check` for them and that was worse than nothing: the
+  // Asda Foundation row came back carrying `link_unverified` TWICE, because the
+  // url_status path already raises it. The existing link and page reasons cover
+  // this ground; a second voice saying the same thing only makes the queue look
+  // busier than it is.
+  if (pageRead?.note === 'fixable_link: wrong_fund') {
+    reasons.push({
+      code: 'page_describes_different_fund', severity: 'critical',
+      label: 'The page does not describe this fund',
+      detail: 'the link loads, but the engine could not find this fund on it',
+    })
+  }
+
+  // A row with no funder cannot be published, whatever else is right about it.
+  // Three of the rows the gate would have published on 17 August were press
+  // releases scraped as funds — "Bentley opens new national grants programme…",
+  // "LNER … grants now open for applications" — and a null funder is the single
+  // signal all three share. A card that cannot say who is giving the money is
+  // not a funding opportunity a user can act on.
+  if (!row.funder || String(row.funder).trim().length === 0) {
+    reasons.push({
+      code: 'no_funder', severity: 'critical',
+      label: 'No funder on the row',
+      detail: 'nothing says who is giving the money, so this cannot go in front of a user',
+    })
+  }
+
   switch (pageRead?.note) {
     case 'no_longer_listed': {
       const q = readStamp(row.field_evidence, 'still_listed')?.quote

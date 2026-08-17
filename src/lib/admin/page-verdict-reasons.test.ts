@@ -18,6 +18,9 @@ function row(evidence: Record<string, unknown>): ReviewRow {
   return {
     id: 'r1',
     title: 'Test fund',
+    // Set so the `no_funder` block does not fire on every fixture. A row
+    // reaching this module without a funder is itself a blocking defect.
+    funder: 'Test Funder',
     is_active: true,
     url_status: 'ok',
     amount_min: 1000,
@@ -167,5 +170,63 @@ describe('a past date in the write-up', () => {
   it('no_current_timing blocks at the gate, stale_dates does not', () => {
     expect(BLOCKING_CODES).toContain('no_current_timing')
     expect(BLOCKING_CODES).not.toContain('stale_dates')
+  })
+})
+
+/**
+ * The gate failures are stored as a COMPOSITE — `"fixable_link: wrong_fund"` —
+ * in the same `note` the bare-outcome switch reads, so none of its cases ever
+ * matched and the gate published the row regardless.
+ *
+ * Found 2026-08-17 in the dry run taken before arming auto-publish: 30 of the 51
+ * rows the gate would have newly published carried a `fixable_link:` verdict, 29
+ * of them `wrong_fund`. The engine had already read those pages and reported
+ * that our fund was not on them.
+ */
+describe('gate failures reach the publish gate', () => {
+  const evidence = (note: string) => ({
+    _page_read: { note, checked_at: TODAY, by: 'verify:v2', agrees: null, quote: null, source_url: null },
+  })
+
+  it('BLOCKS a row whose page does not describe the fund', () => {
+    const cs = codes(row(evidence('fixable_link: wrong_fund')))
+    expect(cs).toContain('page_describes_different_fund')
+    expect(BLOCKING_CODES).toContain('page_describes_different_fund')
+  })
+
+  it('does NOT block on a read failure — that is our problem, not the page contradicting us', () => {
+    for (const failure of ['fetch_failed', 'no_content', 'no_funding_detail']) {
+      const cs = codes(row(evidence(`fixable_link: ${failure}`)))
+      expect(cs, failure).not.toContain('page_describes_different_fund')
+    }
+  })
+
+  it('says nothing at all for a read failure, so the queue is not told twice', () => {
+    // The first draft raised a `check` here and the Asda Foundation row came
+    // back carrying `link_unverified` twice, because the url_status path already
+    // raises it. Existing link reasons own this ground.
+    const clean  = codes(row(evidence('verified')))
+    const failed = codes(row(evidence('fixable_link: fetch_failed')))
+    expect(failed).toEqual(clean)
+  })
+
+  it('leaves a verified row alone', () => {
+    const cs = codes(row(evidence('verified')))
+    expect(cs).not.toContain('page_describes_different_fund')
+    expect(cs).not.toContain('link_unverified')
+  })
+})
+
+describe('a row with no funder cannot publish', () => {
+  it('blocks when funder is null, empty or whitespace', () => {
+    for (const funder of [null, '', '   ', undefined]) {
+      const r = { ...row({}), funder } as ReviewRow
+      expect(codes(r), String(funder)).toContain('no_funder')
+    }
+    expect(BLOCKING_CODES).toContain('no_funder')
+  })
+
+  it('does not fire when a funder is present', () => {
+    expect(codes(row({}))).not.toContain('no_funder')
   })
 })
