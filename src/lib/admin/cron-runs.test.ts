@@ -113,6 +113,22 @@ describe('formatVerify', () => {
       expect(formatVerify(flagged)).toContain('queue: 3 flagged, 341 claimed, 378 unknown')
     })
 
+    // 2026-08-17. 29 live rows were in a conflicting admin state and, because of
+    // it, excluded from verification entirely: 21 published rows still carrying
+    // a "review and activate" note from the July gap audits, and 8 that are
+    // is_active while pipeline_state says archived. Nothing on any screen said
+    // so, and the coverage number could not reach its own total.
+    it('carries the live rows in two states, so the desync cannot hide again', () => {
+      const conflict = { ...WITH_QUEUE, queue: { ...WITH_QUEUE.queue, liveStateConflict: 29 } }
+      expect(formatVerify(conflict))
+        .toContain('queue: 341 claimed, 378 unknown, 29 in two states')
+    })
+
+    it('shows it at zero too, which is the state being worked towards', () => {
+      const settled = { ...WITH_QUEUE, queue: { ...WITH_QUEUE.queue, liveStateConflict: 0 } }
+      expect(formatVerify(settled)).toContain('0 in two states')
+    })
+
     it('renders nothing extra for a run predating the counts', () => {
       // REAL is a real summary from before this shipped. It must still render.
       expect(formatVerify(REAL)).not.toContain('queue:')
