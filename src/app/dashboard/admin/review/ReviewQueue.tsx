@@ -25,7 +25,7 @@
 // improve it. That is what makes the review queue shrink over time instead of
 // calcifying.
 
-import { Fragment, useMemo, useState, useCallback } from 'react'
+import { Fragment, useMemo, useState, useCallback, useRef } from 'react'
 import { Check, RefreshCw, Link2, ExternalLink, Eye, X, MapPin, FilePlus, Clock } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useToast } from '@/components/ui/Toast'
@@ -322,12 +322,41 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
    * `nav` is the single source of what is on screen. There is no second axis.
    */
   const [nav, setNav] = useState<NavId>('ready')
+  /** Read inside callbacks that must not be rebuilt every time the tab changes. */
+  const navRef = useRef<NavId>('ready')
+  navRef.current = nav
   /** The reason-code filter, now behind a Filters disclosure rather than a row
    *  of eighteen chips competing with the sections for the same job. */
   const [filtersOpen, setFiltersOpen] = useState(false)
   /** Navigating always clears the selection: acting on rows you can no longer
    *  see is the kind of thing a bulk button should make impossible. */
-  const go = useCallback((id: NavId) => { setNav(id); setSelected(new Set()) }, [])
+  /**
+   * ROWS YOU HAVE JUST ACTED ON STAY WHERE THEY WERE.
+   *
+   * Every action either removes the row from the queue or changes what is wrong
+   * with it — and changing what is wrong with it is exactly what moves it to a
+   * different tab. So a SUCCESSFUL fix was the case that made a row vanish from
+   * the list you were reading, which is backwards: the better the outcome, the
+   * less you could see of it. Re-reading Ballantrae did this.
+   *
+   * A row acted on is held in the tab it was in, rendered muted with what
+   * happened and where it has gone, until you navigate. You keep your place, the
+   * list does not reshuffle under you, and the outcome is legible without
+   * hunting for it.
+   *
+   * Keyed by the tab it was displayed in, not the tab it belongs to now — that
+   * is the whole point.
+   */
+  const [justActed, setJustActed] = useState<Map<string, { tab: NavId; note: string }>>(new Map())
+  const noteAction = useCallback((id: string, note: string) => {
+    setJustActed(prev => new Map(prev).set(id, { tab: navRef.current, note }))
+  }, [])
+
+  /** Navigating clears the held rows and the selection: acting on rows you can
+   *  no longer see is the kind of thing a bulk button should make impossible. */
+  const go = useCallback((id: NavId) => {
+    setNav(id); setSelected(new Set()); setJustActed(new Map())
+  }, [])
   /** Bulk selection, per section. Cleared whenever the view or filters change. */
   const [selected, setSelected] = useState<Set<string>>(new Set())
   /** How each section is ordered. Evidence strength is the default because it
@@ -567,10 +596,11 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
     setBusyId(null)
     if (!ok) return false
     setDone(d => new Set(d).add(item.id))
+    noteAction(item.id, item.isActive ? 'Confirmed — out of the queue' : 'Published — now live')
     toast.success(`Published ${item.title}`)
     router.refresh()
     return true
-  }, [patch, router, toast])
+  }, [patch, router, toast, noteAction])
 
   const revertField = useCallback(async (item: QueueItem, diff: FieldDiff) => {
     setBusyId(item.id)
@@ -695,9 +725,10 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
       router.refresh()
       return
     }
+    noteAction(item.id, 'Page re-read and tags refreshed')
     toast.success('Page re-read and tags refreshed')
     router.refresh()
-  }, [runJob, classify, router, toast])
+  }, [runJob, classify, router, toast, noteAction])
 
   const reClassify = useCallback(async (item: QueueItem) => {
     if (!await classify(item.id, 'Re-tagging')) return
@@ -750,9 +781,10 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
       router.refresh()
       return
     }
+    noteAction(item.id, 'Source added, both pages read')
     toast.success(`Source added — read alongside the fund page, and re-tagged`)
     router.refresh()
-  }, [runJob, classify, router, toast])
+  }, [runJob, classify, router, toast, noteAction])
 
   const fixLink = useCallback(async (item: QueueItem) => {
     const next = window.prompt(
@@ -775,9 +807,10 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
     setBusyId(null)
     setBusyLabel(null)
     if (!saved) return
+    noteAction(item.id, 'Link replaced and re-read')
     toast.success('Link saved — re-reading')
     await reRead(item)
-  }, [patch, reRead, toast])
+  }, [patch, reRead, toast, noteAction])
 
   /**
    * Take the value the merger refused, on this admin's authority.
@@ -866,9 +899,10 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
     setBusyId(null)
     if (!ok) return
     setDone(d => new Set(d).add(item.id))
+    noteAction(item.id, 'Out of view, funder on the watchlist')
     toast.success(`"${item.title}" is out of view, and the funder is on the watchlist.`)
     router.refresh()
-  }, [patch, router, toast])
+  }, [patch, router, toast, noteAction])
 
   const reject = useCallback(async (item: QueueItem, code: string, note: string) => {
     setBusyId(item.id)
@@ -885,9 +919,10 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
     setBusyId(null)
     if (!ok) return   // patch has already said why
     setDone(d => new Set(d).add(item.id))
+    noteAction(item.id, 'Rejected — out of the queue')
     toast.success(`Rejected. "${item.title}" is no longer visible to users, and the reason is recorded.`)
     router.refresh()
-  }, [patch, router, toast])
+  }, [patch, router, toast, noteAction])
 
   /**
    * Act on a selected group.
@@ -919,13 +954,17 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
     else toast.error(`${ok} of ${rows.length} ${verb}. The rest did not take — see the messages above.`)
   }, [pending, publish, reject, reRead, toast])
 
-  const rows: QueueItem[] =
+  // Memoised because `held` depends on it: an inline conditional produces a new
+  // array every render, which would make that memo recompute every time and
+  // quietly do nothing.
+  const rows: QueueItem[] = useMemo(() =>
     nav === 'liveandwrong' ? liveAndWrong
     : nav === 'liveok'       ? liveOk
     : nav === 'new'          ? newArrivals
     : nav === 'unenriched'   ? pending.filter(i => i.needsEnrichment)
     : nav === 'autopublished'? autoPub
-    : (sectioned.get(nav) ?? [])
+    : (sectioned.get(nav) ?? []),
+    [nav, liveAndWrong, liveOk, newArrivals, pending, autoPub, sectioned])
 
   /**
    * EVERY PENDING ROW MUST HAVE A HOME, AND THE SCREEN MUST SAY SO IF ONE DOES NOT.
@@ -947,6 +986,31 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
     for (const sec of SECTIONS) for (const r of sectioned.get(sec.id) ?? []) placed.add(r.id)
     return byViewTyped.concat(pending.filter(i => i.isActive)).filter(i => !placed.has(i.id))
   }, [liveAndWrong, liveOk, sectioned, byViewTyped, pending])
+
+  /** Where a row lives NOW, so a held row can name its destination rather than
+   *  just saying it moved. `null` means it has left the queue altogether. */
+  const homeOf = useCallback((item: QueueItem): NavId | null => {
+    if (done.has(item.id)) return null
+    if (item.isActive) return item.gateOutcome === 'attention' ? 'liveandwrong' : 'liveok'
+    return sectionOf(item.blockingCodes, item.reasons.map(r => r.code))
+  }, [done])
+
+  /**
+   * Rows acted on in this tab that are no longer in it — held in place rather
+   * than allowed to vanish. Looked up from `items` rather than `pending`,
+   * because a published or rejected row has already left `pending` and holding
+   * it is the entire point.
+   */
+  const held = useMemo(() => {
+    const shown = new Set(rows.map(r => r.id))
+    const out: { item: QueueItem; note: string; movedTo: NavId | null }[] = []
+    justActed.forEach((v, id) => {
+      if (v.tab !== nav || shown.has(id)) return
+      const item = items.find(i => i.id === id)
+      if (item) out.push({ item, note: v.note, movedTo: homeOf(item) })
+    })
+    return out
+  }, [justActed, nav, rows, items, homeOf])
 
   const navMeta = NAV_META[nav]
   const ids = rows.map(r => r.id)
@@ -1090,7 +1154,34 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
             </div>
           )}
 
-          {rows.length === 0 ? (
+          {held.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginBottom: 14 }}>
+              {held.map(({ item, note, movedTo }) => (
+                <div key={`held-${item.id}`} style={{
+                  border: '0.5px solid var(--border-subtle)', borderRadius: 'var(--radius-card)',
+                  padding: '11px 15px', background: 'var(--color-surface-sunken, #FAFAF8)',
+                  display: 'flex', flexWrap: 'wrap', gap: '4px 10px', alignItems: 'baseline',
+                }}>
+                  <strong style={{ ...display, fontSize: 13.5 }}>{item.title}</strong>
+                  <span style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>{note}.</span>
+                  <span style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
+                    {movedTo === null
+                      ? 'No longer in the queue.'
+                      : movedTo === nav
+                        ? 'Still here.'
+                        : <>Now under <b style={{ ...display }}>{NAV_META[movedTo].label}</b>.</>}
+                  </span>
+                  {movedTo !== null && movedTo !== nav && (
+                    <button onClick={() => go(movedTo)} style={{ ...ghostBtn, marginLeft: 'auto', padding: '4px 10px' }}>
+                      Go there
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {rows.length === 0 && held.length === 0 ? (
             <p style={{ color: 'var(--color-text-secondary)', fontSize: 14 }}>
               {q.trim() !== '' ? `Nothing here matches “${q.trim()}”.` : 'Nothing here.'}
             </p>
