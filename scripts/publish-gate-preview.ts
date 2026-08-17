@@ -78,6 +78,23 @@ async function main() {
     sec[id] = (sec[id] ?? 0) + 1
   }
   console.log('not-live by section:', sec)
+
+  // LIVE AND WRONG, grouped by what is actually blocking. These are the only
+  // rows where a person is being misled right now.
+  const lw: Record<string, {title: string; funder: string}[]> = {}
+  for (const r of rows) {
+    if (r.is_active !== true) continue
+    const d = gateDecision(r, deriveReviewReasons(r, today))
+    if (d.outcome !== 'attention') continue
+    for (const b of d.blocking) {
+      (lw[b.code] ??= []).push({ title: String(r.title), funder: String((r as {funder?:string}).funder ?? '') })
+    }
+  }
+  console.log('\nLIVE AND WRONG, by blocking reason:')
+  for (const [code, list] of Object.entries(lw).sort((a,b)=>b[1].length-a[1].length)) {
+    console.log(`\n  ${code} — ${list.length}`)
+    for (const x of list) console.log(`      ${x.funder} — ${x.title}`)
+  }
   // Rows that are LIVE and carry nothing blocking. They are in neither the
   // not-live sections nor the live-and-wrong band.
   let homeless = 0

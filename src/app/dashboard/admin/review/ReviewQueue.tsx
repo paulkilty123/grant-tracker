@@ -1726,6 +1726,27 @@ function Row({
               : <RefreshCw size={14} strokeWidth={2.5} />}
             {busy ? `${busyLabel ?? 'Working'}…` : ask.label}
           </button>
+          {/* THE REVIEWER IS THE AUTHORITY, AND HAD NO WAY TO SAY SO.
+              "Looks right" was offered only when nothing was blocking — which is
+              exactly when nobody needs it. A row flagged "amount not in the
+              text" where the reviewer has just read £25k–£250k on the funder's
+              own page had no button meaning "I checked, it is fine": only
+              re-read, which re-runs the same check that was already wrong, and
+              reject, which is far too strong.
+
+              It publishes — on a live row that changes nothing a user sees and
+              takes it out of the queue. The machine's suspicion is not cleared
+              from the brief, deliberately: writing funder_brief from an admin
+              session pins it at trust 100 and would freeze the whole brief
+              against every future enrichment. So if a later re-read raises the
+              same doubt again, it comes back — which is a fresh finding about
+              fresh data, not this decision being ignored. */}
+          {ask.primary !== 'publish' && (
+            <button onClick={onPublish} disabled={busy} style={{ ...secondaryBtn, ...btnRow }}>
+              <Check size={14} strokeWidth={2.25} />
+              {item.isActive ? 'Looks right, keep it live' : 'Looks right, publish it'}
+            </button>
+          )}
           {ask.primary !== 'reread' && (
             <button onClick={onReRead} disabled={busy} style={{ ...secondaryBtn, ...btnRow }}>
               <RefreshCw size={14} strokeWidth={2.25} />Re-read the page
