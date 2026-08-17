@@ -35,6 +35,166 @@ the new version.
 
 # Waiting
 
+## `feat/arm-removals` — the engine acts for the first time
+
+**What it does:** gives the verification engine an actuator. It has read 637 of
+670 live rows and found 182 the funder's page contradicts, and until today it
+had corrected none of them, because it was built to write evidence and never
+values. This arms the four classes §12 sets out and only those.
+
+**Commit:** `6fccd45` on `feat/arm-removals`
+
+**25 rows corrected today.** The first pass was run from
+`scripts/dry-run-removals.ts --apply` against production, because the route is
+not deployed until this merges. Every action and its quote is listed below, and
+the before-state of every row is in `reports/removals-2026-08-17.json`, which is
+the only way back: `is_active` and `pipeline_state` are untracked by
+`mergeGrantUpdate`, so nothing on the row records what it was.
+
+### Archived, `no_longer_listed` — 8
+
+| Fund | The funder's own words |
+|---|---|
+| The UK Youth Fund | "This fund has now closed to applications." |
+| Innovate UK Women in Innovation Awards | "Opportunity status: Closed" |
+| Local Community Spaces Fund | "The application window for this fund has now closed." |
+| Science Museum Group Wroughton Solar Park | "This programme is currently closed for applications." |
+| Digital Inclusion Fund | "Current status Closed" |
+| Bright Futures Fund | "The latest round … is NOW CLOSED to applications." |
+| Crowdfunder Cost Of Living Resilience Fund | "Applications to this fund are now closed." |
+| Grants to Charities | "Our grant-giving activities are on pause while we finalise a new funding policy." |
+
+### Out of view and watched, `round_closed` — 8
+
+Sent to `between_rounds_scheduled`, not archived, so the migration-057 trigger
+enrols the funder and a reopened round can bring the row back. All eight are now
+on the watchlist. No `next_open_date` was written: that is a claim about the
+future and this actuator may not add one.
+
+| Fund | The funder's own words |
+|---|---|
+| THE LOCAL FUND for the Harrogate District | "Deadline: 05/05/2026" |
+| The Bromley Trust — Human Rights | "The application deadline will be 9 March 2026." |
+| Baillie Gifford International Fund | "Deadline for enquiry forms : 12/08/26" |
+| QFUTURES Community Fund (East Yorkshire) | "Deadline: 02/03/2026" |
+| QFUTURES Community Fund (North Yorkshire) | "Deadline: 02/03/2026" |
+| WCIT Charity Grants | "The next deadline is 5pm on August 14, 2026" |
+| Bettys and Taylors Group Community Fund | "Deadline: 04/06/2026" |
+| Evelyn Partners Merseyside Charitable Fund | "Deadline 30th March 2026" |
+
+### Rolling flag unset — 9
+
+These stay visible. The card moves from "Rolling, apply any time" to "Check
+website", which is what the search card now shows for a row with no deadline
+after this morning's renderer fix.
+
+Joseph Rank Trust · Postcode Society Trust Grants · Annandale and Nithsdale
+Community Benefit Company · Active Spaces Fund · Hull Community Fund · JRCT
+Power & Accountability · JRCT Sustainable Future · Joseph Rowntree Reform Trust ·
+South Lanarkshire Renewable Energy Fund
+
+Quotes are in the ledger file. Representative: South Lanarkshire, *"You must
+submit your application by one of the dates below."*
+
+### 25 rows the rule held back, and why that is the point
+
+A run that acted on everything would mean the rule was not applied. Four of
+these would have been actively wrong:
+
+| Fund | Held because |
+|---|---|
+| **Community Action Fund (Greggs)** | *"currently open for applications until 28th August"* — no year, and says open. **Still live.** |
+| Tech for Good Programme | *"will re-open in May 2026"* — a reopening read as a deadline |
+| Skills for Impact Fund | *"** Coming autumn 2026 **"* — a fund arriving, not leaving |
+| Addressing Mental Health Inequalities | quote is about past grantmaking and asserts no closure at all |
+| Drapers' Charitable Fund | *"You can apply at any time of the year. Our Charities Committee meets five times a year"* |
+| William A Cadbury | *"considered on a monthly basis. Trustees meet in May and November"* |
+| 18 more rolling rows | the funder did not write the year |
+| HCF Grants | the quote describes the fund opening |
+
+**A fifth limb of the rule came out of the dry run, and it is worth your eye.**
+Drapers' and Cadbury are genuinely rolling funds whose pages list the dates their
+**trustees meet**. The extractor read those as application rounds. That is the
+same defect `isPostDecisionEntry` fixed one level down in `deadline-cycle.ts` —
+`verify-row.ts` filters opening entries out of a cycle before concluding a page
+runs in rounds, but not post-decision ones. Guarded in the actuator today;
+fixing it in the extractor is a separate change and is on the ledger, not
+proposed here.
+
+### Deploy gate
+
+```
+Regression: tsc clean. 370 tests pass (24 files), 33 of them new, every fixture
+            a real quote off a live row. eslint clean on every changed file.
+            No migration — no new column, no new state.
+Free-surface fingerprint: NOT APPLICABLE to the code. No MCP route, tool, schema
+            or response shape is touched. 16 rows left the free surface as data,
+            each with the funder's own sentence recorded.
+Accent check: PASSED. No rendered string changes. No page touched.
+Named rollback: 33a8d8c. Data rollback: reports/removals-2026-08-17.json
+            carries before-state per row.
+```
+
+### Two decisions, when you have a minute
+
+1. **Arming it on a schedule.** Nothing is scheduled yet. The route exists,
+   `REMOVALS_ENABLED` is unset, and `?peek=true` is genuinely free because it
+   reads stored evidence and never calls a model. Say the word and it goes in
+   `vercel.json` after the reader.
+2. **`no_longer_listed` → archived may be the wrong destination.** Seven of the
+   eight quotes say *this round has closed*, not *this fund is gone*. Archived
+   rows leave every admin queue and never come back; `between_rounds_scheduled`
+   would watch the funder and let a reopening return them. I followed your
+   mapping rather than quietly redesigning it. Reversing those seven is one
+   command against the ledger file.
+
+---
+
+## The 268 contradictions, classified — for your queue, not for merging
+
+Task 3. **No review has been done and none should be until you have read this.**
+The population is now **245 live contradictions** across 9 fields (it was 268;
+23 went out of view with the removals above).
+
+| Class | Rows | Who decides |
+|---|---:|---|
+| **Widens — page admits more than we do** | **52** | bulk-acceptable in principle, but see below |
+| **Narrows — page admits fewer than we do** | **116** | **you**, grouped |
+| **Conflict — widens and narrows at once** | **13** | **you**, individually, with the quote |
+| Timing — deadline and cycle corrections | 50 | neither; factual, not an eligibility call |
+| Removal classes still held | 2 | already covered above |
+| Rolling flag, `false → true` | 12 | **nobody.** This *adds* "apply any time" and the engine may never put a claim up |
+
+**The widening class is 52 rows and 3 decisions, not 52.** The design predicted
+grouping by transition would be the strongest lever. It is not — 42 distinct
+transitions across 50 structure rows, largest group 3. But grouping by *the
+structure being added* collapses it almost completely:
+
+| Structure the page would add | Rows gaining it |
+|---|---:|
+| `not_registered` | **32** |
+| `unincorporated` | 10 |
+| `individual` | 7 |
+| everything else (6 structures) | 13 between them |
+
+**And this is why I have not bulk-accepted any of it.** Your own non-negotiable
+in the review-shape doc says an auto-resolve must rest on the page naming the
+forms, not on the model expanding a vague phrase — *"non-profit organisations" is
+not an enumeration*. `not_registered` and `unincorporated` are exactly what a
+model produces from "community groups" or "voluntary organisations". So the 32
+rows turn on one question — **does this funder really take unconstituted
+groups?** — and that is a judgement, not a bulk button.
+
+So the honest shape of your sitting: **three questions on the widening side, and
+the narrowing side is where the real work is.** Its largest group is
+`exclusions`, **52 rows where the funder's page states an exclusion we do not
+carry** — the rule-6 failure, someone applying where they are barred. Those are
+worth more of your attention than all 52 widenings together.
+
+**Nothing here is scheduled and nothing acts.** The split was the deliverable.
+
+---
+
 ## `feat/eligibility-extraction`
 
 **What it does:** starts reading who can apply off the funder's own page, instead
