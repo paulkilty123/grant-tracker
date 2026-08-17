@@ -61,7 +61,17 @@ import {
  * comparable across policy revisions and calibration is measured against a
  * known rule rather than "whatever the gate did that week".
  */
-export const GATE_POLICY_VERSION = 'c2'
+/**
+ * `c2.1`, 2026-08-17: added `page_describes_different_fund` and `no_funder` to
+ * the blocking set. Deliberately NOT called `c3` — that name is reserved for the
+ * policy §3 of `tranche-2-design.md` specifies, which is a different and larger
+ * change. This is a two-code addition to c2, and the version moves so
+ * `publish_gate_decisions` rows stay comparable either side of it.
+ *
+ * Per the standing rule in the merge digest, a policy-version change should
+ * force a dry run before the first armed run under the new version.
+ */
+export const GATE_POLICY_VERSION = 'c2.1'
 
 /**
  * Every reason code, classified. `block` = the row asserts something wrong or
@@ -127,6 +137,16 @@ const POLICY: Record<ReviewReasonCode, 'block' | 'info'> = {
   page_says_delisted:     'block',
   page_says_not_funding:  'block',
   page_says_round_closed: 'block',
+
+  // The link loads and the fund is not on it. Same harm as a dead link and
+  // harder for a user to spot, because the page renders fine. Added 2026-08-17
+  // after the pre-arming dry run found 29 of these among the 51 rows the gate
+  // would have newly published.
+  page_describes_different_fund: 'block',
+
+  // Nothing says who is giving the money. Three press releases scraped as funds
+  // shared this and nothing else.
+  no_funder:              'block',
 
   // ── Incomplete but honest: absence renders as absence ──
   no_amount:                  'info',

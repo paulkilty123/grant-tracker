@@ -35,6 +35,87 @@ the new version.
 
 # Waiting
 
+## `fix/publish-gate-wrong-fund` — the publish-queue review, and why I have not armed
+
+**What it does:** stops the publish gate publishing rows whose page the engine
+has already read and found does not describe the fund.
+
+**Commit:** `676b369`. **Nothing is armed by it.**
+
+### The review you asked for, and what it found
+
+I ran the dry run first, per the standing rule. The gate would have published
+**97 rows, 51 of them newly visible.** Reading that list rather than the counts
+is what the rule is for, because the list has a hole in it:
+
+**30 of the 51 newly-visible rows carried a `fixable_link:` verdict — 29 of them
+`wrong_fund`.** The engine had already read those pages and reported that our
+fund is not on them. The gate published them anyway.
+
+The cause is one line. The route stores a gate failure as a **composite**,
+`"fixable_link: wrong_fund"`, in the same `_page_read.note` that the
+bare-outcome `switch` reads. No case matched, no reason was raised, nothing
+blocked. The three verdicts added on 16 August work; this fourth shape was never
+seen.
+
+Three more would have been **press releases scraped as funds**:
+
+> "Bentley opens new national grants programme to strengthen support for
+> charities and disadvantaged communities across the UK"
+> "LNER Customer & Community Investment Fund grants now open for applications"
+> "The Bernard Sunley Foundation pledges grants to assist the most vulnerable"
+
+A null funder is the one signal all three share, so `no_funder` blocks too.
+
+**Effect: rows that would newly appear drops from 51 to 20.**
+
+### The 20 that remain, which is your call
+
+All 20 have a `verified` page read bar one. They are real funds and the queue is
+mostly Arts Council of Wales (5), UKRI (2), two community foundations, DCMS,
+Defra, Money and Pensions Service, Ufi VocTech.
+
+Three things to weigh before you say yes:
+
+1. **17 of the 20 carry `eligibility_missing`.** That is `info`, not blocking —
+   policy is "incomplete but honest, absence renders as absence". It is
+   consistent with rule 6, but it does mean two thirds of the batch ships
+   without a who-can-apply line.
+2. **Two look like the wrong kind of thing.** *"Child Focused Court IDVA —
+   Cheshire & Merseyside"* reads as a commissioned service rather than an open
+   grant, and *"Baring Foundation — International Development Programme"* is a
+   programme I believe Baring closed. Neither is certain and I have not gone
+   digging.
+3. **One has a leading tab in its title** — *"⇥Purchase mid-range equipment for
+   biomedical research: MRC Equip (Grant)"*. Cosmetic, visible, one edit.
+
+### Why I stopped short of arming
+
+Publishing adds rows to the user surface, and your instruction this session was
+that nothing which adds or widens a claim acts without you. Twenty rows
+appearing is that. **Say the word and it is two env vars.**
+
+Note there are two locks, not one: `AUTO_PUBLISH_ENABLED` is unset **and**
+`AUTO_PUBLISH_LIMIT` is `0`. Setting only the first publishes nothing, which is
+a good property and worth keeping — arm the flag, then raise the cap to a canary
+number like 5 and read the result before lifting it.
+
+### Deploy gate
+
+```
+Regression: tsc clean. 380 tests pass (24 files), 6 of them new.
+            eslint clean on every changed file. No migration.
+            Verified all four deriveReviewReasons callers already SELECT
+            `funder`, so no_funder cannot false-positive on a missing column.
+Free-surface fingerprint: NOT APPLICABLE. No MCP route, tool or schema touched.
+            No user-facing page touched. Auto-publish is disarmed, so the gate
+            publishes nothing either way — this only changes what it WOULD do.
+Accent check: PASSED. No rendered string changes.
+Named rollback: 0866e99
+```
+
+---
+
 ## `feat/arm-removals` — MERGED 17 August as `0866e99`, and now scheduled
 
 **What it does:** gives the verification engine an actuator. It has read 637 of
