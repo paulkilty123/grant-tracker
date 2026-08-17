@@ -110,6 +110,36 @@ const CLOSURE_RE =
 const AFFIRMS_ROLLING_RE =
   /\b(at any time|any time of the year|all year round|year[-\s]round|on a rolling basis|rolling basis|considered on a (?:monthly|weekly|quarterly|rolling) basis|no (?:closing|application) deadlines?|there is no deadline|accepted (?:throughout|continuously)|open all year)\b/i
 
+/**
+ * Language in which the funder says the fund is gone, not merely shut for now.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * WHY THE DISTINCTION EARNS ITS OWN REGEX, 2026-08-17
+ *
+ * The first armed pass archived eight `no_longer_listed` rows. Reading their
+ * quotes afterwards, not one of them said the fund was gone:
+ *
+ *   "This fund has now closed to applications."
+ *   "The application window for this fund has now closed."
+ *   "The latest round … is NOW CLOSED to applications."
+ *   "Our grant-giving activities are on pause while we finalise a new policy."
+ *
+ * Every one is a round closing or a funder pausing. Archiving them takes them
+ * out of every admin queue for good and loses the pre-archive state, which
+ * nothing on the row records — so a fund that reopens in October never comes
+ * back. `between_rounds_scheduled` costs nothing extra and enrols the funder on
+ * the watchlist, so a reopening returns the row.
+ *
+ * Paul, 17 August: "watching them is worth more than burying them." So archive
+ * is now the exception and has to be earned by the quote. This is the test.
+ *
+ * Note it is deliberately NOT the negation of a reopening: "closed" plus no
+ * mention of returning is still a round that closed. Only an explicit statement
+ * of permanence archives.
+ */
+const PERMANENT_CLOSURE_RE =
+  /\b(no longer (?:exists?|running|offered|available|funded|in operation)|discontinued|permanently closed|closed permanently|has (?:been )?(?:withdrawn|ceased)|ceased (?:operating|grant|funding|to)|will not (?:be )?(?:re-?open|run again|return)|final round|last round|wound (?:up|down)|now closed for good|no future rounds)\b/i
+
 /** Did the funder write the year, rather than the model resolving one? */
 export function statesYearInFull(quote: string | null | undefined): boolean {
   return typeof quote === 'string' && YEAR_STATED_RE.test(quote)
@@ -129,6 +159,12 @@ export function readsAsForthcoming(quote: string | null | undefined): boolean {
 /** Does this sentence actually assert that the fund is shut, paused or gone? */
 export function statesClosure(quote: string | null | undefined): boolean {
   return typeof quote === 'string' && CLOSURE_RE.test(quote)
+}
+
+/** Does the funder say the fund is GONE, rather than shut for now? Only this
+ *  earns an archive; everything else goes between-rounds and stays watched. */
+export function statesPermanentClosure(quote: string | null | undefined): boolean {
+  return typeof quote === 'string' && PERMANENT_CLOSURE_RE.test(quote)
 }
 
 /** Does the sentence the takedown rests on itself say applications are taken

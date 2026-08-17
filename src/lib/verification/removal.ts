@@ -22,16 +22,24 @@
  * ─────────────────────────────────────────────────────────────────────────────
  * THE FOUR CLASSES, AND WHERE EACH ROW LANDS
  *
- *   no_longer_listed → archived                     (is_active false)
+ *   no_longer_listed → between_rounds_scheduled, unless the quote says the fund
+ *                      is GONE, in which case archived
  *   not_a_grant      → archived                     (is_active false)
  *   round_closed     → between_rounds_scheduled     (is_active false, watched)
  *   rolling unset    → is_rolling true → false      (row stays visible)
  *
- * `round_closed` is deliberately NOT archived. The row is out of view either
- * way, but `between_rounds_scheduled` fires the migration-057 trigger that
- * enrols the funder on the watchlist, so a reopened round can bring the row
- * back. Archiving it would take it out of every admin queue and lose the
- * pre-archive state, which nothing on the row records.
+ * ARCHIVING IS THE EXCEPTION, NOT THE DEFAULT. Revised 17 August after the first
+ * armed pass. A row is out of view either way, but `between_rounds_scheduled`
+ * fires the migration-057 trigger that enrols the funder on the watchlist, so a
+ * reopened round can bring the row back. Archiving takes it out of every admin
+ * queue for good and loses the pre-archive state, which nothing on the row
+ * records — so an archived fund that reopens in October never returns.
+ *
+ * The first pass archived eight rows and not one of their quotes said the fund
+ * was gone; all eight said a round had closed or a funder had paused. So the
+ * quote now has to earn the archive (`statesPermanentClosure`). `not_a_grant` is
+ * the one class that always archives: the page is not funding at all, so there
+ * is no round to wait for and nothing to watch.
  *
  * The rolling flip removes nothing. It moves a card from "Rolling, apply any
  * time" to "Check website", which after the 17 August renderer fix is what the
@@ -60,7 +68,7 @@
  * review queue as a proposal, which is exactly where a judgement belongs.
  */
 
-import { abstainReason, statesClosure, affirmsRolling } from './abstain'
+import { abstainReason, statesClosure, affirmsRolling, statesPermanentClosure } from './abstain'
 import type { FieldEvidence } from '../field-evidence'
 
 /** What the engine may do to a row without a human in the loop. */
@@ -176,17 +184,35 @@ export function decideRemoval(row: RemovalRow): RemovalDecision {
       }
     }
 
+    // ARCHIVE IS THE EXCEPTION AND THE QUOTE HAS TO EARN IT.
+    //
+    // Paul, 17 August, after reading the first pass: "quotes say the round
+    // closed, not the fund is gone, and watching them is worth more than
+    // burying them." Not one of the eight rows archived that morning said the
+    // fund was gone — every quote was a round closing or a funder pausing.
+    //
+    // `not_a_grant` always archives: the page is not a funding opportunity at
+    // all, so there is no round to wait for and nothing to watch.
+    const permanent = verdict === 'not_a_grant' || statesPermanentClosure(quote)
+
     return {
       act: true,
       klass: verdict,
-      fields: {
-        is_active:        false,
-        // Passed explicitly so `transitionPipelineState` is skipped. Without
-        // it, `is_active: false` on a published row lands on `captured`, which
-        // is withdraw-for-review, not archive.
-        pipeline_state:   'archived',
-        rejection_reason: `${verdict}: ${quote!.slice(0, REASON_QUOTE_CHARS)}`,
-      },
+      fields: permanent
+        ? {
+            is_active:        false,
+            // Passed explicitly so `transitionPipelineState` is skipped.
+            // Without it, `is_active: false` on a published row lands on
+            // `captured`, which is withdraw-for-review, not archive.
+            pipeline_state:   'archived',
+            rejection_reason: `${verdict}: ${quote!.slice(0, REASON_QUOTE_CHARS)}`,
+          }
+        : {
+            is_active:        false,
+            // Out of view, but the migration-057 trigger enrols the funder, so
+            // a reopened round brings the row back.
+            pipeline_state:   'between_rounds_scheduled',
+          },
       quote:     quote!,
       sourceUrl: sourceUrlOf(fe, field),
     }

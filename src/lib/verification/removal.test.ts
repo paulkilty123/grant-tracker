@@ -111,13 +111,40 @@ describe('no_longer_listed', () => {
     'This programme is currently closed for applications.',
     'This fund has now closed to applications.',
   ]
-  it.each(acts)('archives on a quote that states closure: %s', q => {
+  // ARCHIVE IS THE EXCEPTION. Every one of these eight quotes is a real
+  // `no_longer_listed` row from the first armed pass, and not one says the fund
+  // is gone — so all eight go out of view AND STAY WATCHED, rather than being
+  // buried where a reopening could never bring them back.
+  it.each(acts)('takes it out of view but keeps it watched: %s', q => {
     const d = decideRemoval(row({ ...pageRead('no_longer_listed'), still_listed: stamp(q) }))
     expect(d.act).toBe(true)
     if (!d.act) return
     expect(d.fields.is_active).toBe(false)
+    expect(d.fields.pipeline_state).toBe('between_rounds_scheduled')
+    expect(d.fields).not.toHaveProperty('rejection_reason')
+  })
+
+  it('archives only where the funder says the fund is GONE', () => {
+    const d = decideRemoval(row({
+      ...pageRead('no_longer_listed'),
+      still_listed: stamp('This programme has been discontinued and there will be no future rounds.'),
+    }))
+    expect(d.act).toBe(true)
+    if (!d.act) return
     expect(d.fields.pipeline_state).toBe('archived')
     expect(String(d.fields.rejection_reason)).toContain('no_longer_listed')
+  })
+
+  it('a pause is not a permanent closure', () => {
+    // Grants to Charities, verbatim. Read as "gone" on the first pass; it is a
+    // funder rewriting its policy, which is the most watchable case of the lot.
+    const d = decideRemoval(row({
+      ...pageRead('no_longer_listed'),
+      still_listed: stamp('Our grant-giving activities are on pause while we finalise a new funding policy.'),
+    }))
+    expect(d.act).toBe(true)
+    if (!d.act) return
+    expect(d.fields.pipeline_state).toBe('between_rounds_scheduled')
   })
 
   it('ABSTAINS on a fund that is arriving, not leaving', () => {
@@ -140,7 +167,7 @@ describe('no_longer_listed', () => {
 })
 
 describe('not_a_grant', () => {
-  it('archives without needing closure language — it is a scope verdict', () => {
+  it('ALWAYS archives — there is no round to wait for and nothing to watch', () => {
     const d = decideRemoval(row({ ...pageRead('not_a_grant'), is_grant: stamp('This page describes volunteering opportunities, not funding.') }))
     expect(d.act).toBe(true)
     if (!d.act) return

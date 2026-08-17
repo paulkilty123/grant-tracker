@@ -4,6 +4,11 @@
 //   GET /api/cron/apply-removals?peek=true   ALWAYS report-only, whatever the flag
 //   GET /api/cron/apply-removals?apply=true  manual: writes regardless of the flag
 //   GET /api/cron/apply-removals?class=round_closed   one class only
+//   GET /api/cron/apply-removals?limit=5     smaller than the daily cap
+//
+// Scheduled 21:00 UTC daily in vercel.json, two hours after the last
+// `verify-rows` run of the day, so it acts on the freshest evidence rather than
+// on yesterday's. Capped at 20 actions a run — see DAILY_CAP.
 //
 // ─────────────────────────────────────────────────────────────────────────────
 // WHY THIS ROUTE EXISTS
@@ -64,12 +69,37 @@ export const maxDuration = 300
 const SOURCE = 'system:removal_actuator:v1'
 
 /**
- * Runaway guard. The measured populations on 2026-08-17 are 10 + 10 + 0 + 32,
- * so a run proposing more than this has found something the design did not
- * anticipate and should stop rather than act. It reports the overflow instead of
- * silently truncating — a silent cap reads as "covered everything".
+ * How many rows one run may change. Set by Paul at 20 on 2026-08-17, arming the
+ * schedule: "capped at around 20 actions a day to start".
+ *
+ * A cap that TRUNCATES is the danger, not the cap itself. `validate-urls`
+ * defined a pass as "whatever is left", got nothing on every run it ever made,
+ * and reported `checked: 0` — which read exactly like "nothing to do". So this
+ * route always reports `deferred` and `deferredByClass`, and a run that left
+ * work behind says so in the digest line.
  */
-const MAX_ACTIONS = 100
+const DAILY_CAP = 20
+
+/**
+ * Runaway guard, above the cap rather than instead of it. The measured
+ * populations on 2026-08-17 were 10 + 10 + 0 + 32. A run that finds more than
+ * this many candidates has hit something the design did not anticipate — a
+ * regressed extractor, a bad batch — and should stop rather than work through it
+ * twenty a day.
+ */
+const RUNAWAY = 100
+
+/**
+ * Which class goes first when the cap bites.
+ *
+ * A fund that has closed but is still on the site is the harm; a row over-
+ * claiming "apply any time" is a lesser one. So removals clear before
+ * de-assertions, and within a class the order is by id, which is stable across
+ * runs — an unstable order would let the same row lose the draw every day.
+ */
+const CLASS_ORDER: Record<string, number> = {
+  no_longer_listed: 0, not_a_grant: 0, round_closed: 1, rolling_unset: 2,
+}
 
 // One line, not a concatenation: supabase-js parses this at TYPE level and a `+`
 // defeats that parser.
@@ -148,19 +178,31 @@ export async function GET(req: NextRequest) {
     const byClass: Record<string, number> = {}
     for (const a of actions) byClass[a.d.klass] = (byClass[a.d.klass] ?? 0) + 1
 
-    if (actions.length > MAX_ACTIONS) {
+    if (actions.length > RUNAWAY) {
       return {
         success: true, armed, wrote: false, candidates: actions.length, byClass, held,
-        error: `refusing to act on ${actions.length} rows in one run (cap ${MAX_ACTIONS})`,
+        error: `refusing to act: ${actions.length} candidates exceeds the runaway guard of ${RUNAWAY}`,
         note: 'the populations this was designed against were 10 + 10 + 0 + 32; something has changed and a human should look before anything moves',
       }
     }
 
+    // Highest harm first, then a stable order so the same row cannot lose the
+    // draw every day.
+    actions.sort((a, b) =>
+      (CLASS_ORDER[a.d.klass] ?? 9) - (CLASS_ORDER[b.d.klass] ?? 9) || a.row.id.localeCompare(b.row.id))
+
+    const cap      = Math.max(1, Math.min(Number(params.get('limit')) || DAILY_CAP, RUNAWAY))
+    const todo     = actions.slice(0, cap)
+    const deferred = actions.slice(cap)
+    const deferredByClass: Record<string, number> = {}
+    for (const a of deferred) deferredByClass[a.d.klass] = (deferredByClass[a.d.klass] ?? 0) + 1
+
     if (!write) {
       return {
         success: true, armed, wrote: false,
-        scanned: rows.length, candidates: actions.length, byClass, held,
-        wouldAct: actions.map(a => ({
+        scanned: rows.length, candidates: actions.length, cap,
+        deferred: deferred.length, deferredByClass, byClass, held,
+        wouldAct: todo.map(a => ({
           id: a.row.id, title: a.row.title, klass: a.d.klass,
           from: { is_active: a.row.is_active, pipeline_state: a.row.pipeline_state },
           to: a.d.fields, quote: a.d.quote, sourceUrl: a.d.sourceUrl,
@@ -175,7 +217,7 @@ export async function GET(req: NextRequest) {
     const acted: unknown[] = []
     const refused: unknown[] = []
 
-    for (const { row, d } of actions) {
+    for (const { row, d } of todo) {
       // Captured BEFORE the write. Nothing on the row records the pre-archive
       // state, so this is the only route back.
       const before = { is_active: row.is_active, pipeline_state: row.pipeline_state }
@@ -208,6 +250,8 @@ export async function GET(req: NextRequest) {
     return {
       success: true, armed, wrote: true, scanned: rows.length,
       acted: acted.length, refusedCount: refused.length,
+      // Never silent. A run that left work behind says how much and of what.
+      candidates: actions.length, cap, deferred: deferred.length, deferredByClass,
       byClass, held, rows: acted, refused, heldRows,
     }
   })
