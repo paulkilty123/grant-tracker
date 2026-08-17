@@ -35,8 +35,9 @@ import type { EvidenceSummary } from '@/lib/admin/evidence-summary'
 // stays a client component.
 import type { MergeRejection } from '@/lib/grant-merge'
 import {
-  SECTIONS, sectionOf, evidenceRank, planLine, EVIDENCE_RANK_LABEL,
+  SECTIONS, sectionOf, evidenceRank, EVIDENCE_RANK_LABEL,
   arrivalOrigin, isNewArrival, ORIGIN_LABEL, NEW_ARRIVAL_DAYS,
+  rootCauseOf, explainedBy,
   type SectionId,
 } from '@/lib/admin/review-sections'
 
@@ -117,6 +118,28 @@ const FUNDING_TYPES: { value: string; label: string }[] = [
   { value: 'investment', label: 'Investment' },
   { value: 'in_kind',    label: 'In-kind' },
 ]
+
+/**
+ * Everything the screen can show, as ONE axis.
+ *
+ * The five sections are the primary navigation; the three under Views are cuts
+ * across them. There is no second selector — the old SHOW row let you pick a
+ * view and a section at once and get a screen that contradicted its own heading.
+ */
+type NavId = SectionId | 'liveandwrong' | 'new' | 'unenriched' | 'autopublished'
+
+const NAV_META: Record<NavId, { label: string; detail: string }> = {
+  liveandwrong: { label: 'Live and wrong',
+    detail: 'People can see these now. Everything else on this screen is invisible, so its cost is delay rather than harm.' },
+  ready:      { label: 'Ready to publish',      detail: 'Nothing blocking. Publishing one changes what users can find today.' },
+  link:       { label: 'Link needs fixing',     detail: 'A link that goes nowhere, or a page describing a different fund. A homepage is not a problem and is not here.' },
+  reading:    { label: 'Needs reading',         detail: 'Nothing has read the funder’s page, so no judgement is possible yet.' },
+  judgement:  { label: 'Needs your judgement',  detail: 'The page was read and what it says is genuinely arguable.' },
+  untruthful: { label: 'Nothing truthful to show', detail: 'No funder, or the page says the fund is gone.' },
+  new:        { label: 'New this week',         detail: `What has arrived in the last ${NEW_ARRIVAL_DAYS} days, newest first. These also appear under whatever they need.` },
+  unenriched: { label: 'Needs enrichment',      detail: 'A stub brief or none at all, whether or not the row is live.' },
+  autopublished: { label: 'Published without you', detail: 'What the gate did on its own. A receipt, not a task.' },
+}
 
 const display = { fontFamily: 'var(--font-space-grotesk)' } as const
 const gbp = (n: number | null) => (n === null ? '—' : `£${n.toLocaleString('en-GB')}`)
@@ -242,12 +265,24 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
   //   'autopublished' is the odd one out: not work, but the record of what the
   //   gate did without asking. Those rows are published and live, so they are
   //   in none of the queue states and disappear from every other view here.
-  // 'hidden' — the not-live queue — is the DEFAULT and the primary view. It is
-  // where catalogue quality is decided, and it used to be the third chip in a
-  // row of five. The rows a user can see and be misled by are not demoted by
-  // this: they keep a pinned band above the sections, which shrinks to nothing
-  // when it is empty.
-  const [view, setView] = useState<'all' | 'live' | 'hidden' | 'unenriched' | 'autopublished'>('hidden')
+  /**
+   * ONE ANSWER PER QUESTION, PER SCREEN.
+   *
+   * The list used to carry two competing mental models at once — five sections
+   * AND eighteen reason chips — over four rows of controls and two blocks of
+   * prose, before a single grant appeared. Sections are now the navigation and
+   * everything else is subordinate to them: reason codes moved behind Filters,
+   * the SHOW row is gone, and the prose is gone.
+   *
+   * `nav` is the single source of what is on screen. There is no second axis.
+   */
+  const [nav, setNav] = useState<NavId>('ready')
+  /** The reason-code filter, now behind a Filters disclosure rather than a row
+   *  of eighteen chips competing with the sections for the same job. */
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  /** Navigating always clears the selection: acting on rows you can no longer
+   *  see is the kind of thing a bulk button should make impossible. */
+  const go = useCallback((id: NavId) => { setNav(id); setSelected(new Set()) }, [])
   /** Bulk selection, per section. Cleared whenever the view or filters change. */
   const [selected, setSelected] = useState<Set<string>>(new Set())
   /** How each section is ordered. Evidence strength is the default because it
@@ -286,14 +321,10 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
     [live],
   )
 
-  // 'unenriched' cuts across live/hidden: a published row with a stub brief is
-  // the case that had no home before — it is not awaiting review, so it never
-  // appeared here, and the only way to enrich it was the old Grant Manager.
-  const byView =
-    view === 'autopublished' ? autoPub
-    : view === 'all'        ? pending
-    : view === 'unenriched' ? pending.filter(i => i.needsEnrichment)
-    : pending.filter(i => (view === 'live' ? i.isActive : !i.isActive))
+  /** The not-live pool. "Not live yet" is no longer a filter you pick — it is
+   *  the heading its sections sit under, so this is simply what the sections
+   *  are built from. */
+  const byView = useMemo(() => pending.filter(i => !i.isActive), [pending])
 
   const counts = useMemo(() => {
     const m = new Map<string, { label: string; n: number }>()
@@ -373,29 +404,13 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
     return out
   }, [sectioned])
 
-  const plan = planLine({
-    ready: sectionCounts.ready ?? 0,
-    bySection: sectionCounts,
-    liveAndWrong: liveAndWrong.length,
-  })
+
 
   const liveToUsers = pending.filter(i => i.isActive).length
   const notLiveCount = pending.length - liveToUsers
   const unenrichedCount = pending.filter(i => i.needsEnrichment).length
   const autoPubCount = autoPub.length
-  const autoPubNewCount = autoPub.filter(i => i.autoPublishNewlyVisible).length
 
-  // Name the window's start date rather than saying "last 7 days".
-  //
-  // The count reads 77 on a morning when the run published 28, because the
-  // window reaches back over the previous run. A relative phrase invites you to
-  // read the number as "today", and a number that contradicts what you just
-  // watched happen is worse than no number. Computed from a server-supplied
-  // timestamp so it cannot drift between render passes.
-  const windowPhrase = gateWindowStart
-    ? `since ${new Date(gateWindowStart).toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })}`
-    : 'in the last 7 days'
-  const attentionCount = shown.filter(i => i.gateOutcome === 'attention').length
 
   /** Single place every write goes through, so a failure can never look like success. */
   const patch = useCallback(async (
@@ -746,398 +761,174 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
     else toast.error(`${ok} of ${rows.length} ${verb}. The rest did not take — see the messages above.`)
   }, [pending, publish, reject, reRead, toast])
 
-  return (
-    <main style={{ padding: '30px 24px 80px', maxWidth: 1180, margin: '0 auto' }}>
+  const rows: QueueItem[] =
+    nav === 'liveandwrong' ? liveAndWrong
+    : nav === 'new'          ? newArrivals
+    : nav === 'unenriched'   ? pending.filter(i => i.needsEnrichment)
+    : nav === 'autopublished'? autoPub
+    : (sectioned.get(nav) ?? [])
 
-      <h1 style={{ ...display, fontSize: 25, fontWeight: 500, letterSpacing: '-0.02em', margin: '0 0 5px' }}>
+  const navMeta = NAV_META[nav]
+  const ids = rows.map(r => r.id)
+  const allPicked = ids.length > 0 && ids.every(id => selected.has(id))
+  const picked = ids.filter(id => selected.has(id))
+
+  return (
+    <main style={{ padding: '30px 24px 80px', maxWidth: 1280, margin: '0 auto' }}>
+
+      <h1 style={{ ...display, fontSize: 25, fontWeight: 500, letterSpacing: '-0.02em', margin: '0 0 16px' }}>
         Review queue
       </h1>
-      <p style={{ color: 'var(--color-text-secondary)', fontSize: 13.5, lineHeight: 1.55, margin: '0 0 22px', maxWidth: '70ch' }}>
-        Start at the top. Those are the ones closest to finished, so a few minutes here clears real
-        rows. Each one tells you what it needs and carries the button that does it, so you never
-        have to work out the next step yourself.
-      </p>
 
-      {/* The honest count. The old screen's header asserted these were not
-          visible to users while its query never filtered on that. */}
-      {/* Hidden only when you are looking at rows nobody can see — telling you
-          how many are visible while you filter to the invisible ones is noise. */}
-      {liveToUsers > 0 && view !== 'hidden' && view !== 'autopublished' && (
-        <div style={{
-          display: 'flex', gap: 11, alignItems: 'flex-start',
-          background: 'var(--coral-pale)', color: 'var(--coral-deep)',
-          borderRadius: 'var(--radius-card)', padding: '13px 16px',
-          marginBottom: 22, fontSize: 13, lineHeight: 1.45,
-        }}>
-          <span style={{ ...display, fontWeight: 700 }}>!</span>
-          <span>
-            <strong style={{ ...display, fontWeight: 700 }}>
-              {liveToUsers} of these {pending.length} are already visible to users.
-            </strong>{' '}
-            Publishing confirms what people can see rather than revealing it for the first time.
-            {attentionCount > 0 && (
-              <>
-                {' '}
-                <strong style={{ ...display, fontWeight: 700 }}>
-                  {attentionCount} of them state something a user could be misled by.
-                </strong>{' '}
-                Those are listed first. Nothing has been taken down automatically, because
-                most were flagged for showing a fund to fewer organisations than it accepts,
-                and hiding it entirely would be the bigger error.
-              </>
-            )}
-          </span>
-        </div>
-      )}
-
-      {/* The receipt view says plainly which of these the gate EXPOSED, because
-          that is the only number here with a user-visible consequence. */}
-      {view === 'autopublished' && (
-        <div style={{
-          display: 'flex', gap: 11, alignItems: 'flex-start',
-          background: 'var(--color-surface-sunken, var(--pale-green, #F1F7E4))',
-          color: 'var(--color-text-primary)',
-          borderRadius: 'var(--radius-card)', padding: '13px 16px',
-          marginBottom: 22, fontSize: 13, lineHeight: 1.45,
-        }}>
-          <span>
-            {autoPubCount === 0 ? (
-              <>The gate has published nothing {windowPhrase}. That is a real answer, not a
-              missing feature: it publishes only rows carrying no blocking reason.</>
-            ) : (
-              <>
-                <strong style={{ ...display, fontWeight: 700 }}>
-                  The gate published {autoPubCount} {autoPubCount === 1 ? 'row' : 'rows'}{' '}
-                  {windowPhrase}, {autoPubNewCount} of which nobody could see before.
-                </strong>{' '}
-                Those {autoPubNewCount === 1 ? 'is' : 'are'} listed first. The rest were already
-                live and the gate only brought their recorded state up to date, so they changed
-                nothing for users. Everything here can still be corrected or hidden from the row.
-                {' '}This is a rolling 7-day window, not just today, so it includes every run in
-                that period rather than only the most recent one.
-              </>
-            )}
-          </span>
-        </div>
-      )}
-
-      {/* A STANDING ALERT, ABOVE EVERY FILTER.
-          It first shipped inside the not-live sections, which was wrong in a way
-          only using it revealed: selecting "Not live yet 107" and being shown 38
-          rows that ARE live contradicts the filter you just chose. These rows
-          belong to no filter — they are the only ones on the screen where a
-          person is being misled right now, so they sit above the controls and
-          are never scoped by them. It shrinks to nothing when empty. */}
-      {liveAndWrong.length > 0 && (
-        <div style={{
-          border: '0.5px solid var(--coral-saturated)', background: 'var(--coral-pale)',
-          borderRadius: 'var(--radius-card)', padding: '11px 15px', marginBottom: 16,
-          display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: '4px 10px',
-        }}>
-          <strong style={{ ...display, fontSize: 13.5, color: 'var(--coral-deep)' }}>
-            {liveAndWrong.length} live to users and wrong
-          </strong>
-          <span style={{ fontSize: 13, color: 'var(--coral-deep)', opacity: 0.9 }}>
-            People can see these now. Everything else on this screen is invisible, so its cost is delay.
-          </span>
-          <button
-            onClick={() => { setView('live'); setFilter(null); setSelected(new Set()) }}
-            style={{ ...ghostBtn, marginLeft: 'auto', color: 'var(--coral-deep)' }}
-          >Show them</button>
-        </div>
-      )}
-
-      {/* Whether users can see it, chosen first — it changes what the reason
-          counts below even mean. "Not live yet" is the old Needs Review. */}
-      <div style={{
-        display: 'flex', flexWrap: 'wrap', gap: 7, alignItems: 'center',
-        paddingBottom: 12, marginBottom: 10,
-      }}>
-        <span style={{
-          ...display, fontSize: 10.5, fontWeight: 500, letterSpacing: '0.08em',
-          textTransform: 'uppercase', color: 'var(--color-text-tertiary)', marginRight: 2,
-        }}>Show</span>
-        <Chip active={view === 'all'}    onClick={() => { setView('all'); setFilter(null) }}    label="Everything"   n={pending.length} />
-        <Chip active={view === 'live'}   onClick={() => { setView('live'); setFilter(null) }}   label="Live to users" n={liveToUsers} />
-        <Chip active={view === 'hidden'} onClick={() => { setView('hidden'); setFilter(null) }} label="Not live yet"  n={notLiveCount} />
-        {/* Cuts across the other three. A published row with a stub brief is not
-            "awaiting review", so it never appeared in this queue at all and the
-            only way to enrich it was the old Grant Manager. Use "Re-read the
-            page" on these — it runs enrich then classify, in that order. */}
-        <Chip active={view === 'unenriched'} onClick={() => { setView('unenriched'); setFilter(null) }} label="Needs enrichment" n={unenrichedCount} />
-        {/* The record of what ran without you. Zero is a legitimate answer, so
-            the chip stays visible at zero rather than vanishing — an absent chip
-            reads as "not built", which is how the gate stayed invisible before. */}
-        <Chip active={view === 'autopublished'} onClick={() => { setView('autopublished'); setFilter(null) }} label="Published without you" n={autoPubCount} />
-
-        <span style={{ flex: '1 1 auto' }} />
-        <input
-          value={q}
-          onChange={e => { setQ(e.target.value); setFilter(null) }}
-          placeholder="Find a title or funder"
-          aria-label="Search the queue by title or funder"
-          style={{
-            ...display, fontSize: 13, padding: '5px 10px', minWidth: 200,
-            border: '0.5px solid var(--border-subtle)', borderRadius: 8,
-            background: 'var(--color-surface)', color: 'var(--color-text-primary)',
-          }}
-        />
-        {q.trim() !== '' && (
-          <button
-            onClick={() => setQ('')}
-            style={{
-              ...display, fontSize: 12.5, padding: '5px 9px', borderRadius: 8, cursor: 'pointer',
-              border: '0.5px solid var(--border-subtle)', background: 'transparent',
-              color: 'var(--color-text-secondary)',
-            }}
-          >Clear</button>
-        )}
+      {/* THREE NUMBERS. Not a paragraph — if the screen needs explaining, the
+          layout is wrong. Each is a link to the thing it counts. */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 22 }}>
+        <Stat n={liveAndWrong.length} label="live and wrong" tone="alert"
+              active={nav === 'liveandwrong'} onClick={() => go('liveandwrong')} />
+        <Stat n={sectionCounts.ready ?? 0} label="ready to publish"
+              active={nav === 'ready'} onClick={() => go('ready')} />
+        <Stat n={newArrivals.length} label="new this week"
+              active={nav === 'new'} onClick={() => go('new')} />
       </div>
 
-      {/* "Why held" is a question about work. Nothing in the receipt view is
-          held — the gate published it precisely because nothing blocked it —
-          so the row would read as an empty or misleading filter. */}
-      {view !== 'autopublished' && (
-        <div style={{
-          display: 'flex', flexWrap: 'wrap', gap: 7, alignItems: 'center',
-          paddingBottom: 12, borderBottom: '0.5px solid var(--border-subtle)', marginBottom: 16,
-        }}>
-          <span style={{
-            ...display, fontSize: 10.5, fontWeight: 500, letterSpacing: '0.08em',
-            textTransform: 'uppercase', color: 'var(--color-text-tertiary)', marginRight: 2,
-          }}>Why held</span>
-          <Chip active={filter === null} onClick={() => setFilter(null)} label="All" n={byView.length} />
-          {counts.map(([code, { label, n }]) => (
-            <Chip key={code} active={filter === code} onClick={() => setFilter(code)} label={label} n={n} />
-          ))}
-        </div>
-      )}
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(210px, 240px) 1fr', gap: 26, alignItems: 'start' }}>
 
-      {/* THE PLAN LINE. A screen that opens with a list asks "where do I start";
-          one that opens with a sentence answers it. Computed, never written by
-          hand, and it carries the live-and-wrong count so it describes the whole
-          screen rather than just the queue below it. */}
-      {view === 'hidden' && (
-        <p style={{
-          ...display, fontSize: 14.5, lineHeight: 1.55, margin: '0 0 18px',
-          color: 'var(--color-text-primary)',
-        }}>{plan}</p>
-      )}
+        {/* ── The rail. Sections ARE the navigation. ────────────────────── */}
+        <nav style={{ display: 'flex', flexDirection: 'column', gap: 18, position: 'sticky', top: 18 }}>
+          <RailItem id="liveandwrong" nav={nav} onGo={go} n={liveAndWrong.length} tone="alert" />
 
-      {/* Funding type as a FILTER. As a section it gives one pile of grants and
-          four piles anyone would clear in a minute; as a chip it costs nothing
-          and gives the view on demand. */}
-      {view === 'hidden' && (
-        <div style={{
-          display: 'flex', flexWrap: 'wrap', gap: 7, alignItems: 'center',
-          paddingBottom: 12, borderBottom: '0.5px solid var(--border-subtle)', marginBottom: 16,
-        }}>
-          <span style={{
-            ...display, fontSize: 10.5, fontWeight: 500, letterSpacing: '0.08em',
-            textTransform: 'uppercase', color: 'var(--color-text-tertiary)', marginRight: 2,
-          }}>Funding type</span>
-          <Chip active={typeFilter === null} onClick={() => { setTypeFilter(null); setSelected(new Set()) }}
-                label="All" n={byView.length} />
-          {FUNDING_TYPES.map(t => (
-            <Chip key={t.value} active={typeFilter === t.value}
-                  onClick={() => { setTypeFilter(t.value); setSelected(new Set()) }}
-                  label={t.label} n={byView.filter(i => i.values.fundingType === t.value).length} />
-          ))}
-          <span style={{ flex: '1 1 auto' }} />
-          <span style={{
-            ...display, fontSize: 10.5, fontWeight: 500, letterSpacing: '0.08em',
-            textTransform: 'uppercase', color: 'var(--color-text-tertiary)', marginRight: 2,
-          }}>Sort</span>
-          <Chip active={sortBy === 'evidence'} onClick={() => setSortBy('evidence')} label="Safest first" n={-1} />
-          <Chip active={sortBy === 'newest'}   onClick={() => setSortBy('newest')}   label="Newest first" n={-1} />
-        </div>
-      )}
+          <div>
+            <RailHeading>Not live yet — {byView.length}</RailHeading>
+            {SECTIONS.map(sec => (
+              <RailItem key={sec.id} id={sec.id} nav={nav} onGo={go} n={sectionCounts[sec.id] ?? 0} />
+            ))}
+          </div>
 
-      {view === 'hidden' ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 26 }}>
-          {newArrivals.length > 0 && (
-            <section>
-              <BandHeading
-                label={`New arrivals — ${newArrivals.length} in the last ${NEW_ARRIVAL_DAYS} days`}
-                detail="What has come in, rather than what is wrong. These also appear below under what they need — this is a second answer to a different question, not a duplicate."
-              />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-                {newArrivals.map(item => (
-                  <Row key={`new-${item.id}`} item={item} open={openId === item.id} busy={busyId === item.id}
-                       onToggle={() => setOpenId(openId === item.id ? null : item.id)}
-                       busyLabel={busyLabel} onPublish={() => publish(item)} onReject={() => reject(item)}
-                       onRevert={(d) => revertField(item, d)} onSetFundingType={(t) => setFundingType(item, t)}
-                       onReRead={() => reRead(item)} onReClassify={() => reClassify(item)}
-                       onFixLink={() => fixLink(item)} rejections={refusals[item.id] ?? []}
-                       onOverride={(r) => override(item.id, r)} />
-                ))}
-              </div>
-            </section>
+          <div>
+            <RailHeading>Views</RailHeading>
+            <RailItem id="new"           nav={nav} onGo={go} n={newArrivals.length} />
+            <RailItem id="unenriched"    nav={nav} onGo={go} n={unenrichedCount} />
+            <RailItem id="autopublished" nav={nav} onGo={go} n={autoPubCount} />
+          </div>
+        </nav>
+
+        {/* ── The body. One section at a time. ──────────────────────────── */}
+        <div style={{ minWidth: 0 }}>
+          <h2 style={{ ...display, fontSize: 17, fontWeight: 500, margin: '0 0 3px' }}>
+            {navMeta.label} <span style={{ color: 'var(--color-text-tertiary)', fontWeight: 400 }}>{rows.length}</span>
+          </h2>
+          {/* One short line. Not a paragraph. */}
+          <p style={{ color: 'var(--color-text-secondary)', fontSize: 13, margin: '0 0 14px', maxWidth: '76ch' }}>
+            {navMeta.detail}
+          </p>
+
+          {/* Section toolbar: everything that acts on THIS list, and nothing that
+              navigates away from it. */}
+          <div style={{
+            display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center',
+            paddingBottom: 12, borderBottom: '0.5px solid var(--border-subtle)', marginBottom: 14,
+          }}>
+            {rows.length > 0 && (
+              <label style={{ ...display, fontSize: 12.5, display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', color: 'var(--color-text-secondary)' }}>
+                <input type="checkbox" checked={allPicked}
+                       onChange={() => setSelected(prev => {
+                         const next = new Set(prev)
+                         if (allPicked) ids.forEach(id => next.delete(id))
+                         else ids.forEach(id => next.add(id))
+                         return next
+                       })} />
+                Select all
+              </label>
+            )}
+            {picked.length > 0 && (
+              <>
+                <span style={{ ...display, fontSize: 12.5, color: 'var(--color-text-secondary)' }}>{picked.length} selected</span>
+                {nav === 'ready' && <button style={primaryBtn} disabled={busyId !== null} onClick={() => bulk(picked, 'publish')}>Publish {picked.length}</button>}
+                {(nav === 'reading' || nav === 'link') && <button style={secondaryBtn} disabled={busyId !== null} onClick={() => bulk(picked, 'reread')}>Re-read {picked.length}</button>}
+                {nav === 'untruthful' && <button style={dangerBtn} disabled={busyId !== null} onClick={() => bulk(picked, 'reject')}>Reject {picked.length}</button>}
+                <button style={ghostBtn} onClick={() => setSelected(new Set())}>Clear</button>
+              </>
+            )}
+
+            <span style={{ flex: '1 1 auto' }} />
+
+            <Chip active={sortBy === 'evidence'} onClick={() => setSortBy('evidence')} label="Safest first" n={-1} />
+            <Chip active={sortBy === 'newest'}   onClick={() => setSortBy('newest')}   label="Newest first" n={-1} />
+            <button
+              onClick={() => setFiltersOpen(o => !o)}
+              style={{
+                ...display, fontSize: 12, fontWeight: 500, cursor: 'pointer', borderRadius: 999,
+                padding: '5px 12px', border: '0.5px solid var(--border-subtle)',
+                background: (filter || typeFilter) ? 'var(--green-deep)' : 'transparent',
+                color: (filter || typeFilter) ? 'var(--green-pale-2)' : 'var(--color-text-secondary)',
+              }}
+            >Filters{(filter || typeFilter) ? ' · on' : ''}</button>
+            <input
+              value={q}
+              onChange={e => { setQ(e.target.value); setFilter(null) }}
+              placeholder="Find a title or funder"
+              aria-label="Search the queue by title or funder"
+              style={{
+                ...display, fontSize: 13, padding: '5px 10px', minWidth: 170,
+                border: '0.5px solid var(--border-subtle)', borderRadius: 8,
+                background: 'var(--color-surface)', color: 'var(--color-text-primary)',
+              }}
+            />
+          </div>
+
+          {/* The eighteen reason chips, behind a disclosure. They answer a
+              different question from the sections and were competing with them
+              for the same space. */}
+          {filtersOpen && (
+            <div style={{
+              display: 'flex', flexWrap: 'wrap', gap: 7, alignItems: 'center',
+              paddingBottom: 14, borderBottom: '0.5px solid var(--border-subtle)', marginBottom: 14,
+            }}>
+              <span style={{ ...display, fontSize: 10.5, fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-tertiary)' }}>Type</span>
+              <Chip active={typeFilter === null} onClick={() => { setTypeFilter(null); setSelected(new Set()) }} label="All" n={-1} />
+              {FUNDING_TYPES.map(t => (
+                <Chip key={t.value} active={typeFilter === t.value}
+                      onClick={() => { setTypeFilter(t.value); setSelected(new Set()) }}
+                      label={t.label} n={byView.filter(i => i.values.fundingType === t.value).length} />
+              ))}
+              <span style={{ width: '100%', height: 0 }} />
+              <span style={{ ...display, fontSize: 10.5, fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-tertiary)' }}>Reason</span>
+              <Chip active={filter === null} onClick={() => setFilter(null)} label="Any" n={-1} />
+              {counts.map(([code, { label, n }]) => (
+                <Chip key={code} active={filter === code} onClick={() => setFilter(code)} label={label} n={n} />
+              ))}
+            </div>
           )}
 
-          {SECTIONS.map(sec => {
-            const rows = sectioned.get(sec.id) ?? []
-            if (rows.length === 0) return null
-            const ids = rows.map(r => r.id)
-            const allPicked = ids.every(id => selected.has(id))
-            const pickedHere = ids.filter(id => selected.has(id))
-            return (
-              <section key={sec.id}>
-                <BandHeading label={`${sec.label} — ${rows.length}`} detail={sec.detail} />
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '0 0 10px' }}>
-                  <label style={{ ...display, fontSize: 12.5, display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', color: 'var(--color-text-secondary)' }}>
-                    <input type="checkbox" checked={allPicked}
-                           onChange={() => setSelected(prev => {
-                             const next = new Set(prev)
-                             if (allPicked) ids.forEach(id => next.delete(id))
-                             else ids.forEach(id => next.add(id))
-                             return next
-                           })} />
-                    Select all {rows.length}
-                  </label>
-                  {pickedHere.length > 0 && (
-                    <>
-                      <span style={{ ...display, fontSize: 12.5, color: 'var(--color-text-secondary)' }}>
-                        {pickedHere.length} selected
-                      </span>
-                      {sec.id === 'ready' && (
-                        <button style={primaryBtn} disabled={busyId !== null}
-                                onClick={() => bulk(pickedHere, 'publish')}>Publish {pickedHere.length}</button>
-                      )}
-                      {(sec.id === 'reading' || sec.id === 'link') && (
-                        <button style={secondaryBtn} disabled={busyId !== null}
-                                onClick={() => bulk(pickedHere, 'reread')}>Re-read {pickedHere.length} pages</button>
-                      )}
-                      {sec.id === 'untruthful' && (
-                        <button style={dangerBtn} disabled={busyId !== null}
-                                onClick={() => bulk(pickedHere, 'reject')}>Reject {pickedHere.length}</button>
-                      )}
-                      <button style={ghostBtn} onClick={() => setSelected(new Set())}>Clear</button>
-                    </>
-                  )}
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-                  {rows.map(item => (
-                    <Row key={item.id} item={item} open={openId === item.id} busy={busyId === item.id}
-                         selected={selected.has(item.id)}
-                         onSelect={(next) => setSelected(prev => {
-                           const s2 = new Set(prev)
-                           if (next) s2.add(item.id); else s2.delete(item.id)
-                           return s2
-                         })}
-                         onToggle={() => setOpenId(openId === item.id ? null : item.id)}
-                         busyLabel={busyLabel} onPublish={() => publish(item)} onReject={() => reject(item)}
-                         onRevert={(d) => revertField(item, d)} onSetFundingType={(t) => setFundingType(item, t)}
-                         onReRead={() => reRead(item)} onReClassify={() => reClassify(item)}
-                         onFixLink={() => fixLink(item)} rejections={refusals[item.id] ?? []}
-                         onOverride={(r) => override(item.id, r)} />
-                  ))}
-                </div>
-              </section>
-            )
-          })}
-
-          {shown.length === 0 && liveAndWrong.length === 0 && (
+          {rows.length === 0 ? (
             <p style={{ color: 'var(--color-text-secondary)', fontSize: 14 }}>
-              Nothing waiting that is not already live. The not-live queue is empty.
+              {q.trim() !== '' ? `Nothing here matches “${q.trim()}”.` : 'Nothing here.'}
             </p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+              {rows.map(item => (
+                <Row key={item.id} item={item} open={openId === item.id} busy={busyId === item.id}
+                     selected={selected.has(item.id)}
+                     onSelect={(next) => setSelected(prev => {
+                       const s2 = new Set(prev)
+                       if (next) s2.add(item.id); else s2.delete(item.id)
+                       return s2
+                     })}
+                     onToggle={() => setOpenId(openId === item.id ? null : item.id)}
+                     busyLabel={busyLabel} onPublish={() => publish(item)} onReject={() => reject(item)}
+                     onRevert={(d) => revertField(item, d)} onSetFundingType={(t) => setFundingType(item, t)}
+                     onReRead={() => reRead(item)} onReClassify={() => reClassify(item)}
+                     onFixLink={() => fixLink(item)} rejections={refusals[item.id] ?? []}
+                     onOverride={(r) => override(item.id, r)} />
+              ))}
+            </div>
           )}
         </div>
-      ) : shown.length === 0 ? (
-
-        <p style={{ color: 'var(--color-text-secondary)', fontSize: 14 }}>
-          {q.trim() !== '' && liveAll.length > 0
-            ? `Nothing in the queue matches “${q.trim()}”. It may be published already — Catalogue searches every row, whatever its state.`
-            : view === 'autopublished'
-              ? `The gate has published nothing ${windowPhrase}.`
-              : pending.length === 0
-                ? 'Nothing waiting. The queue is genuinely empty.'
-                : 'No rows match that filter.'}
-        </p>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-          {shown.map((item, i) => (
-            <Fragment key={item.id}>
-              {/* Band headings, drawn where the list changes character rather
-                  than as a count in a corner. The first band is live and wrong;
-                  everything after it is invisible to users, so the cost of
-                  leaving it is a delay rather than a person misled. */}
-              {view !== 'autopublished' && i === 0 && item.gateOutcome === 'attention' && (
-                <BandHeading
-                  label="Live to users, and wrong"
-                  detail="People can see these now. Fixing one changes what they see today."
-                />
-              )}
-              {view !== 'autopublished' && i > 0 && shown[i - 1].gateOutcome === 'attention' && item.gateOutcome !== 'attention' && (
-                <BandHeading
-                  label="Not visible to users"
-                  detail="Nobody can see these yet, so nothing here is misleading anyone. Closest to finished first."
-                />
-              )}
-              {/* The receipt view splits on the only distinction that matters
-                  there: did this change what a user can see, or not. */}
-              {view === 'autopublished' && i === 0 && item.autoPublishNewlyVisible && (
-                <BandHeading
-                  label="Newly visible — nobody could see these before"
-                  detail="The gate exposed these. If one is wrong, it is wrong in public now."
-                />
-              )}
-              {view === 'autopublished' && item.autoPublishNewlyVisible !== true &&
-               (i === 0 || shown[i - 1].autoPublishNewlyVisible === true) && (
-                <BandHeading
-                  label="Already live — state caught up only"
-                  detail="These were visible before the gate ran. Nothing changed for users."
-                />
-              )}
-              <Row
-                item={item}
-                open={openId === item.id}
-                busy={busyId === item.id}
-                onToggle={() => setOpenId(openId === item.id ? null : item.id)}
-                busyLabel={busyLabel}
-                onPublish={() => publish(item)}
-                onReject={() => reject(item)}
-                onRevert={(d) => revertField(item, d)}
-                onSetFundingType={(t) => setFundingType(item, t)}
-                onReRead={() => reRead(item)}
-                onReClassify={() => reClassify(item)}
-                onFixLink={() => fixLink(item)}
-                rejections={refusals[item.id] ?? []}
-                onOverride={(r) => override(item.id, r)}
-              />
-            </Fragment>
-          ))}
-        </div>
-      )}
+      </div>
     </main>
   )
 }
 
-/**
- * Divides the list where its character changes.
- *
- * The queue used to be one undifferentiated run sorted by how nearly finished
- * each row was, which quietly equated "quick to close" with "worth doing".
- * A row nobody can see is a delay; a row everybody can see that states
- * something wrong is a person being misled. Those deserve to look different.
- */
-function BandHeading({ label, detail }: { label: string; detail: string }) {
-  return (
-    <div style={{
-      display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: 9,
-      marginTop: 6, marginBottom: 1, paddingBottom: 7,
-      borderBottom: '0.5px solid var(--border-subtle)',
-    }}>
-      <span style={{
-        ...display, fontSize: 10.5, fontWeight: 500, letterSpacing: '0.08em',
-        textTransform: 'uppercase', color: 'var(--color-text-tertiary)',
-      }}>{label}</span>
-      <span style={{ fontSize: 12.5, color: 'var(--color-text-secondary)', lineHeight: 1.4 }}>
-        {detail}
-      </span>
-    </div>
-  )
-}
 
 /** `n` below zero renders no tally: a sort chip is a mode, not a count, and a
  *  number beside one would read as "how many are sorted". */
@@ -1388,7 +1179,23 @@ function Row({
   const run = ask.primary === 'publish' ? onPublish : ask.primary === 'fixlink' ? onFixLink : onReRead
   // The ask line already explains the headline problem, and the diff is shown in
   // full below it, so repeating both as chips is noise.
-  const otherReasons = item.reasons.filter(r => r.code !== 'tags_changed')
+  /**
+   * ONE CAUSE ON THE CARD, THE CONSEQUENCES BEHIND DETAILS.
+   *
+   * Charity Bank rendered seven chips — never read, never enriched, link
+   * unverified, no amount, no deadline, no eligibility, no sectors — which is
+   * one fact and six things true only because of it. The ask line above already
+   * states the cause and offers the button that resolves it, so repeating the
+   * six is noise sitting between the reviewer and the decision.
+   *
+   * They are collapsed, never dropped: a count remains, and opening the row
+   * shows them in full.
+   */
+  const rootCause = rootCauseOf(item.reasons.map(r => r.code))
+  const collapsedCodes = new Set(explainedBy(rootCause, item.reasons.map(r => r.code)))
+  const allReasons = item.reasons.filter(r => r.code !== 'tags_changed')
+  const otherReasons = allReasons.filter(r => !collapsedCodes.has(r.code))
+  const collapsedCount = allReasons.length - otherReasons.length
   const shownDiffs = item.diffs.slice(0, 2)
   const moreDiffs = item.diffs.length - shownDiffs.length
 
@@ -1520,8 +1327,20 @@ function Row({
           </div>
         )}
 
-        {otherReasons.length > 0 && (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
+        {(otherReasons.length > 0 || collapsedCount > 0) && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10, alignItems: 'baseline' }}>
+            {collapsedCount > 0 && (
+              <button
+                onClick={onToggle}
+                style={{
+                  ...display, fontSize: 11.5, padding: '3px 9px', cursor: 'pointer',
+                  borderRadius: 'var(--radius-badge, 8px)', border: '0.5px solid var(--border-subtle)',
+                  background: 'transparent', color: 'var(--color-text-tertiary)',
+                }}
+              >
+                {collapsedCount} more {collapsedCount === 1 ? 'follows' : 'follow'} from this
+              </button>
+            )}
             {otherReasons.map(r => {
               const s = SEV_STYLE[r.severity] ?? SEV_STYLE.changed
               return (
@@ -1797,4 +1616,64 @@ const dangerBtn: React.CSSProperties = {
   fontFamily: 'var(--font-space-grotesk)', fontSize: 12.5, fontWeight: 600,
   borderRadius: 'var(--radius-input)', padding: '8px 16px', cursor: 'pointer',
   border: '0.5px solid transparent', background: 'transparent', color: 'var(--coral-deep)',
+}
+
+/** A headline number. Three of these replace two paragraphs of prose. */
+function Stat({ n, label, onClick, active, tone }: {
+  n: number; label: string; onClick: () => void; active: boolean; tone?: 'alert'
+}) {
+  const alert = tone === 'alert' && n > 0
+  return (
+    <button
+      onClick={onClick}
+      aria-pressed={active}
+      style={{
+        ...display, cursor: 'pointer', textAlign: 'left',
+        borderRadius: 'var(--radius-card)', padding: '10px 16px',
+        border: `0.5px solid ${active ? 'var(--green-deep)' : alert ? 'var(--coral-saturated)' : 'var(--border-subtle)'}`,
+        background: alert ? 'var(--coral-pale)' : 'var(--color-surface)',
+        color: alert ? 'var(--coral-deep)' : 'var(--color-text-primary)',
+        minWidth: 128,
+      }}
+    >
+      <div style={{ fontSize: 22, fontWeight: 500, lineHeight: 1.1, fontVariantNumeric: 'tabular-nums' }}>{n}</div>
+      <div style={{ fontSize: 12, opacity: 0.85 }}>{label}</div>
+    </button>
+  )
+}
+
+function RailHeading({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{
+      ...display, fontSize: 10.5, fontWeight: 500, letterSpacing: '0.08em',
+      textTransform: 'uppercase', color: 'var(--color-text-tertiary)',
+      padding: '0 0 6px 10px',
+    }}>{children}</div>
+  )
+}
+
+/** One rail entry: name, count, and the one line that says what it is. */
+function RailItem({ id, nav, onGo, n, tone }: {
+  id: NavId; nav: NavId; onGo: (id: NavId) => void; n: number; tone?: 'alert'
+}) {
+  const active = nav === id
+  const alert = tone === 'alert' && n > 0
+  const meta = NAV_META[id]
+  return (
+    <button
+      onClick={() => onGo(id)}
+      aria-current={active ? 'page' : undefined}
+      style={{
+        ...display, display: 'block', width: '100%', textAlign: 'left', cursor: 'pointer',
+        border: 0, borderRadius: 10, padding: '7px 10px', marginBottom: 2,
+        background: active ? 'var(--green-deep)' : 'transparent',
+        color: active ? 'var(--green-pale-2)' : alert ? 'var(--coral-deep)' : 'var(--color-text-primary)',
+      }}
+    >
+      <span style={{ display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 13.5, fontWeight: 500 }}>
+        <span>{meta.label}</span>
+        <span style={{ fontVariantNumeric: 'tabular-nums', opacity: 0.75 }}>{n}</span>
+      </span>
+    </button>
+  )
 }

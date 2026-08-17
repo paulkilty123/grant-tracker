@@ -190,8 +190,19 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
 
   const funderType    = grant?.funder_type ?? 'other'
   const typeLabel     = FUNDER_LABELS[funderType] ?? funderType.replace(/_/g, ' ')
-  const rawFunding    = grant?.funding_type ?? 'grant'
-  const ftBadge       = FUNDING_TYPE_BADGES[rawFunding] ?? FUNDING_TYPE_BADGES['grant']
+  /**
+   * NO DATA MEANS NO BADGE. It used to default to 'grant', so a row that had not
+   * loaded — still fetching, or 404 because the row is not public — rendered a
+   * confident "Grant" next to "Loading…". Charity Bank Green Loans is
+   * `funding_type: investment` in the database and showed as a Grant on this
+   * panel, beside a description reading "Repayable finance, not a grant": three
+   * answers to one question, and the wrong one was invented here.
+   *
+   * A default is only safe where every value is equally likely. Funding type is
+   * the opposite: 'grant' is the commonest value, so defaulting to it makes the
+   * error invisible exactly when it matters.
+   */
+  const ftBadge       = grant?.funding_type ? FUNDING_TYPE_BADGES[grant.funding_type] ?? null : null
   const lastSeen      = grant?.last_seen_at ? String(grant.last_seen_at).split('T')[0] : null
   const eligibility   = Array.isArray(grant?.eligibility_criteria) ? grant!.eligibility_criteria : []
   const impactSectors = Array.isArray(grant?.impact_sectors)       ? grant!.impact_sectors       : []
@@ -279,13 +290,15 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
 
                   {/* Badge row */}
                   <div className="flex flex-wrap gap-1.5">
-                    <span
-                      className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1"
-                      style={{ backgroundColor: ftBadge.bg, color: ftBadge.color, borderRadius: 9999 }}
-                    >
-                      <ftBadge.Icon className="w-3 h-3" />
-                      {ftBadge.label}
-                    </span>
+                    {ftBadge && (
+                      <span
+                        className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1"
+                        style={{ backgroundColor: ftBadge.bg, color: ftBadge.color, borderRadius: 9999 }}
+                      >
+                        <ftBadge.Icon className="w-3 h-3" />
+                        {ftBadge.label}
+                      </span>
+                    )}
                     {spendLabel(grant.spend_types, grant.spend_restriction) && (
                       <span
                         className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1"
@@ -474,11 +487,17 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
                 )}
 
                 {/* Source */}
+                {/* "Last checked" named a check that never happened.
+                    `last_seen_at` is when a CRAWLER last found this row in a
+                    listing — it says nothing about whether the fund is open, so
+                    "Last checked: today · May be closed" told a user we had
+                    looked today and still could not say. We had not looked; we
+                    had been past. Relabelled to what the field actually is. */}
                 {lastSeen && (
                   <p className="text-[11px] text-[#8A8986] text-center pb-2">
-                    Source: {sourceLabel(grant.source)} · Last checked: {lastSeen}
+                    Source: {sourceLabel(grant.source)} · Last seen in a listing: {lastSeen}
                     {grant.is_active === false && (
-                      <span className="ml-1 text-coral-saturated font-medium">· May be closed</span>
+                      <span className="ml-1 text-coral-saturated font-medium">· No longer listed</span>
                     )}
                   </p>
                 )}

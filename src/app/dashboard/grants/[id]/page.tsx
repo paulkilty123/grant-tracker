@@ -119,8 +119,12 @@ export default async function GrantDetailPage({
     'in-kind':          { Icon: Gift,          label: 'In-Kind Support',   cls: 'bg-amber-pale text-amber-deep border border-amber-mid' },
     'tax-relief':       { Icon: Landmark,      label: 'Tax Relief',        cls: 'bg-stone-100 text-stone-700 border border-stone-300' },
   }
-  const rawFundingType = grant.funding_type ? String(grant.funding_type) : 'grant'
-  const fundingTypeBadge: FTBadge = FUNDING_TYPE_BADGES[rawFundingType] ?? FUNDING_TYPE_BADGES['grant']
+  /** No data means no badge. Defaulting to 'grant' invents the commonest answer
+   *  exactly where being wrong matters most — see GrantDetailModal, where a
+   *  row typed `investment` rendered as a Grant beside a description reading
+   *  "Repayable finance, not a grant". */
+  const fundingTypeBadge: FTBadge | null =
+    grant.funding_type ? FUNDING_TYPE_BADGES[String(grant.funding_type)] ?? null : null
 
   // Impact sectors (classified taxonomy)
   const impactSectors: string[] = Array.isArray(grant.impact_sectors) ? grant.impact_sectors : []
@@ -190,10 +194,12 @@ export default async function GrantDetailPage({
                   <MapPin className="w-3 h-3" />{placeLabel}
                 </span>
               )}
-              <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${fundingTypeBadge.cls}`}>
-                <fundingTypeBadge.Icon className="w-3 h-3" />
-                {fundingTypeBadge.label}
-              </span>
+              {fundingTypeBadge && (
+                <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${fundingTypeBadge.cls}`}>
+                  <fundingTypeBadge.Icon className="w-3 h-3" />
+                  {fundingTypeBadge.label}
+                </span>
+              )}
             </div>
             <h1 className="font-display text-2xl font-bold text-forest leading-tight">{grant.title}</h1>
             <p className="text-mid text-base mt-1">{grant.funder}</p>
@@ -350,9 +356,12 @@ export default async function GrantDetailPage({
 
       {/* Metadata footer */}
       <p className="text-xs text-light text-center">
-        Source: {sourceLabel(String(grant.source))} · Last checked: {lastSeen}
+        {/* `last_seen_at` is when a crawler last found this row in a listing,
+            not a status check. "Last checked: today · May be closed" claimed we
+            had looked today and still could not say. */}
+        Source: {sourceLabel(String(grant.source))} · Last seen in a listing: {lastSeen}
         {grant.is_active === false && (
-          <span className="ml-2 text-coral-saturated font-medium">· May be closed</span>
+          <span className="ml-2 text-coral-saturated font-medium">· No longer listed</span>
         )}
       </p>
       <div className="text-center mt-2">

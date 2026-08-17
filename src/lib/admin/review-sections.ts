@@ -154,48 +154,6 @@ export const EVIDENCE_RANK_LABEL: Record<0 | 1 | 2 | 3, string> = {
   3: 'page is about a different fund',
 }
 
-/**
- * The plan sentence at the top of the screen.
- *
- * Written as a computed fact rather than a slogan: it names what is publishable
- * now, what the single biggest blocker is, and how many rows a person can
- * currently see and be misled by. Paul asked for the live-and-wrong count to be
- * in it "so the sentence reads as a plan for the whole screen rather than just
- * the queue".
- */
-export function planLine(opts: {
-  ready: number
-  bySection: Record<SectionId, number>
-  liveAndWrong: number
-}): string {
-  const { ready, bySection, liveAndWrong } = opts
-  const parts: string[] = []
-
-  parts.push(ready === 0
-    ? 'Nothing is ready to publish.'
-    : `${ready} row${ready === 1 ? ' is' : 's are'} ready to publish.`)
-
-  // The biggest blocker, named. "Clear X and N become publishable" is the whole
-  // reason to group by action rather than by cause.
-  const blockers = (['link', 'reading', 'judgement', 'untruthful'] as SectionId[])
-    .map(id => ({ id, n: bySection[id] ?? 0 }))
-    .filter(b => b.n > 0)
-    .sort((a, b) => b.n - a.n)
-  const top = blockers[0]
-  if (top) {
-    const what = top.id === 'link' ? 'the link issues'
-      : top.id === 'reading' ? 'the unread pages'
-      : top.id === 'judgement' ? 'the judgement calls'
-      : 'the untruthful rows'
-    parts.push(`Clearing ${what} would make ${top.n} more publishable.`)
-  }
-
-  if (liveAndWrong > 0) {
-    parts.push(`${liveAndWrong} row${liveAndWrong === 1 ? ' is' : 's are'} live to users and wrong — those are the only ones misleading anybody right now.`)
-  }
-
-  return parts.join(' ')
-}
 
 
 /**
@@ -240,4 +198,62 @@ export function isNewArrival(firstSeenAt: string | null, now: Date = new Date())
   const t = Date.parse(firstSeenAt)
   if (Number.isNaN(t)) return false
   return now.getTime() - t <= NEW_ARRIVAL_DAYS * 24 * 60 * 60 * 1000
+}
+
+
+/**
+ * One cause, not six consequences.
+ *
+ * Charity Bank showed seven chips: never read · never enriched · link unverified
+ * · no amount · no deadline · no eligibility · no sectors. That is ONE fact —
+ * nobody has read the page — and six things that are true only because of it.
+ * Six chips of noise around one actionable sentence, and the reviewer has to
+ * work out which is which.
+ *
+ * Paul, 2026-08-17: "Where a root cause explains the rest, state it in one
+ * sentence and offer the single button that resolves it."
+ *
+ * ROOT causes, most-explanatory first. A dead link outranks an unread page
+ * because re-reading a dead link cannot help.
+ */
+export const ROOT_CAUSES: readonly string[] = [
+  'link_dead',
+  'page_describes_different_fund',
+  'page_unreadable',
+  'quarantined',
+  'never_verified',
+  'no_brief',
+]
+
+/**
+ * Codes that are CONSEQUENCES of not having a usable page read.
+ *
+ * Every one of these is an absence, and an absence cannot be judged until
+ * something has been read. Deliberately excludes anything that asserts a
+ * positive wrong value — a suspect amount or a passed deadline is a real finding
+ * about data we hold, not a symptom of a missing read, and hiding it behind a
+ * root cause would bury the row's actual defect.
+ */
+const CONSEQUENCE: ReadonlySet<string> = new Set([
+  'link_unverified', 'no_amount', 'no_deadline', 'eligibility_missing',
+  'sectors_missing', 'beneficiaries_generic_only', 'no_brief', 'never_verified',
+  'stale_enrichment', 'amount_ungrounded',
+])
+
+/** The one cause worth stating, or null when the row has no single explanation. */
+export function rootCauseOf(codes: readonly string[]): string | null {
+  for (const c of ROOT_CAUSES) if (codes.includes(c)) return c
+  return null
+}
+
+/**
+ * Which of a row's reasons the root cause already explains, and can therefore
+ * be collapsed behind Details.
+ *
+ * Returns an empty list when there is no root cause, so a row with genuinely
+ * independent problems keeps showing all of them.
+ */
+export function explainedBy(root: string | null, codes: readonly string[]): string[] {
+  if (!root) return []
+  return codes.filter(c => c !== root && CONSEQUENCE.has(c))
 }

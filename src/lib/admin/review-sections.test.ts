@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { sectionOf, evidenceRank, planLine, SECTIONS, arrivalOrigin, isNewArrival } from './review-sections'
+import { sectionOf, evidenceRank, SECTIONS, arrivalOrigin, isNewArrival, rootCauseOf, explainedBy } from './review-sections'
 import { BLOCKING_CODES } from './publish-gate'
 import type { EvidenceSummary } from './evidence-summary'
 
@@ -96,37 +96,6 @@ describe('evidenceRank — safest first', () => {
   })
 })
 
-describe('planLine', () => {
-  const empty = { ready: 0, link: 0, reading: 0, judgement: 0, untruthful: 0 }
-
-  it('names the biggest blocker and what clearing it would buy', () => {
-    const s = planLine({ ready: 27, bySection: { ...empty, link: 44, reading: 13 }, liveAndWrong: 32 })
-    expect(s).toContain('27 rows are ready to publish')
-    expect(s).toContain('the link issues')
-    expect(s).toContain('44 more publishable')
-  })
-
-  it('carries the live-and-wrong count, so it reads as a plan for the whole screen', () => {
-    const s = planLine({ ready: 5, bySection: { ...empty, reading: 2 }, liveAndWrong: 32 })
-    expect(s).toContain('32 rows are live to users and wrong')
-  })
-
-  it('says nothing about live-and-wrong when there are none', () => {
-    const s = planLine({ ready: 5, bySection: { ...empty, reading: 2 }, liveAndWrong: 0 })
-    expect(s).not.toContain('live to users and wrong')
-  })
-
-  it('handles an empty queue without inventing a blocker', () => {
-    const s = planLine({ ready: 0, bySection: { ...empty }, liveAndWrong: 0 })
-    expect(s).toBe('Nothing is ready to publish.')
-  })
-
-  it('uses singular English for one row', () => {
-    const s = planLine({ ready: 1, bySection: { ...empty }, liveAndWrong: 1 })
-    expect(s).toContain('1 row is ready')
-    expect(s).toContain('1 row is live to users and wrong')
-  })
-})
 
 describe('arrivalOrigin — the three origins that mean something', () => {
   it('reads the things we went looking for as discovery', () => {
@@ -172,5 +141,41 @@ describe('isNewArrival', () => {
   it('is false rather than throwing on missing or malformed dates', () => {
     expect(isNewArrival(null, now)).toBe(false)
     expect(isNewArrival('not a date', now)).toBe(false)
+  })
+})
+
+describe('rootCauseOf / explainedBy — one cause, not six consequences', () => {
+  // Charity Bank, verbatim: one fact and six things true only because of it.
+  const charityBank = ['never_verified', 'no_brief', 'link_unverified', 'no_amount',
+                       'no_deadline', 'eligibility_missing', 'sectors_missing']
+
+  it('names the single cause behind seven chips', () => {
+    expect(rootCauseOf(charityBank)).toBe('never_verified')
+  })
+
+  it('collapses the six consequences', () => {
+    const hidden = explainedBy('never_verified', charityBank)
+    expect(hidden).toHaveLength(6)
+    expect(hidden).toContain('no_amount')
+    expect(hidden).toContain('sectors_missing')
+    expect(hidden).not.toContain('never_verified')
+  })
+
+  it('ranks a dead link above an unread page — re-reading a dead link cannot help', () => {
+    expect(rootCauseOf(['never_verified', 'link_dead'])).toBe('link_dead')
+    expect(rootCauseOf(['no_brief', 'page_describes_different_fund'])).toBe('page_describes_different_fund')
+  })
+
+  it('never hides a positive wrong value behind a root cause', () => {
+    // A suspect amount or a passed deadline is a real finding about data we
+    // hold, not a symptom of a missing read. Burying it would hide the defect.
+    const hidden = explainedBy('never_verified',
+      ['never_verified', 'amount_pot_suspected', 'deadline_passed', 'no_amount'])
+    expect(hidden).toEqual(['no_amount'])
+  })
+
+  it('leaves a row with independent problems showing all of them', () => {
+    expect(rootCauseOf(['amount_pot_suspected', 'deadline_implausible'])).toBeNull()
+    expect(explainedBy(null, ['amount_pot_suspected', 'deadline_implausible'])).toEqual([])
   })
 })
