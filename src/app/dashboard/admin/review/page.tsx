@@ -40,6 +40,9 @@ const COLS = [
   'url_status', 'url_quality_score',
   'amount_min', 'amount_max', 'deadline', 'is_rolling', 'next_open_date', 'deadline_cycle',
   'eligible_structures', 'impact_sectors', 'target_beneficiaries', 'funding_type',
+  // What a USER sees at a glance. The queue showed none of it on the card, so
+  // judging a row meant opening it or trusting the reason chips.
+  'funder_type', 'location_tag', 'is_local',
   'funder_brief', 'field_provenance', 'raw_data', 'needs_intervention_reason',
   // What the funder's own page said, when the engine last read it. Every other
   // column here is our bookkeeping; this is the only one from outside.
@@ -239,6 +242,11 @@ export default async function ReviewPage() {
         structures: r.eligible_structures ?? [],
         sectors:    r.impact_sectors ?? [],
         fundingType: (r.funding_type as string | null) ?? null,
+        beneficiaries: r.target_beneficiaries ?? [],
+        funderType:  (r as { funder_type?: string | null }).funder_type ?? null,
+        locationTag: (r as { location_tag?: string | null }).location_tag ?? null,
+        isLocal:     (r as { is_local?: boolean | null }).is_local === true,
+        nextOpenDate: r.next_open_date ?? null,
       },
       }
     })

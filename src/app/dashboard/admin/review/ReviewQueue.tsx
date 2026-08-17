@@ -26,7 +26,7 @@
 // calcifying.
 
 import { Fragment, useMemo, useState, useCallback } from 'react'
-import { Check, RefreshCw, Link2, ExternalLink, Eye, X } from 'lucide-react'
+import { Check, RefreshCw, Link2, ExternalLink, Eye, X, MapPin } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useToast } from '@/components/ui/Toast'
 import GrantDetailModal from '@/components/GrantDetailModal'
@@ -98,6 +98,11 @@ export type QueueItem = {
     sectors: string[]
     /** Which of the four Find Funding tabs this row lands in. */
     fundingType: string | null
+    beneficiaries: string[]
+    funderType: string | null
+    locationTag: string | null
+    isLocal: boolean
+    nextOpenDate: string | null
   }
 }
 
@@ -173,6 +178,10 @@ const NAV_META: Record<NavId, { label: string; detail: string }> = {
 }
 
 const display = { fontFamily: 'var(--font-space-grotesk)' } as const
+/** `young_people` -> `Young people`. The stored values are snake_case codes and
+ *  a reviewer should not have to read the database's spelling. */
+const prettyTag = (t: string) =>
+  t.replace(/_/g, ' ').replace(/^./, c => c.toUpperCase())
 const gbp = (n: number | null) => (n === null ? '—' : `£${n.toLocaleString('en-GB')}`)
 
 /**
@@ -1370,6 +1379,51 @@ function Row({
           </div>
         )}
 
+        {/* WHAT A USER WOULD SEE, ON THE CARD RATHER THAN BEHIND A CLICK.
+            These were all inside Details, so judging a row meant opening it or
+            trusting the reason chips — and the chips describe what is WRONG,
+            never what is there. An empty strip is itself the answer on a row
+            that has been read and has nothing to show. */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 11, alignItems: 'center' }}>
+          {item.values.beneficiaries.slice(0, 3).map(b => (
+            <Pill key={b} bg="var(--bg-pill-neutral)" ink="var(--color-text-secondary)">{prettyTag(b)}</Pill>
+          ))}
+          {item.values.sectors.slice(0, 3).map(sec => (
+            <Pill key={sec} bg="var(--green-pale-2, #F1F7E4)" ink="var(--green-deep, #3B6D11)">{prettyTag(sec)}</Pill>
+          ))}
+          {item.values.funderType && (
+            <Pill bg="var(--bg-pill-neutral)" ink="var(--color-text-secondary)">{prettyTag(item.values.funderType)}</Pill>
+          )}
+          {(item.values.locationTag || item.values.isLocal) && (
+            <Pill bg="rgba(186,230,253,0.55)" ink="#0C447C">
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                <MapPin size={11} strokeWidth={2.25} />
+                {item.values.locationTag ?? 'Local'}
+              </span>
+            </Pill>
+          )}
+        </div>
+
+        {/* The three facts a fundraiser decides on. Absence renders as absence —
+            "not recorded" is a finding, and printing a dash would hide it. */}
+        <div style={{
+          display: 'flex', flexWrap: 'wrap', gap: '4px 22px', marginTop: 10,
+          fontSize: 12.5, color: 'var(--color-text-secondary)',
+        }}>
+          <span><b style={{ ...display, fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--color-text-tertiary)' }}>Amount </b>
+            {item.values.amountMin || item.values.amountMax
+              ? `${gbp(item.values.amountMin)} to ${gbp(item.values.amountMax)}`
+              : <em style={{ color: 'var(--amber-deep)' }}>not recorded</em>}</span>
+          <span><b style={{ ...display, fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--color-text-tertiary)' }}>Deadline </b>
+            {item.values.deadline ?? (item.values.isRolling ? 'Rolling'
+              : item.values.nextOpenDate ? `Opens ${item.values.nextOpenDate}`
+              : <em style={{ color: 'var(--amber-deep)' }}>not recorded</em>)}</span>
+          <span><b style={{ ...display, fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--color-text-tertiary)' }}>Eligible </b>
+            {item.values.structures.length
+              ? `${item.values.structures.slice(0, 2).map(prettyTag).join(', ')}${item.values.structures.length > 2 ? ` +${item.values.structures.length - 2}` : ''}`
+              : <em style={{ color: 'var(--amber-deep)' }}>nobody — no structures recorded</em>}</span>
+        </div>
+
         {(otherReasons.length > 0 || collapsedCount > 0) && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10, alignItems: 'baseline' }}>
             {collapsedCount > 0 && (
@@ -1570,12 +1624,17 @@ function Row({
             )}
 
             <div>
-              <SectionLabel>What is recorded now</SectionLabel>
+              {/* Amount, deadline, eligibility and sectors moved OUT to the card
+                  — they are what a user sees, so they belong where they can be
+                  read without a click. What stays here is the part a user never
+                  sees and which decides whether the row can be trusted: the
+                  page evidence, the brief and its citations, and the one control
+                  that changes which tab the row lands in. */}
+              <SectionLabel>Recorded, with the controls</SectionLabel>
               <div style={{ fontSize: 12.5, display: 'grid', gap: 4 }}>
-                <Val k="Amount">{gbp(item.values.amountMin)} to {gbp(item.values.amountMax)}</Val>
-                <Val k="Deadline">{item.values.deadline ?? (item.values.isRolling ? 'Rolling' : 'none')}</Val>
-                <Val k="Eligibility">{item.values.structures.join(', ') || 'none'}</Val>
-                <Val k="Sectors">{item.values.sectors.join(', ') || 'none'}</Val>
+                <Val k="All eligible structures">{item.values.structures.map(prettyTag).join(', ') || 'none'}</Val>
+                <Val k="All sectors">{item.values.sectors.map(prettyTag).join(', ') || 'none'}</Val>
+                <Val k="Beneficiaries">{item.values.beneficiaries.map(prettyTag).join(', ') || 'none'}</Val>
                 <Val k="Funding type">
                   <span style={{ display: 'inline-flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
                     <strong style={{ ...display, fontSize: 12 }}>
