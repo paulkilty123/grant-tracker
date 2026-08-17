@@ -1,0 +1,233 @@
+{
+  "ranAt": "2026-08-17T13:11:06.022Z",
+  "changed": 9,
+  "record": [
+    {
+      "id": "06a3f5a0-e90d-451b-a829-0d3b895aac72",
+      "title": "LEF — Strengthening Justice Fund",
+      "source": "admin:paulkilty1@gmail.com",
+      "fields": {
+        "apply_url": "https://lef.org.uk/funding/grants/strengthening-justice-fund"
+      },
+      "why": "pointed at the generic /funding/our-funds listing, not the fund",
+      "before": {
+        "title": "Legal Education Foundation — Strengthening Justice Fund",
+        "apply_url": "https://lef.org.uk/funding/our-funds",
+        "is_active": true,
+        "pipeline_state": "published",
+        "deadline": "2026-09-17",
+        "is_rolling": false,
+        "url_status": "ok"
+      },
+      "applied": [
+        "apply_url"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "id": "1ffe7161-587d-48ce-86a2-39a94a9120ad",
+      "title": "The Weavers' Company Charitable Funds",
+      "source": "admin:paulkilty1@gmail.com",
+      "fields": {
+        "apply_url": "https://www.weavers.org.uk/charity/charitable-grants/guidelines/"
+      },
+      "why": "pointed at /charity/, which carries no funding detail — the engine said so and nothing acted",
+      "before": {
+        "title": "The Weavers' Company Charitable Funds",
+        "apply_url": "https://www.weavers.org.uk/charity/",
+        "is_active": true,
+        "pipeline_state": "published",
+        "deadline": null,
+        "is_rolling": false,
+        "url_status": "ok"
+      },
+      "applied": [
+        "apply_url"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "id": "6d512c2b-f3b9-43d2-9b9d-83399dc49d0c",
+      "title": "SSE Match Trading Grant",
+      "source": "admin:paulkilty1@gmail.com",
+      "fields": {
+        "apply_url": "https://www.matchtrading.com/"
+      },
+      "why": "pointed at the-sse.org programme page rather than the fund’s own site",
+      "before": {
+        "title": "SSE Match Trading Grant",
+        "apply_url": "https://www.the-sse.org/our-programmes/match-trading/",
+        "is_active": true,
+        "pipeline_state": "published",
+        "deadline": null,
+        "is_rolling": false,
+        "url_status": "ok"
+      },
+      "applied": [
+        "apply_url"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "id": "8f8bc717-1cbb-44de-abc1-fe04e0efcce2",
+      "title": "JRCT — Rights & Justice Programme",
+      "source": "system:spot_check_2026-08-17",
+      "fields": {
+        "deadline": "2026-09-02",
+        "is_rolling": false
+      },
+      "why": "said \"Rolling, apply any time\" with a hard deadline sixteen days away",
+      "before": {
+        "title": "JRCT — Rights & Justice Programme",
+        "apply_url": "https://www.jrct.org.uk/rights-and-justice",
+        "is_active": true,
+        "pipeline_state": "published",
+        "deadline": null,
+        "is_rolling": true,
+        "url_status": "ok"
+      },
+      "applied": [
+        "deadline",
+        "is_rolling"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "id": "87775eeb-4be9-4068-be85-66587cc45af3",
+      "title": "Woodward Charitable Trust — General Grants",
+      "source": "system:spot_check_2026-08-17",
+      "fields": {
+        "is_active": false,
+        "pipeline_state": "between_rounds_scheduled",
+        "next_open_date": "Later in 2026"
+      },
+      "why": "closed, and showing \"Check website\" — my renderer fix this morning swapped one wrong label for another",
+      "before": {
+        "title": "Woodward Charitable Trust — General Grants",
+        "apply_url": "https://woodwardcharitabletrust.org.uk/general_applications/",
+        "is_active": true,
+        "pipeline_state": "published",
+        "deadline": null,
+        "is_rolling": false,
+        "url_status": "ok"
+      },
+      "applied": [
+        "is_active",
+        "pipeline_state",
+        "next_open_date"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "id": "6492a3f7-ab34-4109-8d1a-89b00749b173",
+      "title": "Runnymede Trust — Race Equality Grants",
+      "source": "system:spot_check_2026-08-17",
+      "fields": {
+        "is_active": false
+      },
+      "why": "apply_url is the Runnymede homepage and no such fund is evident; engine said wrong_fund on 11 August",
+      "before": {
+        "title": "Runnymede Trust — Race Equality Grants",
+        "apply_url": "https://www.runnymedetrust.org/",
+        "is_active": true,
+        "pipeline_state": "published",
+        "deadline": null,
+        "is_rolling": false,
+        "url_status": "ok"
+      },
+      "applied": [
+        "is_active",
+        "pipeline_state"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "id": "33d176a7-0f56-4489-9276-eb74eef826c8",
+      "title": "Fix the Digital Divide Fund",
+      "source": "system:spot_check_2026-08-17",
+      "fields": {
+        "is_active": false,
+        "url_status": "dead"
+      },
+      "why": "URL returns 403 and url_status still read \"ok\"; engine said wrong_fund on 11 August",
+      "before": {
+        "title": "Fix the Digital Divide Fund",
+        "apply_url": "https://network.goodthingsfoundation.org/funding-and-services/funding-available",
+        "is_active": true,
+        "pipeline_state": "published",
+        "deadline": null,
+        "is_rolling": true,
+        "url_status": "ok"
+      },
+      "applied": [
+        "is_active",
+        "url_status",
+        "pipeline_state"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "id": "37a8f875-7834-495f-8e14-a0fade147ebf",
+      "title": "Ufi VocTech Trust",
+      "source": "system:spot_check_2026-08-17",
+      "fields": {
+        "is_active": false
+      },
+      "why": "a front door listing four programmes, carried as one fund; engine said multiple_funds",
+      "before": {
+        "title": "Ufi VocTech Trust",
+        "apply_url": "https://ufi.co.uk/grant-funding/",
+        "is_active": true,
+        "pipeline_state": "published",
+        "deadline": null,
+        "is_rolling": false,
+        "url_status": "ok"
+      },
+      "applied": [
+        "is_active",
+        "pipeline_state"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "id": "d29103be-5800-4beb-920f-205b48a78e78",
+      "title": "City Bridge Foundation — Grants for London",
+      "source": "system:spot_check_2026-08-17",
+      "fields": {
+        "is_active": false
+      },
+      "why": "one generic row claiming \"rolling\" over five real funds with different states; engine said wrong_fund",
+      "before": {
+        "title": "City Bridge Foundation — Grants for London",
+        "apply_url": "https://www.citybridgefoundation.org.uk/funding",
+        "is_active": true,
+        "pipeline_state": "tagged_awaiting_review",
+        "deadline": null,
+        "is_rolling": true,
+        "url_status": "ok"
+      },
+      "applied": [
+        "is_active"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    }
+  ]
+}
