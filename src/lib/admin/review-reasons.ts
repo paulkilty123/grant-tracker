@@ -21,6 +21,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { readGrantFlags, type GrantFlag } from '@/lib/grant-flags'
+import { readStamp, PAGE_READ_KEY, type FieldEvidence } from '@/lib/field-evidence'
 import { FEEDBACK_QUEUE_SOURCE } from '@/lib/feedback/triage'
 
 /** Matches cron/reenrich-stale's STALE_AFTER_DAYS. Keep in step. */
@@ -119,6 +120,12 @@ export type ReviewReasonCode =
   | 'applicant_individual_only'
   | 'deadline_implausible'
   | 'user_flagged'
+  // The verification engine read the funder's own page and found the fund gone,
+  // not funding, or its round shut. Written to field_evidence since 13 August
+  // and, until now, read by nothing that guards publishing.
+  | 'page_says_delisted'
+  | 'page_says_not_funding'
+  | 'page_says_round_closed'
 
 export type ReviewReason = {
   code:     ReviewReasonCode
@@ -165,7 +172,22 @@ export type ReviewRow = {
   /** Which Find Funding tab the row lands in. Not used to derive a reason; the
    *  review queue reads it so a reviewer can correct a misclassification. */
   funding_type?: string | null
+  /** What the funder's own page said when the engine last read it. */
+  field_evidence?: FieldEvidence | null
 }
+
+/**
+ * A year the funder actually wrote: four digits, or two inside a numeric date
+ * like 12/08/26.
+ *
+ * Paul's condition, 2026-08-16: a removal may not act on a deadline the page did
+ * not state in full. `round_closed` is a deterministic function of the proposed
+ * deadline falling in the past (23 rows of 23), so a year-less date resolved to
+ * a wrong past year turns an open fund into a closed one. Greggs' Community
+ * Action Fund is the proof: its page says "until 28th August", the verifier read
+ * 2024, and the fund is open. Six of those 23 rest on an inferred year.
+ */
+const YEAR_STATED_RE = /\d{4}|\d{1,2}[/.-]\d{1,2}[/.-]\d{2}\b/
 
 const SEVERITY_ORDER: Record<ReviewSeverity, number> = { critical: 0, check: 1, changed: 2 }
 
@@ -284,6 +306,47 @@ export function deriveReviewReasons(row: ReviewRow, todayISO?: string): ReviewRe
   const reasons: ReviewReason[] = []
   const brief   = row.funder_brief ?? null
   const flags   = readGrantFlags(row.raw_data)
+
+  // ── What the funder's own page said ──────────────────────────────────────
+  // The strongest evidence we hold about a row, and until now the only signal
+  // the engine produced that nothing downstream consumed. The review queue was
+  // free to offer "Looks right, publish it" on a fund whose page says it is
+  // closed, because a tagging diff outranked the funder's own words. 20 rows
+  // carrying one of these verdicts were visible to users when this was found.
+  const pageRead = readStamp(row.field_evidence, PAGE_READ_KEY)
+  switch (pageRead?.note) {
+    case 'no_longer_listed': {
+      const q = readStamp(row.field_evidence, 'still_listed')?.quote
+      reasons.push({
+        code: 'page_says_delisted', severity: 'critical',
+        label: 'Page no longer lists this fund',
+        detail: q ? `the funder's page says "${q}"` : 'the funder\'s page no longer describes this fund',
+      })
+      break
+    }
+    case 'not_a_grant': {
+      const q = readStamp(row.field_evidence, 'is_grant')?.quote
+      reasons.push({
+        code: 'page_says_not_funding', severity: 'critical',
+        label: 'Page does not describe funding',
+        detail: q ? `the funder's page says "${q}"` : 'the page the link goes to is not a funding opportunity',
+      })
+      break
+    }
+    case 'round_closed': {
+      // ABSTAIN where the year was inferred. See YEAR_STATED_RE above: acting on
+      // a date the funder never wrote is how an open fund gets taken down.
+      const dl = readStamp(row.field_evidence, 'deadline')
+      if (dl?.quote && YEAR_STATED_RE.test(dl.quote)) {
+        reasons.push({
+          code: 'page_says_round_closed', severity: 'critical',
+          label: 'Page says this round has closed',
+          detail: `the funder's page says "${dl.quote}"`,
+        })
+      }
+      break
+    }
+  }
 
   // ── The chain gave up on this row ────────────────────────────────────────
   // Terminal today: process-pipeline-queue excludes these forever and no admin

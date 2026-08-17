@@ -904,6 +904,25 @@ function askFor(item: QueueItem): Ask {
   const keep = item.isActive ? 'Looks right, keep it live' : 'Looks right, publish it'
   const reread = 'Re-read the page' as const
 
+  // FIRST, because it is the funder's own words and it outranks everything
+  // derived from our own data. This queue used to offer "Looks right, publish
+  // it" on a fund whose page said applications were closed, because a tagging
+  // diff was ranked above the verification engine's verdict. The primary action
+  // is never publish here: a fund nobody can apply for should not be offered to
+  // a user, whatever else about the row looks tidy.
+  if (has('page_says_delisted')) return {
+    line: 'The funder\'s page no longer lists this fund. Re-read to confirm, then reject it, or set it between rounds if it is expected back.',
+    primary: 'reread', label: reread,
+  }
+  if (has('page_says_not_funding')) return {
+    line: 'The page this link goes to does not describe funding at all. Fix the link if it points at the wrong page, otherwise reject the row.',
+    primary: 'fixlink', label: 'Fix the link',
+  }
+  if (has('page_says_round_closed')) return {
+    line: 'The funder\'s page says this round has closed, quoting a date it states in full. Set it between rounds so we are told when it reopens, or reject it.',
+    primary: 'reread', label: reread,
+  }
+
   if (has('link_dead')) return {
     line: 'The application link is dead, so anyone who clicks through lands on nothing. Fix the link, or reject the row.',
     primary: 'fixlink', label: 'Fix the link',
