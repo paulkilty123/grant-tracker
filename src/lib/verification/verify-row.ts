@@ -494,6 +494,12 @@ export function candidateLinks(
     // Fragment stripped: a `#tab4` link is the SAME page, and following one
     // spends a model call to re-read what we have already read. Waterloo
     // Foundation's tabbed homepage did exactly that.
+    //
+    // Repeated slashes collapsed: Sir James Knott's site links to
+    // `//applications`, which was written to a live row verbatim as
+    // `knott-trust.co.uk//applications`. It happens to resolve, but a URL we put
+    // in front of a user should not carry the funder's markup bug.
+    abs.pathname = abs.pathname.replace(/\/{2,}/g, '/')
     found.push({ url: abs.href.split('#')[0], score })
   }
 

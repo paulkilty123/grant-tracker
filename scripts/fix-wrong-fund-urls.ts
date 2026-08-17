@@ -99,7 +99,19 @@ async function main() {
   console.log(`estimated cost: about £${(rows.length * GBP_PER_PAGE * 2).toFixed(2)} at two pages a row\n`)
   if (!APPLY) { console.log('DRY RUN — nothing fetched, nothing written. Re-run with --apply.\n'); return }
 
+  // WRITTEN AFTER EVERY ROW, NOT AT THE END.
+  //
+  // The first full pass was killed at row 137 of 189. It had corrected twelve
+  // URLs and the ledger — the only record of what each row pointed at BEFORE —
+  // was still in memory, so it died with the process. The promise was that every
+  // change is reversible; a run that only becomes reversible if it is allowed to
+  // finish does not keep it.
+  const LEDGER_PATH = resolve(HERE, '..', 'reports', 'url-hop-2026-08-17.json')
   const ledger: unknown[] = []
+  const flush = (extra: Record<string, unknown> = {}) => {
+    writeFileSync(LEDGER_PATH, JSON.stringify(
+      { ranAt: new Date().toISOString(), source: SOURCE, before, ...extra, ledger }, null, 2))
+  }
   let corrected = 0, abstained = 0, refused = 0, failed = 0
   let pages = 0
 
@@ -111,6 +123,7 @@ async function main() {
     } catch (e) {
       failed++
       ledger.push({ id: row.id, title: row.title, error: e instanceof Error ? e.message : String(e) })
+      flush({ corrected, abstained, refused, failed, pages })
       continue
     }
     pages += result.pagesRead?.length ?? 1
@@ -141,6 +154,7 @@ async function main() {
       abstained++
       ledger.push({ id: row.id, title: row.title, outcome: 'abstained', funding_index_url: idx ?? null,
                     apply_url: row.apply_url, why: result.notes.slice(-1)[0] ?? 'no candidate named this fund' })
+      flush({ corrected, abstained, refused, failed, pages })
       if ((i + 1) % 20 === 0) console.log(`  ${i + 1}/${rows.length} …`)
       continue
     }
@@ -167,15 +181,12 @@ async function main() {
       funding_index_url: idx ?? null,
       applied, rejected, error: err,
     })
+    flush({ corrected, abstained, refused, failed, pages })
     if ((i + 1) % 20 === 0) console.log(`  ${i + 1}/${rows.length} …`)
   }
 
   const after = await metric()
-  writeFileSync(
-    resolve(HERE, '..', 'reports', 'url-hop-2026-08-17.json'),
-    JSON.stringify({ ranAt: new Date().toISOString(), source: SOURCE, before, after,
-                     corrected, abstained, refused, failed, pages, ledger }, null, 2),
-  )
+  flush({ after, corrected, abstained, refused, failed, pages })
 
   console.log(`\ncorrected ${corrected}   abstained ${abstained}   refused ${refused}   failed ${failed}`)
   console.log(`pages read ${pages}, about £${(pages * GBP_PER_PAGE).toFixed(2)}`)
