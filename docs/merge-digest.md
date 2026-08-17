@@ -35,14 +35,53 @@ the new version.
 
 # Waiting
 
-## `feat/arm-removals` — the engine acts for the first time
+## `feat/arm-removals` — MERGED 17 August as `0866e99`, and now scheduled
 
 **What it does:** gives the verification engine an actuator. It has read 637 of
 670 live rows and found 182 the funder's page contradicts, and until today it
 had corrected none of them, because it was built to write evidence and never
 values. This arms the four classes §12 sets out and only those.
 
-**Commit:** `6fccd45` on `feat/arm-removals`
+**Commits:** `6fccd45` (the actuator), `d58850f` (watch rather than bury, and the
+cap)
+
+### Armed and scheduled, 17 August
+
+- `REMOVALS_ENABLED=true` on Production. Confirmed live: `?peek=true` returns
+  `armed: true`, `cap: 20`, **`candidates: 0`**.
+- `vercel.json`: daily at **21:00 UTC**, two hours after the last `verify-rows`
+  run, so it acts on the freshest evidence rather than yesterday's.
+- **Arming released no backlog, because there is none.** The standing two-step
+  rule was followed: dry run first, read the list, then set the flag. The list
+  was empty — everything actionable had already been done by hand this morning,
+  so the first scheduled run acts only on evidence gathered after arming. That is
+  the safest possible state to arm in and it was luck of sequencing, not design.
+
+**Cap: 20 a run,** per your instruction, with a runaway guard at 100 above it. A
+run that leaves work behind reports `deferred` and `deferredByClass` every time —
+a cap that truncates silently is the real danger, and `validate-urls` already
+taught this repo that lesson by reporting `checked: 0` for its entire existence.
+Ordering is highest-harm-first then by id, so no row can lose the draw every day.
+
+### Correction after the first pass: a closed round is watched, not buried
+
+You were right and the rows prove it. **None of the eight said the fund was
+gone** — all eight were a round closing or a funder pausing, including *"Our
+grant-giving activities are on pause while we finalise a new funding policy"*,
+which is the most watchable of the lot rather than the least. So the condition
+you set for keeping the eighth archived never fired, and **all eight moved.**
+
+`statesPermanentClosure` now has to be satisfied before anything is archived, and
+it tests for permanence explicitly rather than for the absence of a reopening:
+"closed" with no mention of returning is still a round that closed. `not_a_grant`
+is the one class that still always archives — the page is not funding at all, so
+there is no round to wait for.
+
+- 8 of 8 moved to `between_rounds_scheduled`, all now on the funder watchlist.
+- **0 rows remain archived by this actuator.**
+- Record: `reports/archive-destination-correction-2026-08-17.json`. The script
+  reads the run's own ledger rather than a typed list of ids, so it cannot touch
+  a row the actuator never did.
 
 **25 rows corrected today.** The first pass was run from
 `scripts/dry-run-removals.ts --apply` against production, because the route is
@@ -135,18 +174,8 @@ Named rollback: 33a8d8c. Data rollback: reports/removals-2026-08-17.json
             carries before-state per row.
 ```
 
-### Two decisions, when you have a minute
-
-1. **Arming it on a schedule.** Nothing is scheduled yet. The route exists,
-   `REMOVALS_ENABLED` is unset, and `?peek=true` is genuinely free because it
-   reads stored evidence and never calls a model. Say the word and it goes in
-   `vercel.json` after the reader.
-2. **`no_longer_listed` → archived may be the wrong destination.** Seven of the
-   eight quotes say *this round has closed*, not *this fund is gone*. Archived
-   rows leave every admin queue and never come back; `between_rounds_scheduled`
-   would watch the funder and let a reopening return them. I followed your
-   mapping rather than quietly redesigning it. Reversing those seven is one
-   command against the ledger file.
+**Both decisions from the first digest entry are now taken and done:** the
+schedule is armed and capped, and the archive destination is corrected.
 
 ---
 
@@ -192,6 +221,32 @@ carry** — the rule-6 failure, someone applying where they are barred. Those ar
 worth more of your attention than all 52 widenings together.
 
 **Nothing here is scheduled and nothing acts.** The split was the deliverable.
+
+### The 52 exclusion rows, grouped — [`docs/exclusion-review-2026-08-17.md`](exclusion-review-2026-08-17.md)
+
+You asked for these first, on the grounds that being invited to apply where you
+are barred is the worst thing in the catalogue. Agreed, and **five of the 52 are
+that**, not 52. I said otherwise in the first digest and the rows do not support
+it — the correction matters because it changes where the sitting goes.
+
+| Group | Rows |
+|---|---:|
+| **Page bars a legal form we tag as eligible** | **5** |
+| Not an exclusion at all — extractor lifted navigation text; reject | 3 |
+| Bars an applicant, but not by legal form | 23 |
+| Bars a spend, not an applicant | 15 |
+| Bars an activity or conduct | 6 |
+
+The five come down to two questions: **does an unincorporated group belong on a
+Companies-House-only fund** (J N Derbyshire, Key Fund Property Fund — no), and
+**is a CIC limited by shares "profit-distributing"** (Sizewell C, Scops Arts —
+one judgement, two rows). Grants for Good is the clearest of the lot: the page
+bars "Regular Ltd companies and sole traders" and we tag `ltd_shares`.
+
+The tagging is also better than the raw count suggested. Ernest Kleinwort and
+London Catalyst both bar CICs and neither is a clash — we already tag them
+charity-only. Pilkington bars *CICs limited by shares* and we hold
+`cic_guarantee`, which is the right distinction correctly held.
 
 ---
 
