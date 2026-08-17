@@ -26,7 +26,7 @@
 // calcifying.
 
 import { Fragment, useMemo, useState, useCallback } from 'react'
-import { Check, RefreshCw, Link2, ExternalLink, Eye, X, MapPin, FilePlus } from 'lucide-react'
+import { Check, RefreshCw, Link2, ExternalLink, Eye, X, MapPin, FilePlus, Clock } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useToast } from '@/components/ui/Toast'
 import GrantDetailModal from '@/components/GrantDetailModal'
@@ -35,6 +35,7 @@ import type { EvidenceSummary } from '@/lib/admin/evidence-summary'
 // Type-only, so the merger's server dependencies are erased at build and this
 // stays a client component.
 import type { MergeRejection } from '@/lib/grant-merge'
+import { REJECT_REASONS, formatRejectReason } from '@/lib/admin/reject-reasons'
 import {
   SECTIONS, sectionOf, evidenceRank, EVIDENCE_RANK_LABEL,
   arrivalOrigin, isNewArrival, ORIGIN_LABEL, NEW_ARRIVAL_DAYS,
@@ -794,20 +795,57 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
    * A control someone reaches for when something is wrong in public must
    * report its own outcome, both ways.
    */
-  const reject = useCallback(async (item: QueueItem) => {
-    const reason = window.prompt(
-      `Why is "${item.title}" not right for the catalogue?\n\nThis is recorded, so a future pass knows not to re-add it.`,
+  /**
+   * Closed now, expected back — the state Reject was being misused for.
+   *
+   * Rejecting a fund that is merely between rounds is actively wrong: migration
+   * 060 excludes `rejected` and `archived` rows from the verification batch, so
+   * a rejected fund is NEVER read again. Telling the system to stop looking at
+   * exactly the fund you wanted watched is the opposite of the intent.
+   *
+   * `between_rounds_scheduled` is the state that does what is meant. Entering it
+   * fires the migration-057 trigger, which enrols the funder on
+   * `funder_watchlist`, so the listing page is watched and a reopening can bring
+   * the row back.
+   *
+   * `pipeline_state` is passed EXPLICITLY so `transitionPipelineState` is
+   * skipped. Left to itself it sends an `is_active: false` row to `captured`
+   * unless a `next_open_date` happens to be truthy, which would make the
+   * destination depend on whether the reviewer filled in an optional box.
+   */
+  const watchBetweenRounds = useCallback(async (item: QueueItem) => {
+    if (!item.applyUrl) {
+      toast.error('This row has no link, so there is no page to watch. Fix the link first.')
+      return
+    }
+    const when = window.prompt(
+      `Take "${item.title}" out of view and watch for it reopening.\n\n`
+      + 'The funder goes on the watchlist, so a new round can bring this row back. '
+      + 'Users will not see it meanwhile.\n\n'
+      + 'When do you expect it back? Free text — "Later in 2026", "Spring". Leave blank if unknown.',
+      item.values.nextOpenDate ?? '',
     )
-    // Cancel and empty-reason are different intentions and get different words.
-    // Neither may pass without one.
-    if (reason === null) {
-      toast.info(`Reject cancelled. "${item.title}" is unchanged and still live.`)
+    if (when === null) {
+      toast.info(`Left alone. "${item.title}" is unchanged.`)
       return
     }
-    if (!reason.trim()) {
-      toast.error('Reject needs a reason, so a future pass knows not to re-add it. Nothing changed.')
-      return
+    setBusyId(item.id)
+    const fields: Record<string, unknown> = {
+      is_active: false,
+      pipeline_state: 'between_rounds_scheduled',
     }
+    // Only written when typed. An invented reopening date is a claim about the
+    // future, and blank is the honest answer when nobody knows.
+    if (when.trim()) fields.next_open_date = when.trim()
+    const ok = await patch(item.id, fields, 'Setting between rounds', ['is_active', 'pipeline_state'])
+    setBusyId(null)
+    if (!ok) return
+    setDone(d => new Set(d).add(item.id))
+    toast.success(`"${item.title}" is out of view, and the funder is on the watchlist.`)
+    router.refresh()
+  }, [patch, router, toast])
+
+  const reject = useCallback(async (item: QueueItem, code: string, note: string) => {
     setBusyId(item.id)
     // `expect` is the whole point here: pipeline_state is what actually takes
     // the row out of circulation, so the confirmation below is only allowed to
@@ -815,7 +853,9 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
     const ok = await patch(item.id, {
       is_active: false,
       pipeline_state: 'rejected',
-      rejection_reason: reason.trim(),
+      // Code first so the reasons can be COUNTED, note after so the sentence a
+      // human wanted to leave survives beside it.
+      rejection_reason: formatRejectReason(code, note),
     }, 'Rejecting', ['is_active', 'pipeline_state'])
     setBusyId(null)
     if (!ok) return   // patch has already said why
@@ -837,14 +877,14 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
    * failure the single-row path was rebuilt to stop, and doing it thirty at a
    * time would make it thirty times harder to notice.
    */
-  const bulk = useCallback(async (ids: string[], action: 'publish' | 'reread' | 'reject') => {
+  const bulk = useCallback(async (ids: string[], action: 'publish' | 'reread' | 'reject', bulkCode = 'out_of_scope') => {
     const rows = ids
       .map(id => pending.find(i => i.id === id))
       .filter((i): i is QueueItem => Boolean(i))
     let ok = 0
     for (const item of rows) {
       const done = action === 'publish' ? await publish(item)
-        : action === 'reject' ? await reject(item)
+        : action === 'reject' ? await reject(item, bulkCode, '')
         : await reRead(item)
       if (done !== false) ok++
     }
@@ -997,10 +1037,10 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
                        return s2
                      })}
                      onToggle={() => setOpenId(openId === item.id ? null : item.id)}
-                     busyLabel={busyLabel} onPublish={() => publish(item)} onReject={() => reject(item)}
+                     busyLabel={busyLabel} onPublish={() => publish(item)} onReject={(code, note) => reject(item, code, note)}
                      onRevert={(d) => revertField(item, d)} onSetFundingType={(t) => setFundingType(item, t)}
                      onReRead={() => reRead(item)} onReClassify={() => reClassify(item)}
-                     onFixLink={() => fixLink(item)} onAddSource={() => addSource(item)}
+                     onFixLink={() => fixLink(item)} onAddSource={() => addSource(item)} onWatch={() => watchBetweenRounds(item)}
                      rejections={refusals[item.id] ?? []}
                      onOverride={(r) => override(item.id, r)} />
               ))}
@@ -1245,7 +1285,7 @@ function RefusalNotice({
 
 function Row({
   item, open, busy, busyLabel, onToggle, onPublish, onReject, onRevert, onSetFundingType,
-  onReRead, onReClassify, onFixLink, onAddSource, rejections, onOverride, selected, onSelect,
+  onReRead, onReClassify, onFixLink, onAddSource, onWatch, rejections, onOverride, selected, onSelect,
 }: {
   item: QueueItem
   /** Undefined outside the sectioned view, where bulk select does not apply. */
@@ -1256,17 +1296,23 @@ function Row({
   busyLabel: string | null
   onToggle: () => void
   onPublish: () => void
-  onReject: () => void
+  onReject: (code: string, note: string) => void
   onRevert: (d: FieldDiff) => void
   onSetFundingType: (fundingType: string) => void
   onReRead: () => void
   onReClassify: () => void
   onFixLink: () => void
   onAddSource: () => void
+  onWatch: () => void
   rejections: MergeRejection[]
   onOverride: (r: MergeRejection) => void
 }) {
   const [preview, setPreview] = useState(false)
+  /** The reject picker, open on this row. A prompt() cannot offer a vocabulary,
+   *  and free prose is what made every previous reason uncountable. */
+  const [rejecting, setRejecting] = useState(false)
+  const [rejectCode, setRejectCode] = useState(REJECT_REASONS[0].code)
+  const [rejectNote, setRejectNote] = useState('')
   const worst = item.reasons.reduce<string>((acc, r) => {
     if (acc === 'critical' || r.severity === 'critical') return 'critical'
     if (acc === 'check' || r.severity === 'check') return 'check'
@@ -1551,6 +1597,54 @@ function Row({
           <button onClick={() => setPreview(true)} disabled={busy} style={{ ...lookBtn, ...btnRow }}>
             <Eye size={14} strokeWidth={2.25} />See what a user sees
           </button>
+          {rejecting && (
+            <div style={{
+              flexBasis: '100%', marginTop: 4, padding: '12px 14px',
+              border: '0.5px solid var(--border-subtle)', borderRadius: 'var(--radius-card)',
+              background: 'var(--color-surface-sunken, #FAFAF8)',
+            }}>
+              <p style={{ ...display, fontSize: 12.5, fontWeight: 600, margin: '0 0 2px' }}>
+                Why is this not right for the catalogue?
+              </p>
+              <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', margin: '0 0 9px' }}>
+                Rejecting stops it being re-added, and stops it being re-read. If the fund is
+                simply closed and expected back, use “Closed for now, watch it” instead.
+              </p>
+              <div style={{ display: 'grid', gap: 5, marginBottom: 9 }}>
+                {REJECT_REASONS.map(r => (
+                  <label key={r.code} style={{ display: 'flex', gap: 8, alignItems: 'baseline', cursor: 'pointer', fontSize: 12.5 }}>
+                    <input type="radio" name={`reject-${item.id}`} checked={rejectCode === r.code}
+                           onChange={() => setRejectCode(r.code)} />
+                    <span>
+                      <b style={{ ...display, fontWeight: 600 }}>{r.label}</b>
+                      <span style={{ color: 'var(--color-text-secondary)' }}> — {r.detail}</span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+              <input
+                value={rejectNote}
+                onChange={e => setRejectNote(e.target.value)}
+                placeholder="Anything worth adding (optional)"
+                style={{
+                  ...display, fontSize: 12.5, padding: '6px 10px', width: '100%', maxWidth: 460,
+                  border: '0.5px solid var(--border-subtle)', borderRadius: 8,
+                  background: 'var(--color-surface)', color: 'var(--color-text-primary)',
+                }}
+              />
+              <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                <button
+                  onClick={() => { setRejecting(false); onReject(rejectCode, rejectNote) }}
+                  disabled={busy}
+                  style={{ ...dangerBtn, ...btnRow, border: '0.5px solid var(--coral-saturated)' }}
+                >
+                  <X size={14} strokeWidth={2.5} />Reject this row
+                </button>
+                <button onClick={() => setRejecting(false)} style={ghostBtn}>Cancel</button>
+              </div>
+            </div>
+          )}
+
           {item.linkSharedWith > 0 && (
             <span style={{
               fontSize: 11.5, lineHeight: 1.4, color: 'var(--amber-deep)', background: 'var(--amber-pale)',
@@ -1565,7 +1659,13 @@ function Row({
           <button onClick={onToggle} style={ghostBtn} aria-expanded={open}>
             {open ? 'Hide details' : 'Details'} {open ? '⌃' : '⌄'}
           </button>
-          <button onClick={onReject} disabled={busy} style={{ ...dangerBtn, ...btnRow }}>
+          {/* Closed-but-returning is not a rejection. Rejecting such a row takes
+              it out of the verification batch for good (migration 060), which
+              stops the system watching exactly the fund you wanted watched. */}
+          <button onClick={onWatch} disabled={busy} style={{ ...lookBtn, ...btnRow }}>
+            <Clock size={14} strokeWidth={2.25} />Closed for now, watch it
+          </button>
+          <button onClick={() => setRejecting(r => !r)} disabled={busy} style={{ ...dangerBtn, ...btnRow }}>
             <X size={14} strokeWidth={2.5} />Reject
           </button>
         </div>
