@@ -269,3 +269,60 @@ describe('nothing publishes that was never read', () => {
     expect(cs).toContain('never_verified')
   })
 })
+
+/**
+ * `funder_brief.source = 'knowledge_fallback'` is a permanent mark — nothing
+ * clears it but a later enrichment that succeeds. So a row that failed to fetch
+ * once claimed "the funder's page could not be read" for ever, including after
+ * the engine had demonstrably read that exact URL.
+ *
+ * Westminster Foundation's Community Grants Programme showed "page confirms us"
+ * and "Page unreadable" on the same card, nineteen days apart.
+ */
+describe('a stale knowledge_fallback must not outrank a later successful read', () => {
+  const fallbackRow = (over: Partial<ReviewRow>): ReviewRow => ({
+    ...row({}),
+    funder_brief: { who_can_apply: 'Charities', source: 'knowledge_fallback', last_enriched: '2026-07-29' },
+    ...over,
+  })
+
+  const verifiedAt = (checked_at: string) => ({
+    _page_read: { note: 'verified', checked_at, by: 'verify:v2', agrees: null, quote: null, source_url: null },
+  })
+
+  it('drops the warning when the engine read the page AFTER the fallback', () => {
+    const r = fallbackRow({ field_evidence: verifiedAt('2026-08-16T20:13:35Z') as ReviewRow['field_evidence'] })
+    expect(codes(r)).not.toContain('page_unreadable')
+  })
+
+  it('KEEPS the warning when the read predates the fallback', () => {
+    // A read from before the failed enrichment proves nothing about the page now.
+    const r = fallbackRow({ field_evidence: verifiedAt('2026-07-01T09:00:00Z') as ReviewRow['field_evidence'] })
+    expect(codes(r)).toContain('page_unreadable')
+  })
+
+  it('keeps the warning when the engine also failed', () => {
+    const r = fallbackRow({ field_evidence: {
+      _page_read: { note: 'fixable_link: fetch_failed', checked_at: '2026-08-16T20:13:35Z', by: 'verify:v2', agrees: null, quote: null, source_url: null },
+    } as ReviewRow['field_evidence'] })
+    expect(codes(r)).toContain('page_unreadable')
+  })
+
+  it('keeps the warning when the engine has never read it', () => {
+    expect(codes(fallbackRow({ field_evidence: null }))).toContain('page_unreadable')
+  })
+
+  it('keeps the warning on unparseable dates rather than hiding it', () => {
+    // On bad data the safe direction is to show the flag.
+    const r = fallbackRow({
+      funder_brief: { source: 'knowledge_fallback', last_enriched: 'never' },
+      field_evidence: verifiedAt('2026-08-16T20:13:35Z') as ReviewRow['field_evidence'],
+    })
+    expect(codes(r)).toContain('page_unreadable')
+  })
+
+  it('leaves a live-fetch brief alone', () => {
+    const r = { ...row({}), funder_brief: { source: 'live_fetch', last_enriched: '2026-08-16' } } as ReviewRow
+    expect(codes(r)).not.toContain('page_unreadable')
+  })
+})

@@ -185,6 +185,39 @@ export type ReviewRow = {
 }
 
 /**
+ * Has the verification engine read this page SUCCESSFULLY since the enrichment
+ * that gave up and wrote from memory?
+ *
+ * `funder_brief.source = 'knowledge_fallback'` is a permanent mark. Nothing
+ * clears it but a later enrichment run that succeeds, so a row that failed once
+ * carries "the funder's page could not be read" for ever — including after the
+ * engine has demonstrably read that exact URL.
+ *
+ * Westminster Foundation's Community Grants Programme was the case: enrichment
+ * fell back on 2026-07-29, the engine read the same `apply_url` and returned
+ * `verified` on 2026-08-16, and the card showed "page confirms us" and "Page
+ * unreadable" side by side. Two answers to one question, nineteen days apart.
+ *
+ * THE COMPARISON IS ON TIME, NOT ON PRESENCE. A verified stamp that PREDATES the
+ * failed enrichment proves nothing about the page today, so it must not clear
+ * the warning. Anything unparseable keeps the warning: on bad data the safe
+ * direction is to show the flag, not to hide it.
+ *
+ * Measured 2026-08-17: of 72 rows carrying the fallback mark, 50 had never been
+ * read by the engine and 17 had been read and also failed — both honest. Five
+ * were stale, two of them live.
+ */
+function readSinceFallback(row: ReviewRow): boolean {
+  const stamp = readStamp(row.field_evidence, PAGE_READ_KEY)
+  if (stamp?.note !== 'verified') return false
+  const read = Date.parse(String(stamp.checked_at ?? ''))
+  const brief = row.funder_brief as { last_enriched?: unknown } | null
+  const wrote = Date.parse(String(brief?.last_enriched ?? ''))
+  if (Number.isNaN(read) || Number.isNaN(wrote)) return false
+  return read > wrote
+}
+
+/**
  * Paul's condition, 2026-08-16: a removal may not act on a deadline the page did
  * not state in full. `round_closed` is a deterministic function of the proposed
  * deadline falling in the past (23 rows of 23), so a year-less date resolved to
@@ -456,7 +489,7 @@ export function deriveReviewReasons(row: ReviewRow, todayISO?: string): ReviewRe
       label: 'Never enriched',
       detail: 'nothing has been read from the funder’s page yet',
     })
-  } else if (brief.source === 'knowledge_fallback') {
+  } else if (brief.source === 'knowledge_fallback' && !readSinceFallback(row)) {
     reasons.push({
       code: 'page_unreadable', severity: 'critical',
       label: 'Page unreadable',
