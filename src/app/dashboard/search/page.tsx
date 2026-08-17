@@ -471,13 +471,31 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
   // check funder" — so nothing here may add its own "Opens" prefix. Doing so
   // produced "Opens Closed — no reopening date announced as at July 2026" on
   // Greater Manchester Mayor's Charity, 2026-07-30.
+  //
+  // ABSENCE OF A DEADLINE IS NOT "ROLLING", AND SAYING SO WAS THE WORST THING
+  // ON THIS CARD. The old second branch read `grant.isRolling || !grant.deadline`,
+  // so a fund with is_rolling explicitly FALSE and no deadline rendered as
+  // "Rolling, apply any time". Woodward Charitable Trust did exactly that while
+  // its own page, read on 16 August and stored on the row, says trustees review
+  // once a year and the next round opens later in 2026. 96 of the 480 cards
+  // showing "Rolling" were asserting it purely from a missing date, and on 11 of
+  // them the funder's page positively confirms the fund is NOT rolling.
+  //
+  // This is the same fault as `is_rolling = !deadline` in the data, reproduced
+  // in the rendering layer, which is why reading pages to fix the data changed
+  // nothing here. The detail modal and the programmes page already get this
+  // right; this card was the outlier, and the one users scan.
   const deadlineDisplay = (!grant.isRolling && !grant.deadline && grant.nextOpenDate)
     ? (formatNextOpen(grant.nextOpenDate) ?? 'Check funder')
-    : grant.isRolling || !grant.deadline
+    : grant.isRolling
       ? 'Rolling'
-      : (() => {
+      : !grant.deadline
+        // Matches GrantDetailModal, which a user opens from this very card.
+        ? 'Check website'
+        : (() => {
           const parts = grant.deadline!.split('-').map(Number)
-          if (parts.length != 3 || parts.some(isNaN)) return 'Rolling'
+          // An unparseable date is not "rolling" either. Same fault, same fix.
+          if (parts.length != 3 || parts.some(isNaN)) return 'Check website'
           return new Date(parts[0], parts[1] - 1, parts[2])
             .toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
         })()
