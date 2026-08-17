@@ -111,6 +111,7 @@ export type ReviewReasonCode =
   | 'deadline_passed'
   | 'multi_round_uncaptured'
   | 'stale_dates'
+  | 'no_current_timing'
   | 'eligibility_missing'
   | 'sectors_missing'
   | 'beneficiaries_generic_only'
@@ -471,12 +472,38 @@ export function deriveReviewReasons(row: ReviewRow, todayISO?: string): ReviewRe
       detail: `${n} ${plural(n, 'figure', 'figures')} appear in the write-up with no matching wording on the page`,
     })
   }
+  // A past date in the write-up means one of two very different things, and
+  // treating them alike is what let the queue say "Nothing looks wrong" beside a
+  // "Date already past" chip.
+  //
+  //   With a valid future deadline, the key fact on the card is right and one
+  //   sentence in the prose is untidy. Informational.
+  //
+  //   With no current deadline, the card has NOTHING true about when to apply:
+  //   the deadline slot renders empty or "Rolling, apply any time" while the
+  //   write-up underneath describes a round that closed. The surface says open
+  //   and the prose says shut, both from us, on the same card. That is wrong
+  //   rather than incomplete, so it blocks.
+  //
+  // A stored deadline already in the past is not caught here: `deadline_passed`
+  // above already blocks it, and raising both would double-count one fault.
   if (asArray(brief?._stale_dates).length > 0) {
-    reasons.push({
-      code: 'stale_dates', severity: 'check',
-      label: 'Date already past',
-      detail: 'the write-up quotes a date that has gone, so the page may not have been updated',
-    })
+    const hasCurrentDeadline = !!row.deadline && row.deadline >= today
+    if (hasCurrentDeadline) {
+      reasons.push({
+        code: 'stale_dates', severity: 'check',
+        label: 'Date already past',
+        detail: 'the write-up quotes a date that has gone, so the page may not have been updated',
+      })
+    } else if (!row.deadline) {
+      reasons.push({
+        code: 'no_current_timing', severity: 'critical',
+        label: 'Only date we hold has gone',
+        detail: row.is_rolling
+          ? 'the card says "Rolling, apply any time" while the write-up describes a round that has closed'
+          : 'the write-up quotes a date that has passed and no current deadline is recorded, so nothing on the card is true about when to apply',
+      })
+    }
   }
 
   // ── Deadlines ────────────────────────────────────────────────────────────
