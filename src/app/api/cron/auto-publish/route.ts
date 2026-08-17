@@ -73,6 +73,10 @@ const COLS = [
   'amount_min', 'amount_max', 'deadline', 'is_rolling', 'next_open_date', 'deadline_cycle',
   'eligible_structures', 'impact_sectors', 'target_beneficiaries',
   'funder_brief', 'field_provenance', 'raw_data', 'needs_intervention_reason',
+  // Required by deriveReviewReasons for the page-verdict reasons. Without it
+  // readStamp returns null, no reason is raised, and the gate silently stops
+  // blocking on funds the funder's own page says are closed.
+  'field_evidence',
 ].join(', ')
 
 type Row = ReviewRow & { title?: string | null; funder?: string | null; pipeline_state?: string }

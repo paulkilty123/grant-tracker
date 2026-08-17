@@ -108,6 +108,20 @@ const POLICY: Record<ReviewReasonCode, 'block' | 'info'> = {
   // A deadline years out is a programme lifetime shown in the "apply by" slot.
   // Wrong, not missing: it tells a user they have time they may not have.
   deadline_implausible: 'block',
+  // The engine read the funder's own page and found the fund gone, not funding,
+  // or its round shut. These are the strongest evidence the catalogue holds and
+  // the gate could not see any of them: the verdicts were written to
+  // field_evidence from 13 August and consumed by nothing that guards
+  // publishing. Blocking, because publishing a fund the funder says is closed
+  // spends a user's attention on something they cannot apply for, and because
+  // arming auto-publish without this would automate exactly that.
+  //
+  // `page_says_round_closed` is raised ONLY where the page stated the year in
+  // full (see YEAR_STATED_RE in review-reasons). A round_closed verdict resting
+  // on an inferred year never becomes a reason at all, so it cannot block.
+  page_says_delisted:     'block',
+  page_says_not_funding:  'block',
+  page_says_round_closed: 'block',
 
   // ── Incomplete but honest: absence renders as absence ──
   no_amount:                  'info',
