@@ -87,6 +87,12 @@ was reworded after 25 of the original 38 turned out to be `investment` rows, whi
 the catalogue carries deliberately. No live row carries the verdict today, so
 there is nothing to act on and nothing to review.
 
+**Noted 2026-08-17, not scheduled: 18 rows carry leading or trailing whitespace
+in `title`.** All from `scraper:gov_uk`, three with a leading tab that renders on
+the card. Two are live. The fix belongs in the scraper, not in the data — a
+one-time SQL trim is overwritten by the next crawl, which this repo has already
+learned once. Post-September.
+
 **Noted 2026-08-17, not scheduled: the cycle filter misses post-decision dates.**
 `verify-row.ts:1311` filters opening entries out of a page's cycle before
 concluding it runs in rounds, but not the dates trustees meet. Drapers'

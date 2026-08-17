@@ -35,7 +35,38 @@ the new version.
 
 # Waiting
 
-## `fix/publish-gate-wrong-fund` — the publish-queue review, and why I have not armed
+## `fix/publish-gate-wrong-fund` — MERGED 17 August as `3758eb2`, and ARMED
+
+> **State now.** Policy `c2.1` live. `AUTO_PUBLISH_ENABLED=true`,
+> `AUTO_PUBLISH_LIMIT=5`, cron daily 09:00 UTC.
+>
+> **30 rows published today, 0 of them newly visible.** A canary of 5 proved the
+> write path, then a one-off `?limit=25` cleared the whole already-live backlog.
+> Every one was a row users could already see, so nothing appeared that was not
+> there this morning. All 30 verified `applied: true`, `is_active: true`,
+> `pipeline_state: 'published'`, policy stamped `c2.1`.
+>
+> The gate fix is doing its job in production: the three press releases and both
+> duplicate pairs came back `applied: false`.
+>
+> **⚠ The next scheduled run is the first that exposes anything.** The already-
+> live backlog is now empty, so tomorrow at 09:00 UTC the cap of 5 lands on the
+> **20 newly-visible rows**. Ordering among them is not predictable from here, so
+> I cannot tell you which 5 go first — and three of the 20 are ones I flagged as
+> doubtful and you have not ruled on:
+>
+> - *"Child Focused Court IDVA — Cheshire & Merseyside"* — reads as a
+>   commissioned service, not an open grant
+> - *"Baring Foundation — International Development Programme"* — a programme I
+>   believe Baring closed
+> - *"⇥Purchase mid-range equipment… MRC Equip"* — leading tab in the title
+>
+> **If you want any of those held, say so before 09:00 UTC and I will pull them.**
+> Otherwise the 20 publish over the next four daily runs.
+
+---
+
+## The review that produced the fix
 
 **What it does:** stops the publish gate publishing rows whose page the engine
 has already read and found does not describe the fund.
@@ -89,16 +120,16 @@ Three things to weigh before you say yes:
 3. **One has a leading tab in its title** — *"⇥Purchase mid-range equipment for
    biomedical research: MRC Equip (Grant)"*. Cosmetic, visible, one edit.
 
-### Why I stopped short of arming
+### The two locks, and how the arming went
 
-Publishing adds rows to the user surface, and your instruction this session was
-that nothing which adds or widens a claim acts without you. Twenty rows
-appearing is that. **Say the word and it is two env vars.**
+There were two locks, not one: `AUTO_PUBLISH_ENABLED` unset **and**
+`AUTO_PUBLISH_LIMIT` at `0`. Both are now set (`true` / `5`).
 
-Note there are two locks, not one: `AUTO_PUBLISH_ENABLED` is unset **and**
-`AUTO_PUBLISH_LIMIT` is `0`. Setting only the first publishes nothing, which is
-a good property and worth keeping — arm the flag, then raise the cap to a canary
-number like 5 and read the result before lifting it.
+The canary worked because of a design decision already in the route: it sorts
+already-live publishes first, *"so a capped canary run touches only rows whose
+visibility is not actually changing"*. That made it possible to prove the write
+path and clear a 30-row backlog without exposing a single new row. Worth
+remembering the next time a cap needs setting.
 
 ### Deploy gate
 
