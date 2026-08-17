@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { isFrontDoorUrl, timingAnswered, detailAnswered, decideHop, foldEvidence, candidateLinks, statesDatedWindows } from './verify-row'
+import { isFrontDoorUrl, timingAnswered, detailAnswered, carriesApplicationDetail, decideHop, foldEvidence, candidateLinks, statesDatedWindows } from './verify-row'
 import type { VerifyResult } from './verify-row'
 
 /**
@@ -331,5 +331,48 @@ describe('decideHop — the page loads but is the wrong fund', () => {
       const r = { ...wrongFund, gate: { pass: false as const, failure, detail: '' } }
       expect(decideHop(r, 'Our Fund', 'timing'), failure).toBeNull()
     }
+  })
+})
+
+/**
+ * "The page names the fund" admits technically-true matches. The real test is
+ * whether a fundraiser landing there could apply — Paul, 17 August, the same
+ * lesson as the quote check the week before.
+ *
+ * The fixtures are the real split from the first twelve corrections, and they
+ * are the point: the page whose URL looks right carries nothing, and the FAQ
+ * page carries both halves.
+ */
+describe('carriesApplicationDetail — the floor, not a ranking', () => {
+  const res = (fields: [string, boolean | null][]) =>
+    ({ evidence: fields.map(([field, agrees]) => ({ field, agrees, quote: null, source_url: null })) })
+
+  it('accepts a page that answers when', () => {
+    expect(carriesApplicationDetail(res([['deadline', true]]))).toBe(true)
+    expect(carriesApplicationDetail(res([['deadline_cycle', false]]))).toBe(true)
+  })
+
+  it('accepts a page that answers who', () => {
+    expect(carriesApplicationDetail(res([['eligible_structures', false]]))).toBe(true)
+    expect(carriesApplicationDetail(res([['exclusions', true]]))).toBe(true)
+  })
+
+  it('REJECTS a page that only confirms the fund exists', () => {
+    // Accelerated Growth Programme — Business Wales. The URL looks exactly
+    // right, the page answered is_grant and still_listed and nothing else.
+    expect(carriesApplicationDetail(res([['is_grant', true], ['still_listed', true]]))).toBe(false)
+  })
+
+  it('REJECTS silence dressed as an answer', () => {
+    expect(carriesApplicationDetail(res([['deadline', null], ['eligible_structures', null]]))).toBe(false)
+    expect(carriesApplicationDetail(res([]))).toBe(false)
+  })
+
+  it('accepts the FAQ page, because it answers both', () => {
+    // The Robertson Trust /faqs-for-applicants/. Judged ancillary by its URL and
+    // wrong: it answered timing and two eligibility fields.
+    expect(carriesApplicationDetail(res([
+      ['is_rolling', false], ['exclusions', false], ['eligible_structures', false],
+    ]))).toBe(true)
   })
 })

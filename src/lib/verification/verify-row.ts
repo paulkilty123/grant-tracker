@@ -883,6 +883,44 @@ export function detailAnswered(r: Pick<VerifyResult, 'evidence'>): boolean {
 }
 
 /**
+ * The fields that decide whether somebody could actually apply from this page:
+ * when, and who. Amounts and the scope questions (`is_grant`, `still_listed`)
+ * are deliberately absent — a page can confirm a fund exists and is funding and
+ * still leave a fundraiser with nothing to act on.
+ */
+const APPLICATION_DETAIL_FIELDS = [...DETAIL_FIELDS, 'deadline', 'deadline_cycle', 'is_rolling'] as const
+
+/**
+ * Could a fundraiser landing on this page apply?
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * "THE PAGE NAMES THE FUND" IS A PROXY, AND IT ADMITS TECHNICALLY-TRUE MATCHES.
+ *
+ * That was the test the URL hop shipped with, and it is too weak: any page on a
+ * funder's site that mentions the fund passes it, including a news item, a
+ * grants-awarded list, or a page that exists only to say the fund exists.
+ *
+ * Paul, 2026-08-17, and it is the same lesson as the quote check the week
+ * before: "the real test is whether a fundraiser landing there could apply."
+ *
+ * Measured on the first twelve corrections, this separates them in a way the
+ * URL's appearance does not, and it overturned my reading of three of them.
+ * The Robertson Trust's `/faqs-for-applicants/` answers timing AND eligibility;
+ * `/topics-and-guidance/accelerated-growth-programme`, which looks like exactly
+ * the right page, answers NEITHER — it confirms the programme exists and
+ * nothing else.
+ *
+ * Used as a FLOOR, not a ranking. A URL is left alone unless the candidate
+ * clears it, because a homepage known to be wrong is better than a page that
+ * looks fixed: the first stays flagged for a human, the second disappears from
+ * the queue having helped nobody.
+ */
+export function carriesApplicationDetail(r: Pick<VerifyResult, 'evidence'>): boolean {
+  return r.evidence.some(e =>
+    (APPLICATION_DETAIL_FIELDS as readonly string[]).includes(e.field) && e.agrees !== null)
+}
+
+/**
  * How wide the hop's trigger is. `timing` is what production does today: a
  * second page is earned only by an unanswered deadline. `any` is the widening
  * under measurement — an unanswered eligibility question earns one too.
@@ -1161,7 +1199,19 @@ export async function verifyRow(
     // note and no correction is set.
     const named = deeper.gate.pass ? (deeper.gate as { fund_on_page: string | null }).fund_on_page : null
     if (startedWrongFund && !correction && named && namesMatch(row.title, named)) {
-      correction = { from: row.apply_url, to: target, fundOnPage: named }
+      // THE FLOOR. Naming the fund is not enough — the page has to tell a
+      // fundraiser when or who, or it is a page that looks fixed and helps
+      // nobody. Failing it is not a dead end: keep hunting from the same origin,
+      // and if nothing clears the floor the row keeps its `wrong_fund` verdict,
+      // which already blocks publishing and shows in the review queue.
+      if (carriesApplicationDetail(deeper)) {
+        correction = { from: row.apply_url, to: target, fundOnPage: named }
+      } else {
+        current.notes = [...current.notes,
+          `${target} names this fund but carries no application detail, so the link was left alone`]
+        lastFetched = originFetched
+        continue
+      }
     }
 
     current = foldResult(current, deeper)

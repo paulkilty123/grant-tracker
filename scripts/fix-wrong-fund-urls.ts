@@ -69,14 +69,39 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
 
 const COLS = 'id, title, funder, funding_type, apply_url, deadline, deadline_cycle, next_open_date, is_rolling, max_org_income, min_org_income, is_invite_only, eligible_structures, location_tag, funder_brief, field_evidence, funding_index_url'
 
-/** Paul's one unit: live rows pointing at a page that names their fund. */
+/**
+ * Paul's one unit, tightened by him on 2026-08-17:
+ *
+ *   > I want rows whose link lands on a page carrying application detail FOR
+ *   > THAT FUND, not rows where a page merely names it. Re-baseline even if it
+ *   > drops.
+ *
+ * So the gate passing is necessary and not sufficient: the page must also have
+ * answered at least one of when-to-apply or who-may-apply.
+ *
+ * Paginated explicitly. PostgREST stops at 1000 rows by default and a short
+ * read would silently under-report the number this whole exercise is judged by,
+ * which is the failure this repo keeps rediscovering.
+ */
+const APPLY_FIELDS = ['deadline', 'deadline_cycle', 'is_rolling',
+                      'eligible_structures', 'exclusions', 'max_org_income', 'min_org_income']
+
 async function metric(): Promise<{ named: number; live: number }> {
-  const { count: live } = await db.from('scraped_grants')
-    .select('id', { count: 'exact', head: true }).eq('is_active', true)
-  const { count: named } = await db.from('scraped_grants')
-    .select('id', { count: 'exact', head: true })
-    .eq('is_active', true).eq('field_evidence->_page_read->>note', 'verified')
-  return { named: named ?? 0, live: live ?? 0 }
+  const FIELDS = APPLY_FIELDS
+  let live = 0, applyable = 0
+  for (let from = 0; ; from += 1000) {
+    const { data: page, error: e } = await db.from('scraped_grants')
+      .select('field_evidence').eq('is_active', true).range(from, from + 999)
+    if (e) throw new Error(e.message)
+    for (const r of page ?? []) {
+      live++
+      const fe = (r.field_evidence ?? {}) as Record<string, { agrees?: unknown } | undefined>
+      if (fe['_page_read']?.['note' as never] !== 'verified') continue
+      if (FIELDS.some(f => fe[f] && fe[f]!.agrees !== null && fe[f]!.agrees !== undefined)) applyable++
+    }
+    if (!page || page.length < 1000) break
+  }
+  return { named: applyable, live }
 }
 
 async function main() {
