@@ -78,6 +78,15 @@ async function main() {
     sec[id] = (sec[id] ?? 0) + 1
   }
   console.log('not-live by section:', sec)
+  // Rows that are LIVE and carry nothing blocking. They are in neither the
+  // not-live sections nor the live-and-wrong band.
+  let homeless = 0
+  for (const r of rows) {
+    if (r.is_active !== true) continue
+    const d = gateDecision(r, deriveReviewReasons(r, today))
+    if (d.outcome === 'publish') homeless++
+  }
+  console.log('live_no_home:', homeless)
 
   console.log(`queue: ${rows.length} rows`)
   console.log('outcomes:', counts)

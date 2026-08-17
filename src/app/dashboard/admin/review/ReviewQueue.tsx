@@ -165,7 +165,7 @@ const EVIDENCE_TONE: Record<0 | 1 | 2 | 3, { bg: string; ink: string }> = {
  * across them. There is no second selector — the old SHOW row let you pick a
  * view and a section at once and get a screen that contradicted its own heading.
  */
-type NavId = SectionId | 'liveandwrong' | 'new' | 'unenriched' | 'autopublished'
+type NavId = SectionId | 'liveandwrong' | 'liveok' | 'new' | 'unenriched' | 'autopublished'
 
 const NAV_META: Record<NavId, { label: string; detail: string }> = {
   liveandwrong: { label: 'Live and wrong',
@@ -175,6 +175,8 @@ const NAV_META: Record<NavId, { label: string; detail: string }> = {
   reading:    { label: 'Needs reading',         detail: 'Nothing has read the funder’s page, so no judgement is possible yet.' },
   judgement:  { label: 'Needs your judgement',  detail: 'The page was read and what it says is genuinely arguable.' },
   untruthful: { label: 'Nothing truthful to show', detail: 'No funder, or the page says the fund is gone.' },
+  liveok:     { label: 'Live, nothing blocking',
+    detail: 'Already visible and carrying no blocking reason. Confirming one takes it out of this queue without changing what a user sees.' },
   new:        { label: 'New this week',         detail: `What has arrived in the last ${NEW_ARRIVAL_DAYS} days, newest first. These also appear under whatever they need.` },
   unenriched: { label: 'Needs enrichment',      detail: 'A stub brief or none at all, whether or not the row is live.' },
   autopublished: { label: 'Published without you', detail: 'What the gate did on its own. A receipt, not a task.' },
@@ -434,6 +436,29 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
   /** Live to users AND carrying something they could be misled by. Pinned above
    *  the sections rather than demoted to a chip: these are the only rows on the
    *  screen where somebody is being misled right now. */
+  /**
+   * LIVE AND FINE, AND UNTIL NOW HOMELESS.
+   *
+   * The sections are built from NOT-LIVE rows and the alert band holds LIVE rows
+   * carrying something blocking. A row that is live with nothing blocking fell
+   * through both and rendered nowhere — so re-reading a live row and clearing
+   * its last blocking reason made it VANISH from the screen. Ballantrae
+   * Education and Training Fund did exactly that.
+   *
+   * They are not nothing: the row is live but its pipeline_state still says it
+   * is awaiting review, so it sits in the queue for ever. Confirming one changes
+   * nothing a user sees and takes it out of the queue, which is the same thing
+   * the auto-publish gate does for these rows unattended.
+   */
+  const liveOk = useMemo(
+    () => {
+      const rows = pending.filter(i => i.isActive && i.gateOutcome === 'publish')
+      const typed = typeFilter ? rows.filter(i => i.values.fundingType === typeFilter) : rows
+      return typed.sort((a, b) => evidenceRank(a.evidence) - evidenceRank(b.evidence) || a.title.localeCompare(b.title))
+    },
+    [pending, typeFilter],
+  )
+
   const liveAndWrong = useMemo(
     () => {
       const rows = pending.filter(i => i.gateOutcome === 'attention')
@@ -896,10 +921,32 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
 
   const rows: QueueItem[] =
     nav === 'liveandwrong' ? liveAndWrong
+    : nav === 'liveok'       ? liveOk
     : nav === 'new'          ? newArrivals
     : nav === 'unenriched'   ? pending.filter(i => i.needsEnrichment)
     : nav === 'autopublished'? autoPub
     : (sectioned.get(nav) ?? [])
+
+  /**
+   * EVERY PENDING ROW MUST HAVE A HOME, AND THE SCREEN MUST SAY SO IF ONE DOES NOT.
+   *
+   * The four buckets are exhaustive over `gateOutcome` — attention is only ever
+   * set on a live row, so live/not-live crossed with blocking/not-blocking
+   * covers all of them. That was also true of the version this is fixing, right
+   * up until it was not: a bucket was missing and four rows rendered nowhere,
+   * silently, because nothing was counting.
+   *
+   * This counts. If it is ever non-zero the screen says so rather than dropping
+   * the rows, which is the difference between a bug somebody notices in an hour
+   * and one nobody notices at all.
+   */
+  const homeless = useMemo(() => {
+    const placed = new Set<string>()
+    for (const r of liveAndWrong) placed.add(r.id)
+    for (const r of liveOk) placed.add(r.id)
+    for (const sec of SECTIONS) for (const r of sectioned.get(sec.id) ?? []) placed.add(r.id)
+    return byViewTyped.concat(pending.filter(i => i.isActive)).filter(i => !placed.has(i.id))
+  }, [liveAndWrong, liveOk, sectioned, byViewTyped, pending])
 
   const navMeta = NAV_META[nav]
   const ids = rows.map(r => r.id)
@@ -912,6 +959,18 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
       <h1 style={{ ...display, fontSize: 25, fontWeight: 500, letterSpacing: '-0.02em', margin: '0 0 16px' }}>
         Review queue
       </h1>
+
+      {homeless.length > 0 && (
+        <div style={{
+          border: '0.5px solid var(--coral-saturated)', background: 'var(--coral-pale)',
+          color: 'var(--coral-deep)', borderRadius: 'var(--radius-card)',
+          padding: '11px 15px', marginBottom: 14, fontSize: 13,
+        }}>
+          <strong style={{ ...display }}>{homeless.length} rows are not shown under any tab.</strong>{' '}
+          That is a bug in this screen, not a property of the rows — they are still in the queue.
+          {' '}First: {homeless.slice(0, 3).map(r => r.title).join(', ')}.
+        </div>
+      )}
 
       {/* TOP NAV, NOT A RAIL.
           The rail took a fixed 240px column off every card on the page, and the
@@ -936,6 +995,7 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
         </NavGroup>
 
         <NavGroup label="Views" divided>
+          <Tab id="liveok"        nav={nav} onGo={go} n={liveOk.length} />
           <Tab id="new"           nav={nav} onGo={go} n={newArrivals.length} />
           <Tab id="unenriched"    nav={nav} onGo={go} n={unenrichedCount} />
           <Tab id="autopublished" nav={nav} onGo={go} n={autoPubCount} />
@@ -973,7 +1033,7 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
             {picked.length > 0 && (
               <>
                 <span style={{ ...display, fontSize: 12.5, color: 'var(--color-text-secondary)' }}>{picked.length} selected</span>
-                {nav === 'ready' && <button style={{ ...primaryBtn, ...btnRow }} disabled={busyId !== null} onClick={() => bulk(picked, 'publish')}><Check size={14} strokeWidth={2.5} />Publish {picked.length}</button>}
+                {(nav === 'ready' || nav === 'liveok') && <button style={{ ...primaryBtn, ...btnRow }} disabled={busyId !== null} onClick={() => bulk(picked, 'publish')}><Check size={14} strokeWidth={2.5} />Publish {picked.length}</button>}
                 {(nav === 'reading' || nav === 'link') && <button style={{ ...secondaryBtn, ...btnRow }} disabled={busyId !== null} onClick={() => bulk(picked, 'reread')}><RefreshCw size={14} strokeWidth={2.25} />Re-read {picked.length}</button>}
                 {nav === 'untruthful' && <button style={{ ...dangerBtn, ...btnRow }} disabled={busyId !== null} onClick={() => bulk(picked, 'reject')}><X size={14} strokeWidth={2.5} />Reject {picked.length}</button>}
                 <button style={ghostBtn} onClick={() => setSelected(new Set())}>Clear</button>
