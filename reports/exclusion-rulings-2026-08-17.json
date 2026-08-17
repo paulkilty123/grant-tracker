@@ -1,0 +1,143 @@
+{
+  "ranAt": "2026-08-17T12:05:19.925Z",
+  "source": "admin:paulkilty1@gmail.com",
+  "changed": 7,
+  "record": [
+    {
+      "kind": "structure",
+      "id": "c740bb33-f49e-4c9f-b8db-110b767e985f",
+      "title": "J N Derbyshire Trust",
+      "drop": "unincorporated",
+      "because": "the page bars \"organisations not registered with Charities Commission or Companies House\"",
+      "before": [
+        "unincorporated",
+        "ltd_guarantee",
+        "cic_guarantee"
+      ],
+      "after": [
+        "ltd_guarantee",
+        "cic_guarantee"
+      ],
+      "applied": [
+        "eligible_structures"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "kind": "structure",
+      "id": "cc0252b3-e362-401c-80b6-5407fed2dfc8",
+      "title": "Property Fund (Key Fund)",
+      "drop": "unincorporated",
+      "because": "the page bars applicants \"Not a legal company registered at Companies House\"",
+      "before": [
+        "ltd_guarantee",
+        "cic_guarantee",
+        "cic_shares",
+        "cooperative",
+        "unincorporated"
+      ],
+      "after": [
+        "ltd_guarantee",
+        "cic_guarantee",
+        "cic_shares",
+        "cooperative"
+      ],
+      "applied": [
+        "eligible_structures"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "kind": "structure",
+      "id": "c80591fa-fdf6-4e2d-97a5-c14020cff1bb",
+      "title": "Grants for Good Fund",
+      "drop": "ltd_shares",
+      "because": "the page bars \"Regular Ltd companies and sole traders\"",
+      "before": [
+        "registered_charity",
+        "cio",
+        "unincorporated",
+        "ltd_guarantee",
+        "cic_guarantee",
+        "cic_shares",
+        "ltd_shares",
+        "cooperative",
+        "scio"
+      ],
+      "after": [
+        "registered_charity",
+        "cio",
+        "unincorporated",
+        "ltd_guarantee",
+        "cic_guarantee",
+        "cic_shares",
+        "cooperative",
+        "scio"
+      ],
+      "applied": [
+        "eligible_structures"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "kind": "structure",
+      "id": "dc68dcb0-e614-4229-a4fd-8f5b609b7143",
+      "title": "Sizewell C Community Fund",
+      "drop": "cic_shares",
+      "because": "the page bars \"companies that are aimed at generating profits for private distribution, including community interest companies limited by shares\"",
+      "before": [
+        "registered_charity",
+        "cio",
+        "cic_guarantee",
+        "cic_shares",
+        "ltd_guarantee",
+        "cooperative",
+        "unincorporated"
+      ],
+      "after": [
+        "registered_charity",
+        "cio",
+        "cic_guarantee",
+        "ltd_guarantee",
+        "cooperative",
+        "unincorporated"
+      ],
+      "applied": [
+        "eligible_structures"
+      ],
+      "rejected": [],
+      "error": null,
+      "ok": true
+    },
+    {
+      "kind": "reject_extraction",
+      "id": "9d1b13f1-607d-48b1-80df-80e127cd8933",
+      "title": "Annandale and Nithsdale Community Benefit Company",
+      "extracted": "Information on what the fund cannot support is provided here.",
+      "error": null,
+      "ok": true
+    },
+    {
+      "kind": "reject_extraction",
+      "id": "6a57acbc-0c38-45f4-ad35-17a79c059f5b",
+      "title": "Cash for Kids - General Grant",
+      "extracted": "What we don't fund",
+      "error": null,
+      "ok": true
+    },
+    {
+      "kind": "reject_extraction",
+      "id": "f1fdcd6e-152a-403f-a1ac-f7838fbe9ebc",
+      "title": "sportscotland — Facilities Investment",
+      "extracted": "those that will not be eligible (see SFF Guidelines)",
+      "error": null,
+      "ok": true
+    }
+  ]
+}

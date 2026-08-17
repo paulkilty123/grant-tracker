@@ -1,6 +1,17 @@
 # The 52 exclusion rows, grouped
 
-**For Paul, 17 August 2026. Nothing here has been accepted or written.**
+> **RESOLVED 17 August.** Paul ruled on all five of group 1 and rejected all
+> three of group 2. **7 rows changed**, recorded in
+> `reports/exclusion-rulings-2026-08-17.json`, and the standing rules are in
+> [`structure-tagging-rulings.md`](structure-tagging-rulings.md).
+>
+> One ruling changed on contact with the pages, which is why he asked for them to
+> be read: a CIC limited by shares stays eligible **by default**, but Sizewell C's
+> page names *"community interest companies limited by shares"* as ineligible
+> outright, so `cic_shares` came off there and stayed on Scops Arts. See R2.
+>
+> **The urgent side of the exclusions is closed. The remaining 44 wait for
+> September.**
 
 These are the live rows where the funder's page states an exclusion the
 catalogue does not carry. They were sent to your queue rather than bulk-accepted
