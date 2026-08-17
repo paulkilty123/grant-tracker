@@ -544,6 +544,14 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
       return false
     }
     if (!res.ok) {
+      // A 401 here means the admin SESSION expired, not that the action was
+      // wrong — and "Publishing failed: HTTP 401" reads like a broken button
+      // rather than something a reload fixes. After a few hours of reviewing,
+      // an expired cookie is the likeliest reason a click appears to do nothing.
+      if (res.status === 401 || res.status === 403) {
+        toast.error('Your admin session has expired, so nothing was saved. Reload the page and sign in again — the row is unchanged.')
+        return false
+      }
       const j = await res.json().catch(() => ({}))
       toast.error(`${what} failed: ${j.error ?? `HTTP ${res.status}`}`)
       return false
