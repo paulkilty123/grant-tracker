@@ -543,25 +543,39 @@ unchecked URL hides the row from agents but shows it in the app.
 | G2 | — of which live | **33** | **yes** | Same | Tranche 2 |
 | G3 | `between_rounds_scheduled` rows with no parseable reopen date | **40 / 50** | no | Invisible to both reopen crons until fixed | Tranche 2 |
 | G4 | Live rows carrying the "Closed, next round TBC" placeholder | **1** | **yes** | `fix/lifecycle-live-defects` stops new ones; this one predates it and needs a manual sweep | Not scheduled |
-| G5 | Cyclical funds gone dark after one round's deadline, with no `deadline_cycle` to roll them forward | **19** | **yes, as absence** | Read the next round off the brief, which usually states it, and write `deadline_cycle` | Not scheduled |
+| G5 | Cyclical funds gone dark after one round's deadline, with no `deadline_cycle` to roll them forward | **0** (was 19) | was **yes, as absence** | All 19 read against their funder page on 18 Aug and dispositioned | **Closed 18 Aug** |
 
-**On the 19.** Found 2026-08-18 while splitting Sport Wales, and the reason that
-row was worth looking at. Be Active Wales Fund runs three windows a year and its
-stored `deadline` was **9am, 8 July 2026, the date the window OPENED**. The
-expiry cron read it as a closing date, so the fund went dark on the day it became
-available and stayed dark for six weeks while open.
+**The 19, found and closed 2026-08-18.** Found while splitting Sport Wales, and
+the reason that row was worth looking at. Be Active Wales Fund runs three windows
+a year and its stored `deadline` was **9am, 8 July 2026, the date the window
+OPENED**. The expiry cron read it as a closing date, so the fund went dark on the
+day it became available and stayed dark for six weeks while open.
 
-The query is: inactive, `pipeline_state = 'published'`, `deadline` in the past,
-`deadline_cycle` null, and a brief that describes recurring windows. 19 rows.
-Several state their next round in the brief already, and some of those dates have
-passed or are days away: Postcode Local Trust (round 3, 25 Aug to 1 Sep),
-Postcode Society Trust (round 3, closes 1 Sep), Postcode Places Trust (round 3,
-closes 1 Oct), Severn Trent (November window), Magdalen Hospital Trust (November
-trustee meeting).
+The query: inactive, `pipeline_state = 'published'`, `deadline` in the past,
+`deadline_cycle` null, and a brief describing recurring windows. It returned 19,
+and returns 0 now. Every one was read against the funder's own page the same day,
+never against its brief, and the quote is in `field_provenance` under
+`system:cyclical-deadline-sweep-2026-08-18`.
 
-Each needs its page read before it goes back to users, so this is a sweep and not
-a single UPDATE. It is the same failure as A-class staleness, seen from the other
-side: a row that is wrong by being absent.
+| Disposition | Rows | Which |
+|---|---:|---|
+| **Open today, brought back live** | 4 | Hilden Charitable Fund (closes 27 Aug), UnLtd Awards (31 Aug), Barclays Community Sport Fund (4 Nov), Richmond Foundation (no dated deadline at all, so rolling) |
+| Closed, next opening date published | 8 | 5 Postcode trusts, Magdalen Hospital Trust, Severn Trent, Inman Charity. Hidden, cycle written, `next_open_date_parsed` set, so check-coming-soon returns each to the queue on the day it opens |
+| Closed, cycle known but next date only an annual roll | 3 | Blackford, Anglian Water, Esmée Fairbairn. Cycle written, no reopen date invented; the funder watchlist is the trigger |
+| Needs a human, not a date | 3 | Horsham (page behind Cloudflare, reader proxy blocked too), Virgin Media O2 (page states no dates at all), Westminster Community Fund (one row over ~18 council funds, a C-class split question). Moved to the review queue |
+| Withdrawn | 1 | DHSC ASC Digital, a one-off May 2026 procurement whose listing now 404s |
+
+**Three residuals, none of them this issue.** Hilden carries `amount_max` of
+£500,000 against a brief saying grants are typically £5,000, which is A-class and
+was not touched here. The Barclays row's £1,000 describes the access strand,
+which is closed for 2026, while the strand that is open is the coaching one. And
+a second Barclays Community Sport Fund row, added by discovery on 15 August
+against the sponsorship page rather than the application portal, was found during
+the sweep and rejected as a duplicate.
+
+**What would stop the next one.** Nothing here was a code change. An opening date
+parsed as a deadline is a single wrong field that silently removes a fund from
+the catalogue, and the row looks healthy the whole time it is wrong.
 
 ---
 
