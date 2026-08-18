@@ -6,7 +6,7 @@
     },
     {
       "path": "/api/cron/verify-rows",
-      "schedule": "0 1,7,13,19 * * *"
+      "schedule": "0 1 * * *"
     },
     {
       "path": "/api/cron/apply-removals",
