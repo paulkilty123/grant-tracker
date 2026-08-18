@@ -202,9 +202,24 @@ Morrisons is the one to learn from. The row said "TBC, between rounds", which
 shows users a closed fund, and that claim was unevidenced and contradicted by
 the funder's application page. Acting on our own stored field would have
 withdrawn an open fund from the catalogue. The `next_open_date` is cleared and
-left unpinned. Its £25,000 ceiling, pinned by Paul on 1 June, is left alone
-although the page now reads "up to £20,000" — a pinned human figure is his call,
-not a correction to make in passing.
+left unpinned.
+
+**Paul then settled the amount and the link the same day:** £20,000, pointing at
+`/connecting-communities-grant-request` rather than the homepage. Both applied.
+Two things followed from the page rather than from the instruction. `amount_min`
+was cleared, because the page states no minimum and the stored £5,500 came from
+`scraper:young_camden_foundation` — the same third-party directory that produced
+the wrong £500 to £10,000 on Groundwork Grassroots Grants that morning. Two bad
+floors from one directory in one day is a pattern worth watching, not a
+coincidence. And the new link is what the gate wants anyway: the homepage
+carries both Morrisons programmes, which is why the engine kept returning
+`multiple_funds` on this row.
+
+> Left contradicting itself, and Paul's call: the brief's typical-award line
+> still reads "Recent grants have ranged from £5,500 to £25,000", which sits
+> under a £20,000 ceiling on the same card. The oddly specific examples in it
+> (£8,372, £15,545) suggest a real grants-awarded list rather than directory
+> noise, so it is not obviously false, just inconsistent with the stated maximum.
 
 **Migration 063 stops the pair separating again**, and publishes rather than
 hides, because that is what `transitionPipelineState` already says out loud:
