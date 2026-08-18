@@ -1,0 +1,90 @@
+{
+  "written_at_utc": "2026-08-18T19:39:21.282Z",
+  "approved_by": "Paul, 2026-08-18",
+  "between_rounds": [
+    {
+      "id": "e28f625b-3041-490d-9c52-193c2328c58f",
+      "title": "City Bridge Foundation — Access to Justice",
+      "quote": "We are not currently receiving applications. We'll share details of future funding opportunities on this page as they're confirmed. In May 2026, we awarded £6.5m of funding to 20 organisations across London in round one.",
+      "next_open": "Round one closed; funded cohort announced May 2026. City Bridge says future opportunities will be posted on the programme page. No date given."
+    },
+    {
+      "id": "54eca97d-8580-48a6-a3ad-812f2fcff625",
+      "title": "City Bridge Foundation — Racial Justice",
+      "quote": "We are not currently receiving applications. The Racial Justice programme is currently in development.",
+      "next_open": "Programme in development, not receiving applications. No date given."
+    },
+    {
+      "id": "1805dc7a-5123-42d2-b283-dce6b6098556",
+      "title": "City Bridge Foundation — Economic Justice",
+      "quote": "We are not currently receiving applications. While this funding programme is still in development, we're not able to accept applications.",
+      "next_open": "Programme in development, not receiving applications. No date given."
+    }
+  ],
+  "tag": [
+    {
+      "id": "471c6f5f-3bab-4cd1-b472-a1807f991c10",
+      "title": "Somerset Crisis and Resilience Alliance",
+      "quote": "We're looking for 2 types of Voluntary, Community, Faith, and Social Enterprise (VCFSE) partners to establish a joined-up, visible local support network: Community Anchors, which will be larger, established VCSFE groups with paid staff and a physical presence. Community Connectors, which will be smaller.",
+      "fields": {
+        "eligible_structures": [
+          "registered_charity",
+          "cio",
+          "cic_guarantee",
+          "cic_shares",
+          "ltd_guarantee",
+          "cooperative",
+          "unincorporated"
+        ]
+      },
+      "note": "Unincorporated included on purpose: the page explicitly wants smaller Community Connectors and faith groups, which are frequently unconstituted. Deadline of 4 Sep already stored and confirmed by the page (\"Apply by: Friday 4 September 2026, by 5pm\")."
+    }
+  ],
+  "before": [
+    {
+      "id": "1805dc7a-5123-42d2-b283-dce6b6098556",
+      "title": "City Bridge Foundation — Economic Justice",
+      "is_active": false,
+      "pipeline_state": "captured",
+      "next_open_date": "Opening in 2026",
+      "next_open_date_parsed": null,
+      "eligible_structures": [],
+      "deadline": null
+    },
+    {
+      "id": "471c6f5f-3bab-4cd1-b472-a1807f991c10",
+      "title": "Somerset Crisis and Resilience Alliance",
+      "is_active": false,
+      "pipeline_state": "tagged",
+      "next_open_date": null,
+      "next_open_date_parsed": null,
+      "eligible_structures": [],
+      "deadline": "2026-09-04"
+    },
+    {
+      "id": "54eca97d-8580-48a6-a3ad-812f2fcff625",
+      "title": "City Bridge Foundation — Racial Justice",
+      "is_active": false,
+      "pipeline_state": "captured",
+      "next_open_date": "Opening in 2026",
+      "next_open_date_parsed": null,
+      "eligible_structures": [],
+      "deadline": null
+    },
+    {
+      "id": "e28f625b-3041-490d-9c52-193c2328c58f",
+      "title": "City Bridge Foundation — Access to Justice",
+      "is_active": false,
+      "pipeline_state": "tagged",
+      "next_open_date": null,
+      "next_open_date_parsed": null,
+      "eligible_structures": [
+        "registered_charity",
+        "cio",
+        "ltd_guarantee",
+        "cic_guarantee"
+      ],
+      "deadline": null
+    }
+  ]
+}
