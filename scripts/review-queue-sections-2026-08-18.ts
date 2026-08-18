@@ -77,12 +77,9 @@ async function main() {
   const bySection = new Map<SectionId, { id: string; title: string; funder: string; live: boolean; codes: string[]; gaps: string[] }[]>()
 
   for (const r of rows) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const reasons = deriveReviewReasons(r as any)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const gate = gateDecision(r as any, reasons)
     const blocking = gate.blocking.map(b => b.code)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const all = (reasons as any[]).map(x => String(x.code))
     const s = sectionOf(blocking, all)
     if (!bySection.has(s)) bySection.set(s, [])
