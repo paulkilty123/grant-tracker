@@ -366,15 +366,9 @@ check-coming-soon hands the row back on 1 September, and it would have returned
 asserting Rolling with no deadline, which is A6. A fix that changes a row's timing
 state has to sweep the sibling timing fields, not just the one that was wrong.
 
-**The bound on the reopen-date class is 1 of 22, not 1 of the catalogue.** 158 live
-rows carry a future deadline and only 22 carry a citation on that field, so the
-check that found One Stop can only see 14% of the population. The other 136 have no
-quote to read and are invisible to it. Quoting "one row" as the size of this class
-would overstate it; properly bounding it means verifying the 136, not writing a
-better regex. Related: the first version of that query carried a `!~* 'clos'`
-filter, which deleted the only true positive — One Stop's citation reads "currently
-closed for applications and will re-open on..." — and returned zero. A check that
-cannot fail is not a check.
+**How big the reopen-date class is, and the query that hid it**, are recorded once
+in section G rather than twice here. The short version: one real row out of the 22
+whose deadline carries a citation, with 136 more that no query of this kind can see.
 
 **On Somerset specifically, asked 2026-08-18.** The Somerset row once described as
 "live and wrong to users" was `Stronger Communities Fund`, live while the funder's
