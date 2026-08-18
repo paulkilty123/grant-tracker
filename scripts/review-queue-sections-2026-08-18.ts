@@ -19,7 +19,7 @@
 import { getAdminDb } from '../src/lib/admin/admin-db'
 import { deriveReviewReasons } from '../src/lib/admin/review-reasons'
 import { gateDecision } from '../src/lib/admin/publish-gate'
-import { sectionOf, SECTIONS, type SectionId } from '../src/lib/admin/review-sections'
+import { sectionOf, SECTIONS, isIncomplete, type SectionId } from '../src/lib/admin/review-sections'
 import { STUB_BRIEF_SOURCES } from '../src/lib/funder-brief'
 
 const QUEUE_STATES = ['captured', 'enriched', 'tagged', 'tagged_awaiting_review']
@@ -72,7 +72,9 @@ async function main() {
     return true
   })
 
-  const bySection = new Map<SectionId, { id: string; title: string; funder: string; live: boolean; codes: string[] }[]>()
+  const INCOMPLETE = ['eligibility_missing', 'no_deadline', 'no_amount',
+    'sectors_missing', 'beneficiaries_generic_only', 'stale_enrichment']
+  const bySection = new Map<SectionId, { id: string; title: string; funder: string; live: boolean; codes: string[]; gaps: string[] }[]>()
 
   for (const r of rows) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -90,9 +92,11 @@ async function main() {
       funder: String(r.funder ?? '').slice(0, 30),
       live: r.is_active === true,
       codes: blocking,
+      gaps: all.filter(c => INCOMPLETE.includes(c)),
     })
   }
 
+  void isIncomplete
   let total = 0
   for (const sec of SECTIONS) {
     const all = bySection.get(sec.id) ?? []
@@ -103,7 +107,8 @@ async function main() {
     console.log(`\n══ ${sec.label} — ${list.length} not live  (+${liveN} live, excluded)`)
     if (!wanted) continue
     for (const it of list) {
-      console.log(`${it.id}  ${it.live ? 'LIVE ' : '     '} ${it.title.padEnd(54)} ${it.funder.padEnd(30)} ${it.codes.join(',')}`)
+      const what = it.codes.length ? `BLOCK:${it.codes.join(',')}` : `gaps:${it.gaps.join(',') || 'none'}`
+      console.log(`${it.id.slice(0, 8)}  ${it.live ? 'LIVE ' : '     '} ${it.title.slice(0, 44).padEnd(44)} ${it.funder.slice(0, 26).padEnd(26)} ${what}`)
     }
   }
   console.log(`\nNot-live total: ${total}  (of ${rows.length} rows fetched)`)
