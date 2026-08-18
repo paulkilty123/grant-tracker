@@ -64,6 +64,52 @@ which is a sentence about two numbers. The sentence about the user is "the amoun
 we show is not what one applicant can ask for" — and a fund's total pot passes
 the first test while saying nothing about the second.
 
+
+### Both fixed, same day
+
+**The flag now requires a per-grant cue.** `extractGrantAmounts` reports
+`max_cued`, and only a cued figure may dispute a stored amount. The asymmetry is
+deliberate and worth keeping straight: `amount_pot_suspected` needs no cue,
+because a pot read as the derivation makes that ratio *smaller*, never larger.
+Understating is the only direction a stray pot can fake.
+
+Three extractor faults found by looking at the survivors rather than the counts,
+each now a test with its real string:
+
+| Row | Was | Now | Cause |
+|---|---|---|---|
+| Fishmongers' Company | £5,000,000 | £90,000 | "applicant annual income must be between £250,000 and £5,000,000" is eligibility, not a grant |
+| Jerwood Annual Round | £2,000,000 | £200,000 | "award up to £2m annually in one open round" — the round, not the grant |
+| Beinneun Community Fund | £500,000 | none | "the fund has up to £500,000 available annually" — *available* belongs to the fund |
+| Crowdfunder Match Funding | £1 | none | "every £1 raised from the public is doubled" |
+
+`grant-amounts.ts` had **no test file**, which is how a regex tuned against a
+dozen named production cases could be edited with the suite green. It has one
+now, covering the legacy cases (Havering, Sterry, Adint, Stronger Futures,
+Trusthouse, Change Makers, Heritage in Need, Consumer Led Flexibility, Nesta) as
+well as the four above.
+
+**Migration 062 clears an amount flag when the amount changes.** In SQL, not in a
+handler: `scraped_grants` has several write paths and fixing the one in front of
+us is what left the others to rot. Proven both directions — an amount write takes
+the flag 1 → 0, a non-amount write leaves it at 1.
+
+**Re-derived: 32 flags → 11, of which 6 live.** No amount was changed by the
+script; it only adds, keeps or drops the warning. The six live survivors are
+genuine judgement calls, Morrisons (stored £10,000, text says £25,000) most
+likely a real error.
+
+**The card can now apply the figure.** Stored on the flag as a number rather than
+left inside the sentence, with a "Use £2,000" button on the chip that raised it.
+The warning clears itself on the write.
+
+**Left alone, worth a look:** two live rows show a maximum of **£2** —
+International Tree Foundation's Community Tree Planting Grant and DBIST's AI
+Growth Lab. Same rhetorical-figure class as Crowdfunder, and the new £100 floor
+would have stopped both, but the stored values predate it and need a page read
+rather than a guess. The 17 other sub-£100 rows are deliberate £0 in-kind
+entries (pro-bono legal, volunteer matching) and are correct.
+
 ## The line: what "done for launch" means
 
 **Set by Paul, 2026-08-16. This governs everything below it.**
