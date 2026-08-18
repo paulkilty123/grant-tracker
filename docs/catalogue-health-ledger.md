@@ -663,22 +663,54 @@ covers less than a third of the problem:
 |---|---:|
 | blocked fields on live rows | 906 |
 | — carry a `previous` that could be restored | **279** |
-| — **have no `previous` at all**, the admin write was the first write | **627** |
+| — **carry no `previous`** | **627** |
 | blocked `deadline` fields with a `previous` | 15 |
 | blocked `deadline` fields with none | **78** |
 
-So "reset to the scraper value" is not the mechanism for most of it, because for
-627 fields there is no earlier value to go back to. The mechanism is **release the
+**Careful with what the 627 means**, because the first version of this note said
+they were all first writes and that does not follow. `previous` is written only
+when an `admin:` source overrides a NON-admin one (grant-merge.ts:216), so its
+absence covers three different histories: a genuine first write, an admin
+overwriting an earlier admin value, and a pinned non-admin source that never
+qualifies for a `previous` at all. 617 of the 627 carry an `admin:` source and 10
+are pinned under a single non-admin source. The entry cannot tell you which
+history applies, and that is the point: **for 627 fields the provenance record
+cannot say what the field held before, so there is nothing to reset TO.** The mechanism is **release the
 field to be re-derived**: drop or downgrade its provenance entry and let the engine
 read the page. That is not novel here either. It is what was done by hand on
 2026-07-09 to the 12 Scotland-batch rows, where `field_provenance` entries for an
 `admin:gap-audit-*` source were stripped so `ai_enrich` could write again.
 
-**The safe first tranche is the 48.** A blocked-and-empty `deadline` has nothing to
-lose: releasing an empty field cannot destroy a human decision, because no human
-decision is recorded in an empty box, and 32 of those rows are asserting Rolling to
-users on the strength of that emptiness. Releasing a field that holds a value is a
-judgement and wants a rule. Releasing 48 empty ones is not.
+**The safe first tranche is 41 of the 48, not all of them.** My argument for the
+batch was that an empty box records no human decision. The second session tested
+that against the signature the `mergeFieldUpdate` comment names, how many fields
+share one `set_at` second, and it does not hold for all 48:
+
+| | |
+|---|---:|
+| stamped alongside 1 to 11 other fields in the same second, a form save | **41** |
+| **stamped ALONE**, which is what a decision looks like | **7** |
+
+All 7 are `admin:paulkilty1@gmail.com`, none has a `previous`, 6 of the 7 also
+assert `is_rolling`, and 4 of them were stamped inside ten minutes on 29 July,
+which reads as a sitting rather than a save. **Three are `funding_type = in_kind`**
+— In Kind Direct Charity Network Membership, The Hygiene Bank Products for
+Organisations, Microsoft for Nonprofits — and for a product or membership scheme an
+empty deadline is the structurally expected answer rather than an artefact.
+Releasing those would hand the engine permission to replace a correct human answer
+with a guess.
+
+Nobody has checked the pages, so this says only that the 7 carry a decision
+signature and the 41 carry an artefact signature. Neither session is claiming the 7
+are right — the in-kind reading is from `funding_type`, and the rest is from
+titles, which is exactly what cost three of the first twelve URL corrections. The
+point is that they must not ride along in a batch whose whole justification is that
+no judgement is involved.
+
+So: **41 released with no judgement and a report file, 7 held for a page check.**
+One of the 7 goes the other way and is worth releasing on its own — Catch22
+GoodTech Ventures Accelerator is empty AND `is_rolling = false`, so it asserts
+nothing at all to anybody, which is A7 rather than A6.
 
 ---
 
