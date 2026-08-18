@@ -6,6 +6,31 @@ import type { EvidenceSummary } from './evidence-summary'
 /** Blocking codes arrive from the server as plain strings. */
 const r = (code: string) => code
 
+describe('sectionOf — nothing more we can do', () => {
+  /**
+   * The tab exists to hold rows nobody can progress. Its danger is becoming a
+   * dumping ground, so the entry rule is evidence of exhaustion and these tests
+   * pin both directions of it.
+   */
+  it('outranks every other section, so a reviewer is not sent to read an unreadable page', () => {
+    // Before this, an exhausted row filed under `reading`, which told a reviewer
+    // to go and read a page the engine had already failed on four times a day.
+    expect(sectionOf(['page_unreadable'], ['page_unreadable', 'read_exhausted'])).toBe('exhausted')
+    expect(sectionOf(['link_dead'], ['link_dead', 'read_exhausted'])).toBe('exhausted')
+    expect(sectionOf(['no_funder'], ['no_funder', 'read_exhausted'])).toBe('exhausted')
+  })
+
+  it('does not claim a row that was never probed', () => {
+    expect(sectionOf(['page_unreadable'], ['page_unreadable'])).toBe('reading')
+  })
+
+  it('leaves an unblocked row alone — exhausted is about work, not about publishing', () => {
+    // read_exhausted is `info` in the gate. A row carrying nothing blocking is
+    // still ready, because being hard to re-read is not a defect in the row.
+    expect(sectionOf([], ['read_exhausted'])).toBe('ready')
+  })
+})
+
 describe('sectionOf', () => {
   it('a row with nothing blocking is ready', () => {
     expect(sectionOf([])).toBe('ready')

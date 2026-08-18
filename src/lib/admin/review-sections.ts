@@ -41,7 +41,7 @@
 import type { ReviewReasonCode } from './review-reasons'
 import type { EvidenceSummary } from './evidence-summary'
 
-export type SectionId = 'ready' | 'link' | 'reading' | 'judgement' | 'untruthful'
+export type SectionId = 'ready' | 'link' | 'reading' | 'judgement' | 'untruthful' | 'exhausted'
 
 export const SECTIONS: { id: SectionId; label: string; detail: string }[] = [
   { id: 'ready',      label: 'Ready to publish',
@@ -54,6 +54,23 @@ export const SECTIONS: { id: SectionId; label: string; detail: string }[] = [
     detail: 'The page was read and what it says is genuinely arguable. These are the ones only you can settle.' },
   { id: 'untruthful', label: 'Nothing truthful to show',
     detail: 'The row cannot be made honest as it stands — no funder, or the page says the fund is gone.' },
+  /**
+   * Added 2026-08-18. Distinct from `judgement`, which asks you to DECIDE
+   * something arguable. This asks you to RULE on a row nothing can settle:
+   * accept it unverified, override it, or drop it.
+   *
+   * The entry rule is evidence of exhaustion, never difficulty. A row arrives
+   * here only after `probe-read-exhausted` has failed to read its page twice
+   * running through both the direct fetch and the reader proxy, or because its
+   * URL is not fetchable by anything — The Paley Trust's `apply_url` is a
+   * `mailto:` address.
+   *
+   * The count is a measurement, not a backlog. If it grows, that is telling you
+   * something about intake and funder readability rather than about how far
+   * behind you are.
+   */
+  { id: 'exhausted',  label: 'Nothing more we can do',
+    detail: 'Read twice through both paths and still unreadable, or the link is not a web page at all. Yours to accept, override or drop.' },
 ]
 
 /**
@@ -115,6 +132,16 @@ export function sectionOf(blockingCodes: readonly string[], allCodes: readonly s
   // which tells a fundraiser nothing about who may apply is not something
   // anyone would click publish on unread — it needs the page reading.
   if (blockingCodes.length === 0) return isIncomplete(allCodes) ? 'reading' : 'ready'
+
+  // Exhausted outranks every other section, and is read from ALL codes rather
+  // than the blocking ones on purpose: `read_exhausted` deliberately does not
+  // block, because these rows are already blocked by whatever could not be
+  // verified. It changes where the work is filed, not what publishes.
+  //
+  // Filing them under `reading` was actively misleading: it told a reviewer to
+  // go and read a page that has already been read four times a day and cannot
+  // be.
+  if (allCodes.includes('read_exhausted')) return 'exhausted'
   const hit = new Set<SectionId>()
   for (const code of blockingCodes) {
     const s = CODE_SECTION[code as ReviewReasonCode]

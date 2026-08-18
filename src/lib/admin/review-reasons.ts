@@ -131,6 +131,10 @@ export type ReviewReasonCode =
   | 'page_describes_different_fund'
   | 'no_funder'
   | 'never_verified'
+  // Both fetch paths have failed twice running, or the link is not a web page.
+  // Deliberately NON-BLOCKING: these rows are already blocked by whatever could
+  // not be verified, and this only decides where the work is filed.
+  | 'read_exhausted'
 
 export type ReviewReason = {
   code:     ReviewReasonCode
@@ -497,6 +501,27 @@ export function deriveReviewReasons(row: ReviewRow, todayISO?: string): ReviewRe
       code: 'page_describes_different_fund', severity: 'critical',
       label: 'The page does not describe this fund',
       detail: 'the link loads, but the engine could not find this fund on it',
+    })
+  }
+
+  // ── Nothing more we can do ─────────────────────────────────────────────────
+  // Written by scripts/probe-read-exhausted.ts, which attempts the direct fetch
+  // AND the reader proxy and records the outcome. It is recorded rather than
+  // derived because `_page_read` holds the last attempt and not a count, so
+  // "would trying again help" is not answerable from the row.
+  //
+  // Two failures are required before this fires. The Hygiene Bank returned zero
+  // characters on one probe and a full page four minutes later; a single failure
+  // would have filed a working funder as hopeless and then stopped re-probing it.
+  const exhausted = (row.field_evidence as Record<string, unknown> | null | undefined)?.['_read_exhausted'] as
+    { reason?: string; consecutive?: number; detail?: string } | undefined
+  if (exhausted && (exhausted.reason === 'not_a_web_url' || Number(exhausted.consecutive ?? 0) >= 2)) {
+    reasons.push({
+      code: 'read_exhausted', severity: 'check',
+      label: 'Nothing more we can do',
+      detail: exhausted.reason === 'not_a_web_url'
+        ? 'the link is not a web page, so no fetch can ever read it'
+        : 'both the direct fetch and the reader proxy have failed twice running',
     })
   }
 

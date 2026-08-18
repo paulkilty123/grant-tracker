@@ -151,6 +151,15 @@ const POLICY: Record<ReviewReasonCode, 'block' | 'info'> = {
   // shared this and nothing else.
   no_funder:              'block',
 
+  // INFO, not block, and deliberately so. A row reaches `read_exhausted` only
+  // when it is ALREADY blocked by something the engine could not verify —
+  // page_unreadable, never_verified — so blocking again would double-count and,
+  // worse, imply the row became less publishable by being investigated. It
+  // exists to file the work under "nothing more we can do" rather than to change
+  // what publishes, which is why the blocking set and its policy version are
+  // untouched by it.
+  read_exhausted:         'info',
+
   // The engine has never read this row's page. Added 2026-08-17: this is the
   // rule that makes verification a precondition of publishing rather than a
   // commentary on it. Distinct from `no_brief`, which asks whether an AI brief

@@ -180,6 +180,8 @@ const NAV_META: Record<NavId, { label: string; detail: string }> = {
   reading:    { label: 'Needs reading',         detail: 'Nothing has read the funder’s page, so no judgement is possible yet.' },
   judgement:  { label: 'Needs your judgement',  detail: 'The page was read and what it says is genuinely arguable.' },
   untruthful: { label: 'Nothing truthful to show', detail: 'No funder, or the page says the fund is gone.' },
+  exhausted:  { label: 'Nothing more we can do',
+    detail: 'Read twice through both the direct fetch and the reader proxy and still unreadable, or the link is not a web page. Not waiting on more work — waiting on you to accept it unverified, override it, or drop it.' },
   liveok:     { label: 'Live, nothing blocking',
     detail: 'Already visible and carrying no blocking reason. Confirming one takes it out of this queue without changing what a user sees.' },
   new:        { label: 'New this week',         detail: `What has arrived in the last ${NEW_ARRIVAL_DAYS} days, newest first. These also appear under whatever they need.` },
@@ -1180,10 +1182,15 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
       }}>
         <NavGroup label="Needs attention">
           <Tab id="liveandwrong" nav={nav} onGo={go} n={liveAndWrong.length} tone="alert" />
+          {/* Sits here rather than under "Not live yet" because these rows are
+              MIXED: Theatre Breakthrough and The Paley Trust are both live. It is
+              also the only other tab that is a call on Paul rather than a queue of
+              work, which is the thing the two have in common. */}
+          <Tab id="exhausted"    nav={nav} onGo={go} n={sectionCounts.exhausted ?? 0} />
         </NavGroup>
 
         <NavGroup label="Not live yet" count={byView.length} divided>
-          {SECTIONS.map(sec => (
+          {SECTIONS.filter(sec => sec.id !== 'exhausted').map(sec => (
             <Tab key={sec.id} id={sec.id} nav={nav} onGo={go} n={sectionCounts[sec.id] ?? 0} />
           ))}
         </NavGroup>

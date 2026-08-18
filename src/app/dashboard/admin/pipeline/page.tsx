@@ -49,6 +49,28 @@ export default async function PipelinePage() {
     .order('started_at', { ascending: false })
     .limit(2000)
 
+  // Rows nothing can read, counted here rather than only in the review queue.
+  //
+  // It belongs on this page because it is a PIPELINE measurement, not a backlog:
+  // it says how much of the catalogue the verification engine is structurally
+  // unable to reach. If it climbs, the answer is a fetching capability or an
+  // intake rule, not a longer evening in the review queue. Counted separately
+  // for live rows because an unreadable row that users can see is the sharper
+  // half of the number.
+  const { data: exhaustedRows } = await db
+    .from('scraped_grants')
+    .select('is_active, field_evidence')
+    .not('field_evidence->_read_exhausted', 'is', null)
+    .limit(1000)
+
+  const settled = (exhaustedRows ?? []).filter(r => {
+    const e = (r.field_evidence as Record<string, unknown> | null)?.['_read_exhausted'] as
+      { reason?: string; consecutive?: number } | undefined
+    return !!e && (e.reason === 'not_a_web_url' || Number(e.consecutive ?? 0) >= 2)
+  })
+  const exhaustedTotal = settled.length
+  const exhaustedLive  = settled.filter(r => r.is_active === true).length
+
   // A failed read must never render as "no jobs have ever run" — that is
   // indistinguishable from total pipeline failure, and it is the exact mistake
   // the old review queue made when it showed "all clear!" on a broken query.
@@ -101,6 +123,22 @@ export default async function PipelinePage() {
         Every scheduled job, soonest due first, problems at the top. Schedules are read
         from <code>vercel.json</code>, so what you see here is what Vercel actually runs.
       </p>
+
+      {exhaustedTotal > 0 && (
+        <div style={{
+          background: 'var(--color-surface-alt, #F5F1E8)', borderRadius: 'var(--radius-card)',
+          padding: '13px 16px', marginBottom: 22, fontSize: 13, lineHeight: 1.5,
+        }}>
+          <strong style={{ ...display, fontWeight: 700 }}>
+            {exhaustedTotal} row{exhaustedTotal === 1 ? '' : 's'} nothing can read
+          </strong>
+          {exhaustedLive > 0 && <>, {exhaustedLive} of them live to users</>}.{' '}
+          Read twice through both the direct fetch and the reader proxy, or the link is not a
+          web page. They sit under <em>Nothing more we can do</em> in the review queue. This is a
+          measure of what the engine cannot reach, so a rising number is a fetching or intake
+          problem rather than a review backlog.
+        </div>
+      )}
 
       {(overdueCount > 0 || failedCount > 0 || stalledCount > 0) && (
         <div style={{
