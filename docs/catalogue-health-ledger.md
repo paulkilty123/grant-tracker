@@ -179,6 +179,45 @@ correction is not the same as deciding it must never improve."
 > `page_describes_different_fund` reason) to `admin_relinked`, which clears the
 > now-false flag without claiming a machine verification that never ran.
 
+## Archived and live at the same time, 2026-08-18
+
+Eight rows held `pipeline_state = 'archived'` with `is_active = true`. The harm
+was not what users saw, since all eight were live and mostly fine. It was that
+`archived` removes a row from **every** admin queue, so they were in front of
+fundraisers and unreachable by review simultaneously. Paul hit this from the
+other end, asking how to find Morrisons in the review queue: the answer was that
+no search would ever have found it.
+
+**Reading the pages reversed two of the three hides I proposed from metadata.**
+Worth recording, because the proposals looked sound and were built on the verify
+engine's own verdicts.
+
+| Row | Proposed from metadata | What the page said | Outcome |
+|---|---|---|---|
+| American Express | hide, `wrong_fund` | US corporate sustainability reporting, no UK grant route | **Hidden.** Verdict correct. |
+| Steel Charitable Trust | hide, `wrong_fund` | Link was fine: two real programmes with apply routes. But closed to new applicants for 2026 | **Hidden, different reason.** Between rounds, reopens 1 Oct 2026. |
+| Morrisons Foundation | hide, between rounds | Live "Start Your Application" button on the funder's page | **Kept live.** The row's own claim was wrong. |
+
+Morrisons is the one to learn from. The row said "TBC, between rounds", which
+shows users a closed fund, and that claim was unevidenced and contradicted by
+the funder's application page. Acting on our own stored field would have
+withdrawn an open fund from the catalogue. The `next_open_date` is cleared and
+left unpinned. Its £25,000 ceiling, pinned by Paul on 1 June, is left alone
+although the page now reads "up to £20,000" — a pinned human figure is his call,
+not a correction to make in passing.
+
+**Migration 063 stops the pair separating again**, and publishes rather than
+hides, because that is what `transitionPipelineState` already says out loud:
+`is_active=true` takes a row to published regardless of previous state. Hiding
+would have looked more cautious and would silently withdraw funds nobody decided
+to withdraw. The rule stays narrow on purpose: `tagged_awaiting_review` + live
+is 29 rows of intended behaviour, not the same defect. Proven in a rolled-back
+transaction, all three directions, including that a legitimate archive still
+archives.
+
+**Untouched and bigger:** 181 rows are `published` while hidden from users. That
+is the other half of the same desync and it wants its own pass.
+
 **Still thin on this row:** `who_can_apply` and `exclusions` are both empty, so
 it reads "See funder site for eligibility criteria." The guidelines carry all of
 it (community-based organisation, bank account in the applicant's name, signed
