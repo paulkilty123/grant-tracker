@@ -1020,6 +1020,64 @@ funder's quote attached, and every field checked for a pin before it was touched
 
 ---
 
+## Link needs fixing, worked 2026-08-18
+
+**47 rows, of which 28 changed.** The bucket is named for links and was mostly not
+about links.
+
+| Disposition | Rows |
+|---|---:|
+| Withdrawn as duplicates of a working row | 13 |
+| Withdrawn: no application route, closed one-off, out of scope, or not a fund | 7 |
+| Link re-pointed (funder moved, not closed) | 3 |
+| Amounts or dates corrected | 5 |
+| **Unreadable: Arts Council England sits behind a CAPTCHA** | **7** |
+| Assessed as gate false positives, ready for a publish decision | 6 |
+| Need enrichment rather than a link fix (brief is empty) | 6 |
+
+**Duplication, not dead links, was the dominant fault.** Thirteen of the twenty
+withdrawals were funds a working row already carried. The scale underneath: UnLtd
+had five rows, two of them with an identical title AND identical URL. Lloyds had
+three pointing at the same `/funding/` page. Two Arts Council rows and two Power to
+Change rows were each one fund entered twice, all four created by
+`discovery_queue`. SSE is split across two spellings of its own funder name, which
+is C2, and is why its duplicates never matched each other.
+
+**Dedup on `apply_url`, not on funder.** Matching on funder produced 76 hits that
+were nearly all noise, because every named fund at a community foundation shares a
+funder. Same URL is the signal. That correction came from the second session after
+it made the mistake first.
+
+**One open fund was sitting hidden.** London Community Energy Fund, deadline
+30 September 2026, £10,000 feasibility and £60,000 delivery streams, explicitly for
+small organisations with charitable aims in London.
+
+**Three amount figures were the programme, not the award:** the GLA Community
+Housing Fund's £38m, the Local Innovation Partnerships Fund's £2m minimum bid, and
+the Mental Health in Schools £650,000, which the page states is *one* grant. A
+fourth, Social Investment Business, carried a floor of **£5**.
+
+### Two findings that are not about these rows
+
+**`page_describes_different_fund` misfires on front doors.** It fired on LawWorks,
+Tesco Stronger Starts, Ashoka, City Bridge, Nationwide, Baring and SSE Start Up,
+all of which point at a page that describes them correctly. The check looks for a
+discrete named fund and a front-door row does not have one. Roughly half this
+bucket and a quarter of the previous one. The fix belongs in the check, not the
+rows, and until it lands this flag should not be read as evidence.
+
+**`url_status` cannot see a soft 404.** `powertochange.org.uk/our-funds/` returns
+the site's own "We could not find that" page with a 200, and the validator records
+it as `ok`. Any funder whose CMS soft-404s can hold a dead link that passes
+validation indefinitely.
+
+**And Arts Council England cannot be read by anything we have.** 13 rows, 7 in this
+bucket. Both the fetcher and the reader proxy get a bot-protection interstitial, so
+the verification engine cannot read them either, ever. These rows are blocked on a
+funder rather than on a decision, and no amount of queue-working will move them.
+
+---
+
 ## Maintenance
 
 Update on each merge that closes a row, and re-measure the whole table at each
