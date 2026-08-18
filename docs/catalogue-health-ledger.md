@@ -146,6 +146,45 @@ buys no coverage and would start nulling genuine micro-grants.
 > through `normaliseFindAGrant`, and was confirmed to fail against the old
 > wiring before the fix was restored.
 
+**Then the same row's deadline and link, on Paul's go.** Reading the guidelines
+to fix the amount surfaced two more defects on the Tree Foundation row, both
+from the same unevidenced discovery-feed import.
+
+*It advertised a rolling deadline and had none.* The guidelines set a hard end:
+open from 29 June, first assessment round 1 October 2026, then first come first
+served while funds remain, closing **11 December 2026**. Now `deadline`
+2026-12-11 with `is_rolling` false.
+
+*Its apply link was a bare login wall.* `grantplatform.com` 403s to any
+non-browser fetch, which is why the engine could never read it and had already
+flagged the row `fixable_link: wrong_fund`. Re-pointed to the funder's own
+`/uk-grants`, checked first against the three tests the gate actually applies:
+it names this fund, it carries application detail (land-access eligibility, the
+guidelines PDF, a Start application link), and it covers one fund not several.
+Stored in canonical `www` form because the apex 301s.
+
+**The two writes were given deliberately different trust, and the reason
+generalises.** `apply_url` is `admin:` and pinned — the right front door does
+not expire, and nothing should revert it to the login wall. `deadline` is
+`manual_extract:` (50) and **not** pinned, because this date dies with the round
+and pinning it would block enrichment from ever moving it. Trust 50 still
+outranks the crawl (40) and the discovery feed (25) that put the wrong value
+there, so it cannot silently revert. Per `grant-merge.ts`: "Confirming a
+correction is not the same as deciding it must never improve."
+
+> Migration 056's trigger was confirmed working in passing: writing the deadline
+> set `verify_due_at` to null by itself, so the row is queued for the engine to
+> re-read rather than waiting for its 30 August slot. `_page_read` was moved off
+> `fixable_link: wrong_fund` (the only string that raises the critical
+> `page_describes_different_fund` reason) to `admin_relinked`, which clears the
+> now-false flag without claiming a machine verification that never ran.
+
+**Still thin on this row:** `who_can_apply` and `exclusions` are both empty, so
+it reads "See funder site for eligibility criteria." The guidelines carry all of
+it (community-based organisation, bank account in the applicant's name, signed
+landowner permission, public or publicly accessible land, indigenous species).
+Not filled, as it was outside what was asked.
+
 ## The line: what "done for launch" means
 
 **Set by Paul, 2026-08-16. This governs everything below it.**
@@ -601,4 +640,5 @@ Set by Paul, 2026-08-12, and to be carried forward until closed.
 | 2026-08-16 | Launch scope fixed to four items (see "The line" above). Everything else post-September. Catalogue reports by digest only from 17 Aug. |
 | 2026-08-16 | A11 (deadline and is_rolling both set) reduced by one: Greggs Community Action Fund `is_rolling` set false, deadline 2026-08-28 retained. Count to re-measure. |
 | 2026-08-18 | Both £2 rows closed: International Tree Foundation to £21,500 (per-tree unit price misread as the award), DBIST AI Growth Lab to null (gov.uk schema placeholder for a programme paying nothing). `normaliseGovUkAward` now also guards `amount_max`; regression test drives the real record. |
+| 2026-08-18 | Tree Foundation row also re-dated and re-linked: deadline 2026-12-11 with is_rolling false (was rolling with no date), apply_url off the 403ing grantplatform login onto the funder's own /uk-grants. apply_url pinned, deadline deliberately not. |
 | 2026-08-16 | A3 needs a caveat before it is trusted: the `round_closed` verdict is a deterministic function of the proposed deadline falling in the past (23 of 23 rows, no exceptions), so a year-less date on the funder's page that resolves to a wrong past year produces a false "closed". Confirmed on the Greggs row, which is open for another 12 days. Bears directly on the §12 auto-act decision. |
