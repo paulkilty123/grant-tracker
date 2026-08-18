@@ -247,9 +247,31 @@ async function fetchGrantPageInfo(url: string): Promise<{ description: string; i
 // ── Source toggle ─────────────────────────────────────────────────────────────
 // Set DISABLED_SOURCES env var to a comma-separated list of source IDs to skip.
 // e.g. DISABLED_SOURCES=lincolnshire_cf,kent_cf
-const DISABLED_SOURCES = new Set(
-  (process.env.DISABLED_SOURCES ?? '').split(',').map(s => s.trim()).filter(Boolean)
-)
+//
+// `gov_uk` is disabled IN CODE rather than by env var, because the reason is a
+// property of the source and not of one deployment. Find a Grant lists everything
+// government funds, and the great majority of that is not for our audience:
+// Innovate UK R&D consortia that must be led by a registered business, UKRI calls
+// led by a university, Defra grants for farmers and land managers, BFI money for
+// film sales agents, DWP employer subsidies, and police-commissioner service
+// contracts. The Critical Minerals Accelerator states it plainly — "open only to
+// UK registered businesses… charities, not-for-profits" are excluded.
+//
+// Measured 2026-08-18: 40 live-or-queued rows from this source, of which roughly
+// 13 could not be applied for by a UK charity, CIC or social enterprise, and 6 of
+// those were LIVE. The ledger already scored the source at 6% yield (243 rows ever,
+// 15 live). Each irrelevant row costs a review, so the source was spending Paul's
+// attention faster than it was adding funds.
+//
+// Re-enable by removing it here, not by unsetting an env var. The good rows it did
+// find — HS2's community fund, the MoJ rehabilitative services scheme, the
+// Democratic Engagement Fund — stay in the catalogue and are unaffected.
+const CODE_DISABLED_SOURCES = ['gov_uk']
+
+const DISABLED_SOURCES = new Set([
+  ...CODE_DISABLED_SOURCES,
+  ...(process.env.DISABLED_SOURCES ?? '').split(',').map(s => s.trim()).filter(Boolean),
+])
 function guarded(source: string, fn: () => Promise<CrawlResult>): Promise<CrawlResult> {
   if (DISABLED_SOURCES.has(source)) {
     return Promise.resolve({ source, fetched: 0, upserted: 0, error: 'disabled' })
