@@ -180,6 +180,53 @@ export default async function ReviewPage() {
     return k ? Math.max(0, (urlCount.get(k) ?? 1) - 1) : 0
   }
 
+  // What else we already carry on this funder's SITE.
+  //
+  // Intake dedups on an exact URL or an exact title, and discovery varies both,
+  // so it created 24 rows for funds already in the catalogue — a quarter of
+  // everything it has produced. The pairs are obvious to a person and invisible
+  // to a string match: "Community Matters" against "Waitrose Community Matters",
+  // "/our-funding/" against "/our-funds/". Social Business Trust beat even a
+  // domain match, appearing three times across two domains the funder both uses.
+  //
+  // This does NOT declare a duplicate, because a community foundation genuinely
+  // runs many funds from one domain and calling those duplicates is the same
+  // proxy error that has bitten this catalogue repeatedly. It shows the reviewer
+  // what else is on the site and lets them see it in one glance.
+  //
+  // Capped and sorted so a Foundation Scotland row does not print twenty
+  // siblings; the number is what matters once the list gets long.
+  const domainOf = (u: string | null | undefined) =>
+    (u ?? '').toLowerCase().replace(/^https?:\/\/(www\.)?/, '').split('/')[0] ?? ''
+
+  const { data: siblingRows } = await db
+    .from('scraped_grants')
+    .select('id, title, apply_url, is_active, pipeline_state')
+    .not('apply_url', 'is', null)
+    .not('pipeline_state', 'in', '("rejected","archived")')
+    .limit(3000)
+
+  const byDomain = new Map<string, { id: string; title: string; live: boolean }[]>()
+  for (const r of (siblingRows ?? []) as { id: string; title: string | null; apply_url: string | null; is_active: boolean | null }[]) {
+    const d = domainOf(r.apply_url)
+    if (!d) continue
+    if (!byDomain.has(d)) byDomain.set(d, [])
+    byDomain.get(d)!.push({ id: r.id, title: String(r.title ?? '').slice(0, 60), live: r.is_active === true })
+  }
+
+  const siblingsOf = (id: string, url: string | null) => {
+    const d = domainOf(url)
+    if (!d) return { count: 0, sample: [] as { title: string; live: boolean }[] }
+    const all = (byDomain.get(d) ?? []).filter(x => x.id !== id)
+    return {
+      count: all.length,
+      // Live first: a collision with something users can already see is the one
+      // that matters.
+      sample: [...all].sort((a, b) => Number(b.live) - Number(a.live)).slice(0, 4)
+        .map(x => ({ title: x.title, live: x.live })),
+    }
+  }
+
   // Merge, de-duplicating by id in case a state ever overlaps.
   //
   // Gate-published rows come LAST on purpose. If a row the gate published has
@@ -207,6 +254,7 @@ export default async function ReviewPage() {
       funder:        r.funder ?? '',
       applyUrl:      r.apply_url ?? null,
       linkSharedWith: sharedWith(r.apply_url ?? null),
+      siblingsOnSite: siblingsOf(r.id, r.apply_url ?? null),
       isActive:      r.is_active === true,
       pipelineState: r.pipeline_state,
       reasons,

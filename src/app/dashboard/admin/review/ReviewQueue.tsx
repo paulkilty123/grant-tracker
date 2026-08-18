@@ -61,6 +61,11 @@ export type QueueItem = {
   applyUrl: string | null
   /** Other live rows on this exact apply_url. >0 means the link cannot identify this row. */
   linkSharedWith: number
+  /** What else we carry on this funder's SITE. Information, not a verdict: a
+   *  community foundation runs many funds from one domain. It exists because
+   *  intake dedups on exact strings and discovery varies them, so a quarter of
+   *  its rows duplicated funds already in the catalogue. */
+  siblingsOnSite: { count: number; sample: { title: string; live: boolean }[] }
   isActive: boolean
   pipelineState: string
   reasons: ReviewReason[]
@@ -2205,6 +2210,28 @@ function Row({
                 <button onClick={() => setRejecting(false)} style={ghostBtn}>Cancel</button>
               </div>
             </div>
+          )}
+
+          {item.siblingsOnSite.count > 0 && (
+            <span style={{
+              fontSize: 11.5, lineHeight: 1.45, color: 'var(--color-text-secondary)',
+              background: 'var(--color-surface-alt, #F5F1E8)',
+              borderRadius: 'var(--radius-badge, 8px)', padding: '5px 10px', maxWidth: '58ch',
+            }}>
+              We already carry {item.siblingsOnSite.count}{' '}
+              {item.siblingsOnSite.count === 1 ? 'row' : 'rows'} on this funder&rsquo;s site:{' '}
+              {item.siblingsOnSite.sample.map((sib, i) => (
+                <span key={sib.title + i}>
+                  {i > 0 && ', '}
+                  <span style={{ fontWeight: sib.live ? 600 : 400 }}>{sib.title}</span>
+                  {sib.live && <span style={{ color: 'var(--sage, #3B6D11)' }}> (live)</span>}
+                </span>
+              ))}
+              {item.siblingsOnSite.count > item.siblingsOnSite.sample.length
+                && ` and ${item.siblingsOnSite.count - item.siblingsOnSite.sample.length} more`}.
+              {' '}Several funds on one site is normal for a community foundation. Two rows for the
+              same fund is not, and intake cannot tell the difference.
+            </span>
           )}
 
           {item.linkSharedWith > 0 && (
