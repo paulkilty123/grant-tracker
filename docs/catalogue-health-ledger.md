@@ -967,6 +967,59 @@ from it.
 
 ---
 
+## Live and wrong, worked 2026-08-18
+
+**The first bucket taken from the review queue as defined work.** 30 on the admin
+screen, 20 by the gate's own `attention` set; the difference is rows the page pulls
+in from elsewhere. All 20 read against the funder's own page the same day.
+
+| Disposition | Rows |
+|---|---:|
+| Changed | 12 |
+| Correct as they stood, gate flag wrong | 2 |
+| Left alone, could not be settled | 6 |
+
+**The fault was not what the queue is built to catch.** Only ONE of the twenty was
+a stale date. Seven were **a money figure that was not a per-applicant award**:
+Google.org's £95,000 (Workspace and ad credits), Clore's £15,000 (training fees),
+SSE's £15,000 (no figure on the page at all), the Sainsbury fund's £10k–£100k (the
+funder takes no unsolicited applications and publishes no range), Suffolk's £15,000
+(its own stated range is £500–£40,000), Asda's £50,000, and the Football
+Foundation's £100,000.
+
+**Two were funds that do not exist.** Sported was carrying an "Organisational
+Development Grant" that appears nowhere on Sported's site, and Ffilm Cymru a
+"Production Fund" that appears nowhere on theirs. Both funders are real and fund
+real things, so both rows were re-pointed at the funder's actual programme list
+rather than withdrawn.
+
+**Two were gate false positives.** LawWorks and Tesco Stronger Starts both had
+`page_describes_different_fund` raised against pages that describe them exactly.
+The check looks for a discrete fund and finds none on an in-kind or front-door
+row. Worth knowing before anyone treats that flag as evidence.
+
+**And one row's data came from another funder's scraper.** The Football Foundation
+row carried a £100,000 ceiling and a homepage link both written by
+`scraper:young_camden_foundation`. It was a duplicate of a better row that already
+held the correct £25,000 and the right page, so it was withdrawn.
+
+Withdrawn: National Pro Bono Centre (supports the charities that broker pro bono
+work; nothing for a fundraiser to apply for) and the duplicate Football Foundation
+row. Taken out of view: Asda Foundation, every programme closed, next opens autumn
+2026.
+
+**Six left alone, deliberately.** Beinneun Community Fund is live with a deadline of
+24 August that two reads could not confirm and that a cron derived rather than read
+off the page. Theatre Breakthrough Fund (North), ChangemakerXchange and the Leeds
+CF mental-health fund are unreadable even through the reader proxy. Gulbenkian's
+page never says whether it accepts applications. Smallwood's is a hub of seven
+programmes with no amounts on it. A floor beats a ranking: none of these cleared it.
+
+All writes stamped `user_verified:live-and-wrong-2026-08-18`, unpinned, with the
+funder's quote attached, and every field checked for a pin before it was touched.
+
+---
+
 ## Maintenance
 
 Update on each merge that closes a row, and re-measure the whole table at each
