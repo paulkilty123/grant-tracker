@@ -1,0 +1,86 @@
+{
+  "written_at_utc": "2026-08-18T19:02:50.999Z",
+  "approved_by": "Paul, 2026-08-18",
+  "withdraw": [
+    {
+      "id": "b356c693-c1ac-4361-8d11-8969ef369bcb",
+      "title": "Purchase mid-range equipment for biomedical research: MRC Equip",
+      "reason": "applicant_not_social_sector",
+      "quote": "To be eligible to apply for this UK Research and Innovation (UKRI) funding opportunity you must be a researcher or research technical professional employed by an eligible research organisation."
+    },
+    {
+      "id": "d29c32d9-92c6-497e-8aa7-ce04952002d7",
+      "title": "Resilient economy and security through ecosystem transitions (NERC)",
+      "reason": "applicant_not_social_sector",
+      "quote": "This funding opportunity is open to research groups and individuals... welcome applications from individuals at any career stage, subject to NERC eligibility criteria."
+    }
+  ],
+  "correct": [
+    {
+      "id": "4ffd8693-6a2e-4f41-9818-82328bde7e1e",
+      "title": "Debt Advice Modernisation and Transformation Fund — closed cohort",
+      "quote": "This funding opportunity is restricted to organisations that have previously received grant funding from MaPS. The lead applicant organisation must: have been a lead grant recipient of either: the Debt Advice Modernisation Fund (DAMF) 2024/25 or 2025/26, or the Debt Advice Transformation Fund (DATF) 2025/26",
+      "fields": {
+        "is_invite_only": true
+      },
+      "note": "Not invite-only in the letter-through-the-door sense, but functionally closed: only prior MaPS grantees may lead a bid. Closes 19 Aug, one day out. Amounts (£25k-£100k) already match the page and are left alone."
+    }
+  ],
+  "kept_unchanged": [
+    {
+      "id": "ca11a595-5a4b-4e00-a926-fadcf4b8c218",
+      "title": "Child Focused Court IDVA — Cheshire & Merseyside",
+      "why": "Real and relevant. The PCC is \"seeking a delivery partner\" for specialist domestic abuse support and says \"Both individual and consortium bids will be considered\" — specialist DA charities are exactly the intended applicant. Closes 4 Sep. Wants a brief and geography, not a verdict.",
+      "caution": "amount_max is 609,957, which is the value of the whole commission. Left alone rather than guessed at."
+    },
+    {
+      "id": "b3d10128-b913-4815-8e7d-5d8118698c14",
+      "title": "DCMS 'Connections Through Gaming' Pilot Fund",
+      "why": "Real and relevant. Youth organisations are the intended delivery partners, boys 11-16 experiencing loneliness. Closes 11 Sep. Wants a brief and sector tags.",
+      "caution": "amount_max is 648,000, which the page calls \"up to £648,000 in grant funding for programme delivery\" across \"one or more\" delivery partners. That is a POT read as a per-applicant ceiling. Flagged, NOT rewritten: amounts are propose-only in this repo."
+    },
+    {
+      "id": "5e627d36-0816-47cc-acf6-6ed0dd8fd5aa",
+      "title": "Capital Grants 2026 (Defra)",
+      "why": "A genuine judgement rather than a lookup. The page is addressed to \"farmers and land managers\" and applications go through the Rural Payments Service, which reads as outside the catalogue audience — but land-holding conservation charities and wildlife trusts do hold these agreements. Withdrawing it on the wording alone would be judging by appearance. Left for Paul."
+    }
+  ],
+  "before": [
+    {
+      "id": "4ffd8693-6a2e-4f41-9818-82328bde7e1e",
+      "title": "The Debt Advice Modernisation and Transformation Fund 2026/27",
+      "funder": "The Money and Pensions Service",
+      "is_active": false,
+      "pipeline_state": "tagged",
+      "rejection_reason": null,
+      "is_invite_only": false,
+      "deadline": "2026-08-19",
+      "amount_min": 25000,
+      "amount_max": 100000
+    },
+    {
+      "id": "b356c693-c1ac-4361-8d11-8969ef369bcb",
+      "title": "\tPurchase mid-range equipment for biomedical research: MRC Equip (Grant)",
+      "funder": "UK Research and Innovation, Medical Research Council",
+      "is_active": false,
+      "pipeline_state": "tagged",
+      "rejection_reason": null,
+      "is_invite_only": false,
+      "deadline": "2026-11-05",
+      "amount_min": 200000,
+      "amount_max": 1000000
+    },
+    {
+      "id": "d29c32d9-92c6-497e-8aa7-ce04952002d7",
+      "title": "Resilient economy and security through ecosystem transitions grants (Grant)",
+      "funder": "UK Research and Innovation, Natural Environment Research Council",
+      "is_active": false,
+      "pipeline_state": "tagged",
+      "rejection_reason": null,
+      "is_invite_only": false,
+      "deadline": "2026-10-22",
+      "amount_min": null,
+      "amount_max": 2500000
+    }
+  ]
+}
