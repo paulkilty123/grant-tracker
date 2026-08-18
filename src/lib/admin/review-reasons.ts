@@ -172,6 +172,7 @@ export type ReviewRow = {
   eligible_structures?:      string[] | null
   impact_sectors?:           string[] | null
   target_beneficiaries?:     string[] | null
+  niche_tags?:               string[] | null
   funder_brief?:             Record<string, unknown> | null
   field_provenance?:         Record<string, unknown> | null
   raw_data?:                 unknown
@@ -303,8 +304,35 @@ export function compareByReadiness(a: ReviewReason[], b: ReviewReason[]): number
  * { field: { before: [...], after: [...] } }. It is written on every material
  * tag change and has never been rendered anywhere — which is why 145 of the 174
  * rows currently in the queue cost a full re-review instead of a glance.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * THE STORED BLOB IS A RECORD OF A PAST EVENT, NOT THE ROW'S CURRENT STATE.
+ *
+ * Nothing clears it. Pressing "Put it back" writes the field and leaves the blob
+ * exactly as it was, so the card kept offering to undo a change that had already
+ * been undone — three times on Football Foundation's Grass Pitch Maintenance
+ * Fund on 2026-08-17, each press landing correctly in the database and changing
+ * nothing on screen. A button that works and looks broken is worse than one that
+ * is missing: it invites the reviewer to press it again.
+ *
+ * So `current` decides whether a diff is still live. A diff is SETTLED once the
+ * classifier's `after` is no longer what the row holds — whether the reviewer
+ * reverted to `before` or edited to a third value. Either way there is nothing
+ * left to accept or undo.
+ *
+ * Derived from the row, never stored: it survives a refresh, and it is right for
+ * a row changed somewhere else entirely.
+ *
+ * ONLY WHEN THE FIELD WAS ACTUALLY SELECTED. A caller whose query omits the
+ * column would otherwise read `undefined`, conclude "no longer equal to after",
+ * and silently drop every diff for that field. On an absent column the diff is
+ * kept — on missing data the safe direction is to show the change, not to hide
+ * it.
  */
-export function extractTagsDiff(fieldProvenance: Record<string, unknown> | null | undefined): FieldDiff[] {
+export function extractTagsDiff(
+  fieldProvenance: Record<string, unknown> | null | undefined,
+  current?: Record<string, unknown> | null,
+): FieldDiff[] {
   const ps = fieldProvenance?.pipeline_state
   if (!ps || typeof ps !== 'object') return []
   const diff = (ps as Record<string, unknown>).diff
@@ -316,6 +344,7 @@ export function extractTagsDiff(fieldProvenance: Record<string, unknown> | null 
     const r = raw as Record<string, unknown>
     const before = Array.isArray(r.before) ? r.before.map(String) : []
     const after  = Array.isArray(r.after)  ? r.after.map(String)  : []
+    if (isSettled(current, field, after)) continue
     out.push({
       field,
       before,
@@ -325,6 +354,22 @@ export function extractTagsDiff(fieldProvenance: Record<string, unknown> | null 
     })
   }
   return out
+}
+
+/** Order-insensitive, because nothing guarantees the classifier and a hand edit
+ *  write the same sequence, and a reordered list is not a change. */
+function sameSet(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false
+  const s = new Set(a)
+  return b.every(v => s.has(v))
+}
+
+/** True when the field is present on the row AND no longer holds `after`. */
+function isSettled(current: Record<string, unknown> | null | undefined, field: string, after: string[]): boolean {
+  if (!current) return false
+  const value = current[field]
+  if (!Array.isArray(value)) return false   // absent, or not a tag list — keep it
+  return !sameSet(value.map(String), after)
 }
 
 function daysSince(iso: string | null | undefined): number | null {
@@ -710,7 +755,7 @@ export function deriveReviewReasons(row: ReviewRow, todayISO?: string): ReviewRe
   // machine improved something and wants a nod. Severity rises to critical when
   // the change REMOVED eligibility, because that silently hides the fund from
   // organisations that can actually apply.
-  const diffs = extractTagsDiff(row.field_provenance)
+  const diffs = extractTagsDiff(row.field_provenance, row as unknown as Record<string, unknown>)
   if (diffs.length > 0) {
     const structuresLost = diffs.find(d => d.field === 'eligible_structures' && d.removed.length > 0)
     if (structuresLost) {

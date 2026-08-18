@@ -58,7 +58,7 @@ export default async function GrantDetailPage({ params }: { params: { id: string
 
   const row = data as Record<string, unknown>
   const reasons = deriveReviewReasons(row as unknown as ReviewRow)
-  const diffs   = extractTagsDiff(row.field_provenance as Record<string, unknown> | null)
+  const diffs   = extractTagsDiff(row.field_provenance as Record<string, unknown> | null, row)
 
   return (
     <main style={{ padding: '24px 24px 80px', maxWidth: 1180, margin: '0 auto' }}>

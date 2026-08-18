@@ -39,7 +39,7 @@ const COLS = [
   'id', 'external_id', 'title', 'funder', 'apply_url', 'is_active', 'pipeline_state',
   'url_status', 'url_quality_score',
   'amount_min', 'amount_max', 'deadline', 'is_rolling', 'next_open_date', 'deadline_cycle',
-  'eligible_structures', 'impact_sectors', 'target_beneficiaries', 'funding_type',
+  'eligible_structures', 'impact_sectors', 'target_beneficiaries', 'niche_tags', 'funding_type',
   // What a USER sees at a glance. The queue showed none of it on the card, so
   // judging a row meant opening it or trusting the reason chips.
   'funder_type', 'location_tag', 'is_local',
@@ -227,7 +227,7 @@ export default async function ReviewPage() {
         })
         .filter(x => x.url || x.text),
       source:        (r as { source?: string | null }).source ?? null,
-      diffs:         extractTagsDiff(r.field_provenance),
+      diffs:         extractTagsDiff(r.field_provenance, r as unknown as Record<string, unknown>),
       brief:         summariseBrief(r.funder_brief),
       evidence:      summariseEvidence(r.field_evidence),
       // Drives the "Needs enrichment" view — a stub brief, or none at all.

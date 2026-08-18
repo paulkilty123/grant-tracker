@@ -615,12 +615,16 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
     setBusyId(item.id)
     // A deliberate override of the machine, so this one field is written and
     // pinned. That is the correct use of a pin.
-    const ok = await patch(item.id, { [diff.field]: diff.before }, `Reverting ${diff.field}`)
+    const ok = await patch(item.id, { [diff.field]: diff.before }, `Reverting ${fieldLabel(diff.field)}`)
     setBusyId(null)
     if (!ok) return
-    toast.success(`${diff.field} reverted`)
+    // The diff itself vanishes on the refresh — extractTagsDiff drops a change
+    // the row no longer holds — so without this the row would silently lose a
+    // line and, if it was the last one, the row itself. Say what happened.
+    noteAction(item.id, `${fieldLabel(diff.field)} put back`)
+    toast.success(`${fieldLabel(diff.field)} put back`)
     router.refresh()
-  }, [patch, router, toast])
+  }, [patch, router, toast, noteAction])
 
   /**
    * Set the funding type by hand.
