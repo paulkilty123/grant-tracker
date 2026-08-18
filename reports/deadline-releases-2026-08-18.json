@@ -1,0 +1,514 @@
+{
+  "at": "2026-08-18T19:55:06.114Z",
+  "note": "field_provenance.deadline entries removed so the engine can write a date. Value left as NULL. Restore by writing these entries back.",
+  "released": [
+    {
+      "id": "3d6656f0-6f74-4635-8c87-0406ded69be2",
+      "title": "Gordon Fraser Charitable Trust",
+      "is_rolling": true,
+      "removed": {
+        "pinned": false,
+        "set_at": "2026-06-01T10:39:08.059Z",
+        "source": "admin:paulkilty1@gmail.com",
+        "previous": {
+          "value": null,
+          "source": "scraper:young_camden_foundation"
+        }
+      },
+      "siblings": 1
+    },
+    {
+      "id": "696935b8-7b67-45ee-9141-2ba4546c3619",
+      "title": "William Kendall Small Awards Programme",
+      "is_rolling": false,
+      "removed": {
+        "pinned": false,
+        "set_at": "2026-06-24T23:02:45.469Z",
+        "source": "admin:paulkilty1@gmail.com"
+      },
+      "siblings": 6
+    },
+    {
+      "id": "43bfeb81-da3b-48dc-9995-3b4fa662b205",
+      "title": "The Neighbourhood Fund (NCIL)",
+      "is_rolling": true,
+      "removed": {
+        "pinned": false,
+        "set_at": "2026-06-22T20:14:06.656Z",
+        "source": "admin:paulkilty1@gmail.com"
+      },
+      "siblings": 2
+    },
+    {
+      "id": "c6800212-145e-47f7-9879-42f8a891f057",
+      "title": "City & Guilds Foundation — Local Community Skills Fund",
+      "is_rolling": false,
+      "removed": {
+        "pinned": true,
+        "set_at": "2026-07-29T22:55:08.407Z",
+        "source": "admin:paulkilty1@gmail.com"
+      },
+      "siblings": 1
+    },
+    {
+      "id": "142d3163-b0a5-441b-9f8c-b306bd4b1ddd",
+      "title": "Main Grants Programme",
+      "is_rolling": true,
+      "removed": {
+        "pinned": false,
+        "set_at": "2026-06-30T10:58:58.145Z",
+        "source": "admin:paulkilty1@gmail.com"
+      },
+      "siblings": 5
+    },
+    {
+      "id": "181c66e2-24d0-4ba5-addb-02ecc3c7c236",
+      "title": "Rye Fund (via SCF Main Grants)",
+      "is_rolling": false,
+      "removed": {
+        "pinned": false,
+        "set_at": "2026-05-26T13:19:03.016Z",
+        "source": "admin:paulkilty1@gmail.com"
+      },
+      "siblings": 3
+    },
+    {
+      "id": "57c520fd-c715-478b-8a6e-7c9907044d2a",
+      "title": "Older People and Housing Programme",
+      "is_rolling": true,
+      "removed": {
+        "pinned": false,
+        "set_at": "2026-06-30T11:10:30.337Z",
+        "source": "admin:paulkilty1@gmail.com"
+      },
+      "siblings": 5
+    },
+    {
+      "id": "523da313-e449-46a1-8647-c5a51e58b304",
+      "title": "Cornwall Community Foundation — Community Grants",
+      "is_rolling": true,
+      "removed": {
+        "pinned": true,
+        "set_at": "2026-07-15T10:41:47.079Z",
+        "source": "admin:paul@granttracker.co.uk"
+      },
+      "siblings": 3
+    },
+    {
+      "id": "ca27a805-4ee8-437d-9ae6-a90cc9e66739",
+      "title": "Glasspool — Flexible Frontline Fund",
+      "is_rolling": false,
+      "removed": {
+        "pinned": true,
+        "set_at": "2026-07-29T22:55:39.089Z",
+        "source": "admin:paulkilty1@gmail.com"
+      },
+      "siblings": 1
+    },
+    {
+      "id": "5aeceacf-3cd1-466e-847c-fccc8dc938cf",
+      "title": "Green Hall Foundation",
+      "is_rolling": false,
+      "removed": {
+        "pinned": false,
+        "set_at": "2026-06-01T10:39:35.976Z",
+        "source": "admin:paulkilty1@gmail.com",
+        "previous": {
+          "value": "2026-09-01",
+          "source": "scraper:young_camden_foundation"
+        }
+      },
+      "siblings": 5
+    },
+    {
+      "id": "7873fc4e-1763-4f49-9121-40cbfdb2916c",
+      "title": "Grants for Disability and Vulnerable People",
+      "is_rolling": true,
+      "removed": {
+        "pinned": false,
+        "set_at": "2026-06-22T21:06:39.358Z",
+        "source": "admin:paulkilty1@gmail.com"
+      },
+      "siblings": 5
+    },
+    {
+      "id": "08bdec62-f80f-43dd-ad82-43f80787494c",
+      "title": "Corra Foundation — Alcohol and Drugs Fund: Local Support Micro Grants",
+      "is_rolling": true,
+      "removed": {
+        "pinned": false,
+        "set_at": "2026-07-09T18:35:49.642Z",
+        "source": "admin:paulkilty1@gmail.com"
+      },
+      "siblings": 3
+    },
+    {
+      "id": "497400aa-4785-41b3-ae15-88e35fe38845",
+      "title": "Morrisons Foundation",
+      "is_rolling": false,
+      "removed": {
+        "pinned": false,
+        "set_at": "2026-06-01T10:38:58.971Z",
+        "source": "admin:paulkilty1@gmail.com"
+      },
+      "siblings": 3
+    },
+    {
+      "id": "11eb3420-50d0-477d-889c-d950be2c3a06",
+      "title": "Central Grants Programme — Stronger Communities",
+      "is_rolling": true,
+      "removed": {
+        "pinned": false,
+        "set_at": "2026-05-26T13:17:35.678Z",
+        "source": "admin:paulkilty1@gmail.com"
+      },
+      "siblings": 3
+    },
+    {
+      "id": "bec586cc-4172-4d15-bb05-5fd5f24c7bb9",
+      "title": "Innovate UK Innovation Loans",
+      "is_rolling": false,
+      "removed": {
+        "pinned": false,
+        "set_at": "2026-06-01 20:45:48.854727+00",
+        "source": "admin:innovate-uk-batch-2026-06-01"
+      },
+      "siblings": 10
+    },
+    {
+      "id": "db00b21f-d51d-470c-9cab-9f34b73fb1e9",
+      "title": "Express Grant Programme",
+      "is_rolling": true,
+      "removed": {
+        "pinned": false,
+        "set_at": "2026-06-30T10:35:21.567Z",
+        "source": "admin:paulkilty1@gmail.com"
+      },
+      "siblings": 5
+    },
+    {
+      "id": "88a1a617-b9b6-4ccd-9f4b-08a30e622cee",
+      "title": "The Health Lottery Foundation",
+      "is_rolling": false,
+      "removed": {
+        "pinned": false,
+        "set_at": "2026-06-02 12:03:15.07225+00",
+        "source": "admin:health-lottery-refresh-2026-06-02"
+      },
+      "siblings": 4
+    },
+    {
+      "id": "8cafcf2a-a4f7-4e9e-8721-f049db468d81",
+      "title": "Community Grants",
+      "is_rolling": true,
+      "removed": {
+        "pinned": false,
+        "set_at": "2026-06-30T11:13:43.013Z",
+        "source": "admin:paulkilty1@gmail.com"
+      },
+      "siblings": 4
+    },
+    {
+      "id": "c90fec54-7a88-486a-bb7f-d711784dc498",
+      "title": "Norfolk Community Foundation — Grants for Groups",
+      "is_rolling": true,
+      "removed": {
+        "pinned": false,
+        "set_at": "2026-07-08T22:31:24.418Z",
+        "source": "admin:paulkilty1@gmail.com"
+      },
+      "siblings": 1
+    },
+    {
+      "id": "c9529d16-b9c0-433c-88f4-dd627e18543a",
+      "title": "Open Grants Programmes",
+      "is_rolling": true,
+      "removed": {
+        "pinned": false,
+        "set_at": "2026-07-15T11:15:01.699Z",
+        "source": "admin:paul@granttracker.co.uk"
+      },
+      "siblings": 3
+    },
+    {
+      "id": "8f57f2a0-685d-489f-9267-ac9f79b073a7",
+      "title": "Herefordshire Community Foundation — Community Grants (Community Chest)",
+      "is_rolling": true,
+      "removed": {
+        "pinned": true,
+        "set_at": "2026-07-08T22:30:11.649Z",
+        "source": "admin:paulkilty1@gmail.com"
+      },
+      "siblings": 1
+    },
+    {
+      "id": "2d0a123a-2fbd-4fa8-930f-d361d0f21d49",
+      "title": "Aviva Foundation — Communities Fund",
+      "is_rolling": true,
+      "removed": {
+        "pinned": false,
+        "set_at": "2026-06-01T10:40:13.753Z",
+        "source": "admin:paulkilty1@gmail.com"
+      },
+      "siblings": 1
+    },
+    {
+      "id": "2d2d4bc6-1c4e-43e8-8357-e14b85dd3510",
+      "title": "Fitton Trust",
+      "is_rolling": true,
+      "removed": {
+        "pinned": false,
+        "set_at": "2026-05-27T09:31:57.081Z",
+        "source": "admin:paulkilty1@gmail.com",
+        "previous": {
+          "value": "2026-05-06",
+          "source": "scraper:young_camden_foundation"
+        }
+      },
+      "siblings": 5
+    },
+    {
+      "id": "ced26048-d908-4919-bc4b-0bdad1c2d155",
+      "title": "Spacehive — Civic Crowdfunding with Council Match",
+      "is_rolling": true,
+      "removed": {
+        "pinned": false,
+        "set_at": "2026-06-01T10:35:00.309Z",
+        "source": "admin:paulkilty1@gmail.com",
+        "previous": {
+          "value": null,
+          "source": "scraper:spacehive"
+        }
+      },
+      "siblings": 2
+    },
+    {
+      "id": "dd88b889-6926-42e8-9e8f-954b3b9e5af4",
+      "title": "Sigrid Rausing Trust — Grants",
+      "is_rolling": false,
+      "removed": {
+        "pinned": false,
+        "set_at": "2026-06-25T11:23:10.999Z",
+        "source": "admin:paulkilty1@gmail.com"
+      },
+      "siblings": 4
+    },
+    {
+      "id": "f2e16253-0b5f-4aac-8415-0cfb00771d81",
+      "title": "Innovate UK Growth Catalyst — Investor Partnerships",
+      "is_rolling": false,
+      "removed": {
+        "pinned": false,
+        "set_at": "2026-06-01 20:45:48.854727+00",
+        "source": "admin:innovate-uk-batch-2026-06-01"
+      },
+      "siblings": 11
+    },
+    {
+      "id": "f79aada3-721e-487c-9e97-35097aa87ee0",
+      "title": "Lewes Fund (via SCF Main Grants)",
+      "is_rolling": false,
+      "removed": {
+        "pinned": false,
+        "set_at": "2026-05-26T13:12:54.943Z",
+        "source": "admin:paulkilty1@gmail.com"
+      },
+      "siblings": 3
+    },
+    {
+      "id": "97fdcb8e-ece4-4156-b610-4633f6ecb702",
+      "title": "The Paley Trust",
+      "is_rolling": true,
+      "removed": {
+        "pinned": false,
+        "set_at": "2026-06-01T10:42:44.215Z",
+        "source": "admin:paulkilty1@gmail.com"
+      },
+      "siblings": 2
+    },
+    {
+      "id": "129a6434-75e8-489c-876d-5cf40560f0f0",
+      "title": "Greater Manchester Mayor's Charity — Grants Programmes",
+      "is_rolling": false,
+      "removed": {
+        "pinned": true,
+        "set_at": "2026-07-29T23:00:16.213Z",
+        "source": "admin:paulkilty1@gmail.com"
+      },
+      "siblings": 1
+    },
+    {
+      "id": "6e334966-0173-4437-9a44-19955c2a2ba6",
+      "title": "Oglesby Charitable Trust",
+      "is_rolling": true,
+      "removed": {
+        "pinned": false,
+        "set_at": "2026-07-02T09:41:09.796Z",
+        "source": "admin:paulkilty1@gmail.com"
+      },
+      "siblings": 2
+    },
+    {
+      "id": "0268feff-4276-47d6-a0cc-ce55f702c697",
+      "title": "Community Grants Programme",
+      "is_rolling": true,
+      "removed": {
+        "pinned": false,
+        "set_at": "2026-06-22T20:21:37.235Z",
+        "source": "admin:paulkilty1@gmail.com"
+      },
+      "siblings": 2
+    },
+    {
+      "id": "0346c786-fb9c-4df9-9307-205a4337acab",
+      "title": "C B & H H Taylor 1984 Trust — Grants",
+      "is_rolling": false,
+      "removed": {
+        "pinned": false,
+        "set_at": "2026-06-25T11:42:50.131Z",
+        "source": "admin:paulkilty1@gmail.com"
+      },
+      "siblings": 5
+    },
+    {
+      "id": "7dd07b66-3b0f-42ae-a22f-7de3a03764ca",
+      "title": "John Moores Foundation — Grants for Merseyside",
+      "is_rolling": true,
+      "removed": {
+        "pinned": false,
+        "set_at": "2026-07-02T09:40:30.559Z",
+        "source": "admin:paulkilty1@gmail.com"
+      },
+      "siblings": 1
+    },
+    {
+      "id": "bfaa140a-ed84-4862-a455-6e48ca22e906",
+      "title": "Fine & Country Foundation — Homelessness Grants",
+      "is_rolling": false,
+      "removed": {
+        "pinned": true,
+        "set_at": "2026-07-29T22:57:54.360Z",
+        "source": "admin:paulkilty1@gmail.com"
+      },
+      "siblings": 1
+    },
+    {
+      "id": "3b8727a4-faa4-49b7-a162-c46212af731b",
+      "title": "Fishmongers' Company — Charitable Grants",
+      "is_rolling": false,
+      "removed": {
+        "pinned": true,
+        "set_at": "2026-07-29T22:54:45.950Z",
+        "source": "admin:paulkilty1@gmail.com"
+      },
+      "siblings": 2
+    },
+    {
+      "id": "12cf1992-23da-497c-9703-5d5e42b31c06",
+      "title": "One Croydon Alliance Community Funding",
+      "is_rolling": true,
+      "removed": {
+        "pinned": false,
+        "set_at": "2026-05-26T22:39:27.671Z",
+        "source": "admin:paulkilty1@gmail.com"
+      },
+      "siblings": 5
+    },
+    {
+      "id": "32949533-a7ae-4c48-a7a6-57368e083dee",
+      "title": "Strategic Legal Fund for Vulnerable Young Migrants",
+      "is_rolling": true,
+      "removed": {
+        "pinned": true,
+        "set_at": "2026-07-29T22:57:12.143Z",
+        "source": "admin:paulkilty1@gmail.com",
+        "previous": {
+          "value": "2026-09-07",
+          "source": "system:research-manchester-homelessness-2026-07-28"
+        }
+      },
+      "siblings": 1
+    },
+    {
+      "id": "3e70386f-9d11-43cc-824e-54f017aae05f",
+      "title": "Allan & Nesta Ferguson Charitable Trust — Charitable Grants",
+      "is_rolling": true,
+      "removed": {
+        "pinned": false,
+        "set_at": "2026-06-25T11:25:15.493Z",
+        "source": "admin:paulkilty1@gmail.com"
+      },
+      "siblings": 4
+    },
+    {
+      "id": "a6d972cc-5260-4479-ae49-3656264d0ce8",
+      "title": "Community Foundation for Surrey Grants",
+      "is_rolling": true,
+      "removed": {
+        "pinned": false,
+        "set_at": "2026-07-15T11:15:04.865Z",
+        "source": "admin:paul@granttracker.co.uk"
+      },
+      "siblings": 1
+    },
+    {
+      "id": "b98c7493-ff5c-42f4-ab1d-b205940e550c",
+      "title": "TechSoup UK Donated & Discounted Technology",
+      "is_rolling": true,
+      "removed": {
+        "pinned": false,
+        "set_at": "2026-06-01T10:44:17.490Z",
+        "source": "admin:paulkilty1@gmail.com"
+      },
+      "siblings": 1
+    },
+    {
+      "id": "e53c6f5a-bd7a-4ae1-8d37-e3e2333c569e",
+      "title": "Canva for Nonprofits",
+      "is_rolling": true,
+      "removed": {
+        "pinned": false,
+        "set_at": "2026-06-01T10:44:29.539Z",
+        "source": "admin:paulkilty1@gmail.com"
+      },
+      "siblings": 1
+    }
+  ],
+  "held": [
+    {
+      "id": "0316480d-5a0d-41c7-9c46-8695cb7d8465",
+      "title": "Eleanor Rathbone Charitable Trust — General Grants",
+      "reason": "stamped alone — a decision signature, not a form save"
+    },
+    {
+      "id": "6f8de7ae-4ef7-4ae6-9d5b-c06e9cae8fec",
+      "title": "London Social and Affordable Homes Programme 2026 to 2036",
+      "reason": "stamped alone — a decision signature, not a form save"
+    },
+    {
+      "id": "8c8418fe-9b52-4ba8-bac7-0bc4732c96e4",
+      "title": "Arts Council National Lottery Project Grants",
+      "reason": "stamped alone — a decision signature, not a form save"
+    },
+    {
+      "id": "5e62ecae-3f4e-458c-9fdf-013e6f018c73",
+      "title": "In Kind Direct — Charity Network Membership",
+      "reason": "stamped alone — a decision signature, not a form save"
+    },
+    {
+      "id": "3c2c6766-220f-4d54-ad18-4bade01df7a5",
+      "title": "Microsoft for Nonprofits",
+      "reason": "stamped alone — a decision signature, not a form save"
+    },
+    {
+      "id": "fc3f9fe3-ae00-46f0-b7e1-f200163f7e80",
+      "title": "Catch22 — GoodTech Ventures Accelerator",
+      "reason": "stamped alone — a decision signature, not a form save"
+    },
+    {
+      "id": "47ffb17f-f14e-4955-b512-7344ddf294f1",
+      "title": "The Hygiene Bank — Products for Organisations",
+      "reason": "stamped alone — a decision signature, not a form save"
+    }
+  ]
+}

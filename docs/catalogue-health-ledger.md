@@ -712,6 +712,22 @@ One of the 7 goes the other way and is worth releasing on its own — Catch22
 GoodTech Ventures Accelerator is empty AND `is_rolling = false`, so it asserts
 nothing at all to anybody, which is A7 rather than A6.
 
+**Done 2026-08-18.** The 41 were released, 0 failed, with the removed entries in
+`reports/deadline-releases-2026-08-18.json` — the only copy, written before
+anything was touched. The batch was re-derived from scratch before running and
+came to the same 41 and the same 7, independently of the session that found the
+split.
+
+| | before | after |
+|---|---:|---:|
+| live rows with a blocked AND empty `deadline` | 48 | **7** |
+| of those, asserting Rolling to users | 32 | **7** |
+| rolling rows with no deadline the engine can now write to | 317 | **342** |
+
+The 7 held are Arts Council National Lottery Project Grants, London Social and
+Affordable Homes, Eleanor Rathbone, Catch22 GoodTech, In Kind Direct, The Hygiene
+Bank and Microsoft for Nonprofits. Each needs a page read, not a rule.
+
 ---
 
 ## E. Signals nothing consumes
