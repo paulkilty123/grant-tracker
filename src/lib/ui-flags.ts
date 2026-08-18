@@ -20,30 +20,33 @@ function envFlag(raw: string | undefined, fallback: boolean): boolean {
 }
 
 /**
- * The "New this week" badge on the Find Funding grant card.
+ * The "Recently added" badge on the Find Funding grant card.
  *
- * OFF by default, deliberately. The badge describes our ingestion schedule, not
- * the grant: nothing about when a row entered the catalogue bears on whether an
- * organisation should apply. It also competed with the match score for
- * attention, pulling the eye toward whatever is newest rather than whatever
- * fits best.
+ * ON by default since 2026-08-18, at Paul's request, replacing "New this week"
+ * in the same position on the card.
  *
- * And it failed hardest exactly when the catalogue was doing well — 27 funds
- * went live in a single batch on 2026-07-29, so a large share of one user's
- * matches carried it at once, which reads as staged rather than as a catalogue
- * quietly accumulating.
+ * IT WAS SWITCHED OFF DELIBERATELY BEFORE, and the reasons have not gone away,
+ * so they are kept here rather than deleted:
  *
- * Kept behind a flag rather than deleted so it can come back if wanted:
- *   NEXT_PUBLIC_SHOW_NEW_THIS_WEEK=true
+ *   - The badge describes our ingestion schedule, not the grant. Nothing about
+ *     when a row entered the catalogue bears on whether an organisation should
+ *     apply to it.
+ *   - It competes with the match score for attention, pulling the eye toward
+ *     whatever is newest rather than whatever fits best.
+ *   - It fails hardest exactly when the catalogue is doing well. 27 funds went
+ *     live in a single batch on 2026-07-29, so a large share of one user's
+ *     matches carried it at once, which reads as staged rather than as a
+ *     catalogue quietly accumulating.
  *
- * If a genuine "new" signal is ever wanted, a "recently added" filter or a
- * weekly digest is the better home — somewhere the user opts into, rather than
- * a permanent badge on every card.
+ * The 14-day window makes that last point stronger, not weaker: a fortnight
+ * catches more batches than a week does. If the cards start looking like a
+ * sale rail, shortening the window is the first lever, and
+ * NEXT_PUBLIC_SHOW_RECENTLY_ADDED=false turns it off without a deploy.
  */
-export const SHOW_NEW_THIS_WEEK_BADGE = envFlag(
-  process.env.NEXT_PUBLIC_SHOW_NEW_THIS_WEEK,
-  false,
+export const SHOW_RECENTLY_ADDED_BADGE = envFlag(
+  process.env.NEXT_PUBLIC_SHOW_RECENTLY_ADDED,
+  true,
 )
 
-/** How recent a grant must be for that badge, in days. Only read when it is on. */
-export const NEW_THIS_WEEK_DAYS = 7
+/** How recent a grant must be to carry the badge, in days. */
+export const RECENTLY_ADDED_DAYS = 14

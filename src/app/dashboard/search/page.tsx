@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { Search, ChevronDown, Layers, DollarSign, Rocket, Building2, SlidersHorizontal, MapPin, Users, GraduationCap, TrendingUp, GitMerge, Gift, Landmark, CalendarDays, RefreshCw, Bookmark, PlusCircle, Activity, Target, Star, CheckCircle2, XCircle, Lightbulb, AlertTriangle, Sparkles, ExternalLink, ClipboardList, EyeOff } from 'lucide-react'
 import { SEED_GRANTS } from '@/lib/grants'
 import { formatRange, formatNextOpen } from '@/lib/utils'
-import { SHOW_NEW_THIS_WEEK_BADGE, NEW_THIS_WEEK_DAYS } from '@/lib/ui-flags'
+import { SHOW_RECENTLY_ADDED_BADGE, RECENTLY_ADDED_DAYS } from '@/lib/ui-flags'
 import { createClient } from '@/lib/supabase/client'
 import { createPipelineItem, deletePipelineItem, updatePipelineStage } from '@/lib/pipeline'
 import { describePipelineWriteError, ENTITLEMENT_MESSAGE } from '@/lib/pipeline-errors'
@@ -296,11 +296,11 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
   const isApplied    = interactions.has('applied')
 
 
-  // "New this week" badge — OFF by default, behind SHOW_NEW_THIS_WEEK_BADGE.
-  // Flip NEXT_PUBLIC_SHOW_NEW_THIS_WEEK=true in Vercel to bring it back; the
-  // reasoning for defaulting it off is in src/lib/ui-flags.ts.
-  const isNewThisWeek = SHOW_NEW_THIS_WEEK_BADGE && (() => {
-    const cutoff = new Date(Date.now() - NEW_THIS_WEEK_DAYS * 24 * 60 * 60 * 1000)
+  // "Recently added" badge — ON by default, behind SHOW_RECENTLY_ADDED_BADGE.
+  // Set NEXT_PUBLIC_SHOW_RECENTLY_ADDED=false in Vercel to turn it off without
+  // a deploy. The history of this badge is in src/lib/ui-flags.ts.
+  const isRecentlyAdded = SHOW_RECENTLY_ADDED_BADGE && (() => {
+    const cutoff = new Date(Date.now() - RECENTLY_ADDED_DAYS * 24 * 60 * 60 * 1000)
       .toISOString().split('T')[0]
     return !!grant.dateAdded && grant.dateAdded >= cutoff
   })()
@@ -599,9 +599,9 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                 <>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', margin: showFunder ? '0 0 2px' : '0 0 10px' }}>
                     <h3 style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 20, fontWeight: 500, color: '#2C2C2A', margin: 0, lineHeight: 1.3 }}>{grant.title}</h3>
-                    {isNewThisWeek && (
+                    {isRecentlyAdded && (
                       <div style={{ border: '2px solid #173404', color: '#173404', fontSize: 12, fontWeight: 500, padding: '5px 14px', borderRadius: 5, letterSpacing: '0.08em', textTransform: 'uppercase', transform: 'rotate(-3deg)', background: '#EAF3DE', flexShrink: 0, fontFamily: 'var(--font-space-grotesk)' }}>
-                        New this week
+                        Recently added
                       </div>
                     )}
                   </div>
