@@ -537,12 +537,75 @@ ones. Re-measure before acting.
 | D2 | Rows pinned by an `admin:<email>` form save rather than a decision | **407** | no | Cause fixed 26 Jul; these are artefacts | Not scheduled |
 | D3 | Pinned `deadline` on a live row | **54** | partly | 15 of them pinned to NULL, which is A12 | Not scheduled |
 | D4 | No `verified_at` on any field, so "confirmed today" and "written in January" are indistinguishable | all rows | no | Persist-and-verify, part 2 of the lifecycle review | Tranche 2 |
+| D5 | Live rows where at least one field **cannot be corrected from inside the product** | **353 / 642 (55%)** | partly | An unpin affordance, and a reviewed-correction path that writes THROUGH the ladder rather than around it | Not scheduled |
+| D6 | — of which the frozen field is `deadline`, **and it is empty** | **48** | **yes** | Same. Nothing automated can put a date on these rows | Not scheduled |
 
 **On the 54%.** Four documents state it, all tracing to one measurement on
 2026-07-26 with no query attached. The only pinning figure in the repo with SQL
 beside it is 368/742 = 49.6% on 10 August. My measurement today is **341/682 =
 50.0%**, using the same definition (a live row with at least one `pinned: true`
 entry). The series has been flat at roughly half the catalogue for a month.
+
+### D5: a field an admin has touched has no route back
+
+**Found 2026-08-18, and it is the reason D1 matters rather than a restatement of
+it.** D1 counts pins. This counts fields that no automated or reviewed pass can
+change, which is a different and larger set, because `mergeFieldUpdate` has TWO
+independent gates and only one of them is pinning:
+
+- **Case 3, pinned:** a `pinned` field refuses every non-`admin:` write outright.
+- **Case 4, trust:** a lower-trust source is refused regardless of pinning. So an
+  `admin:<email>` field at trust 100 blocks everything below it **even with
+  `pinned: false`**.
+
+Either gate ends the same way: the value stays until a human retypes it in the
+form. There is no in-product path for a verified correction, because every
+automated source is below 100 by construction.
+
+**The worked example is Westminster, tonight.** Its `deadline` held 27 March 2026,
+the closing date of one scheme on a page listing eighteen, stamped
+`admin:paulkilty1@gmail.com` by a form save. A full re-enrichment ran against the
+live page, rewrote the brief, and **left the wrong date exactly where it was, with
+no error**. Raw SQL was the only thing that could move it. That is the argument in
+one row: the correction had to bypass the ladder, so the provenance record now
+says `system:` for a value a human decided, on precisely the field most likely to
+be wrong.
+
+**Measured today**, 642 active rows, blocking defined as `pinned` OR a real
+`admin:` source that is not `backfilled`:
+
+| | |
+|---|---:|
+| active rows | 642 |
+| carry at least one blocking field | **353 (55%)** |
+| carry a real `admin:<email>` field | 346 |
+| **`deadline` blocked** | **93** |
+| **`deadline` blocked AND empty** | **48** |
+| `apply_url` blocked | 27 |
+
+The 48 are the sharp end and they are user-visible: a live row whose deadline box
+is frozen empty, which nothing automated can ever fill. D3 puts that figure at 15
+because it counts only `pinned: true` and misses the unpinned-admin route, which
+is the majority of it.
+
+**Three figures in circulation and none of them is this.** `grant-merge.ts:175`
+says 392 of 720 (54%) with 53 deadlines pinned to NULL, from 26 July. D3 above
+says 54 and 15, from 12 August. Today the pinned count is 336 of 642 (52%) with 15
+nulls, and the *blocking* count, which is the one that matters, is 353 with 48
+empty deadlines. Quote the definition or the number means nothing.
+
+**And `admin:legacy` blocks nothing.** `trustOf` drops backfilled `admin:legacy`
+to 35, below `scraper`, deliberately, so real AI runs can correct the April
+backfill. 1,908 fields on live rows carry it. No pinning figure in circulation
+separates those from real admin edits, so every count that treats "admin-sourced"
+as "frozen" is high, including the first version of this one.
+
+> **The product answer, post-September.** Confirming a value and freezing it
+> should be different acts. The Review Inbox already follows that rule, and
+> `mergeFieldUpdate`'s idempotent branch follows it for unchanged values; the form
+> save is the hole. An unpin affordance in the review queue plus a
+> reviewed-correction source that outranks AI without reaching admin trust would
+> close it without another bypass.
 
 ---
 

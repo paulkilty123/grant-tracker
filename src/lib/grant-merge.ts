@@ -171,11 +171,20 @@ export function mergeFieldUpdate(
   // This is the mechanism behind the catalogue's pinning debt. Grant Manager
   // sends its whole form state on save, so every field on screen is written,
   // whether or not the admin looked at it. update-grant then pins all of them
-  // (route.ts:57, an admin session cannot be downgraded). Measured 2026-07-26:
-  // 392 of 720 active rows (54%) carry at least one pinned field, and 53 have
-  // `deadline` pinned to NULL — frozen empty because the form's date box was
-  // empty when something unrelated was saved. CLA Charitable Trust's round
-  // closes tomorrow and its deadline field cannot be populated by anything.
+  // (route.ts:57, an admin session cannot be downgraded).
+  //
+  // RE-MEASURED 2026-08-18. The figures previously here — 392 of 720 (54%) with
+  // 53 deadlines pinned to NULL, from 26 July — were quoted back out of this
+  // comment three weeks later and were wrong by then. Today, 642 active rows:
+  // 336 (52%) carry a pinned field and 15 have `deadline` pinned to NULL.
+  //
+  // But pinning is the SMALLER problem, and this comment used to imply it was
+  // the whole one. Case 4 below refuses a lower-trust source whether or not the
+  // field is pinned, so an `admin:<email>` field at trust 100 is equally frozen
+  // with `pinned: false`. On that definition it is 353 of 642 rows (55%), and 48
+  // live rows have a `deadline` that is blocked AND EMPTY — nothing automated can
+  // ever put a date on them. Ledger section D5 has the queries; quote the
+  // definition alongside any of these numbers or they mean nothing.
   //
   // Each of those was stamped in the same second as up to six other fields,
   // which is the signature of a form save rather than a per-field decision.
