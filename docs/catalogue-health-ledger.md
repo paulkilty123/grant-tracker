@@ -1145,6 +1145,56 @@ ceiling was real and was carried across before the row was withdrawn.
 
 ---
 
+## The verification bill was a scheduling bug, not a cadence
+
+**Two sessions gave Paul different numbers on 2026-08-18. Both had measured the
+same money.** $15.01 is the TOTAL spend since the engine was armed on 15 August,
+four days, not a week. One session labelled four days as a week and annualised it;
+the other called it "total ever" and predicted it would fall as the backlog
+drained. The label was wrong and so was the prediction.
+
+**The real driver.** `select_verify_batch` treats `verify_due_at IS NULL` as due,
+which is right for a row nothing has looked at and ruinous for a row that was
+looked at and never scheduled: it is permanently due, gets picked every cycle,
+re-read, and stays permanently due. Measured against the 961-row pool:
+
+| | before | after |
+|---|---:|---:|
+| genuinely due now | 4 | 4 |
+| resting on a future date | 739 | **923** |
+| due only because `verify_due_at` is null | **218** | **34** |
+
+The engine was reading 240 pages a day — its batch cap, four runs of sixty —
+against a real demand of four rows.
+
+**Of the 218, 157 had been read successfully.** 128 of those had no timing change
+since the read, so nothing should have made them due again: the run recorded the
+evidence and never wrote the schedule. A further 67 were reads that FAILED the
+gate — `wrong_fund`, `no_funding_detail` — which also get no due date, which is
+precisely the forever the `_page_read` comment describes: *"without this the engine
+would re-read the same unreadable page four times a day forever."* The stamp
+landed; the nap did not.
+
+All 195 were backfilled by replaying `computeCadence`, the same function the route
+calls, against each row's own timing fields and its own read. Not a guessed date:
+the date the run should have written. The 34 left null had their timing change
+after the read and are due again on purpose, by the migration-056 trigger.
+
+**What this means for cadence.** A cut from four runs a day to one was proposed as
+the fix. It is now close to a no-op for cost: with demand at about 38 rows, even a
+single daily run of sixty is above it, so the cap has stopped binding and the bill
+becomes demand-driven. Cutting it would buy little and would delay a genuinely due
+row by up to a day. Worth re-measuring after a week of real spend before changing
+the schedule.
+
+**The bug itself is not fixed, only its accumulation.** The route still writes
+evidence and schedule as two statements, and its own comment accepts that a lost
+second write leaves a null due date. That was a tolerable cost when it was rare. At
+195 rows it is the entire bill, so the write needs to be one statement or the null
+needs to stop meaning "due now".
+
+---
+
 ## Maintenance
 
 Update on each merge that closes a row, and re-measure the whole table at each
