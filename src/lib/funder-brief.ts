@@ -79,3 +79,48 @@ export function isStubBrief(brief: Record<string, unknown> | null | undefined): 
   if (!brief) return false
   return typeof brief.source === 'string' && (STUB_BRIEF_SOURCES as readonly string[]).includes(brief.source)
 }
+
+/**
+ * Eligibility fields are never replaced with nothing.
+ *
+ * The brief blob is rewritten wholesale on every enrich, so any key the fresh
+ * read does not rediscover simply vanishes. Re-enriching 18 seed:legacy rows on
+ * 2026-08-18 dropped `exclusions` on three of them — one in six. Chichester City
+ * Council lost "Large/core funding grants are currently closed", so the card
+ * stopped warning that a stream was shut, and a fundraiser could have prepared a
+ * bid for money that was not there.
+ *
+ * The two failure directions are not symmetric, which is why absence never wins:
+ * keeping an exclusion the funder has actually dropped costs one wasted
+ * eligibility check, while dropping one that still stands sends someone to apply
+ * where they are explicitly barred. Rule 6 — exclusions and who_can_apply stay
+ * complete on every tier, on every surface.
+ *
+ * KNOWN GAP, deliberate. This catches a field going blank, which is what all
+ * three observed losses did. It does NOT catch real content being downgraded to
+ * a phrase like "the source does not list exclusions" — matching that reliably
+ * needs prose classification, and a wrong match would freeze a stale exclusion
+ * in place forever. Blank is the unambiguous case; the phrase case stays visible
+ * in the enrich diff instead.
+ */
+export const PROTECTED_BRIEF_FIELDS = ['exclusions', 'who_can_apply'] as const
+
+function isSubstantive(v: unknown): v is string {
+  return typeof v === 'string' && v.trim().length > 0
+}
+
+export function preserveEligibilityFields(
+  next: Record<string, unknown>,
+  previous: Record<string, unknown> | null | undefined,
+): { brief: Record<string, unknown>; preserved: string[] } {
+  const brief = { ...next }
+  const preserved: string[] = []
+  if (!previous) return { brief, preserved }
+  for (const field of PROTECTED_BRIEF_FIELDS) {
+    if (isSubstantive(previous[field]) && !isSubstantive(brief[field])) {
+      brief[field] = previous[field]
+      preserved.push(field)
+    }
+  }
+  return { brief, preserved }
+}

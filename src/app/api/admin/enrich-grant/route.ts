@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import Anthropic from '@anthropic-ai/sdk'
-import { syncLocationFields } from '@/lib/funder-brief'
+import { syncLocationFields, preserveEligibilityFields } from '@/lib/funder-brief'
 import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
 import { mergeGrantUpdate, type ProvenanceEntry } from '@/lib/grant-merge'
 import { extractIncomeGate } from '@/lib/extract-income-gate'
@@ -683,6 +683,7 @@ NOTE: _deadline_cycle and its _citations entry are ONLY present when a recurring
     }
   }
 
+  const preservedFields: string[] = []
   const briefToSave: Record<string, unknown> = { ...brief }
   delete briefToSave._deadline_cycle  // canonical home is the column, not the blob
 
@@ -692,6 +693,22 @@ NOTE: _deadline_cycle and its _citations entry are ONLY present when a recurring
   // never refreshed → it re-picks the same rows every run and never clears the
   // backlog. Force it server-side so it always reflects when WE enriched.
   briefToSave.last_enriched = new Date().toISOString().split('T')[0]
+
+  // A fresh read must never blank out an eligibility field. The blob is
+  // rewritten wholesale, so a key the model did not restate would otherwise
+  // vanish — three of eighteen rows lost `exclusions` this way on 2026-08-18.
+  // Runs before extractIncomeGate so the income parse sees the preserved text.
+  {
+    const prev = grant.funder_brief && typeof grant.funder_brief === 'object'
+      ? grant.funder_brief as Record<string, unknown>
+      : null
+    const { brief: guarded, preserved } = preserveEligibilityFields(briefToSave, prev)
+    if (preserved.length > 0) {
+      for (const f of preserved) briefToSave[f] = guarded[f]
+      preservedFields.push(...preserved)
+      console.warn('[enrich-grant] re-read dropped eligibility field(s); kept previous', { grantId, preserved })
+    }
+  }
 
   // Deterministic org-income gate parse over the stored text + fresh brief.
   // Reads grant.description / eligibility_criteria (original scrape) plus the
@@ -980,6 +997,10 @@ NOTE: _deadline_cycle and its _citations entry are ONLY present when a recurring
       brief,
       applied:  [...result.applied, ...incomeResult.applied, ...amountsApplied, ...investmentApplied],
       rejected: [...result.rejected, ...incomeResult.rejected, ...amountsRejected, ...investmentRejected],
+      // Eligibility fields the re-read dropped and the guard put back. Surfaced
+      // rather than logged only, so a caller diffing briefs can see that a field
+      // is carried over from a previous read rather than confirmed by this one.
+      preserved: preservedFields,
       // Cost of this call, for the caller to tally. Null only if the model was
       // never reached, which the error paths above already return before here.
       usage:    enrichUsage,
