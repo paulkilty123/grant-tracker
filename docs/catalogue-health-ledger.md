@@ -588,6 +588,28 @@ is frozen empty, which nothing automated can ever fill. D3 puts that figure at 1
 because it counts only `pinned: true` and misses the unpinned-admin route, which
 is the majority of it.
 
+**32 of the 48 are live right now asserting "Rolling".** Blocked deadline,
+deadline empty, `is_rolling = true`, `is_active = true`. The card tells a
+fundraiser the fund takes applications at any time; that assertion is true only
+because the deadline field is empty; and the field cannot be filled by anything
+automated. The claim and the thing that makes the claim unfalsifiable are the same
+emptiness. Found by the second session, 2026-08-18, and re-derived here.
+
+**This makes D5 a dependency of A6, but only for a ninth of it.** A6 is a standing
+priority and the stated goal of the engine's first scheduled runs. Measured today:
+
+| | |
+|---|---:|
+| live rows asserting Rolling | 351 |
+| — with no deadline (the A6 population) | 349 |
+| — the engine can read the page and write the date | **317** |
+| — **the engine can read the page and the write will be refused** | **32** |
+
+So re-reading drains 317 of them however the engine is tuned, and cannot drain the
+other 32 however many passes it makes. A6 can be made much better without the
+unpin route and cannot be closed without it. Worth knowing which of those two
+things launch needs.
+
 **Three figures in circulation and none of them is this.** `grant-merge.ts:175`
 says 392 of 720 (54%) with 53 deadlines pinned to NULL, from 26 July. D3 above
 says 54 and 15, from 12 August. Today the pinned count is 336 of 642 (52%) with 15
@@ -600,12 +622,21 @@ backfill. 1,908 fields on live rows carry it. No pinning figure in circulation
 separates those from real admin edits, so every count that treats "admin-sourced"
 as "frozen" is high, including the first version of this one.
 
-> **The product answer, post-September.** Confirming a value and freezing it
-> should be different acts. The Review Inbox already follows that rule, and
-> `mergeFieldUpdate`'s idempotent branch follows it for unchanged values; the form
-> save is the hole. An unpin affordance in the review queue plus a
-> reviewed-correction source that outranks AI without reaching admin trust would
-> close it without another bypass.
+> **The product answer, and it is smaller than both sessions first thought.**
+> Confirming a value and freezing it should be different acts. Both of us proposed
+> building a reviewed-correction tier that outranks AI without reaching admin
+> trust. **It already exists.** `user_verified` sits at 70, and the comment on it
+> in `grant-merge.ts` states this exact principle, unprompted, from whenever it was
+> written: *"NOT `admin` (100), because admin auto-pins and pinning freezes the
+> value for good. Confirming a correction is not the same as deciding it must never
+> improve."*
+>
+> So nothing needs designing. The only missing piece is a way to take a field that
+> a form save stamped `admin:` and drop it back to a normal tier, after which the
+> existing `user_verified` path writes cleanly and stays overwritable. An unpin
+> button, not a new ladder. That is also why the second session's fixes tonight
+> landed through `user_verified` while mine needed raw SQL: theirs were blocked by
+> a scraper value, mine by an admin one.
 
 ---
 
