@@ -51,6 +51,23 @@ function strip(html: string): string {
     .trim()
 }
 
+/**
+ * A bot-check page is a SUCCESSFUL response containing prose, so neither the
+ * status code nor the length can tell it from a funder's page. artscouncil.org.uk
+ * returns 491 characters of "Performing security verification" through the reader
+ * proxy — comfortably past any length threshold, and it would have been handed to
+ * a judgement step as page content.
+ *
+ * Checked against content, not size, for that reason. Erring toward false alarms
+ * on purpose: a page wrongly called walled gets left flagged for a human, while a
+ * CAPTCHA wrongly called readable becomes a verdict about a fund from a page that
+ * never described it.
+ */
+function looksLikeBotWall(text: string): boolean {
+  const t = text.slice(0, 1500).toLowerCase()
+  return /performing security verification|verify you are (?:not a bot|human)|security service to protect against malicious bots|just a moment\.\.\.|enable javascript and cookies to continue|checking your browser|requiring captcha|access denied|cf-browser-verification/.test(t)
+}
+
 async function main() {
   if (!url) { console.error('usage: read-page <url> [chars]'); process.exit(1) }
   let text = ''
@@ -58,9 +75,16 @@ async function main() {
   try {
     text = strip(await direct(url))
     if (text.length < 200) throw new Error(`only ${text.length} chars of text`)
+    if (looksLikeBotWall(text)) throw new Error('bot wall')
   } catch (e) {
     how = `proxy (direct failed: ${(e as Error).message})`
     text = strip(await viaProxy(url))
+  }
+  if (looksLikeBotWall(text)) {
+    console.log(`── ${url}\n── BOT WALL: ${how} returned a security-verification page, not the funder's page.`)
+    console.log(`── ${text.length} chars. Do NOT judge this fund from the text below.\n`)
+    console.log(text.slice(0, 600))
+    process.exit(2)
   }
   console.log(`── ${url}\n── via ${how}, ${text.length} chars\n`)
   console.log(text.slice(0, LIMIT))
