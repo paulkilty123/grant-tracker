@@ -372,8 +372,20 @@ function deriveGovUkLocation(locations: string[]): { tag: string; isLocal: boole
 // crawl re-ran and re-imported the same artefact — a live example of the
 // "one-time SQL fix reverts on the next crawl" trap). Treat exactly 1 as
 // "no stated minimum", the same as gov.uk truly omitting the field.
-function normaliseGovUkAward(value: unknown): number | null {
-  return typeof value === 'number' && value > 1 ? value : null
+//
+// grantMaximumAward is required too, and a funder running a programme that
+// awards no money at all has nowhere to say so, so it enters the smallest
+// legal pair instead: 1 and 2. Found live 2026-08-18 on DBIST's AI Growth Lab,
+// whose own page says twice that "Participants will not receive funding" while
+// the row advertised a maximum of £2. A ceiling of £2 is never a real award,
+// so treat it as "no stated maximum" the same way.
+//
+// The floors stay this tight on purpose. Across 249 gov.uk rows, 82 carry the
+// £1 minimum placeholder and exactly one carried the £2 maximum, with nothing
+// at all between £3 and £99 — so a wider net would buy no coverage today and
+// would start nulling genuine micro-grants, which do go below £100.
+function normaliseGovUkAward(value: unknown, placeholderCeiling: number): number | null {
+  return typeof value === 'number' && value > placeholderCeiling ? value : null
 }
 
 function normaliseFindAGrant(g: Record<string, unknown>): ScrapedGrant | null {
@@ -393,8 +405,8 @@ function normaliseFindAGrant(g: Record<string, unknown>): ScrapedGrant | null {
     funder:               String(g.grantFunder ?? 'UK Government'),
     funder_type:          'government',
     description:          String(g.grantShortDescription ?? g.grantDescription ?? ''),
-    amount_min:           normaliseGovUkAward(g.grantMinimumAward),
-    amount_max:           typeof g.grantMaximumAward === 'number' ? g.grantMaximumAward : null,
+    amount_min:           normaliseGovUkAward(g.grantMinimumAward, 1),
+    amount_max:           normaliseGovUkAward(g.grantMaximumAward, 2),
     deadline:             parseDeadline(g.grantApplicationCloseDate),
     is_rolling:           false,
     is_local:             loc.isLocal,
@@ -1633,6 +1645,12 @@ function parseDeadline(raw: unknown): string | null {
 
 /** Exported for tests only. The crawl calls the module-local binding. */
 export const __parseDeadlineForTests = parseDeadline
+
+/** Exported for tests only. The crawl calls the module-local binding. */
+export const __normaliseGovUkAwardForTests = normaliseGovUkAward
+
+/** Exported for tests only. The crawl calls the module-local binding. */
+export const __normaliseFindAGrantForTests = normaliseFindAGrant
 
 /**
  * Heading text that is a closing-date label rather than a programme name.
