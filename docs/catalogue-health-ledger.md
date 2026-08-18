@@ -316,7 +316,7 @@ should reach zero first.
 | A8 | Live rows with a brief written from model memory, not the page | **8** | **yes** | Re-enrich; blocked on some by pins (D1) | Not scheduled |
 | A9 | Live rows with invite-only language and no `is_invite_only` flag | **~8** | **yes** | Regex floor from the 10 Aug audit, not re-measured. Needs a pass | Not scheduled |
 | A10 | Live rows with an income limit in prose and no structured value | **~30** | **yes** | Same audit, same caveat | Not scheduled |
-| A11 | Live rows both `deadline` and `is_rolling` set (contradictory) | **4** | **yes** | Per row, not a bulk fix | **Re-measured 18 Aug, see below** |
+| A11 | Live rows both `deadline` and `is_rolling` set (contradictory) | **2** | **yes** | Per row, not a bulk fix | **2 cleared 18 Aug. Of the 2 left, 1 is correct and 1 unverified — see below** |
 | A12 | Live rows with `deadline` pinned to NULL by an unrelated form save | **15** | **yes** | Unpin; part of the D1 cleanup | Not scheduled |
 | A13 | Duplicate live rows on title + funder | **2** | **yes** | Manual merge | Not scheduled |
 
@@ -349,6 +349,32 @@ This is the proxy problem from `CLAUDE.md` in miniature. "Both fields are set" i
 sentence about the row; the sentence that matters is "could a user read this and be
 misled". One of the four is fine, one is a different and more dangerous bug in the
 opposite direction, and the count was double the truth.
+
+**Acted 2026-08-18, Paul's go.** Skinners' and One Stop both had `is_rolling` set
+false through `mergeGrantUpdate` with source `user_verified:paul-review-2026-08-18`
+and the funder's quote attached. Deliberately **not** `admin:`, which auto-pins at
+trust 100 and would have frozen the flag against any future page read; and not
+`system:` (50), which loses to the existing `user_verified` (70) on One Stop's
+deadline. Neither row is pinned. A11 now stands at 2: HPC Small Grants, which the
+evidence says is correct, and Happy Days, which is unverified rather than wrong. On
+the current reading the class has **no confirmed defects left**.
+
+**One Stop needed a second write the first fix missed.** The reopen-date correction
+cleared `deadline` and moved the row between rounds but left `is_rolling = true`.
+Invisible while the row is inactive, and wrong the moment it matters:
+check-coming-soon hands the row back on 1 September, and it would have returned
+asserting Rolling with no deadline, which is A6. A fix that changes a row's timing
+state has to sweep the sibling timing fields, not just the one that was wrong.
+
+**The bound on the reopen-date class is 1 of 22, not 1 of the catalogue.** 158 live
+rows carry a future deadline and only 22 carry a citation on that field, so the
+check that found One Stop can only see 14% of the population. The other 136 have no
+quote to read and are invisible to it. Quoting "one row" as the size of this class
+would overstate it; properly bounding it means verifying the 136, not writing a
+better regex. Related: the first version of that query carried a `!~* 'clos'`
+filter, which deleted the only true positive — One Stop's citation reads "currently
+closed for applications and will re-open on..." — and returned zero. A check that
+cannot fail is not a check.
 
 **On Somerset specifically, asked 2026-08-18.** The Somerset row once described as
 "live and wrong to users" was `Stronger Communities Fund`, live while the funder's
@@ -807,4 +833,6 @@ Set by Paul, 2026-08-12, and to be carried forward until closed.
 | 2026-08-16 | A11 (deadline and is_rolling both set) reduced by one: Greggs Community Action Fund `is_rolling` set false, deadline 2026-08-28 retained. Count to re-measure. |
 | 2026-08-18 | Both £2 rows closed: International Tree Foundation to £21,500 (per-tree unit price misread as the award), DBIST AI Growth Lab to null (gov.uk schema placeholder for a programme paying nothing). `normaliseGovUkAward` now also guards `amount_max`; regression test drives the real record. |
 | 2026-08-18 | Tree Foundation row also re-dated and re-linked: deadline 2026-12-11 with is_rolling false (was rolling with no date), apply_url off the 403ing grantplatform login onto the funder's own /uk-grants. apply_url pinned, deadline deliberately not. |
+| 2026-08-18 | A11 re-measured from 8 to 4, then to 2. Skinners' and One Stop `is_rolling` set false (`user_verified:paul-review-2026-08-18`, unpinned). HPC Small Grants left alone: its page says "Open year-round. Next deadline is Monday 24 August 2026", so both flags are true and any wrongness is in the card. A11's rule mis-describes rolling funds with periodic cut-offs; rule fix post-September. |
+| 2026-08-18 | Asked whether Somerset had dropped off section A. It had not: the row once called "live and wrong to users" was Stronger Communities Fund, fixed 11 Aug, verified still correct. Section A carries issue classes and counts, never funder names, so nothing was removed. C4 unchanged since the ledger opened. |
 | 2026-08-16 | A3 needs a caveat before it is trusted: the `round_closed` verdict is a deterministic function of the proposed deadline falling in the past (23 of 23 rows, no exceptions), so a year-less date on the funder's page that resolves to a wrong past year produces a false "closed". Confirmed on the Greggs row, which is open for another 12 days. Bears directly on the §12 auto-act decision. |
