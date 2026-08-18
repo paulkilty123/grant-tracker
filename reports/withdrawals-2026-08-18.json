@@ -1,0 +1,57 @@
+{
+  "written_at_utc": "2026-08-18T18:41:59.082Z",
+  "approved_by": "Paul, 2026-08-18",
+  "note": "Reversal: set pipeline_state back to the value in `before` and clear rejection_reason.",
+  "withdrawals": [
+    {
+      "id": "5fac2acd-2a0b-4fdd-ab41-cb1e212f87d7",
+      "title": "Bentley opens new national grants programme to strengthen support for charities",
+      "reason": "news_article_not_a_fund",
+      "why": "apply_url is https://www.bentleymedia.com/en/newsitem/1787-... — a press release on Bentley's media site, not a fund page. funder is null and the title is the headline verbatim. Ingested by source \"homeless_link\"."
+    },
+    {
+      "id": "dfb1f774-4977-4466-b756-f48af6472bf1",
+      "title": "Heart of Yorkshire Fund for the Selby District",
+      "reason": "duplicate_of_48dcfee3",
+      "why": "Identical title AND identical apply_url to 48dcfee3, which is the older row (first seen 22 Jun vs 27 Jul), is pipeline_state=published and carries the fund's deadline history. This is the later duplicate capture from source \"two_ridings_cf\"."
+    },
+    {
+      "id": "22e1c850-9454-47f7-85b5-c2f05a1a3556",
+      "title": "Supporting people aged over 65 to be independent, healthy and socially included",
+      "reason": "duplicate_of_7f128498",
+      "why": "Same apply_url as 7f128498 \"The Pargiter Trust Fund\", which is LIVE, published, has a brief and a deadline of 31 Aug. This row has no brief at all and no deadline. Community Foundation Tyne & Wear titles its pages by purpose; the named fund is the row to keep. If the live row's title is the wrong one, that is a title fix on 7f128498, not a reason to keep an empty duplicate."
+    }
+  ],
+  "before": [
+    {
+      "id": "22e1c850-9454-47f7-85b5-c2f05a1a3556",
+      "title": "Supporting people aged over 65 to be independent, healthy and socially included",
+      "funder": "Community Foundation Tyne & Wear and Northumberland",
+      "apply_url": "https://www.communityfoundation.org.uk/grants/supporting-people-aged-over-65-to-be-independent-healthy-and-socially-included/",
+      "is_active": false,
+      "pipeline_state": "captured",
+      "rejection_reason": null,
+      "deadline": null
+    },
+    {
+      "id": "5fac2acd-2a0b-4fdd-ab41-cb1e212f87d7",
+      "title": "Bentley opens new national grants programme to strengthen support for charities and disadvantaged communities across the UK",
+      "funder": null,
+      "apply_url": "https://www.bentleymedia.com/en/newsitem/1787-bentley-opens-new-national-grants-programme-to-strengthen-support-for-charities-and-disadvantaged-communities-across-the-uk",
+      "is_active": false,
+      "pipeline_state": "tagged_awaiting_review",
+      "rejection_reason": null,
+      "deadline": null
+    },
+    {
+      "id": "dfb1f774-4977-4466-b756-f48af6472bf1",
+      "title": "Heart of Yorkshire Fund for the Selby District",
+      "funder": "Two Ridings Community Foundation",
+      "apply_url": "https://tworidingscf.org.uk/fund/heart-of-yorkshire-fund/",
+      "is_active": false,
+      "pipeline_state": "tagged",
+      "rejection_reason": null,
+      "deadline": null
+    }
+  ]
+}
