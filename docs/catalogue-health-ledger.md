@@ -103,12 +103,48 @@ likely a real error.
 left inside the sentence, with a "Use £2,000" button on the chip that raised it.
 The warning clears itself on the write.
 
-**Left alone, worth a look:** two live rows show a maximum of **£2** —
-International Tree Foundation's Community Tree Planting Grant and DBIST's AI
-Growth Lab. Same rhetorical-figure class as Crowdfunder, and the new £100 floor
-would have stopped both, but the stored values predate it and need a page read
-rather than a guess. The 17 other sub-£100 rows are deliberate £0 in-kind
-entries (pro-bono legal, volunteer matching) and are correct.
+**Both £2 rows closed, 18 August, and they were two different bugs.** Read the
+pages rather than guessing, as the entry above required. The 17 other sub-£100
+rows are deliberate £0 in-kind entries (pro-bono legal, volunteer matching) and
+remain correct.
+
+*International Tree Foundation* was the rhetorical-figure class after all, but
+one step further out than Crowdfunder: `ai_extract:amounts:v1` read the unit
+price out of our own description ("max £1.95/tree equivalent") and stored it as
+the size of the award. The funder's June 2026 guidelines give the real mechanic
+— "Projects to range from 100 - 10,000 trees planted per year, with a maximum
+price equivalent to £2.15/tree" — so the ceiling is 10,000 × £2.15 = **£21,500**,
+pinned with the quote. `amount_min` left null deliberately: £2.15 is a *maximum*
+price per tree, not a fixed one, so the 100-tree floor guarantees no £215 award.
+The description was stale in three further ways and was rewritten from the same
+document at `system:` trust, not `admin:`, so enrichment can still improve it:
+the per-tree rate had moved £1.95 → £2.15, the community-orchard provision is
+gone from the 2026 round, and the two-stage EOI process is now a single portal
+application.
+
+*DBIST's AI Growth Lab* was not a rhetorical figure at all. Its page says twice
+that "Participants will not receive funding", and the £2 was a **schema
+placeholder**: gov.uk's Find a Grant requires numeric minimum and maximum award
+fields, so a department with no award to state enters the smallest legal pair,
+1 and 2. The £6.9m in the same record is the scheme total, not a per-applicant
+award. `amount_max` is now null and agrees with `prog_includes_funding`, which
+was already false.
+
+**The placeholder had a fix already, wired to one field of two.**
+`normaliseGovUkAward` in `crawl.ts` has stripped the £1 minimum since July,
+after the BFI rows were hand-fixed on 23 June and re-imported by the crawl on
+14 July. `amount_max` was never routed through it and copied gov.uk verbatim.
+Now both go through, with floors of 1 and 2. **The floors stay tight on
+purpose:** of 249 gov.uk rows, 82 carry the £1 minimum placeholder and exactly
+one carried the £2 maximum, with nothing between £3 and £99 — so a wider net
+buys no coverage and would start nulling genuine micro-grants.
+
+> Worth naming, because it is the second time this shape has cost us a row: the
+> helper was correct, complete and well commented, and the bug was that one
+> caller did not use it. Tests over the helper alone would all have passed. The
+> new `crawl-award.test.ts` therefore drives the real AI Growth Lab record
+> through `normaliseFindAGrant`, and was confirmed to fail against the old
+> wiring before the fix was restored.
 
 ## The line: what "done for launch" means
 
@@ -564,4 +600,5 @@ Set by Paul, 2026-08-12, and to be carried forward until closed.
 | 2026-08-12 | B1 segmented by destination: 11 archive, 19 between rounds, 126 recoverable, 4 archive, 13 unclear. Trigger hypothesis tested and disproved. B1 and A6 set as standing priorities. |
 | 2026-08-16 | Launch scope fixed to four items (see "The line" above). Everything else post-September. Catalogue reports by digest only from 17 Aug. |
 | 2026-08-16 | A11 (deadline and is_rolling both set) reduced by one: Greggs Community Action Fund `is_rolling` set false, deadline 2026-08-28 retained. Count to re-measure. |
+| 2026-08-18 | Both £2 rows closed: International Tree Foundation to £21,500 (per-tree unit price misread as the award), DBIST AI Growth Lab to null (gov.uk schema placeholder for a programme paying nothing). `normaliseGovUkAward` now also guards `amount_max`; regression test drives the real record. |
 | 2026-08-16 | A3 needs a caveat before it is trusted: the `round_closed` verdict is a deterministic function of the proposed deadline falling in the past (23 of 23 rows, no exceptions), so a year-less date on the funder's page that resolves to a wrong past year produces a false "closed". Confirmed on the Greggs row, which is open for another 12 days. Bears directly on the §12 auto-act decision. |
