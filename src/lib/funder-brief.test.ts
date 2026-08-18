@@ -2,10 +2,13 @@ import { describe, it, expect } from 'vitest'
 import { preserveEligibilityFields } from './funder-brief'
 
 // Regression cover for 2026-08-18: re-enriching 18 seed:legacy rows rewrote the
-// brief blob wholesale and dropped `exclusions` on three of them. The worst was
-// Chichester City Council, whose card stopped saying a grant stream was closed.
+// brief blob wholesale and dropped `exclusions` on three of them. Chalk Cliff
+// Trust is the one that genuinely lost content; on the other two the facts
+// resurfaced in other fields. Chichester's wording is kept below because it is
+// the clearest example of the SHAPE the guard tests for — a populated field
+// going null — not because it was the worst harm.
 describe('preserveEligibilityFields', () => {
-  it('keeps a previous exclusion the fresh read dropped (the Chichester case)', () => {
+  it('keeps a previous exclusion the fresh read dropped', () => {
     const prev = { exclusions: 'For-profit organisations. Large/core funding grants are currently closed.' }
     const next = { exclusions: null, what_they_fund: 'Community projects in Chichester' }
     const { brief, preserved } = preserveEligibilityFields(next, prev)

@@ -85,10 +85,20 @@ export function isStubBrief(brief: Record<string, unknown> | null | undefined): 
  *
  * The brief blob is rewritten wholesale on every enrich, so any key the fresh
  * read does not rediscover simply vanishes. Re-enriching 18 seed:legacy rows on
- * 2026-08-18 dropped `exclusions` on three of them — one in six. Chichester City
- * Council lost "Large/core funding grants are currently closed", so the card
- * stopped warning that a stream was shut, and a fundraiser could have prepared a
- * bid for money that was not there.
+ * 2026-08-18 dropped `exclusions` on three of them — one in six.
+ *
+ * BE PRECISE ABOUT THE HARM; the first telling of this overstated it. On two of
+ * the three the facts survived elsewhere in the blob: Chichester's closure
+ * notice reappeared under `funder_tips`, and Cambridge's was soft guidance whose
+ * own text opened "No explicit exclusions stated". Only Chalk Cliff genuinely
+ * lost content — "personal bank accounts cannot receive payments" and "postal
+ * applications are not accepted" were absent from every field afterwards.
+ *
+ * The guard is still right, for a narrower reason than "facts vanish". Prose
+ * that lands in `funder_tips` is not read by anything that reads `exclusions`:
+ * not extractIncomeGate, not the eligibility surfaces, and not a reader scanning
+ * the card for who cannot apply. An empty `exclusions` reads as "there are
+ * none", which is a different statement from "they are written elsewhere".
  *
  * The two failure directions are not symmetric, which is why absence never wins:
  * keeping an exclusion the funder has actually dropped costs one wasted
