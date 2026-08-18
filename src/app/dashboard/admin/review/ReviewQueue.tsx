@@ -37,6 +37,7 @@ import type { EvidenceSummary } from '@/lib/admin/evidence-summary'
 import type { MergeRejection } from '@/lib/grant-merge'
 import { REJECT_REASONS, formatRejectReason } from '@/lib/admin/reject-reasons'
 import { EDITABLE_STRUCTURES, structureLabel, isLegacyStructure } from '@/lib/admin/legal-structures'
+import { parseDmy, splitIso } from '@/lib/admin/parse-dmy'
 import {
   SECTIONS, sectionOf, evidenceRank, EVIDENCE_RANK_LABEL,
   arrivalOrigin, isNewArrival, ORIGIN_LABEL, NEW_ARRIVAL_DAYS,
@@ -718,6 +719,59 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
     router.refresh()
   }, [patch, router, toast, noteAction])
 
+  /**
+   * Set the deadline.
+   *
+   * There was no way to change a date from this screen, so the queue could say
+   * "the deadline has passed, re-read to pick up the next round" and a reviewer
+   * holding the funder's page open with the new date on it still had to leave
+   * for the Catalogue page. Re-reading is the right first move, but it fails on
+   * every page the engine cannot fetch, and those are exactly the rows whose
+   * dates go stale.
+   *
+   * A DATE AND "ROLLING" CANNOT BOTH BE TRUE, so setting one clears the other.
+   * Without this every use of this control would manufacture a row holding both
+   * — the state the ledger tracks as A11 — and the card would contradict itself,
+   * showing a date here and "Rolling" to a user. The Tree Foundation row was in
+   * exactly that state: a hard December close stored as rolling with no date.
+   *
+   * NO CLEAR-TO-NOTHING BUTTON, deliberately, and this is the one place this
+   * control is asymmetric with the amount boxes above. An admin write pins at
+   * trust 100, so a cleared deadline is a NULL frozen against every future
+   * correction. That is not hypothetical: `mergeFieldUpdate` records 53 live
+   * rows already holding `deadline` pinned to NULL from the old form save, one
+   * of them a fund whose round was closing the next day and whose date nothing
+   * could populate. Recreating that with a one-click button is worse than the
+   * missing affordance, so removing a date stays a deliberate act elsewhere.
+   */
+  const setDeadline = useCallback(async (item: QueueItem, iso: string) => {
+    const dateChanged = iso !== item.values.deadline
+    if (!dateChanged && !item.values.isRolling) {
+      toast.error('That is already the stored deadline. Nothing saved.')
+      return
+    }
+    setBusyId(item.id)
+    setBusyLabel('Saving the deadline')
+    const fields: Record<string, unknown> = {}
+    if (dateChanged) fields.deadline = iso
+    if (item.values.isRolling) fields.is_rolling = false
+    // Assert the field that is actually meant to move. Sending `deadline`
+    // unchanged would come back `idempotent` and read as a failed write.
+    const ok = await patch(item.id, fields, 'Saving the deadline',
+                           [dateChanged ? 'deadline' : 'is_rolling'])
+    setBusyId(null)
+    setBusyLabel(null)
+    if (!ok) return
+    const wasRolling = item.values.isRolling ? ', and it no longer reads as rolling' : ''
+    noteAction(item.id, `Deadline set to ${iso}${wasRolling}`)
+    // A date already gone is legitimate to record, and it is also what a
+    // mistyped year looks like. Say so rather than accepting it silently.
+    const past = iso < new Date().toISOString().slice(0, 10)
+    if (past) toast.success(`Deadline saved as ${iso}, which is in the past. Check the year if that was not meant.`)
+    else      toast.success('Deadline saved')
+    router.refresh()
+  }, [patch, router, toast, noteAction])
+
   const runJob = useCallback(async (
     id: string,
     url: string,
@@ -1275,6 +1329,7 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
                      onRevert={(d) => revertField(item, d)} onSetFundingType={(t) => setFundingType(item, t)}
                      onSetStructures={(next) => setStructures(item, next)}
                      onSetAmount={(min, max) => setAmount(item, min, max)}
+                     onSetDeadline={(iso) => setDeadline(item, iso)}
                      onReRead={() => reRead(item)} onReClassify={() => reClassify(item)}
                      onFixLink={() => fixLink(item)} onAddSource={() => addSource(item)} onWatch={() => watchBetweenRounds(item)}
                      rejections={refusals[item.id] ?? []}
@@ -1525,6 +1580,7 @@ function RefusalNotice({
 function Row({
   item, open, busy, busyLabel, onToggle, onPublish, onReject, onRevert, onSetFundingType,
   onReRead, onReClassify, onFixLink, onAddSource, onWatch, onSetStructures, onSetAmount,
+  onSetDeadline,
   rejections, onOverride, selected, onSelect,
 }: {
   item: QueueItem
@@ -1541,6 +1597,7 @@ function Row({
   onSetFundingType: (fundingType: string) => void
   onSetStructures: (next: string[]) => void
   onSetAmount: (min: number | null, max: number | null) => void
+  onSetDeadline: (iso: string) => void
   onReRead: () => void
   onReClassify: () => void
   onFixLink: () => void
@@ -1558,6 +1615,13 @@ function Row({
   /** Amount boxes. Seeded from the row, empty string meaning "no figure". */
   const [amtMin, setAmtMin] = useState(item.values.amountMin === null ? '' : String(item.values.amountMin))
   const [amtMax, setAmtMax] = useState(item.values.amountMax === null ? '' : String(item.values.amountMax))
+  /** Deadline boxes, seeded from the stored date. British order, fixed here
+   *  rather than left to the browser's locale. */
+  const seededDate = splitIso(item.values.deadline)
+  const [dlDay,   setDlDay]   = useState(seededDate.day)
+  const [dlMonth, setDlMonth] = useState(seededDate.month)
+  const [dlYear,  setDlYear]  = useState(seededDate.year)
+  const [dlError, setDlError] = useState<string | null>(null)
   const worst = item.reasons.reduce<string>((acc, r) => {
     if (acc === 'critical' || r.severity === 'critical') return 'critical'
     if (acc === 'check' || r.severity === 'check') return 'check'
@@ -2112,6 +2176,55 @@ function Row({
                     )}
                   </span>
                 </Val>
+                <Val k="Deadline">
+                  <span style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
+                    {/* Three boxes rather than a native date input: that renders
+                        in the browser's locale, so 05/08/2026 means two
+                        different days to two reviewers and neither is told
+                        which. The catalogue and the funder pages being copied
+                        from are both British, so the order is fixed. */}
+                    <input
+                      value={dlDay}
+                      onChange={e => { setDlDay(e.target.value.replace(/[^0-9]/g, '').slice(0, 2)); setDlError(null) }}
+                      inputMode="numeric" placeholder="dd" aria-label="Deadline day"
+                      style={dateBox}
+                    />
+                    <span style={{ color: 'var(--color-text-tertiary)', fontSize: 12 }}>/</span>
+                    <input
+                      value={dlMonth}
+                      onChange={e => { setDlMonth(e.target.value.replace(/[^0-9]/g, '').slice(0, 2)); setDlError(null) }}
+                      inputMode="numeric" placeholder="mm" aria-label="Deadline month"
+                      style={dateBox}
+                    />
+                    <span style={{ color: 'var(--color-text-tertiary)', fontSize: 12 }}>/</span>
+                    <input
+                      value={dlYear}
+                      onChange={e => { setDlYear(e.target.value.replace(/[^0-9]/g, '').slice(0, 4)); setDlError(null) }}
+                      inputMode="numeric" placeholder="yyyy" aria-label="Deadline year"
+                      style={{ ...dateBox, width: 58 }}
+                    />
+                    <button
+                      disabled={busy}
+                      onClick={() => {
+                        const r = parseDmy(dlDay, dlMonth, dlYear)
+                        if (!r.ok) { setDlError(r.error); return }
+                        setDlError(null)
+                        onSetDeadline(r.iso)
+                      }}
+                      style={{ ...miniBtn, ...btnRow }}
+                    >Save</button>
+                    {item.values.isRolling && (
+                      <span style={{ fontSize: 11.5, color: 'var(--color-text-tertiary)' }}>
+                        Saving a date also stops this reading as rolling.
+                      </span>
+                    )}
+                    {/* The refusal sits next to the boxes that caused it. A
+                        toast would be gone before the year could be retyped. */}
+                    {dlError && (
+                      <span style={{ fontSize: 11.5, color: 'var(--amber-deep)' }}>{dlError}</span>
+                    )}
+                  </span>
+                </Val>
                 <Val k="Who can apply">
                   <span style={{ display: 'block' }}>
                     {/* Toggles, not a comma list. Eligibility is the field that
@@ -2274,6 +2387,11 @@ const ghostBtn: React.CSSProperties = {
 const amountBox: React.CSSProperties = {
   fontFamily: 'var(--font-space-grotesk)', fontSize: 12.5, padding: '4px 8px', width: 92,
   border: '0.5px solid var(--border-subtle)', borderRadius: 8,
+  background: 'var(--color-surface)', color: 'var(--color-text-primary)',
+}
+const dateBox: React.CSSProperties = {
+  fontFamily: 'var(--font-space-grotesk)', fontSize: 12.5, padding: '4px 8px', width: 42,
+  border: '0.5px solid var(--border-subtle)', borderRadius: 8, textAlign: 'center',
   background: 'var(--color-surface)', color: 'var(--color-text-primary)',
 }
 const btnRow: React.CSSProperties = {
