@@ -1187,6 +1187,27 @@ becomes demand-driven. Cutting it would buy little and would delay a genuinely d
 row by up to a day. Worth re-measuring after a week of real spend before changing
 the schedule.
 
+**A figure derived from a window needs the window's real extent stated beside it,
+and the extent must come from the data rather than the query.** The wrong number
+came from running `interval '7 days'` and, separately, reading
+`first_run = 2026-08-15` — both on screen — and annualising as though the window
+were full. No amount of care writing SQL would have caught that; only asking what
+the number meant. "$15.01 across the four days since arming" cannot be annualised
+by accident. "$15.02/week" invites it.
+
+**And "Arts Council" is two funders on two hosts.** `artscouncil.org.uk` is 13 rows
+and walled through both paths. `arts.wales` is 15 rows and reads perfectly: 3,975
+characters against the England site's 440. Anything keyed on the funder NAME rather
+than the host would file fifteen readable Welsh rows as unreadable, which is worse
+than leaving them flagged because it looks settled.
+
+**A bot wall cannot be detected by length.** The `artscouncil.org.uk` interstitial
+is 440 to 491 characters depending on path — above any plausible "too short to be
+real" floor, and it is a successful HTTP response containing prose. Two separate
+tools tonight used a size threshold (200 and 400 characters) and both would have
+passed it to a judgement step as page content. The test has to be what the text
+SAYS.
+
 **The bug itself is not fixed, only its accumulation.** The route still writes
 evidence and schedule as two statements, and its own comment accepts that a lost
 second write leaves a null due date. That was a tolerable cost when it was rare. At

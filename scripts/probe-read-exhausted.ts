@@ -60,19 +60,33 @@ const CONSECUTIVE_FAILURES_REQUIRED = 2
  * incident ID…") and The Hygiene Bank returning zero characters. A probe that
  * cannot fail is not a probe, and this one could not.
  *
- * The length floor does the heavy lifting: no real funding page is 400
- * characters. The signatures catch the longer interstitials that clear it.
+ * LENGTH CANNOT DO THIS ON ITS OWN, and the margin was thinner than it looked.
+ * The artscouncil.org.uk interstitial is 491 characters through the proxy — above
+ * the 400 floor. It was the signature list that caught it, not the floor, and a
+ * wall worded differently would have sailed through as page content and been
+ * judged as though it described a fund. A bot check is a successful HTTP response
+ * containing prose; size is not the distinguishing feature and never was.
+ *
+ * So the signatures are the real test and the floor is only a backstop for empty
+ * and near-empty responses. Flagged by the second session, which hit the same
+ * 491-character page against a 200-character threshold in its own tooling.
  */
 const WALL_SIGNATURES = [
   'just a moment',
   'performing security verification',
+  'security service to protect',
   'request unsuccessful',
   'incapsula incident',
   'attention required',
   'verify you are human',
+  'verifying you are human',
+  'checking your browser',
+  'please wait while',
   'enable javascript and cookies',
   'access denied',
   'ddos protection',
+  'unusual traffic',
+  'captcha',
 ]
 
 const MIN_USEFUL_CHARS = 400
