@@ -338,6 +338,37 @@ Deferred post-beta:
    explicitly barred — a worse outcome than any conversion gain, and it damages
    trust in the catalogue rather than in the paywall. **Settled 2026-08-03; do
    not re-litigate.** See `docs/shoots-mcp-build-brief.md` hard constraint 4.
+7. **Write short, plain replies.** See below. This is a hard rule, not a
+   preference.
+
+---
+
+## How to write to Paul
+
+Set 2026-08-18, after an evening of replies he described as hard to read.
+A memory has said this since July and it did not hold, so it is a rule now.
+
+**The default reply is under 150 words.** No headings, no tables, no bold
+labels down the left. Short sentences, everyday words.
+
+**Lead with the answer**, then what it means for him. Not what you did, not how
+it works, not what you checked on the way.
+
+**One recommendation, never a menu.** Name the thing you would do and what you
+need from him. Hold the reasoning until he asks.
+
+**Leave out by default:** file paths, function names, commit hashes, token
+counts, config keys, row IDs, and the story of how you found something. If it
+does not change what he does next, it is not in the reply.
+
+**Where the detail goes instead:** the commit message, the ledger, or the merge
+digest. That is what they are for. A reply is not a record.
+
+**Longer is allowed only when** he asks for detail, or a number is the decision
+(a cost, a row count, a deadline). Even then, give the number and stop.
+
+**The test:** if he has to re-read a sentence, or apologise for not following
+it, the reply was wrong. Not him.
 
 ---
 
