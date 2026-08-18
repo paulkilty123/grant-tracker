@@ -316,7 +316,7 @@ should reach zero first.
 | A8 | Live rows with a brief written from model memory, not the page | **8** | **yes** | Re-enrich; blocked on some by pins (D1) | Not scheduled |
 | A9 | Live rows with invite-only language and no `is_invite_only` flag | **~8** | **yes** | Regex floor from the 10 Aug audit, not re-measured. Needs a pass | Not scheduled |
 | A10 | Live rows with an income limit in prose and no structured value | **~30** | **yes** | Same audit, same caveat | Not scheduled |
-| A11 | Live rows both `deadline` and `is_rolling` set (contradictory) | **8** | **yes** | Trivial data fix | Not scheduled |
+| A11 | Live rows both `deadline` and `is_rolling` set (contradictory) | **4** | **yes** | Per row, not a bulk fix | **Re-measured 18 Aug, see below** |
 | A12 | Live rows with `deadline` pinned to NULL by an unrelated form save | **15** | **yes** | Unpin; part of the D1 cleanup | Not scheduled |
 | A13 | Duplicate live rows on title + funder | **2** | **yes** | Manual merge | Not scheduled |
 
@@ -332,6 +332,33 @@ actions, their quotes and the reversal ledger are in the merge digest and
 was reworded after 25 of the original 38 turned out to be `investment` rows, which
 the catalogue carries deliberately. No live row carries the verdict today, so
 there is nothing to act on and nothing to review.
+
+**A11 re-measured 2026-08-18: four rows, not eight, and the rule mis-describes
+them.** Read row by row against `field_provenance`, "both fields set" turns out to
+cover three different situations, only two of which are the contradiction the line
+claims:
+
+| Row | Funder | Deadline | What it actually is |
+|---|---|---|---|
+| HPC Community Fund Small Grants | Somerset Community Foundation | 24 Aug 2026 | **Correct, not a defect.** The cited page reads *"Open year-round. Next deadline is Monday 24 August 2026, by 5pm. Decisions made every 2 months."* Both flags are true of this fund. If a user sees only "Rolling" and not the cut-off, the fault is in the card, not the data |
+| One Stop Community Partnership Programme | Groundwork / One Stop | 1 Sep 2026 | **Worse than A11, and live.** The 11 Aug citation reads *"currently closed for applications and will re-open on Tuesday 1 September 2026"* — a re-open date stored in `deadline`. A user reads that as a closing date and applies to a fund that is shut. Needs a decision |
+| Skinners' Company Charity Programme | The Skinners' Company | 21 Aug 2026 | **The real A11.** Deadline verified 11 Aug against the funder's page; `is_rolling` untouched since `scraper:hcvs_funding_2026-04-30`. A stale flag on a fund 3 days out |
+| Happy Days Children's Charity | Happy Days Children's Charity | 30 Nov 2026 | Both fields written by one `scraper:young_camden_foundation` backfill on 1 May and never revisited. Unverified rather than known-wrong |
+
+This is the proxy problem from `CLAUDE.md` in miniature. "Both fields are set" is a
+sentence about the row; the sentence that matters is "could a user read this and be
+misled". One of the four is fine, one is a different and more dangerous bug in the
+opposite direction, and the count was double the truth.
+
+**On Somerset specifically, asked 2026-08-18.** The Somerset row once described as
+"live and wrong to users" was `Stronger Communities Fund`, live while the funder's
+page read "Closed. Expected to re-open: Autumn 2026". It was corrected on 11 August
+and is now `between_rounds_scheduled` and inactive, re-verified 18 August. Its
+record sits in `docs/catalogue-structure-worklist.md` under the Somerset
+reconciliation, which is where it went rather than out of this ledger. C4 has
+carried the funder since the ledger opened on 12 August, unchanged. Section A names
+issue classes with counts and never named funders, so no Somerset line was ever
+removed from it.
 
 **Noted 2026-08-17, not scheduled: 18 rows carry leading or trailing whitespace
 in `title`.** All from `scraper:gov_uk`, three with a leading tab that renders on
