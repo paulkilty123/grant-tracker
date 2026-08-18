@@ -23,6 +23,47 @@ clean yet" stays answerable while new rows keep arriving.
 
 ---
 
+
+## 2026-08-18 — Re-read will never correct an amount, and the flag that replaces it reads pots as ceilings
+
+Groundwork's Grassroots Grants was stored at £500–£10,000. The page states one
+figure, once: "unrestricted funding of up to £2,000 to 700 small, local
+organisations in England". Neither stored number appears anywhere on it. Both
+came from `scraper:young_camden_foundation` — 73 rows across 72 different
+funders, i.e. a third-party funding directory, not the funder's own page.
+
+Re-reading did not fix it, and could not. `enrich-grant`'s amount policy is
+**gap-fill only**: it writes a derived figure when the field is null and never
+overwrites an existing one, raising a flag instead. That was a deliberate call on
+2026-07-25 after the extractor disagreed with 18 of 60 live rows and was itself
+wrong on several. The policy is right. What is missing is the other half — a way
+for a human to accept the derived figure in one press. The card prints the
+correct number inside a sentence and offers no way to apply it.
+
+Row corrected by hand: `amount_max` 2,000, `amount_min` null, pinned, with the
+page quote in `field_evidence`.
+
+**The flag population is 32 rows, 23 live — and it does not mean what it says.**
+
+- `amount_under_stated` (24 rows, 16 live) is **mostly false**. It fires when the
+  derived figure is 2× the stored one, and what it is nearly always reading is
+  the fund's total pot: Access £5,000,000, Co-op Belong £7,000,000, NHS Charities
+  Together £1,400,000, City Bridge £22,000,000, MRC Equip £14,000,000, Asda
+  £1,255,314. The stored values on those rows are right and the flag is wrong.
+- `amount_pot_suspected` (8 rows, 6 live) is the useful direction, and is where
+  Grassroots Grants sat.
+- **3 live flags are stale** — Football Foundation Grass Pitch, Lloyds Specialist
+  Programme, Oxfordshire Thriving in Nature. The amount was corrected, the flag
+  was never re-evaluated, and each now warns about a disagreement with itself
+  (3,200 vs 3,200; 200,000 vs 200,000; 500,000 vs 500,000). Nothing clears a flag
+  when the underlying value is fixed. Same shape as the tag diffs fixed earlier
+  today: a stored record of a past event, never reconciled against the row.
+
+This is the house rule again. The check is "the derived figure differs by 2×",
+which is a sentence about two numbers. The sentence about the user is "the amount
+we show is not what one applicant can ask for" — and a fund's total pot passes
+the first test while saying nothing about the second.
+
 ## The line: what "done for launch" means
 
 **Set by Paul, 2026-08-16. This governs everything below it.**
