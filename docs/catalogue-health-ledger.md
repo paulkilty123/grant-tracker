@@ -631,12 +631,54 @@ as "frozen" is high, including the first version of this one.
 > value for good. Confirming a correction is not the same as deciding it must never
 > improve."*
 >
-> So nothing needs designing. The only missing piece is a way to take a field that
-> a form save stamped `admin:` and drop it back to a normal tier, after which the
-> existing `user_verified` path writes cleanly and stays overwritable. An unpin
-> button, not a new ladder. That is also why the second session's fixes tonight
-> landed through `user_verified` while mine needed raw SQL: theirs were blocked by
-> a scraper value, mine by an admin one.
+> So no new tier needs designing. What the release affordance has to DO, though,
+> was wrong in the first version of this note, and the correction is the useful
+> part.
+>
+> **An unpin button frees nothing.** Case 4 derives trust from the source STRING,
+> not from the pin, so an `admin:<email>` field is at 100 whether pinned is true or
+> false. Clear the pin and `user_verified` at 70 is still refused, now as
+> `lower_trust` rather than `pinned`. All 353 rows stay exactly as frozen and only
+> the error message changes. To free a field the affordance must **re-stamp or drop
+> the source**. Caught by the second session, 2026-08-18, against my own wrong
+> conclusion.
+>
+> **And the pin default is two load-bearing lines, not one.**
+> `update-grant/route.ts:57` reads `const pinned = isAdminSession ? true : (...)`,
+> deliberately, under a comment saying admin callers cannot be downgraded. Then
+> `grant-merge.ts:215` sets `pinned: true` **unconditionally** for any `admin:`
+> source overriding a non-admin one, ignoring what the caller passed. Fixing either
+> alone leaves the other pinning. Both are one-line changes and both are the branch
+> that stops an AI run clobbering a deliberate human correction, which is the whole
+> point of the ladder. Changing the default is a decision about which failure we
+> prefer, not a tidy-up.
+
+### What releasing the 353 rows would actually take
+
+`grant-merge.ts:212` already writes `previous: { source, value }` for exactly this,
+calling it "a future reset to scraper value affordance". Measured today, that
+covers less than a third of the problem:
+
+| | |
+|---|---:|
+| blocked fields on live rows | 906 |
+| — carry a `previous` that could be restored | **279** |
+| — **have no `previous` at all**, the admin write was the first write | **627** |
+| blocked `deadline` fields with a `previous` | 15 |
+| blocked `deadline` fields with none | **78** |
+
+So "reset to the scraper value" is not the mechanism for most of it, because for
+627 fields there is no earlier value to go back to. The mechanism is **release the
+field to be re-derived**: drop or downgrade its provenance entry and let the engine
+read the page. That is not novel here either. It is what was done by hand on
+2026-07-09 to the 12 Scotland-batch rows, where `field_provenance` entries for an
+`admin:gap-audit-*` source were stripped so `ai_enrich` could write again.
+
+**The safe first tranche is the 48.** A blocked-and-empty `deadline` has nothing to
+lose: releasing an empty field cannot destroy a human decision, because no human
+decision is recorded in an empty box, and 32 of those rows are asserting Rolling to
+users on the strength of that emptiness. Releasing a field that holds a value is a
+judgement and wants a rule. Releasing 48 empty ones is not.
 
 ---
 
