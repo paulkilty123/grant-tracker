@@ -577,6 +577,27 @@ the sweep and rejected as a duplicate.
 parsed as a deadline is a single wrong field that silently removes a fund from
 the catalogue, and the row looks healthy the whole time it is wrong.
 
+**The same error on a LIVE row, 2026-08-18.** Flagged by the second session while
+this ran, and it is the worse direction: One Stop Community Partnership Programme
+was live showing 1 September 2026 as its deadline, and its own verified quote read
+"currently closed for applications and will re-open on Tuesday 1 September 2026".
+A user reads a closing date and applies to a shut fund. Now hidden, watched, and
+due back in the queue on the day it opens.
+
+Counting the class found 3 candidates and 2 of them were correct (a citation
+saying "opens on 2 July and closes on 3 September" against a deadline of
+3 September is right, not wrong). So **one row, out of the 22 it is possible to
+check.** 158 live rows carry a future deadline and only 22 have a citation on
+that field, so the other **136 are invisible to any check of this kind** — there
+is no quote to read. That is the honest bound, and it is D4 with a number
+attached: a cleverer query cannot see them, only verification can.
+
+> And a warning about the query itself. The first version carried
+> `citation !~* 'clos'`, on the reasoning that a reopen note would not mention
+> closing. One Stop's citation contains the word "closed", so the filter deleted
+> the only true positive and the check returned zero. It could not fail. Same
+> lesson as the readiness-probe rule, one layer down.
+
 ---
 
 ## H. Crawler yield
