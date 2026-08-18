@@ -1,0 +1,20 @@
+{
+  "written_at_utc": "2026-08-18T22:25:05.180Z",
+  "approved_by": "Paul, 2026-08-18",
+  "reason": "duplicate_of_c904362e",
+  "evidence": "LLR Community Foundation page: \"Anglian Water's Thriving Communities Fund ... offers grants of between £10,000 and £100,000 ... This fund is being delivered by Cambridgeshire Community Foundation.\"",
+  "before": [
+    {
+      "id": "fdd7e177-a012-4a71-bc09-eb005183ce64",
+      "title": "Anglian Water's Thriving Communities Fund",
+      "funder": "Leicestershire and Rutland Community Foundation",
+      "apply_url": "https://www.llrcommunityfoundation.org.uk/anglian-waters-thriving-communities-fund/",
+      "is_active": false,
+      "pipeline_state": "tagged",
+      "rejection_reason": null,
+      "deadline": null,
+      "amount_min": 10000,
+      "amount_max": 100000
+    }
+  ]
+}
