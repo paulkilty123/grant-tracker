@@ -1126,6 +1126,29 @@ eligibility extraction starts.
 
 ---
 
+# Merged on a green gate, told to you afterwards
+
+Admin-only surfaces under the 17 August rule. No user-visible change, gate green
+(tsc, 441 tests, lint, `next build`), deployment confirmed `success` on GitHub.
+
+| Merged | What it was | Why it needed no decision |
+|---|---|---|
+| `63176f6` 18 Aug | **A change already put back stops asking to be put back.** The tag diffs on a review card came from the stored `field_provenance.pipeline_state.diff` blob, which records what the last re-classify changed and is never cleared. "Put it back" wrote the field correctly and left the blob alone, so the card re-offered the same undo. Three presses on Football Foundation's Grass Pitch Maintenance Fund all landed in the database and none of them changed the screen. `extractTagsDiff` now takes the row's current values and drops any diff whose `after` is no longer what the row holds. | Review queue only. A working button that looked broken. |
+
+Two things in it worth keeping in mind elsewhere:
+
+- **Derived beats stored for anything a reviewer can undo.** The settled test
+  reads the row, not a flag, so it survives a refresh and is right for a row
+  changed somewhere else entirely. A "dismissed" column would have needed
+  clearing by every other write path.
+- **An absent column is not disagreement.** If the caller's query omits the
+  field, `undefined` is no information — treating it as "no longer equal to
+  after" would silently hide every diff for that field. The diff is kept on
+  missing data, and `niche_tags` was added to the review query rather than left
+  to fail that way.
+
+---
+
 # Done, no longer waiting
 
 | Action | Status |
