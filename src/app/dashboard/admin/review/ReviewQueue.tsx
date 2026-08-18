@@ -38,6 +38,7 @@ import type { MergeRejection } from '@/lib/grant-merge'
 import { REJECT_REASONS, formatRejectReason } from '@/lib/admin/reject-reasons'
 import { EDITABLE_STRUCTURES, structureLabel, isLegacyStructure } from '@/lib/admin/legal-structures'
 import { parseDmy, splitIso } from '@/lib/admin/parse-dmy'
+import { quoteOverstatesAward } from '@/lib/admin/quote-vs-amount'
 import {
   SECTIONS, sectionOf, evidenceRank, EVIDENCE_RANK_LABEL,
   arrivalOrigin, isNewArrival, ORIGIN_LABEL, NEW_ARRIVAL_DAYS,
@@ -1403,10 +1404,27 @@ function askFor(item: QueueItem): Ask {
   // primary action, because askFor ranked absences above the absence of any
   // problem at all. The whole point of the section is the publish button.
   if (item.blockingCodes.length === 0 && !isIncomplete(codes)) {
+    // NOTHING BLOCKING IS NOT NOTHING WRONG, AND THE OLD COPY SAID BOTH.
+    //
+    // "Nothing on this row is blocking and nothing is missing" sat directly
+    // above a "Link looks wrong, page quality scored 45/100" chip on the same
+    // card, so the row appeared to argue with itself. Both statements were
+    // true: `blocking` is a narrow, load-bearing word here and a link warning
+    // is not one. But nobody reads it that narrowly. A reviewer reads "nothing
+    // is missing" as "nothing is wrong", and then has to decide which half of
+    // the card to believe -- which is the opposite of what an ask line is for.
+    //
+    // So count what is still on the row and say so. The sentence keeps its
+    // meaning and stops overclaiming, and the publish button stays primary,
+    // because none of these reasons blocks it.
+    const notes = item.reasons.length
+    const alsoLook = notes === 0 ? ''
+      : notes === 1 ? ' One note below is worth a look first.'
+      : ` ${notes} notes below are worth a look first.`
     return {
-      line: item.isActive
+      line: (item.isActive
         ? 'Nothing on this row is blocking and nothing is missing. Keeping it live needs no further reading.'
-        : 'Nothing on this row is blocking and nothing is missing. It can go live as it stands.',
+        : 'Nothing on this row is blocking and nothing is missing. It can go live as it stands.') + alsoLook,
       primary: 'publish',
       label: item.isActive ? 'Looks right, keep it live' : 'Publish it',
     }
@@ -1812,8 +1830,191 @@ function Row({
           )}
         </div>
 
-        {/* The three facts a fundraiser decides on. Absence renders as absence —
-            "not recorded" is a finding, and printing a dash would hide it. */}
+        {/* THE VALUES, ONCE.
+
+            These used to be printed here as read-only facts AND again as a
+            form at the bottom of the details, so amount, deadline, who can
+            apply and funding type each appeared twice on an open card, with
+            the figure in one place and the box that changes it three scrolls
+            away. That was tolerable when the only controls were amount and
+            eligibility. Once most fields became editable it was just doubled.
+
+            So the same position holds both: the facts when the card is shut,
+            the editors when it is open. Nothing moves when you expand, and no
+            value is stated twice.
+
+            The read-only form is NOT dead weight for the shut state -- it is
+            the scan. Absence renders as absence, because "not recorded" is a
+            finding and printing a dash would hide it. */}
+        {open ? (
+          <div style={{ marginTop: 12 }}>
+            <SectionLabel>What we hold, and what changes it</SectionLabel>
+            <div style={{ fontSize: 12.5, display: 'grid', gap: 4 }}>
+              <Val k="Amount one applicant can ask for">
+                <span style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
+                  <input
+                    value={amtMin} onChange={e => setAmtMin(e.target.value.replace(/[^0-9]/g, ''))}
+                    inputMode="numeric" placeholder="min" aria-label="Minimum amount"
+                    style={amountBox}
+                  />
+                  <span style={{ color: 'var(--color-text-tertiary)', fontSize: 12 }}>to</span>
+                  <input
+                    value={amtMax} onChange={e => setAmtMax(e.target.value.replace(/[^0-9]/g, ''))}
+                    inputMode="numeric" placeholder="max" aria-label="Maximum amount"
+                    style={amountBox}
+                  />
+                  <button
+                    disabled={busy}
+                    onClick={() => onSetAmount(
+                      amtMin === '' ? null : Number(amtMin),
+                      amtMax === '' ? null : Number(amtMax))}
+                    style={{ ...miniBtn, ...btnRow }}
+                  >Save</button>
+                  {/* Clearing is a real answer. A fund whose page states no
+                      per-applicant figure should hold none — a made-up ceiling
+                      is worse than a blank. */}
+                  {(item.values.amountMin !== null || item.values.amountMax !== null) && (
+                    <button
+                      disabled={busy}
+                      onClick={() => { setAmtMin(''); setAmtMax(''); onSetAmount(null, null) }}
+                      style={{ ...miniBtn, ...btnRow }}
+                    >No figure stated</button>
+                  )}
+                </span>
+              </Val>
+              <Val k="Deadline">
+                <span style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
+                  {/* Three boxes rather than a native date input: that renders
+                      in the browser's locale, so 05/08/2026 means two
+                      different days to two reviewers and neither is told
+                      which. The catalogue and the funder pages being copied
+                      from are both British, so the order is fixed. */}
+                  <input
+                    value={dlDay}
+                    onChange={e => { setDlDay(e.target.value.replace(/[^0-9]/g, '').slice(0, 2)); setDlError(null) }}
+                    inputMode="numeric" placeholder="dd" aria-label="Deadline day"
+                    style={dateBox}
+                  />
+                  <span style={{ color: 'var(--color-text-tertiary)', fontSize: 12 }}>/</span>
+                  <input
+                    value={dlMonth}
+                    onChange={e => { setDlMonth(e.target.value.replace(/[^0-9]/g, '').slice(0, 2)); setDlError(null) }}
+                    inputMode="numeric" placeholder="mm" aria-label="Deadline month"
+                    style={dateBox}
+                  />
+                  <span style={{ color: 'var(--color-text-tertiary)', fontSize: 12 }}>/</span>
+                  <input
+                    value={dlYear}
+                    onChange={e => { setDlYear(e.target.value.replace(/[^0-9]/g, '').slice(0, 4)); setDlError(null) }}
+                    inputMode="numeric" placeholder="yyyy" aria-label="Deadline year"
+                    style={{ ...dateBox, width: 58 }}
+                  />
+                  <button
+                    disabled={busy}
+                    onClick={() => {
+                      const r = parseDmy(dlDay, dlMonth, dlYear)
+                      if (!r.ok) { setDlError(r.error); return }
+                      setDlError(null)
+                      onSetDeadline(r.iso)
+                    }}
+                    style={{ ...miniBtn, ...btnRow }}
+                  >Save</button>
+                  {item.values.isRolling && (
+                    <span style={{ fontSize: 11.5, color: 'var(--color-text-tertiary)' }}>
+                      Saving a date also stops this reading as rolling.
+                    </span>
+                  )}
+                  {/* The refusal sits next to the boxes that caused it. A
+                      toast would be gone before the year could be retyped. */}
+                  {dlError && (
+                    <span style={{ fontSize: 11.5, color: 'var(--amber-deep)' }}>{dlError}</span>
+                  )}
+                </span>
+              </Val>
+              <Val k="Who can apply">
+                <span style={{ display: 'block' }}>
+                  {/* Toggles, not a comma list. Eligibility is the field that
+                      decides who sees a fund, and it was the only one on this
+                      screen a reviewer could neither read in full nor change. */}
+                  <span style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 6 }}>
+                    {EDITABLE_STRUCTURES.map(o => {
+                      const on = item.values.structures.includes(o.code)
+                      return (
+                        <button
+                          key={o.code}
+                          disabled={busy}
+                          title={o.hint}
+                          onClick={() => onSetStructures(
+                            on ? item.values.structures.filter(c => c !== o.code)
+                               : [...item.values.structures, o.code])}
+                          style={{
+                            ...display, fontSize: 11.5, fontWeight: 500, cursor: 'pointer',
+                            borderRadius: 999, padding: '4px 10px',
+                            border: `0.5px solid ${on ? 'transparent' : 'var(--border-subtle)'}`,
+                            background: on ? 'var(--green-deep)' : 'transparent',
+                            color: on ? 'var(--green-pale-2)' : 'var(--color-text-secondary)',
+                          }}
+                        >
+                          {on ? '✓ ' : ''}{o.label}
+                        </button>
+                      )
+                    })}
+                  </span>
+                  {/* Values no longer offered. Shown so they can be replaced
+                      rather than left to drift unnoticed. */}
+                  {item.values.structures.filter(isLegacyStructure).map(c => (
+                    <span key={c} style={{ fontSize: 11.5, color: 'var(--amber-deep)' }}>
+                      Also holds “{structureLabel(c)}”, which is a legacy value — replace it with one above.{' '}
+                      <button disabled={busy}
+                              onClick={() => onSetStructures(item.values.structures.filter(x => x !== c))}
+                              style={{ ...miniBtn, padding: '2px 8px' }}>Remove</button>
+                    </span>
+                  ))}
+                  {item.values.structures.length === 0 && (
+                    <span style={{ fontSize: 11.5, color: 'var(--amber-deep)' }}>
+                      Nothing selected, so this fund currently matches nobody.
+                    </span>
+                  )}
+                </span>
+              </Val>
+              <Val k="All sectors">{item.values.sectors.map(prettyTag).join(', ') || 'none'}</Val>
+              <Val k="Beneficiaries">{item.values.beneficiaries.map(prettyTag).join(', ') || 'none'}</Val>
+              {item.sources.length > 0 && (
+                <Val k="Extra source pages">
+                  <span style={{ display: 'grid', gap: 2 }}>
+                    {item.sources.map((src, i) => (
+                      <span key={`${src.url}-${i}`}>
+                        {src.url
+                          ? <a href={src.url} target="_blank" rel="noopener noreferrer"
+                               style={{ color: 'var(--color-text-primary)' }}>{src.url}</a>
+                          : `pasted text, ${src.text.trim().length} characters`}
+                      </span>
+                    ))}
+                  </span>
+                </Val>
+              )}
+              <Val k="Funding type">
+                <span style={{ display: 'inline-flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <strong style={{ ...display, fontSize: 12 }}>
+                    {FUNDING_TYPES.find(t => t.value === item.values.fundingType)?.label
+                      ?? item.values.fundingType ?? 'none'}
+                  </strong>
+                  {FUNDING_TYPES.filter(t => t.value !== item.values.fundingType).map(t => (
+                    <button
+                      key={t.value}
+                      onClick={() => onSetFundingType(t.value)}
+                      disabled={busy}
+                      style={miniBtn}
+                      title={`Record this as ${t.label} and pin it`}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </span>
+              </Val>
+            </div>
+          </div>
+        ) : (
         <div style={{
           display: 'flex', flexWrap: 'wrap', gap: '4px 22px', marginTop: 10,
           fontSize: 12.5, color: 'var(--color-text-secondary)',
@@ -1834,6 +2035,7 @@ function Row({
               ? item.values.structures.map(structureLabel).join(', ')
               : <em style={{ color: 'var(--amber-deep)' }}>nobody — no structures recorded</em>}</span>
         </div>
+        )}
 
         {(otherReasons.length > 0 || collapsedCount > 0) && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10, alignItems: 'baseline' }}>
@@ -2121,6 +2323,21 @@ function Row({
                         {k.replace(/_/g, ' ')}
                       </div>
                       <q>{c.snippet}</q>
+                      {/* A quote parading fund totals under a per-applicant
+                          heading, directly beneath the real figure, with a
+                          confidence badge under it. Asda read "£1,255,314 Local
+                          Community Spaces Fund" on a £500 to £20,000 row. The
+                          badge scores how well the quote was FOUND, never
+                          whether it answers the question the heading asks. */}
+                      {k === 'typical_award' && (() => {
+                        const m = quoteOverstatesAward(c.snippet, item.values.amountMax)
+                        return m ? (
+                          <div style={{ marginTop: 7, fontSize: 11.5, color: 'var(--amber-deep)' }}>
+                            Reads as pot sizes, not awards: {gbp(m.quoted)} here against {gbp(m.stored)} recorded,
+                            {' '}{m.times} times larger, and stated without a per applicant qualifier.
+                          </div>
+                        ) : null
+                      })()}
                       <div style={{ marginTop: 7, fontSize: 11 }}>
                         <span style={{
                           ...display, fontSize: 10, fontWeight: 700, letterSpacing: '0.07em',
@@ -2134,180 +2351,6 @@ function Row({
                 })}
               </div>
             )}
-
-            <div>
-              {/* Amount, deadline, eligibility and sectors moved OUT to the card
-                  — they are what a user sees, so they belong where they can be
-                  read without a click. What stays here is the part a user never
-                  sees and which decides whether the row can be trusted: the
-                  page evidence, the brief and its citations, and the one control
-                  that changes which tab the row lands in. */}
-              <SectionLabel>Recorded, with the controls</SectionLabel>
-              <div style={{ fontSize: 12.5, display: 'grid', gap: 4 }}>
-                <Val k="Amount one applicant can ask for">
-                  <span style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
-                    <input
-                      value={amtMin} onChange={e => setAmtMin(e.target.value.replace(/[^0-9]/g, ''))}
-                      inputMode="numeric" placeholder="min" aria-label="Minimum amount"
-                      style={amountBox}
-                    />
-                    <span style={{ color: 'var(--color-text-tertiary)', fontSize: 12 }}>to</span>
-                    <input
-                      value={amtMax} onChange={e => setAmtMax(e.target.value.replace(/[^0-9]/g, ''))}
-                      inputMode="numeric" placeholder="max" aria-label="Maximum amount"
-                      style={amountBox}
-                    />
-                    <button
-                      disabled={busy}
-                      onClick={() => onSetAmount(
-                        amtMin === '' ? null : Number(amtMin),
-                        amtMax === '' ? null : Number(amtMax))}
-                      style={{ ...miniBtn, ...btnRow }}
-                    >Save</button>
-                    {/* Clearing is a real answer. A fund whose page states no
-                        per-applicant figure should hold none — a made-up ceiling
-                        is worse than a blank. */}
-                    {(item.values.amountMin !== null || item.values.amountMax !== null) && (
-                      <button
-                        disabled={busy}
-                        onClick={() => { setAmtMin(''); setAmtMax(''); onSetAmount(null, null) }}
-                        style={{ ...miniBtn, ...btnRow }}
-                      >No figure stated</button>
-                    )}
-                  </span>
-                </Val>
-                <Val k="Deadline">
-                  <span style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
-                    {/* Three boxes rather than a native date input: that renders
-                        in the browser's locale, so 05/08/2026 means two
-                        different days to two reviewers and neither is told
-                        which. The catalogue and the funder pages being copied
-                        from are both British, so the order is fixed. */}
-                    <input
-                      value={dlDay}
-                      onChange={e => { setDlDay(e.target.value.replace(/[^0-9]/g, '').slice(0, 2)); setDlError(null) }}
-                      inputMode="numeric" placeholder="dd" aria-label="Deadline day"
-                      style={dateBox}
-                    />
-                    <span style={{ color: 'var(--color-text-tertiary)', fontSize: 12 }}>/</span>
-                    <input
-                      value={dlMonth}
-                      onChange={e => { setDlMonth(e.target.value.replace(/[^0-9]/g, '').slice(0, 2)); setDlError(null) }}
-                      inputMode="numeric" placeholder="mm" aria-label="Deadline month"
-                      style={dateBox}
-                    />
-                    <span style={{ color: 'var(--color-text-tertiary)', fontSize: 12 }}>/</span>
-                    <input
-                      value={dlYear}
-                      onChange={e => { setDlYear(e.target.value.replace(/[^0-9]/g, '').slice(0, 4)); setDlError(null) }}
-                      inputMode="numeric" placeholder="yyyy" aria-label="Deadline year"
-                      style={{ ...dateBox, width: 58 }}
-                    />
-                    <button
-                      disabled={busy}
-                      onClick={() => {
-                        const r = parseDmy(dlDay, dlMonth, dlYear)
-                        if (!r.ok) { setDlError(r.error); return }
-                        setDlError(null)
-                        onSetDeadline(r.iso)
-                      }}
-                      style={{ ...miniBtn, ...btnRow }}
-                    >Save</button>
-                    {item.values.isRolling && (
-                      <span style={{ fontSize: 11.5, color: 'var(--color-text-tertiary)' }}>
-                        Saving a date also stops this reading as rolling.
-                      </span>
-                    )}
-                    {/* The refusal sits next to the boxes that caused it. A
-                        toast would be gone before the year could be retyped. */}
-                    {dlError && (
-                      <span style={{ fontSize: 11.5, color: 'var(--amber-deep)' }}>{dlError}</span>
-                    )}
-                  </span>
-                </Val>
-                <Val k="Who can apply">
-                  <span style={{ display: 'block' }}>
-                    {/* Toggles, not a comma list. Eligibility is the field that
-                        decides who sees a fund, and it was the only one on this
-                        screen a reviewer could neither read in full nor change. */}
-                    <span style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 6 }}>
-                      {EDITABLE_STRUCTURES.map(o => {
-                        const on = item.values.structures.includes(o.code)
-                        return (
-                          <button
-                            key={o.code}
-                            disabled={busy}
-                            title={o.hint}
-                            onClick={() => onSetStructures(
-                              on ? item.values.structures.filter(c => c !== o.code)
-                                 : [...item.values.structures, o.code])}
-                            style={{
-                              ...display, fontSize: 11.5, fontWeight: 500, cursor: 'pointer',
-                              borderRadius: 999, padding: '4px 10px',
-                              border: `0.5px solid ${on ? 'transparent' : 'var(--border-subtle)'}`,
-                              background: on ? 'var(--green-deep)' : 'transparent',
-                              color: on ? 'var(--green-pale-2)' : 'var(--color-text-secondary)',
-                            }}
-                          >
-                            {on ? '✓ ' : ''}{o.label}
-                          </button>
-                        )
-                      })}
-                    </span>
-                    {/* Values no longer offered. Shown so they can be replaced
-                        rather than left to drift unnoticed. */}
-                    {item.values.structures.filter(isLegacyStructure).map(c => (
-                      <span key={c} style={{ fontSize: 11.5, color: 'var(--amber-deep)' }}>
-                        Also holds “{structureLabel(c)}”, which is a legacy value — replace it with one above.{' '}
-                        <button disabled={busy}
-                                onClick={() => onSetStructures(item.values.structures.filter(x => x !== c))}
-                                style={{ ...miniBtn, padding: '2px 8px' }}>Remove</button>
-                      </span>
-                    ))}
-                    {item.values.structures.length === 0 && (
-                      <span style={{ fontSize: 11.5, color: 'var(--amber-deep)' }}>
-                        Nothing selected, so this fund currently matches nobody.
-                      </span>
-                    )}
-                  </span>
-                </Val>
-                <Val k="All sectors">{item.values.sectors.map(prettyTag).join(', ') || 'none'}</Val>
-                <Val k="Beneficiaries">{item.values.beneficiaries.map(prettyTag).join(', ') || 'none'}</Val>
-                {item.sources.length > 0 && (
-                  <Val k="Extra source pages">
-                    <span style={{ display: 'grid', gap: 2 }}>
-                      {item.sources.map((src, i) => (
-                        <span key={`${src.url}-${i}`}>
-                          {src.url
-                            ? <a href={src.url} target="_blank" rel="noopener noreferrer"
-                                 style={{ color: 'var(--color-text-primary)' }}>{src.url}</a>
-                            : `pasted text, ${src.text.trim().length} characters`}
-                        </span>
-                      ))}
-                    </span>
-                  </Val>
-                )}
-                <Val k="Funding type">
-                  <span style={{ display: 'inline-flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-                    <strong style={{ ...display, fontSize: 12 }}>
-                      {FUNDING_TYPES.find(t => t.value === item.values.fundingType)?.label
-                        ?? item.values.fundingType ?? 'none'}
-                    </strong>
-                    {FUNDING_TYPES.filter(t => t.value !== item.values.fundingType).map(t => (
-                      <button
-                        key={t.value}
-                        onClick={() => onSetFundingType(t.value)}
-                        disabled={busy}
-                        style={miniBtn}
-                        title={`Record this as ${t.label} and pin it`}
-                      >
-                        {t.label}
-                      </button>
-                    ))}
-                  </span>
-                </Val>
-              </div>
-            </div>
 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
               <button onClick={onReClassify} disabled={busy} style={secondaryBtn}>
