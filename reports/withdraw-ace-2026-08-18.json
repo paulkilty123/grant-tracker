@@ -1,0 +1,19 @@
+{
+  "written_at_utc": "2026-08-18T19:04:24.594Z",
+  "approved_by": "Paul, 2026-08-18",
+  "reason": "stale_news_capture_2023_round",
+  "evidence": "artsprofessional.co.uk article dated Tue 6 June 2023; EOI stage closed 3 July 2023, full bids 25 July to 3 October 2023, decisions April 2024.",
+  "before": [
+    {
+      "id": "d8df8fd2-980e-4bb0-80ac-6718ff64916e",
+      "title": "Capital Investment Programme",
+      "funder": "Arts Council England",
+      "apply_url": "https://www.artsprofessional.co.uk/news/ace-reopens-capital-investment-programme",
+      "is_active": false,
+      "pipeline_state": "tagged",
+      "rejection_reason": null,
+      "deadline": null,
+      "source": "discovery_queue"
+    }
+  ]
+}
