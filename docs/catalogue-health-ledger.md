@@ -215,11 +215,41 @@ coincidence. And the new link is what the gate wants anyway: the homepage
 carries both Morrisons programmes, which is why the engine kept returning
 `multiple_funds` on this row.
 
-> Left contradicting itself, and Paul's call: the brief's typical-award line
-> still reads "Recent grants have ranged from £5,500 to £25,000", which sits
-> under a £20,000 ceiling on the same card. The oddly specific examples in it
-> (£8,372, £15,545) suggest a real grants-awarded list rather than directory
-> noise, so it is not obviously false, just inconsistent with the stated maximum.
+**Dropping the typical-award line found the real defect.** Paul asked for the
+"£5,500 to £25,000" line to go, since it sat under a £20,000 ceiling. Opening the
+brief to remove it showed the brief was a snapshot of **15 January 2026** that
+told users, in three separate fields, that the fund was shut:
+
+- `open_status: between_rounds`
+- `how_to_apply`: "Applications are currently closed. The funder is undergoing a
+  digital upgrade and will reopen with a new website and application process."
+- `decision_timeline`: "currently temporarily closed for applications pending a
+  digital upgrade"
+
+The digital upgrade has since happened. The site is a rebuilt app with a live
+Start Your Application button, so every one of those statements is now false,
+and this is where the phantom "between rounds" on the row came from in the first
+place. A fundraiser reading the card was told three times not to bother.
+
+So the brief was refreshed against the funder's current page rather than just
+having the one line deleted: status open, a real how-to-apply, and the
+exclusions completed from "non-registered charities" to the funder's actual
+list, which bars CICs, exempt or excepted charities, religious or political
+messaging, animal welfare, late or qualified accounts, and **any charity funded
+by them in the last two years**. That last one decides whether an application is
+possible at all and was missing entirely, which is what house rule 6 exists to
+prevent.
+
+> Written at `user_verified` trust (70), not `admin` (100), on purpose. Admin
+> auto-pins, and pinning would freeze the whole brief against all future
+> enrichment. This brief went stale in seven months and telling the catalogue it
+> must never improve again is the opposite of what it needs. 70 still outranks
+> `ai_enrich` (60), so a routine re-enrich cannot silently revert it.
+
+**The general lesson:** a stale brief is not evenly stale. The line Paul spotted
+was cosmetic; the fields nobody was looking at were telling people a live fund
+was closed. Freshness on `funder_brief` should be judged by its `last_enriched`
+date, not by whether anything on the card looks wrong.
 
 **Migration 063 stops the pair separating again**, and publishes rather than
 hides, because that is what `transitionPipelineState` already says out loud:
