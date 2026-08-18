@@ -82,6 +82,8 @@ export type QueueItem = {
   /** Extra source pages already recorded for this row. */
   sources: { label: string; url: string; text: string }[]
   diffs: FieldDiff[]
+  /** The figure an amount flag is arguing for, when it carries one. */
+  amountSuggestion: { amount_min: number | null; amount_max: number | null } | null
   brief: {
     source: string | null
     whoCanApply: string | null
@@ -1311,6 +1313,10 @@ function Chip({ active, onClick, label, n }: { active: boolean; onClick: () => v
 
 // Plain English for the field names. The reviewer is deciding about eligibility,
 // not about a column called eligible_structures.
+/** Reasons whose argument is about the stored amount, and so can be answered by
+ *  writing a figure. */
+const AMOUNT_REASON_CODES: ReadonlySet<string> = new Set(['amount_pot_suspected', 'amount_under_stated'])
+
 const FIELD_LABEL: Record<string, string> = {
   eligible_structures:  'Eligibility',
   impact_sectors:       'Sectors',
@@ -1781,6 +1787,12 @@ function Row({
             )}
             {otherReasons.map(r => {
               const s = SEV_STYLE[r.severity] ?? SEV_STYLE.changed
+              // THE ANSWER SITS WITH THE QUESTION.
+              // The amount reasons state a figure and used to leave the reviewer
+              // to find the amount boxes and retype it. The button goes inside
+              // the chip that raised it, not in the action row, because it
+              // answers that one chip and nothing else.
+              const suggestion = AMOUNT_REASON_CODES.has(r.code) ? item.amountSuggestion : null
               return (
                 <span key={r.code} style={{
                   fontSize: 11.5, borderRadius: 'var(--radius-badge, 8px)', padding: '3px 9px',
@@ -1788,6 +1800,20 @@ function Row({
                 }}>
                   <b style={{ ...display, fontWeight: 700, fontSize: 10.5 }}>{r.label}</b>
                   <span style={{ opacity: 0.9 }}>{r.detail}</span>
+                  {suggestion && (
+                    <button
+                      onClick={() => onSetAmount(suggestion.amount_min, suggestion.amount_max)}
+                      disabled={busy}
+                      title="Write this figure to the row. The warning clears itself once the amount changes."
+                      style={{
+                        ...display, fontSize: 10.5, fontWeight: 700, cursor: busy ? 'default' : 'pointer',
+                        border: `0.5px solid ${s.ink}`, background: 'transparent', color: s.ink,
+                        borderRadius: 999, padding: '2px 9px', marginLeft: 2, whiteSpace: 'nowrap',
+                      }}
+                    >
+                      Use {gbp(suggestion.amount_max ?? suggestion.amount_min)}
+                    </button>
+                  )}
                 </span>
               )
             })}

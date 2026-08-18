@@ -30,6 +30,37 @@
 export type DetectedAmounts = {
   amount_min: number | null
   amount_max: number | null
+  /**
+   * Did the winning `amount_max` carry an explicit per-grant qualifier — "up to
+   * £X", "grants of £X", "maximum £X", a per-grant-framed range, a multi-year
+   * total?
+   *
+   * ───────────────────────────────────────────────────────────────────────────
+   * WHY A BARE FIGURE IS NOT EVIDENCE ABOUT ONE APPLICANT
+   *
+   * `amount_max` is the largest figure that survives the pool cues, cued or not.
+   * The cue list is a deny-list of pool phrasings and it will always be
+   * incomplete, so any pot whose wording is not on it wins the max by being the
+   * biggest number in the text.
+   *
+   * That is tolerable when filling an empty field and NOT tolerable when
+   * contradicting a stored one. Measured on the live catalogue 2026-08-18: of 16
+   * live rows flagged `amount_under_stated`, the "per-applicant ceiling" the
+   * flag was arguing for was a fund total on nearly all of them — Access
+   * £5,000,000, Co-op Belong £7,000,000, NHS Charities Together £1,400,000, City
+   * Bridge £22,000,000, MRC Equip £14,000,000, Asda £1,255,314. The stored
+   * values were right and the flag was wrong.
+   *
+   * So callers that want to DISPUTE an existing amount must require this. A
+   * figure with a per-grant cue is a statement about what one applicant may ask
+   * for. A bare figure in prose is a number in a sentence.
+   *
+   * The house rule this encodes: state the check as a sentence about the user.
+   * "The derived figure differs by 2x" is a sentence about two numbers, and a
+   * fund's total pot passes it while saying nothing about what anyone can apply
+   * for.
+   */
+  max_cued: boolean
 }
 
 /** A candidate figure plus what its surrounding text implied about it. */
@@ -50,7 +81,7 @@ const AMOUNT_RE = /[£$][\d,]+(?:\.?\d+)?(?:\s*[km](?:illion)?)?/gi
 // named fund. That last one is the Stronger Futures case: "£4m Stronger Futures
 // Programme 3.0" was becoming amount_max even though typical_award correctly
 // said £80k–£200k per grant.
-const POOL_CUES_LEFT = /\b(?:awarded?\s+(?:a\s+)?total|totalling|totalled|total\s+(?:of|awarded|distributed|grants?|funding|funds|fund)\b|total\s*$|in\s+(?:the\s+)?(?:past|previous|last)\s+(?:year|years|few\s+years)|annual(?:ly\s+(?:awards?|distribut(?:es?|ed|ing)|gives?|gave|given|spen(?:ds?|t|ding))|\s+(?:budget|fund|spending|expenditure))|per\s+(?:year|annum)|each\s+year|distribut(?:es?|ed|ing)|donat(?:es?|ed|ing)|spen(?:ds?|t|ding)|gives?\s+(?:away|out)|gave\s+(?:away|out)|given\s+(?:away|out)|endowment|combined\s+(?:total|funding|budget)|invest(?:ing|ed|ment)?\s+(?:of\s+)?(?:a\s+)?(?:total|minimum|at\s+least)\b|a\s+share\s+of\b|(?:launch(?:ing|ed)?|announc(?:ing|ed))\s+(?:our\s+|the\s+|a\s+|new\s+|with\s+)|annual\s+(?:income|turnover|expenditure|spending|spend|revenue|budget)\s*(?:[<>≤≥]|of\b)|(?:income|turnover|expenditure|spending|spend|revenue|reserves|budget)\s*(?:[<>≤≥]|\b(?:of|cap|limit|under|below|over|above|up\s+to|less\s+than|more\s+than|exceeding)\b))/i
+const POOL_CUES_LEFT = /\b(?:awarded?\s+(?:a\s+)?total|totalling|totalled|total\s+(?:of|awarded|distributed|grants?|funding|funds|fund)\b|total\s*$|in\s+(?:the\s+)?(?:past|previous|last)\s+(?:year|years|few\s+years)|annual(?:ly\s+(?:awards?|distribut(?:es?|ed|ing)|gives?|gave|given|spen(?:ds?|t|ding))|\s+(?:budget|fund|spending|expenditure))|per\s+(?:year|annum)|each\s+year|distribut(?:es?|ed|ing)|donat(?:es?|ed|ing)|spen(?:ds?|t|ding)|gives?\s+(?:away|out)|gave\s+(?:away|out)|given\s+(?:away|out)|endowment|combined\s+(?:total|funding|budget)|invest(?:ing|ed|ment)?\s+(?:of\s+)?(?:a\s+)?(?:total|minimum|at\s+least)\b|a\s+share\s+of\b|(?:launch(?:ing|ed)?|announc(?:ing|ed))\s+(?:our\s+|the\s+|a\s+|new\s+|with\s+)|annual\s+(?:income|turnover|expenditure|spending|spend|revenue|budget)\s*(?:[<>≤≥]|of\b)|(?:income|turnover|expenditure|spending|spend|revenue|reserves|budget)\s*(?:[<>≤≥]|\b(?:of|cap|limit|under|below|over|above|up\s+to|less\s+than|more\s+than|exceeding|must\s+be|should\s+be|needs?\s+to\s+be|is|are|between)\b))/i
 // Three additions on 2026-07-25, each from a real catalogue row found when this
 // logic was first run over live data (see the git history of this file):
 //
@@ -82,6 +113,27 @@ const POOL_CUES_RIGHT = /^[\s,()]*(?:distribut(?:es|ed|ing)\b|donat(?:es|ed|ing)
 // `fund` is deliberately excluded from the new alternative (it stays only in the
 // older one, which requires an intermediate word) so a bare "£10,000 fund" —
 // where 'fund' is just the funder noun — still survives as a per-grant figure.
+
+/**
+ * Pool cues that beat a per-grant LEFT cue.
+ *
+ * PER_GRANT_LEFT_CUES normally wins over POOL_CUES_RIGHT, so that "up to £5,000
+ * per year" stays a per-grant rate. But some right-context says the money is
+ * fund-level no matter what precedes it, and "up to" then carries the pot
+ * through: Beinneun Community Fund's "the fund has up to £500,000 available
+ * annually" became a £500,000 per-applicant ceiling, and Jerwood's "ambition to
+ * award up to £2m annually in one open round" became £2,000,000.
+ *
+ * The distinction is what the figure is predicated of. Money that is AVAILABLE,
+ * or awarded ACROSS a round or a year, belongs to the fund. Money one applicant
+ * may ask for belongs to the grant. "Available annually" is the fund speaking
+ * about itself.
+ *
+ * Deliberately narrow. A bare "annually" stays in POOL_CUES_RIGHT where a
+ * per-grant cue can still override it, because "up to £5,000 annually" really is
+ * a per-grant rate.
+ */
+const STRONG_POOL_RIGHT = /^[\s,()]*(?:available\s+(?:annually|each\s+year|per\s+(?:year|annum)|in\s+total|across\b)|annually\s+(?:in|across|through|over)\b|(?:to\s+be\s+)?(?:shared|split|divided|distributed)\s+(?:across|between|among)|in\s+(?:grants?|funding|awards?)\s+(?:each\s+year|annually|in\s+total)\b)/i
 
 // Per-grant qualifiers in LEFT context override the pool-cues-RIGHT check.
 // Without this, "Up to £10,000 per year" is dropped because 'per year' looks
@@ -116,6 +168,18 @@ const MULTI_YEAR_RE = /(£[\d,]+(?:\.?\d+)?(?:\s*[km](?:illion)?)?)\s*(?:\/|\s+p
 /** Hard sanity ceiling — nothing above this is a credible single grant figure. */
 const MAX_CREDIBLE = 50_000_000
 
+/**
+ * Hard sanity FLOOR. Below this a figure is being used as an illustration, not
+ * quoted as a grant size.
+ *
+ * Crowdfunder's Match Funding row is the case: "if the funder offers 1:1
+ * matching, every £1 raised from the public is doubled". £1 became the derived
+ * per-applicant maximum, which then made the stored £25,000 look 25,000x too
+ * large and raised `amount_pot_suspected` — a blocking flag, on a correct row,
+ * because of a rhetorical pound sign.
+ */
+const MIN_CREDIBLE = 100
+
 function parseAmt(s: string): number | null {
   const clean = s.replace(/[£$,]/g, '').trim()
   const m = clean.match(/([\d.]+)\s*([km])?/)
@@ -123,7 +187,7 @@ function parseAmt(s: string): number | null {
   let val = parseFloat(m[1])
   if (m[2] === 'k') val *= 1_000
   if (m[2] === 'm') val *= 1_000_000
-  if (isNaN(val) || val > MAX_CREDIBLE) return null
+  if (isNaN(val) || val > MAX_CREDIBLE || val < MIN_CREDIBLE) return null
   return Math.round(val)
 }
 
@@ -160,7 +224,7 @@ export function buildAwardText(parts: Array<string | null | undefined>): string 
  */
 export function extractGrantAmounts(awardText: string): DetectedAmounts {
   if (!awardText || awardText.length < 3) {
-    return { amount_min: null, amount_max: null }
+    return { amount_min: null, amount_max: null, max_cued: false }
   }
 
   // ── Pool-range detection ───────────────────────────────────────────────────
@@ -181,7 +245,7 @@ export function extractGrantAmounts(awardText: string): DetectedAmounts {
     const perGrantFramed = PER_GRANT_RANGE_FRAME_STRICT.test(
       awardText.slice(Math.max(0, xIdx - 40), xIdx)
     )
-    if (!perGrantFramed && (POOL_CUES_RIGHT.test(afterY) || POOL_CUES_LEFT.test(beforeX))) {
+    if (STRONG_POOL_RIGHT.test(afterY) || (!perGrantFramed && (POOL_CUES_RIGHT.test(afterY) || POOL_CUES_LEFT.test(beforeX)))) {
       dropFromRange.add(xIdx)
       dropFromRange.add(yIdx)
     }
@@ -200,6 +264,7 @@ export function extractGrantAmounts(awardText: string): DetectedAmounts {
 
     // Pool total → anchor a breakdown chain and skip the figure itself.
     if (POOL_CUES_LEFT.test(leftCtx)) { chainEnd = idx + m[0].length; continue }
+    if (STRONG_POOL_RIGHT.test(rightCtx)) continue
     if (!perGrantLeft && POOL_CUES_RIGHT.test(rightCtx)) continue
     if (
       !perGrantLeft &&
@@ -243,7 +308,7 @@ export function extractGrantAmounts(awardText: string): DetectedAmounts {
     }
   }
 
-  if (detected.length === 0) return { amount_min: null, amount_max: null }
+  if (detected.length === 0) return { amount_min: null, amount_max: null, max_cued: false }
 
   // Dedupe by value, OR-ing the flags.
   const byVal = new Map<number, Candidate>()
@@ -263,5 +328,9 @@ export function extractGrantAmounts(awardText: string): DetectedAmounts {
   // matches and could write min > max.
   const amount_min = minCandidate !== null && minCandidate < maxVal ? minCandidate : null
 
-  return { amount_min, amount_max: maxVal }
+  // Dedupe has already OR-ed the flags, so this is "was this figure EVER cued as
+  // per-grant anywhere in the text", not "at its last occurrence".
+  const max_cued = deduped.find(d => d.value === maxVal)?.cued === true
+
+  return { amount_min, amount_max: maxVal, max_cued }
 }

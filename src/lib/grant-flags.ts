@@ -49,6 +49,21 @@ export type GrantFlag = {
   source: string
   /** ISO timestamp. */
   at:     string
+  /**
+   * The figure this flag is arguing for, as a number.
+   *
+   * The amount flags used to carry the derived figure ONLY inside `detail`, as
+   * prose: "...the per-applicant figure derived from the text (£2,000)". So the
+   * review card could tell a reviewer the right answer and offer no way to apply
+   * it — Groundwork's Grassroots Grants was stored at £500–£10,000 where the
+   * page says "up to £2,000", the card printed the £2,000, and correcting it
+   * still meant reading the sentence and retyping the number.
+   *
+   * Stored structurally so a one-press "Use this figure" can exist without
+   * parsing our own sentences back into numbers. Optional: flags written by an
+   * older deploy will not have it, and a reader must cope.
+   */
+  suggested?: { amount_min?: number | null; amount_max?: number | null }
 }
 
 /**
@@ -68,7 +83,7 @@ export async function recordGrantFlags(opts: {
   /** The row's current raw_data. Pass it so existing keys are preserved. */
   existingRawData: unknown
   source:          string
-  flags:           Array<{ code: GrantFlagCode; detail: string }>
+  flags:           Array<{ code: GrantFlagCode; detail: string; suggested?: GrantFlag['suggested'] }>
 }): Promise<void> {
   const { db, grantId, existingRawData, source, flags } = opts
 
@@ -82,7 +97,7 @@ export async function recordGrantFlags(opts: {
   const at = new Date().toISOString()
   const next: GrantFlag[] = [
     ...kept,
-    ...flags.map(f => ({ code: f.code, detail: f.detail, source, at })),
+    ...flags.map(f => ({ code: f.code, detail: f.detail, source, at, ...(f.suggested ? { suggested: f.suggested } : {}) })),
   ]
 
   // Nothing to do: this source had no flags before and has none now.
@@ -101,4 +116,53 @@ export function readGrantFlags(rawData: unknown): GrantFlag[] {
   if (!rawData || typeof rawData !== 'object' || Array.isArray(rawData)) return []
   const checks = (rawData as Record<string, unknown>).checks
   return Array.isArray(checks) ? (checks as GrantFlag[]).filter(f => f && typeof f === 'object') : []
+}
+
+/** Codes whose argument is about the stored amount. */
+const AMOUNT_CODES: ReadonlySet<string> = new Set(['amount_pot_suspected', 'amount_under_stated'])
+
+/**
+ * The figure an amount flag is arguing for, if it carries one.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * SO THE REVIEWER DOES NOT RETYPE WHAT THE MACHINE ALREADY WORKED OUT
+ *
+ * The amount policy is gap-fill only: a re-read writes a derived figure into an
+ * empty field and never overwrites one that is already there. That is the right
+ * policy — dry-run on 2026-07-25 the extractor disagreed with 18 of 60 live rows
+ * and was itself wrong on several, so a human has to decide.
+ *
+ * But the decision was made needlessly expensive. The derived figure existed
+ * only inside the flag's prose, so Groundwork's Grassroots Grants printed "the
+ * per-applicant figure derived from the text (£2,000)" on the card while its
+ * stored value stayed £500-£10,000, and accepting the £2,000 meant reading the
+ * sentence and typing the number in by hand.
+ *
+ * Returns null for flags written before `suggested` existed, and for a figure
+ * that matches what is already stored — there is nothing to press in either case.
+ */
+export function amountSuggestionFrom(
+  rawData: unknown,
+  stored: { amount_min: number | null; amount_max: number | null },
+): { amount_min: number | null; amount_max: number | null } | null {
+  const checks = (rawData && typeof rawData === 'object' && !Array.isArray(rawData))
+    ? (rawData as Record<string, unknown>).checks
+    : null
+  if (!Array.isArray(checks)) return null
+
+  for (const raw of checks) {
+    if (!raw || typeof raw !== 'object') continue
+    const c = raw as Record<string, unknown>
+    if (!AMOUNT_CODES.has(String(c.code))) continue
+    const sug = c.suggested
+    if (!sug || typeof sug !== 'object') continue
+    const s = sug as Record<string, unknown>
+    const max = typeof s.amount_max === 'number' ? s.amount_max : null
+    const min = typeof s.amount_min === 'number' ? s.amount_min : null
+    if (max === null && min === null) continue
+    // Already what the row holds. Offering it would be a button that does nothing.
+    if (max === stored.amount_max && min === stored.amount_min) continue
+    return { amount_min: min, amount_max: max }
+  }
+  return null
 }

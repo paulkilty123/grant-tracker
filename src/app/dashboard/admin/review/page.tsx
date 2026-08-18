@@ -18,6 +18,7 @@ import {
   type ReviewRow,
 } from '@/lib/admin/review-reasons'
 import { gateDecision } from '@/lib/admin/publish-gate'
+import { amountSuggestionFrom } from '@/lib/grant-flags'
 import { ReviewQueue, type QueueItem } from './ReviewQueue'
 import { getAdminDb } from '@/lib/admin/admin-db'
 
@@ -228,6 +229,13 @@ export default async function ReviewPage() {
         .filter(x => x.url || x.text),
       source:        (r as { source?: string | null }).source ?? null,
       diffs:         extractTagsDiff(r.field_provenance, r as unknown as Record<string, unknown>),
+      // The figure the amount flag is arguing for, so the card can offer it in
+      // one press instead of printing it inside a sentence and asking the
+      // reviewer to retype it.
+      amountSuggestion: amountSuggestionFrom(r.raw_data, {
+        amount_min: r.amount_min ?? null,
+        amount_max: r.amount_max ?? null,
+      }),
       brief:         summariseBrief(r.funder_brief),
       evidence:      summariseEvidence(r.field_evidence),
       // Drives the "Needs enrichment" view — a stub brief, or none at all.

@@ -835,18 +835,33 @@ NOTE: _deadline_cycle and its _citations entry are ONLY present when a recurring
     // Material = a factor of 2 or more apart. Mirrors the ratio-threshold
     // approach cf-fund-verify already uses for amount sanity.
     const CONFLICT_RATIO = 2
-    const flags: Array<{ code: GrantFlagCode; detail: string }> = []
+    const flags: Array<{ code: GrantFlagCode; detail: string; suggested?: { amount_min?: number | null; amount_max?: number | null } }> = []
     if (amounts.amount_max !== null && existingMax !== null && existingMax > 0) {
       const potRatio = existingMax / amounts.amount_max
       if (potRatio >= CONFLICT_RATIO) {
         flags.push({
           code:   'amount_pot_suspected',
           detail: `stored amount_max £${existingMax.toLocaleString('en-GB')} is ${potRatio.toFixed(1)}x the per-applicant figure derived from the text (£${amounts.amount_max.toLocaleString('en-GB')}) — the stored value may be the whole fund's pot rather than one applicant's cap`,
+          suggested: { amount_max: amounts.amount_max, amount_min: amounts.amount_min },
         })
-      } else if (amounts.amount_max / existingMax >= CONFLICT_RATIO) {
+      // ── Only a CUED figure may dispute a stored amount ────────────────────
+      // `amount_max` is the largest figure surviving the pool cues, cued or not,
+      // and that cue list is a deny-list which will always be incomplete. So the
+      // biggest uncued number in the text wins by default — which is how this
+      // branch came to argue that Access's ceiling was £5,000,000, Co-op
+      // Belong's £7,000,000 and City Bridge's £22,000,000. Every one of those is
+      // the size of the fund, and every stored value it contradicted was right.
+      //
+      // The asymmetry is deliberate. `amount_pot_suspected` above needs no cue:
+      // it fires when the stored figure is LARGER than the derived one, and a
+      // pot read as the derivation makes that ratio smaller, never larger — so a
+      // pot cannot manufacture one. Understating is the only direction a stray
+      // pot can fake, and requiring a per-grant cue is what closes it.
+      } else if (amounts.max_cued && amounts.amount_max / existingMax >= CONFLICT_RATIO) {
         flags.push({
           code:   'amount_under_stated',
           detail: `text suggests a per-applicant ceiling of £${amounts.amount_max.toLocaleString('en-GB')}, ${(amounts.amount_max / existingMax).toFixed(1)}x the stored amount_max of £${existingMax.toLocaleString('en-GB')}`,
+          suggested: { amount_max: amounts.amount_max, amount_min: amounts.amount_min },
         })
       }
     }
