@@ -1,0 +1,30 @@
+-- marketing_list was readable with the public browser key (2026-08-18).
+--
+-- Migration 050 put RLS on user_marketing_consent, service_role only, and
+-- routed all sending through public.marketing_list so nobody could mail an
+-- unverified address. The view was correct. Its permissions were not.
+--
+-- A view created without `security_invoker` runs as its owner (postgres), so
+-- it reads straight past the RLS on user_marketing_consent AND past auth.users.
+-- Supabase's default `grant all on all tables in schema public to anon,
+-- authenticated` then handed that definer view to the anon role, which is the
+-- key shipped in the browser bundle. The careful RLS on the base table was
+-- still there; the view went around it.
+--
+-- Nothing was leaked. The view's WHERE clause (consented AND own_verified_at)
+-- matched zero rows the whole time it was exposed: of 2 consent rows, 0 had
+-- consented = true. The hole was prospective, not realised — the first person
+-- to tick the box and follow the nudge link would have put their address on a
+-- world-readable endpoint.
+--
+-- Fix is the grant, not the view. Left as security_invoker = off deliberately:
+-- the sender runs as service_role, and definer rights are how it reaches
+-- auth.users. Only the anon/authenticated grants were ever wrong.
+--
+-- Falsifiable check, run before and after:
+--   curl "$SUPABASE_URL/rest/v1/marketing_list?select=email" -H "apikey: $ANON"
+--   before: HTTP 200 []      after: HTTP 401 permission denied for view
+-- Note that 200 [] is ALSO what an RLS-blocked table returns, so the 200 alone
+-- proved nothing. The 401 is the signal.
+
+revoke all on public.marketing_list from anon, authenticated;
