@@ -178,9 +178,15 @@ export type ReviewRow = {
   raw_data?:                 unknown
   needs_intervention_reason?: string | null
   location_tag?: string | null
-  /** Which Find Funding tab the row lands in. Not used to derive a reason; the
-   *  review queue reads it so a reviewer can correct a misclassification. */
+  /** Which Find Funding tab the row lands in. Read by `describesADiscreteFund`
+   *  below, and by the review queue so a reviewer can correct a
+   *  misclassification. */
   funding_type?: string | null
+  /** Where the row sends an applicant. */
+  apply_url?: string | null
+  /** The funder's own index of its funds, banked by the URL-correction pass
+   *  (migration 061). When `apply_url` equals it, the row IS the front door. */
+  funding_index_url?: string | null
   /** What the funder's own page said when the engine last read it. */
   field_evidence?: FieldEvidence | null
 }
@@ -389,6 +395,63 @@ function plural(n: number, one: string, many: string): string {
  * An empty array means nothing is wrong with the row that we know how to detect
  * — i.e. the row is a candidate for auto-publish.
  */
+/**
+ * Does this row claim a DISCRETE, NAMED fund that ought to be findable on the
+ * page it links to?
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * WHY `page_describes_different_fund` NEEDED A GUARD
+ *
+ * The engine writes `fixable_link: wrong_fund` when it reads a page and cannot
+ * find the row's fund on it. That is a real defect for a row naming a specific
+ * fund — Sported was carrying an "Organisational Development Grant" that appears
+ * nowhere on Sported's site, and Ffilm Cymru a "Production Fund" that appears
+ * nowhere on theirs. Both were withdrawn on the strength of this code.
+ *
+ * But for a FRONT DOOR the question has no answer, because there is no discrete
+ * fund to look for. Worked through the review queue on 2026-08-18, the code
+ * fired on LawWorks, Tesco Stronger Starts, Google.org, Suffolk Community
+ * Foundation, Westminster City Council and Ashoka, every one of which points at a
+ * page that describes it correctly. About a third of "Live and wrong" was rows
+ * where the row was right and the check was wrong, which is worse than a missed
+ * defect: it spends a reviewer's attention to conclude nothing.
+ *
+ * TWO GUARDS, BOTH EVIDENCE-BASED RATHER THAN A BLANKET SUPPRESSION:
+ *
+ *   in_kind        There is no "fund" in a donated-products or free-advice
+ *                  offer. Google.org gives Workspace licences and ad credits,
+ *                  LawWorks brokers pro bono advice, The Hygiene Bank ships
+ *                  products. Asking whether a fund appears on the page is a
+ *                  category error, not a finding. 26 rows carry the note.
+ *
+ *   apply_url is   Migration 061 banks the funder's own index of its funds. When
+ *   the index      a row points AT that index, we have already recorded that it
+ *                  is the front door, so "this page is about the funder rather
+ *                  than one fund" is the row working as intended. 59 rows.
+ *
+ * WHAT THIS DELIBERATELY DOES NOT CATCH. A funder that renames or sub-brands a
+ * fund still trips the code: Tesco Stronger Starts links to a page headed "Tesco
+ * Fruit & Veg Grant", and no structural signal distinguishes that from a genuinely
+ * wrong link. Narrowing the check further would need the engine to compare fund
+ * identity rather than fund name, which is a change to the verification prompt
+ * and not to this file.
+ *
+ * THE COST OF BEING WRONG HERE IS ASYMMETRIC AND POINTS THIS WAY. A suppressed
+ * true positive is a row whose link is subtly wrong and which still faces every
+ * other check plus the reviewer. A false positive is a correct row held out of
+ * the catalogue indefinitely, because nobody can fix what is not broken.
+ */
+function describesADiscreteFund(row: ReviewRow): boolean {
+  if ((row.funding_type ?? '').toLowerCase() === 'in_kind') return false
+
+  const normalise = (u: string) => u.trim().toLowerCase().replace(/\/+$/, '')
+  const apply = row.apply_url ? normalise(String(row.apply_url)) : ''
+  const index = row.funding_index_url ? normalise(String(row.funding_index_url)) : ''
+  if (apply && index && apply === index) return false
+
+  return true
+}
+
 export function deriveReviewReasons(row: ReviewRow, todayISO?: string): ReviewReason[] {
   const today   = todayISO ?? new Date().toISOString().slice(0, 10)
   const reasons: ReviewReason[] = []
@@ -429,7 +492,7 @@ export function deriveReviewReasons(row: ReviewRow, todayISO?: string): ReviewRe
   // url_status path already raises it. The existing link and page reasons cover
   // this ground; a second voice saying the same thing only makes the queue look
   // busier than it is.
-  if (pageRead?.note === 'fixable_link: wrong_fund') {
+  if (pageRead?.note === 'fixable_link: wrong_fund' && describesADiscreteFund(row)) {
     reasons.push({
       code: 'page_describes_different_fund', severity: 'critical',
       label: 'The page does not describe this fund',

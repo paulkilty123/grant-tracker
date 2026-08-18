@@ -37,7 +37,7 @@ const COLS = [
   // external_id is what the PUBLIC grant API keys on (grants-normalise sets
   // id = external_id ?? id), so the user-preview modal has to fetch by it to
   // land on the same record a user would see.
-  'id', 'external_id', 'title', 'funder', 'apply_url', 'is_active', 'pipeline_state',
+  'id', 'external_id', 'title', 'funder', 'apply_url', 'funding_index_url', 'is_active', 'pipeline_state',
   'url_status', 'url_quality_score',
   'amount_min', 'amount_max', 'deadline', 'is_rolling', 'next_open_date', 'deadline_cycle',
   'eligible_structures', 'impact_sectors', 'target_beneficiaries', 'niche_tags', 'funding_type',

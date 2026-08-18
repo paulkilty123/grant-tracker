@@ -26,7 +26,7 @@ const STATES = ['captured', 'enriched', 'tagged', 'tagged_awaiting_review', 'pub
 const TYPES  = ['grant', 'programme', 'investment', 'in_kind'] as const
 
 const COLS = [
-  'id', 'title', 'funder', 'apply_url', 'is_active', 'pipeline_state',
+  'id', 'title', 'funder', 'apply_url', 'funding_index_url', 'is_active', 'pipeline_state',
   'url_status', 'url_quality_score', 'location_tag', 'funding_type',
   'amount_min', 'amount_max', 'deadline', 'is_rolling', 'next_open_date', 'deadline_cycle',
   'eligible_structures', 'impact_sectors', 'target_beneficiaries',

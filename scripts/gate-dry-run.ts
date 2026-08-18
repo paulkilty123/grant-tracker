@@ -31,6 +31,9 @@ const COLS = [
   'id', 'title', 'funder', 'is_active', 'pipeline_state', 'url_status', 'url_quality_score',
   'amount_min', 'amount_max', 'deadline', 'is_rolling', 'next_open_date', 'deadline_cycle',
   'eligible_structures', 'impact_sectors', 'target_beneficiaries',
+  // Mirrors the route: describesADiscreteFund needs these or it falls through
+  // to blocking, and this dry run would under-report what the gate would clear.
+  'funding_type', 'apply_url', 'funding_index_url',
   'funder_brief', 'field_provenance', 'raw_data', 'needs_intervention_reason',
 ].join(', ')
 

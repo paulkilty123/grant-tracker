@@ -194,6 +194,61 @@ describe('gate failures reach the publish gate', () => {
     expect(BLOCKING_CODES).toContain('page_describes_different_fund')
   })
 
+  /**
+   * The guard added 2026-08-18, after working the review queue found that about a
+   * third of "Live and wrong" was rows where the row was right and the check was
+   * wrong. `wrong_fund` asks whether a named fund appears on the page; a front
+   * door has no named fund, so the question has no answer and the reason is
+   * noise. LawWorks, Google.org, Tesco Stronger Starts, Suffolk Community
+   * Foundation and Westminster all carried it against pages describing them
+   * correctly.
+   */
+  it('still BLOCKS a grant row that names a fund the page does not carry', () => {
+    // Sported was carrying an "Organisational Development Grant" that appears
+    // nowhere on Sported's site. This is the case the code exists for.
+    const cs = codes({ ...row(evidence('fixable_link: wrong_fund')), funding_type: 'grant' })
+    expect(cs).toContain('page_describes_different_fund')
+  })
+
+  it('does NOT block an in-kind row, which has no fund to find', () => {
+    // Google.org gives Workspace licences and ad credits; LawWorks brokers pro
+    // bono advice. Asking whether a fund appears on the page is a category error.
+    const cs = codes({ ...row(evidence('fixable_link: wrong_fund')), funding_type: 'in_kind' })
+    expect(cs).not.toContain('page_describes_different_fund')
+  })
+
+  it('does NOT block a row that points at the funder index we banked for it', () => {
+    const cs = codes({
+      ...row(evidence('fixable_link: wrong_fund')),
+      funding_type: 'grant',
+      apply_url: 'https://funder.example/funding/',
+      funding_index_url: 'https://funder.example/funding',   // trailing slash differs on purpose
+    })
+    expect(cs).not.toContain('page_describes_different_fund')
+  })
+
+  it('keeps blocking when the row merely shares a DOMAIN with the index', () => {
+    // The guard is "this row IS the front door", not "this row is on a funder we
+    // have an index for". A named fund on a funder whose index we hold is still
+    // a named fund.
+    const cs = codes({
+      ...row(evidence('fixable_link: wrong_fund')),
+      funding_type: 'grant',
+      apply_url: 'https://funder.example/funding/named-fund',
+      funding_index_url: 'https://funder.example/funding',
+    })
+    expect(cs).toContain('page_describes_different_fund')
+  })
+
+  it('fails safe when the columns are missing, so an unselected column cannot publish a row', () => {
+    // auto-publish and the review page must select funding_type, apply_url and
+    // funding_index_url. If a caller forgets, the guard must fall through to
+    // blocking rather than silently clearing the row.
+    const bare = { ...row(evidence('fixable_link: wrong_fund')) }
+    delete (bare as Record<string, unknown>).funding_type
+    expect(codes(bare)).toContain('page_describes_different_fund')
+  })
+
   it('does NOT block on a read failure — that is our problem, not the page contradicting us', () => {
     for (const failure of ['fetch_failed', 'no_content', 'no_funding_detail']) {
       const cs = codes(row(evidence(`fixable_link: ${failure}`)))

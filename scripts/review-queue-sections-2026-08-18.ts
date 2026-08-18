@@ -25,7 +25,7 @@ import { STUB_BRIEF_SOURCES } from '../src/lib/funder-brief'
 const QUEUE_STATES = ['captured', 'enriched', 'tagged', 'tagged_awaiting_review']
 
 const COLS = [
-  'id', 'external_id', 'title', 'funder', 'apply_url', 'is_active', 'pipeline_state',
+  'id', 'external_id', 'title', 'funder', 'apply_url', 'funding_index_url', 'is_active', 'pipeline_state',
   'url_status', 'url_quality_score',
   'amount_min', 'amount_max', 'deadline', 'is_rolling', 'next_open_date', 'deadline_cycle',
   'eligible_structures', 'impact_sectors', 'target_beneficiaries', 'niche_tags', 'funding_type',

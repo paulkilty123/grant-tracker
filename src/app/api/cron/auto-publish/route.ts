@@ -77,6 +77,12 @@ const COLS = [
   // readStamp returns null, no reason is raised, and the gate silently stops
   // blocking on funds the funder's own page says are closed.
   'field_evidence',
+  // Required by describesADiscreteFund, which decides whether
+  // `page_describes_different_fund` can fire. Missing columns make that guard
+  // fall through to "yes, it claims a fund", so the gate would keep blocking
+  // rows the review queue shows as clear — and the queue and the gate agreeing
+  // is the whole premise of this route sharing deriveReviewReasons with it.
+  'funding_type', 'apply_url', 'funding_index_url',
 ].join(', ')
 
 type Row = ReviewRow & { title?: string | null; funder?: string | null; pipeline_state?: string }
