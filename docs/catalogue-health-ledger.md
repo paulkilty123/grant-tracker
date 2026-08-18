@@ -469,6 +469,7 @@ One catalogue row standing for several real funds. Source:
 | C4 | **Somerset Community Foundation** | **Reconciled 11 Aug**, one gap | Not a split. Crisis and Resilience Alliance staged not live; `WCS Pickford Trust Fund` has no row at all (closed, low priority) | Not scheduled |
 | C5 | **Ufi VocTech Trust** | Split done, **blocked** | 4 rows created, all verified closed to new applicants, so none is activatable. The generic row stays live meanwhile | Not scheduled |
 | C6 | **Baring Foundation** | **Resolved 11 Aug** | Strengthening Civil Society live, other two inactive, generic row archived | Closed |
+| C7 | **Sport Wales** | **Resolved 18 Aug** | Not a split: the three funds the generic row stood for were already in the catalogue. `Sport Wales — Revenue Grants` rejected as a duplicate of the funding index; A Place for Sport already live and rolling; Be Active Wales Fund brought back live; Energy Saving Grant closed for 2026 and now watched | Closed |
 
 **Not splits, verified, do not reopen:** The Grocers' Charity (18 past-grantee
 categories), Fishmongers' Company (stages of one process), Julia Rausing Trust
@@ -542,6 +543,25 @@ unchecked URL hides the row from agents but shows it in the app.
 | G2 | — of which live | **33** | **yes** | Same | Tranche 2 |
 | G3 | `between_rounds_scheduled` rows with no parseable reopen date | **40 / 50** | no | Invisible to both reopen crons until fixed | Tranche 2 |
 | G4 | Live rows carrying the "Closed, next round TBC" placeholder | **1** | **yes** | `fix/lifecycle-live-defects` stops new ones; this one predates it and needs a manual sweep | Not scheduled |
+| G5 | Cyclical funds gone dark after one round's deadline, with no `deadline_cycle` to roll them forward | **19** | **yes, as absence** | Read the next round off the brief, which usually states it, and write `deadline_cycle` | Not scheduled |
+
+**On the 19.** Found 2026-08-18 while splitting Sport Wales, and the reason that
+row was worth looking at. Be Active Wales Fund runs three windows a year and its
+stored `deadline` was **9am, 8 July 2026, the date the window OPENED**. The
+expiry cron read it as a closing date, so the fund went dark on the day it became
+available and stayed dark for six weeks while open.
+
+The query is: inactive, `pipeline_state = 'published'`, `deadline` in the past,
+`deadline_cycle` null, and a brief that describes recurring windows. 19 rows.
+Several state their next round in the brief already, and some of those dates have
+passed or are days away: Postcode Local Trust (round 3, 25 Aug to 1 Sep),
+Postcode Society Trust (round 3, closes 1 Sep), Postcode Places Trust (round 3,
+closes 1 Oct), Severn Trent (November window), Magdalen Hospital Trust (November
+trustee meeting).
+
+Each needs its page read before it goes back to users, so this is a sweep and not
+a single UPDATE. It is the same failure as A-class staleness, seen from the other
+side: a row that is wrong by being absent.
 
 ---
 
