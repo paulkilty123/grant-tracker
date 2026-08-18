@@ -1078,6 +1078,57 @@ funder rather than on a decision, and no amount of queue-working will move them.
 
 ---
 
+## Discovery re-adds funds the catalogue already has
+
+**Measured 2026-08-18, prompted by Paul noticing CAST was already in.** He seeded
+it on 11 March; that row was archived; `discovery_queue` then created the same
+organisation twice more, in July and August, under names that appear nowhere on
+CAST's site.
+
+| | |
+|---|---:|
+| rows discovery has ever created | 93 |
+| still sitting in the review queue | 38 |
+| **duplicate a fund already in the catalogue** | **24 (26%)** |
+| — of those, still awaiting review | 11 |
+| — of those, live to users | 3 |
+
+**The dedup misses them because it keys on exact title AND exact URL, and
+discovery varies both.** The pairs are unmistakable to a human and invisible to a
+string match:
+
+| Discovery created | Already present |
+|---|---|
+| Community Matters | Waitrose Community Matters |
+| Tesco Bags of Help — Community Grants | Tesco Community Grants (Bags of Help) |
+| Screwfix Foundation — Building & Repair | Screwfix Foundation Grants |
+| Time to Shine Fellowship | Rank Foundation — Time to Shine |
+| Kent Community Foundation | Kent Community Foundation Grants |
+| Postcode Society Trust Grants | Postcode Society Trust (South England…) |
+
+**Social Business Trust is the case that defeats a URL match as well.** Three rows,
+two from discovery, across two domains the funder both uses —
+`socialbusinesstrust.org` and `sbtrust.org.uk`. Neither title nor URL nor domain
+matches, and all three are the same offer.
+
+**A quarter of discovery's output is work that should not exist.** Each duplicate
+costs a review, and the eleven in the queue tonight are a standing tax on every
+future queue-clearing session. This is an intake fix, not a queue fix: dedup needs
+funder identity, not string equality, and a new row landing on a funder already in
+the catalogue should be flagged for a human rather than created silently.
+
+**Two were live to users and are now withdrawn.** The Postcode Society Trust copy
+was the harmful shape: live, carrying no round dates, so it read as open, while the
+canonical row correctly sat out until round 3 opens on 25 August. Its £20,000
+ceiling was real and was carried across before the row was withdrawn.
+
+> Related and already recorded: `crawlUfiVocTech` invented a fund outright, and
+> `stage-researched-grants.ts` dedup keys on both title and URL, which the CF feed
+> design already flagged as wrong for funds that share a funder's index page. Same
+> weakness, arriving from a different direction.
+
+---
+
 ## Maintenance
 
 Update on each merge that closes a row, and re-measure the whole table at each
