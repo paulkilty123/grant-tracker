@@ -1314,6 +1314,44 @@ its inactive state. No next-round date is published, so none was invented.
 deadline looked like a rush-the-user error until I read the cycle: it already models
 the four quarterly trustee cut-offs correctly. Only the URL changed.
 
+## The 115 funds nobody can see, audited 2026-08-19
+
+`between_rounds_scheduled` hides a row from users completely, and 115 rows sit in
+it. Paul asked what they are after the Aldi row went in there by mistake. Bucketed
+by what the CARD would say — using `formatNextOpen` and `deriveCycleDates`
+themselves, not a reading of the data — rather than by what the columns hold:
+
+| Bucket | Rows | What a user would see if it were visible |
+|---|---:|---|
+| We can name the date | 31 | "Opens 11 May 2027" |
+| Derivable from `deadline_cycle` | 6 | same, after one write |
+| Shut, return date unknown | 56 | "Closed — check funder" |
+| **No reopening information at all** | **22** | nothing |
+
+**Thirty-seven of them are being hidden for no reason a user would recognise.**
+Seven open within a fortnight and the soonest is 25 August, six days away. The
+names are not obscure: Esmée Fairbairn, the Leathersellers' Foundation, Steel
+Charitable Trust, Severn Trent, Youth Music, the four Postcode trusts, the Bromley
+Trust's three programmes. A fundraiser planning next quarter cannot find any of
+them, and the fund they cannot find is often the one worth preparing for.
+
+**The 22 with nothing to say are the actual risk, and they are not "between
+rounds".** `check-coming-soon` is what brings a row back, and it keys on
+`next_open_date_parsed`. With no date there is nothing to fire on, so these rows
+are not scheduled to return — they are hidden indefinitely, and nothing in the
+system is waiting for them. Last read: oldest 105 days, median 26. They need a
+page read or an archive decision, per row. Among them are Lloyds Bank Foundation
+Racial Equity Grants, three Arts Council of Wales programmes, National Lottery
+Community Fund Step Forward and Ironmongers' Grants to Charities.
+
+**And even for the dated ones, reopening is not the same as reappearing.**
+`check-coming-soon` moves the row to `tagged_awaiting_review` and deliberately
+leaves visibility alone, so on its opening day a fund lands in the review queue
+rather than in front of users, and stays invisible until someone publishes it.
+That gap is dead time on a fund that is genuinely open. Surfacing the dated rows
+as "Opens ..." now closes it: the row is already visible, and the cron's job
+narrows to getting a real closing date onto a row users can already see.
+
 ## Maintenance
 
 Update on each merge that closes a row, and re-measure the whole table at each
