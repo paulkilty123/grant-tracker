@@ -1749,6 +1749,55 @@ second.
 | In-kind | 50 | 45 | 20 |
 | Grant | 497 | 178 | 0 |
 
+## The 18 mis-filed rows, moved 2026-08-19
+
+Paul: *"yes move them."* Every one was found by the sub-tagging, not by looking
+for them — forcing each row to answer "which of these are you" makes the ones
+that are none of them obvious.
+
+| Disposition | Rows |
+|---|---:|
+| Moved from Programmes to Grants | 10 |
+| Moved from In-Kind to Grants | 1 |
+| Moved to Grants and marked invitation-only | 1 |
+| Withdrawn: not a funding opportunity, or a duplicate | 6 |
+
+**Gatsby got a different disposition on purpose.** It genuinely makes grants, but
+"typically commissions research and designs interventions in partnership with
+sector and industry experts" — it does not take applications. Moving it to Grants
+without also marking it invitation-only would have sent fundraisers to a door
+that does not open, which is a worse outcome than leaving it mis-filed.
+
+**Withdrawn, each quoting what made the call:** Social Enterprise NI signposts
+other people's funds; Theatre Tax Relief is claimed from HMRC rather than applied
+for; TheGivingMachine and Buy Social both state on their own pages that they are
+not grant schemes; Yorkshire Universities is recorded in its own entry as "not a
+grant-making funder"; and one of the two Superhighways rows is a duplicate — the
+survivor links the service page rather than the homepage and was enriched in July
+against the other's April.
+
+**Sub-types were cleared on every move.** `includes_grant` is a programme code
+and means nothing on a grant row, and the grant codes describe spend restriction,
+which none of these rows state. A wrong label is worse than none and an invented
+one is worse still.
+
+### The three tagged tabs are now at 100%
+
+| Tab | Live before | Live after | Tagged |
+|---|---:|---:|---:|
+| Grant | 497 | 509 | 178 |
+| In-kind | 50 | 44 | 44 |
+| Investment | 33 | 33 | 33 |
+| Programme | 36 | 24 | 24 |
+
+Not a coincidence and not a target that was chased: **the rows that could not be
+tagged were exactly the rows that did not belong.** Untaggability turned out to
+be the diagnostic, which is worth remembering the next time a tagging pass leaves
+a residue — the residue is the finding.
+
+Programmes lost a third of its rows. That is the honest size of the tab, and the
+number to hold in mind before claiming programme coverage anywhere.
+
 ## Maintenance
 
 Update on each merge that closes a row, and re-measure the whole table at each
