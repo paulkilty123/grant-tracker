@@ -13,7 +13,7 @@ export const SUBTYPES_BY_FUNDING_TYPE: Record<FundingType, FundingSubtype[]> = {
   grant: ['unrestricted', 'restricted', 'capital', 'emergency', 'small_grant'],
   programme: ['accelerator', 'incubator', 'support_programme', 'training', 'match_funding', 'fellowship', 'cohort_grant', 'award', 'includes_grant'],
   investment: ['loan', 'blended', 'social_investment', 'equity', 'quasi_equity', 'convertible', 'revenue_share', 'community_shares'],
-  in_kind: ['pro_bono_legal', 'pro_bono_consulting', 'tech_product', 'volunteering', 'office_space', 'training'],
+  in_kind: ['tech_product', 'goods', 'pro_bono_consulting', 'pro_bono_legal', 'mentoring', 'volunteering', 'training', 'office_space'],
 }
 
 export const SUBTYPE_LABELS: Record<FundingSubtype, string> = {
@@ -45,6 +45,8 @@ export const SUBTYPE_LABELS: Record<FundingSubtype, string> = {
   pro_bono_legal: 'Pro bono legal',
   pro_bono_consulting: 'Pro bono consulting',
   tech_product: 'Tech / software',
+  goods: 'Goods and materials',
+  mentoring: 'Mentoring',
   volunteering: 'Volunteering',
   office_space: 'Office space',
   training: 'Training',
@@ -87,6 +89,13 @@ export const SUBTYPE_HINTS: Partial<Record<FundingSubtype, string>> = {
   fellowship: 'Funded time and a peer network, usually for one named person.',
   cohort_grant: 'A grant given to a group of organisations going through it together.',
   award: 'Won rather than applied for in the usual sense, often by nomination.',
+  tech_product: 'Software, cloud credits or hardware, given free or heavily discounted.',
+  goods: 'Physical things rather than money: food, hygiene products, building materials, equipment.',
+  pro_bono_consulting: 'Professionals doing a piece of work for you at no charge.',
+  pro_bono_legal: 'Free legal advice and representation.',
+  mentoring: 'Time with an experienced person, one to one, rather than a team doing the work.',
+  volunteering: 'People, or the means to find and manage them.',
+  office_space: 'Somewhere to work, free or below market rent.',
 }
 
 /**

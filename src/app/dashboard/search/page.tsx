@@ -2813,17 +2813,25 @@ export default function SearchPage() {
               </div>
             </div>
 
-            {/* Row 2b: Kind of investment / programme.
-                Only on the two tabs where the broad label stops being useful.
+            {/* Row 2b: what KIND of investment, programme or in-kind support.
+                On the three tabs where the broad label stops being useful.
                 "Investment" covers a £25k unsecured loan and a £400k equity
                 round, and the difference decides whether an organisation can
                 take the money at all — a registered charity has no shares to
-                sell. Absent on Grants and In-Kind, where the tab label already
-                says what the money is. */}
-            {(activeTab === 'investment' || activeTab === 'programme') && (
+                sell. "In-Kind" covers free legal advice, a pallet of hygiene
+                products and £10,000 of Google ads, which are not alternatives to
+                each other in any real sense.
+
+                Absent on Grants, where the tab label already says what the money
+                is, and where the grant sub-types describe spend restriction —
+                an axis `spend_restriction` already filters on. Two controls for
+                one question would be worse than none. */}
+            {(activeTab === 'investment' || activeTab === 'programme' || activeTab === 'in_kind') && (
               <div>
                 <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">
-                  {activeTab === 'investment' ? 'Kind of investment' : 'Kind of programme'}
+                  {activeTab === 'investment' ? 'Kind of investment'
+                    : activeTab === 'programme' ? 'Kind of programme'
+                    : 'Kind of support'}
                 </p>
                 <div className="flex gap-1.5 flex-wrap">
                   {(SUBTYPES_BY_FUNDING_TYPE[activeTab] ?? []).filter(sub => (subtypeCounts.get(sub) ?? 0) > 0).map(sub => {

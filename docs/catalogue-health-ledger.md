@@ -1694,6 +1694,61 @@ went into the wrong `useMemo` dependency array — an earlier one, not the memo 
 owns the predicate — so ticking a box would have done nothing until some other
 state change forced a recompute. Intermittent, and invisible to `tsc`.
 
+## In-kind sub-tags, 2026-08-19
+
+Same job as investment and programme, and in-kind had the worst tags of the four.
+
+**Microsoft for Nonprofits was tagged `office_space`.** The classifier had read
+"Office 365". Slack was `pro_bono_consulting`. Cranfield Trust, Taproot and
+Charterpath were all `volunteering`, which reads as "we will send you helpers"
+rather than "a qualified accountant will do your year end". 23 of the 50 rows had
+no tag at all.
+
+**Two codes added, because the gap was real rather than a matter of taste.**
+`goods` covers physical things being given away, which nothing did: FareShare's
+food, the Hygiene Bank's products, Selco's and Wickes' building materials, In Kind
+Direct's whole catalogue, TechSoup's hardware and the Digital Inclusion Network's
+refurbished devices. Nine rows. `mentoring` separates one person's time from a
+team doing the work, which is a different offer and a different ask.
+
+45 of 50 tagged, 20 of them with more than one tag.
+
+### Five rows are not in-kind support, and one is a duplicate
+
+Left untagged rather than given a label that would hide the problem. **A wrong
+label is worse than none**, so the two that were already carrying
+`pro_bono_consulting` had it removed.
+
+| Row | What it actually is |
+|---|---|
+| Theatre Tax Relief | a Corporation Tax relief for companies producing theatre |
+| TheGivingMachine | its own page: "This is not a grant scheme — it's a fundraising platform" |
+| Buy Social Corporate Challenge | its own page: "This is not a grant scheme." A procurement partnership |
+| UK & Ireland Community Tree Planting | cash at up to £2.15 per tree. A grant, filed as in-kind |
+| Yorkshire Universities | its own entry: "not a grant-making funder" |
+| Superhighways ×2 | the same organisation entered twice, "London Charities" and "London VCSEs" |
+
+**Across the three tabs, the taxonomy has now found 18 rows filed under the wrong
+funding type** — twelve in programmes and six here. That is a better yield than
+the labelling itself, and it is the argument for doing grants next.
+
+### The filter is on three tabs, not four
+
+Grants is deliberately excluded. Its sub-types — unrestricted, restricted,
+capital — describe SPEND RESTRICTION, which `spend_restriction` already filters
+on (migrations 047/048). Two controls asking one question would be worse than
+one, and the honest fix there is to decide which axis wins rather than to add a
+second.
+
+**Coverage after both passes:**
+
+| Tab | Live | Tagged | More than one tag |
+|---|---:|---:|---:|
+| Investment | 33 | 33 | 21 |
+| Programme | 36 | 36 | 17 |
+| In-kind | 50 | 45 | 20 |
+| Grant | 497 | 178 | 0 |
+
 ## Maintenance
 
 Update on each merge that closes a row, and re-measure the whole table at each

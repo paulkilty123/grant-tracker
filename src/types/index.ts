@@ -163,6 +163,13 @@ export type FundingSubtype =
   | 'revenue_share'
   | 'community_shares'
   // in-kind sub-types
+  // `goods` and `mentoring` added 2026-08-19. Nothing covered physical things
+  // being given away, so FareShare's food, the Hygiene Bank's products, Selco's
+  // and Wickes' building materials and In Kind Direct's whole catalogue had no
+  // tag that fitted. `mentoring` separates one person's time from a team doing
+  // the work — a different offer, and a different ask of the charity.
+  | 'goods'
+  | 'mentoring'
   | 'pro_bono_legal'
   | 'pro_bono_consulting'
   | 'tech_product'
