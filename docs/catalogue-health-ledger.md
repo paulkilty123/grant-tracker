@@ -1216,6 +1216,53 @@ needs to stop meaning "due now".
 
 ---
 
+## Rows that linked a directory instead of the funder, worked 2026-08-19
+
+**Nine rows pointed at a `funding.scot` listing rather than the fund's own page.**
+Seven had a real funder page we were simply not linking. Two do not have one at all.
+
+| Disposition | Rows |
+|---|---:|
+| Re-pointed at the funder's own site | 7 |
+| Directory kept: the funder has no website | 2 |
+
+Re-pointed: Inverurie Youth Sports Foundation, S J Noble Trust (our brief carried the
+`.com`, which 301s to `.scot`), The Cadogan Charity, Clackmannanshire and Stirling
+Environment Trust, Bellahouston Bequest Fund, and Argyll & Bute Council.
+
+**The directory is sometimes the only public record, and that is a finding, not a
+failure.** A Sinclair Henderson Trust and the Hugh & Mary Miller Bequest are both
+administered by solicitors, apply by post or email, and have no website. Their rows
+keep the `funding.scot` link because nothing better exists. Both now carry the
+postal route in `how_to_apply` so a user does not have to reach the directory to
+find out where the envelope goes. **Do not "fix" these two later — the link is the
+answer.**
+
+**Two of the nine were wrong about something the link fix would not have caught.**
+
+*A Sinclair Henderson Trust had a deadline in a year with no meeting.* Its
+`deadline_cycle` held an annual 31 May entry labelled "for June 2026 meeting", and
+`system:cycle_derive:v1` duly rolled it forward to 31 May 2027. The trust states it
+"meet[s] once every even year i.e. 2024, 2026, 2028". There is no 2027 meeting. A
+charity working to that date would have posted an application into a year with
+nobody reading it. The cycle has been cleared — a recurring (day, month) list cannot
+express "even years only" — and the real next cut-off, May 2028, set outright.
+
+**This is a cycle-shape gap, not a one-off.** `deadline_cycle` assumes annual
+recurrence. Any biennial, triennial or academic-year fund entered into it will
+derive confident, wrong dates every off year, and the derived date looks exactly
+like a good one. Worth a sweep of rows whose cycle label names a specific year.
+
+*Argyll & Bute Council's brief said the directory WAS the portal.* "Apply via the
+online grants portal at funding.scot" — which is why the link looked deliberate. The
+council runs the fund on its own site. The row itself was otherwise right: the
+2026/27 round opened 11 May and closed 5 July 2026, matching our stored deadline and
+its inactive state. No next-round date is published, so none was invented.
+
+*And one row was right where I expected it to be wrong.* Bellahouston's 31 August
+deadline looked like a rush-the-user error until I read the cycle: it already models
+the four quarterly trustee cut-offs correctly. Only the URL changed.
+
 ## Maintenance
 
 Update on each merge that closes a row, and re-measure the whole table at each
