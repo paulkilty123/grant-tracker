@@ -35,6 +35,10 @@ function overrides(spec: string | null): Record<string, unknown> {
 function report(label: string, row: Record<string, unknown>) {
   const reasons = deriveReviewReasons(row as never)
   const gate = gateDecision(row as never, reasons)
+  // `gate.blocking` is ReviewReason objects, not codes. Passing it straight to
+  // `sectionOf` type-errors and, before that error was fixed, printed
+  // "[object Object]" while still returning a plausible-looking section.
+  const blocking = gate.blocking.map(r => r.code)
   const all = reasons.map(r => r.code)
   const state = String(row.pipeline_state ?? '')
   const briefSource = (row.funder_brief as { source?: string } | null)?.source ?? ''
@@ -50,8 +54,8 @@ function report(label: string, row: Record<string, unknown>) {
   console.log(`   state=${state}  active=${row.is_active}  deadline=${row.deadline}  brief=${briefSource || '(none)'}`)
   console.log(`   on screen because: ${onScreen}`)
   console.log(`   reasons:  ${all.join(', ') || '(none)'}`)
-  console.log(`   blocking: ${gate.blocking.join(', ') || '(none)'}`)
-  console.log(`   SECTION:  ${sectionOf(gate.blocking, all)}`)
+  console.log(`   blocking: ${blocking.join(', ') || '(none)'}`)
+  console.log(`   SECTION:  ${sectionOf(blocking, all)}`)
 }
 
 async function main() {
