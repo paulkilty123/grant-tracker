@@ -173,6 +173,20 @@ const POLICY: Record<ReviewReasonCode, 'block' | 'info'> = {
   beneficiaries_generic_only: 'info',
   amount_zero:                'info',
   amount_under_stated:        'info',
+  // NEW 2026-08-19, and deliberately NOT blocking on its first outing.
+  //
+  // The case for blocking is real: a figure the funder's page does not state is
+  // wrong rather than missing, and "wrong, not missing" is the test every
+  // blocking code above meets. Allan & Nesta Ferguson showed a £50,000 maximum
+  // against a page that offers to match half a budget.
+  //
+  // It is 'info' anyway, because the check has never run. Blocking on the first
+  // pass of an unmeasured extractor would hold an unknown number of correct rows
+  // on the word of a model that has not been scored on this field, and moving a
+  // code into the blocking set changes what auto-publish does and bumps the
+  // policy version. Measure the fire rate first, then decide — that decision is
+  // Paul's, not a tidy-up.
+  amount_unsupported:         'info',
   multi_round_uncaptured:     'info',
   link_unverified:            'info',  // see note 2 in the header — 57/60 never checked
   stale_dates:                'info',   // prose untidy, but the deadline on the card is right

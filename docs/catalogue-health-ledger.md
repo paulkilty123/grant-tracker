@@ -1481,17 +1481,23 @@ rows was pulled and each read against its funder's page by hand.
 |---|---:|
 | Correct | 4 |
 | Minor error | 1 |
-| **Material error** | **4** |
+| **Material error** | **3** (was 4 — see the Ferguson withdrawal below) |
 | Could not assess (bot wall, or a scope question rather than a fact) | 3 |
 
-The four material errors:
+The material errors, as first written, one of which did not survive checking:
 
 - **Beinneun Student Scholarship Fund** — "Individuals aged 16 or over who are
   residents of Fort Augustus". A scholarship for individuals, live in a catalogue
   whose audience is charities, CICs and social enterprises.
-- **Allan & Nesta Ferguson Trust** — `apply_url` is a login wall, "You need to be
-  logged in to view this page". The stored £50,000 maximum appears nowhere; the
-  trust matches up to 50% of a budget.
+- ~~**Allan & Nesta Ferguson Trust** — the stored £50,000 maximum appears
+  nowhere.~~ **WITHDRAWN the same evening.** The £50,000 is the funder's own:
+  its guidance page says "Requests up to £50,000 are reviewed monthly." The
+  hand-check read only `apply_url`, which is a login wall stating nothing, and
+  called the figure invented on that basis. The verifier, which hops up to three
+  pages, found it immediately. `apply_url` pointing at a login wall is still
+  worth fixing; the amount was never wrong. **One hand-read page is not the
+  funder's position** — the same mistake as judging a URL correction by how the
+  URL looked, recorded above.
 - **Community Foundation for Northern Ireland** — stored range £2,000–£5,000. The
   page's three open funds are £3,000, £2,000 and £500. The range matches nothing.
 - **Emerton-Christie Charity** — stored £1,000–£3,000; the page states no amounts
@@ -1500,14 +1506,22 @@ The four material errors:
 Plus one minor: HPC Community Fund Small Grants caps at £10,000 in our row and
 "£20,000 over 3 years, or up to £10,000 if project is 1 year" on the page.
 
-**Roughly one live row in three carries a material error, on a sample of twelve.**
-That is enough to act on and not enough to quote: nine assessable rows puts the
-true rate somewhere broad around a third. The number worth repeating is the
-contrast, not the precision — **100% of live rows were read in the last three
-days, and about a third of them are wrong.**
+**Roughly one live row in four carries a material error, on a sample of twelve.**
+Corrected down from "one in three" the same evening, when building the check
+disproved one of the four findings that motivated it. That is enough to act on
+and not enough to quote: nine assessable rows puts the true rate somewhere broad
+around a quarter. The number worth repeating is the contrast, not the precision —
+**100% of live rows were read in the last three days, and something like a
+quarter of them are wrong.**
+
+**And the correction is the more useful finding.** An audit done by fetching one
+page per row is a weaker instrument than the engine it is auditing, because the
+engine reads up to three. Any future spot-check should run `verifyRow` rather
+than a single fetch, or it will keep manufacturing false positives on funders
+whose apply_url is a form and whose detail is one click away.
 
 **`verify-rows` measures that a page was fetched, not that the row is true.**
-Three of the four material errors are AMOUNTS, which is the field a fetch-and-
+Two of the three surviving material errors are AMOUNTS, which is the field a fetch-and-
 compare is worst at: the page states no figure, so nothing contradicts the stored
 one, and silence reads as agreement. `amount_ungrounded` exists as a reason code;
 it is not firing on these rows. Same shape as the two proxies already recorded at
@@ -1543,6 +1557,68 @@ Not more verification passes. The coverage is already 100% and the errors surviv
 it. The gap is that nothing tests whether a stored FIGURE is supported by the
 page, as opposed to merely unchallenged by it. That is one reason code doing its
 job, not a new system.
+
+## The amount check now needs the page to state the figure, 2026-08-19
+
+Built after the measurement above. `verify-rows` never asked about amounts at
+all — the comment in `verify-row.ts` said so outright: *"Grant AMOUNTS are
+deliberately absent, and not for the usual reason: the verifier does not extract
+them at all, so there is no silence to detect."* So a stored figure was never
+challenged: nothing contradicted it, and silence passed as agreement.
+
+The verifier now extracts `amount_min` and `amount_max` with a quote, and a new
+reason code, `amount_unsupported`, fires when **we assert a figure and the page
+states none**. 510 of 625 live rows (82%) assert an amount, so that is the
+population.
+
+**The prompt spends more words on what is NOT an amount than on what is**, because
+every wrong answer here is confident: the size of the POT ("£2 million is
+available this year"), a match percentage ("we fund up to 75% of project costs"),
+and an amount belonging to a different fund on the same page all have to come
+back null. A figure invented from the funder's size is worse than no figure.
+
+**Absence is still not a finding.** `no_amount` already covers a row with nothing
+to show, and an absent amount renders as absent and misleads nobody. This fires
+only where a number is on the card and the funder never published it.
+
+**It is `info`, not blocking, on purpose.** The case for blocking is real — a
+figure the page does not state is wrong rather than missing, which is the test
+every blocking code meets. But the check has never run against the catalogue.
+Blocking on the first pass of an unmeasured extractor would hold an unknown
+number of correct rows on the word of a model nobody has scored on this field,
+and it would change what auto-publish does and bump the policy version. Fire rate
+first, then Paul's decision.
+
+### Building the check disproved one of the findings that motivated it
+
+The probe runs the real verifier against four rows whose truth was established by
+hand, three that should fire and one that should not. It came back 2 of 4, and
+both misses were the probe being wrong:
+
+- **Allan & Nesta Ferguson** — the hand-check called its £50,000 invented after
+  reading `apply_url`, which is a login wall stating nothing. The verifier hopped
+  one page to the funder's guidance and returned *"Requests up to £50,000 are
+  reviewed monthly."* The figure is the funder's own.
+- **Community Foundation for Northern Ireland** — the read stops at the gate with
+  `multiple_funds`, before any fact is extracted. That is the correct verdict and
+  a different problem: the row needs splitting, not its figure checking.
+
+**An audit that fetches one page per row is a weaker instrument than the engine it
+is auditing.** Future spot-checks should run `verifyRow`, not a single fetch, or
+they will keep manufacturing false positives on funders whose apply_url is a form
+and whose detail is one click away.
+
+Ferguson also exposed a real bug in the first version. The unsupported note was
+stamped on BOTH amount fields whenever the page was silent, so a row with no
+minimum carried "we state a figure this page does not" against a figure it does
+not state. And because a row is read across up to three pages, the first page
+could stamp "unsupported" and a later hop confirm the same figure. The writer now
+notes only fields the row actually asserts, the reader treats a confirmation
+anywhere in the read as outranking silence elsewhere in it, and `foldResult`
+drops the stale note from the cron report. **A check that reads one page of a
+three-page read is the same class of error as the audit that produced it.**
+
+Probe now 4 of 4. Nine unit tests, including both halves of the Ferguson case.
 
 ## Maintenance
 

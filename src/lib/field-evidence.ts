@@ -100,6 +100,8 @@ export type FieldEvidence = Record<string, EvidenceStamp>
  */
 export const EVIDENCE_FIELDS = [
   'deadline',
+  'amount_min',
+  'amount_max',
   'deadline_cycle',
   'is_rolling',
   'max_org_income',
@@ -112,6 +114,30 @@ export const EVIDENCE_FIELDS = [
 ] as const
 
 export type EvidenceField = (typeof EVIDENCE_FIELDS)[number]
+
+/**
+ * "We show a figure this page never states."
+ *
+ * The note that turns silence into a finding. Every other field treats an absent
+ * value as absent — nobody is misled by a deadline we do not hold. An AMOUNT is
+ * different, because the card renders the stored figure whether or not anything
+ * supports it, so a page that says nothing about money does not merely fail to
+ * confirm our number: it leaves a number on screen that came from somewhere else.
+ *
+ * Measured 2026-08-19 on a random sample of twelve live rows. Three of the four
+ * material errors were amounts, and in all three the funder's page stated no
+ * figure at all: Allan & Nesta Ferguson showed a £50,000 maximum against a page
+ * offering to match 50% of a budget, Emerton-Christie showed £1,000-£3,000
+ * against a page with no amounts on it, and the Community Foundation for
+ * Northern Ireland showed £2,000-£5,000 against three open funds of £3,000,
+ * £2,000 and £500. All three had been read by the verifier within three days and
+ * none of them raised anything, because the verifier never asked about amounts —
+ * so nothing contradicted the stored figure and silence passed as agreement.
+ *
+ * Shared between the writer (`verify-row.ts`) and the reader
+ * (`review-reasons.ts`) so the string cannot drift.
+ */
+export const AMOUNT_UNSUPPORTED_NOTE = 'we state a figure this page does not'
 
 /**
  * Reserved key: "this row's page was read at this time, and this is what

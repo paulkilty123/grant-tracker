@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
 import type { EvidenceInput } from '../field-evidence'
+import { AMOUNT_UNSUPPORTED_NOTE } from '../field-evidence'
 import { isOpeningEntry, type CycleEntry } from '../deadline-cycle'
 import { asStructures, asExclusions, compareStructures, newExclusions, namesJurisdiction, quoteNamesAForm } from './eligibility'
 
@@ -72,6 +73,10 @@ export type VerifyRow = {
   is_rolling:      boolean | null
   max_org_income:  number | null
   min_org_income?: number | null
+  /** What the CARD tells a user they can ask for. Read so the page can be asked
+   *  to support it, not merely to fail to contradict it. */
+  amount_min?:     number | null
+  amount_max?:     number | null
   is_invite_only:  boolean | null
   /** The matcher's hard gate. See eligibility.ts for why this is read here. */
   eligible_structures?: string[] | null
@@ -96,6 +101,9 @@ export type Fact<T> = { value: T | null; quote: string | null }
 
 export type Extraction = {
   deadline:       Fact<string>   // ISO yyyy-mm-dd
+  /** Per-applicant award size, NOT the size of the fund. */
+  amount_min:     Fact<number>
+  amount_max:     Fact<number>
   deadline_cycle: Fact<CycleEntry[]>
   is_rolling:     Fact<boolean>
   max_org_income: Fact<number>
@@ -647,6 +655,27 @@ quote of the sentence it came from. If the page does not state it, use
                      rounds. A page that says nominations run all year and then
                      lists dated draws is NOT rolling: the draws are the rounds.
                      Absence of a deadline is NOT evidence of rolling — use null.
+  "amount_min"     : the SMALLEST award a single applicant can receive, as a
+                     plain number of pounds, or null. From wording like "grants
+                     of between £5,000 and £50,000" or "we award from £1,000".
+  "amount_max"     : the LARGEST award a single applicant can receive, as a
+                     plain number of pounds, or null. From "up to £10,000",
+                     "grants of up to £3,000", "maximum award £1,500".
+
+                     These are about ONE APPLICANT, never the fund. "£2 million
+                     is available this year", "a £500,000 programme" and "we
+                     distributed £1.4m last year" are the size of the POT and
+                     must be null. If the page gives only a pot, both are null.
+
+                     A percentage or match is not an amount: "we match up to 50%
+                     of your budget", "we fund up to 75% of project costs" — null
+                     for both, because the cash figure depends on the applicant.
+
+                     If the page names amounts for SEVERAL different funds and
+                     none of them is clearly ours, use null rather than picking
+                     one. Report only what THIS fund awards, and only if the page
+                     says it. Never infer from the funder's size, the sector, or
+                     what similar funders give.
   "max_org_income" : maximum applicant organisation annual income/turnover as a
                      plain number of pounds (e.g. 500000), or null.
   "min_org_income" : MINIMUM applicant organisation annual income/turnover, as a
@@ -705,6 +734,7 @@ Shape:
 {"gate":{"funds_on_page":string[],"our_fund_is_one_of_them":bool,"fund_on_page":string|null,"describes_our_fund":bool,"has_funding_detail":bool},
  "facts":{"deadline":{"value":null,"quote":null},"deadline_cycle":{"value":null,"quote":null},
  "is_rolling":{"value":null,"quote":null},
+ "amount_min":{"value":null,"quote":null},"amount_max":{"value":null,"quote":null},
  "max_org_income":{"value":null,"quote":null},"min_org_income":{"value":null,"quote":null},
  "eligible_structures":{"value":null,"quote":null},"excluded_structures":{"value":null,"quote":null},
  "structures_are_exhaustive":{"value":null,"quote":null},
@@ -873,7 +903,17 @@ function foldResult(base: VerifyResult, hop: VerifyResult): VerifyResult {
     outcome:     hop.outcome === 'round_closed' ? 'round_closed' : base.outcome,
     closedRound: hop.closedRound ?? base.closedRound,
     evidence, proposals, confirmed, notFound,
-    notes: [...base.notes, ...hop.notes],
+    // Drop the first page's "amounts unsupported" line when the hop settled an
+    // amount, for the same reason the proposals above are filtered: the hop is
+    // the later and better-informed read. Ferguson's apply_url is a login wall
+    // that states nothing, and its guidance page one hop on says "Requests up to
+    // £50,000 are reviewed monthly" — leaving both lines in the cron report would
+    // say the figure was invented and confirmed in the same breath.
+    notes: [
+      ...base.notes.filter(n => !(n.startsWith('amounts unsupported')
+        && (hopFields.has('amount_min') || hopFields.has('amount_max')))),
+      ...hop.notes,
+    ],
     usage: hop.usage ?? base.usage,
   }
 }
@@ -1331,6 +1371,50 @@ async function runModel(
   // Only propose an income cap when the sentence is about organisational income
   // or turnover. Wax Chandlers' "less than £200k in cash at bank" is a real
   // sentence with a real number that means something else entirely.
+  // ── Amounts: the page must SAY the figure, not merely fail to deny it ──
+  //
+  // Every other field here treats silence as "we do not know", and that is the
+  // right reading: a deadline we do not hold renders as absent and misleads
+  // nobody. An amount is the exception. The card prints the stored figure
+  // whichever way the page falls, so a page that says nothing about money is not
+  // neutral — it leaves a number on screen that came from somewhere other than
+  // the funder.
+  //
+  // Until 2026-08-19 the verifier did not ask about amounts at all, so there was
+  // no silence to detect and no proposal to make. A sample of twelve live rows
+  // that day found four material errors, three of them amounts, and in all three
+  // the funder's page stated no figure whatever. Every one had been read within
+  // three days and reported clean.
+  //
+  // Nothing here writes. `consider` only ever files a proposal, and verify-rows
+  // reports proposals rather than applying them, which is the standing rule for
+  // amounts — the extractor is wrong often enough on large awards that a human
+  // has to see the change.
+  const minAmountFact = fact('amount_min')
+  const maxAmountFact = fact('amount_max')
+  const pageAmountSilent = asMoney(minAmountFact.value) === null && asMoney(maxAmountFact.value) === null
+  const weAssertAnAmount = (row.amount_min ?? null) !== null || (row.amount_max ?? null) !== null
+
+  if (pageAmountSilent && weAssertAnAmount) {
+    // The note goes ONLY on a field we actually assert. Stamping both was the
+    // first version and it was wrong on its face: a row with no `amount_min`
+    // would carry "we state a figure this page does not" against a figure we do
+    // not state. Caught by the probe on Ferguson, whose row has no minimum.
+    for (const f of ['amount_min', 'amount_max'] as const) {
+      if ((row[f] ?? null) === null) { notFound.push(f); stamp(f, null, null); continue }
+      notFound.push(f)
+      stamp(f, null, null, undefined, AMOUNT_UNSUPPORTED_NOTE)
+    }
+    const shown = [row.amount_min ?? null, row.amount_max ?? null]
+      .filter((n): n is number => n !== null)
+      .map(n => `£${n.toLocaleString('en-GB')}`)
+      .join(' to ')
+    notes.push(`amounts unsupported: the card shows ${shown} and this page states no per-applicant figure`)
+  } else {
+    consider('amount_min', minAmountFact, row.amount_min ?? null, asMoney)
+    consider('amount_max', maxAmountFact, row.amount_max ?? null, asMoney)
+  }
+
   const incomeFact = fact('max_org_income')
   const INCOME_CONCEPT = /\b(income|turnover|revenue|annual (operating )?budget|operating budget)\b/i
   const CASH_CONCEPT   = /\b(cash at bank|cash and investments|balance sheet|reserves|in the bank)\b/i
