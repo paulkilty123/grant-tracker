@@ -517,6 +517,8 @@ export default function PipelinePage() {
   // Builder bridge: which pipeline items already have an application (id), and
   // whether this user can use the builder (cohort-gated).
   const [builderAllowed, setBuilderAllowed] = useState(false)
+  // Org name for the blocked screen, so it names the profile rather than the account.
+  const [blockedOrgName, setBlockedOrgName] = useState<string | null>(null)
   const [appByPipeline, setAppByPipeline] = useState<Record<string, string>>({})
   const draggingId = useRef<string | null>(null)
 
@@ -541,6 +543,7 @@ export default function PipelinePage() {
       // empty Kanban they can't use.
       const access = await fetch('/api/builder/access').then(r => r.json()).catch(() => ({ allowed: false }))
       setBuilderAllowed(!!access?.allowed)
+      setBlockedOrgName(typeof access?.org_name === 'string' ? access.org_name : null)
       if (!access?.allowed) { setLoading(false); return }
       const o = await getOrganisationByOwner(user.id)
       setOrg(o)
@@ -738,15 +741,29 @@ export default function PipelinePage() {
   if (loading) return <div className="flex items-center justify-center h-64 text-mid">Loading pipeline…</div>
 
   // Apply-tier gate (matches Projects/Applications). RLS already blocks the data
-  // for non-entitled users; this keeps them out of the empty Kanban shell.
+  // for non-entitled orgs; this keeps them out of the empty Kanban shell, which
+  // is the whole bug: an RLS-blocked SELECT returns [] rather than an error, so
+  // without this the page says "no opportunities yet" to someone whose rows are
+  // sitting right there, unreadable.
   if (!builderAllowed) {
     return (
       <div style={{ maxWidth: 660 }}>
         <h2 className="text-4xl font-bold text-charcoal leading-tight" style={{ fontFamily: "var(--font-space-grotesk)", letterSpacing: "-0.02em" }}>Pipeline</h2>
         <div className="mt-5" style={{ background: '#F5F1E8', borderRadius: 12, padding: '20px 24px' }}>
+{/* Blocked-state copy, shared shape across Pipeline / Projects /
+              Applications. Two jobs: name the ORGANISATION, because a
+              multi-org owner needs to know it is this profile and not their
+              account; and say the saved work is still there, because the
+              screen otherwise reads as though it was deleted. It is also the
+              screen a finished trial lands on, which is why "kept, not
+              deleted" is the second sentence rather than a footnote.
+              When checkout ships (item 6) this gains a subscribe link. */}
           <p className="text-sm text-mid" style={{ margin: 0, lineHeight: 1.6 }}>
-            Pipeline is currently available to founding cohort members while we shape the
-            Apply tools together. It will open more widely soon.
+            Pipeline is not switched on for {blockedOrgName ?? 'this organisation'}.
+          </p>
+          <p className="text-sm text-mid" style={{ margin: '10px 0 0', lineHeight: 1.6 }}>
+            Anything you have already saved here is kept, not deleted. Get in touch
+            and we will switch it back on.
           </p>
         </div>
       </div>

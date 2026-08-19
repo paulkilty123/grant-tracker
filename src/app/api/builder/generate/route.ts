@@ -135,7 +135,7 @@ ${questionsBlock}`
 export async function POST(req: NextRequest) {
   const user = await getBuilderUser()
   if (!user) {
-    return new Response(JSON.stringify({ t: 'error', message: 'The application builder is currently cohort-only' }) + '\n', { status: 403 })
+    return new Response(JSON.stringify({ t: 'error', message: 'Applications are not switched on for this organisation' }) + '\n', { status: 403 })
   }
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) {

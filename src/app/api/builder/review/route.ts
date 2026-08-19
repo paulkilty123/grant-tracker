@@ -42,7 +42,7 @@ Return ONLY JSON: {"score": 7.5, "tips": [{"headline": "...", "detail": "..."}],
 
 export async function POST(req: NextRequest) {
   const user = await getBuilderUser()
-  if (!user) return NextResponse.json({ error: 'The application builder is currently cohort-only' }, { status: 403 })
+  if (!user) return NextResponse.json({ error: 'Applications are not switched on for this organisation' }, { status: 403 })
 
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) return NextResponse.json({ error: 'ANTHROPIC_API_KEY not configured' }, { status: 500 })

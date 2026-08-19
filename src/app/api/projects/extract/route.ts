@@ -75,7 +75,7 @@ const scrub = (s: string | null) => (s ? s.replace(/\s*—\s*/g, ', ').trim() ||
 
 export async function POST(req: NextRequest) {
   const user = await getBuilderUser()
-  if (!user) return NextResponse.json({ error: 'Projects are currently cohort-only' }, { status: 403 })
+  if (!user) return NextResponse.json({ error: 'Projects are not switched on for this organisation' }, { status: 403 })
 
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) return NextResponse.json({ error: 'ANTHROPIC_API_KEY not configured' }, { status: 500 })

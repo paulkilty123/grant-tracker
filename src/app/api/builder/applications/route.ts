@@ -24,7 +24,7 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 
 export async function POST(req: NextRequest) {
   const user = await getBuilderUser()
-  if (!user) return NextResponse.json({ error: 'The application builder is currently cohort-only' }, { status: 403 })
+  if (!user) return NextResponse.json({ error: 'Applications are not switched on for this organisation' }, { status: 403 })
 
   let body: {
     org_id?: string

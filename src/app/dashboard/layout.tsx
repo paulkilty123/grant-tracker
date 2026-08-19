@@ -35,10 +35,17 @@ export default async function AppLayout({
   const companionSurface =
     !!org && agentEnabledForOrg(org.id) && tierForOrgFlags(org as { apply_access?: boolean | null; companion_access?: boolean | null }) === 'companion'
 
+  // Apply-tier entitlement for the org actually in view, not for the user.
+  // The sidebar used to fetch this from /api/builder/access and cache it under
+  // one session key, which meant a multi-org owner kept the first org's nav
+  // after switching. Resolved here because this component has already loaded
+  // the org row that RLS will be checked against.
+  const applyAccess = !!(org as { apply_access?: boolean | null } | null)?.apply_access
+
   return (
     <ToastProvider>
       <div className="flex min-h-screen">
-        <Sidebar org={org} userEmail={user.email ?? ''} companionSurface={companionSurface} />
+        <Sidebar org={org} userEmail={user.email ?? ''} companionSurface={companionSurface} applyAccess={applyAccess} />
         <main
           className="md:ml-60 flex-1 min-h-screen overflow-x-hidden flex flex-col"
           style={{ background: '#FAFAF7' }}
