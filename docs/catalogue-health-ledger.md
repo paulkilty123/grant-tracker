@@ -844,6 +844,57 @@ Not wrong data, but the volume that everything downstream has to filter.
 everything it sees each time. Adding change detection is roughly a day and is not
 scheduled.
 
+**H3 — discovery adds funders the catalogue already holds, including ones
+already rejected. Measured 2026-08-19.**
+
+The discovery queue added 8 rows overnight. **All 8 were funders already in the
+catalogue, and 4 of the 8 were funders that already had an archived or rejected
+row.** Withdrawn the same morning; prior state in
+`reports/withdraw-discovery-dups-2026-08-19.json`.
+
+| Row added | Already held as | State it was already in |
+|---|---|---|
+| CAF Venturesome | `1df738d5` CAF Venturesome Impact Fund | **published and live** |
+| Charity Bank Social Enterprise & Charity Loans | `72739682` Charity Bank Loans for Social Purpose | published and live |
+| Bridges Evergreen & Social Impact Funds | `5db10efd` Bridges — Social Outcomes Fund, **identical apply_url** | archived April |
+| Unity Trust Bank Social Enterprise Lending | `eb8b4219` Unity Trust Bank — Social Enterprise Banking | archived April |
+| Big Issue Invest Loan Finance | 7 existing Big Issue Invest rows | 3 named funds among them |
+| Key Fund Social Enterprise Loans and Investment | 11 existing Key Fund rows | 6 live |
+| Resonance Enterprise Investment Fund | `250e4dea`, and the link is `/for-investors/` | — |
+| Responsible Finance CDFI Loan Finder | not a fund; a directory of other lenders | — |
+
+**Two distinct failures, and the second is the worse one.**
+
+1. **No dedup against what we hold.** CAF Venturesome is the clearest case
+   because it is the one that looks least like a duplicate: the fund is already
+   published, on the same site, and the new row still got through because the
+   funder string differs — `CAF Venturesome` against
+   `Charities Aid Foundation (CAF)`. A title-only or funder-only check cannot
+   see that. The catalogue's existing dedup rule is title+funder, which is
+   exactly the pair that fails here.
+
+2. **No memory of rejection.** Bridges was added with the *same apply_url* as a
+   row archived in April. Nothing consults prior dispositions, so a human
+   decision to put a funder away does not survive the next discovery run. This
+   is the archive-asymmetry problem from the other direction: additions are
+   gated by review, but review's *outcomes* are not fed back to the thing doing
+   the adding.
+
+**What would fix it**, in order of cost:
+
+- Before insert, reject any candidate whose `apply_url` already exists on any
+  row in any state. Cheapest, catches Bridges and both homepage re-adds.
+- Then reject any candidate whose normalised host + fund name matches an
+  existing row, ignoring the funder string. Catches CAF Venturesome.
+- Then check prior disposition: if a row for this funder is `archived` or
+  `rejected`, route the candidate to review with that history attached rather
+  than adding it silently.
+
+Not scheduled. Worth noting the cost of leaving it is not just review time —
+Key Fund is at 12 rows and Big Issue Invest at 8, and every future duplicate
+makes the funder-level picture harder to read for whoever eventually splits or
+consolidates them.
+
 ---
 
 ## I. Coverage gaps
