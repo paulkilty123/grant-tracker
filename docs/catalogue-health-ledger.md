@@ -1457,6 +1457,93 @@ already handles "late November", so extending it to a season plus a year is
 small — held back only because it changes what every card in the catalogue can
 say, which is Paul's call rather than a tidy-up.
 
+## How well the system actually works, measured 2026-08-19
+
+Paul asked how effective the current system is at maintaining accuracy and at
+sourcing new opportunities. Both answered with numbers, and the accuracy one with
+a sample rather than a coverage statistic, because coverage is the proxy that has
+already misled us twice.
+
+### Accuracy: the coverage number is perfect and does not mean what it says
+
+| Measure | Value |
+|---|---:|
+| Live rows | 625 |
+| Live rows never read | **0** |
+| Live rows last read more than 7 days ago | **0** |
+| Oldest read on any live row | 16 August |
+| `_page_read.note = 'verified'` | 413 of 625 |
+
+On those figures the catalogue looks immaculate. So a random sample of 12 live
+rows was pulled and each read against its funder's page by hand.
+
+| Verdict | Rows |
+|---|---:|
+| Correct | 4 |
+| Minor error | 1 |
+| **Material error** | **4** |
+| Could not assess (bot wall, or a scope question rather than a fact) | 3 |
+
+The four material errors:
+
+- **Beinneun Student Scholarship Fund** — "Individuals aged 16 or over who are
+  residents of Fort Augustus". A scholarship for individuals, live in a catalogue
+  whose audience is charities, CICs and social enterprises.
+- **Allan & Nesta Ferguson Trust** — `apply_url` is a login wall, "You need to be
+  logged in to view this page". The stored £50,000 maximum appears nowhere; the
+  trust matches up to 50% of a budget.
+- **Community Foundation for Northern Ireland** — stored range £2,000–£5,000. The
+  page's three open funds are £3,000, £2,000 and £500. The range matches nothing.
+- **Emerton-Christie Charity** — stored £1,000–£3,000; the page states no amounts
+  at all.
+
+Plus one minor: HPC Community Fund Small Grants caps at £10,000 in our row and
+"£20,000 over 3 years, or up to £10,000 if project is 1 year" on the page.
+
+**Roughly one live row in three carries a material error, on a sample of twelve.**
+That is enough to act on and not enough to quote: nine assessable rows puts the
+true rate somewhere broad around a third. The number worth repeating is the
+contrast, not the precision — **100% of live rows were read in the last three
+days, and about a third of them are wrong.**
+
+**`verify-rows` measures that a page was fetched, not that the row is true.**
+Three of the four material errors are AMOUNTS, which is the field a fetch-and-
+compare is worst at: the page states no figure, so nothing contradicts the stored
+one, and silence reads as agreement. `amount_ungrounded` exists as a reason code;
+it is not firing on these rows. Same shape as the two proxies already recorded at
+the top of CLAUDE.md.
+
+### Sourcing: volume is not the problem, precision is
+
+Twelve weeks of intake:
+
+| | Rows | Share |
+|---|---:|---:|
+| Added | 628 | |
+| Now live | 183 | 29% |
+| Withdrawn as junk, duplicate or out of scope | 255 | 41% |
+| Still in the queue | 52 | 8% |
+
+**Two rows are discarded for every three brought in.** Lifetime the ratio is
+worse: 960 withdrawn against 625 live. Roughly 50 new rows a week arrive and
+about 15 survive, and every discarded row still costs an enrichment call and a
+place in the review queue.
+
+Duplication in the LIVE catalogue is now small — 2 title collisions and 2 URL
+collisions across 625 rows. The peer session's dedup fix on 19 August is the
+reason it will stay that way: the old check loaded `.limit(3000)` into a Set
+against a 1,912-row table that PostgREST caps at 1000, so it reported "no
+duplicate" for anything in the missing half. Its rule 4 is the one that matters
+most — a funder a human archived now survives the next discovery run instead of
+being re-added.
+
+### What this says to do next
+
+Not more verification passes. The coverage is already 100% and the errors survive
+it. The gap is that nothing tests whether a stored FIGURE is supported by the
+page, as opposed to merely unchallenged by it. That is one reason code doing its
+job, not a new system.
+
 ## Maintenance
 
 Update on each merge that closes a row, and re-measure the whole table at each
