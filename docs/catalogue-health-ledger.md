@@ -1620,6 +1620,80 @@ three-page read is the same class of error as the audit that produced it.**
 
 Probe now 4 of 4. Nine unit tests, including both halves of the Ferguson case.
 
+## Sub-tags on investment and programme rows, 2026-08-19
+
+Paul's idea: *"for the investor and programmes funder types, it would be good to
+have sub tags on each card to label what they are."*
+
+**Most of it already existed and nobody had noticed.** `funding_subtype` was a
+single text column, in the view, rendering as a pill on the search card, editable
+in the admin form, and read by the matcher against
+`organisations.funding_subtype_preferences`. What was missing was the data
+quality, the plural, and the filter. Worth remembering before the next "let's
+build X": the check is five minutes and it changed what this piece of work was.
+
+### One value per row was forcing a lie
+
+38 of the 69 live rows carry more than one tag. Access is blended finance AND a
+loan AND social investment. Trust for London does loans AND equity. The Fore is a
+grant AND a support programme AND training. Averages after tagging: 2.0 per
+investment row, 1.6 per programme row.
+
+`funding_subtypes text[]` is now the source of truth, with a database trigger
+keeping the singular equal to its first element so the matcher and the admin form
+did not have to change. **The trigger's first version was wrong** and the
+round-trip test in migration 065 caught it: it asked whether the array was
+non-empty rather than which column had been written, so an admin editing
+`funding_subtype` on a row that already had an array would have watched the
+change revert silently.
+
+### The existing tags contained real errors
+
+Fredericks Foundation — whose entire product is *"repayments are based on a
+percentage of revenue"* — was tagged `equity`. Black Seed VC, which writes
+£100k-£400k cheques, was `social_investment`. The Energy Resilience Fund, *"40%
+grant and 60% loan"*, was `loan` alone. Cross-type contamination was widespread:
+grant rows carried `equity` and `pro_bono_consulting`, programme rows carried
+`restricted` and `small_grant`.
+
+### Twelve programme rows are not programmes
+
+The taxonomy did diagnostic work, which was the argument for doing it at all. Ten
+are plain grants with "programme" or "fund" in the name — **AI For All, Co-op
+Belong, Doc Society, Dormant Assets for All, DWF Foundation, Horizon Europe
+Cluster 3, Skinners' Company, Strengthening Organisations, The Climate Change
+Collaboration, Youth Matters Fund**. Two are neither: **Gatsby** commissions its
+own research in partnership rather than accepting applications, and **Social
+Enterprise NI** signposts other people's funding.
+
+They are tagged `includes_grant` and left where they are. Retyping moves a row
+between tabs, which changes what a user finds where — **Paul's call, not a tidy-up,
+and it is not done here.**
+
+### Also visible: the investment tab is not all for this audience
+
+Start Up Loans and its South West franchise are personal loans for people
+starting a business. Black Seed VC and Bethnal Green Ventures buy equity in
+startups. Innovate UK Innovation Loans fund late-stage commercial R&D. S J Noble
+lends to rural businesses. None is wrong as a record; all sit oddly in a
+catalogue for charities, CICs and social enterprises, and the `equity` tag now at
+least says so on the card — **a registered charity has no shares to sell.** Same
+question as the gov.uk withdrawal on 18 August, and unanswered.
+
+### What the filter does and does not offer
+
+A row in the existing filter panel, on the investment and programme tabs only.
+Options carry a count and any with no rows are not rendered: `quasi_equity`,
+`convertible`, `fellowship` and `cohort_grant` are real instruments the catalogue
+does not hold, and offering them would empty the screen with no visible reason.
+Selections clear on a tab change, because a filter that is not rendered on the
+tab you are looking at must not still be filtering it.
+
+**The exhaustive-deps lint caught a bug that would have shipped.** `activeSubtypes`
+went into the wrong `useMemo` dependency array — an earlier one, not the memo that
+owns the predicate — so ticking a box would have done nothing until some other
+state change forced a recompute. Intermittent, and invisible to `tsc`.
+
 ## Maintenance
 
 Update on each merge that closes a row, and re-measure the whole table at each
