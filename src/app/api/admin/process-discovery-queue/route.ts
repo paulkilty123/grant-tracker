@@ -233,13 +233,86 @@ async function runProcessing(
     return { status: 200, body: { ok: true, processed: 0, message: 'No pending items' } }
   }
 
-  // Get existing grant URLs/titles to deduplicate before inserting
-  const { data: existingGrants } = await db
-    .from('scraped_grants')
-    .select('apply_url, title')
-    .limit(3000)
-  const existingUrls = new Set((existingGrants ?? []).map((g: { apply_url?: string | null }) => (g.apply_url ?? '').toLowerCase().trim()))
-  const existingTitles = new Set((existingGrants ?? []).map((g: { title?: string | null }) => (g.title ?? '').toLowerCase().trim()))
+  // Rows imported earlier in THIS run, so a batch cannot duplicate itself.
+  // Everything already in the catalogue is checked per candidate against the
+  // database instead — see findExisting below.
+  //
+  // This used to load `.select('apply_url, title').limit(3000)` into two Sets.
+  // PostgREST caps a response at 1000 rows whatever the limit asks for, and
+  // scraped_grants passed 1,000 rows some time ago (1,912 on 2026-08-19), so
+  // the "already have it" set held barely half the catalogue. The check still
+  // ran, found nothing, and reported success for anything in the missing half.
+  // Measured on 2026-08-19: `.limit(3000)` returned 1000, and the Bridges Fund
+  // Management URL — which sits on a row archived in April — was absent from
+  // that set and present in a paged read. Eight duplicates were added overnight
+  // as a result, four of them funders already archived or rejected.
+  const importedThisRun = { urls: new Set<string>(), titles: new Set<string>() }
+
+  /**
+   * Is this candidate already in the catalogue, in ANY state?
+   *
+   * Queried per candidate rather than pre-loaded, so no cap applies and the
+   * archived and rejected rows are visible. Returns the row it matched so the
+   * caller can say WHICH row and what state it was in — a duplicate of a live
+   * row and a duplicate of something a human archived are different facts.
+   */
+  async function findExisting(url: string, title: string) {
+    const bare = url.replace(/\/+$/, '')
+
+    // 1. Same URL, any state.
+    const { data } = await db
+      .from('scraped_grants')
+      .select('id, title, funder, pipeline_state, is_active')
+      .or(`apply_url.eq.${url},apply_url.eq.${bare},apply_url.eq.${bare}/`)
+      .limit(1)
+    if (data?.length) return { row: data[0], on: 'url' as const }
+
+    // 2. Same title.
+    const { data: byTitle } = await db
+      .from('scraped_grants')
+      .select('id, title, funder, pipeline_state, is_active')
+      .ilike('title', title)
+      .limit(1)
+    if (byTitle?.length) return { row: byTitle[0], on: 'title' as const }
+
+    // 3 and 4 both need the funder's other rows. Matched on HOST rather than on
+    // the funder string, because the funder string is exactly what failed:
+    // CAF Venturesome was already published under funder "CAF Venturesome"
+    // while the new row arrived as "Charities Aid Foundation (CAF)".
+    let host: string
+    try { host = new URL(url).hostname.replace(/^www\./, '') } catch { return null }
+    const { data: sameHost } = await db
+      .from('scraped_grants')
+      .select('id, title, funder, pipeline_state, is_active, apply_url')
+      .ilike('apply_url', `%${host}%`)
+      .limit(50)
+    const others = sameHost ?? []
+    if (!others.length) return null
+
+    // 3. Same host, and one name contains the other. Catches a fund we already
+    //    hold under a longer or shorter name.
+    const norm = (t: string) => t.toLowerCase().replace(/[^a-z0-9]/g, '')
+    const cn = norm(title)
+    const nameOverlap = others.find(r => {
+      const rn = norm(String(r.title ?? ''))
+      return rn.length > 6 && cn.length > 6 && (rn.includes(cn) || cn.includes(rn))
+    })
+    if (nameOverlap) return { row: nameOverlap, on: 'host and name' as const }
+
+    // 4. Same host, and a human already put a row there away. A rejection
+    //    should survive the next discovery run; before this it did not.
+    const turnedDown = others.find(r =>
+      r.pipeline_state === 'archived' || r.pipeline_state === 'rejected')
+    if (turnedDown) return { row: turnedDown, on: 'host previously turned down' as const }
+
+    // 5. A bare host with no path is the funder's front door. If we already hold
+    //    anything there, a front door adds no reach.
+    let path = '/'
+    try { path = new URL(url).pathname.replace(/\/+$/, '') } catch { /* keep default */ }
+    if (path === '') return { row: others[0], on: 'front door, host already held' as const }
+
+    return null
+  }
 
   const results: { id: string; title: string; status: 'imported' | 'duplicate' | 'failed'; reason?: string; funding_type?: string | null }[] = []
 
@@ -247,15 +320,32 @@ async function runProcessing(
     const urlLower = (item.url ?? '').toLowerCase().trim()
     const titleLower = (item.title ?? '').toLowerCase().trim()
 
-    // Check for duplicates in scraped_grants
-    if (existingUrls.has(urlLower)) {
+    // Already imported earlier in this same run.
+    if (importedThisRun.urls.has(urlLower) || importedThisRun.titles.has(titleLower)) {
       await db.from('discovery_queue').update({ status: 'duplicate', duplicate_of: item.url, processed_at: new Date().toISOString() }).eq('id', item.id)
-      results.push({ id: item.id, title: item.title, status: 'duplicate', reason: 'URL already in catalogue' })
+      results.push({ id: item.id, title: item.title, status: 'duplicate', reason: 'Duplicate within this batch' })
       continue
     }
-    if (existingTitles.has(titleLower)) {
-      await db.from('discovery_queue').update({ status: 'duplicate', processed_at: new Date().toISOString() }).eq('id', item.id)
-      results.push({ id: item.id, title: item.title, status: 'duplicate', reason: 'Title already in catalogue' })
+
+    // Already in the catalogue, in any state. The reason names the row and the
+    // state deliberately: "we hold this and a human archived it" is the fact
+    // worth surfacing, and it was invisible while the check only saw live-ish
+    // rows it happened to have loaded.
+    const existing = await findExisting(item.url?.trim() ?? '', item.title?.trim() ?? '')
+    if (existing) {
+      const { row, on } = existing
+      const state = row.is_active
+        ? 'live'
+        : (row.pipeline_state === 'archived' || row.pipeline_state === 'rejected')
+          ? `previously ${row.pipeline_state}`
+          : String(row.pipeline_state ?? 'not live')
+      await db.from('discovery_queue').update({ status: 'duplicate', duplicate_of: item.url, processed_at: new Date().toISOString() }).eq('id', item.id)
+      results.push({
+        id: item.id,
+        title: item.title,
+        status: 'duplicate',
+        reason: `Matched on ${on}: "${String(row.title).slice(0, 60)}" (${state})`,
+      })
       continue
     }
 
@@ -360,8 +450,8 @@ async function runProcessing(
 
     // Mark queue item as processed
     await db.from('discovery_queue').update({ status: 'processed', processed_at: new Date().toISOString() }).eq('id', item.id)
-    existingUrls.add(urlLower)
-    existingTitles.add(titleLower)
+    importedThisRun.urls.add(urlLower)
+    importedThisRun.titles.add(titleLower)
     results.push({ id: item.id, title: item.title, status: 'imported', funding_type: grantRow.funding_type })
   }
 
