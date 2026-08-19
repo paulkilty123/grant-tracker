@@ -1352,6 +1352,72 @@ That gap is dead time on a fund that is genuinely open. Surfacing the dated rows
 as "Opens ..." now closes it: the row is already visible, and the cron's job
 narrows to getting a real closing date onto a row users can already see.
 
+## Surfacing the dated between-rounds funds, 2026-08-19
+
+**31 of the 115 hidden funds are now visible, showing when they open.** Paul
+approved surfacing the dated ones rather than hiding them: a fund nobody can find
+is worse than a fund a fundraiser can diarise. The first two open on 25 August.
+
+| | Rows |
+|---|---:|
+| Planned from the audit | 37 |
+| Withdrawn as a duplicate before publishing | 1 |
+| Made live and naming an opening date | 31 |
+| Made live, then pulled back because the card would not say it | 5 |
+
+**The duplicate guard earned its place on the first run.** `discovery_queue`
+re-added Asda's Local Community Spaces Fund on 15 August, six months after the
+funder's own scraper had it, pointing at a third-party blog instead of
+asdafoundation.org. Publishing both would have put the same fund in front of a
+user twice with two different amounts. The guard aborts the whole run on any
+collision rather than picking a winner, and it was tested by removing the
+exclusion and watching it abort.
+
+### The floor was in the wrong place
+
+The script checked what the card WOULD say, then wrote. Five of those writes were
+then refused by the trust ladder — admin-pinned `next_open_date`, and `deadline`
+values written by `admin:cycle_derive_2026-07-26` — and the rows went live anyway,
+because `is_active` and `pipeline_state` are not tracked fields and applied
+regardless. **A floor checked before the write is not a floor.**
+
+Worse, those five were invisible to the obvious follow-up query. "Which rows did
+my run change" was asked of `field_provenance`, and a row whose every tracked
+write was refused carries no provenance from the run at all. Three of the five
+were found only by checking every live row with a future opening date, whoever
+made it live. **When the fields that change are untracked, provenance cannot
+answer "what did I just do" — ask the rendered result instead.**
+
+Two were fixable and stayed live: Suffolk Giving Fund and Steel Charitable Trust
+both carried `is_rolling = true` alongside a scheduled reopening, which cannot
+both be true, and the card suppresses "Opens ..." on any rolling row.
+
+Three went back to hidden and are Paul's to release, all blocked by his own admin
+values: Simon Gibson (`deadline` pinned to the same date as the opening, so the
+card renders the opening as a closing date), The Bromley Trust — Grants, Innovate
+UK Women in Innovation and Fellowship Fund (`deadline` from `cycle_derive` at
+trust 100, sitting in front of an opening date that has not arrived). Forrester
+Family Trust is a fourth, blocked differently: its text is correct and unreadable,
+"reopens on 05/01/2027 and closes 17/01/2027", because `formatNextOpen` only
+parses month names. Its stored parsed date was also a month out and is corrected.
+
+### 11 live funds still show a deadline for a round that has not opened
+
+Found by the same check and NOT touched, because they were live before today and
+are a separate decision: Ford Britain Trust, Bristol Impact Fund 3, Schroder
+Charity Trust, Jerwood Annual Funding Round, Oake Sunshine Fund, the BRIT Trust,
+Innovate UK Growth Catalyst, The Health Lottery Foundation, Tower Hamlets
+Community Grant Programme, Better Brighton & Hove Ward Pots and the William
+Kendall Small Awards Programme. Each shows a closing date on a card for a fund a
+user cannot apply to yet. This is the same fault the Aldi row had, and the reason
+`deadline` beating `next_open_date` in the card is worth revisiting as a rule
+rather than row by row.
+
+**`formatNextOpen` cannot read numeric dates.** `05/01/2027` renders as "Closed —
+check funder". Teaching it that format is a small change that would recover
+Forrester and probably others; it is not done here because it changes what every
+card in the catalogue can say.
+
 ## Maintenance
 
 Update on each merge that closes a row, and re-measure the whole table at each
