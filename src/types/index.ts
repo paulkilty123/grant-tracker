@@ -143,6 +143,13 @@ export type FundingSubtype =
   | 'fellowship'
   | 'cohort_grant'
   | 'award'
+  // Added 2026-08-19. The four existing programme codes describe the SHAPE of a
+  // cohort and nothing else, so a procurement training course and a mentoring
+  // scheme both landed as "cohort_grant" or as nothing at all. These three name
+  // what a fundraiser is actually being offered.
+  | 'support_programme'
+  | 'match_funding'
+  | 'includes_grant'
   // investment sub-types
   | 'loan'
   | 'social_investment'
@@ -150,6 +157,11 @@ export type FundingSubtype =
   | 'quasi_equity'
   | 'convertible'
   | 'blended'
+  // Added 2026-08-19 for two instruments already in the catalogue and
+  // unrepresentable: Fredericks Foundation repays out of revenue, and Ethex
+  // raises withdrawable shares from the public.
+  | 'revenue_share'
+  | 'community_shares'
   // in-kind sub-types
   | 'pro_bono_legal'
   | 'pro_bono_consulting'
