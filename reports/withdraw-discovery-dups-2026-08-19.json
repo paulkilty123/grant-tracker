@@ -1,0 +1,145 @@
+{
+  "written_at_utc": "2026-08-19T18:42:57.592Z",
+  "approved_by": "Paul, 2026-08-19",
+  "note": "Reversal: set pipeline_state back to the value in `before` and clear rejection_reason.",
+  "rows": [
+    {
+      "id": "5a9464eb",
+      "reason": "duplicate_of_archived_5db10efd",
+      "title": "Bridges Evergreen & Social Impact Funds",
+      "why": "Identical apply_url to 5db10efd \"Bridges Fund Management — Social Outcomes Fund\", archived since April. The same URL was already looked at and put away.",
+      "fullId": "5a9464eb-f3a2-42cd-a5c2-97d0a0f91105"
+    },
+    {
+      "id": "a9b45831",
+      "reason": "duplicate_of_published_72739682",
+      "title": "Charity Bank Social Enterprise & Charity Loans",
+      "why": "Charity Bank already has three rows including the live 72739682 \"Charity Bank Loans for Social Purpose\" on /loans. This one points at the bare homepage.",
+      "fullId": "a9b45831-f734-460b-aab3-b9141a3f80c3"
+    },
+    {
+      "id": "81ea7507",
+      "reason": "duplicate_of_archived_eb8b4219",
+      "title": "Unity Trust Bank Social Enterprise Lending",
+      "why": "eb8b4219 \"Unity Trust Bank — Social Enterprise Banking\" was archived in April and pointed at the specific /business-banking/social- page. This re-adds the funder at the homepage, so it is both a duplicate and a worse link.",
+      "fullId": "81ea7507-d967-44b1-a42a-f71305eb1a0c"
+    },
+    {
+      "id": "b1b546ce",
+      "reason": "wrong_audience_investor_facing",
+      "title": "Resonance Enterprise Investment Fund",
+      "why": "apply_url is /for-investors/investment-opportunities/... — the page for people putting capital INTO the fund, not for organisations seeking investment. A fundraiser landing there cannot apply. Also duplicates 250e4dea.",
+      "fullId": "b1b546ce-02d6-4789-beae-f5109ef627d7"
+    },
+    {
+      "id": "bca685d5",
+      "reason": "duplicate_of_published_1df738d5",
+      "title": "CAF Venturesome",
+      "why": "Already published as 1df738d5 \"CAF Venturesome Impact Fund\". The duplicate escaped because the funder string differs: \"CAF Venturesome\" against \"Charities Aid Foundation (CAF)\".",
+      "fullId": "bca685d5-8462-4071-95d5-f598d9dde1b3"
+    },
+    {
+      "id": "d1fa687c",
+      "reason": "duplicate_front_door",
+      "title": "Big Issue Invest Loan Finance",
+      "why": "Big Issue Invest already has seven rows including three named funds. This adds an eighth pointing at /finance/, the funder front door.",
+      "fullId": "d1fa687c-8ae9-499b-ae84-f6682f46c273"
+    },
+    {
+      "id": "d3b226dc",
+      "reason": "duplicate_front_door",
+      "title": "Key Fund Social Enterprise Loans and Investment",
+      "why": "Key Fund already has eleven rows, six of them live. This adds a twelfth pointing at /apply/, the funder front door.",
+      "fullId": "d3b226dc-7c18-43e4-894b-d055c2e56d37"
+    },
+    {
+      "id": "c6f0aeb5",
+      "reason": "directory_not_a_fund",
+      "title": "Responsible Finance CDFI Loan Finder",
+      "why": "A search tool listing other lenders, not a fund anyone applies to. Same class as the fundingforall and goodfinance links already in the queue.",
+      "fullId": "c6f0aeb5-a3e7-41e7-8243-109526af4679"
+    }
+  ],
+  "before": [
+    {
+      "id": "5a9464eb-f3a2-42cd-a5c2-97d0a0f91105",
+      "title": "Bridges Evergreen & Social Impact Funds",
+      "funder": "Bridges Fund Management",
+      "apply_url": "https://www.bridgesfundmanagement.com/",
+      "is_active": false,
+      "pipeline_state": "captured",
+      "rejection_reason": null,
+      "first_seen_at": "2026-08-19T09:31:10.370275+00:00"
+    },
+    {
+      "id": "a9b45831-f734-460b-aab3-b9141a3f80c3",
+      "title": "Charity Bank Social Enterprise & Charity Loans",
+      "funder": "Charity Bank",
+      "apply_url": "https://charitybank.org/",
+      "is_active": false,
+      "pipeline_state": "captured",
+      "rejection_reason": null,
+      "first_seen_at": "2026-08-19T09:30:58.250479+00:00"
+    },
+    {
+      "id": "81ea7507-d967-44b1-a42a-f71305eb1a0c",
+      "title": "Unity Trust Bank Social Enterprise Lending",
+      "funder": "Unity Trust Bank",
+      "apply_url": "https://www.unity.co.uk/",
+      "is_active": false,
+      "pipeline_state": "captured",
+      "rejection_reason": null,
+      "first_seen_at": "2026-08-19T09:31:00.268044+00:00"
+    },
+    {
+      "id": "b1b546ce-02d6-4789-beae-f5109ef627d7",
+      "title": "Resonance Enterprise Investment Fund",
+      "funder": "Resonance",
+      "apply_url": "https://resonance.ltd.uk/for-investors/investment-opportunities/enterprise-growth-funds/resonance-enterprise-investment-fund",
+      "is_active": false,
+      "pipeline_state": "captured",
+      "rejection_reason": null,
+      "first_seen_at": "2026-08-19T09:31:04.400458+00:00"
+    },
+    {
+      "id": "bca685d5-8462-4071-95d5-f598d9dde1b3",
+      "title": "CAF Venturesome",
+      "funder": "Charities Aid Foundation (CAF)",
+      "apply_url": "https://www.cafonline.org/charities/borrowing/venturesome",
+      "is_active": false,
+      "pipeline_state": "captured",
+      "rejection_reason": null,
+      "first_seen_at": "2026-08-19T09:31:06.485747+00:00"
+    },
+    {
+      "id": "d1fa687c-8ae9-499b-ae84-f6682f46c273",
+      "title": "Big Issue Invest Loan Finance",
+      "funder": "Big Issue Invest",
+      "apply_url": "https://bigissueinvest.com/finance/",
+      "is_active": false,
+      "pipeline_state": "captured",
+      "rejection_reason": null,
+      "first_seen_at": "2026-08-19T09:30:56.199302+00:00"
+    },
+    {
+      "id": "d3b226dc-7c18-43e4-894b-d055c2e56d37",
+      "title": "Key Fund Social Enterprise Loans and Investment",
+      "funder": "Key Fund",
+      "apply_url": "https://thekeyfund.co.uk/apply/",
+      "is_active": false,
+      "pipeline_state": "captured",
+      "rejection_reason": null,
+      "first_seen_at": "2026-08-19T09:31:02.454348+00:00"
+    },
+    {
+      "id": "c6f0aeb5-a3e7-41e7-8243-109526af4679",
+      "title": "Responsible Finance CDFI Loan Finder",
+      "funder": "Responsible Finance",
+      "apply_url": "https://responsiblefinance.org.uk/find-a-loan/",
+      "is_active": false,
+      "pipeline_state": "captured",
+      "rejection_reason": null,
+      "first_seen_at": "2026-08-19T09:31:08.610533+00:00"
+    }
+  ]
+}
