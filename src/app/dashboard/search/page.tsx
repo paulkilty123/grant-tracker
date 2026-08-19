@@ -20,11 +20,11 @@ import {
   LIKE_SCORE_BOOST, DISLIKE_SCORE_PENALTY, LIKE_SECTOR_BOOST, DISLIKE_SECTOR_PENALTY,
   FB_UP_SCORE_BOOST, FB_DOWN_SCORE_PENALTY, FB_UP_SECTOR_BOOST, FB_DOWN_SECTOR_PENALTY,
 } from '@/lib/matchWeights'
-import type { GrantOpportunity, Organisation, FunderType, FundingType, ImpactSector, LegalStructure } from '@/types'
+import type { GrantOpportunity, Organisation, FunderType, FundingType, FundingSubtype, ImpactSector, LegalStructure } from '@/types'
 import { MatchFeedbackBlock } from '@/components/MatchFeedbackBlock'
 import { track } from '@/lib/analytics'
 import { useIsMobile } from '@/hooks/useIsMobile'
-import { SUBTYPE_LABELS } from '@/lib/funding-subtypes'
+import { SUBTYPE_LABELS, SUBTYPES_BY_FUNDING_TYPE, SUBTYPE_HINTS } from '@/lib/funding-subtypes'
 import { normaliseScrapedGrant, type EnrichedGrant } from '@/lib/grants-normalise'
 import { emitClientEvent } from '@/lib/events/client'
 import { toCatalogueUuid } from '@/lib/events/taxonomy'
@@ -517,9 +517,17 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
   // (real subtype) while others showed "Grant" (just the broad type). The
   // mix read as data inconsistency. Now the Type cell only renders when we
   // know the subtype.
-  const subtypeLbl = grant.fundingSubtype && SUBTYPE_LABELS[grant.fundingSubtype]
-    ? SUBTYPE_LABELS[grant.fundingSubtype]
-    : null
+  //
+  // Now a LIST. Investment and programme rows are routinely more than one thing
+  // — 38 of the 69 live rows carry two tags or more — and showing only the first
+  // told a charity "Loan" about a fund that also does equity, or "Blended
+  // finance" about one that is also a grant. Falls back to the single value for
+  // any row the plural has not reached.
+  const subtypeLabels: string[] = (
+    grant.fundingSubtypes?.length
+      ? grant.fundingSubtypes
+      : (grant.fundingSubtype ? [grant.fundingSubtype] : [])
+  ).map(s => SUBTYPE_LABELS[s]).filter(Boolean)
 
   // ── Insights strip label ──
   // Opportunity-type-specific. Mirrors the type chip vocabulary
@@ -658,10 +666,14 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                   {qualifies && <span style={{ color: '#639922', fontSize: 11 }}>✓</span>}
                 </div>
               </div>
-              {subtypeLbl && (
+              {subtypeLabels.length > 0 && (
                 <div>
                   <div style={{ fontSize: 10, color: '#8A8986', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3, fontFamily: 'var(--font-dm-sans)' }}>Type</div>
-                  <span style={{ fontSize: 11, background: '#F1F7E4', color: '#3B6D11', padding: '2px 8px', borderRadius: 9999, fontWeight: 500, fontFamily: 'var(--font-dm-sans)', display: 'inline-block' }}>{subtypeLbl}</span>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                    {subtypeLabels.map(lbl => (
+                      <span key={lbl} style={{ fontSize: 11, background: '#F1F7E4', color: '#3B6D11', padding: '2px 8px', borderRadius: 9999, fontWeight: 500, fontFamily: 'var(--font-dm-sans)', display: 'inline-block' }}>{lbl}</span>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -1338,6 +1350,8 @@ export default function SearchPage() {
   const [activeFundingType, setActiveFundingType] = useState<FundingType | 'all'>(
     initFundingType ?? 'all'
   )
+  /** Sub-type filter, only meaningful on the investment and programme tabs. */
+  const [activeSubtypes, setActiveSubtypes]       = useState<Set<FundingSubtype>>(new Set())
   const [categoryFilter, setCategoryFilter]       = useState<'all' | 'grants' | 'programmes'>('all')
   const [filtersOpen, setFiltersOpen]             = useState(false)
   const [entryTypeFilter, setEntryTypeFilter]     = useState<'all' | 'live' | 'funders'>('all')
@@ -1355,6 +1369,13 @@ export default function SearchPage() {
   const [hasSearched, setHasSearched]             = useState(false)
   const [profileFiltersOpen, setProfileFiltersOpen] = useState(false)
   const [activeTab, setActiveTab]                 = useState<'grant' | 'programme' | 'investment' | 'in_kind'>('grant')
+
+  // Sub-types are per-tab, so a selection must not survive a tab change.
+  // "Loan" chosen on Investment and then a switch to Programmes would match
+  // nothing, and the screen would go empty with no visible reason — the filter
+  // doing the emptying is not even rendered on that tab. Clearing is the only
+  // honest behaviour; the alternative is a hidden control with a real effect.
+  useEffect(() => { setActiveSubtypes(new Set()) }, [activeTab])
   const [programmeHasCash, setProgrammeHasCash]   = useState(false)
   const [activeView, setActiveView]               = useState<'browse' | 'saved' | 'hidden'>('browse')
   // Explicit profile filter toggle. Previously this was derived from
@@ -1953,6 +1974,14 @@ export default function SearchPage() {
         return new Date(g.lastVerifiedAt) >= cutoff
       })()
       const matchesInviteOnly = showInviteOnly || !g.isInviteOnly
+      // Sub-type. OR within the selection, as the sector filter is: someone
+      // ticking Loan and Blended finance wants either, not both at once, and
+      // almost no row would satisfy both readings anyway.
+      const gSubtypes = (g as GrantOpportunity & { fundingSubtypes?: FundingSubtype[]; fundingSubtype?: FundingSubtype | null })
+      const gSubs: FundingSubtype[] = gSubtypes.fundingSubtypes?.length
+        ? gSubtypes.fundingSubtypes
+        : (gSubtypes.fundingSubtype ? [gSubtypes.fundingSubtype] : [])
+      const matchesSubtype = activeSubtypes.size === 0 || gSubs.some(sub => activeSubtypes.has(sub))
       const matchesFundingType = activeFundingType === 'all' ||
         (g as GrantOpportunity & { fundingType?: FundingType }).fundingType === activeFundingType ||
         // Fallback: if grant has no fundingType set, treat it as 'grant'
@@ -1981,7 +2010,7 @@ export default function SearchPage() {
       const matchesProgrammeCash = !programmeHasCash || activeTab !== 'programme' ||
         ((g.amountMin ?? 0) > 0 || (g.amountMax ?? 0) > 0)
 
-      return matchesQuery && matchesType && matchesAmount && matchesDeadline && matchesSectors && matchesEntryType && matchesFreshness && matchesInviteOnly && matchesFundingType && matchesCategory && matchesFunderCategory && matchesGeoScope && matchesLocationText && matchesTab && matchesProgrammeCash
+      return matchesQuery && matchesType && matchesAmount && matchesDeadline && matchesSectors && matchesEntryType && matchesFreshness && matchesInviteOnly && matchesFundingType && matchesCategory && matchesFunderCategory && matchesGeoScope && matchesLocationText && matchesTab && matchesProgrammeCash && matchesSubtype
     })
 
     if (aiResults) {
@@ -2145,6 +2174,7 @@ export default function SearchPage() {
     freshnessFilter,
     showInviteOnly,
     activeFundingType,
+    activeSubtypes,
     categoryFilter,
     activeFunderCategory,
     activeGeoScope,
@@ -2330,6 +2360,7 @@ export default function SearchPage() {
   function resetAllFilters() {
     setActiveType('all')
     setActiveFundingType('all')
+    setActiveSubtypes(new Set())
     setAmountMin('')
     setAmountMax('')
     setDeadlineFilter('all')
@@ -2359,6 +2390,25 @@ export default function SearchPage() {
       return next
     })
   }
+
+  // How many live rows carry each sub-type on the tab being viewed.
+  //
+  // The taxonomy is wider than the catalogue: `quasi_equity`, `convertible`,
+  // `fellowship` and `cohort_grant` are real things nothing currently holds, and
+  // rendering them would offer a filter that empties the screen and tells the
+  // user nothing about why. Counted from `allGrants` rather than the filtered
+  // set on purpose — a count that shrank as you ticked other filters would make
+  // options vanish mid-use.
+  const subtypeCounts = useMemo(() => {
+    const counts = new Map<FundingSubtype, number>()
+    for (const g of allGrants) {
+      const gg = g as GrantOpportunity & { fundingType?: FundingType; fundingSubtypes?: FundingSubtype[]; fundingSubtype?: FundingSubtype | null }
+      if ((gg.fundingType ?? 'grant') !== activeTab) continue
+      const subs = gg.fundingSubtypes?.length ? gg.fundingSubtypes : (gg.fundingSubtype ? [gg.fundingSubtype] : [])
+      for (const sub of subs) counts.set(sub, (counts.get(sub) ?? 0) + 1)
+    }
+    return counts
+  }, [allGrants, activeTab])
 
   // Derived: which funding-type pills to show given the active category
   const visibleFundingTypes = FUNDING_TYPES.filter(t =>
@@ -2762,6 +2812,48 @@ export default function SearchPage() {
                 </div>
               </div>
             </div>
+
+            {/* Row 2b: Kind of investment / programme.
+                Only on the two tabs where the broad label stops being useful.
+                "Investment" covers a £25k unsecured loan and a £400k equity
+                round, and the difference decides whether an organisation can
+                take the money at all — a registered charity has no shares to
+                sell. Absent on Grants and In-Kind, where the tab label already
+                says what the money is. */}
+            {(activeTab === 'investment' || activeTab === 'programme') && (
+              <div>
+                <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">
+                  {activeTab === 'investment' ? 'Kind of investment' : 'Kind of programme'}
+                </p>
+                <div className="flex gap-1.5 flex-wrap">
+                  {(SUBTYPES_BY_FUNDING_TYPE[activeTab] ?? []).filter(sub => (subtypeCounts.get(sub) ?? 0) > 0).map(sub => {
+                    const isActive = activeSubtypes.has(sub)
+                    return (
+                      <button key={sub}
+                        title={SUBTYPE_HINTS[sub] ?? SUBTYPE_LABELS[sub]}
+                        onClick={() => setActiveSubtypes(prev => {
+                          const next = new Set(prev)
+                          if (next.has(sub)) next.delete(sub); else next.add(sub)
+                          return next
+                        })}
+                        className={`px-3 py-1.5 border text-xs font-medium transition-all rounded-md ${
+                          isActive
+                            ? 'border-[#173404] bg-[#173404] text-[#EAF3DE]'
+                            : 'border-warm text-mid hover:border-[#173404] hover:text-[#173404]'
+                        }`}>
+                        {SUBTYPE_LABELS[sub]}
+                        <span className={isActive ? 'ml-1.5 opacity-70' : 'ml-1.5 text-light'}>{subtypeCounts.get(sub)}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+                {activeSubtypes.size > 0 && (
+                  <p className="text-xs text-light mt-2">
+                    {SUBTYPE_HINTS[Array.from(activeSubtypes)[0]] ?? ''}
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Row 3: Sector — 12-sector taxonomy pills */}
             <div>

@@ -311,6 +311,11 @@ export interface GrantOpportunity {
   fundingType?: FundingType
   /** Optional sub-classification (e.g. loan/equity under investment) */
   fundingSubtype?: FundingSubtype | null
+  /** Every sub-type the row carries. `fundingSubtype` is the first of these,
+   *  kept in step by a database trigger (migration 065) so the matcher and the
+   *  admin form did not have to change. Prefer this on any surface that can show
+   *  more than one label. */
+  fundingSubtypes?: FundingSubtype[]
   /** What the money may be spent on. NULL = the funder page does not say. */
   spendRestriction?: SpendRestriction | null
   /** {capital}, {revenue}, or both. 57 of 623 live grants fund both. */
