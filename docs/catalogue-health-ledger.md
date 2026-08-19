@@ -1418,6 +1418,45 @@ check funder". Teaching it that format is a small change that would recover
 Forrester and probably others; it is not done here because it changes what every
 card in the catalogue can say.
 
+## The 11 live funds whose card and timing disagreed, worked 2026-08-19
+
+Found by the card check, not by the data. Each one read on the funder's page
+first, because **the fault was not the same in any two rows and the columns
+cannot tell you which field is the stale one.** Two were the exact opposite of
+the reported problem.
+
+| Row | What was actually wrong | Now |
+|---|---|---|
+| Schroder Charity Trust | **Nothing.** Open now, closes 5pm 28 Aug 2026. The "Autumn 2026" OPENING date, set in March, was the stale field | deadline 28 Aug, opening date cleared |
+| Oake Sunshine Fund | **Nothing.** Open now, "Apply by: Mon 12th October 2026". Same stale-opening shape | deadline 12 Oct, opening date cleared |
+| BRIT Trust | The 30 Apr 2027 deadline was `cycle_derive` rolling the 2026 cycle forward. No 2027 round has been announced | deadline removed, text quotes the page |
+| Jerwood | Deadline 3 Feb 2027 **is the opening date** — "Applications open 9am 3 February (closing 2pm 17 March) 2027" | **BLOCKED** — Paul's pin |
+| Bristol Impact Fund 3 | Nothing closes 28 Apr 2027. Next timeline published Sept 2027, round runs from Apr 2028 | **BLOCKED** — Paul's pin |
+| Ford Britain Trust | Nothing. Opens 1 Sep, closes 31 Oct 2026; the card shows the closing date, which is the useful one | left alone |
+| Health Lottery, Innovate UK Growth Catalyst | Nothing. Both hold honest prose saying the next round is unannounced, and the card says "Closed — check funder" | left alone |
+| Better Brighton & Hove, Tower Hamlets, William Kendall | Nothing false. "Late 2026" / "Winter 2026" is all anyone has published | left alone, see below |
+
+**Two rows are still wrong on a live card and only Paul can fix them.** Both are
+`admin:paulkilty1@gmail.com` pins on `deadline`, which no other source outranks.
+Jerwood shows a fundraiser "deadline 3 February 2027" for a round that OPENS at
+9am that day and runs six more weeks; the real closing date is 17 March 2027.
+Bristol shows a deadline for a round that does not exist. Both writes were
+attempted so the refusal is on the record rather than assumed.
+
+**The lesson is the one already in CLAUDE.md, in a new place.** "The card does not
+name an opening date" is a sentence about the card. "This fund is shut and we are
+showing a closing date" is a sentence about the user, and only five of the eleven
+turned out to be that. Two were the reverse — an open fund carrying a stale
+opening date — and had the check been trusted as a finding rather than as a
+prompt to go and read, both would have been "fixed" into being wrong.
+
+**`formatNextOpen` cannot read a bare season.** "Late 2026" and "Winter 2026"
+fall through to "Closed — check funder" even though the season is the only thing
+the funder has published. Three live rows are affected. The seasonal branch
+already handles "late November", so extending it to a season plus a year is
+small — held back only because it changes what every card in the catalogue can
+say, which is Paul's call rather than a tidy-up.
+
 ## Maintenance
 
 Update on each merge that closes a row, and re-measure the whole table at each
