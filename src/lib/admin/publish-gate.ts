@@ -199,6 +199,12 @@ const POLICY: Record<ReviewReasonCode, 'block' | 'info'> = {
   beneficiaries_generic_only: 'info',
   amount_zero:                'info',
   amount_under_stated:        'info',
+  // Info, not block, and the difference from `amount_unsupported` is measured
+  // rather than assumed. Amounts nobody supported were scraper-written 65% of
+  // the time. Deadlines are not: of 71 live rows showing a date no page states,
+  // 20 came from scrapers, 16 from admin and 10 from a person verifying by hand.
+  // Blocking would hold rows on deliberate human decisions.
+  deadline_unsupported:       'info',
   multi_round_uncaptured:     'info',
   link_unverified:            'info',  // see note 2 in the header — 57/60 never checked
   stale_dates:                'info',   // prose untidy, but the deadline on the card is right

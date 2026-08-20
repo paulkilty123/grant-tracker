@@ -2300,6 +2300,68 @@ with a fix working and with the model extracting nothing. The probe prints
 deadlines were measured against the OLD extractor, so those piles should be
 re-measured before being worked, not cleaned up on the old numbers.
 
+## Deadlines after the extractor fix, 2026-08-20
+
+Re-read 173 rows against the repaired prompt. **The two residues behaved
+completely differently, and the difference decided what to do with each.**
+
+### Eligibility improved. Deadlines did not.
+
+`not_registered` fell from roughly two proposals in three to about one in five.
+Not eliminated, but the definition worked.
+
+Deadlines barely moved: **57 of the 62 readable rows still show a date their page
+never states.** So it was never a year-guessing problem. Those pages genuinely do
+not publish a deadline, and no prompt change was going to conjure one.
+
+### The provenance is nothing like the amounts, so the treatment differs
+
+| Where the unsupported deadline came from | Rows |
+|---|---:|
+| Scrapers | 20 |
+| **`admin:paulkilty1@gmail.com`** | **16** |
+| AI enrichment | 10 |
+| **A person verifying by hand** | **10** |
+| `system:cycle_derive` | 7 |
+| Other / none | 8 |
+
+Amounts nobody supported were scraper-written 65% of the time, which is what
+justified clearing them in bulk and blocking the rest. **Twenty-six of these are
+Paul's own values or a human check**, so there is no bulk clear to make without
+deleting deliberate decisions. `deadline_unsupported` therefore ships as `info`,
+where `amount_unsupported` blocks. The tests pin that difference so it cannot
+drift back.
+
+### Four of the seven "clearest suspects" were correct
+
+`system:cycle_derive:v1` looked like the weakest provenance in the pile — it is
+the mechanism that gave A Sinclair Henderson Trust a deadline in a year with no
+trustee meeting — so all seven were proposed for removal. Reading them says
+otherwise:
+
+- **Schroder** — "5pm on the 28th August 2026". Correct.
+- **Bellahouston** — quarterly trustee cut-offs, verified 19 August. Correct.
+- **Sizewell C** — "Sunday 27th September 2026 at 23:59". Correct.
+- **Ballantrae** — "Application Deadline: 09/10/26". Correct.
+
+**A derived date is not a wrong date.** Those cycles came off real pages and
+rolled forward correctly; the verifier simply did not find the date on the page
+it happened to read. Suspecting the mechanism rather than the row would have
+deleted four good deadlines.
+
+Two needed something, and only one was about a deadline. **Continuo Foundation**
+derived 1 September from its own cycle entries labelled "Spring round (approx)"
+and "Autumn round (approx)" — a guess wearing a date's precision — while the row
+already said "TBC — between rounds" beside it. **East Midlands Airport** pointed
+at `active-together.org`, a third-party directory, not the airport; relinked to
+the funder's page and the MAG application portal, with its unconfirmed derived
+date removed. Aviva returns 403 and was left alone.
+
+**Four checks changed four minds.** That is the fourth time today a pile turned
+out smaller than the number suggested, and the pattern is now consistent enough
+to be a rule: **measure the pile, then read a sample of it before proposing what
+to do with all of it.**
+
 ## Maintenance
 
 Update on each merge that closes a row, and re-measure the whole table at each

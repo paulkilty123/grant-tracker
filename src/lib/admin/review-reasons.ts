@@ -21,7 +21,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { readGrantFlags, type GrantFlag } from '@/lib/grant-flags'
-import { readStamp, PAGE_READ_KEY, AMOUNT_UNSUPPORTED_NOTE, type FieldEvidence } from '@/lib/field-evidence'
+import { readStamp, PAGE_READ_KEY, AMOUNT_UNSUPPORTED_NOTE, DEADLINE_UNSUPPORTED_NOTE, type FieldEvidence } from '@/lib/field-evidence'
 import { abstainReason } from '@/lib/verification/abstain'
 import { FEEDBACK_QUEUE_SOURCE } from '@/lib/feedback/triage'
 
@@ -108,6 +108,7 @@ export type ReviewReasonCode =
   | 'amount_under_stated'
   | 'amount_ungrounded'
   | 'amount_unsupported'
+  | 'deadline_unsupported'
   | 'amount_inverted'
   | 'no_deadline'
   | 'deadline_passed'
@@ -748,6 +749,24 @@ export function deriveReviewReasons(row: ReviewRow, todayISO?: string): ReviewRe
       code: 'amount_unsupported', severity: 'check',
       label: 'Amount is not on the funder\u2019s page',
       detail: `the card offers ${shown || 'an amount'} and the page we read states no figure for one applicant, so the number came from somewhere other than the funder`,
+    })
+  }
+
+  // The page was read and it states no closing date, while the card shows one.
+  //
+  // INFORMATIONAL, unlike its amount twin, and the difference is the evidence.
+  // Amounts that no page supported turned out to be scraper-written at 65%, so
+  // blocking them mostly blocked invented numbers. Deadlines do not follow that
+  // pattern: of the 71 live rows in this shape on 2026-08-20, 20 came from
+  // scrapers but 16 were Paul's own admin values and 10 were verified by a
+  // person. A funder publishing its deadline in a newsletter or a PDF while the
+  // page we read says nothing is ordinary, so this is a prompt to look, not a
+  // finding.
+  if (row.deadline && readStamp(row.field_evidence, 'deadline')?.note === DEADLINE_UNSUPPORTED_NOTE) {
+    reasons.push({
+      code: 'deadline_unsupported', severity: 'check',
+      label: 'Closing date is not on the funder\u2019s page',
+      detail: `the card shows ${row.deadline} and the page we read states no closing date, so the date came from somewhere other than the funder`,
     })
   }
 

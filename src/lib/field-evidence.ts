@@ -140,6 +140,19 @@ export type EvidenceField = (typeof EVIDENCE_FIELDS)[number]
 export const AMOUNT_UNSUPPORTED_NOTE = 'we state a figure this page does not'
 
 /**
+ * "We show a closing date this page never states."
+ *
+ * The deadline twin of the note above, and deliberately weaker in consequence.
+ * Measured 2026-08-20: 71 live rows show a date the page does not state, and
+ * unlike the amounts the provenance is spread — 20 from scrapers, but 16 from
+ * `admin:paulkilty1@gmail.com` and 10 from a person verifying by hand. A funder
+ * publishing its deadline in a newsletter, a PDF or an email while the page we
+ * read says nothing is ordinary, so silence here is a prompt to look rather than
+ * evidence of an error. Hence `info`, not `block`.
+ */
+export const DEADLINE_UNSUPPORTED_NOTE = 'we show a closing date this page does not state'
+
+/**
  * Reserved key: "this row's page was read at this time, and this is what
  * happened". Not a field, and never a claim about a value.
  *

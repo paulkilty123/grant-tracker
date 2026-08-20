@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
 import type { EvidenceInput } from '../field-evidence'
-import { AMOUNT_UNSUPPORTED_NOTE } from '../field-evidence'
+import { AMOUNT_UNSUPPORTED_NOTE, DEADLINE_UNSUPPORTED_NOTE } from '../field-evidence'
 import { isOpeningEntry, type CycleEntry } from '../deadline-cycle'
 import { asStructures, asExclusions, compareStructures, newExclusions, namesJurisdiction, quoteNamesAForm } from './eligibility'
 
@@ -1326,7 +1326,24 @@ async function runModel(
     // here would let a closed round sit unverified-but-unremarkable forever.
     stamp('deadline', false, deadlineFact.quote, extractedDeadline)
   } else {
-    consider('deadline', deadlineFact, row.deadline, asDate)
+    // THE PAGE SAID NOTHING ABOUT TIMING, AND WE ARE SHOWING A DATE.
+    //
+    // Recorded the same way an unsupported amount is, and for the same reason: a
+    // closing date on a card is acted on, and one the funder's own page does not
+    // state came from somewhere else. `consider` would file this as a plain
+    // unanswered field, which is the right reading for a row showing NO date and
+    // the wrong one for a row showing a date nobody published.
+    //
+    // Measured 2026-08-20: 71 live rows are in this shape, and it survived the
+    // extractor fixes — 57 of the 62 readable ones still had a silent page, so it
+    // was never a year-guessing problem. Those pages genuinely do not publish a
+    // deadline.
+    if (deadlineFact.value === null && row.deadline) {
+      notFound.push('deadline')
+      stamp('deadline', null, null, undefined, DEADLINE_UNSUPPORTED_NOTE)
+    } else {
+      consider('deadline', deadlineFact, row.deadline, asDate)
+    }
   }
   // A FRONT DOOR MAY TAKE A CLAIM DOWN. IT MAY NEVER PUT ONE UP.
   //

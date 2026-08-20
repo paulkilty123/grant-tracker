@@ -103,6 +103,7 @@ const CODE_SECTION: Partial<Record<ReviewReasonCode, SectionId>> = {
   deadline_implausible:   'judgement',
   amount_ungrounded:      'judgement',
   amount_unsupported:     'judgement',
+  deadline_unsupported:   'judgement',
   amount_pot_suspected:   'judgement',
   amount_under_stated:    'judgement',
   amount_inverted:        'judgement',
