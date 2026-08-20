@@ -152,6 +152,30 @@ const FUNDING_TYPES: { value: FundingType; label: string; desc: string }[] = [
    Types
    ═══════════════════════════════════════════════ */
 
+/**
+ * Columns the wizard writes but never asks about.
+ *
+ * These are applied ONLY when creating a brand new organisation, where they
+ * simply restate the database defaults. They are deliberately absent from the
+ * update path: the wizard collects no input for any of them and does not read
+ * them back when it prefills, so including them on an update silently wiped
+ * whatever the user had set elsewhere. Two are user-entered in the profile
+ * editor (funder_type_preferences, years_trading) and all of them feed
+ * ranking, so the symptom was "my matches changed and nothing said why".
+ *
+ * If the wizard ever starts collecting one of these, move it into `payload`
+ * proper rather than adding it back here.
+ */
+const UNCOLLECTED_ON_CREATE = {
+  years_trading:               null,
+  funder_type_preferences:     [],
+  funding_subtype_preferences: [],
+  people_per_year:             null,
+  volunteers:                  null,
+  projects_running:            null,
+  key_outcomes:                [],
+}
+
 type WizardStep = 'entry' | 'review' | 'manual' | 'sectors' | 'beneficiaries' | 'location' | 'reveal'
 
 const STEP_DOT_POS: Record<WizardStep, number> = {
@@ -574,8 +598,12 @@ function CardShell({
 }) {
   const isMobile = useIsMobile()
   return (
-    <div className="flex-1 flex items-start justify-center px-4 py-8 md:py-12">
-      <div className="w-full max-w-[720px]">
+    /* my-auto rather than items-center: auto margins centre the card when there
+       is room and collapse when there is not, so `sectors` at 19 chips stays
+       scrollable instead of having its top clipped. items-start left the short
+       steps floating high, which showed up as soon as `entry` became a card. */
+    <div className="flex-1 flex justify-center px-4 py-8 md:py-12">
+      <div className="w-full max-w-[720px] my-auto">
         <div style={{
           background: '#fff',
           border: `1px solid ${T.borderLight}`,
@@ -921,18 +949,35 @@ export default function OnboardingWizardPage() {
         beneficiaries:                [],
         mission:                      state.mission.trim() || null,
         years_operating:              null,
-        people_per_year:              null,
-        volunteers:                   null,
-        projects_running:             null,
-        key_outcomes:                 [],
+        // NOTHING THE WIZARD DOES NOT ASK ABOUT BELONGS IN THIS PAYLOAD.
+        //
+        // people_per_year, volunteers, projects_running, key_outcomes,
+        // funder_type_preferences, funding_subtype_preferences and
+        // years_trading used to be written here as `null` / `[]` literals.
+        // The wizard collects no input for any of them and does not read them
+        // back when it prefills from an existing org, so on the update branch
+        // they were silently overwritten every time someone re-ran the wizard.
+        //
+        // Two of them are user-entered in the profile editor
+        // (funder_type_preferences, years_trading) and all of them are read by
+        // ranking — matching.ts scores +15 on a preferred funder type — so a
+        // user who set their preferences, then walked the wizard again from the
+        // dashboard prompt, lost them and got different matches with nothing on
+        // screen to say why.
+        //
+        // Removing them rather than adding them to the prefill is deliberate:
+        // it removes the class of bug instead of one instance. Checked against
+        // the schema first — every one of the seven either defaults to '{}' or
+        // is nullable, so create-branch behaviour is byte-identical and the
+        // update branch now leaves existing values alone.
+        //
+        // Note the near-miss: funding_TYPE_preferences below IS collected and
+        // prefilled. funding_SUBTYPE_preferences was not. One character apart.
         min_grant_target:             state.minGrantTarget ? parseInt(state.minGrantTarget.replace(/[^\d]/g, '')) : null,
         max_grant_target:             state.maxGrantTarget ? parseInt(state.maxGrantTarget.replace(/[^\d]/g, '')) : null,
-        funder_type_preferences:      [],
         funding_type_preferences:     state.fundingTypes,
-        funding_subtype_preferences:  [],
         spend_restriction_preferences: state.spendRestrictions,
         has_asset_lock:               eligibilityFlags.has_asset_lock,
-        years_trading:                null,
         owner_id:                     userId,
         alerts_enabled:               true,
         alert_frequency:              'weekly',
@@ -942,9 +987,11 @@ export default function OnboardingWizardPage() {
 
       let currentOrgId = orgId
       if (orgId) {
+        // Update: only the fields the wizard actually collected. Anything it
+        // does not ask about is left exactly as the user left it.
         await updateOrganisation(orgId, payload)
       } else {
-        const created = await createOrganisation(payload as Parameters<typeof createOrganisation>[0])
+        const created = await createOrganisation({ ...UNCOLLECTED_ON_CREATE, ...payload } as Parameters<typeof createOrganisation>[0])
         currentOrgId = created.id
         setOrgId(created.id)
       }
@@ -957,7 +1004,12 @@ export default function OnboardingWizardPage() {
         if (typeof window !== 'undefined') localStorage.setItem('gt_active_org_id', currentOrgId)
       }
       // Build org for matching directly — avoids read-after-write race condition
-      const orgForMatching = { ...payload, id: currentOrgId ?? '', created_at: new Date().toISOString() }
+      // Preview only. Carries the same defaults the payload used to inline, so
+      // the reveal step's numbers are unchanged by the fix above. On the update
+      // branch this still ignores the seven uncollected fields, exactly as it
+      // did before — worth revisiting if the reveal count ever needs to match
+      // the dashboard exactly.
+      const orgForMatching = { ...UNCOLLECTED_ON_CREATE, ...payload, id: currentOrgId ?? '', created_at: new Date().toISOString() }
 
       matchFetchRef.current = (async () => {
         try {
