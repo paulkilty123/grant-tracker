@@ -2614,6 +2614,51 @@ extraction had already filtered them, confirmed by counting cycle entries writte
 today whose label matches meeting / decision / panel / announce: **zero**. Checked
 rather than assumed, because that one has bitten before.
 
+## A funder's own index can advertise a closed programme as open — 2026-08-20
+
+Paul: *"Impact Hub just linked to the home page and when you go to their
+programmes page there are no live programmes."* Half right, and the correction
+went through two rounds.
+
+**Round one.** The homepage was indeed the wrong link, and /programmes carries
+*"Together for Wellbeing: A Mental Health Incubator — Applications now open!"* So
+the fund looked dead because of where we pointed, not because it was. Relinked.
+
+**Round two.** Paul clicked into the programme. Its own page says **"Applications
+now closed"**. The 2026 cohort of seven was announced on 3 June 2026 and the
+programme runs June to December. Every other programme on that index — Together
+for Wellbeing 2025, ASSETS, Boosting Life Sciences & Social Economy, New Roots,
+The Circular Startup — is closed too.
+
+**So the relink was a half-fix that moved the row from a page saying nothing to a
+page saying something untrue.**
+
+### This is a trap for the engine, not just for a reader
+
+A verification read that lands on the index sees "Applications now open!" **in the
+funder's own words**, quotes it, and records the fund as live. The quote is real.
+The claim is stale. Nothing in the engine distinguishes an index's summary of a
+programme from that programme's own status — and the index is the page more
+likely to be linked, because it is the tidier URL.
+
+Every guard built today assumes a page's own words about itself are reliable. That
+holds for a fund's page. It does not hold for a page ABOUT other pages, and the
+distinction is invisible in a quote.
+
+Worth a rule the next time the extractor is touched: **when a quote about
+application status comes from a page listing several programmes, it is evidence
+about the listing, not about the fund.** `statesDatedWindows()` already detects
+multi-round pages for deadlines; the same signal should discount an open/closed
+claim.
+
+### Disposition
+
+Hidden as between-rounds. `apply_url` stays on /programmes, which is the right
+front door for when something reopens, and the reopening detector built earlier
+today will bring the row back when a page there states a closing date that has not
+passed. `how_to_apply` records the trap explicitly, so the next person to read the
+row is warned that the index overstates.
+
 ## Maintenance
 
 Update on each merge that closes a row, and re-measure the whole table at each
