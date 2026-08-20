@@ -2473,6 +2473,51 @@ Left alone and reported: 24 scrapers in `crawl.ts` hardcode `is_rolling: true`,
 and two derive it as `!deadline`. Each is a claim about a specific funder and
 some are right; changing them is per-scraper work, not a sweep.
 
+## Two traps from tracing an API bill, 2026-08-20
+
+Paul hit his Anthropic spend cap. The money was mine — 387 read-only page
+verifications across five measurement scripts, which write nothing, which is why
+the peer session could see the spend and find no rows behind it. **The writes and
+the spend live in different scripts by design, so they will never line up.**
+
+Two things worth keeping from the trace, both of which produced a confident wrong
+answer first.
+
+### Grepping for the SDK import misses billable code
+
+`/api/ai-search` — the Find Funding ranking call — does not import
+`@anthropic-ai/sdk`. It calls `https://api.anthropic.com/v1/messages` with a raw
+`fetch`. So the obvious audit, `grep -rl "anthropic-ai/sdk"`, returns five routes
+and **omits the one a user triggers most often**, giving the answer "nothing
+bills locally", which is wrong.
+
+Audit for the HOST, not the client library.
+
+The related fact, also easy to get backwards: an idle `next dev` costs nothing.
+Loading pages and editing CSS never touches the API. Only a submitted search or an
+opened adviser bills.
+
+### A zero is what a wrong query returns
+
+I reported "zero rows in `events` of any type" for the window since the dev server
+started at 15:06. There was one, at 14:27:49+00 — which is **15:27 London, 21
+minutes inside the window**.
+
+The filter was `created_at >= current_date + time '15:06'`. `created_at` is
+`timestamptz` stored in UTC and the database session runs in UTC, so that literal
+meant 15:06 UTC — 16:06 London. **The window silently started an hour late and
+swallowed the only event in it.**
+
+British Summer Time makes this invisible for half the year and wrong for the
+other half, and it will read as a clean result either way.
+
+**The rule, and it is the third instance this week:** a zero is the result worth
+re-checking, because it is what a broken query returns and what a correct one
+returns, and they look identical. The others were the `!~* 'clos'` filter that
+deleted its own true positive, and the 400-character floor that passed a CAPTCHA
+page. Compare a timestamptz against a timestamptz, or convert explicitly with
+`at time zone`.
+
 ## Maintenance
 
 Update on each merge that closes a row, and re-measure the whole table at each
