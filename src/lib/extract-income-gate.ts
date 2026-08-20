@@ -172,13 +172,34 @@ function scanField(text: string, isExclusions: boolean, acc: ScanAcc): void {
   }
 }
 
+/**
+ * Coerce a funder_brief field to text.
+ *
+ * `??` only guards null and undefined, and these fields do not arrive typed.
+ * `funder_brief` is jsonb whose shape nothing enforces, and the matcher reads
+ * it through a structural cast (`Record<string, string | null>`) that TypeScript
+ * takes on trust. In production 90 of the active rows store `exclusions` as an
+ * ARRAY rather than a string, so `input.exclusions ?? ''` handed an array to
+ * scanField, `text.matchAll(...)` threw "matchAll is not a function", and the
+ * whole of Find Funding died on a client-side exception — the page maps every
+ * row it loads, so one bad row took the lot down.
+ *
+ * Coerce here rather than at the call site: this is the boundary where
+ * unenforced JSON meets code that assumes strings, and every caller benefits.
+ */
+function asText(v: unknown): string {
+  if (typeof v === 'string') return v
+  if (Array.isArray(v)) return v.filter(x => typeof x === 'string').join('  ')
+  return ''
+}
+
 export function extractIncomeGate(input: IncomeGateInput): IncomeGateResult {
   const acc: ScanAcc = { candidates: [], bareValues: new Set(), gatePresent: false, noUpper: false }
 
-  scanField(input.description ?? '', false, acc)
-  scanField((input.eligibilityCriteria ?? []).join('  '), false, acc)
-  scanField(input.whoCanApply ?? '', false, acc)
-  scanField(input.exclusions ?? '', true, acc)
+  scanField(asText(input.description), false, acc)
+  scanField(asText(input.eligibilityCriteria), false, acc)
+  scanField(asText(input.whoCanApply), false, acc)
+  scanField(asText(input.exclusions), true, acc)
 
   const gate = acc.gatePresent
   const unresolved: IncomeGateResult = { gateLanguagePresent: gate }
