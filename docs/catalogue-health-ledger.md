@@ -2052,6 +2052,58 @@ where the funder does state a floor rather than a systemic problem with the batc
 person and 1 needed a permission. An auto-applier would have been right less than
 half the time.
 
+## Hidden funds: what the pages already told us, 2026-08-20
+
+**Two of my own claims about these rows were wrong, and correcting them is the
+finding.**
+
+| I said | It is actually |
+|---|---|
+| "22 rows with nothing to bring them back" | 79 — the rows with no `next_open_date_parsed`, which is what `check-coming-soon` fires on |
+| "Nothing will ever bring them back" | False. `select_verify_batch` takes any row that is not rejected or archived, so all 75 readable ones were re-read between 16 and 19 August |
+| "56 of them say when they return, so parsing is free" | False. 36 say "Closed — next round TBC" and a dozen more say TBC another way |
+
+**The real gap is narrower and worse than any of those.** The pages ARE read, the
+answer IS captured as a verbatim quote in `field_evidence`, and **nothing reads it
+back**. We were paying for the answer every few weeks and throwing it away.
+
+### One fund is open right now and invisible
+
+**Wiltshire & Swindon's Older People's Programme** — *"This programme is currently
+open for applications, and will close on Monday 21 September at 12 noon."* Read on
+16 August, re-read by hand today, hidden from users the whole time, closing in a
+month. It is now in the review queue with its deadline, not made live: visibility
+is Paul's click, which is what `check-coming-soon` does on a reopening.
+
+### Six reopening dates recovered from evidence we already held
+
+City Bridge Economic Justice opens September 2026. CHIP's Community Chest Fund
+reopens at the end of September. Peter Kershaw has one window a year, in November.
+Woodward reviews once a year in October or November. Berkshire's Priority Grants
+Round reopens Summer 2027. Nidderdale reopens in 2027, funds allowing.
+
+Where a funder names a month rather than a day, the FIRST of that month is stored.
+**Under-shooting is the safe direction**: looking early means finding it shut and
+the cadence pushing the date out, where over-shooting means missing the opening
+entirely.
+
+No fetches and no model calls — this mined evidence already bought and stored.
+
+### Six are read, quoted, and still not datable
+
+Named so the residue is visible rather than implied. Lloyds Racial Equity says
+"applications are now open" — but on `actiontogether.org.uk`, a third party, and a
+row is not moved on someone else's page. Rusholme holds two funds in one row, one
+open and one shut. The Pixel Fund is "temporarily closed, oversubscribed", which is
+correctly hidden with no date to give.
+
+### What this argues for
+
+A reopening detector, keyed on evidence rather than on `next_open_date_parsed`.
+`check-coming-soon` can only fire on a date somebody already parsed, so a fund
+whose page says "we are open" in plain English stays hidden however often it is
+read. That is the fix; today's pass is the manual version of it.
+
 ## Maintenance
 
 Update on each merge that closes a row, and re-measure the whole table at each
