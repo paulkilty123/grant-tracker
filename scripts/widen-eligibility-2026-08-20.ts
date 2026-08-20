@@ -28,57 +28,10 @@
 //   npx tsx --env-file=.env.local scripts/widen-eligibility-2026-08-20.ts
 import { createClient } from '@supabase/supabase-js'
 import { mergeGrantUpdate } from '../src/lib/grant-merge'
+import { formsNamedIn } from '../src/lib/verification/structure-naming'
 
 const DRY = process.argv.includes('--dry')
 const SOURCE = 'user_verified:eligibility-widen-2026-08-20'
-
-/**
- * What a quote must SAY for a form to be added.
- *
- * Drawn from how funders actually write, not from our own vocabulary: nobody
- * publishes "ltd_guarantee". Deliberately narrow — a term that could mean two
- * things is left out entirely rather than guessed.
- */
-const NAMES: Record<string, RegExp> = {
-  registered_charity: /\bcharit(y|ies|able)\b/i,
-  cio:                /\bCIO\b|charitable incorporated organisation/i,
-  scio:               /\bSCIO\b|scottish charitable incorporated/i,
-  cic_guarantee:      /\bCIC\b|community interest compan/i,
-  cic_shares:         /\bCIC\b|community interest compan/i,
-  ltd_guarantee:      /limited compan|compan(y|ies) limited|\bltd\b/i,
-  ltd_shares:         /limited compan|compan(y|ies) limited|\bltd\b/i,
-  cooperative:        /co-?operative|\bco-?op\b|community benefit societ/i,
-  unincorporated:     /unincorporated|voluntary (group|organisation|sector)|community group|constituted group|not-for-profit group/i,
-  not_registered:     /not (yet )?registered|unregistered|without charitable status|do not have charitable status/i,
-  sole_trader:        /sole trader/i,
-  individual:         /\bindividual/i,
-}
-
-/**
- * Words that flip a mention into its opposite, checked in the 45 characters
- * BEFORE the form is named.
- *
- * Written after a dry run offered to add `individual` to The Percy Bilton
- * Charity, whose quote reads "Social Workers, Community Psychiatric Nurses and
- * Occupational Therapists ... may apply ON BEHALF OF individuals in financial
- * need". The individual is the beneficiary; the applicant is the professional.
- * Same shape as Hackney's crisis fund, where a support worker fills in the form
- * and the resident receives the money.
- *
- * `on behalf of` is the one that matters most here, because it reads as a
- * positive mention in every other respect.
- */
-const NEGATED = /\b(not|non|cannot|can't|no|never|exclud\w*|except|ineligible|unable|rather than|instead of|on behalf of|behalf)\b[^.;]{0,45}$/i
-
-/** Does the quote name this form, positively, as an applicant? */
-function namedPositively(quote: string, form: string): boolean {
-  const re = NAMES[form]
-  if (!re) return false
-  const m = quote.match(re)
-  if (!m || m.index === undefined) return false
-  const before = quote.slice(Math.max(0, m.index - 45), m.index)
-  return !NEGATED.test(before)
-}
 
 type Row = {
   id: string; title: string; funder: string | null
@@ -121,7 +74,7 @@ async function main() {
     }
     candidates++
 
-    const add = widening.filter(s => namedPositively(quote, s))
+    const add = formsNamedIn(quote, widening)
     const dropped = widening.filter(s => !add.includes(s))
     for (const d of dropped) droppedTotal[d] = (droppedTotal[d] ?? 0) + 1
     if (add.length === 0) { allDropped++; continue }
