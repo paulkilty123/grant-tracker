@@ -2104,6 +2104,76 @@ A reopening detector, keyed on evidence rather than on `next_open_date_parsed`.
 whose page says "we are open" in plain English stays hidden however often it is
 read. That is the fix; today's pass is the manual version of it.
 
+## The reopening detector, built 2026-08-20
+
+`check-coming-soon` could only ever fire on `next_open_date_parsed` — a date
+somebody parsed in advance. 79 of the 94 hidden rows have none, and 36 say only
+"Closed — next round TBC", so for those the job could never fire however many
+times the page was read. And it was read: all 75 readable ones between 16 and 19
+August. The answer was captured and thrown away.
+
+The detector reads it back. One signal: **the funder's page states a closing date
+that has not passed.** Three rules, and the second two exist because the probe
+disproved the first two.
+
+### It missed the case that prompted it
+
+The first version took a future date from the evidence and stopped there. Run
+against live data it found nothing — including nothing on Wiltshire & Swindon's
+Older People's Programme, the fund that motivated the whole thing.
+
+Its quote is *"This programme is currently open for applications, and will close
+on Monday 21 September at 12 noon"*. **No year on the page, and the extractor
+resolved it to 2025-09-21** — a past date, so the rule declined, on a fund that
+was open. A bare day-and-month should roll FORWARD.
+
+So rule 3 asks whether that day has come round yet this year, on a recent read
+only, and labels the result `same_cycle` rather than `stated`. The asymmetry
+justifies the looser test: a false positive costs one review, a false negative
+leaves a fund invisible while it is open.
+
+### Then rule 3 was too loose, and the probe caught that too
+
+Its first run fired on **Skipton Charitable Foundation**, whose quote reads
+"Applications will close on Friday 31st October 2025 at 5pm". The year IS on the
+page, the extractor read it correctly, and the date is genuinely past. Rolling it
+into 2026 would have invented a round the funder never announced.
+
+Guard: **if the quote contains the year, the extractor was not guessing and there
+is nothing to correct.**
+
+### What is deliberately not a signal
+
+`is_rolling.agrees === true` would have made this wrong on its first run. `agrees`
+means "the page matched what WE stored", not "the page says rolling" — so a row
+storing `is_rolling = false` whose page also says not-rolling scores `agrees:
+true`. Forever Manchester's Bright Futures Fund carries exactly that, on the quote
+"The latest round ... is NOW CLOSED to applications."
+
+Scanning quotes for "now open" is also out: the Lloyds Racial Equity row says
+"Applications are now open" on `actiontogether.org.uk`, a third party writing about
+someone else's fund.
+
+### Zero is a real answer, and it is proved
+
+The detector returns 0 against the live backlog, which is correct — it was cleared
+by hand this morning. **A detector returning 0 looks identical whether the backlog
+is empty or the wiring is broken**, so the probe also replays the rule against the
+Older People's Programme's stored stamp and requires it to FIRE. It does.
+
+### One bug fixed on the way that had nothing to do with detection
+
+The route used to `return` early when no coming-soon row was due, which is most
+days. The reopening pass sits after it. **A job wired behind another job's early
+exit is a job that does not exist**, so the early return is gone.
+
+### The root cause is still open
+
+A bare "21 September" resolving to a past year is an extractor fault, not a
+detector one, and it will be producing wrong dates everywhere else too — the
+`round_closed` verdict already carries a `YEAR_STATED_RE` guard for the same
+reason. Worth fixing at source.
+
 ## Maintenance
 
 Update on each merge that closes a row, and re-measure the whole table at each
