@@ -1798,6 +1798,73 @@ a residue — the residue is the finding.
 Programmes lost a third of its rows. That is the honest size of the tab, and the
 number to hold in mind before claiming programme coverage anywhere.
 
+## Funds for individuals were telling charities they qualified, 2026-08-20
+
+Paul asked about Doc Society: he could not find a fund matching our row, and the
+row was showing under Programmes. Both true, and the second was a stale page — it
+had moved to Grants the night before. Chasing the first found something bigger.
+
+**Doc Society's row named a fund that does not exist.** "Good Pitch & Documentary
+Fund" welds together a convening event and a name nothing on the site carries.
+The funder does run eight funds, three of them open. The row is now titled and
+linked as the front door it is, and its amounts corrected: £10,000-£200,000
+appeared nowhere, against a published position of "the total Doc Society
+contribution to your project cannot exceed £150,000", awards "likely to fall in
+the £30K range for development and from £50,000 to £80,000 for production".
+
+Paul's call on scope: *"might be worth having for individuals, think they are
+worth keeping."* So the catalogue now carries funds whose applicant is a person,
+not an organisation — and that made a latent data fault urgent.
+
+### 12 of 16 individual-facing rows admitted organisations that cannot apply
+
+`eligible_structures` is a HARD GATE in the matcher. Sixteen live rows describe
+individual applicants in their own eligibility prose. Twelve carried only
+organisation structures.
+
+A registered charity was being matched to the **Beinneun Student Scholarship**
+("individuals aged 16 or over who are residents of Fort Augustus"), to **Barrhill
+Greener Homes** ("individual residents aged 18 or over... you must own the
+property"), and to five further education funds for named Scottish and Welsh
+parishes. None of them takes an organisation of any kind.
+
+**This is CLAUDE.md rule 6 arriving from the other direction.** The rule guards
+against withholding an exclusion; this was asserting an eligibility that was
+false. The cost is the same — an application that could never have succeeded.
+
+**Narrowing was the safe direction here, which is the opposite of the usual
+case.** The publish gate's `tags_changed` note reasons that "narrowing hides a
+fund from SOME organisations; it never shows a fund to someone barred from it."
+Exactly so: removing an organisation structure from a fund that never accepted
+organisations costs nobody a real match.
+
+| Group | Rows | Action |
+|---|---:|---|
+| Individuals only | 9 | set to `['individual']`, organisation types removed |
+| Genuinely both | 6 | `individual` added, existing kept |
+| Hedged prose | 1 | widened only, flagged for a page read |
+
+The hedged one is the James Ahern Foundation, whose brief says applications
+"appear to be from individuals rather than organisations". Guessing a narrowing on
+that would be how a real fund gets hidden, so it was widened and left flagged.
+
+### One is Paul's to release
+
+**Hackney Crisis and Resilience Fund** is pinned by `admin:paulkilty1@gmail.com`
+to eight organisation structures, while its own brief reads "individuals and
+households living in the London Borough of Hackney who are struggling to afford
+essentials. No specific organisation type is mentioned as this is a direct
+support fund for residents." The pin may encode something the brief does not —
+councils often distribute crisis funds through voluntary organisations — so it is
+flagged rather than overridden.
+
+### The check that made this findable
+
+The floor was applied AFTER the write, not before: read the rows back and count
+how many individual-only funds still admit an organisation. It returned 1, which
+is how the Hackney refusal surfaced at all rather than being lost in a summary
+line.
+
 ## Maintenance
 
 Update on each merge that closes a row, and re-measure the whole table at each
