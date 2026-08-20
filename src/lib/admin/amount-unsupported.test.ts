@@ -129,7 +129,12 @@ describe('amount_unsupported', () => {
     expect(codes(r)).toContain('amount_unsupported')
   })
 
-  it('is informational, so it files the row without changing what publishes', () => {
+  // Was informational when this shipped on 19 August, and promoted to blocking on
+  // 20 August once measured: 20% fire rate over a random sample, 27% over rows
+  // whose amount came from a scraper, and 4 of 4 hand-checked fires correct. The
+  // test flipped with the policy rather than being deleted, so the change is
+  // visible in the diff rather than silent.
+  it('blocks, because a figure nobody published is wrong rather than missing', () => {
     const r = row({
       amount_max: 50000,
       field_evidence: {
@@ -138,8 +143,17 @@ describe('amount_unsupported', () => {
       } as unknown as FieldEvidence,
     })
     const gate = gateDecision(r)
+    expect(gate.blocking.map(b => b.code)).toContain('amount_unsupported')
+    expect(gate.informational.map(b => b.code)).not.toContain('amount_unsupported')
+  })
+
+  // The line that stops this becoming a general appetite for blocking: a row with
+  // NOTHING to show stays publishable. Only an asserted figure blocks.
+  it('does not block a row that simply has no amount', () => {
+    const r = row({ amount_min: null, amount_max: null })
+    const gate = gateDecision(r)
+    expect(gate.blocking.map(b => b.code)).not.toContain('no_amount')
     expect(gate.blocking.map(b => b.code)).not.toContain('amount_unsupported')
-    expect(gate.informational.map(b => b.code)).toContain('amount_unsupported')
   })
 
   it('lands under "needs your judgement" when it is the blocking reason', () => {

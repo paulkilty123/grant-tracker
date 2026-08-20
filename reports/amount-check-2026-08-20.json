@@ -1,0 +1,528 @@
+{
+  "sampled": 40,
+  "readable": 30,
+  "fired": 6,
+  "confirmed": 19,
+  "results": [
+    {
+      "id": "4f67eb88-7752-44bf-9c74-047046a80ed9",
+      "title": "Islington Giving — The Disability Fund",
+      "outcome": "fixable_link",
+      "had": [
+        null,
+        3000
+      ],
+      "fired": false,
+      "confirmed": false,
+      "proposed": null
+    },
+    {
+      "id": "4075bfa0-5ca1-4732-bac4-2b050c542015",
+      "title": "Digital Candle — Free Digital Advice",
+      "outcome": "fixable_link",
+      "had": [
+        0,
+        0
+      ],
+      "fired": false,
+      "confirmed": false,
+      "proposed": null
+    },
+    {
+      "id": "75f72d6e-c93b-4cd7-9830-49b70995b1e3",
+      "title": "Google Ad Grants",
+      "outcome": "verified",
+      "had": [
+        null,
+        10000
+      ],
+      "fired": false,
+      "confirmed": true,
+      "proposed": null
+    },
+    {
+      "id": "50203489-dcd2-44ec-9a3e-7035b825b4fb",
+      "title": "The Percy Bilton Charity",
+      "outcome": "verified",
+      "had": [
+        2000,
+        5000
+      ],
+      "fired": true,
+      "confirmed": false,
+      "proposed": null
+    },
+    {
+      "id": "2fe43759-28ed-4a62-b725-dd0c51bd19a9",
+      "title": "Volant Charitable Trust — Large Grants",
+      "outcome": "verified",
+      "had": [
+        10000,
+        25000
+      ],
+      "fired": false,
+      "confirmed": true,
+      "proposed": {
+        "field": "amount_max",
+        "from": 25000,
+        "to": 75000,
+        "quote": "You can apply for up to £25,000 per year, for a maximum of 3 years (maximum total grant, therefore, is £75,000)."
+      }
+    },
+    {
+      "id": "033b3ddf-fd0c-4aea-b440-7cb4c12be8d7",
+      "title": "Arts Council of Wales — Create and Engage",
+      "outcome": "verified",
+      "had": [
+        null,
+        100000
+      ],
+      "fired": false,
+      "confirmed": false,
+      "proposed": {
+        "field": "amount_max",
+        "from": 100000,
+        "to": 60000,
+        "quote": "There are two levels of award: small, up to £10,000 and large, up to £60,000."
+      }
+    },
+    {
+      "id": "5c86ee8d-a9a6-4840-a70f-1a8099f1ca67",
+      "title": "London Catalyst — Main Grants",
+      "outcome": "verified",
+      "had": [
+        2000,
+        10000
+      ],
+      "fired": false,
+      "confirmed": true,
+      "proposed": null
+    },
+    {
+      "id": "25f3db7e-802d-4649-8fb5-8e682b2a6d40",
+      "title": "Samworth Brothers Community Opportunity Fund",
+      "outcome": "verified",
+      "had": [
+        600,
+        20000
+      ],
+      "fired": true,
+      "confirmed": false,
+      "proposed": null
+    },
+    {
+      "id": "8ef744d0-2157-4be3-aa94-b276c7b83bb6",
+      "title": "Magdalen Hospital Trust — Vulnerable Children & Young Adults Grants",
+      "outcome": "verified",
+      "had": [
+        500,
+        2000
+      ],
+      "fired": false,
+      "confirmed": true,
+      "proposed": null
+    },
+    {
+      "id": "a7b1e535-b639-471c-9231-1d87cff07489",
+      "title": "DWF Foundation",
+      "outcome": "verified",
+      "had": [
+        null,
+        5000
+      ],
+      "fired": true,
+      "confirmed": false,
+      "proposed": null
+    },
+    {
+      "id": "6e013e69-03c1-40f0-9002-b11a2a35d63d",
+      "title": "National Lottery Awards for All England",
+      "outcome": "verified",
+      "had": [
+        300,
+        20000
+      ],
+      "fired": false,
+      "confirmed": false,
+      "proposed": null
+    },
+    {
+      "id": "0d40a15e-3341-4f5f-8f93-d19a11ca0fde",
+      "title": "Community Action",
+      "outcome": "verified",
+      "had": [
+        20001,
+        250000
+      ],
+      "fired": false,
+      "confirmed": true,
+      "proposed": null
+    },
+    {
+      "id": "7dd026a3-0524-43be-9a88-a29eb716f03e",
+      "title": "Barrhill Community Fund",
+      "outcome": "verified",
+      "had": [
+        null,
+        5001
+      ],
+      "fired": false,
+      "confirmed": false,
+      "proposed": {
+        "field": "amount_min",
+        "from": null,
+        "to": 1000,
+        "quote": "Small grants: £1,000 - £5,000"
+      }
+    },
+    {
+      "id": "6780e074-46a5-4e0e-b6d1-5760c84d3c4a",
+      "title": "Communications Support and Volunteer Matching",
+      "outcome": "fixable_link",
+      "had": [
+        0,
+        0
+      ],
+      "fired": false,
+      "confirmed": false,
+      "proposed": null
+    },
+    {
+      "id": "c34f6859-efee-491f-98e8-aa560f2c0b35",
+      "title": "Devon Community Foundation — Community Grants",
+      "outcome": "fixable_link",
+      "had": [
+        null,
+        5000
+      ],
+      "fired": false,
+      "confirmed": false,
+      "proposed": null
+    },
+    {
+      "id": "5147342c-5490-4a88-91de-354e1f3cfed3",
+      "title": "HAPi & Matched Funding",
+      "outcome": "multiple_funds",
+      "had": [
+        0,
+        2500
+      ],
+      "fired": false,
+      "confirmed": false,
+      "proposed": null
+    },
+    {
+      "id": "d35b05bd-bbb1-4826-aa8f-6dca2739591b",
+      "title": "Suffolk Giving Fund",
+      "outcome": "round_closed",
+      "had": [
+        null,
+        5000
+      ],
+      "fired": false,
+      "confirmed": false,
+      "proposed": {
+        "field": "amount_max",
+        "from": 5000,
+        "to": 3000,
+        "quote": "Grants of up to £3,000 for charitable, voluntary and community groups that are addressing needs within Suffolk."
+      }
+    },
+    {
+      "id": "97242e7b-33ec-4249-b46b-b54f039818d5",
+      "title": "Lambert Charitable Trust",
+      "outcome": "verified",
+      "had": [
+        1000,
+        15000
+      ],
+      "fired": false,
+      "confirmed": true,
+      "proposed": null
+    },
+    {
+      "id": "8cafcf2a-a4f7-4e9e-8721-f049db468d81",
+      "title": "Community Grants",
+      "outcome": "fixable_link",
+      "had": [
+        1000,
+        100000
+      ],
+      "fired": false,
+      "confirmed": false,
+      "proposed": null
+    },
+    {
+      "id": "d2116281-d83f-4ade-9777-c8f662315895",
+      "title": "Monmouthshire Further Education Trust Fund",
+      "outcome": "verified",
+      "had": [
+        null,
+        3000
+      ],
+      "fired": false,
+      "confirmed": false,
+      "proposed": {
+        "field": "amount_max",
+        "from": 3000,
+        "to": 1000,
+        "quote": "Applicants can apply for grants of up to £1,000 per year, for up to 3 years."
+      }
+    },
+    {
+      "id": "614ffed1-b5c4-44d0-9ad4-34c4496f3137",
+      "title": "Bairdwatson Charitable Trust",
+      "outcome": "verified",
+      "had": [
+        null,
+        20000
+      ],
+      "fired": false,
+      "confirmed": true,
+      "proposed": null
+    },
+    {
+      "id": "ced26048-d908-4919-bc4b-0bdad1c2d155",
+      "title": "Spacehive — Civic Crowdfunding with Council Match",
+      "outcome": "fixable_link",
+      "had": [
+        1000,
+        50000
+      ],
+      "fired": false,
+      "confirmed": false,
+      "proposed": null
+    },
+    {
+      "id": "f2e16253-0b5f-4aac-8415-0cfb00771d81",
+      "title": "Innovate UK Growth Catalyst — Investor Partnerships",
+      "outcome": "verified",
+      "had": [
+        35000,
+        900000
+      ],
+      "fired": true,
+      "confirmed": false,
+      "proposed": null
+    },
+    {
+      "id": "5ed5ccdf-f551-4f87-ae8a-514f843ac3c2",
+      "title": "Football Foundation - Grass Pitch Maintenance Fund",
+      "outcome": "verified",
+      "had": [
+        null,
+        3200
+      ],
+      "fired": false,
+      "confirmed": true,
+      "proposed": {
+        "field": "amount_min",
+        "from": null,
+        "to": 384,
+        "quote": "Mini soccer (7v7 and 5v5) £384"
+      }
+    },
+    {
+      "id": "86380b2e-1c74-4cd3-b560-663a021bc097",
+      "title": "Adint Charitable Trust",
+      "outcome": "verified",
+      "had": [
+        5000,
+        10000
+      ],
+      "fired": false,
+      "confirmed": true,
+      "proposed": null
+    },
+    {
+      "id": "088f1eec-36fa-401f-91ed-bb3d474b5582",
+      "title": "The Solidarity Fund",
+      "outcome": "verified",
+      "had": [
+        1000000,
+        5000000
+      ],
+      "fired": false,
+      "confirmed": true,
+      "proposed": null
+    },
+    {
+      "id": "5700594e-ce98-46ea-9818-ce87e5f44286",
+      "title": "Community and Environment Fund (CEF) and Business and Local Economy Fund (BLEF)",
+      "outcome": "verified",
+      "had": [
+        null,
+        250000
+      ],
+      "fired": false,
+      "confirmed": true,
+      "proposed": {
+        "field": "amount_min",
+        "from": null,
+        "to": 1,
+        "quote": "From £1 to £250,000"
+      }
+    },
+    {
+      "id": "452edf72-42e4-4f7b-92f8-ef505c3f15c1",
+      "title": "Evan Cornish Grassroots Fund",
+      "outcome": "verified",
+      "had": [
+        null,
+        6000
+      ],
+      "fired": false,
+      "confirmed": true,
+      "proposed": null
+    },
+    {
+      "id": "5a00d50c-5244-4850-a6f9-af242703b7f2",
+      "title": "Selco Community Heroes 2026",
+      "outcome": "verified",
+      "had": [
+        1000,
+        15000
+      ],
+      "fired": false,
+      "confirmed": true,
+      "proposed": null
+    },
+    {
+      "id": "bec586cc-4172-4d15-bb05-5fd5f24c7bb9",
+      "title": "Innovate UK Innovation Loans",
+      "outcome": "verified",
+      "had": [
+        100000,
+        5000000
+      ],
+      "fired": false,
+      "confirmed": true,
+      "proposed": null
+    },
+    {
+      "id": "3f5d135b-c001-4cc3-8ae3-049a9b85baef",
+      "title": "Whirlwind Charitable Trust",
+      "outcome": "verified",
+      "had": [
+        1000,
+        10000
+      ],
+      "fired": true,
+      "confirmed": false,
+      "proposed": null
+    },
+    {
+      "id": "49d410cd-2107-421e-b35b-158793a21c0e",
+      "title": "Hull Community Fund",
+      "outcome": "verified",
+      "had": [
+        null,
+        250000
+      ],
+      "fired": false,
+      "confirmed": false,
+      "proposed": {
+        "field": "amount_max",
+        "from": 250000,
+        "to": 10000,
+        "quote": "You can apply for either an activity grant (up to £2,000) to help address a gap in provision or a Organisational Development grant (up to £10,000)."
+      }
+    },
+    {
+      "id": "bfdbf2a8-09b7-4df5-a994-4361ba2fbe3a",
+      "title": "Creative Scotland — Open Fund",
+      "outcome": "fixable_link",
+      "had": [
+        1000,
+        150000
+      ],
+      "fired": false,
+      "confirmed": false,
+      "proposed": null
+    },
+    {
+      "id": "d679e8d8-0c17-4c9f-aec9-2464bbb2ec9d",
+      "title": "Clothworkers Foundation — Large Capital Grants (over £15,000)",
+      "outcome": "verified",
+      "had": [
+        15001,
+        250000
+      ],
+      "fired": false,
+      "confirmed": true,
+      "proposed": null
+    },
+    {
+      "id": "d29103be-5800-4beb-920f-205b48a78e78",
+      "title": "City Bridge Foundation — Grants for London",
+      "outcome": "multiple_funds",
+      "had": [
+        10000,
+        500000
+      ],
+      "fired": false,
+      "confirmed": false,
+      "proposed": null
+    },
+    {
+      "id": "80141171-c793-470c-b03a-abeae9ea7d79",
+      "title": "Riverside Foundation — Community Fund",
+      "outcome": "verified",
+      "had": [
+        null,
+        3000
+      ],
+      "fired": false,
+      "confirmed": true,
+      "proposed": null
+    },
+    {
+      "id": "ce059535-b345-4642-b6d7-59fe37581025",
+      "title": "Help the Homeless Grants",
+      "outcome": "verified",
+      "had": [
+        null,
+        5000
+      ],
+      "fired": false,
+      "confirmed": true,
+      "proposed": null
+    },
+    {
+      "id": "fed70a24-486d-42ea-a14c-173c9250a3ec",
+      "title": "Sport Wales — A Place for Sport (Crowdfunder)",
+      "outcome": "verified",
+      "had": [
+        15000,
+        15000
+      ],
+      "fired": false,
+      "confirmed": true,
+      "proposed": null
+    },
+    {
+      "id": "d51e7f33-1464-4181-a535-8265fd923587",
+      "title": "Hargreaves Foundation",
+      "outcome": "verified",
+      "had": [
+        null,
+        50000
+      ],
+      "fired": true,
+      "confirmed": false,
+      "proposed": null
+    },
+    {
+      "id": "c99c9f91-9b19-4e1f-ae89-2e97afde3af5",
+      "title": "Migration Fund",
+      "outcome": "verified",
+      "had": [
+        50000,
+        60000
+      ],
+      "fired": false,
+      "confirmed": true,
+      "proposed": null
+    }
+  ]
+}

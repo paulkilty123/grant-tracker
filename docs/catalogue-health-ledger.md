@@ -1880,6 +1880,127 @@ how many individual-only funds still admit an organisation. It returned 1, which
 is how the Hackney refusal surfaced at all rather than being lost in a summary
 line.
 
+## How often the amount check fires, measured 2026-08-20
+
+40 live rows sampled from the 498 that assert an amount, each read by the real
+verifier rather than by a single fetch.
+
+| | Rows |
+|---|---:|
+| Read | 40 |
+| Gate passed, facts extracted | 30 |
+| Page CONFIRMS our figure | 19 |
+| Page states a DIFFERENT figure | 8 |
+| **Page states NO figure while we show one** | **6** |
+
+**A 20% fire rate on readable rows, which projects to roughly 100 across the
+catalogue.** The categories overlap: a row can have its minimum confirmed and its
+maximum contradicted, which is why the three outcomes sum to more than 30.
+
+### The fires check out, and they share a fingerprint
+
+Three of the six were re-read by hand. Whirlwind Charitable Trust and the
+Hargreaves Foundation genuinely state no amounts anywhere. Percy Bilton returned
+empty to a plain fetch twice, so it is recorded as unverified rather than
+confirmed — the verifier read it, this reviewer could not.
+
+**Every fire inspected had its figure written by a third-party directory
+scraper**, not by the funder and not by a person: `scraper:young_camden_foundation`
+on three of them, `scraper:community_works_2026-05-06` on the fourth. That is
+precisely where a number nobody published comes from, and it is a stronger signal
+than the fire rate itself.
+
+### The contradictions are the more immediately useful half
+
+Eight rows carry a figure the page disputes, several badly:
+
+- **Hull Community Fund** — we show up to £250,000; the page offers "an activity
+  grant (up to £2,000)... or a Organisational Development grant (up to £10,000)".
+- **Arts Council of Wales, Create and Engage** — we show £100,000; the page says
+  "small, up to £10,000 and large, up to £60,000".
+- **Suffolk Giving Fund** — we show £5,000; the page says "up to £3,000".
+
+Two are a per-year/total ambiguity rather than an error: Volant is "up to £25,000
+per year, for a maximum of 3 years (maximum total grant, therefore, is £75,000)"
+and Monmouthshire is "£1,000 per year, for up to 3 years". Both readings are
+defensible and a human should pick.
+
+Two extractions are literal-minded and would need rejecting: `amount_min` of £1
+from "From £1 to £250,000", and £384 from a Football Foundation price list. This
+is why proposals are reported and never auto-applied.
+
+**Nothing here was written.** `verifyRow` writes nothing and the measurement
+script writes nothing; the sample is deterministic (md5 of id plus a salt) so the
+same 40 rows can be re-read for a second opinion.
+
+## The amount sweep, and the check turned on, 2026-08-20
+
+The plan was "leave it flagging and let the daily cron populate the evidence for
+free". **That was wrong and had to be corrected within the hour.** `verify-rows`
+reads 60 rows a day, once a day, and only rows that are DUE: 0 were due, 12 within
+a week, 398 within 30 days, 205 later. Free, but a month away at best for a
+hundred wrong figures sitting on live cards.
+
+**So the sweep was narrowed rather than paid for in full.** Every fire inspected
+in the 40-row sample had its amount written by a scraper, and 151 live rows are in
+that shape — a third of the cost of sweeping all 498, aimed where invented figures
+come from.
+
+| 151 scraper-sourced rows | |
+|---|---:|
+| Page confirms our figure | 62 |
+| Page states a different one | 17 proposals |
+| **Page states NO figure** | **31** |
+| Could not be read | 38 (untouched) |
+
+27% of readable rows, against 20% across the general sample — **the provenance is
+predictive**, which is the useful finding.
+
+### "Third-party directory" was the wrong theory
+
+The tempting story was that bad amounts come from other people's listings, and
+20 of the 31 did come from `young_camden_foundation`. But four came from the
+funder's OWN scraper — `jrct`, `peoples_health_trust`, `sport_scotland`,
+`severn_trent_fund` — and hand-checking two of them found their own pages state no
+figure either. A scraper named after a funder is not the same as the funder
+saying it.
+
+**4 of 4 fires re-read by hand were correct**: Whirlwind, the Hargreaves
+Foundation, JRCT Power & Accountability and the People's Health Trust Health
+Justice Fund all state no amount anywhere.
+
+### Cleared, not deleted
+
+31 rows had the figure removed and the old value written into the brief as
+`amount_note`, naming the scraper that supplied it. `amount_min`/`amount_max`
+drive the card AND the matcher's grant-size dimension, so a figure nobody
+published does not merely decorate — it sizes an organisation against a number
+that does not exist.
+
+Applied from the saved report rather than re-running the 151 fetches, because
+paying twice to write the same answer is money for nothing.
+
+### Policy c2.2 → c2.3: `amount_unsupported` now blocks
+
+Promoted on the measurement, not on the argument. It is the "wrong, not missing"
+case that every other blocking code meets: `no_amount` already covers a row with
+nothing to show and stays informational. **The 31 worst offenders were cleared
+before the flip**, so it bites gradually as the cron re-reads rather than dropping
+a hundred rows into the queue at once. The unit test flipped with the policy
+rather than being deleted, so the change is visible in the diff.
+
+### The extractor leaked one pot figure
+
+Of the 17 contradictions, most are plainly better than what we held — Drapers'
+£20,000 not £25,000, Alpkit "£50-£500" not a £500 floor, Scops "up to £15,000 per
+annum" not £30,000. Two are literal-minded (£1 from "From £1 to £250,000"), and
+one is a real prompt failure: **London Social and Affordable Homes proposed
+£11,700,000,000** from "Funding amount: up to £11.7 billion", which is the
+programme's whole budget. The prompt tells the model that a pot is not an amount
+and it failed on the largest possible example. Nothing was applied — proposals are
+reported, never written — but it is the case to fix before trusting the
+contradictions in bulk.
+
 ## Maintenance
 
 Update on each merge that closes a row, and re-measure the whole table at each

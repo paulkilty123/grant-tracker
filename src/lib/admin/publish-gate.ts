@@ -74,7 +74,7 @@ import {
  * Per the standing rule in the merge digest, a policy-version change should
  * force a dry run before the first armed run under the new version.
  */
-export const GATE_POLICY_VERSION = 'c2.2'
+export const GATE_POLICY_VERSION = 'c2.3'
 
 /**
  * Every reason code, classified. `block` = the row asserts something wrong or
@@ -151,6 +151,32 @@ const POLICY: Record<ReviewReasonCode, 'block' | 'info'> = {
   // shared this and nothing else.
   no_funder:              'block',
 
+  // A figure on the card that the funder's own page does not state.
+  //
+  // Shipped 'info' on 2026-08-19 with the reasoning that blocking on an unmeasured
+  // extractor would hold correct rows on the word of a model nobody had scored.
+  // Promoted to 'block' on 2026-08-20, after measuring:
+  //
+  //   40 random live rows asserting an amount: 30 readable, 19 confirmed by the
+  //   page, 8 contradicted, 6 unsupported. A 20% fire rate.
+  //
+  //   151 rows whose amount was written by a SCRAPER: 113 readable, 62 confirmed,
+  //   31 unsupported. 27%, so the provenance is predictive.
+  //
+  //   Precision: 4 of 4 fires re-read by hand were correct — Whirlwind, the
+  //   Hargreaves Foundation, JRCT Power & Accountability and the People's Health
+  //   Trust Health Justice Fund all state no figure anywhere on their pages.
+  //   Notably JRCT's and the Trust's amounts came from their OWN scrapers, so
+  //   this is not only a third-party-directory problem.
+  //
+  // It blocks because it is the "wrong, not missing" case: `no_amount` already
+  // covers a row with nothing to show and stays informational, whereas this one
+  // puts a number in front of a fundraiser that nobody published and sizes them
+  // against it in the matcher. The 31 worst offenders were cleared before this
+  // flipped, so it bites gradually as verify-rows re-reads the catalogue rather
+  // than dropping a hundred rows into the queue at once.
+  amount_unsupported:     'block',
+
   // INFO, not block, and deliberately so. A row reaches `read_exhausted` only
   // when it is ALREADY blocked by something the engine could not verify —
   // page_unreadable, never_verified — so blocking again would double-count and,
@@ -173,20 +199,6 @@ const POLICY: Record<ReviewReasonCode, 'block' | 'info'> = {
   beneficiaries_generic_only: 'info',
   amount_zero:                'info',
   amount_under_stated:        'info',
-  // NEW 2026-08-19, and deliberately NOT blocking on its first outing.
-  //
-  // The case for blocking is real: a figure the funder's page does not state is
-  // wrong rather than missing, and "wrong, not missing" is the test every
-  // blocking code above meets. Allan & Nesta Ferguson showed a £50,000 maximum
-  // against a page that offers to match half a budget.
-  //
-  // It is 'info' anyway, because the check has never run. Blocking on the first
-  // pass of an unmeasured extractor would hold an unknown number of correct rows
-  // on the word of a model that has not been scored on this field, and moving a
-  // code into the blocking set changes what auto-publish does and bumps the
-  // policy version. Measure the fire rate first, then decide — that decision is
-  // Paul's, not a tidy-up.
-  amount_unsupported:         'info',
   multi_round_uncaptured:     'info',
   link_unverified:            'info',  // see note 2 in the header — 57/60 never checked
   stale_dates:                'info',   // prose untidy, but the deadline on the card is right
