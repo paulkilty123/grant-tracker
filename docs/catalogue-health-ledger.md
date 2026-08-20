@@ -2174,6 +2174,75 @@ detector one, and it will be producing wrong dates everywhere else too — the
 `round_closed` verdict already carries a `YEAR_STATED_RE` guard for the same
 reason. Worth fixing at source.
 
+## Deadlines and eligibility, measured 2026-08-20
+
+Measured free, off evidence `verify-rows` had already written and nothing had read.
+
+### Deadlines are worse than amounts were
+
+| Of 607 live rows | |
+|---|---:|
+| Carry a deadline stamp | 444 |
+| Page CONFIRMS our closing date | **31** |
+| Page contradicts it | 10 |
+| Page silent, and we show a date anyway | **71** |
+| Withheld: "a single date off a page that runs in rounds" | 24 |
+
+**We can point at a funder's own words for the closing date on 31 rows out of
+607.** The 71 are the same shape as the amounts: a date on a card that the
+funder's page does not state. Not done yet — the next piece.
+
+### Eligibility: 118 contradictions, and the direction decides the cost
+
+| | Rows |
+|---|---:|
+| Page names MORE forms than we list | 77 |
+| We list more than the page names | 22 |
+| Overlapping but different | 15 |
+
+The 77 are an under-match: a CIC reads "not for you" about a fund whose page says
+"Charity, Faith organisation, Social Enterprise/CIC, and Voluntary/Community
+Group". Nobody is harmed, but the fund is hidden from people the funder invited.
+
+The 22 are NOT proof of error and were left alone. A page failing to mention a
+form is silence, not exclusion — the rule is already in `eligibility.ts`, and Wee
+Grants lost its `scio` tag to the opposite assumption.
+
+### Widening is the recoverable direction and still needed a floor
+
+I told Paul widening "can only ever show a fund to someone the funder said was
+welcome". **That is only true if the proposal is faithful to the quote, and it
+often is not.** Red Hill Trust's quote is *"Grants are only awarded to
+organisations, not individuals"* — naming no legal form whatever — and the
+extractor proposed six, including CICs and unincorporated groups, for what reads
+like a traditional grant-making trust.
+
+**The floor: a form is added only if the QUOTE NAMES IT.** 77 candidates became
+20. 57 were rejected because the quote names none of the forms proposed.
+
+**`not_registered` was proposed on 50 rows and named in none of them.** That is
+the extractor inventing a legal form at scale, and it is the single biggest thing
+this measurement found.
+
+A second guard was added mid-run. The dry run offered to add `individual` to The
+Percy Bilton Charity, whose quote reads *"Social Workers, Community Psychiatric
+Nurses and Occupational Therapists ... may apply ON BEHALF OF individuals in
+financial need"*. The individual is the beneficiary and the professional is the
+applicant — the same shape as Hackney's crisis fund earlier the same day. Words
+like "on behalf of", "not" and "excluding" in the 45 characters before a form now
+disqualify it.
+
+**Result: 16 widened, 4 refused as admin-pinned, 57 left for a person.**
+
+### And the verification of the verification was wrong
+
+The script's own floor check reported 4 rows as having lost a structure. None
+had: it compared the result against the INTENDED set rather than against what the
+row held BEFORE, so every refused row looked like a loss. Confirmed clean by
+querying `field_provenance.previous` directly — 16 rows written, 16 still at
+least as wide. The check is fixed. **A floor that cannot be trusted is worse than
+no floor, because it spends the attention it was built to save.**
+
 ## Maintenance
 
 Update on each merge that closes a row, and re-measure the whole table at each
