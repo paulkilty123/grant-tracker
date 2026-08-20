@@ -582,8 +582,20 @@ export async function fetchPage(url: string, forceProxy = false): Promise<Fetche
 
 const MODEL = 'claude-haiku-4-5-20251001'
 
-function buildPrompt(row: VerifyRow, pageText: string): string {
+/**
+ * `todayISO` is passed in, not read from the clock inside the template, so one
+ * batch is judged against one day and the prompt is reproducible.
+ *
+ * The model was never told the date until 2026-08-20, which is why a page
+ * reading "closes on Monday 21 September" came back as 2025-09-21: with no
+ * reference point it fell back on its training prior. That put a past date on an
+ * OPEN fund and kept Wiltshire & Swindon's Older People's Programme hidden from
+ * users for four days.
+ */
+function buildPrompt(row: VerifyRow, pageText: string, todayISO: string): string {
   return `You are checking one catalogue record against the funder's own web page.
+
+TODAY IS ${todayISO}. Use it whenever the page gives a date without a year.
 
 OUR RECORD
   Fund title : ${row.title}
@@ -642,6 +654,13 @@ quote of the sentence it came from. If the page does not state it, use
                      different funds, do NOT pick one of their dates for this
                      field — put the rounds in deadline_cycle and leave this
                      null.
+
+                     IF THE PAGE GIVES NO YEAR, use the NEXT occurrence from
+                     today. "closes on Monday 21 September", read today, means
+                     the 21 September that is still ahead — never the one that
+                     has gone. Funders write the year far less often than you
+                     would expect, and a date put in the wrong year reads as a
+                     closed fund and hides an open one.
   "deadline_cycle" : the page's whole schedule, when it names more than one round
                      or draw, as a list. Otherwise null. Each entry:
                        {"day":7,"month":9,"label":"Draw 2 closes"}
@@ -692,10 +711,29 @@ quote of the sentence it came from. If the page does not state it, use
                        cooperative, unincorporated, sole_trader,
                        not_registered, individual
                      "unincorporated" covers constituted community groups with no
-                     legal registration. "individual" means a private person
-                     applying in their own name. Null if the page does not say.
-                     Do NOT list a form merely because the page fails to exclude
-                     it: only forms the page positively names.
+                     legal registration — a residents' association, a committee
+                     with a constitution and a bank account. This is the right
+                     tag for "voluntary and community groups", which is how most
+                     funders describe them.
+
+                     "not_registered" is NARROWER and is the one to leave alone
+                     when unsure. Use it ONLY where the page positively says an
+                     organisation with NO constitution and NO registration at all
+                     may apply — "you don't need to be constituted", "informal
+                     groups welcome". It is NOT a synonym for "community group",
+                     it does NOT follow from a page failing to demand charity
+                     registration, and it must never be inferred from a list that
+                     simply omits charities.
+
+                     "individual" means a private person applying in their own
+                     name, for themselves. A professional or a charity applying
+                     ON BEHALF OF someone is NOT this: there the applicant is the
+                     organisation and the individual is the beneficiary.
+
+                     Null if the page does not say. Do NOT list a form merely
+                     because the page fails to exclude it: only forms the page
+                     positively names, in words a reader would recognise as that
+                     form.
   "excluded_structures" : legal forms the page positively RULES OUT, same
                      vocabulary, or null. This is different from a form simply
                      not being mentioned — use it only for an explicit "we do not
@@ -1069,10 +1107,15 @@ async function runModel(
   /** The page these facts came from — stamped onto every piece of evidence. */
   sourceUrl: string | null,
 ): Promise<VerifyResult> {
+  // One clock read for the whole call: the prompt and the comparison below must
+  // agree on what day it is, or a date could be "future" to one and "past" to
+  // the other across midnight.
+  const todayISO = new Date().toISOString().slice(0, 10)
+
   const res = await anthropic.messages.create({
     model: MODEL,
     max_tokens: 1200,
-    messages: [{ role: 'user', content: buildPrompt(row, pageText) }],
+    messages: [{ role: 'user', content: buildPrompt(row, pageText, todayISO) }],
   })
   const usage = { input: res.usage.input_tokens, output: res.usage.output_tokens }
   const text = res.content.map(c => (c.type === 'text' ? c.text : '')).join('')
@@ -1254,7 +1297,6 @@ async function runModel(
   // instead of written.
   const deadlineFact = fact('deadline')
   const extractedDeadline = asDate(deadlineFact.value)
-  const todayISO = new Date().toISOString().slice(0, 10)
   let closedRound: { deadline: string; quote: string } | undefined
   // The schedule is read BEFORE the single deadline, because whether a lone date
   // can be trusted depends on whether the page turned out to run in rounds.

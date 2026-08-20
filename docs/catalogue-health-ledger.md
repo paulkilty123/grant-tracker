@@ -2243,6 +2243,63 @@ querying `field_provenance.previous` directly — 16 rows written, 16 still at
 least as wide. The check is fixed. **A floor that cannot be trusted is worse than
 no floor, because it spends the attention it was built to save.**
 
+## Fixing the extractor rather than its output, 2026-08-20
+
+Three passes today ended with the same shape of conclusion: the extractor said
+something the quote did not support, and a script cleaned up after it. Two of
+those were prompt faults, and both are now fixed at source, where they cost
+nothing per row and improve every future read.
+
+### The model was never told what day it is
+
+`buildPrompt` passed the fund, the funder, the URL and the page text — and no
+date. So a page reading *"will close on Monday 21 September at 12 noon"*, with no
+year on it, had no reference point and fell back on the model's training prior:
+**2025-09-21**. A past date on an open fund, which is exactly what kept Wiltshire
+& Swindon's Older People's Programme hidden from users for four days and what
+made the first reopening detector return nothing.
+
+The prompt now opens with `TODAY IS <date>` and says outright that a date with no
+year means the NEXT occurrence, never the one that has gone. **Funders write the
+year far less often than you would expect.**
+
+`runModel` also reads the clock once and shares it between the prompt and the
+comparison, so a date cannot be future to one and past to the other across
+midnight.
+
+### `not_registered` was in the vocabulary with no definition
+
+Fifteen forms were listed; `unincorporated` and `individual` were explained and
+`not_registered` was not. So the model reached for it whenever a page said
+"voluntary and community groups" — **proposed on 50 rows, and named in the quote
+on none of them.**
+
+It now has a narrow definition and an instruction to leave it alone when unsure:
+only where a page positively says an organisation with no constitution and no
+registration may apply. "Community group" belongs to `unincorporated`, which is
+how most funders phrase it.
+
+`individual` gained the distinction that caught Percy Bilton and Hackney the same
+day: a professional or charity applying ON BEHALF OF someone is not an individual
+applicant — the organisation applies and the person benefits.
+
+### Proved on the rows that produced the bugs
+
+Not on fixtures, and not on "no proposal was raised", which is consistent both
+with a fix working and with the model extracting nothing. The probe prints
+`agrees` beside the row's own value:
+
+- **Older People's Programme** — now `agrees: true` against 2026-09-21. It
+  returned 2025-09-21 this morning.
+- **Haggerston Estate Micro Grants** — proposes `unincorporated` alone where it
+  previously included `not_registered`.
+- **Wickes** — confirms what we hold, with no `not_registered`.
+- **Drapers'** — extracted nothing; inconclusive rather than wrong.
+
+**The residues these faults created are still there.** 57 eligibility rows and 71
+deadlines were measured against the OLD extractor, so those piles should be
+re-measured before being worked, not cleaned up on the old numbers.
+
 ## Maintenance
 
 Update on each merge that closes a row, and re-measure the whole table at each
