@@ -1800,7 +1800,11 @@ function StepSectors({ impactSectors, nicheTags, excludedNicheTags, toggleSector
             fontFamily: 'var(--font-space-grotesk)',
             lineHeight: 1.2,
           }}>
-            <span style={{ color: T.lime, fontSize: 10 }}>★</span>
+            {/* Cream, not T.lime. lime now resolves to --deep and this pill's
+                background is --deep, so the star was deep on deep and simply
+                could not be seen. It has to match the star on the chip it is
+                describing. */}
+            <span style={{ color: T.onDeep, fontSize: 10 }}>★</span>
             primary
           </span>
           plus up to 3 others. Tap a
@@ -1968,7 +1972,11 @@ function StepBeneficiaries({ beneficiaryGroups, toggleBeneficiary, makePrimaryBe
             fontFamily: 'var(--font-space-grotesk)',
             lineHeight: 1.2,
           }}>
-            <span style={{ color: T.lime, fontSize: 10 }}>★</span>
+            {/* Cream, not T.lime. lime now resolves to --deep and this pill's
+                background is --deep, so the star was deep on deep and simply
+                could not be seen. It has to match the star on the chip it is
+                describing. */}
+            <span style={{ color: T.onDeep, fontSize: 10 }}>★</span>
             primary
           </span>
           plus up to 3 others. Tap a
@@ -2176,12 +2184,17 @@ function StepReveal({ matchCount, topMatches, hasMission, onExplore, onAddMissio
         <div style={{ textAlign: 'center', padding: '24px 0 16px' }}>
           <div style={{ fontSize: 40, marginBottom: 12 }}>🌱</div>
           <h1 style={{ ...H1_STYLE, fontSize: 22 }}>Your profile is saved</h1>
+          {/* This is the ZERO-match branch, so it cannot offer to show matches.
+              It also used to promise "we'll email you when matching grants
+              appear", which nothing currently does: /api/cron/send-alerts
+              exists but is not scheduled in vercel.json, only classify-alerts
+              is. Put the promise back when the alert cron is actually armed. */}
           <p style={{ ...SUBTITLE_STYLE, marginBottom: 0 }}>
-            We&rsquo;ll email you when matching grants appear. In the meantime, browse the full catalogue.
+            Nothing in the catalogue fits it closely enough yet. Have a look through everything and save anything worth watching.
           </p>
         </div>
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: 24 }}>
-          <Button variant="primary" size="lg" onClick={onExplore}>Browse all grants <ArrowRight size={15} /></Button>
+          <Button variant="primary" size="lg" onClick={onExplore}>Browse all funding <ArrowRight size={15} /></Button>
         </div>
       </>
     )
