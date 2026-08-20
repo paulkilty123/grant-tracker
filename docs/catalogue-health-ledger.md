@@ -2001,6 +2001,57 @@ and it failed on the largest possible example. Nothing was applied — proposals
 reported, never written — but it is the case to fix before trusting the
 contradictions in bulk.
 
+## The 17 amount contradictions, judged 2026-08-20
+
+The quotes are trustworthy — the verifier will not raise a proposal without a
+quote it found on the page — so the work was not "is this real" but "what does it
+MEAN". **Three different faults, and treating them alike would have written eight
+wrong numbers.**
+
+| | |
+|---|---:|
+| Page simply right, we were wrong | 7 applied |
+| Right number, wrong slot | 1 applied |
+| Literal-minded or two grants conflated | 6 rejected |
+| Per-year versus total | 2 for Paul |
+| Blocked by a pinned null | 1 |
+
+**Applied:** Drapers' £25,000 → £20,000; Ballantrae gains its £1,000 floor;
+Jack Petchey Educational Visits £2,000 → £1,200; Paul Hamlyn's Youth Fund gains
+the £30,000 floor it states outright; Alpkit £500-£500 → £50-£500, which had been
+reading as a fixed award; Movement for Good's £1,000 draw no longer claims £5,000.
+
+**The slot error is the interesting one.** Ian Askew's page reads *"Funder No Min
+- £3,000 no deadline"*. The extractor offered £3,000 as a MINIMUM on a page that
+says there is no minimum — and our stored maximum was £500, wrong on top of that.
+The number was right and everything around it was wrong. Now £3,000 maximum, no
+minimum.
+
+**Rejected, and the pattern in them:** three take a TYPICAL for a FLOOR — "grants
+tend to be for about £4,000", "grants are typically £250", "typically start from a
+few hundred pounds" — and in two of those our maximum already held the same
+figure, so applying it would have produced a fixed award from a range. One takes
+"From £1 to £250,000" literally, when "from £1" is a funder saying there is no
+minimum. One conflates two grants: SWEF's £500 is the start-up maximum and the
+£1,500 is a separate follow-on after six months of trading. And one is the
+£11.7 billion housing programme budget.
+
+**Two are genuinely arguable and were not guessed.** The 1989 Willan is "up to
+£20,000, £10,000 per year" and Scops is "up to £15,000 per annum" on multi-year
+grants. Whether a card shows the most anyone can receive or the most in one year
+is a product decision, not an extraction problem.
+
+**One is blocked by a pinned null.** Sport England's Movement Fund states "grants
+or pledges from £300 to £15,000", but `amount_min` is pinned null by
+`admin:amount_uptox_fix_2026-06-15`, a June batch that stripped minimums from
+"up to X" funds. The batch touched 15 rows, 9 of them live, so this is one row
+where the funder does state a floor rather than a systemic problem with the batch.
+
+**This is the argument for proposals never being auto-applied**, which
+`verify-rows` already gets right: 8 of 17 were correct, 6 were wrong, 2 needed a
+person and 1 needed a permission. An auto-applier would have been right less than
+half the time.
+
 ## Maintenance
 
 Update on each merge that closes a row, and re-measure the whole table at each
