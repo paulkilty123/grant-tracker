@@ -26,7 +26,10 @@ const fraunces = Fraunces({
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ['latin'],
-  weight: ['500', '700'],
+  // 600 added for the Shoots band A type ramp: page titles, sections, labels,
+  // eyebrows and every button weight are 600, and only 500/700 were loaded.
+  // The live landing page loads 500;600;700 for the same reason.
+  weight: ['500', '600', '700'],
   variable: '--font-space-grotesk',
   display: 'swap',
 })

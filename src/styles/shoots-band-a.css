@@ -1,0 +1,519 @@
+/* Shoots band A — tokens and primitives.
+   ============================================================
+   Scoped to `.shoots-a`, the same deliberate-island pattern as
+   src/app/oauth/authorize/shoots-auth.css. Scoped rather than global so
+   rebuilding these pages restyles nothing else: the wider app keeps the old
+   tokens until the October sweep, and `--cream` in particular means two
+   different colours inside and outside this scope (#F6F1E7 here, the retired
+   `var(--bg-page)` in globals.css). A global declaration would silently
+   repaint every page in the app.
+
+   Values are copied verbatim from the band A design spec, section 2. Do not
+   "improve" one here. Three of them replace values that failed WCAG AA and
+   the spec states them as floors, not preferences:
+
+     --ink-muted       #5F5E5A  5.77:1 on cream   (was charcoal @ 60%, 3.70:1)
+     --ink-placeholder #74736E  4.75:1 on white   (was charcoal @ 42%, 2.41:1)
+     --border-input    #7B8A8B  3.59:1 on white   (was deep @ 18%,     1.39:1)
+
+   All ten ratios in the spec were recomputed against these hex values before
+   this file was written and every one matched to two decimal places.
+
+   ONE TOKEN IS ADDED beyond the spec's list: --ink-on-deep-mut. The spec has
+   no muted text colour for use ON the deep panel, which the signup page needs
+   for its benefit copy. Rather than invent an rgba (which the no-raw-hex lint
+   cannot see), this takes --text-on-dark-mut from the canonical Shoots token
+   block, where it already exists. 6.78:1 on --deep, verified.
+
+   Typography is the three-face system in the spec's section 0 and section 3:
+   Space Grotesk for headings, labels, buttons and all numerics; Plus Jakarta
+   Sans for body prose. No DM Serif Display on any band A page, including the
+   onboarding welcome headline, whose serif reservation in brand-guidelines.md
+   was superseded on 20 Aug.
+
+   Both faces were already loaded and already used this way, so there is no
+   font swap here, only the two variables below.
+   ============================================================ */
+
+.shoots-a {
+  /* brand — already live at the landing page */
+  --cream:            #F6F1E7;
+  --deep:             #1D3C3E;
+  --charcoal:         #2E2E2E;
+  --sage:             #9BCA9D;
+  --terra:            #D67558;
+  --gold:             #EBCE78;
+  --teal:             #4EAAB4;
+  --sky:              #ABCBEE;
+
+  /* added for states */
+  --deep-hover:       #16302F;
+  --deep-active:      #102524;
+  --ink-muted:        #5F5E5A;
+  --ink-placeholder:  #74736E;
+  --ink-on-deep-mut:  #B8C7C2;
+  --danger:           #B4472A;
+  --danger-hover:     #9C3C24;
+  --danger-tint:      #FBEFEA;
+  --border-input:     #7B8A8B;
+  --border-ghost:     rgba(29, 60, 62, 0.22);
+  --border-hair:      rgba(29, 60, 62, 0.10);
+
+  /* Tints, from the onboarding spec's field-confidence table. Declared as
+     tokens rather than inline rgba so the no-raw-hex lint has something to see
+     and the sweep has one place to change. These started as rgba badge tints
+     from the reset-flow mockup; the sage flattened to exactly this over white
+     and the gold was three units off, so both now point at the spec's solid
+     figures instead. #854F0B on the gold tint is 5.71:1 and deep on either
+     tint is about 10:1. The status icons are aria-hidden: each heading already
+     carries the meaning, and each state also has a shape, so none of it
+     depends on colour. */
+  --sage-tint:        #E1EFE2;
+  --gold-tint:        #F7ECCC;
+  --amber-deep:       #854F0B;
+  --badge-sage:       var(--sage-tint);
+  --badge-gold:       var(--gold-tint);
+  --note-success:     rgba(155, 202, 157, 0.22);
+  /* Ground for a wizard field we could not fill. Near-white against the white
+     card, so the dashed border does the work rather than the fill. */
+  --field-missing-bg: #FBF9F4;
+
+  /* geometry */
+  --radius-pill:      999px;
+  --radius-input:     12px;
+  --radius-card:      22px;
+
+  /* type */
+  --font-ui:   var(--font-space-grotesk), "Space Grotesk", system-ui, sans-serif;
+  --font-body: var(--font-dm-sans), "Plus Jakarta Sans", system-ui, sans-serif;
+
+  background: var(--cream);
+  color: var(--charcoal);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+.shoots-a *,
+.shoots-a *::before,
+.shoots-a *::after { box-sizing: border-box; }
+
+/* ─── Type ramp (spec section 3) ─────────────────────────────
+   Body, meta and helper run in Plus Jakarta; everything structural runs in
+   Space Grotesk. Display 56/1.08/700 is landing-hero only and is deliberately
+   absent — no band A page has a hero. */
+.shoots-a .t-title {
+  font-family: var(--font-ui);
+  font-size: 32px; line-height: 1.15; font-weight: 600;
+  letter-spacing: -0.025em; color: var(--deep); margin: 0;
+  text-wrap: balance;
+}
+.shoots-a .t-section {
+  font-family: var(--font-ui);
+  font-size: 20px; line-height: 1.3; font-weight: 600;
+  letter-spacing: -0.01em; color: var(--deep); margin: 0;
+}
+.shoots-a .t-body {
+  font-family: var(--font-body);
+  font-size: 15.5px; line-height: 1.6; font-weight: 400;
+  color: var(--ink-muted); margin: 0;
+}
+.shoots-a .t-meta {
+  font-family: var(--font-body);
+  font-size: 12.8px; line-height: 1.5; font-weight: 400;
+  color: var(--ink-muted); margin: 0;
+}
+.shoots-a .t-eyebrow {
+  font-family: var(--font-ui);
+  font-size: 11.5px; font-weight: 600; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--ink-muted); margin: 0;
+}
+
+/* ─── Wordmark ───────────────────────────────────────────────
+   Lowercase, 500, matching the landing page's own .logo treatment. */
+.shoots-a .brand { display: inline-flex; align-items: center; gap: 7px; text-decoration: none; }
+.shoots-a .brand span {
+  font-family: var(--font-ui); font-weight: 500; font-size: 23px;
+  letter-spacing: -0.01em; text-transform: lowercase; color: var(--deep);
+}
+.shoots-a .brand.on-deep span { color: var(--cream); }
+
+/* ─── Buttons (spec section 4) ───────────────────────────────
+   Four levels, six states. Focus is one rule with no exceptions: a 2px deep
+   outline at 3px offset. On the secondary that ring is doing real work, since
+   its border is deliberately light at 1.49:1 to match the live nav pill; the
+   label carries identification at 10.55:1 and the ring carries keyboard
+   navigation. Removing it makes the control unusable without a mouse. */
+.shoots-a .btn {
+  font-family: var(--font-ui);
+  font-size: 15px; font-weight: 600; line-height: 1;
+  border-radius: var(--radius-pill);
+  padding: 12px 26px;
+  border: 0;
+  display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+  cursor: pointer; white-space: nowrap;
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease, transform 0.06s ease;
+}
+.shoots-a .btn:focus-visible { outline: 2px solid var(--deep); outline-offset: 3px; }
+.shoots-a .btn:disabled { cursor: not-allowed; transform: none; }
+
+/* Full-width form variant. Height is fixed at 52px, which is also what holds
+   the button's width through the loading state so the layout cannot jump. */
+.shoots-a .btn-block { width: 100%; height: 52px; padding-top: 0; padding-bottom: 0; }
+
+.shoots-a .btn-primary { background: var(--deep); color: var(--cream); }
+.shoots-a .btn-primary:hover:not(:disabled) { background: var(--deep-hover); }
+.shoots-a .btn-primary:active:not(:disabled) { background: var(--deep-active); transform: translateY(1px); }
+.shoots-a .btn-primary:disabled { background: rgba(29, 60, 62, 0.26); color: rgba(29, 60, 62, 0.48); }
+
+.shoots-a .btn-secondary {
+  background: transparent; color: var(--deep);
+  border: 1.5px solid var(--border-ghost);
+  padding: 10.5px 24.5px;
+}
+.shoots-a .btn-secondary:hover:not(:disabled) {
+  background: rgba(29, 60, 62, 0.06); border-color: rgba(29, 60, 62, 0.38);
+}
+.shoots-a .btn-secondary:disabled { color: rgba(29, 60, 62, 0.38); border-color: rgba(29, 60, 62, 0.12); }
+.shoots-a .btn-secondary.btn-block { padding-left: 24.5px; padding-right: 24.5px; }
+
+.shoots-a .btn-tertiary {
+  background: transparent; color: var(--deep); padding: 12px 8px;
+  text-decoration: underline; text-underline-offset: 4px;
+  text-decoration-thickness: 1.5px; text-decoration-color: rgba(29, 60, 62, 0.35);
+}
+.shoots-a .btn-tertiary:hover { text-decoration-color: var(--deep); }
+.shoots-a .btn-tertiary:focus-visible { border-radius: 8px; }
+
+/* Specified so it exists when the wider app needs it. No band A page uses it. */
+.shoots-a .btn-danger { background: var(--danger); color: #FDF6F3; }
+.shoots-a .btn-danger:hover:not(:disabled) { background: var(--danger-hover); }
+.shoots-a .btn-danger:focus-visible { outline-color: var(--danger); }
+
+/* Loading spinner. Sits inside the button and keeps the verb beside it. */
+.shoots-a .spin {
+  width: 15px; height: 15px; border-radius: 50%;
+  border: 2px solid rgba(246, 241, 231, 0.35);
+  border-top-color: var(--cream);
+  animation: shoots-spin 0.7s linear infinite;
+  flex: 0 0 auto;
+}
+@keyframes shoots-spin { to { transform: rotate(360deg); } }
+
+/* ─── Inputs (spec section 5) ────────────────────────────────
+   Labels are always visible. Never placeholder-as-label. */
+.shoots-a .field { display: flex; flex-direction: column; }
+.shoots-a .field > label {
+  font-family: var(--font-ui);
+  font-size: 13px; line-height: 1.3; font-weight: 600;
+  color: var(--deep); margin-bottom: 7px;
+}
+.shoots-a .lblrow {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 12px; margin-bottom: 7px;
+}
+.shoots-a .lblrow > label { margin-bottom: 0; }
+
+.shoots-a .input {
+  width: 100%; height: 50px;
+  border-radius: var(--radius-input);
+  border: 1.5px solid var(--border-input);
+  background: #fff;
+  padding: 0 15px;
+  font-family: var(--font-body); font-size: 15px;
+  color: var(--charcoal);
+  outline: none;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+}
+.shoots-a .input::placeholder { color: var(--ink-placeholder); opacity: 1; }
+.shoots-a .input:focus { border-color: var(--deep); box-shadow: 0 0 0 3px rgba(29, 60, 62, 0.16); }
+.shoots-a .input[aria-invalid="true"] { border-color: var(--danger); background: var(--danger-tint); }
+.shoots-a .input:disabled { background: #F1EEE7; border-color: #D8D3C8; color: var(--ink-placeholder); }
+
+/* Password reveal, styled as tertiary per the spec. */
+.shoots-a .pw { position: relative; display: flex; }
+.shoots-a .pw .input { padding-right: 66px; }
+.shoots-a .reveal {
+  position: absolute; right: 13px; top: 50%; transform: translateY(-50%);
+  font-family: var(--font-ui); font-size: 13px; font-weight: 600;
+  color: var(--deep); background: none; border: 0; cursor: pointer; padding: 3px 2px;
+  text-decoration: underline; text-underline-offset: 3px;
+  text-decoration-color: rgba(29, 60, 62, 0.35);
+}
+.shoots-a .reveal:hover { text-decoration-color: var(--deep); }
+.shoots-a .reveal:focus-visible { outline: 2px solid var(--deep); outline-offset: 3px; border-radius: 6px; }
+
+/* Field-level error. Linked to its input with aria-describedby at the call site. */
+.shoots-a .errmsg {
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--font-body); font-size: 12.8px; font-weight: 500;
+  color: var(--danger); margin-top: 7px;
+}
+.shoots-a .errmsg svg { flex: 0 0 auto; }
+.shoots-a .helpmsg {
+  font-family: var(--font-body); font-size: 12.8px;
+  color: var(--ink-muted); margin-top: 7px;
+}
+
+/* ─── Form-level banner ──────────────────────────────────────
+   Sign-in failure belongs here, above the form, never attached to one field.
+   Naming the email as valid confirms to anyone guessing that an account
+   exists. See spec section 6. */
+.shoots-a .banner {
+  display: flex; align-items: flex-start; gap: 9px;
+  background: var(--danger-tint);
+  border: 1px solid rgba(180, 71, 42, 0.28);
+  border-radius: var(--radius-input);
+  padding: 12px 14px;
+  font-family: var(--font-body); font-size: 13.6px; line-height: 1.45;
+  color: var(--danger);
+}
+.shoots-a .banner svg { flex: 0 0 auto; margin-top: 1px; }
+
+/* ─── Card ───────────────────────────────────────────────────*/
+.shoots-a .card {
+  background: #fff;
+  border: 1px solid rgba(29, 60, 62, 0.08);
+  border-radius: var(--radius-card);
+  padding: 38px 36px 30px;
+  /* The reset-flow mockup lifts the card off the cream rather than leaving it
+     flat. Applied here so every band A card matches, login included. */
+  box-shadow: 0 1px 2px rgba(29, 60, 62, 0.04), 0 14px 36px rgba(29, 60, 62, 0.06);
+}
+.shoots-a .card-centred { text-align: center; }
+.shoots-a .card-centred .badge,
+.shoots-a .card-centred .spin-dark { margin-left: auto; margin-right: auto; }
+.shoots-a .card-foot {
+  margin-top: 24px; padding-top: 19px;
+  border-top: 1px solid var(--border-hair); text-align: center;
+}
+
+/* ─── Sage highlight ─────────────────────────────────────────
+   The landing page's .hl marker treatment. On cream it lays a translucent
+   sage band behind deep text. On the deep panel that band drops to 3.03:1
+   against cream text, so on deep the highlighted words invert instead: deep
+   text on solid sage, 6.41:1. Same device, legible on both grounds. */
+.shoots-a .hl {
+  position: relative; display: inline-block; isolation: isolate; line-height: 1.05;
+}
+.shoots-a .hl::before {
+  content: ""; position: absolute;
+  left: -0.08em; right: -0.06em; top: 0.14em; bottom: 0.08em;
+  background: var(--sage); z-index: -1; border-radius: 3px;
+}
+.shoots-a .on-deep .hl { color: var(--deep); }
+
+/* ─── Links ──────────────────────────────────────────────────*/
+.shoots-a .link {
+  font-family: var(--font-ui); font-weight: 600; color: var(--deep);
+  text-decoration: underline; text-underline-offset: 4px;
+  text-decoration-thickness: 1.5px; text-decoration-color: rgba(29, 60, 62, 0.35);
+}
+.shoots-a .link:hover { text-decoration-color: var(--deep); }
+.shoots-a .link:focus-visible { outline: 2px solid var(--deep); outline-offset: 3px; border-radius: 6px; }
+
+.shoots-a .navlink {
+  font-family: var(--font-ui); font-size: 14px; font-weight: 500;
+  color: var(--ink-muted); text-decoration: none;
+}
+.shoots-a .navlink:hover { color: var(--deep); }
+.shoots-a .navlink:focus-visible { outline: 2px solid var(--deep); outline-offset: 3px; border-radius: 6px; }
+
+/* ─── Page shells ────────────────────────────────────────────*/
+.shoots-a .page {
+  min-height: 100vh; min-height: 100dvh;
+  display: flex; flex-direction: column;
+}
+.shoots-a .page > header {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 22px 32px;
+}
+.shoots-a .centred {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  padding: 24px 24px 64px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shoots-a *, .shoots-a *::before, .shoots-a *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ─── Split canvas (band A direction B, signup) ──────────────
+   Deep panel left at 50%, form right on cream with no card. */
+.shoots-a .split {
+  min-height: 100vh; min-height: 100dvh;
+  display: grid; grid-template-columns: 1fr 1fr;
+}
+
+.shoots-a .panel {
+  background: var(--deep);
+  color: var(--cream);
+  padding: 44px 48px;
+  display: flex; flex-direction: column; gap: 40px;
+}
+.shoots-a .panel-head {
+  font-family: var(--font-ui);
+  font-size: 38px; line-height: 1.16; font-weight: 600;
+  letter-spacing: -0.02em; color: var(--cream); margin: 0;
+  max-width: 13ch; text-wrap: balance;
+}
+.shoots-a .benefits { display: flex; flex-direction: column; gap: 22px; margin: 0; padding: 0; list-style: none; }
+.shoots-a .benefit-t {
+  font-family: var(--font-ui); font-size: 15.5px; font-weight: 600;
+  color: var(--cream); margin: 0 0 4px;
+}
+.shoots-a .benefit-b {
+  font-family: var(--font-body); font-size: 14.2px; line-height: 1.55;
+  color: var(--ink-on-deep-mut); margin: 0; max-width: 42ch;
+}
+.shoots-a .benefit-t .tick { color: var(--sage); margin-right: 8px; }
+
+.shoots-a .proof {
+  display: flex; flex-wrap: wrap; gap: 30px;
+  padding-top: 24px; border-top: 1px solid rgba(246, 241, 231, 0.16);
+  margin-top: auto;
+}
+.shoots-a .proof div { display: flex; flex-direction: column; gap: 3px; }
+.shoots-a .proof b {
+  font-family: var(--font-ui); font-weight: 600; font-size: 22px;
+  color: var(--cream); font-variant-numeric: tabular-nums;
+}
+.shoots-a .proof span {
+  font-family: var(--font-ui); font-size: 11.5px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-on-deep-mut);
+}
+
+.shoots-a .formside {
+  padding: 44px 52px;
+  display: flex; flex-direction: column;
+}
+.shoots-a .formside-top { display: flex; justify-content: flex-end; }
+.shoots-a .formbox { max-width: 400px; width: 100%; margin: auto; padding: 32px 0; }
+
+/* Mobile: the deep panel stacks above the form. Benefits 2 and 4 are dropped
+   rather than scrolling all four above the fields, per the spec. */
+@media (max-width: 880px) {
+  .shoots-a .split { grid-template-columns: 1fr; min-height: 0; }
+  .shoots-a .panel { padding: 32px 26px; gap: 28px; }
+  .shoots-a .panel-head { font-size: 30px; max-width: none; }
+  .shoots-a .benefit-drop { display: none; }
+  .shoots-a .proof { margin-top: 0; gap: 22px; }
+  .shoots-a .formside { padding: 8px 26px 48px; }
+  .shoots-a .formbox { padding: 24px 0 0; margin: 0 auto; }
+}
+
+/* ─── Status heading ─────────────────────────────────────────
+   A deliberate step below --t-title, for cards that report a state rather
+   than ask for something: "Check your email", "Password updated", "Reset link
+   expired". The reset-flow mockup sets every heading at 27/23, which sits
+   outside the spec's section 3 ramp entirely. Primary headings stay on the
+   ramp at 32 so the whole flow matches login; only the status cards step
+   down, which is the distinction the mockup was actually drawing. */
+.shoots-a .t-status {
+  font-family: var(--font-ui);
+  font-size: 23px; line-height: 1.2; font-weight: 600;
+  letter-spacing: -0.02em; color: var(--deep); margin: 0;
+  text-wrap: balance;
+}
+
+/* ─── Status badge ───────────────────────────────────────────
+   Gold, not red, for the expired state. A safe-links scanner spending the
+   token before the human clicks is routine for M365 users, which most of
+   these users are, so it is a normal step in the path and must not read as
+   though they did something wrong. See docs/password-reset-flow.md. */
+.shoots-a .badge {
+  width: 52px; height: 52px; border-radius: 15px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 18px; flex: 0 0 auto;
+}
+.shoots-a .badge svg { display: block; }
+.shoots-a .badge-sage   { background: var(--badge-sage); }
+.shoots-a .badge-gold   { background: var(--badge-gold); }
+.shoots-a .badge-danger { background: var(--danger-tint); }
+
+/* ─── Note box ───────────────────────────────────────────────
+   Carries the "Not arrived?" help, including the one-per-hour rate limit.
+   resetPasswordForEmail is limited to roughly one send per hour per address
+   and a second request inside that hour sends nothing, silently, so this box
+   is doing real work and its last bullet is not filler. */
+.shoots-a .note {
+  background: var(--cream);
+  border: 1px solid rgba(29, 60, 62, 0.09);
+  border-radius: var(--radius-input);
+  padding: 15px 17px;
+}
+.shoots-a .note-h {
+  font-family: var(--font-ui); font-weight: 600; font-size: 12.5px;
+  color: var(--deep); margin: 0 0 7px;
+}
+.shoots-a .note ul {
+  margin: 0; padding-left: 17px;
+  /* Tailwind's preflight sets list-style:none on every ul, so the mockup's
+     bullets vanish unless they are asked for back. Without them the four
+     items read as one run-on paragraph. */
+  list-style: disc;
+  font-family: var(--font-body); font-size: 12.7px; line-height: 1.72;
+  color: var(--ink-muted);
+}
+.shoots-a .note li { margin: 0; }
+.shoots-a .note-success {
+  background: var(--note-success);
+  border: 1px solid rgba(29, 60, 62, 0.10);
+  border-radius: var(--radius-input);
+  padding: 14px 16px;
+}
+.shoots-a .note-success .note-h { color: var(--deep); }
+
+/* Spinner for light surfaces. The cream-on-deep one above is invisible here. */
+.shoots-a .spin-dark {
+  width: 26px; height: 26px; border-radius: 50%;
+  border: 2px solid rgba(29, 60, 62, 0.2);
+  border-top-color: var(--deep);
+  animation: shoots-spin 0.7s linear infinite;
+}
+
+/* ─── Onboarding welcome hero ────────────────────────────────
+   Headline is Space Grotesk, not DM Serif Display. brand-guidelines.md §2
+   reserves the serif for this exact headline, but the page never used it and
+   Paul chose the page over the doc on 20 Aug. No band A page loads the serif.
+   The guideline is now the stale one; §2 should drop the reference. */
+.shoots-a .hero {
+  width: 100%; max-width: 600px; margin: 0 auto;
+  text-align: center; display: flex; flex-direction: column; align-items: center;
+}
+.shoots-a .hero-head {
+  font-family: var(--font-ui);
+  font-size: 48px; line-height: 1.08; font-weight: 600;
+  letter-spacing: -0.03em; color: var(--deep); margin: 0 0 18px;
+  text-wrap: balance;
+}
+.shoots-a .hero p {
+  font-family: var(--font-body);
+  font-size: 16.5px; line-height: 1.6; color: var(--ink-muted);
+  max-width: 462px; margin: 0 0 32px;
+}
+/* Sage pill, not lime text. Lime was doing the work of making this read as a
+   badge; a pill does that without the retired colour. */
+.shoots-a .pill-eyebrow {
+  font-family: var(--font-ui); font-weight: 600; font-size: 11.5px;
+  letter-spacing: 0.13em; text-transform: uppercase; color: var(--deep);
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--sage-tint); padding: 7px 14px;
+  border-radius: var(--radius-pill); margin-bottom: 22px;
+}
+.shoots-a .pill-eyebrow i {
+  width: 6px; height: 6px; background: var(--deep);
+  border-radius: 50%; display: inline-block; flex: 0 0 auto;
+}
+.shoots-a .skip {
+  font-family: var(--font-ui); font-size: 13px; color: var(--ink-placeholder);
+  text-decoration: none; padding: 12px 16px; display: inline-block;
+}
+.shoots-a .skip:hover { color: var(--deep); }
+.shoots-a .skip:focus-visible { outline: 2px solid var(--deep); outline-offset: 2px; border-radius: 8px; }
+
+@media (max-width: 780px) {
+  .shoots-a .hero-head { font-size: 35px; }
+}

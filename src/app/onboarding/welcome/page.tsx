@@ -4,9 +4,27 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { isFoundingCohort } from '@/lib/founding-cohort'
+import '@/styles/shoots-band-a.css'
 
-const UI = "var(--font-space-grotesk), Space Grotesk, sans-serif"
-const BODY = "var(--font-dm-sans), Plus Jakarta Sans, sans-serif"
+/* Band A page 5 — onboarding welcome.
+   ============================================================
+   The headline is Space Grotesk, 48/1.08/600, tracking -0.03em. This was put
+   to Paul as an open question because brand-guidelines.md reserves DM Serif
+   Display for this exact headline while the page has always used the sans; he
+   chose the page over the doc on 20 Aug. The serif is now used in one place
+   across the whole product, the marketing About testimonial, and no band A
+   page loads it. brand-guidelines.md §2 should drop the onboarding reference.
+
+   Two copy fixes, both about the first screen telling the truth:
+
+   1. The eyebrow is conditional. "Founding cohort, you're in" is true today
+      and false for anyone arriving through public signup from September.
+      See src/lib/founding-cohort.ts for how membership is decided.
+   2. The name fallback no longer renders "Welcome, there." firstName() used
+      to return the literal string 'there'. It now returns empty and the
+      headline drops the comma with it.
+   ============================================================ */
 
 function firstName(email: string | null | undefined, meta: Record<string, unknown> | null): string {
   const metaName = typeof meta?.first_name === 'string' ? (meta.first_name as string).trim() : ''
@@ -18,11 +36,14 @@ function firstName(email: string | null | undefined, meta: Record<string, unknow
     const token = local.split(/[._-]/)[0]
     if (token) return token.charAt(0).toUpperCase() + token.slice(1)
   }
-  return 'there'
+  // Empty, not 'there'. The headline reads "Welcome." rather than the
+  // typo-looking "Welcome, there."
+  return ''
 }
 
 export default function OnboardingWelcomePage() {
-  const [name, setName] = useState<string>('there')
+  const [name, setName] = useState<string>('')
+  const [cohort, setCohort] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -30,107 +51,40 @@ export default function OnboardingWelcomePage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
       setName(firstName(user.email, user.user_metadata ?? null))
+      setCohort(isFoundingCohort(user.created_at))
     }
     load()
   }, [])
 
+  // The .shoots-a scope and the cream ground come from onboarding/layout.tsx.
   return (
-    <div style={{
-      flex: 1,
-      display: 'flex',
-      flexDirection: 'column',
-      padding: '20px 24px 40px',
-      minHeight: 620,
-      width: '100%',
-      background: '#fff',
-      fontFamily: BODY,
-      color: '#2C2C2A',
-    }}>
-      {/* Hero — matches wizard step 'entry' positioning */}
-      <div style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'flex-start',
-        textAlign: 'center',
-        maxWidth: 560,
-        margin: '0 auto',
-        width: '100%',
-        paddingTop: 146,
-      }}>
-        {/* Eyebrow */}
-        <div style={{
-          fontFamily: UI,
-          fontWeight: 500,
-          fontSize: 11.5,
-          color: '#8ECB3C',
-          letterSpacing: '0.08em',
-          textTransform: 'uppercase',
-          marginBottom: 20,
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 8,
-        }}>
-          <span style={{ width: 6, height: 6, background: '#8ECB3C', borderRadius: '50%', display: 'inline-block', flexShrink: 0 }} />
-          Founding cohort, you&rsquo;re in
-        </div>
+    <div className="centred" style={{ flex: 1, alignItems: 'center' }}>
+      <div className="hero">
 
-        <h1 style={{
-          fontFamily: UI,
-          fontWeight: 500,
-          fontSize: 'clamp(36px, 5.5vw, 52px)',
-          lineHeight: 1.08,
-          letterSpacing: '-0.025em',
-          color: '#2C2C2A',
-          marginBottom: 18,
-        }}>
-          Welcome, {name}.
+        <span className="pill-eyebrow">
+          <i />
+          {cohort ? 'Founding cohort, you’re in' : 'Let’s get you set up'}
+        </span>
+
+        <h1 className="hero-head">
+          {name ? `Welcome, ${name}.` : 'Welcome.'}
         </h1>
 
-        <p style={{
-          fontFamily: BODY,
-          fontSize: 17,
-          lineHeight: 1.55,
-          color: '#5F5E5A',
-          maxWidth: 460,
-          marginBottom: 36,
-        }}>
-          You&rsquo;re one of the first to use Shoots. Let&rsquo;s set up your organisation so we can match you with funding that fits: grants, programmes, social investment, and in-kind support. About two minutes.
+        <p>
+          You&rsquo;re one of the first to use Shoots. Let&rsquo;s set up your organisation so we can
+          match you with funding that fits: grants, programmes, social investment, and in-kind
+          support. About two minutes.
         </p>
 
-        <Link
-          href="/onboarding/wizard"
-          style={{
-            fontFamily: UI,
-            fontWeight: 600,
-            fontSize: 15,
-            background: '#8ECB3C',
-            color: '#173404',
-            padding: '13px 24px',
-            borderRadius: 10,
-            textDecoration: 'none',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 8,
-            transition: 'opacity 0.15s',
-          }}
-          onMouseEnter={e => (e.currentTarget.style.opacity = '0.9')}
-          onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
-        >
+        <Link href="/onboarding/wizard" className="btn btn-primary">
           Let&rsquo;s get you set up
           <ArrowRight size={16} strokeWidth={2.5} />
         </Link>
-      </div>
 
-      {/* Bottom skip — matches wizard's pattern */}
-      <div style={{ textAlign: 'center' }}>
-        <Link
-          href="/dashboard/profile"
-          style={{ fontFamily: UI, fontSize: 13, color: '#8A8986', padding: '12px 16px', display: 'inline-block', textDecoration: 'none' }}
-        >
-          Set up later
-        </Link>
+        <div style={{ marginTop: 26 }}>
+          <Link href="/dashboard/profile" className="skip">Set up later</Link>
+        </div>
+
       </div>
     </div>
   )

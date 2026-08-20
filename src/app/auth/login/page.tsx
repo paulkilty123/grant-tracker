@@ -4,15 +4,24 @@ import { useState, Suspense } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
 import { isOnboardingComplete, computePostLoginPath } from '@/lib/onboarding'
 import LogoMark from '@/components/icons/LogoMark'
+import '@/styles/shoots-band-a.css'
 
-const UI = "var(--font-space-grotesk), Space Grotesk, sans-serif"
-const BODY = "var(--font-dm-sans), Plus Jakarta Sans, sans-serif"
+/* Band A direction A — centred card on cream, max-width 436px.
+   Presentation is rebuilt against the Shoots tokens; the routing and session
+   logic below is unchanged from the lime-era page and deliberately so.
+
+   Google sign-in is absent on purpose. All 31 auth identities on the project
+   are `email` and the provider has never been used, so this ships as the
+   spec's section 7 email-only fallback: no "or" divider left orphaned, and a
+   hairline-topped footer where the Google block would have sat. Adding it
+   later is the divider, the button and one call to signInWithOAuth. */
 
 const ERROR_MESSAGES: Record<string, string> = {
-  'Invalid login credentials': 'Incorrect email or password. Please try again.',
+  // One message for both halves. Confirming that an email is valid tells
+  // someone guessing that an account exists. Spec section 6.
+  'Invalid login credentials': 'Email or password is not correct.',
   'Email not confirmed': 'Please check your email and click the confirmation link first.',
   'Too many requests': 'Too many attempts. Please wait a few minutes and try again.',
 }
@@ -28,6 +37,15 @@ function friendlyError(msg: string): string {
     if (msg.includes(key)) return friendly
   }
   return msg
+}
+
+function AlertIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M8 4.6v4.2M8 11.2v.6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  )
 }
 
 function LoginForm() {
@@ -92,103 +110,96 @@ function LoginForm() {
     }
   }
 
+  const banner = error ?? urlErrorMessage
+
   return (
-    <div style={{ background: '#FAFAF7', minHeight: '100vh', fontFamily: BODY, color: '#2C2C2A' }}>
+    <div className="shoots-a">
+      <div className="page">
 
-      {/* NAV */}
-      <nav style={{ background: 'white', borderBottom: '0.5px solid rgba(23,52,4,0.08)', padding: '18px 0' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}>
-            <LogoMark size={30} />
-            {/* Logotype: lowercase, weight 500, matching the landing page's
-                .brand treatment. Hardcoded rather than read from mcp-brand,
-                which reads non-public env at module load and cannot be
-                imported into a client component. */}
-            <span style={{ fontFamily: UI, fontWeight: 500, fontSize: 24, letterSpacing: '-0.01em', textTransform: 'lowercase', color: 'var(--deep, #1D3C3E)' }}>Shoots</span>
+        {/* Logo only. The spec puts "New here? Join the waitlist" here AND a
+            waitlist footer inside the card (section 7's email-only fallback),
+            which renders the same call to action twice on a 436px card and
+            reads as a mistake. Kept the one below the form: that is where
+            someone who cannot sign in actually looks, and it is the one the
+            fallback exists to provide. The wordmark still links home. */}
+        <header>
+          <Link href="/" className="brand">
+            <LogoMark size={28} />
+            <span>shoots</span>
           </Link>
-          <Link href="/" style={{ fontFamily: UI, fontSize: 13.5, color: '#5F5E5A', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-            <ArrowLeft size={14} /> Back to home
-          </Link>
-        </div>
-      </nav>
+        </header>
 
-      <div style={{ maxWidth: 460, margin: '0 auto', padding: '64px 24px 48px' }}>
+        <main className="centred">
+          <div style={{ width: '100%', maxWidth: 436 }}>
+            <div className="card">
 
-        {/* Card */}
-        <div style={{ background: 'white', borderRadius: 16, padding: '40px 36px', boxShadow: '0 2px 24px rgba(23,52,4,0.06)', border: '0.5px solid rgba(23,52,4,0.06)' }}>
-          <h1 style={{ fontFamily: UI, fontWeight: 500, fontSize: 28, lineHeight: 1.15, letterSpacing: '-0.02em', color: '#2C2C2A', marginBottom: 6 }}>
-            Welcome back
-          </h1>
-          <p style={{ fontFamily: BODY, fontSize: 14.5, color: '#5F5E5A', marginBottom: 28 }}>
-            Sign in to your Shoots account.
-          </p>
+              <h1 className="t-title">Welcome back</h1>
+              <p className="t-body" style={{ marginTop: 8 }}>Sign in to pick up where you left off.</p>
 
-          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {urlErrorMessage && (
-              <div style={{ background: '#FFFBEB', border: '0.5px solid rgba(180,135,40,0.25)', color: '#854F0B', fontSize: 13, padding: '11px 14px', borderRadius: 10 }}>
-                {urlErrorMessage}
-              </div>
-            )}
-            {error && (
-              <div style={{ background: '#FAECE7', border: '0.5px solid rgba(153,60,29,0.25)', color: '#993C1D', fontSize: 13, padding: '11px 14px', borderRadius: 10 }}>
-                {error}
-              </div>
-            )}
+              <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 18, marginTop: 28 }}>
 
-            <div>
-              <label style={{ display: 'block', fontFamily: UI, fontWeight: 500, fontSize: 13, color: '#2C2C2A', marginBottom: 6 }}>Email</label>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="form-input" placeholder="you@organisation.org" autoComplete="email" required />
-            </div>
+                {banner && (
+                  <div className="banner" role="alert">
+                    <AlertIcon />
+                    <span>{banner}</span>
+                  </div>
+                )}
 
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                <label style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, color: '#2C2C2A' }}>Password</label>
-                <Link href="/auth/forgot-password" style={{ fontFamily: UI, fontSize: 12, color: '#3B6D11', textDecoration: 'none' }}>Forgot password?</Link>
-              </div>
-              <div style={{ position: 'relative' }}>
-                <input
-                  type={showPw ? 'text' : 'password'}
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  className="form-input"
-                  style={{ paddingRight: 56 }}
-                  placeholder={'\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'}
-                  autoComplete="current-password"
-                  required
-                />
-                <button type="button" onClick={() => setShowPw(v => !v)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontFamily: UI, fontSize: 12, color: '#8A8986', background: 'transparent', border: 'none', cursor: 'pointer' }} tabIndex={-1}>
-                  {showPw ? 'Hide' : 'Show'}
+                <div className="field">
+                  <label htmlFor="email">Email</label>
+                  <input
+                    id="email"
+                    className="input"
+                    type="email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    placeholder="you@organisation.org"
+                    autoComplete="email"
+                    required
+                  />
+                </div>
+
+                <div className="field">
+                  <div className="lblrow">
+                    <label htmlFor="password">Password</label>
+                    <Link href="/auth/forgot-password" className="link" style={{ fontSize: 13 }}>Forgot password?</Link>
+                  </div>
+                  <div className="pw">
+                    <input
+                      id="password"
+                      className="input"
+                      type={showPw ? 'text' : 'password'}
+                      value={password}
+                      onChange={e => setPassword(e.target.value)}
+                      autoComplete="current-password"
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="reveal"
+                      onClick={() => setShowPw(v => !v)}
+                      aria-label={showPw ? 'Hide password' : 'Show password'}
+                    >
+                      {showPw ? 'Hide' : 'Show'}
+                    </button>
+                  </div>
+                </div>
+
+                <button type="submit" className="btn btn-primary btn-block" disabled={loading} style={{ marginTop: 4 }}>
+                  {loading ? <><span className="spin" />Signing in…</> : 'Sign in'}
                 </button>
+              </form>
+
+              <div style={{ marginTop: 26, paddingTop: 22, borderTop: '1px solid var(--border-hair)' }}>
+                <p className="t-meta">
+                  New to Shoots? <Link href="/#waitlist" className="link" style={{ fontSize: 12.8 }}>Join the waitlist</Link> →
+                </p>
               </div>
+
             </div>
+          </div>
+        </main>
 
-            <button
-              type="submit"
-              disabled={loading}
-              style={{
-                marginTop: 8,
-                background: '#8ECB3C',
-                color: '#173404',
-                fontFamily: UI,
-                fontWeight: 600,
-                fontSize: 15,
-                padding: '13px 22px',
-                borderRadius: 10,
-                border: 'none',
-                cursor: loading ? 'default' : 'pointer',
-                opacity: loading ? 0.7 : 1,
-                transition: 'opacity 0.15s',
-              }}
-            >
-              {loading ? 'Signing in...' : 'Sign in'}
-            </button>
-          </form>
-        </div>
-
-        <p style={{ fontFamily: BODY, fontSize: 13, color: '#8A8986', textAlign: 'center', marginTop: 24 }}>
-          Want to join the founding cohort?{' '}
-          <Link href="/apply" style={{ fontFamily: UI, fontWeight: 500, color: '#3B6D11', textDecoration: 'none' }}>Apply here</Link>
-        </p>
       </div>
     </div>
   )
