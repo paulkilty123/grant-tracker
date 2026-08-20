@@ -266,6 +266,27 @@ async function fetchGrantPageInfo(url: string): Promise<{ description: string; i
 // Re-enable by removing it here, not by unsetting an env var. The good rows it did
 // find — HS2's community fund, the MoJ rehabilitative services scheme, the
 // Democratic Engagement Fund — stay in the catalogue and are unaffected.
+/**
+ * WRITING A NEW SCRAPER: `is_rolling` DEFAULTS TO FALSE.
+ *
+ * `false` does not mean "this fund has a deadline". It means "we make no claim",
+ * and the card renders that as "Check website". `true` is a positive assertion
+ * that a fundraiser can apply on any day of the year, and it belongs on a row
+ * ONLY where the funder's page says so in words.
+ *
+ * Measured 2026-08-20: 324 of 607 live rows claimed Rolling. The funder's page
+ * confirmed 89 and disputed 14; on 221 it said nothing at all. Two scrapers
+ * derived the flag as `!deadline`, which turns a parse failure into a promise,
+ * and 24 hardcoded `true` for a whole funder. Paul: "rolling has been the issue
+ * for a while."
+ *
+ * The 24 hardcoded ones are NOT all wrong — TNLCF has 14 rows the page confirms
+ * as rolling, Two Ridings 8, Foundation Scotland 6. They are per-funder claims
+ * and each needs its page read before it is changed, which is why only the two
+ * derivations and the two our own evidence contradicts were touched.
+ *
+ * If you do not know, write `false`.
+ */
 const CODE_DISABLED_SOURCES = ['gov_uk']
 
 const DISABLED_SOURCES = new Set([
@@ -536,7 +557,12 @@ async function crawlForeverManchester(): Promise<CrawlResult> {
         amount_min:           null,
         amount_max:           null,
         deadline,
-        is_rolling:           !deadline,
+        // NOT `!deadline`. A deadline we failed to parse is not evidence that
+        // there is no deadline, and this line turned every parse failure into
+        // "Rolling, apply any time" on the card. Paul, 2026-08-20: "rolling has
+        // been the issue for a while." False means "we make no claim", which is
+        // what the card renders as "Check website".
+        is_rolling:           false,
         is_local:             true,
         sectors:              ['community', 'social welfare'],
         eligibility_criteria: ['Greater Manchester based organisations'],
@@ -748,7 +774,7 @@ async function crawlHeritageFund(): Promise<CrawlResult> {
         amount_min:           min,
         amount_max:           max,
         deadline:             null,
-        is_rolling:           true,
+        is_rolling:           false,
         is_local:             false,
         sectors:              ['heritage', 'culture', 'community', 'environment'],
         eligibility_criteria: [],
@@ -813,7 +839,12 @@ async function crawlCFNI(): Promise<CrawlResult> {
         amount_min:           null,
         amount_max:           amount,
         deadline,
-        is_rolling:           !deadline,
+        // NOT `!deadline`. A deadline we failed to parse is not evidence that
+        // there is no deadline, and this line turned every parse failure into
+        // "Rolling, apply any time" on the card. Paul, 2026-08-20: "rolling has
+        // been the issue for a while." False means "we make no claim", which is
+        // what the card renders as "Check website".
+        is_rolling:           false,
         is_local:             true,
         sectors:              ['community', 'social welfare'],
         eligibility_criteria: ['Northern Ireland based organisations'],
@@ -2422,7 +2453,7 @@ async function crawlSouthYorkshireCF(): Promise<CrawlResult> {
       const url  = href.startsWith('http') ? href : `${BASE}${href}`
       const desc = card.querySelector('p')?.text?.trim() ?? ''
       const { min, max } = parseAmountRange(desc + ' ' + title)
-      grants.push({ external_id: `south_yorkshire_cf_${slugify(href || title)}`, source: SOURCE, title, funder: 'South Yorkshire Community Foundation', funder_type: 'community_foundation', description: desc || 'Grant from South Yorkshire Community Foundation.', amount_min: min, amount_max: max, deadline: null, is_rolling: true, is_local: true, sectors: ['community', 'social welfare'], eligibility_criteria: ['Organisations in South Yorkshire'], location_tag: 'South Yorkshire', apply_url: url || null, raw_data: { title, href } as Record<string, unknown> })
+      grants.push({ external_id: `south_yorkshire_cf_${slugify(href || title)}`, source: SOURCE, title, funder: 'South Yorkshire Community Foundation', funder_type: 'community_foundation', description: desc || 'Grant from South Yorkshire Community Foundation.', amount_min: min, amount_max: max, deadline: null, is_rolling: false, is_local: false, sectors: ['community', 'social welfare'], eligibility_criteria: ['Organisations in South Yorkshire'], location_tag: 'South Yorkshire', apply_url: url || null, raw_data: { title, href } as Record<string, unknown> })
     }
     if (grants.length > 0) return await upsertGrants(SOURCE, grants)
     return await upsertGrants(SOURCE, [{ external_id: `${SOURCE}_open`, source: SOURCE, title: 'South Yorkshire Community Foundation — Open Grants', funder: 'South Yorkshire Community Foundation', funder_type: 'community_foundation', description: 'South Yorkshire Community Foundation supports voluntary and community organisations across Sheffield, Rotherham, Barnsley and Doncaster with a range of grant programmes.', amount_min: 500, amount_max: 20000, deadline: null, is_rolling: true, is_local: true, sectors: ['community', 'social welfare', 'arts', 'health'], eligibility_criteria: ['Voluntary or community group in South Yorkshire'], location_tag: 'South Yorkshire', apply_url: `${BASE}/apply/search-our-grants`, raw_data: { note: 'Hardcoded fallback' } as Record<string, unknown> }])

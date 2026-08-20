@@ -340,6 +340,48 @@ Deferred post-beta:
    not re-litigate.** See `docs/shoots-mcp-build-brief.md` hard constraint 4.
 7. **Write short, plain replies.** See below. This is a hard rule, not a
    preference.
+8. **Ask before spending anything on the Anthropic API.** See below. Set
+   2026-08-20, the day Paul hit his spend cap.
+
+---
+
+## API spend needs a yes first
+
+Set 2026-08-20. Paul hit his Anthropic spend cap and asked to be told about any
+spend so he can approve it.
+
+**The key in `.env.local` is his personal one.** Anything run from the command
+line bills to it — `npx tsx scripts/...` included. The production key is separate
+and the Vercel crons run on that; those are not this rule.
+
+**Before running anything that calls the API, say three things and wait:**
+
+1. What it will read — **in rows, not dollars**. Rows are the unit actually being
+   chosen; a dollar estimate is a guess layered on top of one.
+2. Why the cheaper option will not do. Stored `field_evidence` is free and the
+   production cron refreshes it nightly, so "read the pages again" is often
+   avoidable. The reopening detector and the second eligibility pass were both
+   built entirely from evidence already paid for.
+3. That it is a fresh read rather than something already on disk. Applying a
+   saved report costs nothing; re-running the measurement to produce the same
+   report costs the whole thing again.
+
+**What counts:** any script importing `@anthropic-ai/sdk`, and anything hitting
+`api.anthropic.com` directly. **Audit by the HOST, not the SDK import** —
+`/api/ai-search` calls the API by raw `fetch`, so an import grep says "nothing
+bills locally", which is wrong.
+
+**What does not count:** DB reads and writes, SQL, code, tests, and reading
+`field_evidence` that a cron already bought.
+
+**Why this exists rather than "be careful".** On 20 August a day of measure-first
+work ran 387 page verifications across five scripts — the amount sample, the
+scraper sweep, the re-measure after fixing the extractor, and two probes. Each was
+defensible on its own and nobody had seen the total. The work was good and the
+rate was never put in front of him.
+
+**A running `next dev` is free** until somebody submits a Find Funding search or
+opens the adviser. Loading pages and editing styles costs nothing.
 
 ---
 

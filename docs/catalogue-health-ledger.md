@@ -2518,6 +2518,49 @@ deleted its own true positive, and the 400-character floor that passed a CAPTCHA
 page. Compare a timestamptz against a timestamptz, or convert explicitly with
 `at time zone`.
 
+## The rolling flag at source, 2026-08-20
+
+Paul asked for the 24 scrapers that hardcode `is_rolling: true`. **Four changed,
+not 24, and the reason is the same one that has come up all day.**
+
+Tested each scraper against evidence already in the database — free, no page
+reads — and the hardcoded `true` is often RIGHT:
+
+| Scraper | Rows the page confirms as rolling |
+|---|---:|
+| `tnlcf` | 14 |
+| `two_ridings_cf` | 8 |
+| `foundation_scotland` | 6 |
+| `cf_ni`, `cf_wales` | 3 each |
+
+Flipping all 24 would have replaced 30-odd supported claims with "Check website".
+**A hardcoded value is not automatically a wrong one**, which is the fourth time
+today that reading before sweeping changed the answer.
+
+### What did change
+
+**Two derivations.** `is_rolling: !deadline` in two scrapers — the exact
+mechanism Paul named, where a deadline we failed to parse becomes a promise that
+there is no deadline. A silent failure promoted to an assertion.
+
+**Two scrapers our own evidence contradicts.** `south_yorkshire_cf` has a row the
+page positively denies is rolling; `heritage_fund` has one denied against one
+confirmed, on a funder that plainly runs rounds.
+
+**And the rule, written where the next scraper gets written.** A comment block at
+the head of `crawl.ts`: `false` does not mean "this has a deadline", it means "we
+make no claim", and the card renders it "Check website". `true` is a positive
+assertion that someone can apply on any day of the year. **If you do not know,
+write `false`.**
+
+### What is left, and why it is not done
+
+Twenty hardcoded `true` values remain. Each is a claim about one funder —
+Garfield Weston and Esmée Fairbairn probably are always-open, Pilgrim Trust and
+Wolfson probably are not — and settling any of them means reading that funder's
+page, which now needs Paul's approval per the new spend rule. Named here rather
+than left implicit.
+
 ## Maintenance
 
 Update on each merge that closes a row, and re-measure the whole table at each
