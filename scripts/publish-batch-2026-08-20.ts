@@ -80,11 +80,39 @@ async function main() {
       const sectors = (r.impact_sectors ?? []).length > 0
       const timing = r.deadline !== null || r.is_rolling === true || typeof brief.how_to_apply === 'string'
       const amountOrHonest = r.amount_max !== null || r.amount_min !== null || typeof brief.typical_award === 'string'
+      // THE TEST THE FIRST SELECTION LACKED.
+      //
+      // `agrees: false` stamps are frozen at read time, so a dispute already
+      // settled by a later write still reads as a dispute. Compare the stored
+      // proposal against what the row holds NOW. Seven of the first ten proposed
+      // rows failed this and the score had them all at 7/7 — because the score
+      // asks whether the fields are FILLED IN, not whether they are right.
+      const ev = (r.field_evidence ?? {}) as Record<string, { agrees?: unknown; proposed?: unknown }>
+      const briefObj = (r.funder_brief ?? {}) as Record<string, unknown>
+      const openDisputes: string[] = []
+      for (const [field, st] of Object.entries(ev)) {
+        if (st?.agrees !== false) continue
+        const current = field === 'exclusions' ? briefObj.exclusions : (r as unknown as Record<string, unknown>)[field]
+        const p = st.proposed
+        let same: boolean
+        if (p === null || p === undefined) same = true
+        else if (Array.isArray(p) && Array.isArray(current)) {
+          const a = [...p].map(String).sort(), b = [...current].map(String).sort()
+          same = a.length === b.length && a.every((v, i) => v === b[i])
+        } else if (Array.isArray(p)) same = false
+        else same = String(p) === String(current)
+        if (!same) openDisputes.push(field)
+      }
+      const enrichedAt = typeof briefObj.last_enriched === 'string' ? Date.parse(briefObj.last_enriched) : NaN
+      const briefFresh = Number.isFinite(enrichedAt) && (Date.now() - enrichedAt) / 86_400_000 <= 180
+
       const score = [readOk, briefReal, who, structures, sectors, timing, amountOrHonest].filter(Boolean).length
       return { r, score, readOk, briefReal, who, structures, sectors, timing, amountOrHonest,
+               openDisputes, briefFresh,
                info: gate.informational.map(i => i.code) }
     })
     .sort((a, b) => b.score - a.score || (a.r.title ?? '').localeCompare(b.r.title ?? ''))
+  const ready = scored.filter(s => s.openDisputes.length === 0 && s.briefFresh && s.readOk && s.briefReal)
 
   const publicBodyHeld = rows.filter(r =>
     OUT_OF_BATCH_SOURCES.includes(String((r as unknown as { source?: string }).source ?? ''))
@@ -92,9 +120,14 @@ async function main() {
   console.log(`\nqueue rows eligible for a batch  : ${scored.length}`)
   console.log(`held back, public body or gov.uk : ${publicBodyHeld}  (scope read first, see the note in this file)`)
   console.log(`of those, page read + real brief : ${scored.filter(s => s.readOk && s.briefReal).length}`)
+  console.log(`READY — nothing its page disputes, brief under 6 months: ${ready.length}`)
+  console.log(`held by a live dispute            : ${scored.filter(s => s.openDisputes.length > 0).length}`)
+  const byField: Record<string, number> = {}
+  for (const s2 of scored) for (const d of s2.openDisputes) byField[d] = (byField[d] ?? 0) + 1
+  for (const [k, v] of Object.entries(byField).sort((a, b) => b[1] - a[1])) console.log(`     ${k.padEnd(22)} ${v}`)
   console.log(`\n── proposed first batch of ${SIZE}, strongest evidence first\n`)
 
-  const batch = scored.slice(0, SIZE)
+  const batch = ready.slice(0, SIZE)
   for (const s of batch) {
     const r = s.r
     const money = r.amount_max ? `up to £${r.amount_max.toLocaleString('en-GB')}` : (r.amount_min ? `from £${r.amount_min.toLocaleString('en-GB')}` : 'no amount stated')
