@@ -2561,6 +2561,59 @@ Wolfson probably are not — and settling any of them means reading that funder'
 page, which now needs Paul's approval per the new spend rule. Named here rather
 than left implicit.
 
+## Facts we read, stored, and never wrote down — 2026-08-20
+
+Checking the first publish batch turned up **City Bridge Foundation offering
+£450,000 with no income limit on our row**, while its page — read on 19 August and
+sitting in `field_evidence` ever since — says *"Organisations must have a total
+annual income of between £50,000 and £1.5m"*. A £20,000 charity would have matched
+a fund it is barred from. Beinneun showed "no date" against six dated rounds in
+the same store.
+
+**Third time today the same pattern.** The engine reads the page, records the
+answer verbatim, and nothing reads it back. The reopening detector was the first,
+the second eligibility widening the second.
+
+| Gap filled from stored evidence | Rows |
+|---|---:|
+| **Exclusions** | **94** |
+| `deadline_cycle` | 26 |
+| `max_org_income` | 26 |
+| `min_org_income` | 7 |
+
+130 rows written, 119 of them live. No page reads, no model calls.
+
+**Exclusions are the point.** CLAUDE.md rule 6 is the one Paul has defended
+hardest — withholding an exclusion "could send someone to apply where they are
+explicitly barred". We were not withholding them from a tier. **We were failing to
+write them down at all**, on 94 rows whose funders had published them and whose
+pages we had already read.
+
+### Add only, never overwrite
+
+A field already holding a value was left alone and the disagreement reported: two
+rows where our income cap differs from the page (Randal £50k v £100k, Forte £500k
+v £250k). **Filling a blank from the funder's own sentence is not a judgement.
+Replacing a value somebody chose is.** No quote, no write.
+
+### The first source was refused 78 times
+
+`system:` is trust 50. 61 of the briefs were written by `ai_enrich:v2` at 60 and
+13 by `user_verified:` writes from earlier the same day at 70, so more than half
+the run silently did nothing on the first pass — visible only because the script
+counts refusals and re-checks the gaps afterwards. Re-run at `user_verified:`,
+which is the honest level here rather than a workaround: every write is backed by
+a verbatim quote required before the field is touched.
+
+### And the check that could have gone wrong
+
+Beinneun's proposed cycle mixed three "Application deadline" entries with three
+"Community Panel Meeting" entries. **A decision date stored as a closing date is
+the Sinclair Henderson bug** — a derived deadline in a month nothing closes. The
+extraction had already filtered them, confirmed by counting cycle entries written
+today whose label matches meeting / decision / panel / announce: **zero**. Checked
+rather than assumed, because that one has bitten before.
+
 ## Maintenance
 
 Update on each merge that closes a row, and re-measure the whole table at each
