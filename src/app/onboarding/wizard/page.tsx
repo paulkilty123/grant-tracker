@@ -184,6 +184,30 @@ const STEP_DOT_POS: Record<WizardStep, number> = {
 
 type FieldConfidence = 'confident' | 'uncertain' | 'missing'
 
+/**
+ * The fields the review step actually renders, and therefore the only fields
+ * the user can confirm.
+ *
+ * `ExtractedData.confidence` carries a seventh key, `mission`, which is
+ * extracted and saved but never shown. The Continue gate used to iterate every
+ * key in that object, so a mission score between 0.4 and 0.8 counted as
+ * "uncertain" and had to be confirmed — except nothing on screen could confirm
+ * it, and auto-confirm only covers 0.8 and above. Continue went permanently
+ * dead with all six visible fields green and the banner cheerfully reporting
+ * "6 of 6 fields found".
+ *
+ * Gate on what the user can see and act on. If a field is ever added here,
+ * render it too.
+ */
+const REVIEW_FIELD_KEYS = [
+  'name',
+  'legalStructure',
+  'primaryLocation',
+  'impactSectors',
+  'beneficiaryGroups',
+  'annualIncomeBand',
+] as const
+
 function fieldConf(c: number | undefined | null, hasValue = false): FieldConfidence {
   if (c == null || c < 0.4) return hasValue ? 'uncertain' : 'missing'
   if (c < 0.8)              return 'uncertain'
@@ -837,10 +861,22 @@ export default function OnboardingWizardPage() {
 
   function reviewCanContinue(): boolean {
     if (!extracted) return true
-    return Object.entries(extracted.confidence)
-      .filter(([, c]) => fieldConf(c) === 'uncertain')
-      .map(([k]) => k)
+    return REVIEW_FIELD_KEYS
+      .filter(k => fieldConf(extracted.confidence[k]) === 'uncertain')
       .every(f => confirmed.has(f))
+  }
+
+  /** Which visible fields are still holding Continue back, for the hint below it. */
+  function reviewBlockers(): string[] {
+    if (!extracted) return []
+    const LABELS: Record<string, string> = {
+      name: 'Organisation name', legalStructure: 'Legal structure',
+      primaryLocation: 'Primary location', impactSectors: 'Primary sector',
+      beneficiaryGroups: 'Who you serve', annualIncomeBand: 'Annual income',
+    }
+    return REVIEW_FIELD_KEYS
+      .filter(k => fieldConf(extracted.confidence[k]) === 'uncertain' && !confirmed.has(k))
+      .map(k => LABELS[k] ?? k)
   }
 
   function confirmField(field: string, value?: string) {
@@ -1117,6 +1153,7 @@ export default function OnboardingWizardPage() {
           setEditingField={setEditingField}
           confirmField={confirmField}
           canContinue={reviewCanContinue()}
+          blockers={reviewBlockers()}
           onBack={() => setStep('entry')}
           onSkip={() => setStep('sectors')}
           onContinue={() => setStep('sectors')}
@@ -1260,13 +1297,14 @@ function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual }: {
    Step 2A — Review extracted data
    ═══════════════════════════════════════════════ */
 
-function StepReview({ extracted, confirmed, editingField, setEditingField, confirmField, canContinue, onBack, onSkip, onContinue, wizardState, toggleSector, makePrimarySector, toggleBeneficiary, makePrimaryBeneficiary }: {
+function StepReview({ extracted, confirmed, editingField, setEditingField, confirmField, canContinue, blockers, onBack, onSkip, onContinue, wizardState, toggleSector, makePrimarySector, toggleBeneficiary, makePrimaryBeneficiary }: {
   extracted: ExtractedData
   confirmed: Set<string>
   editingField: string | null
   setEditingField: (f: string | null) => void
   confirmField: (field: string, value?: string) => void
   canContinue: boolean
+  blockers: string[]
   onBack: () => void; onSkip: () => void; onContinue: () => void
   wizardState: WizardState
   toggleSector: (s: ImpactSector) => void
@@ -1336,9 +1374,18 @@ function StepReview({ extracted, confirmed, editingField, setEditingField, confi
 
       <div style={ACTIONS_STYLE}>
         <SkipAction onClick={onSkip}>I&rsquo;ll refine these later</SkipAction>
-        <Button variant="primary" onClick={onContinue} disabled={!canContinue}>
-          Continue <ArrowRight size={14} />
-        </Button>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
+          <Button variant="primary" onClick={onContinue} disabled={!canContinue}>
+            Continue <ArrowRight size={14} />
+          </Button>
+          {/* A greyed-out Continue with nothing saying why is exactly how this
+              page trapped people. If it is disabled, name what it wants. */}
+          {!canContinue && blockers.length > 0 && (
+            <p style={{ fontSize: 11.5, color: T.amberMid, margin: 0, fontFamily: 'var(--font-dm-sans)', textAlign: 'right' as const }}>
+              Confirm {blockers.join(', ')} to carry on
+            </p>
+          )}
+        </div>
       </div>
     </>
   )
