@@ -51,6 +51,19 @@ async function main() {
   console.log('\nblocking reasons, most common first:')
   for (const [k, v] of Object.entries(blockingCounts).sort((a, b) => b[1] - a[1])) console.log(`   ${k.padEnd(30)} ${v}`)
 
+  const listSection = process.argv.includes('--list') ? process.argv[process.argv.indexOf('--list') + 1] : null
+  if (listSection) {
+    console.log(`\n── section "${listSection}"`)
+    for (const r of rows) {
+      const reasons = deriveReviewReasons(r, today)
+      const gate = gateDecision(r, reasons)
+      if (sectionOf(gate.blocking.map(b => b.code), reasons.map(x => x.code)) !== listSection) continue
+      console.log(`   ${(r.title ?? '').slice(0, 46).padEnd(48)} ${(r as unknown as { funder?: string }).funder ?? '—'}`)
+      console.log(`      ${(r as unknown as { apply_url?: string }).apply_url}`)
+      console.log(`      blocking: ${gate.blocking.map(b => b.code).join(', ')}`)
+    }
+  }
+
   console.log('\nrows held by exactly ONE reason (clear it and they publish):')
   for (const [k, v] of Object.entries(singleBlocker).sort((a, b) => b[1].length - a[1].length)) {
     console.log(`   ${k.padEnd(30)} ${v.length}`)
