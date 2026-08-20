@@ -719,6 +719,8 @@ export default function OnboardingWizardPage() {
 
   const [revealMatches, setRevealMatches] = useState<RevealMatch[] | null>(null)
   const [revealCount, setRevealCount]     = useState<number | null>(null)
+  /** The match preview failed. Distinct from "there are none" — see the catch below. */
+  const [revealFailed, setRevealFailed]   = useState(false)
   const matchFetchRef = useRef<Promise<void> | null>(null)
 
   useEffect(() => {
@@ -1064,7 +1066,10 @@ export default function OnboardingWizardPage() {
             .or(`is_rolling.eq.true,deadline.is.null,deadline.gte.${today}`)
             .limit(1500)
 
-          if (!scraped) return
+          // A failed query returns null. Returning here left revealCount at
+          // null forever, so the user sat on "Finding your matches…" until they
+          // navigated away.
+          if (!scraped) throw new Error('grants_with_funder returned no rows')
 
 
 
@@ -1090,8 +1095,23 @@ export default function OnboardingWizardPage() {
               deadline:   grant.deadline ?? null,
             }))
           )
-        } catch {
-          setRevealCount(0)
+        } catch (err) {
+          // THIS REPORTED EVERY FAILURE AS "you have no matches".
+          //
+          // It swallowed the error and set the count to zero, so a crash inside
+          // computeMatchScore, a network blip, or a Supabase error all rendered
+          // the same screen: "Nothing in the catalogue fits it closely enough
+          // yet." That is a different claim from "we could not work it out",
+          // and it was being made on the last screen of onboarding.
+          //
+          // It really happened. One funder_brief field shaped as an array threw
+          // "matchAll is not a function" inside the matcher (fixed in
+          // extract-income-gate), and Lewisham Donation Hub was told nothing
+          // fitted while Find Funding had 45 matches for the same organisation.
+          //
+          // Log it, and say we do not know rather than asserting zero.
+          console.error('[wizard] match preview failed', err)
+          setRevealFailed(true)
           setRevealMatches([])
         }
       })()
@@ -1216,6 +1236,7 @@ export default function OnboardingWizardPage() {
       {step === 'reveal' && (
         <StepReveal
           matchCount={revealCount}
+          failed={revealFailed}
           topMatches={revealMatches}
           hasMission={!!state.mission.trim()}
           onExplore={() => router.push('/dashboard/search')}
@@ -2165,10 +2186,30 @@ function FundingTypeChip({ label, desc, active, onClick }: { label: string; desc
    Step 5 — The reveal
    ═══════════════════════════════════════════════ */
 
-function StepReveal({ matchCount, topMatches, hasMission, onExplore, onAddMission }: {
-  matchCount: number | null; topMatches: RevealMatch[] | null
+function StepReveal({ matchCount, failed, topMatches, hasMission, onExplore, onAddMission }: {
+  matchCount: number | null; failed: boolean; topMatches: RevealMatch[] | null
   hasMission: boolean; onExplore: () => void; onAddMission: () => void
 }) {
+  // We could not work the matches out. Say that, rather than claiming there
+  // are none — the profile IS saved, and the matches are computed again on
+  // Find Funding, so this is a delay and not a dead end.
+  if (failed) {
+    return (
+      <>
+        <div style={{ textAlign: 'center', padding: '24px 0 16px' }}>
+          <div style={{ fontSize: 40, marginBottom: 12 }}>🌱</div>
+          <h1 style={{ ...H1_STYLE, fontSize: 22 }}>Your profile is saved</h1>
+          <p style={{ ...SUBTITLE_STYLE, marginBottom: 0 }}>
+            We couldn&rsquo;t work out your matches just now. They&rsquo;re calculated again on Find Funding, so have a look there.
+          </p>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 24 }}>
+          <Button variant="primary" size="lg" onClick={onExplore}>Go to Find Funding <ArrowRight size={15} /></Button>
+        </div>
+      </>
+    )
+  }
+
   if (matchCount === null) {
     return (
       <div style={{ textAlign: 'center', padding: '32px 0' }}>
