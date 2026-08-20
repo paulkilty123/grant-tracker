@@ -2362,6 +2362,45 @@ out smaller than the number suggested, and the pattern is now consistent enough
 to be a rule: **measure the pile, then read a sample of it before proposing what
 to do with all of it.**
 
+## A repeatable accuracy measure, and what it points at, 2026-08-20
+
+15 live rows sampled and read by the ENGINE rather than by hand. 10 readable, 5
+with a field the funder's page disputes — **50%**.
+
+**That is not a worse catalogue than this morning's "one in four".** It is a
+wider net and a better instrument. The hand-check fetched one page per row, which
+is weaker than the engine it was auditing and produced a false positive on Allan
+& Nesta Ferguson. This counts any field the page disagrees with, across deadline,
+cycle, amounts, structures and the rolling flag. **The two numbers should not be
+compared; this one is comparable to itself.**
+
+What it caught: two funds flagged rolling that are not, one deadline cycle, one
+amount already parked as per-year-versus-total, and one fund showing amounts its
+page never states — the new flag firing correctly on a row nobody had looked at.
+
+### `is_rolling` is the biggest unsupported claim in the catalogue
+
+Two of five in a sample of fifteen was enough to go and count:
+
+| Of 607 live rows | |
+|---|---:|
+| Claim "Rolling, apply any time" | **324** |
+| Page confirms it | 89 |
+| Page disputes it | 14 |
+| **Page says nothing** | **221** |
+
+**221 rows tell a fundraiser they can apply whenever they like, with nothing
+behind it.** That is more unsupported assertion than the amounts (about 100) and
+the deadlines (71) put together, and it is on the field a user acts on first.
+
+The cause is mechanical rather than a model's judgement: `is_rolling` is set from
+the ABSENCE of a deadline, so **a deadline we failed to parse becomes a positive
+claim that there is no deadline.** A silent failure is promoted to an assertion,
+which is the exact inversion of every other rule in this ledger.
+
+Unreadable rate: 5 of 15, in line with the 38 of 151 seen earlier today. Bot
+walls, mostly.
+
 ## Maintenance
 
 Update on each merge that closes a row, and re-measure the whole table at each
