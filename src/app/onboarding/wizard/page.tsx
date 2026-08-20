@@ -532,13 +532,20 @@ function PickerChip({
         position: 'relative',
         width: '100%',
         padding: '9px 12px',
-        // Three chip treatments, per the spec. Primary is a DIFFERENT KIND of
-        // thing from "also selected", so it gets a different mark (sage tint
-        // plus a star) rather than a darker shade of the selected fill.
+        // Three treatments, loudest = most important: primary is the deep
+        // fill, also-selected is the sage tint, unselected is a ghost outline.
+        // The star is the extra mark that says "primary is a different KIND of
+        // thing from also-selected", which is the spec's actual point.
+        //
+        // An earlier pass had this the other way round, following the mockup
+        // literally: primary sage-tinted, selected deep-filled. Two problems.
+        // The loudest chip on screen was the less important one; and inside a
+        // confident review field, whose own background is sage tint, the
+        // primary chip became fill-on-fill and vanished entirely.
         border: `1.5px solid ${isPrimary || isSecondary || showHover ? T.greenDeep : 'var(--border-ghost)'}`,
         borderRadius: 999,
-        background: isPrimary ? T.greenCream : isSecondary ? T.greenDeep : showHover ? T.greenCream : 'transparent',
-        color: isSecondary ? T.onDeep : T.greenTextDeep,
+        background: isPrimary ? T.greenDeep : isSecondary || showHover ? T.greenCream : 'transparent',
+        color: isPrimary ? T.onDeep : T.greenTextDeep,
         fontSize: 12,
         fontWeight: isPrimary || isSecondary ? 500 : 400,
         cursor: dimmed ? 'default' : 'pointer',
@@ -557,7 +564,7 @@ function PickerChip({
       tabIndex={dimmed ? -1 : 0}
       onKeyDown={e => { if (!dimmed && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onClick() } }}
     >
-      {isPrimary && <span aria-label="primary" style={{ color: T.greenDeep, fontSize: 11 }}>★</span>}
+      {isPrimary && <span aria-label="primary" style={{ color: T.onDeep, fontSize: 11 }}>★</span>}
       {showSecondaryStar && (
         <button
           type="button"
@@ -1390,6 +1397,12 @@ function ReviewField({ label, value, fieldState: fState, isConfirmed, isEditing,
         </div>
         {isEditing && type === 'chips' && chipOptions ? (
           <div style={{ marginTop: 8 }}>
+            {/* The hollow star is the only way to change which pick is primary
+                and nothing else on screen says so. The sectors step carries the
+                same sentence; this editor had no hint at all. */}
+            <p style={{ fontSize: 11.5, lineHeight: 1.45, color: T.textSecondary, margin: '0 0 8px', fontFamily: 'var(--font-dm-sans)' }}>
+              The filled chip is your primary. Tap <span style={{ fontFamily: 'var(--font-space-grotesk)' }}>☆</span> on another to move it.
+            </p>
             <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6, marginBottom: 10 }}>
               {chipOptions.map(opt => {
                 const sel = selectedChips?.includes(opt.value) ?? false
@@ -1404,20 +1417,22 @@ function ReviewField({ label, value, fieldState: fState, isConfirmed, isEditing,
                       padding: '5px 10px', borderRadius: 6, fontSize: 12,
                       fontFamily: 'var(--font-space-grotesk)', cursor: dimmed ? 'not-allowed' : 'pointer',
                       opacity: dimmed ? 0.4 : 1, transition: 'all 120ms ease',
-                      background: isPrimary ? T.greenCream : sel ? T.greenDeep : 'transparent',
-                      color: sel && !isPrimary ? T.onDeep : T.greenTextDeep,
+                      background: isPrimary ? T.greenDeep : sel ? T.greenCream : 'transparent',
+                      color: isPrimary ? T.onDeep : T.greenTextDeep,
                       border: `1px solid ${isPrimary || sel ? T.greenDeep : 'var(--border-ghost)'}`,
-                      fontWeight: sel ? 500 : 400,
+                      fontWeight: isPrimary ? 600 : sel ? 500 : 400,
                     }}
                   >
                     {isPrimary && <span style={{ marginRight: 4, fontSize: 10 }}>★</span>}
                     {opt.label}
                     {sel && !isPrimary && (
                       <span
+                        role="button"
+                        aria-label={`Make ${opt.label} the primary sector`}
                         onClick={e => { e.stopPropagation(); onMakePrimaryChip?.(opt.value) }}
-                        title="Set as primary"
-                        style={{ marginLeft: 5, fontSize: 9, opacity: 0.6, cursor: 'pointer' }}
-                      >★</span>
+                        title="Make this the primary"
+                        style={{ marginLeft: 6, fontSize: 11, cursor: 'pointer', color: T.greenTextDeep }}
+                      >☆</span>
                     )}
                   </button>
                 )
