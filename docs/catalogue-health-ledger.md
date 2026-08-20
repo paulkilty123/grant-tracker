@@ -1848,15 +1848,30 @@ The hedged one is the James Ahern Foundation, whose brief says applications
 "appear to be from individuals rather than organisations". Guessing a narrowing on
 that would be how a real fund gets hidden, so it was widened and left flagged.
 
-### One is Paul's to release
+### Hackney: released the same day, after reading the page
 
-**Hackney Crisis and Resilience Fund** is pinned by `admin:paulkilty1@gmail.com`
-to eight organisation structures, while its own brief reads "individuals and
-households living in the London Borough of Hackney who are struggling to afford
-essentials. No specific organisation type is mentioned as this is a direct
-support fund for residents." The pin may encode something the brief does not —
-councils often distribute crisis funds through voluntary organisations — so it is
-flagged rather than overridden.
+**Hackney Crisis and Resilience Fund** was pinned by `admin:paulkilty1@gmail.com`
+to eight organisation structures. It was flagged rather than overridden because
+the pin might have encoded something the brief did not: councils do sometimes pay
+crisis money out through voluntary organisations. Paul: *"change the hackney fund
+so it is accurate."*
+
+The council's page settles it — **"you can only apply for the Hackney Crisis and
+Resilience Fund if you live in the borough of Hackney"** — so the row is now
+`['individual']` and the pin released rather than replaced, for the same reason
+as Jerwood and Bristol: an `admin:` write would stamp a fresh pin and stop the
+verifier correcting it if the council changes the scheme.
+
+**The nuance is what makes the row worth keeping.** A third party "can fill in
+the form on behalf of someone else if they've given you permission", so a
+frontline charity has a real use for this record — as a route for the people it
+supports, never as income for itself. `who_can_apply` now says exactly that,
+which is more useful than either deleting the row or leaving eight structures on
+it.
+
+Final state: 20 live rows tagged `individual`, 10 of them individuals-only, and
+nothing whose eligibility prose opens with "individuals", "students" or
+"residents" is missing the tag.
 
 ### The check that made this findable
 
