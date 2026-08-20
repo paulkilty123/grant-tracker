@@ -61,7 +61,9 @@ export async function POST(req: NextRequest) {
     amount_min:           g.amountMin            ?? null,
     amount_max:           g.amountMax            ?? null,
     deadline:             g.deadline             ?? null,
-    is_rolling:           g.isRolling            ?? true,
+    // Unknown is not rolling. See the note in admin/urls — defaulting this to
+    // true turns a missing deadline into a promise that there is no deadline.
+    is_rolling:           g.isRolling            ?? false,
     is_local:             g.isLocal              ?? false,
     sectors:              g.sectors              ?? [],
     eligibility_criteria: g.eligibilityCriteria  ?? [],

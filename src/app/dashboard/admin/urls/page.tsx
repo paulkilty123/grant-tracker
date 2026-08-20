@@ -147,7 +147,10 @@ const FUNDING_TYPE_OPTIONS = [
 const BLANK_FORM: AddGrantForm = {
   title: '', funder: '', funder_type: 'trust_foundation', funding_type: 'grant', funding_subtype: '', apply_url: '',
   description: '', amount_min: '', amount_max: '', deadline: '',
-  is_rolling: true, is_invite_only: false, next_open_date: '', sectors: '',
+  // Was `true`. An Add form that starts on "Rolling, apply any time" makes the
+  // most confident claim on the card the one you get by not touching anything —
+  // and 221 live rows ended up asserting it with nothing behind them.
+  is_rolling: false, is_invite_only: false, next_open_date: '', sectors: '',
   location_tag: '', is_local: false,
 }
 
@@ -1514,7 +1517,7 @@ export default function UrlAdminPage() {
           description:   d.description  ?? '',
           amount_min:    d.amount_min   != null ? String(d.amount_min) : '',
           amount_max:    d.amount_max   != null ? String(d.amount_max) : '',
-          is_rolling:    d.is_rolling   ?? true,
+          is_rolling:    d.is_rolling   ?? false,
           deadline:      d.deadline     ?? '',
           sectors:       Array.isArray(d.sectors) && d.sectors.length > 0 ? d.sectors.join(', ') : '',
           is_invite_only: d.is_invite_only ?? grant.is_invite_only,
@@ -1536,7 +1539,7 @@ export default function UrlAdminPage() {
           description:   grant.description ?? '',
           amount_min:    grant.amount_min != null ? String(grant.amount_min) : '',
           amount_max:    grant.amount_max != null ? String(grant.amount_max) : '',
-          is_rolling:    grant.is_rolling ?? true,
+          is_rolling:    grant.is_rolling ?? false,
           deadline:      grant.deadline ?? '',
           sectors:       Array.isArray(grant.impact_sectors) && grant.impact_sectors.length > 0 ? grant.impact_sectors.join(', ') : '',
           is_invite_only: grant.is_invite_only,

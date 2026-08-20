@@ -2401,6 +2401,78 @@ which is the exact inversion of every other rule in this ledger.
 Unreadable rate: 5 of 15, in line with the 38 of 151 seen earlier today. Bot
 walls, mostly.
 
+## "Rolling, apply any time", asserted by nobody — 2026-08-20
+
+Paul: *"rolling has been the issue for a while."* It has, and the shape of it had
+not been measured until now.
+
+| Of 607 live rows | |
+|---|---:|
+| Claim "Rolling, apply any time" | 324 |
+| Funder's page confirms it | 89 |
+| Funder's page disputes it | 14 |
+| **Page says nothing** | **221** |
+
+### The card was already fixed. The data was not.
+
+The rendering fault — inferring "Rolling" from a missing deadline — was corrected
+in August, and the comment on `deadlineDisplay` records it. So reading pages to
+fix the data changed nothing on screen, and fixing the screen left 324 rows still
+storing the claim as a fact.
+
+### Who set it
+
+Of the 221 the page does not support:
+
+| Source | Rows | |
+|---|---:|---|
+| `admin:legacy` | 74 | backfilled, unpinned |
+| `seed:legacy` | 22 | backfilled |
+| (no source at all) | 21 | predates provenance |
+| `discovery:legacy` | 8 | backfilled |
+| **`admin:paulkilty1@gmail.com`** | **17** | **pinned — Paul's own call** |
+| `admin:paul@granttracker.co.uk` | 3 | pinned |
+| various scrapers | 38 | backfilled assertions |
+
+**`admin:legacy` reads like a decision and is not one.** `trustOf` already
+downgrades it to 35 precisely because it is a migration stamp; none of those 74
+are pinned or carry a previous value. Nobody chose them.
+
+### Cleared 90, not 130, and the difference is a stated judgement
+
+The 130 authorless rows split **grant 79, in_kind 23, investment 17, programme
+11** — and the same unsourced flag means different things across them. Most
+GRANTS run in rounds, so "apply any time" is a claim against the grain and the one
+that costs a fundraiser a deadline. Most social LOANS and in-kind offers genuinely
+are always-open: a CDFI takes applications whenever you ask and Canva has no
+closing date. Clearing those would trade a probably-true label for "Check website"
+and make the catalogue less useful without making it more honest.
+
+So 90 grants and programmes cleared; 40 investment and in-kind rows left. **That is
+a judgement about how each kind of funding works, not evidence, and it is written
+into the script so it can be argued with rather than discovered later.**
+
+Paul's 20 pinned rows are untouched.
+
+### Visibility checked before writing, not assumed
+
+The search filter admits a row on `is_rolling` OR a null deadline OR a future
+deadline, so clearing the flag on a row with no deadline changes what the card
+SAYS and not whether it appears. Confirmed after the write: 607 of 607 live rows
+still visible.
+
+### And the source of the supply
+
+Four defaults were creating fresh ones: the admin Add form started on
+`is_rolling: true`, two refresh paths used `?? true`, and `promote-all-seeds` did
+the same. **An Add form that starts on "Rolling, apply any time" makes the most
+confident claim on the card the one you get by not touching anything.** All four
+now default to false.
+
+Left alone and reported: 24 scrapers in `crawl.ts` hardcode `is_rolling: true`,
+and two derive it as `!deadline`. Each is a claim about a specific funder and
+some are right; changing them is per-scraper work, not a sweep.
+
 ## Maintenance
 
 Update on each merge that closes a row, and re-measure the whole table at each
