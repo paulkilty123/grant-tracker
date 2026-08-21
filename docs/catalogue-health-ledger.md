@@ -2929,3 +2929,65 @@ what the widened filter returns.
 The `ScrapedGrant.is_rolling` type was widened from `boolean` to `boolean | null`
 as part of this. The old type is what let `!deadline` look like a legitimate
 answer in the first place.
+
+## 2026-08-21 — the ten contradicted dates: five applied, five refused
+
+Paul cleared the ten live rows whose stored deadline disagreed with the funder's
+page. Reading them turned ten into five, and the five that were wrong were wrong
+in two specific, nameable ways.
+
+### Three proposed an OPENING date as a CLOSING date
+
+> One Stop: "will re-open on Tuesday 1 September 2026."
+> Bethnal Green Ventures: "Applications ... will re-open in May 2026."
+> Heart of England: "We expect to reopen applications in September 2026."
+
+The extractor read each sentence correctly and filed it under `deadline`.
+Applying them would tell a fundraiser to apply BY the day the fund OPENS. That is
+an inversion, and worse than the blank we show today. All three rows already
+carry `next_open_date`, which is where the fact belongs.
+
+Same family as the index-vs-programme status trap: the sentence is extracted
+faithfully and assigned to the wrong field.
+
+**Checked whether it is systemic: it is not.** Six rows in the whole catalogue
+have a deadline proposal whose quote uses reopening language, five of them live,
+and all five are in this set. Worth the query — the assumption would have been
+that a bug like this is everywhere.
+
+### Two proposed a PAST date because the quote names no year
+
+Suffolk Giving Fund: "For applications up until 10th August" → proposed
+2025-08-10. Greggs: "open for applications until 28th August at 12 noon", read on
+16 August 2026 → proposed 2025-08-28, against our stored 2026-08-28, which is
+almost certainly right.
+
+This is exactly the failure the reopening detector's `quoteStatesTheYear` guard
+was built for, and the abstain rule's `requireYear` exists for it. Neither runs on
+this path, so both rows were reported rather than written. On Greggs the engine
+is wrong and we are right, which is worth stating plainly: a contradiction is not
+automatically our error.
+
+### The five applied
+
+| Row | Set to | The funder's sentence |
+|---|---|---|
+| JRCT Sustainable Future | 2026-09-02 | "The next open round ... closes on September 2, 2026." |
+| Barrhill Greener Homes | 2026-09-01 | "Apply by: 01/09/26" |
+| York Community Fund | 2026-10-12 | "Deadline: 12/10/2026" |
+| Grassroots Grants | 2027-02-28 | "submitted by end of February 2027 (TBC)" |
+| Merchant Taylors Small Grants | 2026-11-30 | "re-open ... from the 14th of September to the 30th of November 2026 (5pm)" |
+
+Every one names its year in the funder's own words. Two notes on judgement:
+
+**Grassroots** was showing 2027-03-31 and the page says end of February 2027
+"(TBC)". Neither date is certain, so the choice is which direction to be wrong
+in. A month earlier is the safe one, and it is the funder's figure rather than
+ours.
+
+**Merchant Taylors** got both dates, not one. The sentence carries an opening AND
+a closing date; storing only the deadline would make a fund that is shut until 14
+September read as open now.
+
+Adding a deadline PUTS A CLAIM UP, which the actuator may never do unattended.
+These five rest on Paul's clearance of 2026-08-21, not on an automated rule.
