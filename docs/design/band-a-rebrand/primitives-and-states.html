@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shoots — primitives &amp; states</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#F6F1E7; --deep:#1D3C3E; --deep-hover:#16302F; --deep-active:#102524;
+  --charcoal:#2E2E2E; --ink-muted:#5F5E5A; --ink-placeholder:#74736E;
+  --sage:#9BCA9D; --terra:#D67558; --gold:#EBCE78; --teal:#4EAAB4; --sky:#ABCBEE;
+  --danger:#B4472A; --danger-hover:#9C3C24; --danger-tint:#FBEFEA;
+  --border-input:#7B8A8B; --border-ghost:rgba(29,60,62,.22); --border-hair:rgba(29,60,62,.10);
+  --font:"Space Grotesk","Plus Jakarta Sans",system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:#EFE9DD;font-family:var(--font);color:var(--charcoal);-webkit-font-smoothing:antialiased;}
+.wrap{max-width:1120px;margin:0 auto;padding:40px 28px 90px;}
+.kicker{font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;font-weight:600;color:var(--ink-muted);margin:0 0 10px;}
+h1.doc{font-size:31px;font-weight:700;color:var(--deep);margin:0 0 8px;letter-spacing:-.02em;}
+p.doc{font-size:15.5px;line-height:1.6;color:var(--ink-muted);margin:0 0 30px;max-width:720px;}
+.sec{background:#fff;border:1px solid var(--border-hair);border-radius:18px;padding:26px 28px;margin-bottom:26px;box-shadow:0 1px 2px rgba(29,60,62,.03);}
+.sec > h2{font-size:16.5px;font-weight:600;color:var(--deep);margin:0 0 4px;}
+.sec > .sub{font-size:13.6px;color:var(--ink-muted);margin:0 0 22px;line-height:1.6;max-width:760px;}
+.grid{display:grid;gap:18px 22px;}
+.cell{}
+.cell .cap{font-size:11px;letter-spacing:.11em;text-transform:uppercase;font-weight:600;color:var(--ink-muted);margin-bottom:9px;}
+.onCream{background:var(--cream);border-radius:12px;padding:18px;border:1px solid var(--border-hair);}
+
+/* buttons */
+.btn{font-family:var(--font);font-size:15px;font-weight:600;border-radius:999px;padding:12px 26px;border:0;
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;cursor:default;white-space:nowrap;}
+.b-pri{background:var(--deep);color:var(--cream);}
+.b-pri.hover{background:var(--deep-hover);}
+.b-pri.active{background:var(--deep-active);transform:translateY(1px);}
+.b-pri.focus{outline:2px solid var(--deep);outline-offset:3px;}
+.b-pri.disabled{background:rgba(29,60,62,.26);color:rgba(29,60,62,.48);}
+.b-sec{background:transparent;color:var(--deep);border:1.5px solid var(--border-ghost);padding:10.5px 24.5px;}
+.b-sec.hover{background:rgba(29,60,62,.06);border-color:rgba(29,60,62,.38);}
+.b-sec.focus{outline:2px solid var(--deep);outline-offset:3px;}
+.b-sec.disabled{color:rgba(29,60,62,.38);border-color:rgba(29,60,62,.12);}
+.b-ter{background:transparent;color:var(--deep);padding:12px 8px;text-decoration:underline;text-underline-offset:4px;
+  text-decoration-thickness:1.5px;text-decoration-color:rgba(29,60,62,.35);}
+.b-ter.hover{text-decoration-color:var(--deep);}
+.b-ter.focus{outline:2px solid var(--deep);outline-offset:3px;border-radius:8px;}
+.b-dan{background:var(--danger);color:#FDF6F3;}
+.b-dan.hover{background:var(--danger-hover);}
+.b-dan.focus{outline:2px solid var(--danger);outline-offset:3px;}
+.spin{width:15px;height:15px;border-radius:50%;border:2px solid rgba(246,241,231,.35);border-top-color:var(--cream);
+  animation:sp .7s linear infinite;}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* inputs */
+.f{margin-bottom:0;}
+.f label{display:block;font-size:13px;font-weight:600;color:var(--deep);margin-bottom:7px;}
+.inp{height:50px;border-radius:12px;border:1.5px solid var(--border-input);background:#fff;display:flex;align-items:center;
+  padding:0 15px;font-size:15px;color:var(--charcoal);}
+.inp.ph{color:var(--ink-placeholder);}
+.inp.focus{border-color:var(--deep);box-shadow:0 0 0 3px rgba(29,60,62,.16);}
+.inp.err{border-color:var(--danger);background:var(--danger-tint);}
+.inp.dis{background:#F1EEE7;border-color:#D8D3C8;color:var(--ink-placeholder);}
+.inp .show{margin-left:auto;font-size:13px;font-weight:600;color:var(--deep);text-decoration:underline;text-underline-offset:3px;}
+.errmsg{display:flex;align-items:center;gap:6px;font-size:12.8px;color:var(--danger);margin-top:7px;font-weight:500;}
+.helpmsg{font-size:12.8px;color:var(--ink-muted);margin-top:7px;}
+
+/* contrast table */
+table{width:100%;border-collapse:collapse;font-size:13.3px;}
+th{text-align:left;font-size:11px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-muted);
+  padding:0 10px 9px 0;font-weight:600;border-bottom:1px solid var(--border-hair);}
+td{padding:9px 10px 9px 0;border-bottom:1px solid var(--border-hair);vertical-align:middle;}
+td.n{font-variant-numeric:tabular-nums;font-weight:600;}
+.chip{display:inline-block;width:15px;height:15px;border-radius:4px;vertical-align:-3px;margin-right:7px;border:1px solid var(--border-hair);}
+.pass{color:#2C6B3F;font-weight:600;}
+.fail{color:var(--danger);font-weight:600;}
+.was{text-decoration:line-through;color:var(--ink-placeholder);}
+.note{background:var(--cream);border-left:3px solid var(--terra);border-radius:0 10px 10px 0;padding:13px 16px;
+  font-size:13.4px;line-height:1.6;color:var(--charcoal);margin-top:18px;}
+.note b{color:var(--deep);}
+
+/* type ramp */
+.ramp div{margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border-hair);}
+.ramp div:last-child{border:0;margin:0;padding:0;}
+.ramp .lbl{font-size:11px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-muted);font-weight:600;margin-bottom:5px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<p class="kicker">Shoots rebrand · Band A · primitives</p>
+<h1 class="doc">Component states — for sign-off</h1>
+<p class="doc">These don't exist in the brand yet, so I've built them. Once you approve, they go into the written spec and every one of the six pages inherits them. Three of the values I used in the earlier mockups turned out to fail contrast — corrected here and flagged below.</p>
+
+<!-- CONTRAST -->
+<div class="sec">
+  <h2>Three corrections</h2>
+  <p class="sub">I ran the maths on every foreground/background pair rather than eyeballing it. The landing page's own greens are excellent — <b>10.55:1</b> for deep on cream. The greys and hairlines were the problem.</p>
+  <table>
+    <thead><tr><th>Use</th><th>Was</th><th>Ratio</th><th>Now</th><th>Ratio</th></tr></thead>
+    <tbody>
+      <tr><td>Secondary body text</td><td class="was">charcoal @ 60%</td><td class="n fail">3.70:1 ✗</td><td><span class="chip" style="background:#5F5E5A"></span>#5F5E5A</td><td class="n pass">5.77:1 ✓</td></tr>
+      <tr><td>Input placeholder</td><td class="was">charcoal @ 42%</td><td class="n fail">2.41:1 ✗</td><td><span class="chip" style="background:#74736E"></span>#74736E</td><td class="n pass">4.75:1 ✓</td></tr>
+      <tr><td>Input border</td><td class="was">deep @ 18%</td><td class="n fail">1.39:1 ✗</td><td><span class="chip" style="background:#7B8A8B"></span>#7B8A8B</td><td class="n pass">3.59:1 ✓</td></tr>
+      <tr><td>Danger fill &amp; text</td><td>—</td><td class="n">—</td><td><span class="chip" style="background:#B4472A"></span>#B4472A</td><td class="n pass">4.81:1 ✓</td></tr>
+      <tr><td>Deep on cream</td><td>—</td><td class="n">—</td><td><span class="chip" style="background:#1D3C3E"></span>#1D3C3E</td><td class="n pass">10.55:1 ✓</td></tr>
+    </tbody>
+  </table>
+  <div class="note">
+    <b>Two judgement calls, not bugs.</b><br>
+    <b>Ghost button border</b> stays at deep @ 22% (1.49:1) — that's your live landing style, and the rule only bites when the border is the sole thing identifying the control. Here the label is 10.55:1 and carries it. It does mean the focus ring is doing real work, so it can't be dropped.<br>
+    <b>Terracotta <span class="chip" style="background:#D67558"></span>#D67558 is 2.85:1 on cream</b> — fine as a fill, accent or icon, never as text. That's why danger became the deepened <span class="chip" style="background:#B4472A"></span>#B4472A rather than terra itself.
+  </div>
+</div>
+
+<!-- BUTTONS -->
+<div class="sec">
+  <h2>Buttons — four levels, six states</h2>
+  <p class="sub">Focus is a 2px deep outline at 3px offset on every level — one rule, no exceptions, and it must survive keyboard-only navigation. Loading keeps the button's width so the layout doesn't jump.</p>
+  <div class="onCream">
+    <div class="grid" style="grid-template-columns:repeat(6,auto);justify-content:start;align-items:end;">
+      <div class="cell"><div class="cap">Default</div><span class="btn b-pri">Sign in</span></div>
+      <div class="cell"><div class="cap">Hover</div><span class="btn b-pri hover">Sign in</span></div>
+      <div class="cell"><div class="cap">Active</div><span class="btn b-pri active">Sign in</span></div>
+      <div class="cell"><div class="cap">Focus</div><span class="btn b-pri focus">Sign in</span></div>
+      <div class="cell"><div class="cap">Loading</div><span class="btn b-pri"><span class="spin"></span>Signing in…</span></div>
+      <div class="cell"><div class="cap">Disabled</div><span class="btn b-pri disabled">Sign in</span></div>
+    </div>
+    <div class="grid" style="grid-template-columns:repeat(6,auto);justify-content:start;align-items:end;margin-top:22px;">
+      <div class="cell"><div class="cap">Default</div><span class="btn b-sec">Cancel</span></div>
+      <div class="cell"><div class="cap">Hover</div><span class="btn b-sec hover">Cancel</span></div>
+      <div class="cell"><div class="cap">Focus</div><span class="btn b-sec focus">Cancel</span></div>
+      <div class="cell"><div class="cap">Disabled</div><span class="btn b-sec disabled">Cancel</span></div>
+      <div class="cell"><div class="cap">Tertiary</div><span class="btn b-ter">Forgot password?</span></div>
+      <div class="cell"><div class="cap">Tertiary hover</div><span class="btn b-ter hover">Forgot password?</span></div>
+    </div>
+    <div class="grid" style="grid-template-columns:repeat(4,auto);justify-content:start;align-items:end;margin-top:22px;">
+      <div class="cell"><div class="cap">Danger</div><span class="btn b-dan">Delete project</span></div>
+      <div class="cell"><div class="cap">Danger hover</div><span class="btn b-dan hover">Delete project</span></div>
+      <div class="cell"><div class="cap">Danger focus</div><span class="btn b-dan focus">Delete project</span></div>
+      <div class="cell"><div class="cap">Tertiary focus</div><span class="btn b-ter focus">Forgot password?</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- INPUTS -->
+<div class="sec">
+  <h2>Inputs — five states</h2>
+  <p class="sub">Border is now <b>1.5px #7B8A8B</b> rather than a near-invisible hairline. It reads slightly heavier than the current app; that's the cost of the field boundary actually being visible, and I think it's the right trade for a sector that gets asked about accessibility.</p>
+  <div class="onCream">
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(230px,1fr));">
+      <div class="cell"><div class="cap">Default / empty</div><div class="f"><label>Email</label><div class="inp ph">you@organisation.org</div></div></div>
+      <div class="cell"><div class="cap">Filled</div><div class="f"><label>Email</label><div class="inp">jo@tinderbox.org.uk</div></div></div>
+      <div class="cell"><div class="cap">Focus</div><div class="f"><label>Email</label><div class="inp focus">jo@tinderbox.org.uk</div></div></div>
+      <div class="cell"><div class="cap">Error</div><div class="f"><label>Email</label><div class="inp err">jo@tinderbox</div>
+        <div class="errmsg"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#B4472A" stroke-width="1.6"/><path d="M8 4.6v4.2M8 11.2v.6" stroke="#B4472A" stroke-width="1.8" stroke-linecap="round"/></svg>Enter a valid email address.</div></div></div>
+      <div class="cell"><div class="cap">Disabled</div><div class="f"><label>Email</label><div class="inp dis">jo@tinderbox.org.uk</div></div></div>
+      <div class="cell"><div class="cap">With helper + reveal</div><div class="f"><label>Password</label><div class="inp ph">At least 8 characters<span class="show">Show</span></div><div class="helpmsg">Use at least 8 characters.</div></div></div>
+    </div>
+  </div>
+  <div class="note">
+    <b>One behaviour to specify, not just a colour.</b> Sign-in failure must not say which half was wrong — "Email or password is not correct" only. Naming the email as valid confirms to anyone guessing that an account exists. The error belongs above the form as a banner, not on either field.
+  </div>
+</div>
+
+<!-- TYPE -->
+<div class="sec">
+  <h2>Type ramp</h2>
+  <p class="sub">Space Grotesk throughout, matching the landing page. Sizes below are the desktop values used in both mockups.</p>
+  <div class="ramp">
+    <div><div class="lbl">Display · 56/1.08 · 700 · −0.03em — landing hero only</div><div style="font-size:44px;font-weight:700;letter-spacing:-.03em;color:var(--deep);line-height:1.08;">Funding you can actually win</div></div>
+    <div><div class="lbl">Page title · 32/1.15 · 600 · −0.025em</div><div style="font-size:32px;font-weight:600;letter-spacing:-.025em;color:var(--deep);">Welcome back</div></div>
+    <div><div class="lbl">Section · 20/1.3 · 600 · −0.01em</div><div style="font-size:20px;font-weight:600;letter-spacing:-.01em;color:var(--deep);">Choose a new password</div></div>
+    <div><div class="lbl">Body · 15.5/1.6 · 400 · #5F5E5A</div><div style="font-size:15.5px;line-height:1.6;color:var(--ink-muted);">Sign in to pick up where you left off.</div></div>
+    <div><div class="lbl">Label · 13/1.3 · 600 · deep</div><div style="font-size:13px;font-weight:600;color:var(--deep);">Work email</div></div>
+    <div><div class="lbl">Meta / helper · 12.8 · 400 · #5F5E5A</div><div style="font-size:12.8px;color:var(--ink-muted);">We'll email you when Shoots opens.</div></div>
+    <div><div class="lbl">Eyebrow · 11.5 · 600 · .16em · uppercase</div><div style="font-size:11.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-muted);">Sign in to Shoots</div></div>
+  </div>
+</div>
+
+</div>
+</body>
+</html>

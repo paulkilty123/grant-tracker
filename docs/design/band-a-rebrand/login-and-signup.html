@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shoots — Login (A) &amp; Signup (B)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#F6F1E7; --deep:#1D3C3E; --forest:#173404; --charcoal:#2E2E2E;
+  --terra:#D67558; --gold:#EBCE78; --teal:#4EAAB4; --sage:#9BCA9D; --sky:#ABCBEE;
+  --font:"Space Grotesk","Plus Jakarta Sans",system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:#EFE9DD;font-family:var(--font);color:var(--charcoal);-webkit-font-smoothing:antialiased;}
+.wrap{max-width:1180px;margin:0 auto;padding:40px 28px 90px;}
+.kicker{font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;font-weight:600;color:rgba(29,60,62,.55);margin:0 0 10px;}
+h1.doc{font-size:32px;font-weight:700;color:var(--deep);margin:0 0 8px;letter-spacing:-.02em;}
+p.doc{font-size:15.5px;line-height:1.6;color:rgba(46,46,46,.75);margin:0 0 34px;max-width:700px;}
+.panel{background:#fff;border:1px solid rgba(29,60,62,.09);border-radius:18px;padding:24px 26px;margin-bottom:34px;box-shadow:0 1px 2px rgba(29,60,62,.03);}
+.panel.warn{border-left:4px solid var(--terra);}
+.panel h2{font-size:16px;font-weight:600;color:var(--deep);margin:0 0 6px;}
+.panel p{font-size:13.8px;line-height:1.62;color:rgba(46,46,46,.75);margin:0 0 8px;}
+.panel p:last-child{margin-bottom:0;}
+code{background:#EFE9DD;border-radius:5px;padding:1px 6px;font-size:12.5px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;}
+
+.optlabel{display:flex;align-items:baseline;gap:12px;margin:34px 0 4px;}
+.optlabel .tag{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;background:var(--deep);color:var(--cream);border-radius:999px;padding:5px 11px;}
+.optlabel h3{font-size:20px;font-weight:600;color:var(--deep);margin:0;letter-spacing:-.01em;}
+.optdesc{font-size:14px;line-height:1.6;color:rgba(46,46,46,.72);margin:8px 0 16px;max-width:740px;}
+.frame{width:100%;aspect-ratio:1280/780;overflow:hidden;position:relative;border-radius:16px;border:1px solid rgba(29,60,62,.14);box-shadow:0 2px 4px rgba(29,60,62,.04),0 16px 40px rgba(29,60,62,.09);background:var(--cream);margin-bottom:14px;}
+.canvas{width:1280px;height:780px;transform-origin:top left;position:absolute;top:0;left:0;}
+.twoup{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:14px;}
+.frame.card{aspect-ratio:560/620;}
+.frame.card .canvas{width:560px;height:620px;}
+.capt{font-size:12.5px;color:rgba(46,46,46,.6);margin:0 0 22px;text-align:center;}
+
+.m{font-family:var(--font);color:var(--charcoal);}
+.logo{display:flex;align-items:center;gap:9px;}
+.logo svg{width:26px;height:26px;display:block;}
+.logo span{font-size:23px;font-weight:600;letter-spacing:-.02em;}
+.field{margin-bottom:16px;}
+.field label{display:block;font-size:13px;font-weight:600;color:var(--deep);margin-bottom:7px;}
+.input{height:50px;border-radius:12px;border:1px solid rgba(29,60,62,.18);background:#fff;display:flex;align-items:center;padding:0 16px;font-size:15px;color:rgba(46,46,46,.42);}
+.input .show{margin-left:auto;font-size:13px;font-weight:600;color:rgba(29,60,62,.55);}
+.rowbetween{display:flex;align-items:center;justify-content:space-between;}
+.fullbtn{width:100%;height:52px;border-radius:999px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:15.5px;font-weight:600;}
+.p-fill{background:var(--deep);color:var(--cream);}
+.g-out{background:transparent;color:var(--deep);border:1.5px solid rgba(29,60,62,.22);}
+.tlink{font-size:13.5px;font-weight:600;color:var(--deep);text-decoration:underline;text-underline-offset:3px;text-decoration-color:rgba(29,60,62,.3);}
+.muted{font-size:13.5px;color:rgba(46,46,46,.6);}
+.divider{display:flex;align-items:center;gap:14px;margin:22px 0;}
+.divider i{flex:1;height:1px;background:rgba(29,60,62,.13);}
+.divider span{font-size:12px;color:rgba(46,46,46,.45);letter-spacing:.04em;}
+.gicon{width:18px;height:18px;display:block;}
+.benefit{display:flex;gap:13px;margin-bottom:19px;align-items:flex-start;}
+.benefit .ic{width:26px;height:26px;border-radius:8px;background:rgba(155,202,157,.22);display:flex;align-items:center;justify-content:center;flex:0 0 26px;margin-top:1px;}
+.benefit b{display:block;font-size:15px;font-weight:600;color:#F6F1E7;margin-bottom:3px;letter-spacing:-.01em;}
+.benefit span{display:block;font-size:13.2px;line-height:1.5;color:rgba(246,241,231,.66);}
+@media (max-width:760px){.twoup{grid-template-columns:1fr;} .wrap{padding:24px 14px 60px;} h1.doc{font-size:25px;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<p class="kicker">Shoots rebrand · Band A · round 2</p>
+<h1 class="doc">Login in direction A · Signup in direction B</h1>
+<p class="doc">Benefits copy on the signup panel is lifted from live landing sections, not invented — so marketing and signup say the same thing. Sprout mark still a stand-in. Nothing written to the codebase.</p>
+
+<div class="panel warn">
+  <h2>Google sign-in is not currently wired up</h2>
+  <p>Your Supabase project has <b>31 auth identities and every one of them is <code>email</code></b> — zero Google, none ever. So a "Continue with Google" button today would be decorative. Enabling it is a config job, not a design one: a Google Cloud OAuth client plus the provider toggle in Supabase Auth, maybe an hour, and it has to land <i>before</i> the Code session builds the button rather than after.</p>
+  <p>I've drawn both states below so you can decide without redesigning later. My read: worth doing — your users are charity and CIC staff who mostly live in Google Workspace, and it removes a password from the launch funnel. But if it slips, ship email-only; the card below is designed so the Google block lifts out cleanly without leaving a hole.</p>
+</div>
+
+<!-- LOGIN A -->
+<div class="optlabel"><span class="tag">A</span><h3>Login — refined</h3></div>
+<p class="optdesc">Your pick, tightened: card up to 22px radius, fields on white against cream, tertiary "Forgot password?" sitting on the label row rather than floating, and the whole card vertically centred. Sign-in is the only primary on the page, so nothing competes with it.</p>
+<div class="frame"><div class="canvas" style="background:#F6F1E7">
+  <div class="m" style="height:100%;display:flex;flex-direction:column;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:28px 48px;">
+      <div class="logo" style="color:#1D3C3E">
+        <svg viewBox="0 0 32 32" fill="none"><path d="M16 29V13" stroke="#1D3C3E" stroke-width="2.4" stroke-linecap="round"/><path d="M16 15C16 9 11 5 5 5c0 6 5 10 11 10z" fill="#1D3C3E"/><path d="M16.5 19c0-4.5 3.8-7.5 8.5-7.5 0 4.5-3.8 7.5-8.5 7.5z" fill="#9BCA9D"/></svg>
+        <span>shoots</span>
+      </div>
+      <div class="muted">New here? <span class="tlink">Join the waitlist</span></div>
+    </div>
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;padding-bottom:40px;">
+      <div style="width:436px;background:#fff;border:1px solid rgba(29,60,62,.08);border-radius:22px;padding:40px 40px 34px;box-shadow:0 1px 2px rgba(29,60,62,.04),0 16px 40px rgba(29,60,62,.07);">
+        <div style="font-size:29px;font-weight:600;color:#1D3C3E;letter-spacing:-.02em;margin-bottom:7px;">Welcome back</div>
+        <div class="muted" style="margin-bottom:28px;">Sign in to pick up where you left off.</div>
+        <div class="field"><label>Email</label><div class="input">you@organisation.org</div></div>
+        <div class="field">
+          <div class="rowbetween" style="margin-bottom:7px;"><label style="margin:0">Password</label><span class="tlink" style="font-size:12.5px">Forgot password?</span></div>
+          <div class="input"><span>••••••••</span><span class="show">Show</span></div>
+        </div>
+        <div class="fullbtn p-fill" style="margin-top:22px;">Sign in</div>
+        <div class="divider"><i></i><span>or</span><i></i></div>
+        <div class="fullbtn g-out">
+          <svg class="gicon" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.5 12.3c0-.9-.1-1.5-.2-2.2H12v4h6.6c-.1 1.1-.9 2.8-2.5 3.9l3.8 3c2.3-2.1 3.6-5.2 3.6-8.7z"/><path fill="#34A853" d="M12 24c3.2 0 6-1.1 8-2.9l-3.8-3c-1 .7-2.4 1.2-4.2 1.2-3.2 0-5.9-2.1-6.9-5l-4 3.1C3.1 21.3 7.2 24 12 24z"/><path fill="#FBBC05" d="M5.1 14.3c-.3-.8-.4-1.5-.4-2.3s.2-1.6.4-2.3l-4-3.1C.4 8.2 0 10 0 12s.4 3.8 1.1 5.4l4-3.1z"/><path fill="#EA4335" d="M12 4.8c2.2 0 3.8.9 4.6 1.7l3.4-3.3C17.9 1.2 15.2 0 12 0 7.2 0 3.1 2.7 1.1 6.6l4 3.1c1-2.9 3.7-4.9 6.9-4.9z"/></svg>
+          Continue with Google
+        </div>
+      </div>
+    </div>
+  </div>
+</div></div>
+
+<!-- Google present vs absent -->
+<div class="twoup">
+  <div class="frame card"><div class="canvas" style="background:#F6F1E7;display:flex;align-items:center;justify-content:center;">
+    <div class="m" style="width:436px;background:#fff;border:1px solid rgba(29,60,62,.08);border-radius:22px;padding:36px 40px 32px;box-shadow:0 1px 2px rgba(29,60,62,.04),0 16px 40px rgba(29,60,62,.07);">
+      <div style="font-size:27px;font-weight:600;color:#1D3C3E;letter-spacing:-.02em;margin-bottom:24px;">Welcome back</div>
+      <div class="field"><label>Email</label><div class="input">you@organisation.org</div></div>
+      <div class="field"><div class="rowbetween" style="margin-bottom:7px;"><label style="margin:0">Password</label><span class="tlink" style="font-size:12.5px">Forgot password?</span></div><div class="input"><span>••••••••</span><span class="show">Show</span></div></div>
+      <div class="fullbtn p-fill" style="margin-top:20px;">Sign in</div>
+      <div class="divider"><i></i><span>or</span><i></i></div>
+      <div class="fullbtn g-out">
+        <svg class="gicon" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.5 12.3c0-.9-.1-1.5-.2-2.2H12v4h6.6c-.1 1.1-.9 2.8-2.5 3.9l3.8 3c2.3-2.1 3.6-5.2 3.6-8.7z"/><path fill="#34A853" d="M12 24c3.2 0 6-1.1 8-2.9l-3.8-3c-1 .7-2.4 1.2-4.2 1.2-3.2 0-5.9-2.1-6.9-5l-4 3.1C3.1 21.3 7.2 24 12 24z"/><path fill="#FBBC05" d="M5.1 14.3c-.3-.8-.4-1.5-.4-2.3s.2-1.6.4-2.3l-4-3.1C.4 8.2 0 10 0 12s.4 3.8 1.1 5.4l4-3.1z"/><path fill="#EA4335" d="M12 4.8c2.2 0 3.8.9 4.6 1.7l3.4-3.3C17.9 1.2 15.2 0 12 0 7.2 0 3.1 2.7 1.1 6.6l4 3.1c1-2.9 3.7-4.9 6.9-4.9z"/></svg>
+        Continue with Google
+      </div>
+    </div>
+  </div></div>
+  <div class="frame card"><div class="canvas" style="background:#F6F1E7;display:flex;align-items:center;justify-content:center;">
+    <div class="m" style="width:436px;background:#fff;border:1px solid rgba(29,60,62,.08);border-radius:22px;padding:36px 40px 32px;box-shadow:0 1px 2px rgba(29,60,62,.04),0 16px 40px rgba(29,60,62,.07);">
+      <div style="font-size:27px;font-weight:600;color:#1D3C3E;letter-spacing:-.02em;margin-bottom:24px;">Welcome back</div>
+      <div class="field"><label>Email</label><div class="input">you@organisation.org</div></div>
+      <div class="field"><div class="rowbetween" style="margin-bottom:7px;"><label style="margin:0">Password</label><span class="tlink" style="font-size:12.5px">Forgot password?</span></div><div class="input"><span>••••••••</span><span class="show">Show</span></div></div>
+      <div class="fullbtn p-fill" style="margin-top:20px;">Sign in</div>
+      <div style="margin-top:24px;padding-top:20px;border-top:1px solid rgba(29,60,62,.1);text-align:center;" class="muted">New to Shoots? <span class="tlink">Join the waitlist →</span></div>
+    </div>
+  </div></div>
+</div>
+<p class="capt">Left: Google live. Right: email-only fallback — the divider and Google block lift out, a footer link takes the space so the card doesn't end abruptly.</p>
+
+<!-- SIGNUP B -->
+<div class="optlabel"><span class="tag">B</span><h3>Signup — split canvas with benefits</h3></div>
+<p class="optdesc">Four benefits under the headline, each mapped to one of your live landing sections — match &amp; search, funding mix, pipeline &amp; deadlines, projects &amp; applications — so someone who read the marketing sees the same four promises restated at the moment they commit. The proof row at the bottom carries the numbers.</p>
+<div class="frame"><div class="canvas" style="background:#F6F1E7">
+  <div class="m" style="height:100%;display:flex;">
+    <div style="width:50%;background:#1D3C3E;padding:40px 50px 34px;display:flex;flex-direction:column;position:relative;overflow:hidden;">
+      <svg viewBox="0 0 32 32" style="position:absolute;right:-80px;bottom:-60px;width:330px;height:330px;opacity:.06"><path d="M16 29V13" stroke="#F6F1E7" stroke-width="2.4" stroke-linecap="round"/><path d="M16 15C16 9 11 5 5 5c0 6 5 10 11 10z" fill="#F6F1E7"/><path d="M16.5 19c0-4.5 3.8-7.5 8.5-7.5 0 4.5-3.8 7.5-8.5 7.5z" fill="#F6F1E7"/></svg>
+      <div class="logo" style="color:#F6F1E7;position:relative;">
+        <svg viewBox="0 0 32 32" fill="none"><path d="M16 29V13" stroke="#F6F1E7" stroke-width="2.4" stroke-linecap="round"/><path d="M16 15C16 9 11 5 5 5c0 6 5 10 11 10z" fill="#F6F1E7"/><path d="M16.5 19c0-4.5 3.8-7.5 8.5-7.5 0 4.5-3.8 7.5-8.5 7.5z" fill="#9BCA9D"/></svg>
+        <span>shoots</span>
+      </div>
+      <div style="position:relative;margin-top:38px;">
+        <div style="font-size:36px;line-height:1.14;font-weight:700;color:#F6F1E7;letter-spacing:-.03em;">
+          Funding you can<br><span style="background:#9BCA9D;color:#1D3C3E;padding:1px 9px 4px;border-radius:4px;display:inline-block;margin-top:5px;">actually win</span>
+        </div>
+      </div>
+      <div style="position:relative;margin-top:34px;">
+        <div class="benefit"><div class="ic"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="#9BCA9D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div><b>Only what you're eligible for</b><span>Every opportunity checked against your legal structure, location and funding stage — before you spend an hour on it.</span></div></div>
+        <div class="benefit"><div class="ic"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="#9BCA9D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div><b>Not just grants</b><span>Social investment, programmes and in-kind support alongside grants — the funding you didn't know to look for.</span></div></div>
+        <div class="benefit"><div class="ic"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="#9BCA9D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div><b>One pipeline, not a stale spreadsheet</b><span>Track every application from matched through drafting to won, with every deadline in view.</span></div></div>
+        <div class="benefit" style="margin-bottom:0;"><div class="ic"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="#9BCA9D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div><b>Applications in your own voice</b><span>Turn one project into tailored, fundable applications per funder. The voice stays yours.</span></div></div>
+      </div>
+      <div style="position:relative;margin-top:auto;padding-top:26px;border-top:1px solid rgba(246,241,231,.16);display:flex;gap:30px;">
+        <div><div style="font-size:21px;font-weight:700;color:#F6F1E7;">600+</div><div style="font-size:12px;color:rgba(246,241,231,.6);margin-top:2px;">verified opportunities</div></div>
+        <div><div style="font-size:21px;font-weight:700;color:#F6F1E7;">4</div><div style="font-size:12px;color:rgba(246,241,231,.6);margin-top:2px;">funding types</div></div>
+        <div><div style="font-size:21px;font-weight:700;color:#F6F1E7;">3 min</div><div style="font-size:12px;color:rgba(246,241,231,.6);margin-top:2px;">to first matches</div></div>
+      </div>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;padding:32px 58px 40px;">
+      <div style="text-align:right;" class="muted">Already have an account? <span class="tlink">Sign in</span></div>
+      <div style="margin:auto 0;max-width:382px;width:100%;">
+        <div style="font-size:32px;font-weight:600;color:#1D3C3E;letter-spacing:-.025em;margin-bottom:7px;">Create your account</div>
+        <div class="muted" style="margin-bottom:26px;">Tell us about your organisation and see what fits, in about three minutes.</div>
+        <div class="field"><label>Your name</label><div class="input">Jo Bennett</div></div>
+        <div class="field"><label>Work email</label><div class="input">you@organisation.org</div></div>
+        <div class="field"><label>Password</label><div class="input"><span>At least 8 characters</span><span class="show">Show</span></div></div>
+        <div class="fullbtn p-fill" style="margin-top:20px;">Create account</div>
+        <div class="divider"><i></i><span>or</span><i></i></div>
+        <div class="fullbtn g-out">
+          <svg class="gicon" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.5 12.3c0-.9-.1-1.5-.2-2.2H12v4h6.6c-.1 1.1-.9 2.8-2.5 3.9l3.8 3c2.3-2.1 3.6-5.2 3.6-8.7z"/><path fill="#34A853" d="M12 24c3.2 0 6-1.1 8-2.9l-3.8-3c-1 .7-2.4 1.2-4.2 1.2-3.2 0-5.9-2.1-6.9-5l-4 3.1C3.1 21.3 7.2 24 12 24z"/><path fill="#FBBC05" d="M5.1 14.3c-.3-.8-.4-1.5-.4-2.3s.2-1.6.4-2.3l-4-3.1C.4 8.2 0 10 0 12s.4 3.8 1.1 5.4l4-3.1z"/><path fill="#EA4335" d="M12 4.8c2.2 0 3.8.9 4.6 1.7l3.4-3.3C17.9 1.2 15.2 0 12 0 7.2 0 3.1 2.7 1.1 6.6l4 3.1c1-2.9 3.7-4.9 6.9-4.9z"/></svg>
+          Sign up with Google
+        </div>
+        <div style="font-size:12.2px;line-height:1.55;color:rgba(46,46,46,.5);margin-top:20px;">By creating an account you agree to our <span style="text-decoration:underline;text-underline-offset:2px;">Terms</span> and <span style="text-decoration:underline;text-underline-offset:2px;">Privacy policy</span>.</div>
+      </div>
+    </div>
+  </div>
+</div></div>
+
+</div>
+<script>
+function fit(){document.querySelectorAll('.frame').forEach(f=>{const c=f.querySelector('.canvas');c.style.transform='scale('+(f.clientWidth/c.offsetWidth)+')';});}
+window.addEventListener('resize',fit);
+document.fonts && document.fonts.ready.then(fit);
+fit();
+</script>
+</body>
+</html>
