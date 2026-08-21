@@ -199,3 +199,30 @@ export function expectedRegisterFor(structure: LegalStructure | '' | null | unde
       }
   }
 }
+
+/**
+ * Pull a UK registration number out of page text, deterministically.
+ *
+ * Runs over the FULL stripped page rather than the truncated prompt window,
+ * because these numbers are almost always in the footer. Requires a labelling
+ * phrase next to the digits so it cannot mistake a phone number, a postcode or
+ * a fundraising total for a registration.
+ *
+ * Returns the raw match; the caller validates the shape.
+ */
+export const REG_NUMBER_PATTERNS: RegExp[] = [
+  // "Registered charity number 292411", "Charity No. 1104458", "Charity reg 1104458-1"
+  /(?:registered\s+)?charity(?:\s+(?:registration|reg\.?|no\.?|number))?[\s:.#]*((?:SC|NIC)?\d{6,7}(?:-\d{1,2})?)/i,
+  // "Company number 07156518", "Registered in England No. 07156518"
+  /(?:company|registered\s+in\s+\w+)[\s\w]{0,20}?(?:no\.?|number)[\s:.#]*((?:SC|NI|OC|LP)?\d{6,8})/i,
+  // "Registered society number 31088R"
+  /(?:society|mutuals?)[\s\w]{0,20}?(?:no\.?|number)[\s:.#]*(\d{1,6}(?:R|RS|C)?)/i,
+]
+
+export function scanRegistrationNumber(text: string): string | null {
+  for (const re of REG_NUMBER_PATTERNS) {
+    const m = text.match(re)
+    if (m?.[1]) return m[1].toUpperCase()
+  }
+  return null
+}

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { isRecognisedNumber, scanRegistrationNumber } from '@/lib/registered-number'
 import { createClient } from '@/lib/supabase/server'
 import { enforceInferenceRateLimit } from '@/lib/mcp-rate-limit'
 
@@ -47,6 +48,7 @@ export async function POST(req: NextRequest) {
     const fullUrl = url.startsWith('http') ? url : `https://${url}`
 
     let pageText = ''
+    let scannedNumber: string | null = null
     try {
       const pageRes = await fetch(fullUrl, {
         headers: {
@@ -58,7 +60,15 @@ export async function POST(req: NextRequest) {
       })
       if (pageRes.ok) {
         const html = await pageRes.text()
-        pageText = stripHtml(html).slice(0, 5000)
+        const full = stripHtml(html)
+        // Scan the WHOLE page for a registration number before truncating.
+        // Charity and company numbers live in the footer, which is exactly what
+        // the 5000-character window cuts off: Centrepoint publishes 292411 on
+        // its homepage at roughly character 5,300, so the model was being asked
+        // for something it could not see. A regex over the full text costs no
+        // tokens and is more reliable than the model for a string this regular.
+        scannedNumber = scanRegistrationNumber(full)
+        pageText = full.slice(0, 5000)
       }
     } catch {
       // Network error — fall through with empty pageText
@@ -149,6 +159,18 @@ Rules for field values:
 
     const text = aiData.content?.[0]?.text ?? ''
     const result = JSON.parse(text.replace(/```json|```/g, '').trim())
+
+    // A number found by the regex beats one the model produced. It was read off
+    // the full page including the footer, which the prompt window never sees,
+    // and it came from an explicit label rather than inference — so it cannot
+    // be a plausible-looking hallucination. Confidence 0.95 rather than 1.0:
+    // the string is certain, whether it belongs to THIS organisation rather
+    // than a partner named in the footer is not.
+    if (scannedNumber && isRecognisedNumber(scannedNumber)) {
+      result.charityNumber = scannedNumber
+      result._confidence = { ...(result._confidence ?? {}), charityNumber: 0.95 }
+    }
+
     return NextResponse.json(result)
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Auto-fill failed'

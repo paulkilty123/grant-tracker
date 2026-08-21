@@ -106,3 +106,41 @@ describe('expectedRegisterFor', () => {
     expect(expectedRegisterFor(null).expected).toBe(false)
   })
 })
+
+describe('scanRegistrationNumber', () => {
+  it('reads the number out of a real footer', async () => {
+    const { scanRegistrationNumber } = await import('./registered-number')
+    // Verified against the live homepages on 2026-08-21.
+    expect(scanRegistrationNumber('Centrepoint is a registered charity number 292411.')).toBe('292411')
+    expect(scanRegistrationNumber('Mustard Tree. Registered Charity No. 1135192')).toBe('1135192')
+  })
+
+  it('handles the punctuation charities actually use', async () => {
+    const { scanRegistrationNumber } = await import('./registered-number')
+    for (const s of [
+      'Charity No. 1104458', 'Charity no 1104458', 'charity number: 1104458',
+      'Registered charity number 1104458', 'Charity reg. 1104458',
+    ]) expect(scanRegistrationNumber(s)).toBe('1104458')
+  })
+
+  it('reads Scottish and Northern Irish charity numbers', async () => {
+    const { scanRegistrationNumber } = await import('./registered-number')
+    expect(scanRegistrationNumber('A charity registered in Scotland, charity number SC046869')).toBe('SC046869')
+    expect(scanRegistrationNumber('Charity number NIC100123')).toBe('NIC100123')
+  })
+
+  it('reads company numbers', async () => {
+    const { scanRegistrationNumber } = await import('./registered-number')
+    expect(scanRegistrationNumber('Registered in England No. 07156518')).toBe('07156518')
+    expect(scanRegistrationNumber('Company number 07156518')).toBe('07156518')
+  })
+
+  it('will not mistake other numbers on the page for a registration', async () => {
+    const { scanRegistrationNumber } = await import('./registered-number')
+    // The label is required precisely so these do not match.
+    expect(scanRegistrationNumber('Call us on 020 7426 5300')).toBeNull()
+    expect(scanRegistrationNumber('We raised £292411 last year')).toBeNull()
+    expect(scanRegistrationNumber('12,000 young people supported since 1969')).toBeNull()
+    expect(scanRegistrationNumber('')).toBeNull()
+  })
+})
