@@ -11,7 +11,7 @@ import { emitClientEvent } from '@/lib/events/client'
 import { toCatalogueUuid } from '@/lib/events/taxonomy'
 import { track } from '@/lib/analytics'
 import { normaliseScrapedGrant, type EnrichedGrant } from '@/lib/grants-normalise'
-import { computeMatchScore } from '@/lib/matching'
+import { computeMatchScore, MATCH_FLOOR } from '@/lib/matching'
 import { eligibilityStated, ELIGIBILITY_NOT_STATED } from '@/lib/eligibility-disclosure'
 import type { DeadlineAlert, PipelineItem, PipelineStage, FundingType, Organisation } from '@/types'
 
@@ -1069,7 +1069,7 @@ export default function DeadlinesPage() {
             const score = computeMatchScore(g, typedOrg).score
             return { grant: g, score, deadline: g.deadline ?? '' }
           })
-          .filter(x => x.score >= 55 && x.deadline && !dismissedIds.has(x.grant.id))
+          .filter(x => x.score >= MATCH_FLOOR && x.deadline && !dismissedIds.has(x.grant.id))
           .sort((a, b) => (a.deadline < b.deadline ? -1 : 1))
           .slice(0, 20)
         setMatchRows(scored.map(({ grant, score }) => ({ grant, score })))

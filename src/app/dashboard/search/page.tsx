@@ -11,7 +11,7 @@ import { createPipelineItem, deletePipelineItem, updatePipelineStage } from '@/l
 import { describePipelineWriteError, ENTITLEMENT_MESSAGE } from '@/lib/pipeline-errors'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { getOrganisationByOwner } from '@/lib/organisations'
-import { computeMatchScore, scoreColour, grantInGeoSelection, grantMatchesLocationText } from '@/lib/matching'
+import { computeMatchScore, scoreColour, grantInGeoSelection, grantMatchesLocationText, MATCH_FLOOR } from '@/lib/matching'
 import type { FeedbackSignals, MatchBreakdown } from '@/lib/matching'
 import { getInteractions, recordInteraction, removeInteraction, getSavedReminders, setSavedReminder, getDismissSnoozes, setDismissSnooze, getSavedNotes, setSavedNote } from '@/lib/interactions'
 import { getMatchFeedback, type StoredFeedback } from '@/lib/matchFeedback'
@@ -2144,7 +2144,7 @@ export default function SearchPage() {
     // Mirrors the filter applied in crossTabCounts above so headline tab
     // counts and the visible list stay consistent.
     if (actionableOnly) {
-      withScores.splice(0, withScores.length, ...withScores.filter(d => (pinnedGrantId && d.grant.id === pinnedGrantId) || d.score >= 50))
+      withScores.splice(0, withScores.length, ...withScores.filter(d => (pinnedGrantId && d.grant.id === pinnedGrantId) || d.score >= MATCH_FLOOR))
     }
     // on it immediately. Falls through silently if the id isn't in the list
     // (e.g. grant has since been filtered out).

@@ -13,7 +13,7 @@ import { ArrowLeft, Check, ChevronDown, ChevronRight, ChevronUp, ExternalLink, R
 import { createClient } from '@/lib/supabase/client'
 import { getOrganisationByOwner } from '@/lib/organisations'
 import { emitClientEvent } from '@/lib/events/client'
-import { computeMatchScore, matchTier } from '@/lib/matching'
+import { computeMatchScore, matchTier, MATCH_FLOOR } from '@/lib/matching'
 import { normaliseScrapedGrant, type EnrichedGrant } from '@/lib/grants-normalise'
 import { IMPACT_SECTOR_OPTIONS, BENEFICIARY_OPTIONS } from '@/lib/tag-suggestions'
 import { T, UI, BODY, inputStyle } from '@/components/builder/tokens'
@@ -305,7 +305,7 @@ export default function ProjectPage() {
           const result = computeMatchScore(g, synthetic)
           return { grant: g, score: result.score, positives: result.positiveReasons, warns: result.warnReasons }
         })
-        .filter((x): x is ScoredMatch => x !== null && x.score >= 55)
+        .filter((x): x is ScoredMatch => x !== null && x.score >= MATCH_FLOOR)
         .sort((a, b) => b.score - a.score)
 
       // Grouped by funding type: grants get the most room (the primary ask),

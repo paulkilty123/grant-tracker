@@ -8,7 +8,7 @@ import { ArrowLeft, ArrowRight, ChevronRight, Check, Globe, Pencil, X } from 'lu
 import { createClient } from '@/lib/supabase/client'
 import { getOrganisationByOwner, createOrganisation, updateOrganisation, writeActiveOrgCookie } from '@/lib/organisations'
 import { track } from '@/lib/analytics'
-import { computeMatchScore } from '@/lib/matching'
+import { computeMatchScore, MATCH_FLOOR } from '@/lib/matching'
 import { normaliseScrapedGrant } from '@/lib/grants-normalise'
 import type { LegalStructure, ImpactSector, BeneficiaryGroup, FundingType, SpendNeed } from '@/types'
 import Button from '@/components/ui/Button'
@@ -1079,7 +1079,11 @@ export default function OnboardingWizardPage() {
               const result = computeMatchScore(grant, orgForMatching as Parameters<typeof computeMatchScore>[1])
               return { grant, score: result.score }
             })
-            .filter(x => x.score >= 40 && (x.grant.fundingType === 'grant' || !x.grant.fundingType))
+            // All four funding types, not grants only. Hiding programmes,
+            // investment and in-kind here meant onboarding concealed the
+            // non-grant breadth at the exact moment the product is meant to
+            // prove itself. 113 of the 639 live rows are non-grant.
+            .filter(x => x.score >= MATCH_FLOOR)
             .sort((a, b) => b.score - a.score)
 
           setRevealCount(scored.length)

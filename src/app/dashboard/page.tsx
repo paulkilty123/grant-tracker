@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getDeadlineAlerts, formatCurrency, formatNextOpen } from '@/lib/utils'
 import type { PipelineItem, Organisation } from '@/types'
 import { Award, TrendingUp, Users, Rocket, GraduationCap, Gift, ArrowRight, CalendarDays, Check, Sparkles, Bookmark, ListChecks, UserPlus, FilePenLine, Lightbulb, CircleCheck } from 'lucide-react'
-import { computeMatchScore, MATCH_TIER } from '@/lib/matching'
+import { computeMatchScore, MATCH_TIER, MATCH_FLOOR } from '@/lib/matching'
 import { normaliseScrapedGrant } from '@/lib/grants-normalise'
 import { getBuilderUser } from '@/lib/builder/access'
 import { agentEnabledForOrg } from '@/lib/agent/orchestrator/config'
@@ -248,7 +248,7 @@ export default async function DashboardPage() {
             if (projectSectors.size > 0 && ge.impactSectors && ge.impactSectors.length > 0) {
               if (!ge.impactSectors.some(s => projectSectors.has(s))) continue
             }
-            if (computeMatchScore(g, synthetic).score >= 55) n++
+            if (computeMatchScore(g, synthetic).score >= MATCH_FLOOR) n++
           }
           fitCount = n
         }

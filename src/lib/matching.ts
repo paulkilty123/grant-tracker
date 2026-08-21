@@ -8,6 +8,29 @@ import { extractIncomeGate } from './extract-income-gate'
  *  carries the same meaning as "none selected": no preference expressed. */
 const SPEND_RESTRICTION_VALUES = ['restricted', 'unrestricted', 'capital'] as const
 
+/**
+ * What counts as a match at all, on every surface.
+ *
+ * Before this existed each screen hardcoded its own floor: the onboarding
+ * reveal 40 (grants only), Find Funding 50, and the dashboard, projects and
+ * deadlines pages 55. One organisation was therefore told five different
+ * things about itself depending which page it was on, and nothing failed when
+ * those numbers drifted apart, because each was locally sensible.
+ *
+ * 65 rather than any of them. Measured across all 40 organisations against all
+ * 639 live rows (scripts/measure-match-thresholds.ts): the median org came out
+ * with 273 "matches" at 40, 102 at 50 and 68 at 55 — between a tenth and
+ * nearly half the whole catalogue. Unicorn Theatre had 131 at 55. A number
+ * that size cannot help a fundraiser decide where to spend an evening, and it
+ * quietly contradicts the promise of only chasing what you can win. At 65 the
+ * median is 17, which is a list somebody can actually work through.
+ *
+ * Re-measure with that script before moving it, and again as the catalogue
+ * grows — the right floor is a function of catalogue size, not a constant of
+ * nature.
+ */
+export const MATCH_FLOOR = 65
+
 export interface MatchBreakdown {
   location:      { score: number; max: number; label: string }
   themes:        { score: number; max: number; label: string }
