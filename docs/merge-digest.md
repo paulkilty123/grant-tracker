@@ -35,6 +35,92 @@ the new version.
 
 # Waiting
 
+## `worktree-grants-b` — MERGED 21 August, on Paul's explicit go
+
+**What it does:** an equity offer to an organisation with no share capital is
+now a blocker, not a low score. Also answers the programmes/investment spec.
+
+Nothing in the codebase checked a financial instrument against a legal structure
+that can hold it. The `eligible_structures` gate in `matching.ts` is deliberately
+soft, capping the score at 4 with a floor of 1 and leaving the row visible,
+because that file's standing rule is de-rank rather than disappear. Right for a
+grant whose eligibility list is a classifier's reading of a vague page. Wrong for
+equity, where the constraint is not a judgement about the funder but arithmetic
+about the applicant: a company limited by guarantee has no share capital, and a
+CIO has none either.
+
+`src/lib/instrument-structure.ts` answers only that question, and answers it
+without reading the funder's page at all, which is why it can be deterministic
+code rather than model judgement. Wired into `sharedChecks`, not
+`investmentChecks`, so it keys off the instrument and catches rows filed under
+the wrong `funding_type`.
+
+**Found three live rows offering equity to structures that legally cannot hold
+it.** Black Seed VC listed `cic_guarantee` and `ltd_guarantee`, Bethnal Green
+Ventures listed `ltd_guarantee`, City Bridge listed five including
+`registered_charity` and `cio`. All corrected; the structures are pinned under
+`admin:equity-structure-gate-2026-08-21` because the narrowing guard in
+`classify.ts` would otherwise restore them, and rollback is in
+`reports/fix-equity-structures-2026-08-21.json`.
+
+**The near-miss worth recording.** Migration 065 landed on `main` while this
+branch was open and made `funding_subtypes` (plural) the source of truth, with
+`funding_subtype` a trigger-maintained copy of its first element. The gate was
+reading the singular. Trust for London's Social Investment Programme is
+`[loan, equity, social_investment]` and the Growth Impact Fund is
+`[loan, equity, revenue_share, social_investment]`; both read as `loan` in the
+singular, so the gate saw no equity at all. Reading the array and blocking on any
+equity would have been the worse bug: both funds correctly list charities, who
+cannot take the equity and can take the loan. The rule is now all-or-nothing, and
+a partly-reachable row returns `info` naming the part that is out of reach.
+
+Deliberately narrow, because a false block hides funding silently: `quasi_equity`
+is not gated (it exists so asset-locked orgs can take risk capital),
+`community_shares` warns only when it is the whole offer, `llp` stays out.
+
+### Deploy gate
+
+```
+Regression: tsc clean. eslint clean on all changed files.
+            603 tests pass across 41 files, up from 540 on the pre-merge
+            baseline (41 new, in two suites).
+            Mutation-checked, not just run: commenting out the single push in
+            sharedChecks turns the wiring suite red (5 failures) and leaves the
+            helper suite fully green. That is feedback_guard_wired_to_one_sibling
+            reproduced deliberately and then caught, and it is the reason the
+            two suites are separate files.
+            Live re-verification independent of the code: the SQL that found the
+            problem returns zero rows across the whole catalogue, published or
+            not, active or not, on both instrument columns and under the
+            corrected all-or-nothing rule.
+Free-surface fingerprint: NOT APPLICABLE, and checked rather than assumed.
+            src/app/api/mcp/** and opportunity-adapter.ts import neither the
+            eligibility engine nor this module, and neither emits
+            funding_subtype. No MCP route, tool, schema or response shape is
+            touched. Two rows' eligible_structures changed, which get_
+            opportunity_detail will surface, but that is a data correction, not
+            a contract change.
+Accent check: PASSED. No new accent, no lime, no ti-bulb mark, no UI file
+            changed by this branch.
+Named rollback: origin/main at 4cec0ee, "fix(programmes): check the other
+            homepage links the Impact Hub way".
+```
+
+**Blast radius, stated because it is user-visible.** 37 of the 40 live orgs
+(20 registered charities, 8 CICs limited by guarantee, 5 companies limited by
+guarantee, 3 CIOs, 1 unregistered) will now see the two equity-only rows as
+ineligible and capped at 5 rather than 30. That is the intended effect: none of
+them can issue equity. The 2 orgs that can (1 CIC limited by shares, 1
+co-operative) are unaffected, as is the 1 org with no structure set.
+
+**Still open.** A NEW row arriving with an impossible instrument is caught at
+match time but not flagged in the review queue, because `ReviewRow` in
+`review-reasons.ts` does not carry `funding_subtypes` and adding it means
+touching every caller's SELECT. Deferred deliberately rather than done badly:
+`feedback_supabase_select_silent_filter` is exactly the failure mode a missed
+SELECT would produce.
+
+
 ## `fix/gate-requires-a-page-read` — MERGED 17 August as `f6e0039`
 
 **What it does:** nothing publishes that the verification engine has never read.

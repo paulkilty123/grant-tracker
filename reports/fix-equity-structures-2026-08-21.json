@@ -1,0 +1,271 @@
+{
+  "written_at_utc": "2026-08-21T11:06:38.650Z",
+  "approved_by": "Paul, 2026-08-21",
+  "source": "admin:equity-structure-gate-2026-08-21",
+  "reason": "equity offered to structures with no share capital; two rows mistagged as equity",
+  "findings": [
+    {
+      "id": "55d3592a-1a6b-4495-9f55-e772f1857d60",
+      "title": "Black Seed VC",
+      "finding": "Equity VC listing cic_guarantee and ltd_guarantee as eligible. Neither form has share capital, so neither can accept the investment. Removed; ltd_shares, cic_shares and cooperative retained.",
+      "evidence": "Row description: \"Early-stage investors with initial funding commitment typically within the £100,000 to £400,000 range, requiring at least one member of the co-founding team to identify as Black\"."
+    },
+    {
+      "id": "0ce8470d-9557-40a3-a8d2-ef01daba3f09",
+      "title": "Tech for Good Programme (Bethnal Green Ventures)",
+      "finding": "Equity programme listing ltd_guarantee as eligible. Removed; ltd_shares and cooperative retained.",
+      "evidence": "Row description: \"An early-stage venture capital investment programme ... BGV invests from pre-seed to Series A/B stage, providing capital, mentorship, and platform support\"."
+    },
+    {
+      "id": "b81f41be-db1a-4b9e-9e7f-da7cacff19b1",
+      "title": "Social Investment Fund for London (City Bridge Foundation)",
+      "finding": "Mistagged as equity. The row's own description says loans and equity-TYPE arrangements, which is quasi-equity, not equity. The structures list (charities, CIOs, CICs) is correct for a repayable-finance fund and is left alone; only the instrument changes.",
+      "evidence": "Row description: \"A £22 million social investment fund providing accessible, flexible and long-term repayable finance (loans and equity-type arrangements) for established social purpose organisations\"."
+    },
+    {
+      "id": "283f4277-aca4-4cc1-ae9e-2d2aebcf54f3",
+      "title": "Community Shares — Booster Fund",
+      "finding": "Mistagged as equity, and as an equity subtype under funding_type='grant', which is not a valid combination. It is a grant that pays for the costs of running a share offer, not the share offer itself. This is the row that proved the gate belongs in sharedChecks rather than investmentChecks.",
+      "evidence": "Row description: \"Grants to help community organisations run community share offers ... Covers costs of the share offer process and provides match funding to boost campaigns.\""
+    }
+  ],
+  "before": [
+    {
+      "id": "0ce8470d-9557-40a3-a8d2-ef01daba3f09",
+      "title": "Tech for Good Programme",
+      "funder": "Bethnal Green Ventures",
+      "funding_type": "investment",
+      "funding_subtype": "equity",
+      "eligible_structures": [
+        "ltd_guarantee",
+        "ltd_shares",
+        "cooperative"
+      ],
+      "is_active": true,
+      "pipeline_state": "published"
+    },
+    {
+      "id": "283f4277-aca4-4cc1-ae9e-2d2aebcf54f3",
+      "title": "Community Shares — Booster Fund",
+      "funder": "Community Shares",
+      "funding_type": "grant",
+      "funding_subtype": "equity",
+      "eligible_structures": [
+        "cooperative"
+      ],
+      "is_active": true,
+      "pipeline_state": "published"
+    },
+    {
+      "id": "55d3592a-1a6b-4495-9f55-e772f1857d60",
+      "title": "Black Seed VC",
+      "funder": "Black Seed Ventures",
+      "funding_type": "investment",
+      "funding_subtype": "equity",
+      "eligible_structures": [
+        "ltd_shares",
+        "cic_guarantee",
+        "cic_shares",
+        "ltd_guarantee",
+        "cooperative"
+      ],
+      "is_active": true,
+      "pipeline_state": "published"
+    },
+    {
+      "id": "b81f41be-db1a-4b9e-9e7f-da7cacff19b1",
+      "title": "Social Investment Fund for London",
+      "funder": "City Bridge Foundation",
+      "funding_type": "investment",
+      "funding_subtype": "equity",
+      "eligible_structures": [
+        "cic_guarantee",
+        "cic_shares",
+        "ltd_guarantee",
+        "cooperative",
+        "registered_charity",
+        "cio",
+        "sole_trader"
+      ],
+      "is_active": true,
+      "pipeline_state": "published"
+    }
+  ],
+  "results": [
+    {
+      "id": "55d3592a-1a6b-4495-9f55-e772f1857d60",
+      "title": "Black Seed VC",
+      "outcome": "written",
+      "before": {
+        "id": "55d3592a-1a6b-4495-9f55-e772f1857d60",
+        "title": "Black Seed VC",
+        "funder": "Black Seed Ventures",
+        "funding_type": "investment",
+        "funding_subtype": "equity",
+        "eligible_structures": [
+          "ltd_shares",
+          "cic_guarantee",
+          "cic_shares",
+          "ltd_guarantee",
+          "cooperative"
+        ],
+        "is_active": true,
+        "pipeline_state": "published"
+      },
+      "fields": {
+        "eligible_structures": [
+          "ltd_shares",
+          "cic_shares",
+          "cooperative"
+        ]
+      },
+      "applied": [
+        "eligible_structures"
+      ],
+      "rejected": []
+    },
+    {
+      "id": "0ce8470d-9557-40a3-a8d2-ef01daba3f09",
+      "title": "Tech for Good Programme (Bethnal Green Ventures)",
+      "outcome": "written",
+      "before": {
+        "id": "0ce8470d-9557-40a3-a8d2-ef01daba3f09",
+        "title": "Tech for Good Programme",
+        "funder": "Bethnal Green Ventures",
+        "funding_type": "investment",
+        "funding_subtype": "equity",
+        "eligible_structures": [
+          "ltd_guarantee",
+          "ltd_shares",
+          "cooperative"
+        ],
+        "is_active": true,
+        "pipeline_state": "published"
+      },
+      "fields": {
+        "eligible_structures": [
+          "ltd_shares",
+          "cooperative"
+        ]
+      },
+      "applied": [
+        "eligible_structures"
+      ],
+      "rejected": []
+    },
+    {
+      "id": "b81f41be-db1a-4b9e-9e7f-da7cacff19b1",
+      "title": "Social Investment Fund for London (City Bridge Foundation)",
+      "outcome": "written",
+      "before": {
+        "id": "b81f41be-db1a-4b9e-9e7f-da7cacff19b1",
+        "title": "Social Investment Fund for London",
+        "funder": "City Bridge Foundation",
+        "funding_type": "investment",
+        "funding_subtype": "equity",
+        "eligible_structures": [
+          "cic_guarantee",
+          "cic_shares",
+          "ltd_guarantee",
+          "cooperative",
+          "registered_charity",
+          "cio",
+          "sole_trader"
+        ],
+        "is_active": true,
+        "pipeline_state": "published"
+      },
+      "fields": {
+        "funding_subtype": "social_investment"
+      },
+      "applied": [
+        "funding_subtype"
+      ],
+      "rejected": []
+    },
+    {
+      "id": "283f4277-aca4-4cc1-ae9e-2d2aebcf54f3",
+      "title": "Community Shares — Booster Fund",
+      "outcome": "written",
+      "before": {
+        "id": "283f4277-aca4-4cc1-ae9e-2d2aebcf54f3",
+        "title": "Community Shares — Booster Fund",
+        "funder": "Community Shares",
+        "funding_type": "grant",
+        "funding_subtype": "equity",
+        "eligible_structures": [
+          "cooperative"
+        ],
+        "is_active": true,
+        "pipeline_state": "published"
+      },
+      "fields": {
+        "funding_subtype": "restricted"
+      },
+      "applied": [
+        "funding_subtype"
+      ],
+      "rejected": []
+    }
+  ],
+  "after": [
+    {
+      "id": "0ce8470d-9557-40a3-a8d2-ef01daba3f09",
+      "title": "Tech for Good Programme",
+      "funder": "Bethnal Green Ventures",
+      "funding_type": "investment",
+      "funding_subtype": "equity",
+      "eligible_structures": [
+        "ltd_shares",
+        "cooperative"
+      ],
+      "is_active": true,
+      "pipeline_state": "published"
+    },
+    {
+      "id": "283f4277-aca4-4cc1-ae9e-2d2aebcf54f3",
+      "title": "Community Shares — Booster Fund",
+      "funder": "Community Shares",
+      "funding_type": "grant",
+      "funding_subtype": "restricted",
+      "eligible_structures": [
+        "cooperative"
+      ],
+      "is_active": true,
+      "pipeline_state": "published"
+    },
+    {
+      "id": "55d3592a-1a6b-4495-9f55-e772f1857d60",
+      "title": "Black Seed VC",
+      "funder": "Black Seed Ventures",
+      "funding_type": "investment",
+      "funding_subtype": "equity",
+      "eligible_structures": [
+        "ltd_shares",
+        "cic_shares",
+        "cooperative"
+      ],
+      "is_active": true,
+      "pipeline_state": "published"
+    },
+    {
+      "id": "b81f41be-db1a-4b9e-9e7f-da7cacff19b1",
+      "title": "Social Investment Fund for London",
+      "funder": "City Bridge Foundation",
+      "funding_type": "investment",
+      "funding_subtype": "social_investment",
+      "eligible_structures": [
+        "cic_guarantee",
+        "cic_shares",
+        "ltd_guarantee",
+        "cooperative",
+        "registered_charity",
+        "cio",
+        "sole_trader"
+      ],
+      "is_active": true,
+      "pipeline_state": "published"
+    }
+  ],
+  "still_barred_after": []
+}

@@ -2121,7 +2121,20 @@ export function computeMatchScore(
   if (hasBranchedBlocker) {
     eligibilityStatus = 'ineligible'
     eligibilityReason = branchedVerdict.reason
-    score = Math.min(score, 30)
+    // A legally impossible instrument is capped harder than a general blocker.
+    //
+    // 30 is the right level for "this funder probably will not take you": it
+    // buries the row without hiding it, and the fundraiser can overrule us. It
+    // is the wrong level for "your organisation has no share capital", because
+    // that is not a judgement we might have got wrong about the funder, it is
+    // arithmetic about the applicant. Matched to INDIVIDUAL_ONLY_SCORE_CAP for
+    // the same reason it exists: a cap that still ranks above genuine matches
+    // is not a cap. Still a cap and not a filter, so the row stays browsable
+    // and auditable, per the standing rule at the hard gate above.
+    const impossibleInstrument = branchedVerdict.issues.some(
+      i => i.severity === 'blocker' && i.code === 'instrument_requires_share_capital',
+    )
+    score = Math.min(score, impossibleInstrument ? INDIVIDUAL_ONLY_SCORE_CAP : 30)
   } else if (hasBranchedWarning && eligibilityStatus === 'eligible') {
     eligibilityStatus = 'check_required'
     if (!eligibilityReason) eligibilityReason = branchedVerdict.reason

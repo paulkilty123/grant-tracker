@@ -16,6 +16,7 @@ import type {
   OrgStage,
   BeneficiaryGroup,
 } from '@/types'
+import { checkInstrumentAgainstStructure } from './instrument-structure'
 
 export type EligibilityStatus =
   | 'eligible'
@@ -121,6 +122,29 @@ function sharedChecks(opp: GrantOpportunity, org: Organisation): EligibilityIssu
       message: 'Invitation-only — open applications are not accepted.',
     })
   }
+
+  // Instrument versus structure — the one check that does not consult the
+  // funder's eligibility list at all.
+  //
+  // Deliberately in sharedChecks rather than investmentChecks. The gate keys off
+  // the instrument, not the opportunity kind, so a row carrying an equity
+  // subtype under the wrong funding_type cannot slip past it. That is not
+  // hypothetical: "Community Shares — Booster Fund" sat live as
+  // funding_type='grant' with funding_subtype='equity', which would have routed
+  // to grantChecks and never been looked at.
+  //
+  // Reads the PLURAL column. `funding_subtype` is a trigger-maintained copy of
+  // `funding_subtypes[0]` since migration 065, so the singular is one arbitrary
+  // instrument off a row that may offer four. Trust for London and the Growth
+  // Impact Fund both carry equity in slot two, behind a loan, and reading the
+  // singular misses both. Singular and si_instrument_type are the fallback for
+  // the ~1,460 rows with no array yet.
+  const instrumentIssue = checkInstrumentAgainstStructure(
+    opp.fundingSubtypes,
+    org.legal_structure,
+    opp.fundingSubtype ?? opp.siInstrumentType,
+  )
+  if (instrumentIssue) out.push(instrumentIssue)
 
   // Hard structure gate — only fires when the opportunity has an explicit
   // eligibleStructures list AND the org has set its legal structure
