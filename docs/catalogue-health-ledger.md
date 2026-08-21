@@ -2690,3 +2690,72 @@ Set by Paul, 2026-08-12, and to be carried forward until closed.
 | 2026-08-18 | A11 re-measured from 8 to 4, then to 2. Skinners' and One Stop `is_rolling` set false (`user_verified:paul-review-2026-08-18`, unpinned). HPC Small Grants left alone: its page says "Open year-round. Next deadline is Monday 24 August 2026", so both flags are true and any wrongness is in the card. A11's rule mis-describes rolling funds with periodic cut-offs; rule fix post-September. |
 | 2026-08-18 | Asked whether Somerset had dropped off section A. It had not: the row once called "live and wrong to users" was Stronger Communities Fund, fixed 11 Aug, verified still correct. Section A carries issue classes and counts, never funder names, so nothing was removed. C4 unchanged since the ledger opened. |
 | 2026-08-16 | A3 needs a caveat before it is trusted: the `round_closed` verdict is a deterministic function of the proposed deadline falling in the past (23 of 23 rows, no exceptions), so a year-less date on the funder's page that resolves to a wrong past year produces a false "closed". Confirmed on the Greggs row, which is open for another 12 days. Bears directly on the §12 auto-act decision. |
+
+## 2026-08-21 — eleven funds from an Idox feed, checked one at a time
+
+Paul passed eleven Open4Community links and said the links do not go to the
+funding pages, so research them. They do not: Idox's news links are login-walled
+(the note about that is already in memory). Each was checked on the funder's own
+site instead.
+
+The pile behaved the way every pile in this session has behaved. Eleven items,
+and after reading them: three we already hold, two out of scope, one that cannot
+be identified, five new. Plus one we did not know we were missing, found by
+accident.
+
+**Already held, and two of the three were wrong.**
+
+| Row | State on 21 Aug | What the funder says |
+|---|---|---|
+| Morrisons Foundation | live, £20,000, right link | agrees, no change |
+| Commonweal Housing | ARCHIVED, url_status dead, url_last_checked null | "Call for New Ideas: Now Open", closes 16 Oct 2026 |
+| Esmée Communities and Collections | "next round expected January 2027" | "open for applications in the week commencing 28 September 2026" |
+
+The Esmée gap is four months, and it is the expensive kind: a museum reading our
+card in September concludes there is nothing to do until the new year and does
+not look again. Corrected to 28 September, with the Museums Association page as
+the source and the apply_url moved there.
+
+Commonweal was archived with `url_status = 'dead'` and no check date — the
+signature of a manual hide, not a failed fetch. Its call page loads fine. The
+whole page was read without an API call: applications close Friday 16 October
+2026, England, Wales and Scotland only, explicitly not Northern Ireland, funding
+is for a feasibility study, and **the page states no figure**, so amounts stay
+null. Revived to the queue, url_status reset to `unchecked` so the checker makes
+its own call rather than me marking my own homework.
+
+**Five new, staged inactive, all landing in "Needs reading":**
+
+- Henry Smith Foundation — Maternity Equity (listed "Coming Soon", no dates yet)
+- Heart Research UK — Healthy Hearts NI (£15,000, closes 16 Sep 2026)
+- Sunrise Medical Community Fund (£5,000, closes 30 Sep 2026)
+- Macmillan Q Lab (£75,000, then up to £200,000; team applications close 14 Sep 2026)
+- Let's Celebrate Towns (£20,000, entries close 25 Oct 2026)
+
+**Sixth, not on the feed at all:** Henry Smith's Career Ready fund is open on
+their grants page and was absent from the catalogue. Found while checking
+Maternity Equity. Worth noting as a small argument for reading a funder's whole
+grants index whenever one of its funds comes up, rather than the single page the
+lead points at.
+
+**Let's Celebrate Towns was Paul's call and he said keep it.** It is £20,000 from
+Visa and Nationwide, but TOWNS enter, not charities — the entry route is a
+Business Improvement District, a council or an MP. It is in because the money
+goes "towards community-led projects" and a fundraiser who knows the competition
+exists can get their town to enter. The caveat is written into the description so
+nobody discovers it at the entry form.
+
+**Not added, and why:**
+
+- Low Carbon Fuels Fund — £93m for sustainable aviation fuel producers.
+- Cladding Safety Scheme — for building owners remediating cladding.
+  Neither is a thing a charity applies to a funder for.
+- "Funding for UK Healthcare Delivery Projects" — too vague to pin down. The
+  likeliest matches are the Hospital Saturday Fund, whose 11 August deadline had
+  already passed when the feed item ran, and MSD UK's second 2026 window closing
+  8 September. Guessing between them puts a wrong funder in the catalogue, so it
+  is reported rather than added. Same floor-beats-a-ranking rule as the URL
+  corrections: if nothing clears the bar, change nothing.
+
+Sources deliberately `system:` and not `admin:` — these are staged FOR review,
+not reviewed, and an admin stamp would permanently block re-enrichment.
