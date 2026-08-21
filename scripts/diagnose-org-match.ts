@@ -13,7 +13,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync } from 'fs'
 import path from 'path'
-import { computeMatchScore } from '../src/lib/matching'
+import { computeMatchScore, MATCH_FLOOR } from '../src/lib/matching'
 import { normaliseScrapedGrant } from '../src/lib/grants-normalise'
 import type { Organisation } from '../src/types'
 
@@ -82,6 +82,23 @@ async function main() {
     console.log('  BY FUNDING TYPE   rows   not-ineligible   best score')
     for (const [t, v] of Object.entries(byType).sort((a, b) => b[1].n - a[1].n)) {
       console.log(`  ${t.padEnd(16)} ${String(v.n).padStart(5)} ${String(v.eligible).padStart(14)} ${String(v.best).padStart(12)}`)
+    }
+
+    // What the onboarding "not yet registered" screen would show. Same matcher,
+    // one field changed, so it cannot drift from what they would really see.
+    if (org.legal_structure === 'not_registered') {
+      let openNow = 0, ifConstituted = 0
+      const asConstituted = { ...org, legal_structure: 'unincorporated' } as Organisation
+      for (const g of grants) {
+        try {
+          // Eligibility, not match quality. The question this screen answers is
+          // "what am I allowed to apply to", which is a different question from
+          // "what scores well for me".
+          if (computeMatchScore(g, org).eligibilityStatus !== 'ineligible') openNow++
+          if (computeMatchScore(g, asConstituted).eligibilityStatus !== 'ineligible') ifConstituted++
+        } catch { /* skip */ }
+      }
+      console.log(`  NOT-REGISTERED SCREEN would read:  ${openNow} open now  ->  ${ifConstituted} if constituted  (floor ${MATCH_FLOOR})`)
     }
 
     console.log('  DIMENSION        avg score / avg max   = share')

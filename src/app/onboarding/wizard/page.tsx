@@ -721,6 +721,13 @@ export default function OnboardingWizardPage() {
   const [revealCount, setRevealCount]     = useState<number | null>(null)
   /** The match preview failed. Distinct from "there are none" — see the catch below. */
   const [revealFailed, setRevealFailed]   = useState(false)
+  /**
+   * Set only for a not-yet-registered organisation: how much of the catalogue
+   * is open to them now, and how much becoming constituted would open. Both
+   * counted live, because the catalogue grows and a hardcoded figure would
+   * quietly rot.
+   */
+  const [structureBlock, setStructureBlock] = useState<{ openNow: number; ifConstituted: number } | null>(null)
   const matchFetchRef = useRef<Promise<void> | null>(null)
 
   useEffect(() => {
@@ -1073,9 +1080,40 @@ export default function OnboardingWizardPage() {
 
 
 
-          const scored = scraped
-            .map(row => {
-              const grant  = normaliseScrapedGrant(row as Record<string, unknown>)
+          const rows = scraped.map(row => normaliseScrapedGrant(row as Record<string, unknown>))
+
+          /**
+           * A not-yet-registered organisation is not a matching failure, it is
+           * a fact about eligibility: most UK funders require a constituted
+           * body. Measured against the live catalogue, `not_registered` is
+           * named by 8 rows and `unincorporated` by 319, so the gap between
+           * "nothing for me here" and "half the catalogue" is one step the
+           * user can actually take.
+           *
+           * The second number is produced by the SAME matcher with one field
+           * changed, rather than a separate query, so it cannot drift from
+           * what they would really see afterwards.
+           */
+          if ((payload.legal_structure ?? '') === 'not_registered') {
+            const asConstituted = { ...orgForMatching, legal_structure: 'unincorporated' }
+            // Counted by ELIGIBILITY, not by match score. The question this
+            // screen answers is "what am I allowed to apply to", which is a
+            // different question from "what scores well for me". Counting by
+            // score read 0 -> 7 for the first org this was built for, which is
+            // true but useless; by eligibility it reads 25 -> 296, which is
+            // the fact that actually changes what they do next.
+            let openNow = 0, ifConstituted = 0
+            for (const grant of rows) {
+              try {
+                if (computeMatchScore(grant, orgForMatching as Parameters<typeof computeMatchScore>[1]).eligibilityStatus !== 'ineligible') openNow++
+                if (computeMatchScore(grant, asConstituted as Parameters<typeof computeMatchScore>[1]).eligibilityStatus !== 'ineligible') ifConstituted++
+              } catch { /* a row the matcher cannot read should not skew the count */ }
+            }
+            setStructureBlock({ openNow, ifConstituted })
+          }
+
+          const scored = rows
+            .map(grant => {
               const result = computeMatchScore(grant, orgForMatching as Parameters<typeof computeMatchScore>[1])
               return { grant, score: result.score }
             })
@@ -1241,6 +1279,7 @@ export default function OnboardingWizardPage() {
         <StepReveal
           matchCount={revealCount}
           failed={revealFailed}
+          structureBlock={structureBlock}
           topMatches={revealMatches}
           hasMission={!!state.mission.trim()}
           onExplore={() => router.push('/dashboard/search')}
@@ -2190,10 +2229,63 @@ function FundingTypeChip({ label, desc, active, onClick }: { label: string; desc
    Step 5 — The reveal
    ═══════════════════════════════════════════════ */
 
-function StepReveal({ matchCount, failed, topMatches, hasMission, onExplore, onAddMission }: {
-  matchCount: number | null; failed: boolean; topMatches: RevealMatch[] | null
+function StepReveal({ matchCount, failed, structureBlock, topMatches, hasMission, onExplore, onAddMission }: {
+  matchCount: number | null; failed: boolean
+  structureBlock: { openNow: number; ifConstituted: number } | null
+  topMatches: RevealMatch[] | null
   hasMission: boolean; onExplore: () => void; onAddMission: () => void
 }) {
+  /**
+   * Not yet registered.
+   *
+   * This used to render as an empty screen, which read as "the product has
+   * nothing for you" when the truth is narrower and fixable: most UK funders
+   * require a constituted body, and becoming one is a single step that opens
+   * most of the catalogue. Naming the reason and both numbers turns a dead end
+   * into a next action.
+   *
+   * Shown ahead of the count branches on purpose — a small number here needs
+   * this explanation more than it needs a list.
+   */
+  if (structureBlock) {
+    const { openNow, ifConstituted } = structureBlock
+    return (
+      <>
+        <div style={{ textAlign: 'center', padding: '20px 0 4px' }}>
+          <div style={{ fontSize: 40, marginBottom: 12 }}>🌱</div>
+          <h1 style={{ ...H1_STYLE, fontSize: 22 }}>Your profile is saved</h1>
+          <p style={{ ...SUBTITLE_STYLE, marginBottom: 20, maxWidth: 440, marginLeft: 'auto', marginRight: 'auto' }}>
+            You told us you&rsquo;re not registered yet. Most funders will only take applications from a
+            constituted organisation, so most of the catalogue is closed to you for now.
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginBottom: 22, flexWrap: 'wrap' as const }}>
+          <div style={{ background: T.greenCream, border: `1px solid ${T.borderLight}`, borderRadius: 13, padding: '14px 20px', minWidth: 150, textAlign: 'center' as const }}>
+            <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 28, fontWeight: 600, color: T.greenDeep, lineHeight: 1.1 }}>{openNow}</div>
+            <div style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 12.5, color: T.textSecondary, marginTop: 3 }}>you can apply to now</div>
+          </div>
+          <div style={{ background: T.amberBgSoft, border: '1px solid rgba(133,79,11,0.22)', borderRadius: 13, padding: '14px 20px', minWidth: 150, textAlign: 'center' as const }}>
+            <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 28, fontWeight: 600, color: T.amberMid, lineHeight: 1.1 }}>{ifConstituted}</div>
+            <div style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 12.5, color: T.textSecondary, marginTop: 3 }}>if you constitute</div>
+          </div>
+        </div>
+
+        <p style={{ ...SUBTITLE_STYLE, fontSize: 13.5, textAlign: 'center' as const, maxWidth: 460, margin: '0 auto 22px' }}>
+          Becoming a constituted community group means adopting a written constitution and opening a
+          bank account in the group&rsquo;s name. It does not mean registering as a charity. When
+          you&rsquo;ve done it, change your legal structure in your profile and these open up.
+        </p>
+
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <Button variant="primary" size="lg" onClick={onExplore}>
+            {openNow > 0 ? `See the ${openNow} you can apply to` : 'Browse the catalogue'} <ArrowRight size={15} />
+          </Button>
+        </div>
+      </>
+    )
+  }
+
   // We could not work the matches out. Say that, rather than claiming there
   // are none — the profile IS saved, and the matches are computed again on
   // Find Funding, so this is a delay and not a dead end.
