@@ -30,19 +30,41 @@ const SPEND_RESTRICTION_VALUES = ['restricted', 'unrestricted', 'capital'] as co
  * and its own "See all N" link then filtered at 50, so the destination
  * disagreed with the number that sent you there. Both read this now.
  *
- * 65 rather than any of them. Measured across all 40 organisations against all
- * 639 live rows (scripts/measure-match-thresholds.ts): the median org came out
- * with 273 "matches" at 40, 102 at 50 and 68 at 55 — between a tenth and
- * nearly half the whole catalogue. Unicorn Theatre had 131 at 55. A number
- * that size cannot help a fundraiser decide where to spend an evening, and it
- * quietly contradicts the promise of only chasing what you can win. At 65 the
- * median is 17, which is a list somebody can actually work through.
+ * 55, and the reason is worth keeping because the first answer was wrong.
  *
- * Re-measure with that script before moving it, and again as the catalogue
- * grows — the right floor is a function of catalogue size, not a constant of
- * nature.
+ * This was briefly set to 65, chosen by list LENGTH: the median org had 68
+ * matches at 55 and 17 at 65, and 17 looked like a list somebody could work
+ * through. That is a judgement about the list, not about whether the score
+ * finds good matches, and it is exactly the proxy trap — the check was a
+ * sentence about the page rather than about the user.
+ *
+ * The real test was already in the database. match_feedback stores
+ * match_score_at_time beside each thumbs up or down, 504 of them. Measured
+ * against those verdicts, of the matches users explicitly called GOOD:
+ *
+ *     floor   % of approved matches kept   % above floor that are approved
+ *      50               84                            22
+ *      55               78                            24
+ *      60               56                            26
+ *      65               46                            28
+ *      70               27                            30
+ *
+ * 65 discards 54% of the matches users approved of and buys 6 points of
+ * precision for it. The knee is between 55 and 60: that single step costs 22
+ * points of recall for 2 of precision.
+ *
+ * The flatness of that right-hand column is the real finding. Down-votes have
+ * a median score of 52 and up-votes 63, heavily overlapping, and one approved
+ * match scored 41 — so the score barely discriminates and raising the floor
+ * removes good and bad in roughly equal measure. No floor fixes that. Matcher
+ * quality does.
+ *
+ * Caveats on the evidence: 81 up-votes is a small sample, feedback is skewed
+ * towards complaint (423 down against 81 up), and users can only rate what they
+ * were shown. Re-run the query before moving this, and re-measure list lengths
+ * with scripts/measure-match-thresholds.ts as the catalogue grows.
  */
-export const MATCH_FLOOR = 65
+export const MATCH_FLOOR = 55
 
 export interface MatchBreakdown {
   location:      { score: number; max: number; label: string }
