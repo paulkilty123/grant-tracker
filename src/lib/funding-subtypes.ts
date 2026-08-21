@@ -12,7 +12,7 @@ import type { FundingSubtype, FundingType } from '@/types'
 export const SUBTYPES_BY_FUNDING_TYPE: Record<FundingType, FundingSubtype[]> = {
   grant: ['unrestricted', 'restricted', 'capital', 'emergency', 'small_grant'],
   programme: ['accelerator', 'incubator', 'fellowship', 'cohort_grant', 'award'],
-  investment: ['loan', 'social_investment', 'equity', 'quasi_equity', 'convertible', 'blended'],
+  investment: ['loan', 'social_investment', 'equity', 'quasi_equity', 'convertible', 'blended', 'revenue_share', 'community_shares'],
   in_kind: ['pro_bono_legal', 'pro_bono_consulting', 'tech_product', 'volunteering', 'office_space', 'training'],
 }
 
@@ -36,6 +36,8 @@ export const SUBTYPE_LABELS: Record<FundingSubtype, string> = {
   quasi_equity: 'Quasi-equity',
   convertible: 'Convertible',
   blended: 'Blended finance',
+  revenue_share: 'Revenue share',
+  community_shares: 'Community shares',
   // in-kind
   pro_bono_legal: 'Pro bono legal',
   pro_bono_consulting: 'Pro bono consulting',

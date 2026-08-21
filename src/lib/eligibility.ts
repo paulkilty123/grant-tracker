@@ -16,6 +16,7 @@ import type {
   OrgStage,
   BeneficiaryGroup,
 } from '@/types'
+import { checkInstrumentAgainstStructure } from './instrument-structure'
 
 export type EligibilityStatus =
   | 'eligible'
@@ -121,6 +122,25 @@ function sharedChecks(opp: GrantOpportunity, org: Organisation): EligibilityIssu
       message: 'Invitation-only — open applications are not accepted.',
     })
   }
+
+  // Instrument versus structure — the one check that does not consult the
+  // funder's eligibility list at all.
+  //
+  // Deliberately in sharedChecks rather than investmentChecks. The gate keys off
+  // the instrument, not the opportunity kind, so a row carrying an equity
+  // subtype under the wrong funding_type cannot slip past it. That is not
+  // hypothetical: "Community Shares — Booster Fund" sat live as
+  // funding_type='grant' with funding_subtype='equity', which would have routed
+  // to grantChecks and never been looked at.
+  //
+  // Both instrument columns are read because both are populated and they do not
+  // agree with each other. funding_subtype first: it carries the instrument on
+  // 39 published rows against si_instrument_type's 4.
+  const instrumentIssue = checkInstrumentAgainstStructure(
+    opp.fundingSubtype ?? opp.siInstrumentType,
+    org.legal_structure,
+  )
+  if (instrumentIssue) out.push(instrumentIssue)
 
   // Hard structure gate — only fires when the opportunity has an explicit
   // eligibleStructures list AND the org has set its legal structure

@@ -150,6 +150,14 @@ export type FundingSubtype =
   | 'quasi_equity'
   | 'convertible'
   | 'blended'
+  // Both added 2026-08-21. The catalogue has carried a live row on each since
+  // before this union was written, so `isValidSubtypeForFundingType()` returned
+  // false for two instruments the data was already using. Added when the
+  // instrument gate needed to name them: community shares are society-only, and
+  // revenue share is one of the instruments that does NOT require share capital,
+  // which the gate has to be able to say.
+  | 'revenue_share'
+  | 'community_shares'
   // in-kind sub-types
   | 'pro_bono_legal'
   | 'pro_bono_consulting'
