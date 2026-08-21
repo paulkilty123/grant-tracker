@@ -2966,8 +2966,14 @@ export default function SearchPage() {
                       style={{ color: isActive
                         ? (tab.id === 'grant' ? '#639922' : tab.id === 'programme' ? '#993C1D' : tab.id === 'investment' ? '#0C447C' : '#854F0B')
                         : '#8A8986' }}>
+                      {/* "eligible", not "matches". These counts have no score
+                          floor — they are every row this org is allowed to apply
+                          to. Deliberately so: a fundraiser wants to see
+                          everything open to them, including things that slipped
+                          down the ranking. Calling it "matches" claimed a
+                          judgement the number was not making. */}
                       {tab.count} {profileFilterOn
-                        ? 'matches'
+                        ? 'eligible'
                         : tab.id === 'programme' ? 'programmes'
                         : tab.id === 'investment' ? 'investments'
                         : tab.id === 'in_kind' ? 'in-kind'
@@ -3136,7 +3142,7 @@ export default function SearchPage() {
                     <strong className="text-3xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>{displayGrants.length}</strong>
                     <span className="text-base text-mid">{tabNoun}</span>
                     {profileFilterOn && (
-                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: '#EAF3DE', color: '#173404' }}>✓ matched</span>
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: '#EAF3DE', color: '#173404' }}>✓ you can apply for</span>
                     )}
                     {!profileFilterOn && !filterQuery && !aiResults && (
                       <span className="text-sm" style={{ color: '#9A9895' }}>&middot; all UK funding &middot; unfiltered</span>
