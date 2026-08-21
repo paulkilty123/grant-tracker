@@ -2759,3 +2759,85 @@ nobody discovers it at the entry form.
 
 Sources deliberately `system:` and not `admin:` — these are staged FOR review,
 not reviewed, and an admin stamp would permanently block re-enrichment.
+
+## 2026-08-21 — what shape is the catalogue in, measured
+
+Paul asked whether it is mainly accurate and whether he needs to worry. That
+deserves numbers rather than a feeling, so the gate the review queue uses was run
+over **every** row, including the live ones the queue never shows. A live row
+with a blocking reason is the thing that should worry him; a staged row with one
+is just work.
+
+1,924 rows. 639 live, 1,285 not. **528 of the 639 live rows have nothing the gate
+would block on, 82.6%.**
+
+### Three of the first-pass numbers were flattering and had to be retested
+
+*"100% of live rows read in the last 30 days"* is a proxy, and a hollow one. The
+`_page_read` stamp records the ATTEMPT, and its own docstring says so: a page
+that fails the gate produces no field stamps and would otherwise never drain from
+the work queue. The real question is whether the read produced facts.
+
+| | live rows | |
+|---|---|---|
+| a fresh stamp on a real field | 467 | 73.1% |
+| ...at least one carrying a quote | 459 | 71.8% |
+| visited, yielded nothing | 172 | 26.9% |
+
+True recent-evidence coverage is 72%, not 100%. Same lesson as the "names the
+fund" versus "could actually apply" re-baseline: state the check as a sentence
+about the user, then see whether the condition tests it.
+
+### The one systemic problem, and it is on the live surface
+
+254 live rows say "apply any time". The page agrees on 93 of them.
+
+| | rows | |
+|---|---|---|
+| page read and AGREES it is rolling | 93 | 36.6% |
+| page CONTRADICTS it | 9 | 3.5% |
+| no evidence either way | 152 | 59.8% |
+
+This is `is_rolling = !deadline` surfacing as a claim to the user. A date the
+extractor could not parse becomes a promise that there is no date. It has sat in
+memory as a known post-launch fix; it is now measured, and it is on 40% of the
+live catalogue.
+
+The 9 contradicted rows shrink on reading, as every pile in this session has.
+Three are arguably right: Drapers' says "You can apply at any time of the year",
+Movement for Good says "Nominations open all year", and Didymus takes expressions
+of interest continuously. Six are genuinely wrong: Toy Trust, Corra, the
+Strategic Legal Fund ("six closing dates ... roughly every two months"), Willan,
+National Lottery Heritage's quarterly deadlines, and the Social Investment
+Programme's four rounds a year.
+
+### 51 live rows point at a page the engine says is not about that fund
+
+All 51 carry the same note, `fixable_link: wrong_fund`. The URL pass earlier this
+week worked the queue, not the live set. Spot-checking the targets: the Sainsbury
+Family Charitable Trusts row points at an index of trusts, Bolton at a login
+page, DCR Allen at the Charity Commission register. Judge by evidence not
+appearance still applies, but here the evidence IS the engine's own read.
+
+### 10 live rows show a date the page contradicts
+
+Four of them we show as having no deadline at all where the page states one, and
+Suffolk Giving Fund's stated date has already passed. The evidence is already
+bought and stored, so applying it costs nothing.
+
+### What is genuinely healthy
+
+Worth saying, because the failure modes get all the attention. Every live row has
+an apply link. 97.7% say who can apply, 83.1% carry exclusions, and the
+eligibility rule is holding. No live row has a deadline already in the past. No
+live row has a link recorded as dead.
+
+### The queue
+
+65 rows: 26 need reading, 17 ready to publish, 11 exhausted, 7 need Paul's
+judgement, 4 have link problems.
+
+### Still open, unrelated to the above
+
+160 rows marked published but not live, the expire-grants desync already in
+memory. Unchanged since it was logged.
