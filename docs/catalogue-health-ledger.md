@@ -2991,3 +2991,69 @@ September read as open now.
 
 Adding a deadline PUTS A CLAIM UP, which the actuator may never do unattended.
 These five rest on Paul's clearance of 2026-08-21, not on an automated rule.
+
+## 2026-08-21 — the 51 "wrong fund" links: 51 flagged, 4 wrong, 2 fixed
+
+All 51 live rows carrying `fixable_link: wrong_fund` were fetched and read. No
+API spend — plain HTTP, with the reader proxy where a host refused.
+
+### My own probe produced a false finding first, which is the lesson again
+
+The first run reported 11 sites as unfetchable. They were nothing of the kind:
+`READER_PROXY_URL` is `https://r.jina.ai` with no trailing slash, and the
+fallback built `https://r.jina.aihttps%3A%2F%2F...`, which `fetch` rejects as
+unparseable. All 11 came back "0 chars, no detail" — **a probe failure wearing
+the costume of a finding.** Fixed; 10 of the 11 then read fine through the proxy.
+
+This is the third time in a fortnight a measuring instrument has been the thing
+that was broken. It is why the health run's "100% read" number got retested.
+
+### What the 51 actually are
+
+| | rows |
+|---|---|
+| a fundraiser landing there COULD apply | 10 |
+| the page names the fund but carries little detail — mostly the funder's own grants index | 26 |
+| certainly wrong | 4 |
+| my probe could not read them well enough to judge | 11 |
+
+The test used is the sentence about the user, not about the page: does the page
+carry two or more of a date, an eligibility statement, an amount, or an apply
+route, as well as naming the fund. Leathersellers', Idlewild, Skinners',
+Grocers', Baily Thomas and the Vicar's Relief Fund all carry all or most of it.
+**The flag is simply wrong on those ten.**
+
+The 26 are the case Paul settled on 17 August: "A link landing on a funder's
+homepage is fine and shouldn't appear as a problem; only dead links and pages
+that aren't about the fund belong there." Not touched.
+
+The 11 are reported as UNKNOWN, not as broken. The proxy returned about 490
+bytes for several, which is a rate-limit page, not a funder page. Calling those
+dead would be the same error the probe just made.
+
+### The four that are certainly wrong, and the two fixed
+
+**Bolton Housing Partnership** pointed at `services.boltoncvs.org.uk/user/login`
+— 327 characters of login form. The real page is
+`boltoncvs.org.uk/funding/bolton-housing-partnership-grants/`, headed "The Bolton
+Housing Partnership Grants", with the funding team's contact details and the
+route to the application forms. Corrected, `url_status` reset to `unchecked` so
+the checker makes its own call.
+
+**Improving life chances in Tyne & Wear** returns 404, and the funder's current
+grants index lists 17 funds, none of them this one. `url_status` set to `dead`.
+**Deliberately not given a guessed replacement** — none of the 17 is plausibly
+the same fund, and a wrong link that loads is worse than a dead one that does
+not. Needs Paul's call on removal.
+
+**DCR Allen Charitable Trust** and **Theatre and Charitable Grants** both point
+at a Charity Commission register entry. A register entry is not an application
+page — but for a small trust with no website it may be the only public record
+there is, and swapping it for nothing would make the row worse. Left, and
+flagged, rather than guessed at.
+
+### What this leaves
+
+The 10 false positives and the 26 index pages are not user harm; they are queue
+noise, and clearing them honestly means re-verifying, which costs money. That is
+Paul's call to make, quoted in rows, not something to slip into a cleanup.
