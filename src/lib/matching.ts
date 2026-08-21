@@ -11,11 +11,24 @@ const SPEND_RESTRICTION_VALUES = ['restricted', 'unrestricted', 'capital'] as co
 /**
  * What counts as a match at all, on every surface.
  *
- * Before this existed each screen hardcoded its own floor: the onboarding
- * reveal 40 (grants only), Find Funding 50, and the dashboard, projects and
- * deadlines pages 55. One organisation was therefore told five different
- * things about itself depending which page it was on, and nothing failed when
- * those numbers drifted apart, because each was locally sensible.
+ * Before this existed each screen hardcoded its own, and they disagreed:
+ *
+ *   onboarding reveal          score >= 40, grants only
+ *   dashboard                  score >= 55
+ *   projects                   score >= 55
+ *   deadlines                  score >= 55
+ *   Find Funding ?actionable=1 score >= 50
+ *   Find Funding, matched view NO SCORE FLOOR AT ALL — structure only
+ *
+ * The last one is the one to know about. Its "N matched" badge counts every
+ * row the org is structurally eligible for, so it is answering "what am I
+ * allowed to apply to" while every other surface answers "what is worth my
+ * time", under the same word. That is why the dashboard could say 55 things
+ * and Find Funding 120 for the same organisation on the same day.
+ *
+ * The actionable path mattered more than it looks: the dashboard counted at 55
+ * and its own "See all N" link then filtered at 50, so the destination
+ * disagreed with the number that sent you there. Both read this now.
  *
  * 65 rather than any of them. Measured across all 40 organisations against all
  * 639 live rows (scripts/measure-match-thresholds.ts): the median org came out

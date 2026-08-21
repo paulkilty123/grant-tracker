@@ -13,6 +13,10 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { getOrganisationByOwner } from '@/lib/organisations'
 import { computeMatchScore, scoreColour, grantInGeoSelection, grantMatchesLocationText, MATCH_FLOOR } from '@/lib/matching'
 import type { FeedbackSignals, MatchBreakdown } from '@/lib/matching'
+import {
+  countEligibleByStructure, structureIsLimiting, structureLabel,
+  ORG_LEGAL_STRUCTURES, ORG_LEGAL_STRUCTURE_VALUES,
+} from '@/lib/structure-opportunity'
 import { getInteractions, recordInteraction, removeInteraction, getSavedReminders, setSavedReminder, getDismissSnoozes, setDismissSnooze, getSavedNotes, setSavedNote } from '@/lib/interactions'
 import { getMatchFeedback, type StoredFeedback } from '@/lib/matchFeedback'
 import { eligibilityStated, ELIGIBILITY_NOT_STATED, ELIGIBILITY_NOT_STATED_SHORT } from '@/lib/eligibility-disclosure'
@@ -1319,6 +1323,18 @@ export default function SearchPage() {
   const [smartMatched, setSmartMatched] = useState(false)
   const [toast, setToast]               = useState<{ msg: string; variant: 'success' | 'error' } | null>(null)
   const [org, setOrg]                   = useState<Organisation | null>(null)
+  /**
+   * "Show me what I'd match as a CIC."
+   *
+   * Legal structure is the hardest gate in the catalogue, and an org on the
+   * wrong side of it sees almost nothing — so the useful question is not just
+   * "what do I match" but "what would I match if I were constituted
+   * differently". Null means the org's real structure; anything else is a
+   * PREVIEW and is banner-marked as one throughout, because showing somebody
+   * funds they cannot actually apply to is the one mistake this product must
+   * never make quietly.
+   */
+  const [previewStructure, setPreviewStructure] = useState<LegalStructure | null>(null)
   const [userId, setUserId]             = useState('')
   const [sortBy, setSortBy]             = useState<'match' | 'amount' | 'freshest' | 'deadline'>('match')
   const [freshnessFilter, setFreshnessFilter] = useState<'all' | '7d' | '14d' | '30d'>('all')
@@ -1904,6 +1920,24 @@ export default function SearchPage() {
   // expensive. The dependency array below lists everything the memo body
   // reads; any input that changes what appears or how it's ranked must be
   // included, otherwise the UI will go stale.
+  /** The org as scored: the real one, or the previewed structure. */
+  const scoringOrg: Organisation | null = useMemo(
+    () => (org && previewStructure ? { ...org, legal_structure: previewStructure } as Organisation : org),
+    [org, previewStructure],
+  )
+
+  /**
+   * What each structure would open, counted by eligibility over the same rows.
+   * Only computed when there is an org and the catalogue has loaded, and only
+   * over the twelve real structures, so it is one sweep rather than per-render
+   * work.
+   */
+  const structureCounts = useMemo(() => {
+    if (!org || allGrants.length === 0) return []
+    return countEligibleByStructure(allGrants, org, ORG_LEGAL_STRUCTURE_VALUES)
+  }, [org, allGrants])
+  const showStructureNotice = useMemo(() => structureIsLimiting(structureCounts), [structureCounts])
+
   const displayGrants: DisplayGrant[] = useMemo(() => {
     const minAmt = amountMin ? Number(amountMin) : null
     const maxAmt = amountMax ? Number(amountMax) : null
@@ -2061,7 +2095,7 @@ export default function SearchPage() {
 
     const withScores: DisplayGrant[] = filtered.map(grant => {
       if (org) {
-        const match = computeMatchScore(grant, org, feedbackSignals)
+        const match = computeMatchScore(grant, scoringOrg ?? org, feedbackSignals)
         const grantInteractions = interactions.get(grant.id) ?? new Set()
         const displayScore = match.score
         let score = match.score
@@ -2183,6 +2217,8 @@ export default function SearchPage() {
     programmeHasCash,
     pinnedGrantId,
     actionableOnly,
+    // Without this the preview picks a structure and nothing re-scores.
+    scoringOrg,
   ])
 
   // ── Capture layer ──────────────────────────────────────────────────────────
@@ -3002,6 +3038,66 @@ export default function SearchPage() {
           </button>
         </div>
       )}
+
+      {/* ── Previewing another legal structure ──────────────────────────────
+          Unmissable and permanent while active. Showing somebody funding they
+          cannot actually apply to is the one mistake this product must never
+          make quietly, so this is a banner rather than a subtle pill, and the
+          way out sits inside it. */}
+      {previewStructure && (
+        <div
+          role="status"
+          className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl px-4 py-3"
+          style={{ background: '#F7ECCC', border: '1px solid rgba(133,79,11,0.28)' }}
+        >
+          <span className="text-sm font-semibold" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#854F0B' }}>
+            Previewing as {structureLabel(previewStructure)}
+          </span>
+          <span className="text-sm" style={{ color: '#7A4E10' }}>
+            You cannot apply to these yet. Your profile still says {structureLabel(org?.legal_structure as LegalStructure)}.
+          </span>
+          <button
+            onClick={() => setPreviewStructure(null)}
+            className="ml-auto text-sm font-semibold px-4 py-1.5 rounded-lg"
+            style={{ fontFamily: 'var(--font-space-grotesk)', background: '#fff', color: '#2C2C2A', border: '1px solid #D0CCC4' }}
+          >
+            Back to my matches
+          </button>
+        </div>
+      )}
+
+      {/* ── Your structure is closing most of the catalogue ──────────────────
+          Only when another structure would open materially more, so a
+          registered charity is never nagged about becoming a CIO. */}
+      {showStructureNotice && !previewStructure && (() => {
+        const current = structureCounts.find(c => c.current)
+        const best = structureCounts[0]
+        if (!current || !best) return null
+        return (
+          <div className="mb-3 rounded-xl px-4 py-3" style={{ background: '#FBF9F4', border: '1px solid rgba(29,60,62,0.14)' }}>
+            <p className="text-sm font-semibold mb-1" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#1D3C3E' }}>
+              Your legal structure is closing most of the catalogue
+            </p>
+            <p className="text-sm mb-2" style={{ color: '#5F5E5A' }}>
+              As {structureLabel(current.structure)} you can apply to <strong style={{ color: '#1D3C3E' }}>{current.eligible}</strong> of {allGrants.length}.
+              As {structureLabel(best.structure)} that would be <strong style={{ color: '#1D3C3E' }}>{best.eligible}</strong>.
+            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs" style={{ color: '#74736E', fontFamily: 'var(--font-space-grotesk)' }}>See what you would match as</span>
+              {structureCounts.filter(c => !c.current && c.eligible > current.eligible).slice(0, 4).map(c => (
+                <button
+                  key={c.structure}
+                  onClick={() => setPreviewStructure(c.structure)}
+                  className="text-xs font-semibold px-3 py-1.5 rounded-full"
+                  style={{ fontFamily: 'var(--font-space-grotesk)', background: '#fff', color: '#1D3C3E', border: '1px solid rgba(29,60,62,0.22)' }}
+                >
+                  {structureLabel(c.structure)} · {c.eligible}
+                </button>
+              ))}
+            </div>
+          </div>
+        )
+      })()}
 
       {/* ── Results header (hidden when empty — empty-state card owns that space) ── */}
       {activeView === 'browse' && hasSearched && displayGrants.length > 0 && (
