@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/client'
 import { getOrganisationByOwner, createOrganisation, updateOrganisation, writeActiveOrgCookie } from '@/lib/organisations'
 import { track } from '@/lib/analytics'
 import { computeMatchScore, MATCH_FLOOR } from '@/lib/matching'
+import { columnFor, normaliseNumber, detectRegister, registerLabel, isRecognisedNumber } from '@/lib/registered-number'
 import { normaliseScrapedGrant } from '@/lib/grants-normalise'
 import type { LegalStructure, ImpactSector, BeneficiaryGroup, FundingType, SpendNeed } from '@/types'
 import Button from '@/components/ui/Button'
@@ -167,6 +168,12 @@ const FUNDING_TYPES: { value: FundingType; label: string; desc: string }[] = [
  * proper rather than adding it back here.
  */
 const UNCOLLECTED_ON_CREATE = {
+  // Both number columns default to null on CREATE only. The payload spreads
+  // after this and overrides whichever one the entered number belongs in, so
+  // an update never nulls the column it did not detect — a dual-registered org
+  // keeps both.
+  charity_number:              null,
+  cic_number:                  null,
   years_trading:               null,
   funder_type_preferences:     [],
   funding_subtype_preferences: [],
@@ -201,10 +208,9 @@ type FieldConfidence = 'confident' | 'uncertain' | 'missing'
  */
 const REVIEW_FIELD_KEYS = [
   'name',
+  'registeredNumber',
   'legalStructure',
   'primaryLocation',
-  'impactSectors',
-  'beneficiaryGroups',
   'annualIncomeBand',
 ] as const
 
@@ -217,6 +223,13 @@ function fieldConf(c: number | undefined | null, hasValue = false): FieldConfide
 interface ExtractedData {
   url:               string
   name:              string | null
+  /**
+   * The extractor has always returned this and the wizard has always thrown it
+   * away, then written null over whatever was in the profile. Same shape as the
+   * seven uncollected fields, and it is the one identifier that makes the
+   * eligibility gate checkable rather than self-declared.
+   */
+  registeredNumber:  string | null
   legalStructure:    string | null
   primaryLocation:   string | null
   annualIncomeBand:  string | null
@@ -225,6 +238,7 @@ interface ExtractedData {
   beneficiaryGroups: BeneficiaryGroup[]
   confidence: {
     name?:              number
+    registeredNumber?:  number
     legalStructure?:    number
     primaryLocation?:   number
     annualIncomeBand?:  number
@@ -248,6 +262,8 @@ interface RevealMatch {
 interface WizardState {
   name:             string
   legalStructure:   LegalStructure | ''
+  /** Charity, company or mutuals-register number. See detectRegister(). */
+  registeredNumber: string
   primaryLocation:  string
   annualIncomeBand: string
   geographicReach:  string
@@ -263,7 +279,8 @@ interface WizardState {
 }
 
 const EMPTY_STATE: WizardState = {
-  name: '', legalStructure: '', primaryLocation: '',
+  name: '',
+  registeredNumber: '', legalStructure: '', primaryLocation: '',
   annualIncomeBand: '', geographicReach: '', mission: '',
   impactSectors: [], beneficiaryGroups: [],
   minGrantTarget: '', maxGrantTarget: '',
@@ -740,6 +757,9 @@ export default function OnboardingWizardPage() {
         setOrgId(org.id)
         setState({
           name:             org.name ?? '',
+          // Read back whichever column holds it, so a second pass through the
+          // wizard cannot wipe a number the user already gave us.
+          registeredNumber: (org.charity_number ?? org.cic_number ?? '') as string,
           legalStructure:   (org.legal_structure as LegalStructure) ?? '',
           primaryLocation:  org.primary_location ?? '',
           annualIncomeBand: org.annual_income_band ?? '',
@@ -815,6 +835,8 @@ export default function OnboardingWizardPage() {
       const ext: ExtractedData = {
         url: raw,
         name:              data.name ?? null,
+        // The API has always returned this; the wizard just never read it.
+        registeredNumber:  typeof data.charityNumber === 'string' && data.charityNumber.trim() ? data.charityNumber.trim() : null,
         legalStructure:    structureConfident ? (derivedLegal || null) : null,
         primaryLocation:   data.primaryLocation ?? null,
         annualIncomeBand:  data.annualIncome ?? null,
@@ -823,6 +845,7 @@ export default function OnboardingWizardPage() {
         beneficiaryGroups: Array.isArray(data.beneficiaryGroups) ? data.beneficiaryGroups.slice(0, 5) : [],
         confidence: {
           name:              conf.name,
+          registeredNumber:  conf.charityNumber,
           // undefined (not the low score) when unconfident → review renders the
           // structure as a "please add" field rather than a guess to rubber-stamp.
           legalStructure:    structureConfident ? conf.orgType : undefined,
@@ -836,7 +859,7 @@ export default function OnboardingWizardPage() {
       // Count what was actually extracted. If we got nothing useful, skip the
       // empty Review screen and drop the user into manual entry instead.
       const foundCount = [
-        ext.name, ext.legalStructure, ext.primaryLocation,
+        ext.name, ext.registeredNumber, ext.legalStructure, ext.primaryLocation,
         ext.annualIncomeBand, ext.mission,
       ].filter(Boolean).length + (ext.impactSectors.length > 0 ? 1 : 0) + (ext.beneficiaryGroups.length > 0 ? 1 : 0)
       if (foundCount === 0) {
@@ -848,6 +871,7 @@ export default function OnboardingWizardPage() {
       setState(prev => ({
         ...prev,
         name:              ext.name ?? prev.name,
+        registeredNumber:  ext.registeredNumber ?? prev.registeredNumber,
         legalStructure:    (ext.legalStructure as LegalStructure) ?? prev.legalStructure,
         primaryLocation:   ext.primaryLocation ?? prev.primaryLocation,
         annualIncomeBand:  ext.annualIncomeBand ?? prev.annualIncomeBand,
@@ -982,8 +1006,17 @@ export default function OnboardingWizardPage() {
       const validNiche = validNicheTagsFor(state.impactSectors)
       const payload = {
         name:                         state.name.trim() || 'My Organisation',
-        charity_number:               null,
-        cic_number:                   null,
+        // Was `null, null`, which discarded a number the extractor had already
+        // found and wiped whatever was on the profile from a previous pass —
+        // the same shape as the seven uncollected fields removed above.
+        // columnFor() routes by the number's own format, falling back to the
+        // declared structure only to break the OSCR / Scottish-company tie.
+        ...(() => {
+          const num = state.registeredNumber.trim()
+          if (!num) return {}
+          const col = columnFor(num, state.legalStructure)
+          return col ? { [col]: normaliseNumber(num) } : {}
+        })(),
         org_type:                     legalStructureToOrgType(state.legalStructure) as 'cic' | 'registered_charity' | 'social_enterprise' | 'community_group' | 'other',
         legal_structure:              state.legalStructure || null,
         org_stage:                    null,
@@ -1383,7 +1416,7 @@ function StepReview({ extracted, confirmed, editingField, setEditingField, confi
 
   const fields: Array<{
     key: keyof typeof extracted.confidence
-    label: string; value: string | null
+    label: string; value: string | null; hint?: string | null
     stateKey?: string; type?: 'text' | 'select' | 'chips'
     options?: { value: string; label: string }[]
     chipOptions?: { value: string; label: string }[]
@@ -1392,12 +1425,20 @@ function StepReview({ extracted, confirmed, editingField, setEditingField, confi
     onToggleChip?: (val: string) => void
     onMakePrimaryChip?: (val: string) => void
   }> = [
-    { key: 'name',              label: 'Organisation name', value: extracted.name,            stateKey: 'name',            type: 'text' },
+{ key: 'name',              label: 'Organisation name', value: extracted.name,            stateKey: 'name',              type: 'text' },
+    { key: 'registeredNumber',  label: 'Registered number', value: extracted.registeredNumber, stateKey: 'registeredNumber',  type: 'text',
+      // Says which register we recognised, so a typo is visible before it
+      // reaches the eligibility gate, and says why we ask. Never blocks: an
+      // unregistered group leaves it empty and the row reads as "missing"
+      // rather than "please confirm".
+      hint: extracted.registeredNumber
+        ? (isRecognisedNumber(extracted.registeredNumber)
+            ? `Recognised as ${registerLabel(detectRegister(extracted.registeredNumber))}. We use it to check eligibility, so your matches are right.`
+            : 'We don\u2019t recognise that format. Leave it if it\u2019s right, or correct it.')
+        : 'Charity, company or mutuals number. Optional, and it helps us check eligibility.' },
     { key: 'legalStructure',    label: 'Legal structure',   value: LEGAL_STRUCTURE_OPTIONS.find(o => o.value === extracted.legalStructure)?.label ?? extracted.legalStructure, stateKey: 'legalStructure', type: 'select', options: LEGAL_STRUCTURE_OPTIONS },
-    { key: 'primaryLocation',   label: 'Primary location',  value: extracted.primaryLocation,  stateKey: 'primaryLocation', type: 'text' },
-    { key: 'impactSectors',     label: 'Primary sector',    value: wizardState.impactSectors.slice(0,2).map(s => IMPACT_SECTORS.find(o => o.value === s)?.label ?? s).join(' · ') || null, type: 'chips' as const, chipOptions: IMPACT_SECTORS, selectedChips: wizardState.impactSectors, maxChips: 4, onToggleChip: (v) => toggleSector(v as ImpactSector), onMakePrimaryChip: (v) => makePrimarySector(v as ImpactSector) },
-    { key: 'beneficiaryGroups', label: 'Who you serve',     value: wizardState.beneficiaryGroups.slice(0,2).map(b => BENEFICIARY_GROUPS.find(o => o.value === b)?.label ?? b).join(' · ') || null, type: 'chips' as const, chipOptions: BENEFICIARY_GROUPS, selectedChips: wizardState.beneficiaryGroups, maxChips: 4, onToggleChip: (v) => toggleBeneficiary(v as BeneficiaryGroup), onMakePrimaryChip: (v) => makePrimaryBeneficiary(v as BeneficiaryGroup) },
-    { key: 'annualIncomeBand',  label: 'Annual income',     value: extracted.annualIncomeBand, stateKey: 'annualIncomeBand', type: 'select', options: INCOME_BANDS.map(b => ({ value: b, label: b })) },
+    { key: 'primaryLocation',   label: 'Primary location',  value: extracted.primaryLocation,  stateKey: 'primaryLocation',   type: 'text' },
+    { key: 'annualIncomeBand',  label: 'Annual income',     value: extracted.annualIncomeBand, stateKey: 'annualIncomeBand',  type: 'select', options: INCOME_BANDS.map(b => ({ value: b, label: b })) },
   ]
   const foundCount = fields.filter(f => f.value).length
 
@@ -1427,6 +1468,7 @@ function StepReview({ extracted, confirmed, editingField, setEditingField, confi
             onEdit={() => setEditingField(field.key)}
             onConfirm={val => confirmField(field.key, val)}
             onCancel={() => setEditingField(null)}
+            hint={field.hint}
             chipOptions={field.chipOptions}
             selectedChips={field.selectedChips}
             maxChips={field.maxChips}
@@ -1455,8 +1497,8 @@ function StepReview({ extracted, confirmed, editingField, setEditingField, confi
   )
 }
 
-function ReviewField({ label, value, fieldState: fState, isConfirmed, isEditing, type, options, chipOptions, selectedChips, maxChips, onToggleChip, onMakePrimaryChip, onEdit, onConfirm, onCancel }: {
-  label: string; value: string | null
+function ReviewField({ label, value, hint, fieldState: fState, isConfirmed, isEditing, type, options, chipOptions, selectedChips, maxChips, onToggleChip, onMakePrimaryChip, onEdit, onConfirm, onCancel }: {
+  label: string; value: string | null; hint?: string | null
   fieldState: FieldConfidence; isConfirmed: boolean; isEditing: boolean
   type?: 'text' | 'select' | 'chips'; options?: { value: string; label: string }[]
   chipOptions?: { value: string; label: string }[]
@@ -1585,6 +1627,9 @@ function ReviewField({ label, value, fieldState: fState, isConfirmed, isEditing,
           <div style={{ fontSize: 14, color: value ? T.textPrimary : T.textTertiary, fontWeight: value ? 500 : 400, fontStyle: value ? 'normal' : 'italic', fontFamily: 'var(--font-dm-sans)' }}>
             {value ?? "We couldn't find this — add manually"}
           </div>
+        )}
+        {!isEditing && hint && (
+          <div style={{ fontSize: 11.5, lineHeight: 1.45, color: T.textSecondary, marginTop: 4, fontFamily: 'var(--font-dm-sans)' }}>{hint}</div>
         )}
       </div>
 
