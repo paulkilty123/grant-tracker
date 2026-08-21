@@ -38,7 +38,7 @@ function htmlToText(html: string): string {
 
 export async function POST(req: NextRequest) {
   const user = await getBuilderUser()
-  if (!user) return NextResponse.json({ error: 'The application builder is currently cohort-only' }, { status: 403 })
+  if (!user) return NextResponse.json({ error: 'Applications are not switched on for this organisation' }, { status: 403 })
 
   let body: { application_id?: string; text?: string; url?: string }
   try {

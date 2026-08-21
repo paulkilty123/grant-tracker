@@ -86,6 +86,11 @@ export async function middleware(request: NextRequest) {
   const isPublicPage =
     pathname === '/' ||
     pathname === '/apply' ||
+    // Reachable by direct URL but deliberately unlinked until launch: nothing
+    // public points at /signup, and the landing page's only two entry points
+    // stay "Sign in" and the #waitlist anchor. Without this the auth gate 307s
+    // a logged-out visitor to /auth/login and the page never renders at all.
+    pathname === '/signup' ||
     pathname === '/cohort-signup-7k9m2x' ||
     pathname === '/privacy' ||
     pathname === '/terms' ||

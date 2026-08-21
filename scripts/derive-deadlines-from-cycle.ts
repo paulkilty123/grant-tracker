@@ -81,28 +81,46 @@ async function main() {
   // Fixed once per run, so every row in a run is judged against the same day and
   // the output is reproducible.
   const today = new Date()
+  const todayISO = today.toISOString().slice(0, 10)
 
   const { data, error } = await db
     .from('scraped_grants')
-    .select('id, title, funder, deadline, next_open_date, is_rolling, deadline_cycle')
+    .select('id, title, funder, deadline, next_open_date, next_open_date_parsed, is_rolling, deadline_cycle')
     .eq('is_active', true)
   if (error) { console.error('query failed:', error.message); process.exit(1) }
 
   type Row = {
     id: string; title: string; funder: string | null
     deadline: string | null; next_open_date: string | null
+    next_open_date_parsed: string | null
     is_rolling: boolean | null; deadline_cycle: unknown
   }
   const rows = (data ?? []) as unknown as Row[]
 
   const plan: Array<{ row: Row; fields: Record<string, unknown>; note: string }> = []
   let skippedHasDeadline = 0, skippedAmbiguous = 0, skippedOpensOnly = 0, noCycle = 0
+  let skippedBetweenRounds = 0
 
   for (const r of rows) {
     if (!Array.isArray(r.deadline_cycle) || r.deadline_cycle.length === 0) { noCycle++; continue }
     const d = deriveCycleDates(r.deadline_cycle, today)
 
     if (r.deadline) { skippedHasDeadline++; continue }
+
+    // A fund that has not reopened yet must not be given a closing date.
+    //
+    // The card shows "Opens 11 May 2027" only when the deadline is NULL — see
+    // `deadlineDisplay` in the search page. So writing a derived deadline over a
+    // row that is between rounds does not add information, it REPLACES "opens in
+    // May" with a June closing date on a fund nobody can apply to yet, which
+    // reads as open. Aldi's Scottish Sport Fund was deliberately put into that
+    // shape on 2026-08-19 and this script would have silently undone it on its
+    // next run.
+    //
+    // The cycle is not lost. It stays on the row, and `check-coming-soon` sends
+    // the row back into review on the opening date, which is when a real closing
+    // date should be read off the funder's page rather than derived.
+    if (r.next_open_date_parsed && r.next_open_date_parsed > todayISO) { skippedBetweenRounds++; continue }
 
     if (!d.deadline) {
       if (d.nextOpenDate) skippedOpensOnly++
@@ -136,6 +154,7 @@ async function main() {
   console.log(`  already have a deadline            : ${skippedHasDeadline}`)
   console.log(`  cycle names a month but no day     : ${skippedAmbiguous}  (no date invented)`)
   console.log(`  cycle names only an opening date   : ${skippedOpensOnly}  (no deadline claimed)`)
+  console.log(`  between rounds, opens in the future : ${skippedBetweenRounds}  (left showing "Opens ...")`)
   console.log(`\nDEADLINES TO SET                     : ${withDeadline.length}`)
   console.log(`  of which also un-flag "rolling"    : ${rollingCleared.length}`)
   console.log(`other rows gaining a next_open_date  : ${plan.length - withDeadline.length}\n`)

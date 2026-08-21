@@ -1,0 +1,111 @@
+{
+  "sampled": 15,
+  "readable": 10,
+  "flawed": 5,
+  "out": [
+    {
+      "title": "Fitton Trust",
+      "outcome": "verified",
+      "contradicted": [
+        "is_rolling"
+      ],
+      "unsupported": []
+    },
+    {
+      "title": "Integrate Donated Office Space",
+      "outcome": "verified",
+      "contradicted": [],
+      "unsupported": []
+    },
+    {
+      "title": "Evan Cornish Grassroots Fund",
+      "outcome": "verified",
+      "contradicted": [],
+      "unsupported": []
+    },
+    {
+      "title": "Skinners' Company Charity Programme",
+      "outcome": "verified",
+      "contradicted": [
+        "deadline_cycle"
+      ],
+      "unsupported": []
+    },
+    {
+      "title": "Waterloo Foundation Grant Programmes",
+      "outcome": "fixable_link",
+      "contradicted": [],
+      "unsupported": []
+    },
+    {
+      "title": "Grant Funding",
+      "outcome": "verified",
+      "contradicted": [],
+      "unsupported": []
+    },
+    {
+      "title": "Northern Cultural Regeneration Fund",
+      "outcome": "verified",
+      "contradicted": [],
+      "unsupported": []
+    },
+    {
+      "title": "Peabody Community Foundation",
+      "outcome": "fixable_link",
+      "contradicted": [],
+      "unsupported": []
+    },
+    {
+      "title": "Monmouthshire Further Education Trust Fund",
+      "outcome": "verified",
+      "contradicted": [
+        "amount_max"
+      ],
+      "unsupported": []
+    },
+    {
+      "title": "Property Fund",
+      "outcome": "verified",
+      "contradicted": [],
+      "unsupported": []
+    },
+    {
+      "title": "Ernest Kleinwort Charitable Trust — Small Grants",
+      "outcome": "verified",
+      "contradicted": [
+        "is_rolling"
+      ],
+      "unsupported": []
+    },
+    {
+      "title": "ASTOP — Rent-Free Property for Charities",
+      "outcome": "fixable_link",
+      "contradicted": [],
+      "unsupported": []
+    },
+    {
+      "title": "The JJ Charitable Trust — Literacy Programme",
+      "outcome": "verified",
+      "contradicted": [],
+      "unsupported": [
+        "amount_min",
+        "amount_max"
+      ]
+    },
+    {
+      "title": "Groundwork — Just About Managing Fund",
+      "outcome": "fixable_link",
+      "contradicted": [],
+      "unsupported": []
+    },
+    {
+      "title": "Express Grant Programme",
+      "outcome": "fixable_link",
+      "contradicted": [],
+      "unsupported": [
+        "amount_min",
+        "amount_max"
+      ]
+    }
+  ]
+}

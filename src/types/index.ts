@@ -143,6 +143,13 @@ export type FundingSubtype =
   | 'fellowship'
   | 'cohort_grant'
   | 'award'
+  // Added 2026-08-19. The four existing programme codes describe the SHAPE of a
+  // cohort and nothing else, so a procurement training course and a mentoring
+  // scheme both landed as "cohort_grant" or as nothing at all. These three name
+  // what a fundraiser is actually being offered.
+  | 'support_programme'
+  | 'match_funding'
+  | 'includes_grant'
   // investment sub-types
   | 'loan'
   | 'social_investment'
@@ -150,15 +157,19 @@ export type FundingSubtype =
   | 'quasi_equity'
   | 'convertible'
   | 'blended'
-  // Both added 2026-08-21. The catalogue has carried a live row on each since
-  // before this union was written, so `isValidSubtypeForFundingType()` returned
-  // false for two instruments the data was already using. Added when the
-  // instrument gate needed to name them: community shares are society-only, and
-  // revenue share is one of the instruments that does NOT require share capital,
-  // which the gate has to be able to say.
+  // Added 2026-08-19 for two instruments already in the catalogue and
+  // unrepresentable: Fredericks Foundation repays out of revenue, and Ethex
+  // raises withdrawable shares from the public.
   | 'revenue_share'
   | 'community_shares'
   // in-kind sub-types
+  // `goods` and `mentoring` added 2026-08-19. Nothing covered physical things
+  // being given away, so FareShare's food, the Hygiene Bank's products, Selco's
+  // and Wickes' building materials and In Kind Direct's whole catalogue had no
+  // tag that fitted. `mentoring` separates one person's time from a team doing
+  // the work — a different offer, and a different ask of the charity.
+  | 'goods'
+  | 'mentoring'
   | 'pro_bono_legal'
   | 'pro_bono_consulting'
   | 'tech_product'
@@ -307,6 +318,11 @@ export interface GrantOpportunity {
   fundingType?: FundingType
   /** Optional sub-classification (e.g. loan/equity under investment) */
   fundingSubtype?: FundingSubtype | null
+  /** Every sub-type the row carries. `fundingSubtype` is the first of these,
+   *  kept in step by a database trigger (migration 065) so the matcher and the
+   *  admin form did not have to change. Prefer this on any surface that can show
+   *  more than one label. */
+  fundingSubtypes?: FundingSubtype[]
   /** What the money may be spent on. NULL = the funder page does not say. */
   spendRestriction?: SpendRestriction | null
   /** {capital}, {revenue}, or both. 57 of 623 live grants fund both. */

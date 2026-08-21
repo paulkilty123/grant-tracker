@@ -1,0 +1,1983 @@
+{
+  "deadlineSet": 71,
+  "eligSet": 118,
+  "results": [
+    {
+      "id": "c740bb33-f49e-4c9f-b8db-110b767e985f",
+      "title": "J N Derbyshire Trust",
+      "outcome": "verified",
+      "dlAgrees": true,
+      "dlProposed": null,
+      "esProposed": [
+        "cic_guarantee",
+        "cic_shares",
+        "ltd_guarantee",
+        "registered_charity"
+      ],
+      "esQuote": "We only make grants to registered charities, or companies (e.g. CIC or a company Limited by Guarantee) who operate on a "
+    },
+    {
+      "id": "f4b5d074-7759-4c7b-b1ea-0860bef98507",
+      "title": "Community Grants Fund",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": ""
+    },
+    {
+      "id": "442ee4c5-ceb8-40a6-a367-5295981e7ba0",
+      "title": "Supporting the Supporters",
+      "outcome": "fixable_link",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": ""
+    },
+    {
+      "id": "4e4060c3-e8f0-4aba-8877-0f41f509f78d",
+      "title": "Cuthbert Horn Trust",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "Voluntary and community organisations operating in the UK are eligible to apply."
+    },
+    {
+      "id": "f06351b9-42a7-460c-a9fa-3af50bffb9c2",
+      "title": "General and Small Grants (Learning Disability)",
+      "outcome": "fixable_link",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": ""
+    },
+    {
+      "id": "dc68dcb0-e614-4229-a4fd-8f5b609b7143",
+      "title": "Sizewell C Community Fund",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cic_guarantee",
+        "ltd_guarantee",
+        "registered_charity",
+        "unincorporated"
+      ],
+      "esQuote": "We welcome applications from: voluntary and community organisations registered charities not-for-profit enterprises, inc"
+    },
+    {
+      "id": "e0a27a78-3cfd-44e3-aebf-59d41d576894",
+      "title": "HCF Grants",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "Grants are available for projects that are addressing identified need and benefitting residents of Hertfordshire. Succes"
+    },
+    {
+      "id": "40c079d7-5be8-4eaf-9ad0-db4f59d34c71",
+      "title": "The Wyseliot Rose Charitable Trust",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "UK registered charities of 'national significance' can apply as long as their work supports the objectives of the Trust."
+    },
+    {
+      "id": "2fe43759-28ed-4a62-b725-dd0c51bd19a9",
+      "title": "Volant Charitable Trust — Large Grants",
+      "outcome": "verified",
+      "dlAgrees": true,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": ""
+    },
+    {
+      "id": "a6e1d29c-74d5-4f97-8026-9c371365a7d2",
+      "title": "James Tudor Foundation — Mental Health Grant",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "We welcome applications from UK registered charities that work either regionally or nationally"
+    },
+    {
+      "id": "5c86ee8d-a9a6-4840-a70f-1a8099f1ca67",
+      "title": "London Catalyst — Main Grants",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "registered_charity"
+      ],
+      "esQuote": "Please note for this programme we do not fund CICs, schools, colleges, universities, after-school clubs, holiday activit"
+    },
+    {
+      "id": "0a4186fb-dd4b-4007-8382-242ea20b30a3",
+      "title": "Sasha Foundation",
+      "outcome": "fixable_link",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": ""
+    },
+    {
+      "id": "8a7c3b87-8539-47bf-aef1-889169c6a2f6",
+      "title": "Peter Sell Award",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "unincorporated"
+      ],
+      "esQuote": "to a Scout or Guide group(s)"
+    },
+    {
+      "id": "72cae14e-7592-4033-a7bb-bb1fa3ca2090",
+      "title": "Sport Wales — Be Active Wales Fund",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "unincorporated"
+      ],
+      "esQuote": "Not-for-profit sports clubs and community groups can apply."
+    },
+    {
+      "id": "68f51f86-7411-4628-a2f2-af70c7215c67",
+      "title": "Fidelio Charitable Trust",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": ""
+    },
+    {
+      "id": "9e29e607-f4aa-488f-a0d0-190d2a21880a",
+      "title": "Granada Foundation — Grants",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "You are a charitable or not-for-profit organisation"
+    },
+    {
+      "id": "b4dd4488-867a-48c2-9853-1250c43865f6",
+      "title": "Schroder Charity Trust Grant Programmes",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": ""
+    },
+    {
+      "id": "cbad88ec-2eed-40b8-a1f2-1c05cb023dbc",
+      "title": "Angels' Den 2026",
+      "outcome": "verified",
+      "dlAgrees": true,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "Ten remarkable charities will be chosen to participate in this event"
+    },
+    {
+      "id": "ba777964-c525-42f2-9a9c-4708ea748470",
+      "title": "Sterry Family Foundation",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "UK registered charities may apply."
+    },
+    {
+      "id": "3075b31d-e436-45f9-be93-35d31d5e294e",
+      "title": "Sussex Community Foundation — Main Grants",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "Most of our grants are awarded to not-for-profit volunteer-led organisations whose annual income does not exceed £2 mill"
+    },
+    {
+      "id": "5e097507-c0dc-4439-86fd-b54483c82494",
+      "title": "Borough Council of King's Lynn & West Norfolk Small Grants Scheme",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cic_guarantee",
+        "cic_shares",
+        "registered_charity",
+        "unincorporated"
+      ],
+      "esQuote": "Who can apply? Charity, Faith organisation, Social Enterprise/CIC, and Voluntary/Community Group"
+    },
+    {
+      "id": "0b545d02-996a-4269-83d5-544dd7b25367",
+      "title": "Co-op Bank Customer Donation Fund",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "Our Charity and Community Bank Account customers can apply for a grant of up to £1,000 to support their special projects"
+    },
+    {
+      "id": "80b8dd93-8f34-49ce-a616-3b7fd4e5ada9",
+      "title": "Anton Jurgens Charitable Trust",
+      "outcome": "multiple_funds",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": ""
+    },
+    {
+      "id": "8f8bc717-1cbb-44de-abc1-fe04e0efcce2",
+      "title": "JRCT — Rights & Justice Programme",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": ""
+    },
+    {
+      "id": "5147342c-5490-4a88-91de-354e1f3cfed3",
+      "title": "HAPi & Matched Funding",
+      "outcome": "fixable_link",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": ""
+    },
+    {
+      "id": "89e514f0-cf93-4aca-90f4-2f9298629ecb",
+      "title": "The Randal Foundation Small Grant",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cic_guarantee",
+        "registered_charity",
+        "unincorporated"
+      ],
+      "esQuote": "Applicants must be registered charities, community groups, or not-for-profit organisations operating in Northern Ireland"
+    },
+    {
+      "id": "1e255db9-6e40-41d9-bb1a-01532ac20b2c",
+      "title": "Democratic Engagement Fund",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": ""
+    },
+    {
+      "id": "31807e92-d843-484f-bd73-f6524af16e99",
+      "title": "Wise Music Foundation Grants",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "generally support smaller charities with an annual turnover of up to £500,000"
+    },
+    {
+      "id": "97242e7b-33ec-4249-b46b-b54f039818d5",
+      "title": "Lambert Charitable Trust",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "Charitable organisations based in the UK are eligible to apply."
+    },
+    {
+      "id": "234937b8-fd66-4449-8322-9914c9bf8702",
+      "title": "Central Social and Recreational Trust",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "Only clubs/organisations affiliated to their governing body i.e. England Boxing, National Association of Clubs for Young"
+    },
+    {
+      "id": "e6379d1a-0437-4ea5-9bca-06385dfd7c08",
+      "title": "Andy Fanshawe Memorial Trust",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "The Trust gives grants to disadvantaged young people to develop an existing interest in adventurous activities. We usual"
+    },
+    {
+      "id": "ae1bbd08-1216-43fc-9ff3-218543f08925",
+      "title": "Projects for Young People Grants",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": ""
+    },
+    {
+      "id": "8797b0c0-e49a-4b33-b82c-1dc0657254a3",
+      "title": "The Bothwell Charitable Trust",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "Charitable organisations based and working in Great Britain are eligible to apply."
+    },
+    {
+      "id": "49a1fffd-2412-4105-8897-8a5af286b797",
+      "title": "Continuo Foundation Project Grants",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": ""
+    },
+    {
+      "id": "1f86676a-1fca-4c4f-b1d1-291c20224947",
+      "title": "Dudgeon Community STEM in Schools Fund",
+      "outcome": "verified",
+      "dlAgrees": true,
+      "dlProposed": null,
+      "esProposed": [
+        "cic_guarantee",
+        "cio",
+        "cooperative",
+        "ltd_guarantee",
+        "registered_charity",
+        "unincorporated"
+      ],
+      "esQuote": "Applications can be made by: non-fee paying colleges and schools (up to and including year 13) charities and other not-f"
+    },
+    {
+      "id": "1d5f09bb-2f34-4c27-b3bb-a909028c6c62",
+      "title": "Ballantrae Community Fund",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cic_guarantee",
+        "cio",
+        "cooperative",
+        "ltd_guarantee",
+        "not_registered",
+        "registered_charity",
+        "unincorporated"
+      ],
+      "esQuote": "You don't need to be a registered charity to apply."
+    },
+    {
+      "id": "5c9bf8bf-5307-427a-afc0-923cbb0326a0",
+      "title": "Grants for Older People",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "Grants will be awarded to groups, projects and programmes"
+    },
+    {
+      "id": "90da13dd-fdc8-4246-8f63-00a8cb80c4e5",
+      "title": "Childs Charitable Trust",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "All applicants must be registered with the Charity Commission of England and Wales, the Office of the Scottish Charity R"
+    },
+    {
+      "id": "1d6af16c-0060-45b4-8f1e-051888785890",
+      "title": "A Sinclair Henderson Trust",
+      "outcome": "round_closed",
+      "dlAgrees": false,
+      "dlProposed": "2026-05-31",
+      "esProposed": [
+        "registered_charity",
+        "scio"
+      ],
+      "esQuote": "Registered charities."
+    },
+    {
+      "id": "e2733c2c-61aa-4323-86a6-01cc14f5f3f2",
+      "title": "Bicker Wind Farm Trust",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "unincorporated"
+      ],
+      "esQuote": "Applicants can be not for profit community groups or social enterprises that support community activity."
+    },
+    {
+      "id": "f2f498ec-1964-43d6-86a6-dff48b44fa40",
+      "title": "Beddington Community Benefit Fund",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "Any project, charity or organisation within a 2.5 mile radius of the Beddington Energy Recovery Facility (ERF) could be "
+    },
+    {
+      "id": "b2d727c6-ffe5-4cbf-bcf8-91a22dd48db5",
+      "title": "Sir John Fisher Foundation — Main Grants",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "Unregistered organisations unless you have previously received a grant from us."
+    },
+    {
+      "id": "270eddd0-674c-4d18-9f96-80f7a6b46b27",
+      "title": "James Tudor Foundation — Physical Health Grant",
+      "outcome": "fixable_link",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": ""
+    },
+    {
+      "id": "f1f498ee-a106-4975-984d-18db562d9c10",
+      "title": "The Thomas Farr Charity",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "supporting registered charities, constituted voluntary and community groups in those areas where the Home Brewery had a "
+    },
+    {
+      "id": "452edf72-42e4-4f7b-92f8-ef505c3f15c1",
+      "title": "Evan Cornish Grassroots Fund",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "unincorporated"
+      ],
+      "esQuote": "Eligible groups are: Locally run and managed voluntary or community organisations."
+    },
+    {
+      "id": "600db8c5-dc40-43c4-9b2c-e812b018bdad",
+      "title": "Joseph Rank Trust",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "The Trustees can only consider applications from registered charities as registered with the Charity Commission of Engla"
+    },
+    {
+      "id": "a7e93d28-fc29-48ff-91fa-b06b1f30eafe",
+      "title": "East Midlands Airport Community Fund Grant",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "Charities, community groups and not-for-profit community organisations within the EMA Area of Benefit can apply"
+    },
+    {
+      "id": "33bac7f6-8b8f-44f5-8ab6-55141aac452c",
+      "title": "Environment & Sustainability Grants",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "To apply, your group must have a constitution and a bank account that requires two signatures."
+    },
+    {
+      "id": "5a00d50c-5244-4850-a6f9-af242703b7f2",
+      "title": "Selco Community Heroes 2026",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "The competition is open to any charity, organisation or group that benefits their local community."
+    },
+    {
+      "id": "9cf129d2-9e1c-43d0-9627-032cf46ba18a",
+      "title": "HPC Community Fund Small Grants",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "Local groups normally running on under £250,000 that are working in areas impacted by Hinkley Point C."
+    },
+    {
+      "id": "d68fdab1-08d2-4220-9598-f17d81868e2e",
+      "title": "Legal Education Foundation — Emerging Justice Fund",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "We fund small and medium-sized organisations, closely connected to their communities"
+    },
+    {
+      "id": "31f56c84-447a-478b-a15a-fcb19469c1aa",
+      "title": "UK and Ireland Community Tree Planting Grant",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "ITF supports community groups across the UK and Ireland"
+    },
+    {
+      "id": "720c4571-5ecc-477f-b84f-cb49a7ea1c59",
+      "title": "Henry Smith Foundation — Holiday Grants",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "We fund schools, youth groups, and non-profit organisations planning one-time trips for children aged 13 and under."
+    },
+    {
+      "id": "aa3d0b6c-2048-4007-beb2-25d400085dfe",
+      "title": "Southover Manor Trust",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": ""
+    },
+    {
+      "id": "373ce8d3-e424-4fbc-b2cc-1b4da8ce602d",
+      "title": "Manchester Airport Community Trust Fund",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": ""
+    },
+    {
+      "id": "8b202156-ff89-4547-8e39-306d772aba9c",
+      "title": "Grange Wind Farm Community Fund",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "Grants of up to £5,000 are available to volunteer led not for profit community groups."
+    },
+    {
+      "id": "757e41c3-07dd-4f84-9f4f-9588a4bcfd41",
+      "title": "Yapp Charitable Trust",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "we only fund charities that meet our eligibility criteria"
+    },
+    {
+      "id": "a0dd3472-4d4f-4987-84c2-fbf919da3c4f",
+      "title": "Chapman Charitable Trust Grants",
+      "outcome": "verified",
+      "dlAgrees": true,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "We only support registered UK charities focusing on arts, health and wellbeing, and nature conservation"
+    },
+    {
+      "id": "6fbf369d-2b80-40b8-9e94-f9635c0ead13",
+      "title": "Breckland Council Inspiring Communities",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "Who can apply? Charity, Faith organisation, Parish/Town Council, School, Social Enterprise/CIC, and Voluntary/Community "
+    },
+    {
+      "id": "9b804311-6c45-407b-9550-0be1bc78bf5f",
+      "title": "Community Grants",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": ""
+    },
+    {
+      "id": "a4008675-eb18-436e-aff4-b2c223b5e657",
+      "title": "HPC Community Fund Open Grants",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cic_guarantee",
+        "cic_shares",
+        "cio",
+        "ltd_guarantee",
+        "registered_charity",
+        "unincorporated"
+      ],
+      "esQuote": "Which groups can apply? We can only consider your group for a grant from this fund if you meet our minimum standards and"
+    },
+    {
+      "id": "ba33eb0c-e6d9-453c-b57e-21f23e925738",
+      "title": "Champions for Children — Match Fundraising Programme",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": ""
+    },
+    {
+      "id": "d18b6db9-bda1-4703-b5ce-ecbf21e80173",
+      "title": "Triangle Trust 1949 Fund — Young Women & Girls in Criminal Justice",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cic_guarantee",
+        "cic_shares",
+        "cio",
+        "cooperative",
+        "ltd_guarantee",
+        "registered_charity",
+        "scio",
+        "unincorporated"
+      ],
+      "esQuote": "UK registered (or exempt) charities and organisations with charitable aims"
+    },
+    {
+      "id": "d5cd29aa-66e9-494c-89d1-c78a3c594474",
+      "title": "Service Pupil Support programme",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "not_registered"
+      ],
+      "esQuote": "We can accept applications from: maintained schools academy schools free school sixth form colleges further education co"
+    },
+    {
+      "id": "dff42471-e15e-4c23-930e-0adfe6f44aec",
+      "title": "Bellahouston Bequest Fund",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": ""
+    },
+    {
+      "id": "b8c22c26-1011-4ebb-a64c-764e35fe49ae",
+      "title": "Barclays Community Sport Fund",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "The fund supports charities, community groups and grassroots sports organisations who are working within the most depriv"
+    },
+    {
+      "id": "e271481d-bb05-49b0-850b-e0cc6853a4ca",
+      "title": "Performing and Visual Arts Grants (Wales)",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "Applicants must be UK Registered Charities and activity to be funded must be in the UK."
+    },
+    {
+      "id": "fab5ab12-9098-4e07-8647-722374e2126e",
+      "title": "Idlewild Trust Conservation Grants",
+      "outcome": "fixable_link",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": ""
+    },
+    {
+      "id": "e3bc4c50-f84b-4c54-9238-175d073e871c",
+      "title": "Laceby Solar Farm",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "Applicants may be constituted voluntary and community groups, registered charities, cooperatives, or social enterprises."
+    },
+    {
+      "id": "e0c1a655-d377-481b-b806-0c171095f7be",
+      "title": "Financial Futures Fund",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": ""
+    },
+    {
+      "id": "bda997e5-cfb6-42ec-9bb9-cddee3e363cc",
+      "title": "Islington Giving — Make It Happen Fund",
+      "outcome": "fixable_link",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": ""
+    },
+    {
+      "id": "4df3f20a-30a1-45e6-9663-5f2eed94d235",
+      "title": "Brighton Soup",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "To be eligible to apply, your project must benefit the people of Brighton and Hove, and be charitable in some way."
+    },
+    {
+      "id": "b818a116-3579-4eb3-8808-b40abc38e393",
+      "title": "Key Fund Flexible Finance",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": ""
+    },
+    {
+      "id": "1b62fbe2-6a97-45bd-9f40-63a8b59dc7eb",
+      "title": "FareShare Greater Manchester — Community Food Membership",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "Membership is available to eligible charities, schools, food banks, pantries and not-for-profit organisations that provi"
+    },
+    {
+      "id": "732a41ad-8df9-405f-a74f-cd25be2b64c2",
+      "title": "Esmée Fairbairn Foundation — Arts, Culture & Heritage",
+      "outcome": "fixable_link",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": ""
+    },
+    {
+      "id": "1bc07b39-f953-43ee-8248-db7ccf816f86",
+      "title": "Weston Windfarm Community Fund",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "Who can apply? Charity, Faith organisation, Parish/Town Council, Social Enterprise/CIC, and Voluntary/Community Group"
+    },
+    {
+      "id": "696935b8-7b67-45ee-9141-2ba4546c3619",
+      "title": "William Kendall Small Awards Programme",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cic_guarantee",
+        "cic_shares",
+        "ltd_guarantee",
+        "registered_charity"
+      ],
+      "esQuote": "Be formally constituted and not–for–profit with a charity and/or limited company reference number."
+    },
+    {
+      "id": "2612d2af-5d84-41d1-87a2-a0d84a2da367",
+      "title": "Corra Foundation — YoYo Fund",
+      "outcome": "verified",
+      "dlAgrees": true,
+      "dlProposed": null,
+      "esProposed": [
+        "cic_guarantee",
+        "cic_shares",
+        "ltd_guarantee",
+        "registered_charity",
+        "scio"
+      ],
+      "esQuote": "Organisations applying must be an incorporated not-for-profit organisation (e.g. Scottish charity/SCIO, company interest"
+    },
+    {
+      "id": "120e1d2a-d2ef-4663-8934-c0e091138818",
+      "title": "Movement for Good — £1,000 Draws",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cic_guarantee",
+        "cic_shares",
+        "cio",
+        "not_registered",
+        "registered_charity",
+        "scio"
+      ],
+      "esQuote": "Our draws are open to registered charities, non-registered charities, church and Community Interest Companies."
+    },
+    {
+      "id": "8c168203-e428-44f5-a1f7-e1c8268a83c5",
+      "title": "An Official Oral History of Women Veterans in the UK",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cio",
+        "not_registered",
+        "registered_charity",
+        "scio"
+      ],
+      "esQuote": "Be a UK Higher Education Institution , registered UK charity , not-for-profit organisation or UK research institute ."
+    },
+    {
+      "id": "bcd035bf-e0e7-462d-8895-84c1aee05953",
+      "title": "Arts Council of Wales — Arts, Health and Wellbeing",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cic_guarantee",
+        "cio",
+        "cooperative",
+        "ltd_guarantee",
+        "registered_charity",
+        "unincorporated"
+      ],
+      "esQuote": "The Arts Health and Wellbeing Fund is open to partnership bids from across the arts, health, social care, nature, enviro"
+    },
+    {
+      "id": "35ba6bf6-d21b-4239-b490-6ed905c81898",
+      "title": "Red Hill Trust",
+      "outcome": "fixable_link",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": ""
+    },
+    {
+      "id": "57c520fd-c715-478b-8a6e-7c9907044d2a",
+      "title": "Older People and Housing Programme",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "28 not-for-profit, community-led organisations"
+    },
+    {
+      "id": "142d3163-b0a5-441b-9f8c-b306bd4b1ddd",
+      "title": "Main Grants Programme",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "Reflecting the fact that well over a third of the charity sector in the North East is made up of micro-organisations wit"
+    },
+    {
+      "id": "166aa0c7-b17a-4f45-897d-ef7b9e768a48",
+      "title": "Wickes Community Programme — Materials Donations",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "The organisations and good causes that the programme seeks to support includes registered charities, Community Interest "
+    },
+    {
+      "id": "7b4f415e-39be-45a5-882f-1e09c74252ef",
+      "title": "Sussex Community Foundation — Rampion Community Benefit Fund",
+      "outcome": "no_longer_listed",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": ""
+    },
+    {
+      "id": "8b5c4025-318d-4354-a766-228b361ffba3",
+      "title": "Trading for Good: Community Business",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "You could be a charity (including a charitable company, a CIO or an unincorporated charity), a CIC, or another form of n"
+    },
+    {
+      "id": "10c59873-5f31-48e2-ae7f-1f04c3b527e9",
+      "title": "Heritage Crafts — Endangered Crafts Fund",
+      "outcome": "verified",
+      "dlAgrees": true,
+      "dlProposed": null,
+      "esProposed": [
+        "cic_guarantee",
+        "cic_shares",
+        "cio",
+        "cooperative",
+        "individual",
+        "ltd_guarantee",
+        "registered_charity",
+        "sole_trader",
+        "unincorporated"
+      ],
+      "esQuote": "Heritage Crafts invites craft practitioners and organisations in the UK to apply"
+    },
+    {
+      "id": "a7b1e535-b639-471c-9231-1d87cff07489",
+      "title": "DWF Foundation",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "If you are a registered charity working in a country where DWF has a presence and would like to make an application for "
+    },
+    {
+      "id": "52d6008d-17c3-414e-84be-909177c218ed",
+      "title": "Organisation Grants",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cic_guarantee",
+        "cic_shares",
+        "cio",
+        "cooperative",
+        "ltd_guarantee",
+        "not_registered",
+        "registered_charity",
+        "unincorporated"
+      ],
+      "esQuote": "The Trustees welcome applications from any organisation or local group, whether registered as a charity or not"
+    },
+    {
+      "id": "040888ac-bdd1-4a22-9f33-cc841f9b5cbb",
+      "title": "Backstage Trust — Performing Arts Grants",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cic_guarantee",
+        "cic_shares",
+        "cio",
+        "registered_charity",
+        "scio"
+      ],
+      "esQuote": "The Backstage Trust makes grants to registered charities and CICs with a focus on the performing arts, particularly thea"
+    },
+    {
+      "id": "c282c317-515b-4aad-85b2-11cd8c7b2aea",
+      "title": "North London Community Fund",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "awards funding to non-profit organisations"
+    },
+    {
+      "id": "7dd026a3-0524-43be-9a88-a29eb716f03e",
+      "title": "Barrhill Community Fund",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cic_guarantee",
+        "cic_shares",
+        "cio",
+        "cooperative",
+        "not_registered",
+        "registered_charity",
+        "unincorporated"
+      ],
+      "esQuote": "You don't need to be a registered charity to apply, but your group/organisation must meet the standard eligibility crite"
+    },
+    {
+      "id": "5aaf0863-889f-47cb-8426-a195e2ebe153",
+      "title": "Barrhill Greener Homes",
+      "outcome": "verified",
+      "dlAgrees": false,
+      "dlProposed": "2026-09-01",
+      "esProposed": null,
+      "esQuote": "Applicants must: Be individuals resident in Barrhill aged 18 or over"
+    },
+    {
+      "id": "f25fbeb5-199f-49dd-9bfe-cf355a1e85c7",
+      "title": "SEAD Fund",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "SEAD provides small grants for individuals or groups."
+    },
+    {
+      "id": "4fb33c2c-5f3e-496e-a27d-0e7f8ecb2afc",
+      "title": "Supporting capital projects within Gateshead",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cic_guarantee",
+        "cic_shares",
+        "cio",
+        "cooperative",
+        "ltd_guarantee",
+        "registered_charity",
+        "unincorporated"
+      ],
+      "esQuote": "applications will be considered from voluntary, community and social enterprise sector organisations"
+    },
+    {
+      "id": "cf23c001-d792-4938-93bb-5fd2b99286f5",
+      "title": "Supporting Newcastle based organisations to engage residents in culture",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cic_guarantee",
+        "cic_shares",
+        "cooperative",
+        "ltd_guarantee",
+        "registered_charity",
+        "unincorporated"
+      ],
+      "esQuote": "Independent, not-for profit organisations delivering activity in Newcastle upon Tyne."
+    },
+    {
+      "id": "277bbe32-d3e9-48a8-b826-ebc8fa354395",
+      "title": "New Albion Community Wind Farm Fund",
+      "outcome": "verified",
+      "dlAgrees": true,
+      "dlProposed": null,
+      "esProposed": [
+        "unincorporated"
+      ],
+      "esQuote": "Your group must be a small, locally managed, voluntary, community or self-help group."
+    },
+    {
+      "id": "3585a7fa-7907-4f17-9020-0c6f36a21875",
+      "title": "Arts-based Learning Fund",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cic_guarantee",
+        "cic_shares",
+        "cio",
+        "cooperative",
+        "ltd_guarantee",
+        "ltd_shares",
+        "registered_charity",
+        "scio",
+        "unincorporated"
+      ],
+      "esQuote": "Arts organisations can be charities, community organisations, social enterprises and not-for-profit companies active in "
+    },
+    {
+      "id": "1d4ca50a-a2cf-4f57-b015-d1bddc41370b",
+      "title": "Esmée Fairbairn Foundation Grant Programme",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "we support constituted organisations, including charities and non-charities doing charitable work"
+    },
+    {
+      "id": "87805cc2-c24b-4562-9a2b-129559fcdf9f",
+      "title": "Buttle UK — Chances for Children Grants",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "Applications can only be made by frontline professionals working for a: registered charity housing association public se"
+    },
+    {
+      "id": "2506cc66-7ba4-4da7-80fb-070b5961783d",
+      "title": "Harford Charitable Trust",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cio",
+        "registered_charity"
+      ],
+      "esQuote": "We are a small Family Trust making grants (maximum £2,000) to registered charities (not individuals)."
+    },
+    {
+      "id": "6f5fad07-d56e-496c-a9f7-b68967bd7fe0",
+      "title": "Wigan — Supporting Communities Fund",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "My organisation is a not-for-profit organisation with a governing document"
+    },
+    {
+      "id": "1a99b534-f6f5-4792-937d-361f6a0ba067",
+      "title": "The Access Foundation",
+      "outcome": "fixable_link",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": ""
+    },
+    {
+      "id": "a8a34a8e-4570-4fbd-9260-cbbcc8926637",
+      "title": "Community Grants",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "individual",
+        "sole_trader",
+        "unincorporated"
+      ],
+      "esQuote": "administers around £250K in discretionary grants to families, individuals and community groups residing and living withi"
+    },
+    {
+      "id": "94b05b92-fde2-48fd-931c-a5b969279a44",
+      "title": "Didymus Fund",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "registered_charity"
+      ],
+      "esQuote": "A Registered Charity, with annual returns and accounts up to date with the Charity Commission."
+    },
+    {
+      "id": "0adbc570-5d75-4d6e-af6d-3263559896a3",
+      "title": "Community Builders Fund",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "The Community Builders Fund is for UK charities and social enterprises based in England, Wales and Scotland who are impr"
+    },
+    {
+      "id": "9f2bbfca-91ed-4f0e-a3d2-cf9e1486ce8d",
+      "title": "Lush Charity Pot — Grants",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "small not-for-profit organisations and campaign groups"
+    },
+    {
+      "id": "333bc785-de7a-43c8-bcba-e22b083a8a69",
+      "title": "Grassroots Grants",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cio",
+        "registered_charity",
+        "unincorporated"
+      ],
+      "esQuote": "voluntary or community organisations, including registered charities/companies, whose annual turnover is no more than £2"
+    },
+    {
+      "id": "50203489-dcd2-44ec-9a3e-7035b825b4fb",
+      "title": "The Percy Bilton Charity",
+      "outcome": "fixable_link",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": ""
+    },
+    {
+      "id": "3d6656f0-6f74-4635-8c87-0406ded69be2",
+      "title": "Gordon Fraser Charitable Trust",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cio",
+        "registered_charity",
+        "scio"
+      ],
+      "esQuote": "Applicants must be organisations which are registered either with the Charity Commission in England and Wales or with th"
+    },
+    {
+      "id": "c8c96218-4a00-411c-b015-c2caf632f837",
+      "title": "Make a Difference Locally (MADL)",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cio",
+        "registered_charity",
+        "scio",
+        "unincorporated"
+      ],
+      "esQuote": "Be a registered charity OR good cause with a dedicated business bank account"
+    },
+    {
+      "id": "cc5f93d2-aa9e-4873-aaa9-2a425b8868e1",
+      "title": "Community Foundation Wales — Grants Hub",
+      "outcome": "fixable_link",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": ""
+    },
+    {
+      "id": "614ffed1-b5c4-44d0-9ad4-34c4496f3137",
+      "title": "Bairdwatson Charitable Trust",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "Registered charities Constituted voluntary and community organisations Community companies e.g. companies limited by gua"
+    },
+    {
+      "id": "ae7cef18-d1cb-495d-ac93-4e177007997a",
+      "title": "Essex Community Foundation — Grants Hub",
+      "outcome": "fixable_link",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": ""
+    },
+    {
+      "id": "16bfa48f-f9e6-4f32-a431-23e2b732c3e7",
+      "title": "Commissioned Rehabilitative Services General Grant Scheme",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cio",
+        "registered_charity",
+        "unincorporated"
+      ],
+      "esQuote": "Who can apply Non-profit"
+    },
+    {
+      "id": "25deea15-f4be-460a-b906-0b3dd66192b3",
+      "title": "Community First Prime Opportunities Fund",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "The fund is available to voluntary organisations, community groups, small charities and other not-for-profits serving co"
+    },
+    {
+      "id": "65032b04-e949-4d96-b34c-3049d4915a8c",
+      "title": "Farmer Welfare Grant ",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cic_guarantee",
+        "cio",
+        "cooperative",
+        "ltd_guarantee",
+        "registered_charity",
+        "unincorporated"
+      ],
+      "esQuote": "To support the work of English charities and/or third sector not for-profit organisations"
+    },
+    {
+      "id": "2b0fb0f0-6bb6-4803-baf7-8a289b115976",
+      "title": "Baring Foundation — Strengthening Civil Society Programme",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cio",
+        "registered_charity",
+        "scio",
+        "unincorporated"
+      ],
+      "esQuote": "be a civil society organisation, preferably a charity, with a focus on corporate accountability, or a migrants' rights o"
+    },
+    {
+      "id": "2b5e34e5-ad7a-4b18-9182-e05a33abf795",
+      "title": "People and Research",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cic_guarantee",
+        "cic_shares",
+        "cio",
+        "individual",
+        "ltd_guarantee",
+        "ltd_shares",
+        "registered_charity",
+        "sole_trader",
+        "unincorporated"
+      ],
+      "esQuote": "All organisations including local authorities, educational institutions, charitable trusts and registered companies that"
+    },
+    {
+      "id": "2172377c-724f-4261-ae35-389af8de6867",
+      "title": "Forces in Mind Trust — Veterans Mental Health Programme",
+      "outcome": "fixable_link",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": ""
+    },
+    {
+      "id": "da45f5fc-31ff-4a5d-9fd9-9821c65b46d7",
+      "title": "Allen Lane Foundation — Older People",
+      "outcome": "fixable_link",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": ""
+    },
+    {
+      "id": "18dcac42-fa21-4f81-a689-57da1bd0dd92",
+      "title": "Growth Impact Fund",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cic_guarantee",
+        "cic_shares",
+        "cio",
+        "cooperative",
+        "ltd_guarantee",
+        "ltd_shares",
+        "registered_charity",
+        "scio"
+      ],
+      "esQuote": "You're legally registered in the UK as a: Limited Company Community Interest Company (CIC) Charity Or another eligible l"
+    },
+    {
+      "id": "05d6dbdf-d370-4d34-9a5b-80540e3b06fa",
+      "title": "The Alan and Babette Sainsbury Charitable Fund",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cio",
+        "not_registered",
+        "registered_charity",
+        "scio"
+      ],
+      "esQuote": "We are comfortable funding non registered charities who have lived experience of the issues they address"
+    },
+    {
+      "id": "7eb61b99-36e4-4246-a7da-bc91a61e3e8e",
+      "title": "More than a Pub",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cic_guarantee",
+        "cooperative",
+        "ltd_guarantee",
+        "not_registered"
+      ],
+      "esQuote": "that are incorporated 'not for profit' business with clear geography of benefit and be able to demonstrate local engagem"
+    },
+    {
+      "id": "2bc9fbc3-9696-48d1-857d-5e864eac46da",
+      "title": "Cash4Clubs",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cic_guarantee",
+        "cio",
+        "ltd_guarantee",
+        "registered_charity",
+        "scio",
+        "unincorporated"
+      ],
+      "esQuote": "We welcome applications from not-for-profit organisations, including charities, community groups and traditional sports "
+    },
+    {
+      "id": "cc0252b3-e362-401c-80b6-5407fed2dfc8",
+      "title": "Property Fund",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cic_guarantee",
+        "cic_shares",
+        "cooperative",
+        "ltd_guarantee",
+        "registered_charity",
+        "unincorporated"
+      ],
+      "esQuote": "We generally only work with charities, community businesses and social enterprises."
+    },
+    {
+      "id": "7430666a-27b7-4f34-884a-f293d438c5a7",
+      "title": "BCG UK Social Enterprise Award",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cic_guarantee",
+        "cic_shares",
+        "cio",
+        "cooperative",
+        "ltd_guarantee",
+        "ltd_shares",
+        "registered_charity",
+        "scio"
+      ],
+      "esQuote": "We welcome applications from social enterprises — either for-profit organisations with primarily social objectives whose"
+    },
+    {
+      "id": "2828f266-4dae-4933-a041-b3d1d56c17a4",
+      "title": "National Lottery Heritage Fund — Heritage in Need: Places of Worship",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cio",
+        "registered_charity",
+        "scio",
+        "unincorporated"
+      ],
+      "esQuote": "Not-for-profit organisations and partnerships led by not-for-profit organisations from across the UK can apply."
+    },
+    {
+      "id": "ced26048-d908-4919-bc4b-0bdad1c2d155",
+      "title": "Spacehive — Civic Crowdfunding with Council Match",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "Anyone can pledge money to a project to help reach a fundraising target; from friends, family members and colleagues, to"
+    },
+    {
+      "id": "758d3705-6589-43c8-b87f-f01cca2e5ddc",
+      "title": "National Lottery Heritage Fund — Landscape Connections",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cic_guarantee",
+        "cooperative",
+        "ltd_guarantee",
+        "not_registered"
+      ],
+      "esQuote": "Applications are open to not-for-profit organisations, and partnerships led by not-for-profit organisations, from across"
+    },
+    {
+      "id": "60e2144a-4955-43fe-893c-1956785946f1",
+      "title": "Utilita Football Rebooted Grassroots Fund",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": ""
+    },
+    {
+      "id": "5ed5ccdf-f551-4f87-ae8a-514f843ac3c2",
+      "title": "Football Foundation - Grass Pitch Maintenance Fund",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cio",
+        "registered_charity",
+        "scio",
+        "unincorporated"
+      ],
+      "esQuote": "Grassroots football clubs* Leagues Charities Education sites (offering community usage on evenings and weekends) Town an"
+    },
+    {
+      "id": "3babd148-b901-41b2-8f88-91b11a87a631",
+      "title": "Foodbank Fundamentals Fund",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "Not-for-profit groups with a primary aim of supporting food distribution and provision"
+    },
+    {
+      "id": "4db45a85-2ff4-4cac-bca6-51a44bd56fe1",
+      "title": "Church and Communities Programme",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "We support churches and other faith & community-based organisations."
+    },
+    {
+      "id": "facf81cb-733c-439c-a73a-d98ed6361d8e",
+      "title": "Pilgrim Trust — Preservation & Scholarship",
+      "outcome": "fixable_link",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cic_guarantee",
+        "cic_shares",
+        "cio",
+        "cooperative",
+        "ltd_guarantee",
+        "not_registered",
+        "registered_charity",
+        "scio",
+        "unincorporated"
+      ],
+      "esQuote": "UK registered charities Organisations with exempt charitable status Recognised public bodies"
+    },
+    {
+      "id": "dcaa5778-a036-4ae0-b380-42a78cb580a4",
+      "title": "The Cadogan Charity — General Grants",
+      "outcome": "fixable_link",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": ""
+    },
+    {
+      "id": "7b86b8ec-59d4-4b89-89d7-965cb90bc0ad",
+      "title": "Forth Giving",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": ""
+    },
+    {
+      "id": "5700594e-ce98-46ea-9818-ce87e5f44286",
+      "title": "Community and Environment Fund (CEF) and Business and Local Economy Fund (BLEF)",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "Who can apply Public Sector, Non-profit"
+    },
+    {
+      "id": "0114ad82-c985-4e59-9c5b-791cd5c3f1df",
+      "title": "Alpkit Foundation",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "This is to community groups, individuals and organisations that encourage people to get outdoors"
+    },
+    {
+      "id": "71a96f39-3506-493f-8e48-b56206b175f8",
+      "title": "Heritage and Nature Grants",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cic_guarantee",
+        "registered_charity",
+        "unincorporated"
+      ],
+      "esQuote": "You can apply for funding if you are a: constituted voluntary or community organisation or a registered charity or a not"
+    },
+    {
+      "id": "7dd07b66-3b0f-42ae-a22f-7de3a03764ca",
+      "title": "John Moores Foundation — Grants for Merseyside",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": ""
+    },
+    {
+      "id": "1e994bdb-bb99-4c97-b02c-ee23c1874e18",
+      "title": "Firstport Start It Programme",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cic_guarantee",
+        "cic_shares",
+        "cooperative",
+        "individual",
+        "ltd_guarantee",
+        "ltd_shares",
+        "registered_charity",
+        "scio"
+      ],
+      "esQuote": "Legal fees for incorporation and/or registration as a charity or Community Interest Company."
+    },
+    {
+      "id": "1694669a-605f-44ea-9775-c6a492f0362e",
+      "title": "Achievement Award Scheme",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": ""
+    },
+    {
+      "id": "0b19ebd6-86f5-4dff-a893-e29bd76fd18d",
+      "title": "Barr Education and Training Fund",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "The fund is open to individuals aged 16 or over and living in the Barr Community Council area."
+    },
+    {
+      "id": "bfaa140a-ed84-4862-a455-6e48ca22e906",
+      "title": "Fine & Country Foundation — Homelessness Grants",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cio",
+        "registered_charity",
+        "scio"
+      ],
+      "esQuote": "The organisation is required to be a registered charity and must provide the Registered Charity Number in all documents."
+    },
+    {
+      "id": "16ca161d-a373-475e-9032-9944bd5c02e2",
+      "title": "Rudbaxton Parish Education Fund",
+      "outcome": "verified",
+      "dlAgrees": true,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "Community/voluntary groups and local charities either based in Rudbaxton or whose work directly benefits individuals und"
+    },
+    {
+      "id": "6d512c2b-f3b9-43d2-9b9d-83399dc49d0c",
+      "title": "SSE Match Trading Grant",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cic_guarantee",
+        "cic_shares",
+        "cio",
+        "cooperative",
+        "ltd_guarantee",
+        "ltd_shares",
+        "registered_charity",
+        "scio",
+        "unincorporated"
+      ],
+      "esQuote": "So far, we have offered Match Trading™ grants to social enterprises, community interest companies, community businesses,"
+    },
+    {
+      "id": "60dcab53-8d08-4c2d-b5e5-a37fa8c29f10",
+      "title": "Consumer Led Flexibility for the Clean Energy Superpower Mission",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cic_guarantee",
+        "cic_shares",
+        "cio",
+        "cooperative",
+        "ltd_guarantee",
+        "ltd_shares",
+        "not_registered",
+        "registered_charity",
+        "scio"
+      ],
+      "esQuote": "To work as a sole applicant or lead a collaborative project your organisation must be a UK registered business of any si"
+    },
+    {
+      "id": "81c50185-6ad9-4b77-b10f-c0677d14f03a",
+      "title": "Achlachan Wind Farm Community Fund",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cic_guarantee",
+        "cic_shares",
+        "cio",
+        "cooperative",
+        "ltd_guarantee",
+        "not_registered",
+        "registered_charity",
+        "scio",
+        "unincorporated"
+      ],
+      "esQuote": "Groups and organisations working to benefit people in any community within the Halkirk Community Council area can apply."
+    },
+    {
+      "id": "46d26bc7-f120-4b66-b4e2-303dcabe0c39",
+      "title": "Small and Large Grants",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "registered_charity",
+        "scio",
+        "unincorporated"
+      ],
+      "esQuote": "our funding is available to both registered charities and constituted groups"
+    },
+    {
+      "id": "5bcec32a-a050-45b4-9788-7d1dece0ed19",
+      "title": "Barrhill Education & Training Fund",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "Applicants for bursaries: Must be individuals resident in Barrhill aged 16 or over"
+    },
+    {
+      "id": "e3c90440-3ea2-4bb9-a98c-07cd5d32a2e2",
+      "title": "Newcastle Culture Investment Fund",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cic_guarantee",
+        "cic_shares",
+        "cio",
+        "ltd_guarantee",
+        "registered_charity",
+        "unincorporated"
+      ],
+      "esQuote": "Independent, not-for profit organisations delivering activity in Newcastle upon Tyne."
+    },
+    {
+      "id": "b3cf1e96-4d11-4d03-b6f4-14e7b7d6fed2",
+      "title": "Thomas Farr Charity Fund",
+      "outcome": "verified",
+      "dlAgrees": true,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "supporting registered charities, constituted voluntary and community groups"
+    },
+    {
+      "id": "6d8568db-e597-476b-9075-d856e94229ff",
+      "title": "Michael Cornish Core Grants Programme",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cic_guarantee",
+        "cic_shares",
+        "ltd_guarantee",
+        "registered_charity",
+        "unincorporated"
+      ],
+      "esQuote": "This scheme is open to not-for-profit constituted community groups, registered charities and social enterprises deliveri"
+    },
+    {
+      "id": "036a2937-bb8f-4f9e-9840-33a4bd450b33",
+      "title": "Tim Parry Johnathan Ball Foundation Grants",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cic_guarantee",
+        "cic_shares",
+        "cio",
+        "cooperative",
+        "ltd_guarantee",
+        "registered_charity",
+        "scio",
+        "unincorporated"
+      ],
+      "esQuote": "Charities working in the areas set out above, which are registered with the Charity Commission and other 'not for profit"
+    },
+    {
+      "id": "3665afff-c092-41c1-83e9-fb67b8d4d563",
+      "title": "Community Grants",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "Our Community Grants are available for local charities, voluntary sector organisations and community groups who provide "
+    },
+    {
+      "id": "68d71ccf-5285-491c-ac31-290801ff7665",
+      "title": "Dormant Assets for All",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cic_guarantee",
+        "cic_shares",
+        "cio",
+        "cooperative",
+        "ltd_guarantee",
+        "ltd_shares",
+        "registered_charity",
+        "unincorporated"
+      ],
+      "esQuote": "This funding is for voluntary, community and social enterprise (VCSE) organisations in Northern Ireland."
+    },
+    {
+      "id": "356e9de1-76ae-43bd-999c-134b1567841c",
+      "title": "Heritage of London Trust — Restoration Grants",
+      "outcome": "fixable_link",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cic_guarantee",
+        "cic_shares",
+        "cio",
+        "ltd_guarantee",
+        "registered_charity",
+        "unincorporated"
+      ],
+      "esQuote": "Any community organisation, representative of a community organisation or London local authority can apply for a grant."
+    },
+    {
+      "id": "cfb56fe7-0ddb-4ac4-ab6f-c04102b8009d",
+      "title": "Community Action Fund",
+      "outcome": "verified",
+      "dlAgrees": true,
+      "dlProposed": null,
+      "esProposed": [
+        "cic_guarantee",
+        "cio",
+        "cooperative",
+        "ltd_guarantee",
+        "registered_charity",
+        "scio",
+        "unincorporated"
+      ],
+      "esQuote": "To receive a grant from the Community Action Fund you must be a not-for-profit organisation and based in one of our geog"
+    },
+    {
+      "id": "9d1b13f1-607d-48b1-80df-80e127cd8933",
+      "title": "Annandale and Nithsdale Community Benefit Company",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cic_guarantee",
+        "cic_shares",
+        "cio",
+        "cooperative",
+        "ltd_guarantee",
+        "ltd_shares",
+        "not_registered",
+        "registered_charity",
+        "scio",
+        "unincorporated"
+      ],
+      "esQuote": "You don't need to be a registered charity to apply."
+    },
+    {
+      "id": "5ed056e6-d5dd-4a82-b845-65c27a9a9eb5",
+      "title": "Accelerate",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "registered_charity",
+        "scio",
+        "unincorporated"
+      ],
+      "esQuote": "Accelerate is a programme of free business and organisational support targeted at third sector organisations and communi"
+    },
+    {
+      "id": "80141171-c793-470c-b03a-abeae9ea7d79",
+      "title": "Riverside Foundation — Community Fund",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cic_guarantee",
+        "cic_shares",
+        "cio",
+        "ltd_guarantee",
+        "not_registered",
+        "registered_charity",
+        "scio",
+        "unincorporated"
+      ],
+      "esQuote": "We welcome applications from charities, not-for-profit organisations, clubs, constituted groups and informal groups."
+    },
+    {
+      "id": "89a22fca-ffc6-44f2-be88-78eb6d92cf9b",
+      "title": "The 1989 Willan Charitable Trust",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cio",
+        "cooperative",
+        "ltd_guarantee",
+        "ltd_shares",
+        "registered_charity"
+      ],
+      "esQuote": "The 1989 Willan Charitable Trust Fund supports registered charities, exempted and excepted organisations, whose activiti"
+    },
+    {
+      "id": "b6cdb321-90df-45d4-ab58-6cd2cd193655",
+      "title": "Villages Windfarm Community Fund",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "Who can apply? Charity, Faith organisation, Parish/Town Council, Social Enterprise/CIC, and Voluntary/Community Group"
+    },
+    {
+      "id": "e73119cf-dfb8-493b-bf20-8da65285eca3",
+      "title": "Hackney — Project Innovation Fund",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cic_guarantee",
+        "cic_shares",
+        "cio",
+        "cooperative",
+        "ltd_guarantee",
+        "registered_charity",
+        "sole_trader",
+        "unincorporated"
+      ],
+      "esQuote": "You can apply if you're a: formally constituted group Tenant Resident Association newly formed charitable company or soc"
+    },
+    {
+      "id": "a0b8ede0-9869-4535-91c3-c9b03c15a4d8",
+      "title": "Free From Fear programme",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cio",
+        "registered_charity",
+        "scio",
+        "unincorporated"
+      ],
+      "esQuote": "We invite applications from: UK‑based charities which have been registered for a minimum of three years Local authoritie"
+    },
+    {
+      "id": "4b989eab-79b0-4981-987d-f308f0843fdc",
+      "title": "National Lottery Heritage Grants £250,000 to £10million",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cic_guarantee",
+        "cooperative",
+        "ltd_guarantee",
+        "not_registered"
+      ],
+      "esQuote": "Are you a not-for-profit organisation or a partnership led by a not-for-profit organisation?"
+    },
+    {
+      "id": "f1c42af9-3659-4b39-8fb5-4c00a8f5ce7e",
+      "title": "Southwark Council — Neighbourhood Grants",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "Ideas can come from local organisations and individuals who live or work in Southwark. For example: a constituted organi"
+    },
+    {
+      "id": "61989785-35af-40d7-9961-011cf4711f44",
+      "title": "William A Cadbury Charitable Trust Grants",
+      "outcome": "multiple_funds",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": ""
+    },
+    {
+      "id": "5fcfa9df-c3f9-41c0-8701-417b90dece8e",
+      "title": "SWEF Enterprise Fund Business Grant",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": [
+        "cic_shares",
+        "ltd_shares",
+        "sole_trader"
+      ],
+      "esQuote": "Applications can only be from sole traders/limited companies/CICs limited by shares that have been trading less than 2.5"
+    },
+    {
+      "id": "328baf9b-67e8-4241-a641-d01263a582ad",
+      "title": "John Ellerman Foundation Grants",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "We fund and support UK-based charitable organisations doing work in the UK"
+    },
+    {
+      "id": "f999cba2-95c7-4c48-940a-611ecd0e6514",
+      "title": "South Lanarkshire Renewable Energy Fund",
+      "outcome": "verified",
+      "dlAgrees": null,
+      "dlProposed": null,
+      "esProposed": null,
+      "esQuote": "Applications will be accepted from: public organisations and agencies partnerships, trusts and co-operatives community g"
+    }
+  ]
+}

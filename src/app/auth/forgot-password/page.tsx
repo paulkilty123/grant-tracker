@@ -3,11 +3,47 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
 import LogoMark from '@/components/icons/LogoMark'
+import '@/styles/shoots-band-a.css'
 
-const UI = "var(--font-space-grotesk), Space Grotesk, sans-serif"
-const BODY = "var(--font-dm-sans), Plus Jakarta Sans, sans-serif"
+/* Band A page 3 — forgot password.
+   ============================================================
+   A re-skin, not a redesign. The two states, the enumeration-safe wording and
+   the "Not arrived?" help box are all as they were; what changes is colour,
+   radius, borders and button style.
+
+   Two pieces of copy are load-bearing and must not be tidied:
+
+   "If <address> has an account, a reset link is on its way" — the conditional
+   is deliberate. Saying "we've sent a link to X" confirms to anyone typing an
+   address that an account exists, which is the same disclosure the sign-in
+   error avoids. Spec section 6.
+
+   "You can only request one link per hour" — resetPasswordForEmail is rate
+   limited to roughly one send per hour per address, and a second request
+   inside that hour sends nothing at all, silently. Without this line a user
+   who mistypes, corrects, and resends waits an hour for an email that was
+   never sent.
+   ============================================================ */
+
+function EnvelopeIcon() {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"
+         style={{ color: 'var(--deep)' }}>
+      <rect x="3" y="5" width="18" height="14" rx="2.5" stroke="currentColor" strokeWidth="1.9" />
+      <path d="M3 7l9 6 9-6" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+function AlertIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M8 4.6v4.2M8 11.2v.6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  )
+}
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
@@ -39,103 +75,89 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div style={{ background: '#FAFAF7', minHeight: '100vh', fontFamily: BODY, color: '#2C2C2A' }}>
+    <div className="shoots-a">
+      <div className="page">
 
-      {/* NAV */}
-      <nav style={{ background: 'white', borderBottom: '0.5px solid rgba(23,52,4,0.08)', padding: '18px 0' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}>
-            <LogoMark size={30} />
-            <span style={{ fontFamily: UI, fontWeight: 500, fontSize: 24, letterSpacing: '-0.01em', textTransform: 'lowercase', color: 'var(--deep, #1D3C3E)' }}>Shoots</span>
+        <header>
+          <Link href="/" className="brand">
+            <LogoMark size={28} />
+            <span>shoots</span>
           </Link>
-          <Link href="/" style={{ fontFamily: UI, fontSize: 13.5, color: '#5F5E5A', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-            <ArrowLeft size={14} /> Back to home
-          </Link>
-        </div>
-      </nav>
+        </header>
 
-      <div style={{ maxWidth: 460, margin: '0 auto', padding: '64px 24px 48px' }}>
+        <main className="centred">
+          <div style={{ width: '100%', maxWidth: 452 }}>
+            <div className="card">
 
-        <div style={{ background: 'white', borderRadius: 16, padding: '40px 36px', boxShadow: '0 2px 24px rgba(23,52,4,0.06)', border: '0.5px solid rgba(23,52,4,0.06)' }}>
-          {sent ? (
-            <>
-              <h1 style={{ fontFamily: UI, fontWeight: 500, fontSize: 24, letterSpacing: '-0.02em', color: '#2C2C2A', marginBottom: 10 }}>
-                Check your email
-              </h1>
-              <p style={{ fontFamily: BODY, fontSize: 14.5, color: '#5F5E5A', lineHeight: 1.55, marginBottom: 18 }}>
-                If <strong style={{ color: '#2C2C2A' }}>{email}</strong> has an account, a reset link is on its way. Click it to set a new password.
-              </p>
-              <div style={{ background: '#F5F1E8', border: '0.5px solid rgba(180,135,40,0.18)', borderRadius: 10, padding: '14px 16px', marginBottom: 20 }}>
-                <p style={{ fontFamily: UI, fontWeight: 500, fontSize: 12, color: '#2C2C2A', marginBottom: 6 }}>Not arrived?</p>
-                <ul style={{ fontFamily: BODY, fontSize: 12.5, color: '#5F5E5A', lineHeight: 1.6, paddingLeft: 18, margin: 0 }}>
-                  <li>Check your spam or junk folder</li>
-                  <li>Allow a minute or two for delivery</li>
-                  <li>Check it&apos;s exactly the address you signed up with — including the spelling and domain (e.g. .co vs .com)</li>
-                  <li>You can only request one link per hour</li>
-                </ul>
-              </div>
-              <button
-                onClick={() => setSent(false)}
-                style={{ fontFamily: UI, fontSize: 13, color: '#3B6D11', background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', textDecoration: 'underline' }}
-              >
-                Try a different email address
-              </button>
-            </>
-          ) : (
-            <>
-              <h1 style={{ fontFamily: UI, fontWeight: 500, fontSize: 28, lineHeight: 1.15, letterSpacing: '-0.02em', color: '#2C2C2A', marginBottom: 6 }}>
-                Reset your password
-              </h1>
-              <p style={{ fontFamily: BODY, fontSize: 14.5, color: '#5F5E5A', lineHeight: 1.55, marginBottom: 24 }}>
-                Enter the email address for your account and we&apos;ll send you a link to set a new password.
-              </p>
-              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                {error && (
-                  <div style={{ background: '#FAECE7', border: '0.5px solid rgba(153,60,29,0.25)', color: '#993C1D', fontSize: 13, padding: '11px 14px', borderRadius: 10 }}>
-                    {error}
+              {sent ? (
+                <>
+                  <div className="badge badge-sage"><EnvelopeIcon /></div>
+                  <h1 className="t-status">Check your email</h1>
+                  <p className="t-body" style={{ marginTop: 8, marginBottom: 20 }}>
+                    If <strong style={{ color: 'var(--charcoal)', fontWeight: 600 }}>{email}</strong> has an
+                    account, a reset link is on its way. Click it to set a new password.
+                  </p>
+
+                  <div className="note">
+                    <p className="note-h">Not arrived?</p>
+                    <ul>
+                      <li>Check your spam or junk folder</li>
+                      <li>Allow a minute or two for delivery</li>
+                      <li>Check it&apos;s exactly the address you signed up with, including the spelling and domain (e.g. .co vs .com)</li>
+                      <li>You can only request one link per hour</li>
+                    </ul>
                   </div>
-                )}
-                <div>
-                  <label style={{ display: 'block', fontFamily: UI, fontWeight: 500, fontSize: 13, color: '#2C2C2A', marginBottom: 6 }}>Email address</label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    className="form-input"
-                    placeholder="you@organisation.org"
-                    required
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  style={{
-                    marginTop: 4,
-                    background: '#8ECB3C',
-                    color: '#173404',
-                    fontFamily: UI,
-                    fontWeight: 600,
-                    fontSize: 15,
-                    padding: '13px 22px',
-                    borderRadius: 10,
-                    border: 'none',
-                    cursor: loading ? 'default' : 'pointer',
-                    opacity: loading ? 0.7 : 1,
-                    transition: 'opacity 0.15s',
-                  }}
-                >
-                  {loading ? 'Sending...' : 'Send reset link'}
-                </button>
-              </form>
-            </>
-          )}
 
-          <div style={{ marginTop: 24, paddingTop: 20, borderTop: '0.5px solid rgba(23,52,4,0.08)', textAlign: 'center' }}>
-            <Link href="/auth/login" style={{ fontFamily: UI, fontSize: 13, color: '#5F5E5A', textDecoration: 'none' }}>
-              Back to sign in
-            </Link>
+                  <div style={{ textAlign: 'center', marginTop: 20 }}>
+                    <button type="button" className="btn btn-tertiary" onClick={() => setSent(false)}>
+                      Try a different email address
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <h1 className="t-title">Reset your password</h1>
+                  <p className="t-body" style={{ marginTop: 8 }}>
+                    Enter the email address for your account and we&apos;ll send you a link to set a new password.
+                  </p>
+
+                  <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18, marginTop: 26 }}>
+                    {error && (
+                      <div className="banner" role="alert">
+                        <AlertIcon />
+                        <span>{error}</span>
+                      </div>
+                    )}
+
+                    <div className="field">
+                      <label htmlFor="email">Email address</label>
+                      <input
+                        id="email"
+                        className="input"
+                        type="email"
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                        placeholder="you@organisation.org"
+                        autoComplete="email"
+                        required
+                      />
+                    </div>
+
+                    <button type="submit" className="btn btn-primary btn-block" disabled={loading} style={{ marginTop: 4 }}>
+                      {loading ? <><span className="spin" />Sending…</> : 'Send reset link'}
+                    </button>
+                  </form>
+                </>
+              )}
+
+              <div className="card-foot">
+                <Link href="/auth/login" className="btn btn-tertiary">Back to sign in</Link>
+              </div>
+
+            </div>
           </div>
-        </div>
+        </main>
+
       </div>
     </div>
   )

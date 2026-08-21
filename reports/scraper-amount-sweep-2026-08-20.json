@@ -1,0 +1,476 @@
+{
+  "scanned": 151,
+  "fires": [
+    {
+      "id": "e6379d1a-0437-4ea5-9bca-06385dfd7c08",
+      "title": "Andy Fanshawe Memorial Trust",
+      "had": [
+        null,
+        5000
+      ],
+      "src": "scraper:young_camden_foundation",
+      "outcome": "verified"
+    },
+    {
+      "id": "8797b0c0-e49a-4b33-b82c-1dc0657254a3",
+      "title": "The Bothwell Charitable Trust",
+      "had": [
+        1000,
+        null
+      ],
+      "src": "scraper:young_camden_foundation",
+      "outcome": "verified"
+    },
+    {
+      "id": "50203489-dcd2-44ec-9a3e-7035b825b4fb",
+      "title": "The Percy Bilton Charity",
+      "had": [
+        2000,
+        5000
+      ],
+      "src": "scraper:young_camden_foundation",
+      "outcome": "verified"
+    },
+    {
+      "id": "25f3db7e-802d-4649-8fb5-8e682b2a6d40",
+      "title": "Samworth Brothers Community Opportunity Fund",
+      "had": [
+        600,
+        20000
+      ],
+      "src": "scraper:community_works_2026-05-06",
+      "outcome": "verified"
+    },
+    {
+      "id": "1ef69197-b551-4da9-860c-645c97acfb09",
+      "title": "Severn Trent Community Fund — Children's Football Clubs",
+      "had": [
+        1000,
+        1000
+      ],
+      "src": "scraper:severn_trent_fund",
+      "outcome": "verified"
+    },
+    {
+      "id": "12bbaf28-20aa-445b-867b-1958ebcef1ef",
+      "title": "Hollick Family Charitable Trust",
+      "had": [
+        null,
+        5000
+      ],
+      "src": "scraper:young_camden_foundation",
+      "outcome": "verified"
+    },
+    {
+      "id": "a0e69102-abcd-4bb0-a11c-840ad6a3e433",
+      "title": "Emerton-Christie Charity",
+      "had": [
+        1000,
+        3000
+      ],
+      "src": "scraper:young_camden_foundation",
+      "outcome": "verified"
+    },
+    {
+      "id": "3d6656f0-6f74-4635-8c87-0406ded69be2",
+      "title": "Gordon Fraser Charitable Trust",
+      "had": [
+        500,
+        2500
+      ],
+      "src": "scraper:young_camden_foundation",
+      "outcome": "verified"
+    },
+    {
+      "id": "70c2c973-e718-4d50-9394-8ff7d1092da6",
+      "title": "Wooden Spoon Charity",
+      "had": [
+        null,
+        10000
+      ],
+      "src": "scraper:young_camden_foundation",
+      "outcome": "verified"
+    },
+    {
+      "id": "1a99b534-f6f5-4792-937d-361f6a0ba067",
+      "title": "The Access Foundation",
+      "had": [
+        25000,
+        100000
+      ],
+      "src": "scraper:young_camden_foundation",
+      "outcome": "verified"
+    },
+    {
+      "id": "ed3f6ba2-c76c-4b44-9bf4-5846f4ad4bed",
+      "title": "James Ahern Foundation",
+      "had": [
+        750,
+        5000
+      ],
+      "src": "scraper:young_camden_foundation",
+      "outcome": "verified"
+    },
+    {
+      "id": "65032b04-e949-4d96-b34c-3049d4915a8c",
+      "title": "Farmer Welfare Grant ",
+      "had": [
+        1000,
+        600000
+      ],
+      "src": "scraper:gov_uk",
+      "outcome": "verified"
+    },
+    {
+      "id": "0f6795e2-bdd9-4746-b1d8-88a6ea469824",
+      "title": "Barbara Ward Children's Foundation",
+      "had": [
+        2000,
+        null
+      ],
+      "src": "scraper:young_camden_foundation",
+      "outcome": "verified"
+    },
+    {
+      "id": "4c6acc32-d648-451c-931b-17da273ab598",
+      "title": "Worthing Community Chest — Seed Grants",
+      "had": [
+        null,
+        250
+      ],
+      "src": "scraper:community_works_2026-05-06",
+      "outcome": "verified"
+    },
+    {
+      "id": "16bfa48f-f9e6-4f32-a431-23e2b732c3e7",
+      "title": "Commissioned Rehabilitative Services General Grant Scheme",
+      "had": [
+        8000,
+        450000
+      ],
+      "src": "scraper:gov_uk",
+      "outcome": "verified"
+    },
+    {
+      "id": "60e2144a-4955-43fe-893c-1956785946f1",
+      "title": "Utilita Football Rebooted Grassroots Fund",
+      "had": [
+        null,
+        10000
+      ],
+      "src": "scraper:young_camden_foundation",
+      "outcome": "verified"
+    },
+    {
+      "id": "e60c8be4-21ae-4645-8d24-c54a865cf9dd",
+      "title": "HDH Wills Charitable Trust",
+      "had": [
+        500,
+        20000
+      ],
+      "src": "scraper:community_works_2026-05-06",
+      "outcome": "verified"
+    },
+    {
+      "id": "600db8c5-dc40-43c4-9b2c-e812b018bdad",
+      "title": "Joseph Rank Trust",
+      "had": [
+        20000,
+        70000
+      ],
+      "src": "scraper:young_camden_foundation",
+      "outcome": "verified"
+    },
+    {
+      "id": "3f5d135b-c001-4cc3-8ae3-049a9b85baef",
+      "title": "Whirlwind Charitable Trust",
+      "had": [
+        1000,
+        10000
+      ],
+      "src": "scraper:young_camden_foundation",
+      "outcome": "verified"
+    },
+    {
+      "id": "aac5e1fe-dbd1-4428-8eab-efcc9cff30dd",
+      "title": "Albert Hunt Trust",
+      "had": [
+        10000,
+        null
+      ],
+      "src": "scraper:young_camden_foundation",
+      "outcome": "verified"
+    },
+    {
+      "id": "2b5e34e5-ad7a-4b18-9182-e05a33abf795",
+      "title": "People and Research",
+      "had": [
+        250,
+        300000
+      ],
+      "src": "scraper:gov_uk",
+      "outcome": "verified"
+    },
+    {
+      "id": "6344f1bf-cc8a-4410-a4b6-f15e200559f5",
+      "title": "JRCT — Power & Accountability Programme",
+      "had": [
+        10000,
+        200000
+      ],
+      "src": "scraper:jrct",
+      "outcome": "verified"
+    },
+    {
+      "id": "3fe7c722-1434-4bdb-8d66-48749104b5e3",
+      "title": "People's Health Trust — Health Justice Fund",
+      "had": [
+        10000,
+        150000
+      ],
+      "src": "scraper:peoples_health_trust",
+      "outcome": "verified"
+    },
+    {
+      "id": "c8c96218-4a00-411c-b015-c2caf632f837",
+      "title": "Make a Difference Locally (MADL)",
+      "had": [
+        null,
+        2000
+      ],
+      "src": "scraper:community_works_2026-05-06",
+      "outcome": "verified"
+    },
+    {
+      "id": "f1fdcd6e-152a-403f-a1ac-f7838fbe9ebc",
+      "title": "sportscotland — Facilities Investment",
+      "had": [
+        10000,
+        500000
+      ],
+      "src": "scraper:sport_scotland",
+      "outcome": "verified"
+    },
+    {
+      "id": "d51e7f33-1464-4181-a535-8265fd923587",
+      "title": "Hargreaves Foundation",
+      "had": [
+        null,
+        50000
+      ],
+      "src": "scraper:young_camden_foundation",
+      "outcome": "verified"
+    },
+    {
+      "id": "f4cc6956-affd-496c-9954-09c189ddea02",
+      "title": "Ulverscroft Foundation",
+      "had": [
+        1000,
+        25000
+      ],
+      "src": "scraper:young_camden_foundation",
+      "outcome": "verified"
+    },
+    {
+      "id": "3ca96f8d-8d53-4be5-99d8-f3a637d1fc5e",
+      "title": "British Record Industry Trust (Brit Trust)",
+      "had": [
+        null,
+        10000
+      ],
+      "src": "scraper:young_camden_foundation",
+      "outcome": "verified"
+    },
+    {
+      "id": "fd7d2b8b-4946-43a8-be8b-1ef9b63ce244",
+      "title": "Wakeham Trust",
+      "had": [
+        125,
+        2500
+      ],
+      "src": "scraper:young_camden_foundation",
+      "outcome": "verified"
+    },
+    {
+      "id": "daf20da3-2ce9-498f-a0bd-e6f3abce6651",
+      "title": "Ernest Kleinwort Charitable Trust — Small Grants",
+      "had": [
+        null,
+        10000
+      ],
+      "src": "scraper:community_works_2026-05-06",
+      "outcome": "verified"
+    },
+    {
+      "id": "8bb0acde-a49f-4a86-995a-9f19b23115f0",
+      "title": "JRCT — Sustainable Future Programme",
+      "had": [
+        10000,
+        200000
+      ],
+      "src": "scraper:jrct",
+      "outcome": "verified"
+    }
+  ],
+  "contradicted": [
+    {
+      "title": "Cuthbert Horn Trust",
+      "field": "amount_min",
+      "from": null,
+      "to": 4000,
+      "quote": "grants tend to be for about £4,000."
+    },
+    {
+      "title": "Movement for Good — £1,000 Draws",
+      "field": "amount_max",
+      "from": 5000,
+      "to": 1000,
+      "quote": "Enter your favourite charities for the chance to win £1,000."
+    },
+    {
+      "title": "Drapers' Charitable Fund",
+      "field": "amount_max",
+      "from": 25000,
+      "to": 20000,
+      "quote": "Grants are awarded for sums up to £20,000 but larger grants may be selectively awarded."
+    },
+    {
+      "title": "SWEF Enterprise Fund Start-Up Grant",
+      "field": "amount_min",
+      "from": null,
+      "to": 500,
+      "quote": "Start-up grants are awarded up to £500"
+    },
+    {
+      "title": "SWEF Enterprise Fund Start-Up Grant",
+      "field": "amount_max",
+      "from": 500,
+      "to": 1500,
+      "quote": "After 6 months, successful grantees can reapply for additional funds up to £1,500 if the business has progressed."
+    },
+    {
+      "title": "Ballantrae Community Fund",
+      "field": "amount_min",
+      "from": null,
+      "to": 1000,
+      "quote": "You can apply for grants between £1000 and £25,000."
+    },
+    {
+      "title": "SEAD Fund",
+      "field": "amount_min",
+      "from": null,
+      "to": 250,
+      "quote": "Grants are typically £250."
+    },
+    {
+      "title": "Jack Petchey Foundation - Educational Visit Grants",
+      "field": "amount_max",
+      "from": 2000,
+      "to": 1200,
+      "quote": "with a contribution of up to £20 per young person (to a maximum £1,200 grant value per application)"
+    },
+    {
+      "title": "Community and Environment Fund (CEF) and Business and Local Economy Fund (BLEF)",
+      "field": "amount_min",
+      "from": null,
+      "to": 1,
+      "quote": "How much you can get From £1 to £250,000"
+    },
+    {
+      "title": "Alpkit Foundation",
+      "field": "amount_min",
+      "from": 500,
+      "to": 50,
+      "quote": "We focus mainly on small awards that have a direct impact, with support in the region of £50-£500"
+    },
+    {
+      "title": "Ian Askew Charitable Trust",
+      "field": "amount_min",
+      "from": null,
+      "to": 3000,
+      "quote": "Funder No Min - £3,000 no deadline"
+    },
+    {
+      "title": "Youth Fund",
+      "field": "amount_min",
+      "from": null,
+      "to": 30000,
+      "quote": "We do not make grants of less than £30,000 per year"
+    },
+    {
+      "title": "The Movement Fund",
+      "field": "amount_min",
+      "from": null,
+      "to": 300,
+      "quote": "Grants or pledges from £300 to £15,000"
+    },
+    {
+      "title": "London Social and Affordable Homes Programme 2026 to 2036",
+      "field": "amount_max",
+      "from": null,
+      "to": 11700000000,
+      "quote": "Funding amount: up to £11.7 billion"
+    },
+    {
+      "title": "The 1989 Willan Charitable Trust",
+      "field": "amount_max",
+      "from": 10000,
+      "to": 20000,
+      "quote": "The Fund may also consider applications for core and unrestricted grants of up to £20,000, £10,000 per year for two years"
+    },
+    {
+      "title": "Scops Arts Trust",
+      "field": "amount_min",
+      "from": null,
+      "to": 100,
+      "quote": "Grant awards typically start from a few hundred pounds"
+    },
+    {
+      "title": "Scops Arts Trust",
+      "field": "amount_max",
+      "from": 30000,
+      "to": 15000,
+      "quote": "in exceptional cases we make multi-year grants of up to £15,000 per annum"
+    }
+  ],
+  "unreadable": [
+    "Charles Hayward Foundation — Small Grants (Older People) (no_longer_listed)",
+    "Skinners' Company Charity Programme (fixable_link)",
+    "Rayne Foundation (fixable_link)",
+    "Sasha Foundation (fixable_link)",
+    "Cash for Kids - Cost of Living Grants (fixable_link)",
+    "Grocers' Charity Memorial Grant (fixable_link)",
+    "Red Hill Trust (fixable_link)",
+    "Improving life chances in Tyne & Wear and Northumberland (fixable_link)",
+    "Eranda Rothschild Foundation (fixable_link)",
+    "Arnold Clark Community Fund (multiple_funds)",
+    "DCR Allen Charitable Trust (fixable_link)",
+    "St Giles & St George Education Charity (multiple_funds)",
+    "Cash for Kids - General Grant (fixable_link)",
+    "Garfield Weston Foundation — General Grants (multiple_funds)",
+    "The Portal Trust (multiple_funds)",
+    "Cadent Foundation — Community Grants (fixable_link)",
+    "Architectural Heritage Fund — Development Grants (fixable_link)",
+    "National Archives - Project Grants (fixable_link)",
+    "The Health Lottery Foundation (multiple_funds)",
+    "Steel Charitable Trust (fixable_link)",
+    "Happy Days Children's Charity (multiple_funds)",
+    "Historic England — Listed Places of Worship Grant Scheme (fixable_link)",
+    "Ernest Kleinwort Charitable Trust — Medium Grants (fixable_link)",
+    "Pilgrim Trust — Preservation & Scholarship (fixable_link)",
+    "Historic England — Heritage at Risk Grants (fixable_link)",
+    "Social Investment Scotland — Loan Funding (multiple_funds)",
+    "The Pebble Trust (fixable_link)",
+    "7Stars Foundation (multiple_funds)",
+    "Wolfson Foundation — Capital Grants (multiple_funds)",
+    "London Social and Affordable Homes Programme 2026 to 2036 (round_closed)",
+    "Hampstead Wells and Camden Trust (fixable_link)",
+    "Ernest Cook Trust — Rural Skills & Conservation (fixable_link)",
+    "Leathersellers' Foundation Main Grants (fixable_link)",
+    "Youth Endowment Fund (multiple_funds)",
+    "Nesta Innovation Challenges — Prize Competitions (fixable_link)",
+    "Triangle Trust 1949 Fund — Young Women & Girls in Criminal Justice (multiple_funds)",
+    "Percy Bilton Charity Grants (multiple_funds)",
+    "Variety Club - Equipment Grants (multiple_funds)"
+  ]
+}

@@ -18,26 +18,39 @@ import LogoMark from '@/components/icons/LogoMark'
    Design tokens — 1:1 from reference HTML :root
    ═══════════════════════════════════════════════ */
 
+/* Retargeted to the band A tokens. The KEY NAMES are historical and no longer
+   describe their colours: this file has ~100 `T.` call sites and renaming them
+   all would be a large diff over working code for no behavioural gain. What
+   matters is that each key kept its ROLE. Values resolve as CSS variables
+   against the `.shoots-a` scope declared on onboarding/layout.tsx.
+
+   Three keys changed role rather than just value, and their call sites were
+   edited to match rather than remapped blindly:
+     lime      was an accent AND text-on-dark. Text-on-dark is now `onDeep`.
+     greenDeep was the primary chip fill. The primary chip is now sage-tint.
+     greenMid  was the selected chip border. Selected is now a deep fill. */
 const T = {
-  lime:          '#8ECB3C',
-  greenMid:      '#639922',
-  greenDeep:     '#173404',
-  greenTextDeep: '#3B6D11',
-  greenSoft:     '#97C459',
-  greenCream:    '#EAF3DE',
-  cream1:        '#F5F1E8',
-  creamHover:    '#EAE5D7',
-  pageBg:        '#FAFAF7',
-  amberMid:      '#BA7517',
-  amberBgSoft:   '#FDFBF5',
-  coralBg:       '#FAECE7',
-  coralText:     '#993C1D',
-  borderLight:   'rgba(0,0,0,0.06)',
-  borderMid:     'rgba(0,0,0,0.1)',
-  borderInput:   'rgba(0,0,0,0.14)',
-  textPrimary:   '#2C2C2A',
-  textSecondary: '#5F5E5A',
-  textTertiary:  '#8A8986',
+  lime:          'var(--deep)',
+  greenMid:      'var(--deep)',
+  greenDeep:     'var(--deep)',
+  greenTextDeep: 'var(--deep)',
+  greenSoft:     'var(--sage)',
+  greenCream:    'var(--sage-tint)',
+  cream1:        'var(--cream)',
+  creamHover:    'var(--cream)',
+  pageBg:        'var(--field-missing-bg)',
+  amberMid:      'var(--amber-deep)',
+  amberBgSoft:   'var(--gold-tint)',
+  coralBg:       'var(--danger-tint)',
+  coralText:     'var(--danger)',
+  borderLight:   'var(--border-hair)',
+  borderMid:     'rgba(29,60,62,0.15)',
+  borderInput:   'var(--border-input)',
+  textPrimary:   'var(--charcoal)',
+  textSecondary: 'var(--ink-muted)',
+  textTertiary:  'var(--ink-placeholder)',
+  /* Anything sitting ON a deep fill: button labels, tick glyphs, badge text. */
+  onDeep:        'var(--cream)',
 } as const
 
 /* ═══════════════════════════════════════════════
@@ -139,6 +152,30 @@ const FUNDING_TYPES: { value: FundingType; label: string; desc: string }[] = [
    Types
    ═══════════════════════════════════════════════ */
 
+/**
+ * Columns the wizard writes but never asks about.
+ *
+ * These are applied ONLY when creating a brand new organisation, where they
+ * simply restate the database defaults. They are deliberately absent from the
+ * update path: the wizard collects no input for any of them and does not read
+ * them back when it prefills, so including them on an update silently wiped
+ * whatever the user had set elsewhere. Two are user-entered in the profile
+ * editor (funder_type_preferences, years_trading) and all of them feed
+ * ranking, so the symptom was "my matches changed and nothing said why".
+ *
+ * If the wizard ever starts collecting one of these, move it into `payload`
+ * proper rather than adding it back here.
+ */
+const UNCOLLECTED_ON_CREATE = {
+  years_trading:               null,
+  funder_type_preferences:     [],
+  funding_subtype_preferences: [],
+  people_per_year:             null,
+  volunteers:                  null,
+  projects_running:            null,
+  key_outcomes:                [],
+}
+
 type WizardStep = 'entry' | 'review' | 'manual' | 'sectors' | 'beneficiaries' | 'location' | 'reveal'
 
 const STEP_DOT_POS: Record<WizardStep, number> = {
@@ -146,6 +183,30 @@ const STEP_DOT_POS: Record<WizardStep, number> = {
 }
 
 type FieldConfidence = 'confident' | 'uncertain' | 'missing'
+
+/**
+ * The fields the review step actually renders, and therefore the only fields
+ * the user can confirm.
+ *
+ * `ExtractedData.confidence` carries a seventh key, `mission`, which is
+ * extracted and saved but never shown. The Continue gate used to iterate every
+ * key in that object, so a mission score between 0.4 and 0.8 counted as
+ * "uncertain" and had to be confirmed — except nothing on screen could confirm
+ * it, and auto-confirm only covers 0.8 and above. Continue went permanently
+ * dead with all six visible fields green and the banner cheerfully reporting
+ * "6 of 6 fields found".
+ *
+ * Gate on what the user can see and act on. If a field is ever added here,
+ * render it too.
+ */
+const REVIEW_FIELD_KEYS = [
+  'name',
+  'legalStructure',
+  'primaryLocation',
+  'impactSectors',
+  'beneficiaryGroups',
+  'annualIncomeBand',
+] as const
 
 function fieldConf(c: number | undefined | null, hasValue = false): FieldConfidence {
   if (c == null || c < 0.4) return hasValue ? 'uncertain' : 'missing'
@@ -287,13 +348,19 @@ function fmtThousands(raw: string): string {
    Shared UI primitives
    ═══════════════════════════════════════════════ */
 
+/* The shared field. This is what the four undrawn steps — manual,
+   beneficiaries, location and the inline editors — inherit, so bringing it to
+   the spec's section 5 figures is what makes the claim "the rest inherit the
+   language" actually true rather than assumed. 1.5px at #7B8A8B is 3.59:1,
+   where the old hairline was 1.39:1 and failed. */
 const INPUT_STYLE: React.CSSProperties = {
   width: '100%',
-  padding: '11px 14px',
-  border: `0.5px solid ${T.borderInput}`,
-  borderRadius: 10,
+  height: 50,
+  padding: '0 15px',
+  border: `1.5px solid ${T.borderInput}`,
+  borderRadius: 12,
   fontFamily: 'var(--font-dm-sans)',
-  fontSize: 14,
+  fontSize: 15,
   color: T.textPrimary,
   background: '#fff',
   outline: 'none',
@@ -327,21 +394,41 @@ const ACTIONS_STYLE: React.CSSProperties = {
   borderTop: `0.5px solid ${T.borderLight}`,
 }
 
+/**
+ * Progress: a text counter with the dots beside it.
+ *
+ * The dots alone were the only progress signal on this page, and they are
+ * purely visual — a screen reader got nothing from them and six of them are
+ * hard to count at a glance. The text carries the state and the dots become
+ * decorative, which is where they belong, so they are aria-hidden.
+ */
 function StepDots({ active, total = 6 }: { active: number; total?: number }) {
   return (
-    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-      {Array.from({ length: total }, (_, i) => {
-        const pos = i + 1
-        return (
-          <div key={i} style={{
-            height: 6,
-            width: pos === active ? 18 : 6,
-            borderRadius: 999,
-            background: pos < active ? T.greenSoft : pos === active ? T.greenMid : 'rgba(0,0,0,0.1)',
-            transition: 'all 250ms ease',
-          }} />
-        )
-      })}
+    <div style={{ display: 'flex', gap: 11, alignItems: 'center' }}>
+      <span style={{
+        fontFamily: 'var(--font-space-grotesk)',
+        fontSize: 11.5,
+        fontWeight: 600,
+        color: T.textSecondary,
+        letterSpacing: '0.04em',
+        whiteSpace: 'nowrap',
+      }}>
+        Step {active} of {total}
+      </span>
+      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }} aria-hidden="true">
+        {Array.from({ length: total }, (_, i) => {
+          const pos = i + 1
+          return (
+            <div key={i} style={{
+              height: 6,
+              width: pos === active ? 20 : 6,
+              borderRadius: 999,
+              background: pos < active ? T.greenSoft : pos === active ? T.greenDeep : 'rgba(29,60,62,0.15)',
+              transition: 'all 250ms ease',
+            }} />
+          )
+        })}
+      </div>
     </div>
   )
 }
@@ -469,10 +556,20 @@ function PickerChip({
         position: 'relative',
         width: '100%',
         padding: '9px 12px',
-        border: `0.5px solid ${isPrimary ? T.greenDeep : isSecondary ? T.greenMid : showHover ? T.greenMid : T.borderInput}`,
-        borderRadius: 8,
-        background: isPrimary ? T.greenDeep : isSecondary || showHover ? T.greenCream : '#fff',
-        color: isPrimary ? '#fff' : isSecondary || showHover ? T.greenTextDeep : T.textPrimary,
+        // Three treatments, loudest = most important: primary is the deep
+        // fill, also-selected is the sage tint, unselected is a ghost outline.
+        // The star is the extra mark that says "primary is a different KIND of
+        // thing from also-selected", which is the spec's actual point.
+        //
+        // An earlier pass had this the other way round, following the mockup
+        // literally: primary sage-tinted, selected deep-filled. Two problems.
+        // The loudest chip on screen was the less important one; and inside a
+        // confident review field, whose own background is sage tint, the
+        // primary chip became fill-on-fill and vanished entirely.
+        border: `1.5px solid ${isPrimary || isSecondary || showHover ? T.greenDeep : 'var(--border-ghost)'}`,
+        borderRadius: 999,
+        background: isPrimary ? T.greenDeep : isSecondary || showHover ? T.greenCream : 'transparent',
+        color: isPrimary ? T.onDeep : T.greenTextDeep,
         fontSize: 12,
         fontWeight: isPrimary || isSecondary ? 500 : 400,
         cursor: dimmed ? 'default' : 'pointer',
@@ -491,7 +588,7 @@ function PickerChip({
       tabIndex={dimmed ? -1 : 0}
       onKeyDown={e => { if (!dimmed && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onClick() } }}
     >
-      {isPrimary && <span aria-label="primary" style={{ color: T.lime, fontSize: 11 }}>★</span>}
+      {isPrimary && <span aria-label="primary" style={{ color: T.onDeep, fontSize: 11 }}>★</span>}
       {showSecondaryStar && (
         <button
           type="button"
@@ -532,20 +629,26 @@ function CardShell({
 }) {
   const isMobile = useIsMobile()
   return (
-    <div className="flex-1 flex items-start justify-center px-4 py-8 md:py-12">
-      <div className="w-full max-w-[720px]">
+    /* my-auto rather than items-center: auto margins centre the card when there
+       is room and collapse when there is not, so `sectors` at 19 chips stays
+       scrollable instead of having its top clipped. items-start left the short
+       steps floating high, which showed up as soon as `entry` became a card. */
+    <div className="flex-1 flex justify-center px-4 py-8 md:py-12">
+      <div className="w-full max-w-[720px] my-auto">
         <div style={{
           background: '#fff',
-          border: `0.5px solid ${T.borderMid}`,
-          borderRadius: 16,
+          border: `1px solid ${T.borderLight}`,
+          borderRadius: 20,
           overflow: 'hidden',
-          boxShadow: '0 1px 2px rgba(0,0,0,0.02)',
+          // Same lift as the auth cards, so the wizard reads as part of one
+          // flow rather than a different surface.
+          boxShadow: '0 1px 2px rgba(29,60,62,0.04), 0 14px 36px rgba(29,60,62,0.06)',
         }}>
           {/* Card header */}
           <div style={{ padding: isMobile ? '16px 20px 0' : '20px 32px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
               <LogoMark size={26} />
-              <span style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 20, color: T.textPrimary, letterSpacing: '-0.01em', textTransform: 'lowercase' }}>
+              <span style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, fontSize: 20, color: T.greenDeep, letterSpacing: '-0.01em', textTransform: 'lowercase' }}>
                 Shoots
               </span>
             </span>
@@ -758,10 +861,22 @@ export default function OnboardingWizardPage() {
 
   function reviewCanContinue(): boolean {
     if (!extracted) return true
-    return Object.entries(extracted.confidence)
-      .filter(([, c]) => fieldConf(c) === 'uncertain')
-      .map(([k]) => k)
+    return REVIEW_FIELD_KEYS
+      .filter(k => fieldConf(extracted.confidence[k]) === 'uncertain')
       .every(f => confirmed.has(f))
+  }
+
+  /** Which visible fields are still holding Continue back, for the hint below it. */
+  function reviewBlockers(): string[] {
+    if (!extracted) return []
+    const LABELS: Record<string, string> = {
+      name: 'Organisation name', legalStructure: 'Legal structure',
+      primaryLocation: 'Primary location', impactSectors: 'Primary sector',
+      beneficiaryGroups: 'Who you serve', annualIncomeBand: 'Annual income',
+    }
+    return REVIEW_FIELD_KEYS
+      .filter(k => fieldConf(extracted.confidence[k]) === 'uncertain' && !confirmed.has(k))
+      .map(k => LABELS[k] ?? k)
   }
 
   function confirmField(field: string, value?: string) {
@@ -877,18 +992,35 @@ export default function OnboardingWizardPage() {
         beneficiaries:                [],
         mission:                      state.mission.trim() || null,
         years_operating:              null,
-        people_per_year:              null,
-        volunteers:                   null,
-        projects_running:             null,
-        key_outcomes:                 [],
+        // NOTHING THE WIZARD DOES NOT ASK ABOUT BELONGS IN THIS PAYLOAD.
+        //
+        // people_per_year, volunteers, projects_running, key_outcomes,
+        // funder_type_preferences, funding_subtype_preferences and
+        // years_trading used to be written here as `null` / `[]` literals.
+        // The wizard collects no input for any of them and does not read them
+        // back when it prefills from an existing org, so on the update branch
+        // they were silently overwritten every time someone re-ran the wizard.
+        //
+        // Two of them are user-entered in the profile editor
+        // (funder_type_preferences, years_trading) and all of them are read by
+        // ranking — matching.ts scores +15 on a preferred funder type — so a
+        // user who set their preferences, then walked the wizard again from the
+        // dashboard prompt, lost them and got different matches with nothing on
+        // screen to say why.
+        //
+        // Removing them rather than adding them to the prefill is deliberate:
+        // it removes the class of bug instead of one instance. Checked against
+        // the schema first — every one of the seven either defaults to '{}' or
+        // is nullable, so create-branch behaviour is byte-identical and the
+        // update branch now leaves existing values alone.
+        //
+        // Note the near-miss: funding_TYPE_preferences below IS collected and
+        // prefilled. funding_SUBTYPE_preferences was not. One character apart.
         min_grant_target:             state.minGrantTarget ? parseInt(state.minGrantTarget.replace(/[^\d]/g, '')) : null,
         max_grant_target:             state.maxGrantTarget ? parseInt(state.maxGrantTarget.replace(/[^\d]/g, '')) : null,
-        funder_type_preferences:      [],
         funding_type_preferences:     state.fundingTypes,
-        funding_subtype_preferences:  [],
         spend_restriction_preferences: state.spendRestrictions,
         has_asset_lock:               eligibilityFlags.has_asset_lock,
-        years_trading:                null,
         owner_id:                     userId,
         alerts_enabled:               true,
         alert_frequency:              'weekly',
@@ -898,9 +1030,11 @@ export default function OnboardingWizardPage() {
 
       let currentOrgId = orgId
       if (orgId) {
+        // Update: only the fields the wizard actually collected. Anything it
+        // does not ask about is left exactly as the user left it.
         await updateOrganisation(orgId, payload)
       } else {
-        const created = await createOrganisation(payload as Parameters<typeof createOrganisation>[0])
+        const created = await createOrganisation({ ...UNCOLLECTED_ON_CREATE, ...payload } as Parameters<typeof createOrganisation>[0])
         currentOrgId = created.id
         setOrgId(created.id)
       }
@@ -913,7 +1047,12 @@ export default function OnboardingWizardPage() {
         if (typeof window !== 'undefined') localStorage.setItem('gt_active_org_id', currentOrgId)
       }
       // Build org for matching directly — avoids read-after-write race condition
-      const orgForMatching = { ...payload, id: currentOrgId ?? '', created_at: new Date().toISOString() }
+      // Preview only. Carries the same defaults the payload used to inline, so
+      // the reveal step's numbers are unchanged by the fix above. On the update
+      // branch this still ignores the seven uncollected fields, exactly as it
+      // did before — worth revisiting if the reveal count ever needs to match
+      // the dashboard exactly.
+      const orgForMatching = { ...UNCOLLECTED_ON_CREATE, ...payload, id: currentOrgId ?? '', created_at: new Date().toISOString() }
 
       matchFetchRef.current = (async () => {
         try {
@@ -978,59 +1117,25 @@ export default function OnboardingWizardPage() {
     )
   }
 
-  /* ── Step 1: full-page hero — no card ── */
+  /* ── Step 1: the card, same shell as every other step ──
+     This was a full-page hero. The onboarding mockup draws entry inside the
+     standard card at "Step 1 of 6", and /onboarding/welcome is already a
+     full-page hero immediately before it, so two heroes back to back was the
+     odd part. The copy is unchanged: the mockups are the source of truth for
+     layout and spacing, section 7 for content, and section 7 does not restate
+     this step's words. */
   if (step === 'entry') {
     return (
-      <div style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        padding: '20px 24px 40px',
-        minHeight: 620,
-        width: '100%',
-        // Gradient per design spec (not in HTML .hero-page, but explicit in text requirements)
-        background: '#fff',
-      }}>
-        {/* Top-right step dots */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: 60 }}>
-          <StepDots active={1} />
-        </div>
-
-        {/* Hero content — upper-third anchor per text spec (HTML uses center) */}
-        <div style={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'flex-start',
-          textAlign: 'center',
-          maxWidth: 560,
-          margin: '0 auto',
-          width: '100%',
-          paddingTop: 80,
-        }}>
-          <StepEntry
-            url={url}
-            setUrl={setUrl}
-            fetching={fetching}
-            error={fetchError}
-            onAutoFill={handleAutoFill}
-            onManual={() => { setExtracted(null); setStep('manual') }}
-          />
-        </div>
-
-        {/* Bottom skip */}
-        <div style={{ textAlign: 'center' }}>
-          <Link
-            href="/dashboard/profile"
-            style={{ fontSize: 13, color: T.textTertiary, fontFamily: 'var(--font-space-grotesk)', padding: '12px 16px', display: 'inline-block', textDecoration: 'none' }}
-            onMouseEnter={e => (e.currentTarget.style.color = T.textSecondary)}
-            onMouseLeave={e => (e.currentTarget.style.color = T.textTertiary)}
-          >
-            Set up later
-          </Link>
-        </div>
-      </div>
+      <CardShell step={1}>
+        <StepEntry
+          url={url}
+          setUrl={setUrl}
+          fetching={fetching}
+          error={fetchError}
+          onAutoFill={handleAutoFill}
+          onManual={() => { setExtracted(null); setStep('manual') }}
+        />
+      </CardShell>
     )
   }
 
@@ -1048,6 +1153,7 @@ export default function OnboardingWizardPage() {
           setEditingField={setEditingField}
           confirmField={confirmField}
           canContinue={reviewCanContinue()}
+          blockers={reviewBlockers()}
           onBack={() => setStep('entry')}
           onSkip={() => setStep('sectors')}
           onContinue={() => setStep('sectors')}
@@ -1150,7 +1256,7 @@ function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual }: {
             onChange={e => setUrl(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && !fetching && url.trim() && onAutoFill()}
             placeholder="https://yourorganisation.co.uk"
-            style={{ ...INPUT_STYLE, fontSize: 15, padding: '14px 14px 14px 34px', boxSizing: 'border-box' }}
+            style={{ ...INPUT_STYLE, padding: '0 14px 0 34px', boxSizing: 'border-box' }}
           />
         </div>
         <Button variant="primary" size="lg" onClick={onAutoFill} disabled={fetching}>
@@ -1175,7 +1281,7 @@ function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual }: {
             background: 'transparent', border: 'none', color: hov ? T.textPrimary : T.textSecondary,
             fontFamily: 'var(--font-dm-sans)', fontSize: 13, cursor: 'pointer',
             textDecoration: 'underline',
-            textDecorationColor: 'rgba(95,94,90,0.3)',
+            textDecorationColor: 'rgba(29,60,62,0.35)',
             textUnderlineOffset: 3,
             padding: '8px 12px',
           }}
@@ -1191,13 +1297,14 @@ function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual }: {
    Step 2A — Review extracted data
    ═══════════════════════════════════════════════ */
 
-function StepReview({ extracted, confirmed, editingField, setEditingField, confirmField, canContinue, onBack, onSkip, onContinue, wizardState, toggleSector, makePrimarySector, toggleBeneficiary, makePrimaryBeneficiary }: {
+function StepReview({ extracted, confirmed, editingField, setEditingField, confirmField, canContinue, blockers, onBack, onSkip, onContinue, wizardState, toggleSector, makePrimarySector, toggleBeneficiary, makePrimaryBeneficiary }: {
   extracted: ExtractedData
   confirmed: Set<string>
   editingField: string | null
   setEditingField: (f: string | null) => void
   confirmField: (field: string, value?: string) => void
   canContinue: boolean
+  blockers: string[]
   onBack: () => void; onSkip: () => void; onContinue: () => void
   wizardState: WizardState
   toggleSector: (s: ImpactSector) => void
@@ -1267,9 +1374,18 @@ function StepReview({ extracted, confirmed, editingField, setEditingField, confi
 
       <div style={ACTIONS_STYLE}>
         <SkipAction onClick={onSkip}>I&rsquo;ll refine these later</SkipAction>
-        <Button variant="primary" onClick={onContinue} disabled={!canContinue}>
-          Continue <ArrowRight size={14} />
-        </Button>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
+          <Button variant="primary" onClick={onContinue} disabled={!canContinue}>
+            Continue <ArrowRight size={14} />
+          </Button>
+          {/* A greyed-out Continue with nothing saying why is exactly how this
+              page trapped people. If it is disabled, name what it wants. */}
+          {!canContinue && blockers.length > 0 && (
+            <p style={{ fontSize: 11.5, color: T.amberMid, margin: 0, fontFamily: 'var(--font-dm-sans)', textAlign: 'right' as const }}>
+              Confirm {blockers.join(', ')} to carry on
+            </p>
+          )}
+        </div>
       </div>
     </>
   )
@@ -1291,24 +1407,29 @@ function ReviewField({ label, value, fieldState: fState, isConfirmed, isEditing,
 
   const effective = isConfirmed && fState !== 'confident' ? 'confident' : fState
 
+  /* Each confidence state carries a SHAPE as well as a colour, so it survives
+     greyscale and colour blindness: tick, warning, plus. The dashed border on
+     `missing` was already doing that job; confident and uncertain were
+     separated only by green versus amber, which is exactly the pair that does
+     not survive. fieldConf() is untouched — this is presentation only. */
   const bg = effective === 'confident' ? T.greenCream
            : effective === 'uncertain' ? T.amberBgSoft : T.pageBg
-  const borderColor = effective === 'confident' ? 'rgba(99,153,34,0.2)'
-                    : effective === 'uncertain' ? 'rgba(186,117,23,0.2)' : T.borderLight
+  const borderColor = effective === 'confident' ? 'var(--border-hair)'
+                    : effective === 'uncertain' ? 'rgba(133,79,11,0.22)' : 'rgba(29,60,62,0.30)'
   const borderStyle = fState === 'missing' && !isConfirmed ? 'dashed' : 'solid'
 
-  const iconBg  = effective === 'confident' ? T.greenMid
+  const iconBg  = effective === 'confident' ? T.greenDeep
                 : effective === 'uncertain' ? T.amberMid : 'transparent'
-  const iconChar = effective === 'confident' ? '✓' : effective === 'uncertain' ? '?' : '+'
-  const iconColor = (fState === 'missing' && !isConfirmed) ? T.textTertiary : '#fff'
+  const iconChar = effective === 'confident' ? '✓' : effective === 'uncertain' ? '!' : '+'
+  const iconColor = (fState === 'missing' && !isConfirmed) ? T.textTertiary : T.onDeep
 
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '14px 16px', background: bg, borderRadius: 10, border: `0.5px ${borderStyle} ${borderColor}`, transition: 'background 120ms ease' }}>
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 13, padding: '14px 16px', background: bg, borderRadius: 13, border: `1px ${borderStyle} ${borderColor}`, transition: 'background 120ms ease' }}>
       {/* State icon */}
       <div style={{
-        width: 20, height: 20, borderRadius: '50%', flexShrink: 0, marginTop: 1,
+        width: 26, height: 26, borderRadius: 8, flexShrink: 0, marginTop: 1,
         background: iconBg,
-        border: fState === 'missing' && !isConfirmed ? `1px dashed ${T.textTertiary}` : 'none',
+        border: fState === 'missing' && !isConfirmed ? '1px dashed rgba(29,60,62,0.35)' : 'none',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontSize: 12, color: iconColor, fontWeight: 600,
       }}>
@@ -1323,6 +1444,12 @@ function ReviewField({ label, value, fieldState: fState, isConfirmed, isEditing,
         </div>
         {isEditing && type === 'chips' && chipOptions ? (
           <div style={{ marginTop: 8 }}>
+            {/* The hollow star is the only way to change which pick is primary
+                and nothing else on screen says so. The sectors step carries the
+                same sentence; this editor had no hint at all. */}
+            <p style={{ fontSize: 11.5, lineHeight: 1.45, color: T.textSecondary, margin: '0 0 8px', fontFamily: 'var(--font-dm-sans)' }}>
+              The filled chip is your primary. Tap <span style={{ fontFamily: 'var(--font-space-grotesk)' }}>☆</span> on another to move it.
+            </p>
             <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6, marginBottom: 10 }}>
               {chipOptions.map(opt => {
                 const sel = selectedChips?.includes(opt.value) ?? false
@@ -1337,20 +1464,22 @@ function ReviewField({ label, value, fieldState: fState, isConfirmed, isEditing,
                       padding: '5px 10px', borderRadius: 6, fontSize: 12,
                       fontFamily: 'var(--font-space-grotesk)', cursor: dimmed ? 'not-allowed' : 'pointer',
                       opacity: dimmed ? 0.4 : 1, transition: 'all 120ms ease',
-                      background: isPrimary ? T.greenDeep : sel ? T.greenCream : '#fff',
-                      color: isPrimary ? '#fff' : sel ? T.greenTextDeep : T.textSecondary,
-                      border: `1px solid ${isPrimary ? T.greenDeep : sel ? T.greenMid : T.borderInput}`,
-                      fontWeight: sel ? 500 : 400,
+                      background: isPrimary ? T.greenDeep : sel ? T.greenCream : 'transparent',
+                      color: isPrimary ? T.onDeep : T.greenTextDeep,
+                      border: `1px solid ${isPrimary || sel ? T.greenDeep : 'var(--border-ghost)'}`,
+                      fontWeight: isPrimary ? 600 : sel ? 500 : 400,
                     }}
                   >
                     {isPrimary && <span style={{ marginRight: 4, fontSize: 10 }}>★</span>}
                     {opt.label}
                     {sel && !isPrimary && (
                       <span
+                        role="button"
+                        aria-label={`Make ${opt.label} the primary sector`}
                         onClick={e => { e.stopPropagation(); onMakePrimaryChip?.(opt.value) }}
-                        title="Set as primary"
-                        style={{ marginLeft: 5, fontSize: 9, opacity: 0.6, cursor: 'pointer' }}
-                      >★</span>
+                        title="Make this the primary"
+                        style={{ marginLeft: 6, fontSize: 11, cursor: 'pointer', color: T.greenTextDeep }}
+                      >☆</span>
                     )}
                   </button>
                 )
@@ -1369,7 +1498,7 @@ function ReviewField({ label, value, fieldState: fState, isConfirmed, isEditing,
                 onChange={e => setDraft(e.target.value)}
                 autoFocus
                 style={{
-                  ...INPUT_STYLE, flex: 1, fontSize: 13, padding: '6px 32px 6px 10px',
+                  ...INPUT_STYLE, flex: 1, height: 34, fontSize: 13, padding: '0 32px 0 10px',
                   appearance: 'none' as const,
                   backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235F5E5A' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
                   backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center',
@@ -1379,7 +1508,7 @@ function ReviewField({ label, value, fieldState: fState, isConfirmed, isEditing,
                 {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             ) : (
-              <input type="text" value={draft} onChange={e => setDraft(e.target.value)} autoFocus style={{ ...INPUT_STYLE, flex: 1, fontSize: 13, padding: '6px 10px' }} />
+              <input type="text" value={draft} onChange={e => setDraft(e.target.value)} autoFocus style={{ ...INPUT_STYLE, flex: 1, height: 34, fontSize: 13, padding: '0 10px' }} />
             )}
             <Button variant="primary" size="sm" onClick={() => onConfirm(draft)}>
               <Check size={11} /> Save
@@ -1665,13 +1794,17 @@ function StepSectors({ impactSectors, nicheTags, excludedNicheTags, toggleSector
           Pick 1
           <span aria-label="primary" style={{
             display: 'inline-flex', alignItems: 'center', gap: 4,
-            background: T.greenDeep, color: '#fff',
+            background: T.greenDeep, color: T.onDeep,
             padding: '2px 8px', borderRadius: 99,
             fontSize: 11, fontWeight: 500,
             fontFamily: 'var(--font-space-grotesk)',
             lineHeight: 1.2,
           }}>
-            <span style={{ color: T.lime, fontSize: 10 }}>★</span>
+            {/* Cream, not T.lime. lime now resolves to --deep and this pill's
+                background is --deep, so the star was deep on deep and simply
+                could not be seen. It has to match the star on the chip it is
+                describing. */}
+            <span style={{ color: T.onDeep, fontSize: 10 }}>★</span>
             primary
           </span>
           plus up to 3 others. Tap a
@@ -1701,7 +1834,7 @@ function StepSectors({ impactSectors, nicheTags, excludedNicheTags, toggleSector
       {impactSectors.includes('mental_health') && impactSectors.includes('health') && (
         <div style={{
           background: T.amberBgSoft,
-          border: `0.5px solid rgba(186,117,23,0.25)`,
+          border: `1px solid rgba(133,79,11,0.22)`,
           borderRadius: 8,
           padding: '10px 14px',
           marginBottom: 20,
@@ -1718,8 +1851,8 @@ function StepSectors({ impactSectors, nicheTags, excludedNicheTags, toggleSector
           Click cycles: neutral → include (green) → exclude (coral strikethrough) → neutral */}
       {nicheSectors.length > 0 && (
         <div style={{
-          background: '#F5F1E8',
-          borderLeft: '3px solid #8ECB3C',
+          background: T.cream1,
+          borderLeft: `3px solid ${T.greenDeep}`,
           borderRadius: 8,
           padding: '12px 14px',
           marginBottom: 20,
@@ -1733,12 +1866,12 @@ function StepSectors({ impactSectors, nicheTags, excludedNicheTags, toggleSector
             marginBottom: 14,
             padding: '10px 12px',
             background: 'rgba(255,255,255,0.75)',
-            borderLeft: '3px solid #639922',
+            borderLeft: `3px solid ${T.greenDeep}`,
             borderRadius: 4,
             lineHeight: 1.5,
           }}>
-            <strong style={{ color: '#3B6D11', fontWeight: 700, letterSpacing: '0.01em' }}>Tip</strong>
-            <span style={{ color: '#3B6D11' }}> · </span>
+            <strong style={{ color: T.greenTextDeep, fontWeight: 700, letterSpacing: '0.01em' }}>Tip</strong>
+            <span style={{ color: T.greenTextDeep }}> · </span>
             Click once to mark as a specialism. Click again to <strong>exclude</strong> (we won&apos;t show grants targeting it). Click a third time to reset.
           </div>
           {nicheSectors.map(sector => {
@@ -1753,9 +1886,9 @@ function StepSectors({ impactSectors, nicheTags, excludedNicheTags, toggleSector
                   {opts.map(opt => {
                     const isIncluded = nicheTags.includes(opt.value)
                     const isExcluded = excludedNicheTags.includes(opt.value)
-                    const borderCol = isIncluded ? '#8ECB3C' : isExcluded ? '#D85A30' : '#D9D4C7'
-                    const bgCol     = isIncluded ? '#EEF8D8' : isExcluded ? '#FAECE7' : '#FEFCF8'
-                    const txtCol    = isIncluded ? '#3A6B0E' : isExcluded ? '#993C1D' : T.textSecondary
+                    const borderCol = isIncluded ? T.greenDeep : isExcluded ? T.coralText : 'var(--border-ghost)'
+                    const bgCol     = isIncluded ? T.greenCream : isExcluded ? T.coralBg : 'transparent'
+                    const txtCol    = isIncluded ? T.greenTextDeep : isExcluded ? T.coralText : T.textSecondary
                     return (
                       <button
                         key={opt.value}
@@ -1833,13 +1966,17 @@ function StepBeneficiaries({ beneficiaryGroups, toggleBeneficiary, makePrimaryBe
           Pick 1
           <span aria-label="primary" style={{
             display: 'inline-flex', alignItems: 'center', gap: 4,
-            background: T.greenDeep, color: '#fff',
+            background: T.greenDeep, color: T.onDeep,
             padding: '2px 8px', borderRadius: 99,
             fontSize: 11, fontWeight: 500,
             fontFamily: 'var(--font-space-grotesk)',
             lineHeight: 1.2,
           }}>
-            <span style={{ color: T.lime, fontSize: 10 }}>★</span>
+            {/* Cream, not T.lime. lime now resolves to --deep and this pill's
+                background is --deep, so the star was deep on deep and simply
+                could not be seen. It has to match the star on the chip it is
+                describing. */}
+            <span style={{ color: T.onDeep, fontSize: 10 }}>★</span>
             primary
           </span>
           plus up to 3 others. Tap a
@@ -2017,7 +2154,7 @@ function FundingTypeChip({ label, desc, active, onClick }: { label: string; desc
       </div>
       {active && (
         <div style={{ width: 16, height: 16, borderRadius: '50%', background: T.lime, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
-          <Check size={9} color={T.greenDeep} strokeWidth={3} />
+          <Check size={9} color={T.onDeep} strokeWidth={3} />
         </div>
       )}
     </button>
@@ -2047,12 +2184,17 @@ function StepReveal({ matchCount, topMatches, hasMission, onExplore, onAddMissio
         <div style={{ textAlign: 'center', padding: '24px 0 16px' }}>
           <div style={{ fontSize: 40, marginBottom: 12 }}>🌱</div>
           <h1 style={{ ...H1_STYLE, fontSize: 22 }}>Your profile is saved</h1>
+          {/* This is the ZERO-match branch, so it cannot offer to show matches.
+              It also used to promise "we'll email you when matching grants
+              appear", which nothing currently does: /api/cron/send-alerts
+              exists but is not scheduled in vercel.json, only classify-alerts
+              is. Put the promise back when the alert cron is actually armed. */}
           <p style={{ ...SUBTITLE_STYLE, marginBottom: 0 }}>
-            We&rsquo;ll email you when matching grants appear. In the meantime, browse the full catalogue.
+            Nothing in the catalogue fits it closely enough yet. Have a look through everything and save anything worth watching.
           </p>
         </div>
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: 24 }}>
-          <Button variant="primary" size="lg" onClick={onExplore}>Browse all grants <ArrowRight size={15} /></Button>
+          <Button variant="primary" size="lg" onClick={onExplore}>Browse all funding <ArrowRight size={15} /></Button>
         </div>
       </>
     )
@@ -2129,7 +2271,7 @@ function NudgeCard({ title, subtitle, onAction, actionLabel }: { title: string; 
   const [hov, setHov] = useState(false)
   return (
     <div style={{ marginBottom: 8, padding: '16px 18px', background: T.cream1, borderRadius: 10, borderLeft: `3px solid ${T.lime}`, display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-      <div style={{ flexShrink: 0, width: 24, height: 24, background: T.greenDeep, color: T.lime, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 600 }}>+</div>
+      <div style={{ flexShrink: 0, width: 24, height: 24, background: T.greenDeep, color: T.onDeep, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 600 }}>+</div>
       <div style={{ flex: 1 }}>
         <div style={{ fontSize: 13, fontWeight: 500, color: T.textPrimary, marginBottom: 2, fontFamily: 'var(--font-space-grotesk)' }}>{title}</div>
         <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.4, fontFamily: 'var(--font-dm-sans)' }}>{subtitle}</div>

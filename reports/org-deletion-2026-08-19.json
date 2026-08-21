@@ -1,0 +1,26 @@
+{
+  "deleted_at": "2026-08-19",
+  "reason": "Item 24. A conversational-eval fixture org left behind by scripts/agent-eval/conversational.ts, holding two pipeline rows its owner could not read (apply_access false). Paul chose deletion over entitling it, so stray orgs are not sitting around when org caps arrive with Team.",
+  "safe_because": "The eval harness creates this org by name at run time and does not reference its id, so a future run makes its own. The owner keeps their real org (ASP Belong, entitled). Nothing referenced it: 0 projects, 0 applications, 0 org_core_content, so no NO ACTION foreign key blocked the delete.",
+  "cascaded": { "pipeline_items": 2, "events": 5 },
+  "org": {
+    "id": "3be48cd6-db7e-4951-8c2a-cd7f0353cf0a",
+    "name": "ZZ Conversational Eval CV-02 (delete me)",
+    "owner_id": "49fbf25b-6f5a-41c7-bb34-b3a1c0731f78",
+    "created_at": "2026-07-07T15:55:33.501657+00:00",
+    "apply_access": false,
+    "legal_structure": "registered_charity",
+    "primary_location": "UK-wide",
+    "impact_sectors": ["mental_health", "education", "young_people"],
+    "beneficiary_groups": ["young_people", "children", "families"],
+    "annual_income_band": "£100,000–£250,000",
+    "min_grant_target": 5000,
+    "max_grant_target": 100000,
+    "years_trading": 5,
+    "geographic_reach": "regional"
+  },
+  "pipeline_items": [
+    { "id": "2b59a910-931f-4e22-b1f0-fcea0e1c0ea9", "grant_name": "Youth Mental Health Fund", "funder_name": "Wellbeing Trust", "amount_requested": 40000, "stage": "won" },
+    { "id": "61e20b9f-9479-4c19-b78d-8930abbd786a", "grant_name": "Community Resilience Grant", "funder_name": "Resilience Foundation", "amount_requested": 30000, "stage": "applying" }
+  ]
+}

@@ -1,9 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
+import { enforceInferenceRateLimit } from '@/lib/mcp-rate-limit'
+import { MCP_CONTACT_EMAIL } from '@/lib/mcp-brand'
 
 const FROM_EMAIL  = process.env.ALERT_FROM_EMAIL ?? 'alerts@granttracker.co.uk'
 const NOTIFY_TO   = process.env.FEEDBACK_NOTIFY_EMAIL ?? 'hello@granttracker.co.uk'
+
+// Vercel-style X-Forwarded-For parsing. First entry is the real client IP.
+// Same shape as the copy in api/waitlist, which says the same of mcp-middleware.
+function extractClientIP(req: NextRequest): string {
+  const xff = req.headers.get('x-forwarded-for')
+  if (xff) return xff.split(',')[0].trim()
+  const real = req.headers.get('x-real-ip')
+  if (real) return real.trim()
+  return 'unknown'
+}
 
 function adminClient() {
   return createClient(
@@ -19,6 +31,33 @@ function escapeHtml(s: string): string {
 }
 
 export async function POST(req: NextRequest) {
+  // Per-IP ceiling, checked before anything is written or sent. Until this,
+  // the route was an unauthenticated write that also triggered an outbound
+  // email on every call, with no brake of any kind on either.
+  //
+  // Same limiter, posture and numbers as api/waitlist: fail CLOSED, because an
+  // Upstash outage must stop unbounded submissions rather than wave them
+  // through. Over-blocking costs a message that has an email address sitting
+  // next to the form as a fallback, and the 503 copy names it.
+  const limit = await enforceInferenceRateLimit({
+    scope: 'contact',
+    identifier: `ip:${extractClientIP(req)}`,
+    perHour: 5,
+    perDay: 20,
+  })
+  if (!limit.allowed) {
+    if (limit.reason === 'limiter_unavailable') {
+      return NextResponse.json(
+        { error: `We could not accept messages just now. Please email ${MCP_CONTACT_EMAIL} instead.` },
+        { status: 503 },
+      )
+    }
+    return NextResponse.json(
+      { error: 'That is a few too many messages. Please try again later.' },
+      { status: 429, headers: limit.retry_after ? { 'Retry-After': String(limit.retry_after) } : undefined },
+    )
+  }
+
   try {
     const { name, email, message } = await req.json()
 

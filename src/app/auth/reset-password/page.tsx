@@ -4,16 +4,13 @@ import { useState, useEffect, useCallback, Suspense } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
 import LogoMark from '@/components/icons/LogoMark'
 import {
   parseRecoveryLink,
   messageForErrorCode,
   isMissingVerifierError,
 } from '@/lib/auth/recovery-link'
-
-const UI = "var(--font-space-grotesk), Space Grotesk, sans-serif"
-const BODY = "var(--font-dm-sans), Plus Jakarta Sans, sans-serif"
+import '@/styles/shoots-band-a.css'
 
 /**
  * Recovery link handling.
@@ -38,12 +35,61 @@ const BODY = "var(--font-dm-sans), Plus Jakarta Sans, sans-serif"
  *    outcome lands on an explicit expired state with a resend control.
  *
  * `?code=` is still handled so links already sitting in inboxes keep working.
+ *
+ * ── Band A re-skin note ──────────────────────────────────────────────────
+ * The four-phase state machine below is untouched. Only presentation changed.
+ * Two things about that presentation are decisions, not decoration:
+ *
+ * The expired state is GOLD, not red. For M365 users, and most of these users
+ * are, a safe-links scanner spending the token before they click is routine.
+ * It is a normal step in the path, not a mistake they made, and the resend
+ * field is the primary action rather than an afterthought.
+ *
+ * The confirm phase is headed "You're nearly there", not "Reset your
+ * password". /auth/forgot-password already opens with "Reset your password",
+ * and a user who hits a dead link sees the second one immediately after the
+ * first. Same words, different page, different meaning.
  */
 type Phase = 'checking' | 'confirm' | 'ready' | 'invalid'
 
 type Credential =
   | { kind: 'token_hash'; value: string }
   | { kind: 'code'; value: string }
+
+function LockIcon() {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ color: 'var(--deep)' }}>
+      <rect x="4.5" y="10.5" width="15" height="9.5" rx="2.4" stroke="currentColor" strokeWidth="1.9" />
+      <path d="M8 10.5V7.8a4 4 0 018 0v2.7" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function TickIcon() {
+  return (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ color: 'var(--deep)' }}>
+      <path d="M5 12.5l4.6 4.5L19 7.5" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+function ClockIcon() {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ color: 'var(--deep)' }}>
+      <circle cx="12" cy="12" r="8.4" stroke="currentColor" strokeWidth="1.9" />
+      <path d="M12 7.6V12l2.9 2" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+function AlertIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M8 4.6v4.2M8 11.2v.6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  )
+}
 
 function ResetPasswordContent() {
   const [phase, setPhase] = useState<Phase>('checking')
@@ -211,191 +257,173 @@ function ResetPasswordContent() {
     }
   }
 
-  const card: React.CSSProperties = {
-    background: 'white',
-    borderRadius: 16,
-    padding: '40px 36px',
-    boxShadow: '0 2px 24px rgba(23,52,4,0.06)',
-    border: '0.5px solid rgba(23,52,4,0.06)',
-  }
-  const heading: React.CSSProperties = {
-    fontFamily: UI,
-    fontWeight: 500,
-    fontSize: 26,
-    lineHeight: 1.15,
-    letterSpacing: '-0.02em',
-    color: '#2C2C2A',
-    marginBottom: 8,
-  }
-  const bodyText: React.CSSProperties = {
-    fontFamily: BODY,
-    fontSize: 14.5,
-    color: '#5F5E5A',
-    lineHeight: 1.55,
-  }
-  const limeButton: React.CSSProperties = {
-    background: '#8ECB3C',
-    color: '#173404',
-    fontFamily: UI,
-    fontWeight: 600,
-    fontSize: 15,
-    padding: '13px 22px',
-    borderRadius: 10,
-    border: 'none',
-    cursor: 'pointer',
-    transition: 'opacity 0.15s',
-  }
-
   return (
-    <div style={{ background: '#FAFAF7', minHeight: '100vh', fontFamily: BODY, color: '#2C2C2A' }}>
+    <div className="shoots-a">
+      <div className="page">
 
-      {/* NAV */}
-      <nav style={{ background: 'white', borderBottom: '0.5px solid rgba(23,52,4,0.08)', padding: '18px 0' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}>
-            <LogoMark size={30} />
-            <span style={{ fontFamily: UI, fontWeight: 500, fontSize: 24, letterSpacing: '-0.01em', textTransform: 'lowercase', color: 'var(--deep, #1D3C3E)' }}>Shoots</span>
+        <header>
+          <Link href="/" className="brand">
+            <LogoMark size={28} />
+            <span>shoots</span>
           </Link>
-          <Link href="/" style={{ fontFamily: UI, fontSize: 13.5, color: '#5F5E5A', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-            <ArrowLeft size={14} /> Back to home
-          </Link>
-        </div>
-      </nav>
+        </header>
 
-      <div style={{ maxWidth: 460, margin: '0 auto', padding: '64px 24px 48px' }}>
-        <div style={card}>
+        <main className="centred">
+          <div style={{ width: '100%', maxWidth: 452 }}>
+            <div className={`card${phase === 'checking' || done ? ' card-centred' : ''}`}>
 
-          {phase === 'checking' && (
-            <p style={{ ...bodyText, fontSize: 14, textAlign: 'center', padding: '12px 0' }}>Checking your reset link...</p>
-          )}
-
-          {/* Click to redeem. Nothing is spent until this button is pressed, so a
-              mail scanner that prefetches the link cannot use up the token. */}
-          {phase === 'confirm' && (
-            <>
-              <h1 style={heading}>Reset your password</h1>
-              <p style={{ ...bodyText, marginBottom: 24 }}>
-                Confirm it&apos;s you to carry on. You&apos;ll choose a new password on the next step.
-              </p>
-              <button
-                onClick={handleRedeem}
-                disabled={redeeming}
-                style={{ ...limeButton, width: '100%', opacity: redeeming ? 0.7 : 1, cursor: redeeming ? 'default' : 'pointer' }}
-              >
-                {redeeming ? 'Checking...' : 'Continue'}
-              </button>
-            </>
-          )}
-
-          {phase === 'ready' && !done && (
-            <>
-              <h1 style={{ ...heading, fontSize: 28, marginBottom: 6 }}>Choose a new password</h1>
-              <p style={{ ...bodyText, marginBottom: 24 }}>Pick something at least 8 characters long.</p>
-              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                {error && (
-                  <div style={{ background: '#FAECE7', border: '0.5px solid rgba(153,60,29,0.25)', color: '#993C1D', fontSize: 13, padding: '11px 14px', borderRadius: 10 }}>
-                    {error}
-                  </div>
-                )}
-                <div>
-                  <label style={{ display: 'block', fontFamily: UI, fontWeight: 500, fontSize: 13, color: '#2C2C2A', marginBottom: 6 }}>New password</label>
-                  <div style={{ position: 'relative' }}>
-                    <input
-                      type={showPw ? 'text' : 'password'}
-                      value={password}
-                      onChange={e => setPassword(e.target.value)}
-                      className="form-input"
-                      style={{ paddingRight: 56 }}
-                      placeholder="At least 8 characters"
-                      required
-                      minLength={8}
-                    />
-                    <button type="button" onClick={() => setShowPw(v => !v)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontFamily: UI, fontSize: 12, color: '#8A8986', background: 'transparent', border: 'none', cursor: 'pointer' }} tabIndex={-1}>
-                      {showPw ? 'Hide' : 'Show'}
-                    </button>
-                  </div>
+              {phase === 'checking' && (
+                <div style={{ padding: '14px 0 10px' }}>
+                  <div className="spin-dark" style={{ marginBottom: 20 }} />
+                  <h1 className="t-status" style={{ marginBottom: 6 }}>Checking your reset link…</h1>
+                  <p className="t-body">This only takes a moment.</p>
                 </div>
-                <div>
-                  <label style={{ display: 'block', fontFamily: UI, fontWeight: 500, fontSize: 13, color: '#2C2C2A', marginBottom: 6 }}>Confirm new password</label>
-                  <input
-                    type={showPw ? 'text' : 'password'}
-                    value={confirmPw}
-                    onChange={e => setConfirmPw(e.target.value)}
-                    className="form-input"
-                    placeholder={'••••••••'}
-                    required
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  style={{ ...limeButton, marginTop: 4, opacity: loading ? 0.7 : 1, cursor: loading ? 'default' : 'pointer' }}
-                >
-                  {loading ? 'Saving...' : 'Set new password'}
-                </button>
-              </form>
-            </>
-          )}
-
-          {done && (
-            <>
-              <h1 style={{ ...heading, fontSize: 24 }}>Password updated</h1>
-              <p style={bodyText}>Taking you to your dashboard...</p>
-            </>
-          )}
-
-          {/* Dead link. Never show a password form here: anything typed could not
-              be saved, which is the whole reason this page was broken. */}
-          {phase === 'invalid' && (
-            <>
-              <h1 style={{ ...heading, fontSize: 24 }}>Reset link expired</h1>
-              <p style={{ ...bodyText, marginBottom: 22 }}>{invalidReason}</p>
-
-              {resent ? (
-                <div style={{ background: '#F1F7E4', border: '0.5px solid rgba(59,109,17,0.2)', borderRadius: 10, padding: '14px 16px' }}>
-                  <p style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, color: '#3B6D11', marginBottom: 4 }}>New link sent</p>
-                  <p style={{ ...bodyText, fontSize: 13, margin: 0 }}>
-                    If that address has an account, a fresh reset link is on its way. It expires in one hour.
-                  </p>
-                </div>
-              ) : (
-                <form onSubmit={handleResend} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {resendError && (
-                    <div style={{ background: '#FAECE7', border: '0.5px solid rgba(153,60,29,0.25)', color: '#993C1D', fontSize: 13, padding: '11px 14px', borderRadius: 10 }}>
-                      {resendError}
-                    </div>
-                  )}
-                  <div>
-                    <label style={{ display: 'block', fontFamily: UI, fontWeight: 500, fontSize: 13, color: '#2C2C2A', marginBottom: 6 }}>Email address</label>
-                    <input
-                      type="email"
-                      value={resendEmail}
-                      onChange={e => setResendEmail(e.target.value)}
-                      className="form-input"
-                      placeholder="you@organisation.org"
-                      required
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={resending}
-                    style={{ ...limeButton, opacity: resending ? 0.7 : 1, cursor: resending ? 'default' : 'pointer' }}
-                  >
-                    {resending ? 'Sending...' : 'Send me a new link'}
-                  </button>
-                </form>
               )}
-            </>
-          )}
 
-          {!done && phase !== 'checking' && (
-            <div style={{ marginTop: 24, paddingTop: 20, borderTop: '0.5px solid rgba(23,52,4,0.08)', textAlign: 'center' }}>
-              <Link href="/auth/login" style={{ fontFamily: UI, fontSize: 13, color: '#5F5E5A', textDecoration: 'none' }}>
-                Back to sign in
-              </Link>
+              {/* Click to redeem. Nothing is spent until this button is pressed, so a
+                  mail scanner that prefetches the link cannot use up the token. */}
+              {phase === 'confirm' && (
+                <>
+                  <div className="badge badge-sage"><LockIcon /></div>
+                  <h1 className="t-title">You&apos;re nearly there</h1>
+                  <p className="t-body" style={{ marginTop: 8, marginBottom: 24 }}>
+                    Your link is valid. Click continue to confirm it&apos;s you, then choose a new password.
+                  </p>
+                  <button
+                    className="btn btn-primary btn-block"
+                    onClick={handleRedeem}
+                    disabled={redeeming}
+                  >
+                    {redeeming ? <><span className="spin" />Checking…</> : 'Continue'}
+                  </button>
+                </>
+              )}
+
+              {phase === 'ready' && !done && (
+                <>
+                  <h1 className="t-title">Choose a new password</h1>
+                  <p className="t-body" style={{ marginTop: 8 }}>Pick something at least 8 characters long.</p>
+
+                  <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18, marginTop: 26 }}>
+                    {error && (
+                      <div className="banner" role="alert">
+                        <AlertIcon />
+                        <span>{error}</span>
+                      </div>
+                    )}
+
+                    <div className="field">
+                      <label htmlFor="password">New password</label>
+                      <div className="pw">
+                        <input
+                          id="password"
+                          className="input"
+                          type={showPw ? 'text' : 'password'}
+                          value={password}
+                          onChange={e => setPassword(e.target.value)}
+                          placeholder="At least 8 characters"
+                          autoComplete="new-password"
+                          required
+                          minLength={8}
+                        />
+                        <button
+                          type="button"
+                          className="reveal"
+                          onClick={() => setShowPw(v => !v)}
+                          aria-label={showPw ? 'Hide password' : 'Show password'}
+                        >
+                          {showPw ? 'Hide' : 'Show'}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="field">
+                      <label htmlFor="confirm-password">Confirm new password</label>
+                      <input
+                        id="confirm-password"
+                        className="input"
+                        type={showPw ? 'text' : 'password'}
+                        value={confirmPw}
+                        onChange={e => setConfirmPw(e.target.value)}
+                        placeholder="••••••••"
+                        autoComplete="new-password"
+                        required
+                      />
+                    </div>
+
+                    <button type="submit" className="btn btn-primary btn-block" disabled={loading} style={{ marginTop: 4 }}>
+                      {loading ? <><span className="spin" />Saving…</> : 'Set new password'}
+                    </button>
+                  </form>
+                </>
+              )}
+
+              {done && (
+                <div style={{ padding: '8px 0 4px' }}>
+                  <div className="badge badge-sage"><TickIcon /></div>
+                  <h1 className="t-status" style={{ marginBottom: 7 }}>Password updated</h1>
+                  <p className="t-body">Taking you to your dashboard…</p>
+                </div>
+              )}
+
+              {/* Dead link. Never show a password form here: anything typed could not
+                  be saved, which is the whole reason this page was broken.
+                  Gold rather than red: for M365 users a safe-links scanner burning
+                  the token is routine, not a mistake they made. */}
+              {phase === 'invalid' && (
+                <>
+                  <div className="badge badge-gold"><ClockIcon /></div>
+                  <h1 className="t-status">Reset link expired</h1>
+                  <p className="t-body" style={{ marginTop: 8, marginBottom: 22 }}>{invalidReason}</p>
+
+                  {resent ? (
+                    <div className="note-success">
+                      <p className="note-h">New link sent</p>
+                      <p className="t-meta">
+                        If that address has an account, a fresh reset link is on its way. It expires in one hour.
+                      </p>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleResend} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                      {resendError && (
+                        <div className="banner" role="alert">
+                          <AlertIcon />
+                          <span>{resendError}</span>
+                        </div>
+                      )}
+
+                      <div className="field">
+                        <label htmlFor="resend-email">Email address</label>
+                        <input
+                          id="resend-email"
+                          className="input"
+                          type="email"
+                          value={resendEmail}
+                          onChange={e => setResendEmail(e.target.value)}
+                          placeholder="you@organisation.org"
+                          autoComplete="email"
+                          required
+                        />
+                      </div>
+
+                      <button type="submit" className="btn btn-primary btn-block" disabled={resending} style={{ marginTop: 4 }}>
+                        {resending ? <><span className="spin" />Sending…</> : 'Send a new link'}
+                      </button>
+                    </form>
+                  )}
+                </>
+              )}
+
+              {!done && phase !== 'checking' && (
+                <div className="card-foot">
+                  <Link href="/auth/login" className="btn btn-tertiary">Back to sign in</Link>
+                </div>
+              )}
+
             </div>
-          )}
-        </div>
+          </div>
+        </main>
+
       </div>
     </div>
   )
@@ -404,8 +432,20 @@ function ResetPasswordContent() {
 export default function ResetPasswordPage() {
   return (
     <Suspense fallback={
-      <div style={{ background: '#FAFAF7', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <p style={{ fontFamily: BODY, fontSize: 14, color: '#5F5E5A' }}>Loading...</p>
+      <div className="shoots-a">
+        <div className="page">
+          <main className="centred">
+            <div style={{ width: '100%', maxWidth: 452 }}>
+              <div className="card card-centred">
+                <div style={{ padding: '14px 0 10px' }}>
+                  <div className="spin-dark" style={{ marginBottom: 20 }} />
+                  <h1 className="t-status" style={{ marginBottom: 6 }}>Checking your reset link…</h1>
+                  <p className="t-body">This only takes a moment.</p>
+                </div>
+              </div>
+            </div>
+          </main>
+        </div>
       </div>
     }>
       <ResetPasswordContent />

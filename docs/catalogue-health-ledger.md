@@ -1314,6 +1314,1351 @@ its inactive state. No next-round date is published, so none was invented.
 deadline looked like a rush-the-user error until I read the cycle: it already models
 the four quarterly trustee cut-offs correctly. Only the URL changed.
 
+## The 115 funds nobody can see, audited 2026-08-19
+
+`between_rounds_scheduled` hides a row from users completely, and 115 rows sit in
+it. Paul asked what they are after the Aldi row went in there by mistake. Bucketed
+by what the CARD would say — using `formatNextOpen` and `deriveCycleDates`
+themselves, not a reading of the data — rather than by what the columns hold:
+
+| Bucket | Rows | What a user would see if it were visible |
+|---|---:|---|
+| We can name the date | 31 | "Opens 11 May 2027" |
+| Derivable from `deadline_cycle` | 6 | same, after one write |
+| Shut, return date unknown | 56 | "Closed — check funder" |
+| **No reopening information at all** | **22** | nothing |
+
+**Thirty-seven of them are being hidden for no reason a user would recognise.**
+Seven open within a fortnight and the soonest is 25 August, six days away. The
+names are not obscure: Esmée Fairbairn, the Leathersellers' Foundation, Steel
+Charitable Trust, Severn Trent, Youth Music, the four Postcode trusts, the Bromley
+Trust's three programmes. A fundraiser planning next quarter cannot find any of
+them, and the fund they cannot find is often the one worth preparing for.
+
+**The 22 with nothing to say are the actual risk, and they are not "between
+rounds".** `check-coming-soon` is what brings a row back, and it keys on
+`next_open_date_parsed`. With no date there is nothing to fire on, so these rows
+are not scheduled to return — they are hidden indefinitely, and nothing in the
+system is waiting for them. Last read: oldest 105 days, median 26. They need a
+page read or an archive decision, per row. Among them are Lloyds Bank Foundation
+Racial Equity Grants, three Arts Council of Wales programmes, National Lottery
+Community Fund Step Forward and Ironmongers' Grants to Charities.
+
+**And even for the dated ones, reopening is not the same as reappearing.**
+`check-coming-soon` moves the row to `tagged_awaiting_review` and deliberately
+leaves visibility alone, so on its opening day a fund lands in the review queue
+rather than in front of users, and stays invisible until someone publishes it.
+That gap is dead time on a fund that is genuinely open. Surfacing the dated rows
+as "Opens ..." now closes it: the row is already visible, and the cron's job
+narrows to getting a real closing date onto a row users can already see.
+
+## Surfacing the dated between-rounds funds, 2026-08-19
+
+**31 of the 115 hidden funds are now visible, showing when they open.** Paul
+approved surfacing the dated ones rather than hiding them: a fund nobody can find
+is worse than a fund a fundraiser can diarise. The first two open on 25 August.
+
+| | Rows |
+|---|---:|
+| Planned from the audit | 37 |
+| Withdrawn as a duplicate before publishing | 1 |
+| Made live and naming an opening date | 31 |
+| Made live, then pulled back because the card would not say it | 5 |
+
+**The duplicate guard earned its place on the first run.** `discovery_queue`
+re-added Asda's Local Community Spaces Fund on 15 August, six months after the
+funder's own scraper had it, pointing at a third-party blog instead of
+asdafoundation.org. Publishing both would have put the same fund in front of a
+user twice with two different amounts. The guard aborts the whole run on any
+collision rather than picking a winner, and it was tested by removing the
+exclusion and watching it abort.
+
+### The floor was in the wrong place
+
+The script checked what the card WOULD say, then wrote. Five of those writes were
+then refused by the trust ladder — admin-pinned `next_open_date`, and `deadline`
+values written by `admin:cycle_derive_2026-07-26` — and the rows went live anyway,
+because `is_active` and `pipeline_state` are not tracked fields and applied
+regardless. **A floor checked before the write is not a floor.**
+
+Worse, those five were invisible to the obvious follow-up query. "Which rows did
+my run change" was asked of `field_provenance`, and a row whose every tracked
+write was refused carries no provenance from the run at all. Three of the five
+were found only by checking every live row with a future opening date, whoever
+made it live. **When the fields that change are untracked, provenance cannot
+answer "what did I just do" — ask the rendered result instead.**
+
+Two were fixable and stayed live: Suffolk Giving Fund and Steel Charitable Trust
+both carried `is_rolling = true` alongside a scheduled reopening, which cannot
+both be true, and the card suppresses "Opens ..." on any rolling row.
+
+Three went back to hidden and are Paul's to release, all blocked by his own admin
+values: Simon Gibson (`deadline` pinned to the same date as the opening, so the
+card renders the opening as a closing date), The Bromley Trust — Grants, Innovate
+UK Women in Innovation and Fellowship Fund (`deadline` from `cycle_derive` at
+trust 100, sitting in front of an opening date that has not arrived). Forrester
+Family Trust is a fourth, blocked differently: its text is correct and unreadable,
+"reopens on 05/01/2027 and closes 17/01/2027", because `formatNextOpen` only
+parses month names. Its stored parsed date was also a month out and is corrected.
+
+### 11 live funds still show a deadline for a round that has not opened
+
+Found by the same check and NOT touched, because they were live before today and
+are a separate decision: Ford Britain Trust, Bristol Impact Fund 3, Schroder
+Charity Trust, Jerwood Annual Funding Round, Oake Sunshine Fund, the BRIT Trust,
+Innovate UK Growth Catalyst, The Health Lottery Foundation, Tower Hamlets
+Community Grant Programme, Better Brighton & Hove Ward Pots and the William
+Kendall Small Awards Programme. Each shows a closing date on a card for a fund a
+user cannot apply to yet. This is the same fault the Aldi row had, and the reason
+`deadline` beating `next_open_date` in the card is worth revisiting as a rule
+rather than row by row.
+
+**`formatNextOpen` cannot read numeric dates.** `05/01/2027` renders as "Closed —
+check funder". Teaching it that format is a small change that would recover
+Forrester and probably others; it is not done here because it changes what every
+card in the catalogue can say.
+
+## The 11 live funds whose card and timing disagreed, worked 2026-08-19
+
+Found by the card check, not by the data. Each one read on the funder's page
+first, because **the fault was not the same in any two rows and the columns
+cannot tell you which field is the stale one.** Two were the exact opposite of
+the reported problem.
+
+| Row | What was actually wrong | Now |
+|---|---|---|
+| Schroder Charity Trust | **Nothing.** Open now, closes 5pm 28 Aug 2026. The "Autumn 2026" OPENING date, set in March, was the stale field | deadline 28 Aug, opening date cleared |
+| Oake Sunshine Fund | **Nothing.** Open now, "Apply by: Mon 12th October 2026". Same stale-opening shape | deadline 12 Oct, opening date cleared |
+| BRIT Trust | The 30 Apr 2027 deadline was `cycle_derive` rolling the 2026 cycle forward. No 2027 round has been announced | deadline removed, text quotes the page |
+| Jerwood | Deadline 3 Feb 2027 **is the opening date** — "Applications open 9am 3 February (closing 2pm 17 March) 2027" | **BLOCKED** — Paul's pin |
+| Bristol Impact Fund 3 | Nothing closes 28 Apr 2027. Next timeline published Sept 2027, round runs from Apr 2028 | **BLOCKED** — Paul's pin |
+| Ford Britain Trust | Nothing. Opens 1 Sep, closes 31 Oct 2026; the card shows the closing date, which is the useful one | left alone |
+| Health Lottery, Innovate UK Growth Catalyst | Nothing. Both hold honest prose saying the next round is unannounced, and the card says "Closed — check funder" | left alone |
+| Better Brighton & Hove, Tower Hamlets, William Kendall | Nothing false. "Late 2026" / "Winter 2026" is all anyone has published | left alone, see below |
+
+**Two rows are still wrong on a live card and only Paul can fix them.** Both are
+`admin:paulkilty1@gmail.com` pins on `deadline`, which no other source outranks.
+Jerwood shows a fundraiser "deadline 3 February 2027" for a round that OPENS at
+9am that day and runs six more weeks; the real closing date is 17 March 2027.
+Bristol shows a deadline for a round that does not exist. Both writes were
+attempted so the refusal is on the record rather than assumed.
+
+**The lesson is the one already in CLAUDE.md, in a new place.** "The card does not
+name an opening date" is a sentence about the card. "This fund is shut and we are
+showing a closing date" is a sentence about the user, and only five of the eleven
+turned out to be that. Two were the reverse — an open fund carrying a stale
+opening date — and had the check been trusted as a finding rather than as a
+prompt to go and read, both would have been "fixed" into being wrong.
+
+**`formatNextOpen` cannot read a bare season.** "Late 2026" and "Winter 2026"
+fall through to "Closed — check funder" even though the season is the only thing
+the funder has published. Three live rows are affected. The seasonal branch
+already handles "late November", so extending it to a season plus a year is
+small — held back only because it changes what every card in the catalogue can
+say, which is Paul's call rather than a tidy-up.
+
+## How well the system actually works, measured 2026-08-19
+
+Paul asked how effective the current system is at maintaining accuracy and at
+sourcing new opportunities. Both answered with numbers, and the accuracy one with
+a sample rather than a coverage statistic, because coverage is the proxy that has
+already misled us twice.
+
+### Accuracy: the coverage number is perfect and does not mean what it says
+
+| Measure | Value |
+|---|---:|
+| Live rows | 625 |
+| Live rows never read | **0** |
+| Live rows last read more than 7 days ago | **0** |
+| Oldest read on any live row | 16 August |
+| `_page_read.note = 'verified'` | 413 of 625 |
+
+On those figures the catalogue looks immaculate. So a random sample of 12 live
+rows was pulled and each read against its funder's page by hand.
+
+| Verdict | Rows |
+|---|---:|
+| Correct | 4 |
+| Minor error | 1 |
+| **Material error** | **3** (was 4 — see the Ferguson withdrawal below) |
+| Could not assess (bot wall, or a scope question rather than a fact) | 3 |
+
+The material errors, as first written, one of which did not survive checking:
+
+- **Beinneun Student Scholarship Fund** — "Individuals aged 16 or over who are
+  residents of Fort Augustus". A scholarship for individuals, live in a catalogue
+  whose audience is charities, CICs and social enterprises.
+- ~~**Allan & Nesta Ferguson Trust** — the stored £50,000 maximum appears
+  nowhere.~~ **WITHDRAWN the same evening.** The £50,000 is the funder's own:
+  its guidance page says "Requests up to £50,000 are reviewed monthly." The
+  hand-check read only `apply_url`, which is a login wall stating nothing, and
+  called the figure invented on that basis. The verifier, which hops up to three
+  pages, found it immediately. `apply_url` pointing at a login wall is still
+  worth fixing; the amount was never wrong. **One hand-read page is not the
+  funder's position** — the same mistake as judging a URL correction by how the
+  URL looked, recorded above.
+- **Community Foundation for Northern Ireland** — stored range £2,000–£5,000. The
+  page's three open funds are £3,000, £2,000 and £500. The range matches nothing.
+- **Emerton-Christie Charity** — stored £1,000–£3,000; the page states no amounts
+  at all.
+
+Plus one minor: HPC Community Fund Small Grants caps at £10,000 in our row and
+"£20,000 over 3 years, or up to £10,000 if project is 1 year" on the page.
+
+**Roughly one live row in four carries a material error, on a sample of twelve.**
+Corrected down from "one in three" the same evening, when building the check
+disproved one of the four findings that motivated it. That is enough to act on
+and not enough to quote: nine assessable rows puts the true rate somewhere broad
+around a quarter. The number worth repeating is the contrast, not the precision —
+**100% of live rows were read in the last three days, and something like a
+quarter of them are wrong.**
+
+**And the correction is the more useful finding.** An audit done by fetching one
+page per row is a weaker instrument than the engine it is auditing, because the
+engine reads up to three. Any future spot-check should run `verifyRow` rather
+than a single fetch, or it will keep manufacturing false positives on funders
+whose apply_url is a form and whose detail is one click away.
+
+**`verify-rows` measures that a page was fetched, not that the row is true.**
+Two of the three surviving material errors are AMOUNTS, which is the field a fetch-and-
+compare is worst at: the page states no figure, so nothing contradicts the stored
+one, and silence reads as agreement. `amount_ungrounded` exists as a reason code;
+it is not firing on these rows. Same shape as the two proxies already recorded at
+the top of CLAUDE.md.
+
+### Sourcing: volume is not the problem, precision is
+
+Twelve weeks of intake:
+
+| | Rows | Share |
+|---|---:|---:|
+| Added | 628 | |
+| Now live | 183 | 29% |
+| Withdrawn as junk, duplicate or out of scope | 255 | 41% |
+| Still in the queue | 52 | 8% |
+
+**Two rows are discarded for every three brought in.** Lifetime the ratio is
+worse: 960 withdrawn against 625 live. Roughly 50 new rows a week arrive and
+about 15 survive, and every discarded row still costs an enrichment call and a
+place in the review queue.
+
+Duplication in the LIVE catalogue is now small — 2 title collisions and 2 URL
+collisions across 625 rows. The peer session's dedup fix on 19 August is the
+reason it will stay that way: the old check loaded `.limit(3000)` into a Set
+against a 1,912-row table that PostgREST caps at 1000, so it reported "no
+duplicate" for anything in the missing half. Its rule 4 is the one that matters
+most — a funder a human archived now survives the next discovery run instead of
+being re-added.
+
+### What this says to do next
+
+Not more verification passes. The coverage is already 100% and the errors survive
+it. The gap is that nothing tests whether a stored FIGURE is supported by the
+page, as opposed to merely unchallenged by it. That is one reason code doing its
+job, not a new system.
+
+## The amount check now needs the page to state the figure, 2026-08-19
+
+Built after the measurement above. `verify-rows` never asked about amounts at
+all — the comment in `verify-row.ts` said so outright: *"Grant AMOUNTS are
+deliberately absent, and not for the usual reason: the verifier does not extract
+them at all, so there is no silence to detect."* So a stored figure was never
+challenged: nothing contradicted it, and silence passed as agreement.
+
+The verifier now extracts `amount_min` and `amount_max` with a quote, and a new
+reason code, `amount_unsupported`, fires when **we assert a figure and the page
+states none**. 510 of 625 live rows (82%) assert an amount, so that is the
+population.
+
+**The prompt spends more words on what is NOT an amount than on what is**, because
+every wrong answer here is confident: the size of the POT ("£2 million is
+available this year"), a match percentage ("we fund up to 75% of project costs"),
+and an amount belonging to a different fund on the same page all have to come
+back null. A figure invented from the funder's size is worse than no figure.
+
+**Absence is still not a finding.** `no_amount` already covers a row with nothing
+to show, and an absent amount renders as absent and misleads nobody. This fires
+only where a number is on the card and the funder never published it.
+
+**It is `info`, not blocking, on purpose.** The case for blocking is real — a
+figure the page does not state is wrong rather than missing, which is the test
+every blocking code meets. But the check has never run against the catalogue.
+Blocking on the first pass of an unmeasured extractor would hold an unknown
+number of correct rows on the word of a model nobody has scored on this field,
+and it would change what auto-publish does and bump the policy version. Fire rate
+first, then Paul's decision.
+
+### Building the check disproved one of the findings that motivated it
+
+The probe runs the real verifier against four rows whose truth was established by
+hand, three that should fire and one that should not. It came back 2 of 4, and
+both misses were the probe being wrong:
+
+- **Allan & Nesta Ferguson** — the hand-check called its £50,000 invented after
+  reading `apply_url`, which is a login wall stating nothing. The verifier hopped
+  one page to the funder's guidance and returned *"Requests up to £50,000 are
+  reviewed monthly."* The figure is the funder's own.
+- **Community Foundation for Northern Ireland** — the read stops at the gate with
+  `multiple_funds`, before any fact is extracted. That is the correct verdict and
+  a different problem: the row needs splitting, not its figure checking.
+
+**An audit that fetches one page per row is a weaker instrument than the engine it
+is auditing.** Future spot-checks should run `verifyRow`, not a single fetch, or
+they will keep manufacturing false positives on funders whose apply_url is a form
+and whose detail is one click away.
+
+Ferguson also exposed a real bug in the first version. The unsupported note was
+stamped on BOTH amount fields whenever the page was silent, so a row with no
+minimum carried "we state a figure this page does not" against a figure it does
+not state. And because a row is read across up to three pages, the first page
+could stamp "unsupported" and a later hop confirm the same figure. The writer now
+notes only fields the row actually asserts, the reader treats a confirmation
+anywhere in the read as outranking silence elsewhere in it, and `foldResult`
+drops the stale note from the cron report. **A check that reads one page of a
+three-page read is the same class of error as the audit that produced it.**
+
+Probe now 4 of 4. Nine unit tests, including both halves of the Ferguson case.
+
+## Sub-tags on investment and programme rows, 2026-08-19
+
+Paul's idea: *"for the investor and programmes funder types, it would be good to
+have sub tags on each card to label what they are."*
+
+**Most of it already existed and nobody had noticed.** `funding_subtype` was a
+single text column, in the view, rendering as a pill on the search card, editable
+in the admin form, and read by the matcher against
+`organisations.funding_subtype_preferences`. What was missing was the data
+quality, the plural, and the filter. Worth remembering before the next "let's
+build X": the check is five minutes and it changed what this piece of work was.
+
+### One value per row was forcing a lie
+
+38 of the 69 live rows carry more than one tag. Access is blended finance AND a
+loan AND social investment. Trust for London does loans AND equity. The Fore is a
+grant AND a support programme AND training. Averages after tagging: 2.0 per
+investment row, 1.6 per programme row.
+
+`funding_subtypes text[]` is now the source of truth, with a database trigger
+keeping the singular equal to its first element so the matcher and the admin form
+did not have to change. **The trigger's first version was wrong** and the
+round-trip test in migration 065 caught it: it asked whether the array was
+non-empty rather than which column had been written, so an admin editing
+`funding_subtype` on a row that already had an array would have watched the
+change revert silently.
+
+### The existing tags contained real errors
+
+Fredericks Foundation — whose entire product is *"repayments are based on a
+percentage of revenue"* — was tagged `equity`. Black Seed VC, which writes
+£100k-£400k cheques, was `social_investment`. The Energy Resilience Fund, *"40%
+grant and 60% loan"*, was `loan` alone. Cross-type contamination was widespread:
+grant rows carried `equity` and `pro_bono_consulting`, programme rows carried
+`restricted` and `small_grant`.
+
+### Twelve programme rows are not programmes
+
+The taxonomy did diagnostic work, which was the argument for doing it at all. Ten
+are plain grants with "programme" or "fund" in the name — **AI For All, Co-op
+Belong, Doc Society, Dormant Assets for All, DWF Foundation, Horizon Europe
+Cluster 3, Skinners' Company, Strengthening Organisations, The Climate Change
+Collaboration, Youth Matters Fund**. Two are neither: **Gatsby** commissions its
+own research in partnership rather than accepting applications, and **Social
+Enterprise NI** signposts other people's funding.
+
+They are tagged `includes_grant` and left where they are. Retyping moves a row
+between tabs, which changes what a user finds where — **Paul's call, not a tidy-up,
+and it is not done here.**
+
+### Also visible: the investment tab is not all for this audience
+
+Start Up Loans and its South West franchise are personal loans for people
+starting a business. Black Seed VC and Bethnal Green Ventures buy equity in
+startups. Innovate UK Innovation Loans fund late-stage commercial R&D. S J Noble
+lends to rural businesses. None is wrong as a record; all sit oddly in a
+catalogue for charities, CICs and social enterprises, and the `equity` tag now at
+least says so on the card — **a registered charity has no shares to sell.** Same
+question as the gov.uk withdrawal on 18 August, and unanswered.
+
+### What the filter does and does not offer
+
+A row in the existing filter panel, on the investment and programme tabs only.
+Options carry a count and any with no rows are not rendered: `quasi_equity`,
+`convertible`, `fellowship` and `cohort_grant` are real instruments the catalogue
+does not hold, and offering them would empty the screen with no visible reason.
+Selections clear on a tab change, because a filter that is not rendered on the
+tab you are looking at must not still be filtering it.
+
+**The exhaustive-deps lint caught a bug that would have shipped.** `activeSubtypes`
+went into the wrong `useMemo` dependency array — an earlier one, not the memo that
+owns the predicate — so ticking a box would have done nothing until some other
+state change forced a recompute. Intermittent, and invisible to `tsc`.
+
+## In-kind sub-tags, 2026-08-19
+
+Same job as investment and programme, and in-kind had the worst tags of the four.
+
+**Microsoft for Nonprofits was tagged `office_space`.** The classifier had read
+"Office 365". Slack was `pro_bono_consulting`. Cranfield Trust, Taproot and
+Charterpath were all `volunteering`, which reads as "we will send you helpers"
+rather than "a qualified accountant will do your year end". 23 of the 50 rows had
+no tag at all.
+
+**Two codes added, because the gap was real rather than a matter of taste.**
+`goods` covers physical things being given away, which nothing did: FareShare's
+food, the Hygiene Bank's products, Selco's and Wickes' building materials, In Kind
+Direct's whole catalogue, TechSoup's hardware and the Digital Inclusion Network's
+refurbished devices. Nine rows. `mentoring` separates one person's time from a
+team doing the work, which is a different offer and a different ask.
+
+45 of 50 tagged, 20 of them with more than one tag.
+
+### Five rows are not in-kind support, and one is a duplicate
+
+Left untagged rather than given a label that would hide the problem. **A wrong
+label is worse than none**, so the two that were already carrying
+`pro_bono_consulting` had it removed.
+
+| Row | What it actually is |
+|---|---|
+| Theatre Tax Relief | a Corporation Tax relief for companies producing theatre |
+| TheGivingMachine | its own page: "This is not a grant scheme — it's a fundraising platform" |
+| Buy Social Corporate Challenge | its own page: "This is not a grant scheme." A procurement partnership |
+| UK & Ireland Community Tree Planting | cash at up to £2.15 per tree. A grant, filed as in-kind |
+| Yorkshire Universities | its own entry: "not a grant-making funder" |
+| Superhighways ×2 | the same organisation entered twice, "London Charities" and "London VCSEs" |
+
+**Across the three tabs, the taxonomy has now found 18 rows filed under the wrong
+funding type** — twelve in programmes and six here. That is a better yield than
+the labelling itself, and it is the argument for doing grants next.
+
+### The filter is on three tabs, not four
+
+Grants is deliberately excluded. Its sub-types — unrestricted, restricted,
+capital — describe SPEND RESTRICTION, which `spend_restriction` already filters
+on (migrations 047/048). Two controls asking one question would be worse than
+one, and the honest fix there is to decide which axis wins rather than to add a
+second.
+
+**Coverage after both passes:**
+
+| Tab | Live | Tagged | More than one tag |
+|---|---:|---:|---:|
+| Investment | 33 | 33 | 21 |
+| Programme | 36 | 36 | 17 |
+| In-kind | 50 | 45 | 20 |
+| Grant | 497 | 178 | 0 |
+
+## The 18 mis-filed rows, moved 2026-08-19
+
+Paul: *"yes move them."* Every one was found by the sub-tagging, not by looking
+for them — forcing each row to answer "which of these are you" makes the ones
+that are none of them obvious.
+
+| Disposition | Rows |
+|---|---:|
+| Moved from Programmes to Grants | 10 |
+| Moved from In-Kind to Grants | 1 |
+| Moved to Grants and marked invitation-only | 1 |
+| Withdrawn: not a funding opportunity, or a duplicate | 6 |
+
+**Gatsby got a different disposition on purpose.** It genuinely makes grants, but
+"typically commissions research and designs interventions in partnership with
+sector and industry experts" — it does not take applications. Moving it to Grants
+without also marking it invitation-only would have sent fundraisers to a door
+that does not open, which is a worse outcome than leaving it mis-filed.
+
+**Withdrawn, each quoting what made the call:** Social Enterprise NI signposts
+other people's funds; Theatre Tax Relief is claimed from HMRC rather than applied
+for; TheGivingMachine and Buy Social both state on their own pages that they are
+not grant schemes; Yorkshire Universities is recorded in its own entry as "not a
+grant-making funder"; and one of the two Superhighways rows is a duplicate — the
+survivor links the service page rather than the homepage and was enriched in July
+against the other's April.
+
+**Sub-types were cleared on every move.** `includes_grant` is a programme code
+and means nothing on a grant row, and the grant codes describe spend restriction,
+which none of these rows state. A wrong label is worse than none and an invented
+one is worse still.
+
+### The three tagged tabs are now at 100%
+
+| Tab | Live before | Live after | Tagged |
+|---|---:|---:|---:|
+| Grant | 497 | 509 | 178 |
+| In-kind | 50 | 44 | 44 |
+| Investment | 33 | 33 | 33 |
+| Programme | 36 | 24 | 24 |
+
+Not a coincidence and not a target that was chased: **the rows that could not be
+tagged were exactly the rows that did not belong.** Untaggability turned out to
+be the diagnostic, which is worth remembering the next time a tagging pass leaves
+a residue — the residue is the finding.
+
+Programmes lost a third of its rows. That is the honest size of the tab, and the
+number to hold in mind before claiming programme coverage anywhere.
+
+## Funds for individuals were telling charities they qualified, 2026-08-20
+
+Paul asked about Doc Society: he could not find a fund matching our row, and the
+row was showing under Programmes. Both true, and the second was a stale page — it
+had moved to Grants the night before. Chasing the first found something bigger.
+
+**Doc Society's row named a fund that does not exist.** "Good Pitch & Documentary
+Fund" welds together a convening event and a name nothing on the site carries.
+The funder does run eight funds, three of them open. The row is now titled and
+linked as the front door it is, and its amounts corrected: £10,000-£200,000
+appeared nowhere, against a published position of "the total Doc Society
+contribution to your project cannot exceed £150,000", awards "likely to fall in
+the £30K range for development and from £50,000 to £80,000 for production".
+
+Paul's call on scope: *"might be worth having for individuals, think they are
+worth keeping."* So the catalogue now carries funds whose applicant is a person,
+not an organisation — and that made a latent data fault urgent.
+
+### 12 of 16 individual-facing rows admitted organisations that cannot apply
+
+`eligible_structures` is a HARD GATE in the matcher. Sixteen live rows describe
+individual applicants in their own eligibility prose. Twelve carried only
+organisation structures.
+
+A registered charity was being matched to the **Beinneun Student Scholarship**
+("individuals aged 16 or over who are residents of Fort Augustus"), to **Barrhill
+Greener Homes** ("individual residents aged 18 or over... you must own the
+property"), and to five further education funds for named Scottish and Welsh
+parishes. None of them takes an organisation of any kind.
+
+**This is CLAUDE.md rule 6 arriving from the other direction.** The rule guards
+against withholding an exclusion; this was asserting an eligibility that was
+false. The cost is the same — an application that could never have succeeded.
+
+**Narrowing was the safe direction here, which is the opposite of the usual
+case.** The publish gate's `tags_changed` note reasons that "narrowing hides a
+fund from SOME organisations; it never shows a fund to someone barred from it."
+Exactly so: removing an organisation structure from a fund that never accepted
+organisations costs nobody a real match.
+
+| Group | Rows | Action |
+|---|---:|---|
+| Individuals only | 9 | set to `['individual']`, organisation types removed |
+| Genuinely both | 6 | `individual` added, existing kept |
+| Hedged prose | 1 | widened only, flagged for a page read |
+
+The hedged one is the James Ahern Foundation, whose brief says applications
+"appear to be from individuals rather than organisations". Guessing a narrowing on
+that would be how a real fund gets hidden, so it was widened and left flagged.
+
+### Hackney: released the same day, after reading the page
+
+**Hackney Crisis and Resilience Fund** was pinned by `admin:paulkilty1@gmail.com`
+to eight organisation structures. It was flagged rather than overridden because
+the pin might have encoded something the brief did not: councils do sometimes pay
+crisis money out through voluntary organisations. Paul: *"change the hackney fund
+so it is accurate."*
+
+The council's page settles it — **"you can only apply for the Hackney Crisis and
+Resilience Fund if you live in the borough of Hackney"** — so the row is now
+`['individual']` and the pin released rather than replaced, for the same reason
+as Jerwood and Bristol: an `admin:` write would stamp a fresh pin and stop the
+verifier correcting it if the council changes the scheme.
+
+**The nuance is what makes the row worth keeping.** A third party "can fill in
+the form on behalf of someone else if they've given you permission", so a
+frontline charity has a real use for this record — as a route for the people it
+supports, never as income for itself. `who_can_apply` now says exactly that,
+which is more useful than either deleting the row or leaving eight structures on
+it.
+
+Final state: 20 live rows tagged `individual`, 10 of them individuals-only, and
+nothing whose eligibility prose opens with "individuals", "students" or
+"residents" is missing the tag.
+
+### The check that made this findable
+
+The floor was applied AFTER the write, not before: read the rows back and count
+how many individual-only funds still admit an organisation. It returned 1, which
+is how the Hackney refusal surfaced at all rather than being lost in a summary
+line.
+
+## How often the amount check fires, measured 2026-08-20
+
+40 live rows sampled from the 498 that assert an amount, each read by the real
+verifier rather than by a single fetch.
+
+| | Rows |
+|---|---:|
+| Read | 40 |
+| Gate passed, facts extracted | 30 |
+| Page CONFIRMS our figure | 19 |
+| Page states a DIFFERENT figure | 8 |
+| **Page states NO figure while we show one** | **6** |
+
+**A 20% fire rate on readable rows, which projects to roughly 100 across the
+catalogue.** The categories overlap: a row can have its minimum confirmed and its
+maximum contradicted, which is why the three outcomes sum to more than 30.
+
+### The fires check out, and they share a fingerprint
+
+Three of the six were re-read by hand. Whirlwind Charitable Trust and the
+Hargreaves Foundation genuinely state no amounts anywhere. Percy Bilton returned
+empty to a plain fetch twice, so it is recorded as unverified rather than
+confirmed — the verifier read it, this reviewer could not.
+
+**Every fire inspected had its figure written by a third-party directory
+scraper**, not by the funder and not by a person: `scraper:young_camden_foundation`
+on three of them, `scraper:community_works_2026-05-06` on the fourth. That is
+precisely where a number nobody published comes from, and it is a stronger signal
+than the fire rate itself.
+
+### The contradictions are the more immediately useful half
+
+Eight rows carry a figure the page disputes, several badly:
+
+- **Hull Community Fund** — we show up to £250,000; the page offers "an activity
+  grant (up to £2,000)... or a Organisational Development grant (up to £10,000)".
+- **Arts Council of Wales, Create and Engage** — we show £100,000; the page says
+  "small, up to £10,000 and large, up to £60,000".
+- **Suffolk Giving Fund** — we show £5,000; the page says "up to £3,000".
+
+Two are a per-year/total ambiguity rather than an error: Volant is "up to £25,000
+per year, for a maximum of 3 years (maximum total grant, therefore, is £75,000)"
+and Monmouthshire is "£1,000 per year, for up to 3 years". Both readings are
+defensible and a human should pick.
+
+Two extractions are literal-minded and would need rejecting: `amount_min` of £1
+from "From £1 to £250,000", and £384 from a Football Foundation price list. This
+is why proposals are reported and never auto-applied.
+
+**Nothing here was written.** `verifyRow` writes nothing and the measurement
+script writes nothing; the sample is deterministic (md5 of id plus a salt) so the
+same 40 rows can be re-read for a second opinion.
+
+## The amount sweep, and the check turned on, 2026-08-20
+
+The plan was "leave it flagging and let the daily cron populate the evidence for
+free". **That was wrong and had to be corrected within the hour.** `verify-rows`
+reads 60 rows a day, once a day, and only rows that are DUE: 0 were due, 12 within
+a week, 398 within 30 days, 205 later. Free, but a month away at best for a
+hundred wrong figures sitting on live cards.
+
+**So the sweep was narrowed rather than paid for in full.** Every fire inspected
+in the 40-row sample had its amount written by a scraper, and 151 live rows are in
+that shape — a third of the cost of sweeping all 498, aimed where invented figures
+come from.
+
+| 151 scraper-sourced rows | |
+|---|---:|
+| Page confirms our figure | 62 |
+| Page states a different one | 17 proposals |
+| **Page states NO figure** | **31** |
+| Could not be read | 38 (untouched) |
+
+27% of readable rows, against 20% across the general sample — **the provenance is
+predictive**, which is the useful finding.
+
+### "Third-party directory" was the wrong theory
+
+The tempting story was that bad amounts come from other people's listings, and
+20 of the 31 did come from `young_camden_foundation`. But four came from the
+funder's OWN scraper — `jrct`, `peoples_health_trust`, `sport_scotland`,
+`severn_trent_fund` — and hand-checking two of them found their own pages state no
+figure either. A scraper named after a funder is not the same as the funder
+saying it.
+
+**4 of 4 fires re-read by hand were correct**: Whirlwind, the Hargreaves
+Foundation, JRCT Power & Accountability and the People's Health Trust Health
+Justice Fund all state no amount anywhere.
+
+### Cleared, not deleted
+
+31 rows had the figure removed and the old value written into the brief as
+`amount_note`, naming the scraper that supplied it. `amount_min`/`amount_max`
+drive the card AND the matcher's grant-size dimension, so a figure nobody
+published does not merely decorate — it sizes an organisation against a number
+that does not exist.
+
+Applied from the saved report rather than re-running the 151 fetches, because
+paying twice to write the same answer is money for nothing.
+
+### Policy c2.2 → c2.3: `amount_unsupported` now blocks
+
+Promoted on the measurement, not on the argument. It is the "wrong, not missing"
+case that every other blocking code meets: `no_amount` already covers a row with
+nothing to show and stays informational. **The 31 worst offenders were cleared
+before the flip**, so it bites gradually as the cron re-reads rather than dropping
+a hundred rows into the queue at once. The unit test flipped with the policy
+rather than being deleted, so the change is visible in the diff.
+
+### The extractor leaked one pot figure
+
+Of the 17 contradictions, most are plainly better than what we held — Drapers'
+£20,000 not £25,000, Alpkit "£50-£500" not a £500 floor, Scops "up to £15,000 per
+annum" not £30,000. Two are literal-minded (£1 from "From £1 to £250,000"), and
+one is a real prompt failure: **London Social and Affordable Homes proposed
+£11,700,000,000** from "Funding amount: up to £11.7 billion", which is the
+programme's whole budget. The prompt tells the model that a pot is not an amount
+and it failed on the largest possible example. Nothing was applied — proposals are
+reported, never written — but it is the case to fix before trusting the
+contradictions in bulk.
+
+## The 17 amount contradictions, judged 2026-08-20
+
+The quotes are trustworthy — the verifier will not raise a proposal without a
+quote it found on the page — so the work was not "is this real" but "what does it
+MEAN". **Three different faults, and treating them alike would have written eight
+wrong numbers.**
+
+| | |
+|---|---:|
+| Page simply right, we were wrong | 7 applied |
+| Right number, wrong slot | 1 applied |
+| Literal-minded or two grants conflated | 6 rejected |
+| Per-year versus total | 2 for Paul |
+| Blocked by a pinned null | 1 |
+
+**Applied:** Drapers' £25,000 → £20,000; Ballantrae gains its £1,000 floor;
+Jack Petchey Educational Visits £2,000 → £1,200; Paul Hamlyn's Youth Fund gains
+the £30,000 floor it states outright; Alpkit £500-£500 → £50-£500, which had been
+reading as a fixed award; Movement for Good's £1,000 draw no longer claims £5,000.
+
+**The slot error is the interesting one.** Ian Askew's page reads *"Funder No Min
+- £3,000 no deadline"*. The extractor offered £3,000 as a MINIMUM on a page that
+says there is no minimum — and our stored maximum was £500, wrong on top of that.
+The number was right and everything around it was wrong. Now £3,000 maximum, no
+minimum.
+
+**Rejected, and the pattern in them:** three take a TYPICAL for a FLOOR — "grants
+tend to be for about £4,000", "grants are typically £250", "typically start from a
+few hundred pounds" — and in two of those our maximum already held the same
+figure, so applying it would have produced a fixed award from a range. One takes
+"From £1 to £250,000" literally, when "from £1" is a funder saying there is no
+minimum. One conflates two grants: SWEF's £500 is the start-up maximum and the
+£1,500 is a separate follow-on after six months of trading. And one is the
+£11.7 billion housing programme budget.
+
+**Two are genuinely arguable and were not guessed.** The 1989 Willan is "up to
+£20,000, £10,000 per year" and Scops is "up to £15,000 per annum" on multi-year
+grants. Whether a card shows the most anyone can receive or the most in one year
+is a product decision, not an extraction problem.
+
+**One is blocked by a pinned null.** Sport England's Movement Fund states "grants
+or pledges from £300 to £15,000", but `amount_min` is pinned null by
+`admin:amount_uptox_fix_2026-06-15`, a June batch that stripped minimums from
+"up to X" funds. The batch touched 15 rows, 9 of them live, so this is one row
+where the funder does state a floor rather than a systemic problem with the batch.
+
+**This is the argument for proposals never being auto-applied**, which
+`verify-rows` already gets right: 8 of 17 were correct, 6 were wrong, 2 needed a
+person and 1 needed a permission. An auto-applier would have been right less than
+half the time.
+
+## Hidden funds: what the pages already told us, 2026-08-20
+
+**Two of my own claims about these rows were wrong, and correcting them is the
+finding.**
+
+| I said | It is actually |
+|---|---|
+| "22 rows with nothing to bring them back" | 79 — the rows with no `next_open_date_parsed`, which is what `check-coming-soon` fires on |
+| "Nothing will ever bring them back" | False. `select_verify_batch` takes any row that is not rejected or archived, so all 75 readable ones were re-read between 16 and 19 August |
+| "56 of them say when they return, so parsing is free" | False. 36 say "Closed — next round TBC" and a dozen more say TBC another way |
+
+**The real gap is narrower and worse than any of those.** The pages ARE read, the
+answer IS captured as a verbatim quote in `field_evidence`, and **nothing reads it
+back**. We were paying for the answer every few weeks and throwing it away.
+
+### One fund is open right now and invisible
+
+**Wiltshire & Swindon's Older People's Programme** — *"This programme is currently
+open for applications, and will close on Monday 21 September at 12 noon."* Read on
+16 August, re-read by hand today, hidden from users the whole time, closing in a
+month. It is now in the review queue with its deadline, not made live: visibility
+is Paul's click, which is what `check-coming-soon` does on a reopening.
+
+### Six reopening dates recovered from evidence we already held
+
+City Bridge Economic Justice opens September 2026. CHIP's Community Chest Fund
+reopens at the end of September. Peter Kershaw has one window a year, in November.
+Woodward reviews once a year in October or November. Berkshire's Priority Grants
+Round reopens Summer 2027. Nidderdale reopens in 2027, funds allowing.
+
+Where a funder names a month rather than a day, the FIRST of that month is stored.
+**Under-shooting is the safe direction**: looking early means finding it shut and
+the cadence pushing the date out, where over-shooting means missing the opening
+entirely.
+
+No fetches and no model calls — this mined evidence already bought and stored.
+
+### Six are read, quoted, and still not datable
+
+Named so the residue is visible rather than implied. Lloyds Racial Equity says
+"applications are now open" — but on `actiontogether.org.uk`, a third party, and a
+row is not moved on someone else's page. Rusholme holds two funds in one row, one
+open and one shut. The Pixel Fund is "temporarily closed, oversubscribed", which is
+correctly hidden with no date to give.
+
+### What this argues for
+
+A reopening detector, keyed on evidence rather than on `next_open_date_parsed`.
+`check-coming-soon` can only fire on a date somebody already parsed, so a fund
+whose page says "we are open" in plain English stays hidden however often it is
+read. That is the fix; today's pass is the manual version of it.
+
+## The reopening detector, built 2026-08-20
+
+`check-coming-soon` could only ever fire on `next_open_date_parsed` — a date
+somebody parsed in advance. 79 of the 94 hidden rows have none, and 36 say only
+"Closed — next round TBC", so for those the job could never fire however many
+times the page was read. And it was read: all 75 readable ones between 16 and 19
+August. The answer was captured and thrown away.
+
+The detector reads it back. One signal: **the funder's page states a closing date
+that has not passed.** Three rules, and the second two exist because the probe
+disproved the first two.
+
+### It missed the case that prompted it
+
+The first version took a future date from the evidence and stopped there. Run
+against live data it found nothing — including nothing on Wiltshire & Swindon's
+Older People's Programme, the fund that motivated the whole thing.
+
+Its quote is *"This programme is currently open for applications, and will close
+on Monday 21 September at 12 noon"*. **No year on the page, and the extractor
+resolved it to 2025-09-21** — a past date, so the rule declined, on a fund that
+was open. A bare day-and-month should roll FORWARD.
+
+So rule 3 asks whether that day has come round yet this year, on a recent read
+only, and labels the result `same_cycle` rather than `stated`. The asymmetry
+justifies the looser test: a false positive costs one review, a false negative
+leaves a fund invisible while it is open.
+
+### Then rule 3 was too loose, and the probe caught that too
+
+Its first run fired on **Skipton Charitable Foundation**, whose quote reads
+"Applications will close on Friday 31st October 2025 at 5pm". The year IS on the
+page, the extractor read it correctly, and the date is genuinely past. Rolling it
+into 2026 would have invented a round the funder never announced.
+
+Guard: **if the quote contains the year, the extractor was not guessing and there
+is nothing to correct.**
+
+### What is deliberately not a signal
+
+`is_rolling.agrees === true` would have made this wrong on its first run. `agrees`
+means "the page matched what WE stored", not "the page says rolling" — so a row
+storing `is_rolling = false` whose page also says not-rolling scores `agrees:
+true`. Forever Manchester's Bright Futures Fund carries exactly that, on the quote
+"The latest round ... is NOW CLOSED to applications."
+
+Scanning quotes for "now open" is also out: the Lloyds Racial Equity row says
+"Applications are now open" on `actiontogether.org.uk`, a third party writing about
+someone else's fund.
+
+### Zero is a real answer, and it is proved
+
+The detector returns 0 against the live backlog, which is correct — it was cleared
+by hand this morning. **A detector returning 0 looks identical whether the backlog
+is empty or the wiring is broken**, so the probe also replays the rule against the
+Older People's Programme's stored stamp and requires it to FIRE. It does.
+
+### One bug fixed on the way that had nothing to do with detection
+
+The route used to `return` early when no coming-soon row was due, which is most
+days. The reopening pass sits after it. **A job wired behind another job's early
+exit is a job that does not exist**, so the early return is gone.
+
+### The root cause is still open
+
+A bare "21 September" resolving to a past year is an extractor fault, not a
+detector one, and it will be producing wrong dates everywhere else too — the
+`round_closed` verdict already carries a `YEAR_STATED_RE` guard for the same
+reason. Worth fixing at source.
+
+## Deadlines and eligibility, measured 2026-08-20
+
+Measured free, off evidence `verify-rows` had already written and nothing had read.
+
+### Deadlines are worse than amounts were
+
+| Of 607 live rows | |
+|---|---:|
+| Carry a deadline stamp | 444 |
+| Page CONFIRMS our closing date | **31** |
+| Page contradicts it | 10 |
+| Page silent, and we show a date anyway | **71** |
+| Withheld: "a single date off a page that runs in rounds" | 24 |
+
+**We can point at a funder's own words for the closing date on 31 rows out of
+607.** The 71 are the same shape as the amounts: a date on a card that the
+funder's page does not state. Not done yet — the next piece.
+
+### Eligibility: 118 contradictions, and the direction decides the cost
+
+| | Rows |
+|---|---:|
+| Page names MORE forms than we list | 77 |
+| We list more than the page names | 22 |
+| Overlapping but different | 15 |
+
+The 77 are an under-match: a CIC reads "not for you" about a fund whose page says
+"Charity, Faith organisation, Social Enterprise/CIC, and Voluntary/Community
+Group". Nobody is harmed, but the fund is hidden from people the funder invited.
+
+The 22 are NOT proof of error and were left alone. A page failing to mention a
+form is silence, not exclusion — the rule is already in `eligibility.ts`, and Wee
+Grants lost its `scio` tag to the opposite assumption.
+
+### Widening is the recoverable direction and still needed a floor
+
+I told Paul widening "can only ever show a fund to someone the funder said was
+welcome". **That is only true if the proposal is faithful to the quote, and it
+often is not.** Red Hill Trust's quote is *"Grants are only awarded to
+organisations, not individuals"* — naming no legal form whatever — and the
+extractor proposed six, including CICs and unincorporated groups, for what reads
+like a traditional grant-making trust.
+
+**The floor: a form is added only if the QUOTE NAMES IT.** 77 candidates became
+20. 57 were rejected because the quote names none of the forms proposed.
+
+**`not_registered` was proposed on 50 rows and named in none of them.** That is
+the extractor inventing a legal form at scale, and it is the single biggest thing
+this measurement found.
+
+A second guard was added mid-run. The dry run offered to add `individual` to The
+Percy Bilton Charity, whose quote reads *"Social Workers, Community Psychiatric
+Nurses and Occupational Therapists ... may apply ON BEHALF OF individuals in
+financial need"*. The individual is the beneficiary and the professional is the
+applicant — the same shape as Hackney's crisis fund earlier the same day. Words
+like "on behalf of", "not" and "excluding" in the 45 characters before a form now
+disqualify it.
+
+**Result: 16 widened, 4 refused as admin-pinned, 57 left for a person.**
+
+### And the verification of the verification was wrong
+
+The script's own floor check reported 4 rows as having lost a structure. None
+had: it compared the result against the INTENDED set rather than against what the
+row held BEFORE, so every refused row looked like a loss. Confirmed clean by
+querying `field_provenance.previous` directly — 16 rows written, 16 still at
+least as wide. The check is fixed. **A floor that cannot be trusted is worse than
+no floor, because it spends the attention it was built to save.**
+
+## Fixing the extractor rather than its output, 2026-08-20
+
+Three passes today ended with the same shape of conclusion: the extractor said
+something the quote did not support, and a script cleaned up after it. Two of
+those were prompt faults, and both are now fixed at source, where they cost
+nothing per row and improve every future read.
+
+### The model was never told what day it is
+
+`buildPrompt` passed the fund, the funder, the URL and the page text — and no
+date. So a page reading *"will close on Monday 21 September at 12 noon"*, with no
+year on it, had no reference point and fell back on the model's training prior:
+**2025-09-21**. A past date on an open fund, which is exactly what kept Wiltshire
+& Swindon's Older People's Programme hidden from users for four days and what
+made the first reopening detector return nothing.
+
+The prompt now opens with `TODAY IS <date>` and says outright that a date with no
+year means the NEXT occurrence, never the one that has gone. **Funders write the
+year far less often than you would expect.**
+
+`runModel` also reads the clock once and shares it between the prompt and the
+comparison, so a date cannot be future to one and past to the other across
+midnight.
+
+### `not_registered` was in the vocabulary with no definition
+
+Fifteen forms were listed; `unincorporated` and `individual` were explained and
+`not_registered` was not. So the model reached for it whenever a page said
+"voluntary and community groups" — **proposed on 50 rows, and named in the quote
+on none of them.**
+
+It now has a narrow definition and an instruction to leave it alone when unsure:
+only where a page positively says an organisation with no constitution and no
+registration may apply. "Community group" belongs to `unincorporated`, which is
+how most funders phrase it.
+
+`individual` gained the distinction that caught Percy Bilton and Hackney the same
+day: a professional or charity applying ON BEHALF OF someone is not an individual
+applicant — the organisation applies and the person benefits.
+
+### Proved on the rows that produced the bugs
+
+Not on fixtures, and not on "no proposal was raised", which is consistent both
+with a fix working and with the model extracting nothing. The probe prints
+`agrees` beside the row's own value:
+
+- **Older People's Programme** — now `agrees: true` against 2026-09-21. It
+  returned 2025-09-21 this morning.
+- **Haggerston Estate Micro Grants** — proposes `unincorporated` alone where it
+  previously included `not_registered`.
+- **Wickes** — confirms what we hold, with no `not_registered`.
+- **Drapers'** — extracted nothing; inconclusive rather than wrong.
+
+**The residues these faults created are still there.** 57 eligibility rows and 71
+deadlines were measured against the OLD extractor, so those piles should be
+re-measured before being worked, not cleaned up on the old numbers.
+
+## Deadlines after the extractor fix, 2026-08-20
+
+Re-read 173 rows against the repaired prompt. **The two residues behaved
+completely differently, and the difference decided what to do with each.**
+
+### Eligibility improved. Deadlines did not.
+
+`not_registered` fell from roughly two proposals in three to about one in five.
+Not eliminated, but the definition worked.
+
+Deadlines barely moved: **57 of the 62 readable rows still show a date their page
+never states.** So it was never a year-guessing problem. Those pages genuinely do
+not publish a deadline, and no prompt change was going to conjure one.
+
+### The provenance is nothing like the amounts, so the treatment differs
+
+| Where the unsupported deadline came from | Rows |
+|---|---:|
+| Scrapers | 20 |
+| **`admin:paulkilty1@gmail.com`** | **16** |
+| AI enrichment | 10 |
+| **A person verifying by hand** | **10** |
+| `system:cycle_derive` | 7 |
+| Other / none | 8 |
+
+Amounts nobody supported were scraper-written 65% of the time, which is what
+justified clearing them in bulk and blocking the rest. **Twenty-six of these are
+Paul's own values or a human check**, so there is no bulk clear to make without
+deleting deliberate decisions. `deadline_unsupported` therefore ships as `info`,
+where `amount_unsupported` blocks. The tests pin that difference so it cannot
+drift back.
+
+### Four of the seven "clearest suspects" were correct
+
+`system:cycle_derive:v1` looked like the weakest provenance in the pile — it is
+the mechanism that gave A Sinclair Henderson Trust a deadline in a year with no
+trustee meeting — so all seven were proposed for removal. Reading them says
+otherwise:
+
+- **Schroder** — "5pm on the 28th August 2026". Correct.
+- **Bellahouston** — quarterly trustee cut-offs, verified 19 August. Correct.
+- **Sizewell C** — "Sunday 27th September 2026 at 23:59". Correct.
+- **Ballantrae** — "Application Deadline: 09/10/26". Correct.
+
+**A derived date is not a wrong date.** Those cycles came off real pages and
+rolled forward correctly; the verifier simply did not find the date on the page
+it happened to read. Suspecting the mechanism rather than the row would have
+deleted four good deadlines.
+
+Two needed something, and only one was about a deadline. **Continuo Foundation**
+derived 1 September from its own cycle entries labelled "Spring round (approx)"
+and "Autumn round (approx)" — a guess wearing a date's precision — while the row
+already said "TBC — between rounds" beside it. **East Midlands Airport** pointed
+at `active-together.org`, a third-party directory, not the airport; relinked to
+the funder's page and the MAG application portal, with its unconfirmed derived
+date removed. Aviva returns 403 and was left alone.
+
+**Four checks changed four minds.** That is the fourth time today a pile turned
+out smaller than the number suggested, and the pattern is now consistent enough
+to be a rule: **measure the pile, then read a sample of it before proposing what
+to do with all of it.**
+
+## A repeatable accuracy measure, and what it points at, 2026-08-20
+
+15 live rows sampled and read by the ENGINE rather than by hand. 10 readable, 5
+with a field the funder's page disputes — **50%**.
+
+**That is not a worse catalogue than this morning's "one in four".** It is a
+wider net and a better instrument. The hand-check fetched one page per row, which
+is weaker than the engine it was auditing and produced a false positive on Allan
+& Nesta Ferguson. This counts any field the page disagrees with, across deadline,
+cycle, amounts, structures and the rolling flag. **The two numbers should not be
+compared; this one is comparable to itself.**
+
+What it caught: two funds flagged rolling that are not, one deadline cycle, one
+amount already parked as per-year-versus-total, and one fund showing amounts its
+page never states — the new flag firing correctly on a row nobody had looked at.
+
+### `is_rolling` is the biggest unsupported claim in the catalogue
+
+Two of five in a sample of fifteen was enough to go and count:
+
+| Of 607 live rows | |
+|---|---:|
+| Claim "Rolling, apply any time" | **324** |
+| Page confirms it | 89 |
+| Page disputes it | 14 |
+| **Page says nothing** | **221** |
+
+**221 rows tell a fundraiser they can apply whenever they like, with nothing
+behind it.** That is more unsupported assertion than the amounts (about 100) and
+the deadlines (71) put together, and it is on the field a user acts on first.
+
+The cause is mechanical rather than a model's judgement: `is_rolling` is set from
+the ABSENCE of a deadline, so **a deadline we failed to parse becomes a positive
+claim that there is no deadline.** A silent failure is promoted to an assertion,
+which is the exact inversion of every other rule in this ledger.
+
+Unreadable rate: 5 of 15, in line with the 38 of 151 seen earlier today. Bot
+walls, mostly.
+
+## "Rolling, apply any time", asserted by nobody — 2026-08-20
+
+Paul: *"rolling has been the issue for a while."* It has, and the shape of it had
+not been measured until now.
+
+| Of 607 live rows | |
+|---|---:|
+| Claim "Rolling, apply any time" | 324 |
+| Funder's page confirms it | 89 |
+| Funder's page disputes it | 14 |
+| **Page says nothing** | **221** |
+
+### The card was already fixed. The data was not.
+
+The rendering fault — inferring "Rolling" from a missing deadline — was corrected
+in August, and the comment on `deadlineDisplay` records it. So reading pages to
+fix the data changed nothing on screen, and fixing the screen left 324 rows still
+storing the claim as a fact.
+
+### Who set it
+
+Of the 221 the page does not support:
+
+| Source | Rows | |
+|---|---:|---|
+| `admin:legacy` | 74 | backfilled, unpinned |
+| `seed:legacy` | 22 | backfilled |
+| (no source at all) | 21 | predates provenance |
+| `discovery:legacy` | 8 | backfilled |
+| **`admin:paulkilty1@gmail.com`** | **17** | **pinned — Paul's own call** |
+| `admin:paul@granttracker.co.uk` | 3 | pinned |
+| various scrapers | 38 | backfilled assertions |
+
+**`admin:legacy` reads like a decision and is not one.** `trustOf` already
+downgrades it to 35 precisely because it is a migration stamp; none of those 74
+are pinned or carry a previous value. Nobody chose them.
+
+### Cleared 90, not 130, and the difference is a stated judgement
+
+The 130 authorless rows split **grant 79, in_kind 23, investment 17, programme
+11** — and the same unsourced flag means different things across them. Most
+GRANTS run in rounds, so "apply any time" is a claim against the grain and the one
+that costs a fundraiser a deadline. Most social LOANS and in-kind offers genuinely
+are always-open: a CDFI takes applications whenever you ask and Canva has no
+closing date. Clearing those would trade a probably-true label for "Check website"
+and make the catalogue less useful without making it more honest.
+
+So 90 grants and programmes cleared; 40 investment and in-kind rows left. **That is
+a judgement about how each kind of funding works, not evidence, and it is written
+into the script so it can be argued with rather than discovered later.**
+
+Paul's 20 pinned rows are untouched.
+
+### Visibility checked before writing, not assumed
+
+The search filter admits a row on `is_rolling` OR a null deadline OR a future
+deadline, so clearing the flag on a row with no deadline changes what the card
+SAYS and not whether it appears. Confirmed after the write: 607 of 607 live rows
+still visible.
+
+### And the source of the supply
+
+Four defaults were creating fresh ones: the admin Add form started on
+`is_rolling: true`, two refresh paths used `?? true`, and `promote-all-seeds` did
+the same. **An Add form that starts on "Rolling, apply any time" makes the most
+confident claim on the card the one you get by not touching anything.** All four
+now default to false.
+
+Left alone and reported: 24 scrapers in `crawl.ts` hardcode `is_rolling: true`,
+and two derive it as `!deadline`. Each is a claim about a specific funder and
+some are right; changing them is per-scraper work, not a sweep.
+
+## Two traps from tracing an API bill, 2026-08-20
+
+Paul hit his Anthropic spend cap. The money was mine — 387 read-only page
+verifications across five measurement scripts, which write nothing, which is why
+the peer session could see the spend and find no rows behind it. **The writes and
+the spend live in different scripts by design, so they will never line up.**
+
+Two things worth keeping from the trace, both of which produced a confident wrong
+answer first.
+
+### Grepping for the SDK import misses billable code
+
+`/api/ai-search` — the Find Funding ranking call — does not import
+`@anthropic-ai/sdk`. It calls `https://api.anthropic.com/v1/messages` with a raw
+`fetch`. So the obvious audit, `grep -rl "anthropic-ai/sdk"`, returns five routes
+and **omits the one a user triggers most often**, giving the answer "nothing
+bills locally", which is wrong.
+
+Audit for the HOST, not the client library.
+
+The related fact, also easy to get backwards: an idle `next dev` costs nothing.
+Loading pages and editing CSS never touches the API. Only a submitted search or an
+opened adviser bills.
+
+### A zero is what a wrong query returns
+
+I reported "zero rows in `events` of any type" for the window since the dev server
+started at 15:06. There was one, at 14:27:49+00 — which is **15:27 London, 21
+minutes inside the window**.
+
+The filter was `created_at >= current_date + time '15:06'`. `created_at` is
+`timestamptz` stored in UTC and the database session runs in UTC, so that literal
+meant 15:06 UTC — 16:06 London. **The window silently started an hour late and
+swallowed the only event in it.**
+
+British Summer Time makes this invisible for half the year and wrong for the
+other half, and it will read as a clean result either way.
+
+**The rule, and it is the third instance this week:** a zero is the result worth
+re-checking, because it is what a broken query returns and what a correct one
+returns, and they look identical. The others were the `!~* 'clos'` filter that
+deleted its own true positive, and the 400-character floor that passed a CAPTCHA
+page. Compare a timestamptz against a timestamptz, or convert explicitly with
+`at time zone`.
+
+## The rolling flag at source, 2026-08-20
+
+Paul asked for the 24 scrapers that hardcode `is_rolling: true`. **Four changed,
+not 24, and the reason is the same one that has come up all day.**
+
+Tested each scraper against evidence already in the database — free, no page
+reads — and the hardcoded `true` is often RIGHT:
+
+| Scraper | Rows the page confirms as rolling |
+|---|---:|
+| `tnlcf` | 14 |
+| `two_ridings_cf` | 8 |
+| `foundation_scotland` | 6 |
+| `cf_ni`, `cf_wales` | 3 each |
+
+Flipping all 24 would have replaced 30-odd supported claims with "Check website".
+**A hardcoded value is not automatically a wrong one**, which is the fourth time
+today that reading before sweeping changed the answer.
+
+### What did change
+
+**Two derivations.** `is_rolling: !deadline` in two scrapers — the exact
+mechanism Paul named, where a deadline we failed to parse becomes a promise that
+there is no deadline. A silent failure promoted to an assertion.
+
+**Two scrapers our own evidence contradicts.** `south_yorkshire_cf` has a row the
+page positively denies is rolling; `heritage_fund` has one denied against one
+confirmed, on a funder that plainly runs rounds.
+
+**And the rule, written where the next scraper gets written.** A comment block at
+the head of `crawl.ts`: `false` does not mean "this has a deadline", it means "we
+make no claim", and the card renders it "Check website". `true` is a positive
+assertion that someone can apply on any day of the year. **If you do not know,
+write `false`.**
+
+### What is left, and why it is not done
+
+Twenty hardcoded `true` values remain. Each is a claim about one funder —
+Garfield Weston and Esmée Fairbairn probably are always-open, Pilgrim Trust and
+Wolfson probably are not — and settling any of them means reading that funder's
+page, which now needs Paul's approval per the new spend rule. Named here rather
+than left implicit.
+
+## Facts we read, stored, and never wrote down — 2026-08-20
+
+Checking the first publish batch turned up **City Bridge Foundation offering
+£450,000 with no income limit on our row**, while its page — read on 19 August and
+sitting in `field_evidence` ever since — says *"Organisations must have a total
+annual income of between £50,000 and £1.5m"*. A £20,000 charity would have matched
+a fund it is barred from. Beinneun showed "no date" against six dated rounds in
+the same store.
+
+**Third time today the same pattern.** The engine reads the page, records the
+answer verbatim, and nothing reads it back. The reopening detector was the first,
+the second eligibility widening the second.
+
+| Gap filled from stored evidence | Rows |
+|---|---:|
+| **Exclusions** | **94** |
+| `deadline_cycle` | 26 |
+| `max_org_income` | 26 |
+| `min_org_income` | 7 |
+
+130 rows written, 119 of them live. No page reads, no model calls.
+
+**Exclusions are the point.** CLAUDE.md rule 6 is the one Paul has defended
+hardest — withholding an exclusion "could send someone to apply where they are
+explicitly barred". We were not withholding them from a tier. **We were failing to
+write them down at all**, on 94 rows whose funders had published them and whose
+pages we had already read.
+
+### Add only, never overwrite
+
+A field already holding a value was left alone and the disagreement reported: two
+rows where our income cap differs from the page (Randal £50k v £100k, Forte £500k
+v £250k). **Filling a blank from the funder's own sentence is not a judgement.
+Replacing a value somebody chose is.** No quote, no write.
+
+### The first source was refused 78 times
+
+`system:` is trust 50. 61 of the briefs were written by `ai_enrich:v2` at 60 and
+13 by `user_verified:` writes from earlier the same day at 70, so more than half
+the run silently did nothing on the first pass — visible only because the script
+counts refusals and re-checks the gaps afterwards. Re-run at `user_verified:`,
+which is the honest level here rather than a workaround: every write is backed by
+a verbatim quote required before the field is touched.
+
+### And the check that could have gone wrong
+
+Beinneun's proposed cycle mixed three "Application deadline" entries with three
+"Community Panel Meeting" entries. **A decision date stored as a closing date is
+the Sinclair Henderson bug** — a derived deadline in a month nothing closes. The
+extraction had already filtered them, confirmed by counting cycle entries written
+today whose label matches meeting / decision / panel / announce: **zero**. Checked
+rather than assumed, because that one has bitten before.
+
+## A funder's own index can advertise a closed programme as open — 2026-08-20
+
+Paul: *"Impact Hub just linked to the home page and when you go to their
+programmes page there are no live programmes."* Half right, and the correction
+went through two rounds.
+
+**Round one.** The homepage was indeed the wrong link, and /programmes carries
+*"Together for Wellbeing: A Mental Health Incubator — Applications now open!"* So
+the fund looked dead because of where we pointed, not because it was. Relinked.
+
+**Round two.** Paul clicked into the programme. Its own page says **"Applications
+now closed"**. The 2026 cohort of seven was announced on 3 June 2026 and the
+programme runs June to December. Every other programme on that index — Together
+for Wellbeing 2025, ASSETS, Boosting Life Sciences & Social Economy, New Roots,
+The Circular Startup — is closed too.
+
+**So the relink was a half-fix that moved the row from a page saying nothing to a
+page saying something untrue.**
+
+### This is a trap for the engine, not just for a reader
+
+A verification read that lands on the index sees "Applications now open!" **in the
+funder's own words**, quotes it, and records the fund as live. The quote is real.
+The claim is stale. Nothing in the engine distinguishes an index's summary of a
+programme from that programme's own status — and the index is the page more
+likely to be linked, because it is the tidier URL.
+
+Every guard built today assumes a page's own words about itself are reliable. That
+holds for a fund's page. It does not hold for a page ABOUT other pages, and the
+distinction is invisible in a quote.
+
+Worth a rule the next time the extractor is touched: **when a quote about
+application status comes from a page listing several programmes, it is evidence
+about the listing, not about the fund.** `statesDatedWindows()` already detects
+multi-round pages for deadlines; the same signal should discount an open/closed
+claim.
+
+### Disposition
+
+Hidden as between-rounds. `apply_url` stays on /programmes, which is the right
+front door for when something reopens, and the reopening detector built earlier
+today will bring the row back when a page there states a closing date that has not
+passed. `how_to_apply` records the trap explicitly, so the next person to read the
+row is warned that the index overstates.
+
 ## Maintenance
 
 Update on each merge that closes a row, and re-measure the whole table at each

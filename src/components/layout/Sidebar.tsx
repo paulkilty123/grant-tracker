@@ -42,6 +42,14 @@ interface Props {
    *  Briefing replaces Dashboard as the first item. The flag is the single
    *  source of truth for nav visibility — no separate UI toggle. */
   companionSurface?: boolean
+  /** Apply-tier entitlement for the org currently in view, resolved
+   *  server-side in the layout from that org's apply_access. A prop rather
+   *  than a fetch because the layout already knows: the previous version
+   *  called /api/builder/access on mount and cached the answer in
+   *  sessionStorage under one global key, so switching to an org with
+   *  different entitlement kept showing the previous org's nav until the tab
+   *  was closed. */
+  applyAccess?: boolean
 }
 
 function matchProfileScore(org: Organisation | null): number {
@@ -109,30 +117,15 @@ const ADMIN_NAV = [
   { href: '/dashboard/admin/waitlist',     label: 'Waitlist',            Icon: Mail          },
 ]
 
-export default function Sidebar({ org, userEmail, companionSurface = false }: Props) {
+export default function Sidebar({ org, userEmail, companionSurface = false, applyAccess = false }: Props) {
   const pathname    = usePathname()
   const router      = useRouter()
   const [mobileOpen,   setMobileOpen]   = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
-  // Application builder access — cohort allowlist, checked server-side so the
-  // list never ships in the client bundle.
-  const [builderAllowed, setBuilderAllowed] = useState(false)
+  // Apply-tier entitlement for the org in view. Arrives as a prop from the
+  // layout, so it changes with the org switcher and never lags behind it.
+  const builderAllowed = applyAccess
   const userMenuRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    // Session-cache the access check so the nav doesn't layout-shift on
-    // every page load while the fetch resolves.
-    try {
-      if (sessionStorage.getItem('gt_builder_allowed') === '1') setBuilderAllowed(true)
-    } catch { /* ignore */ }
-    fetch('/api/builder/access')
-      .then(r => r.json())
-      .then(d => {
-        setBuilderAllowed(!!d?.allowed)
-        try { sessionStorage.setItem('gt_builder_allowed', d?.allowed ? '1' : '0') } catch { /* ignore */ }
-      })
-      .catch(() => {})
-  }, [])
 
   const profileScore = matchProfileScore(org)
   const showBadge    = org != null && profileScore > 0

@@ -86,7 +86,7 @@ const FIXES: Fix[] = [
   },
 ]
 
-const SELECT = 'id, title, funder, funding_type, funding_subtype, eligible_structures, is_active, pipeline_state'
+const SELECT = 'id, title, funder, funding_type, funding_subtype, funding_subtypes, eligible_structures, is_active, pipeline_state'
 
 async function main() {
   const db = createClient(
@@ -146,7 +146,7 @@ async function main() {
   // changed" — the trust ladder can accept a call and still write nothing.
   const { data: after } = await db.from('scraped_grants').select(SELECT).in('id', FIXES.map(f => f.id))
   const stillBarred = (after ?? [])
-    .map(r => ({ title: r.title, barred: barredStructuresFor(r.funding_subtype, r.eligible_structures) }))
+    .map(r => ({ title: r.title, barred: barredStructuresFor(r.funding_subtypes, r.eligible_structures, r.funding_subtype) }))
     .filter(r => r.barred.length > 0)
 
   console.log(`── after: ${stillBarred.length} rows still offering equity to a structure that cannot hold it`)

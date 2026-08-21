@@ -121,7 +121,7 @@ function adminClient(): SupabaseClient {
 // One line, not a concatenation: supabase-js parses this string at TYPE level to
 // infer the row shape, and a `+` defeats that parser — it falls back to
 // GenericStringError and every downstream cast becomes a lie.
-const SELECT_COLS = 'id, title, funder, funding_type, apply_url, deadline, deadline_cycle, next_open_date, is_rolling, max_org_income, min_org_income, is_invite_only, eligible_structures, location_tag, funder_brief, field_evidence'
+const SELECT_COLS = 'id, title, funder, funding_type, apply_url, deadline, deadline_cycle, next_open_date, is_rolling, amount_min, amount_max, max_org_income, min_org_income, is_invite_only, eligible_structures, location_tag, funder_brief, field_evidence'
 
 /**
  * What the row carries for scheduling, on top of what the extraction reads.

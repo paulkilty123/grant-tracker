@@ -45,7 +45,7 @@ function org(over: Partial<Organisation> = {}): Organisation {
 describe('the equity gate, end to end through runEligibilityChecks', () => {
   it('marks a CIO ineligible for an equity investment', () => {
     const verdict = runEligibilityChecks(
-      opportunity({ fundingSubtype: 'equity' }),
+      opportunity({ fundingSubtypes: ['equity'] }),
       org({ legal_structure: 'cio' }),
     )
     expect(verdict.status).toBe('ineligible')
@@ -57,7 +57,7 @@ describe('the equity gate, end to end through runEligibilityChecks', () => {
     // one, because "the funder did not list you" invites a phone call and "you
     // have no share capital" does not, so it must sort first.
     const verdict = runEligibilityChecks(
-      opportunity({ fundingSubtype: 'equity', eligibleStructures: ['ltd_shares'] }),
+      opportunity({ fundingSubtypes: ['equity'], eligibleStructures: ['ltd_shares'] }),
       org({ legal_structure: 'registered_charity' }),
     )
     expect(verdict.issues[0]?.code).toBe('instrument_requires_share_capital')
@@ -65,18 +65,31 @@ describe('the equity gate, end to end through runEligibilityChecks', () => {
   })
 
   it('fires even when the row is mistagged as a grant', () => {
-    // The Community Shares Booster case: funding_type='grant' carrying
-    // funding_subtype='equity'. Routing on kind would have missed it entirely.
+    // The Community Shares Booster case: funding_type='grant' carrying an equity
+    // subtype. Routing on kind would have missed it entirely.
     const verdict = runEligibilityChecks(
-      opportunity({ fundingType: 'grant', fundingSubtype: 'equity' }),
+      opportunity({ fundingType: 'grant', fundingSubtypes: ['equity'] }),
       org({ legal_structure: 'cic_guarantee' }),
     )
     expect(verdict.status).toBe('ineligible')
   })
 
-  it('reads si_instrument_type when funding_subtype is empty', () => {
+  it('reads the array, not the trigger-maintained singular', () => {
+    // Trust for London: ['loan','equity','social_investment'] with
+    // funding_subtype='loan'. Reading the singular sees only the loan and lets
+    // it pass silently; reading the array sees the equity and says so without
+    // burying a fund the charity can genuinely use.
     const verdict = runEligibilityChecks(
-      opportunity({ fundingSubtype: null, siInstrumentType: 'equity' }),
+      opportunity({ fundingSubtype: 'loan', fundingSubtypes: ['loan', 'equity', 'social_investment'] }),
+      org({ legal_structure: 'registered_charity' }),
+    )
+    expect(verdict.status).not.toBe('ineligible')
+    expect(verdict.issues.some(i => i.code === 'instrument_partly_out_of_reach')).toBe(true)
+  })
+
+  it('falls back to si_instrument_type when nothing else carries an instrument', () => {
+    const verdict = runEligibilityChecks(
+      opportunity({ fundingSubtype: null, fundingSubtypes: [], siInstrumentType: 'equity' }),
       org({ legal_structure: 'cio' }),
     )
     expect(verdict.status).toBe('ineligible')
@@ -88,7 +101,7 @@ describe('the equity gate, end to end through runEligibilityChecks', () => {
 
   it('does not fire for a CIC limited by shares', () => {
     const verdict = runEligibilityChecks(
-      opportunity({ fundingSubtype: 'equity' }),
+      opportunity({ fundingSubtypes: ['equity'] }),
       org({ legal_structure: 'cic_shares' }),
     )
     expect(verdict.issues.some(i => i.code === 'instrument_requires_share_capital')).toBe(false)
@@ -96,7 +109,7 @@ describe('the equity gate, end to end through runEligibilityChecks', () => {
 
   it('does not fire on a loan to a charity', () => {
     const verdict = runEligibilityChecks(
-      opportunity({ fundingSubtype: 'loan' }),
+      opportunity({ fundingSubtypes: ['loan'] }),
       org({ legal_structure: 'registered_charity' }),
     )
     expect(verdict.issues.some(i => i.code === 'instrument_requires_share_capital')).toBe(false)
@@ -104,7 +117,7 @@ describe('the equity gate, end to end through runEligibilityChecks', () => {
 
   it('does not fire on an ordinary grant', () => {
     const verdict = runEligibilityChecks(
-      opportunity({ fundingType: 'grant', fundingSubtype: 'small_grant' }),
+      opportunity({ fundingType: 'grant', fundingSubtypes: ['small_grant'] }),
       org({ legal_structure: 'cio' }),
     )
     expect(verdict.issues.some(i => i.code === 'instrument_requires_share_capital')).toBe(false)
@@ -112,7 +125,7 @@ describe('the equity gate, end to end through runEligibilityChecks', () => {
 
   it('does not fire when the org has no structure on its profile', () => {
     const verdict = runEligibilityChecks(
-      opportunity({ fundingSubtype: 'equity' }),
+      opportunity({ fundingSubtypes: ['equity'] }),
       org({ legal_structure: null }),
     )
     expect(verdict.issues.some(i => i.code === 'instrument_requires_share_capital')).toBe(false)
@@ -120,7 +133,7 @@ describe('the equity gate, end to end through runEligibilityChecks', () => {
 
   it('downgrades to check_required, not ineligible, on community shares', () => {
     const verdict = runEligibilityChecks(
-      opportunity({ fundingSubtype: 'community_shares' }),
+      opportunity({ fundingSubtypes: ['community_shares'] }),
       org({ legal_structure: 'registered_charity' }),
     )
     expect(verdict.status).toBe('check_required')

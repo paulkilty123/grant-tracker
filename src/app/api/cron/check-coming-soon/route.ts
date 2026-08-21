@@ -32,6 +32,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { mergeGrantUpdate } from '@/lib/grant-merge'
 import { recordRun } from '@/lib/admin/cron-runs'
+import { detectReopening } from '@/lib/verification/reopening'
 
 export const dynamic = 'force-dynamic'
 
@@ -71,9 +72,11 @@ export async function GET(req: NextRequest) {
       return { error: fetchErr.message }
     }
 
-    if (!dueGrants || dueGrants.length === 0) {
-      return { ok: true, processed: 0, message: 'No grants due' }
-    }
+    // NO EARLY RETURN. This used to bail out when no coming-soon row was due,
+    // which is most days — and the reopening pass below would then never run at
+    // all. A second job wired behind another job's early exit is a job that does
+    // not exist.
+    const dueList = dueGrants ?? []
 
     // Clear the "Opens …" badge and route to review, one row at a time so each
     // write goes through the trust ladder and the state machine.
@@ -87,7 +90,7 @@ export async function GET(req: NextRequest) {
     const skippedPinned: string[] = []
     const failed: { id: string; error: string }[] = []
 
-    for (const g of dueGrants) {
+    for (const g of dueList) {
       const label = `${g.title} (${g.funder}) — was "${g.next_open_date}"`
       try {
         const probe = await mergeGrantUpdate({
@@ -145,17 +148,72 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    // ── SECOND PASS: hidden funds whose page already says they are open ──
+    //
+    // The pass above can only fire on `next_open_date_parsed`, a date somebody
+    // parsed in advance. 79 of the 94 rows in `between_rounds_scheduled` have no
+    // such date and 36 say only "Closed — next round TBC", so for those this job
+    // could never fire at all — however many times verify-rows re-read them.
+    //
+    // And it does re-read them: `select_verify_batch` takes any row that is not
+    // rejected or archived, so all 75 readable ones were read between 16 and 19
+    // August 2026. What the page said went into `field_evidence` and nothing ever
+    // looked at it again. On 20 August that store held "This programme is
+    // currently open for applications, and will close on Monday 21 September at
+    // 12 noon" for a fund hidden from users since the day it was read.
+    //
+    // The comment on the first pass anticipated this: "Once it does, this is the
+    // event that should enqueue a verify: the page either says the round is open,
+    // in which case publish, or it names a new date." This is that, working off
+    // evidence already bought rather than a fresh fetch.
+    //
+    // A REVIEW, NEVER A PUBLICATION. `is_active` is untouched, exactly as in the
+    // pass above: the row joins the queue and a human — or auto-publish, on a
+    // clean gate — decides what users see.
+    const reopened: string[] = []
+    const { data: hidden, error: hiddenErr } = await db
+      .from('scraped_grants')
+      .select('id, title, funder, deadline, field_evidence')
+      .eq('pipeline_state', 'between_rounds_scheduled')
+      .limit(1000)
+
+    if (hiddenErr) {
+      console.error('[check-coming-soon] hidden-row fetch failed:', hiddenErr.message)
+      failed.push({ id: '(hidden batch)', error: hiddenErr.message })
+    } else {
+      for (const g of (hidden ?? []) as { id: string; title: string; funder: string | null; deadline: string | null; field_evidence: Record<string, unknown> | null }[]) {
+        const hit = detectReopening(g, today)
+        if (!hit) continue
+        try {
+          await mergeGrantUpdate({
+            id: g.id,
+            fields: { pipeline_state: 'tagged_awaiting_review' },
+            source: PROVENANCE_SOURCE,
+            db,
+          })
+          reopened.push(`${g.title} (${g.funder}) — ${hit.reason}`)
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err)
+          console.error(`[check-coming-soon] reopening write failed for ${g.id}:`, msg)
+          failed.push({ id: g.id, error: msg })
+        }
+      }
+    }
+
     console.log(
       `[check-coming-soon] ${today} — moved ${processed.length} to review, ` +
+      `${reopened.length} reopened by evidence, ` +
       `skipped ${skippedPinned.length} (admin-pinned), failed ${failed.length}`
     )
 
     return {
       ok: failed.length === 0,
       processed: processed.length,
+      reopened: reopened.length,
       skippedPinned: skippedPinned.length,
       failed: failed.length,
       grants: processed,
+      reopenedGrants: reopened,
       skippedGrants: skippedPinned,
       failures: failed,
     }

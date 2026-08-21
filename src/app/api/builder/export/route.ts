@@ -23,7 +23,7 @@ function para(s: string): string {
 
 export async function GET(req: NextRequest) {
   const user = await getBuilderUser()
-  if (!user) return NextResponse.json({ error: 'The application builder is currently cohort-only' }, { status: 403 })
+  if (!user) return NextResponse.json({ error: 'Applications are not switched on for this organisation' }, { status: 403 })
 
   const applicationId = req.nextUrl.searchParams.get('application_id')
   if (!applicationId) return NextResponse.json({ error: 'application_id required' }, { status: 400 })

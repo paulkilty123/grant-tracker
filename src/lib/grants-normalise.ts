@@ -93,6 +93,7 @@ export function normaliseScrapedGrant(row: Record<string, unknown>): EnrichedGra
     })(),
     fundingType:          (row.funding_type ? String(row.funding_type) : 'grant') as FundingType,
     fundingSubtype:       row.funding_subtype ? String(row.funding_subtype) as FundingSubtype : null,
+    fundingSubtypes:      Array.isArray(row.funding_subtypes) ? row.funding_subtypes as FundingSubtype[] : [],
     spendRestriction:     row.spend_restriction ? String(row.spend_restriction) as SpendRestriction : null,
     spendTypes:           Array.isArray(row.spend_types) ? row.spend_types as SpendType[] : null,
     impactSectors:        Array.isArray(row.impact_sectors)       ? (row.impact_sectors       as ImpactSector[])   : undefined,

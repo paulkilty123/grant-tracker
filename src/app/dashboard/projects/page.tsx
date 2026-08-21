@@ -75,6 +75,8 @@ function HowItWorks({ withCta }: { withCta?: boolean }) {
 export default function ProjectsPage() {
   const router = useRouter()
   const [allowed, setAllowed] = useState<boolean | null>(null)
+  // Org name for the blocked screen, so it names the profile rather than the account.
+  const [blockedOrgName, setBlockedOrgName] = useState<string | null>(null)
   const [projects, setProjects] = useState<Project[]>([])
   const [loaded, setLoaded] = useState(false)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
@@ -92,6 +94,7 @@ export default function ProjectsPage() {
     async function load() {
       const access = await fetch('/api/builder/access').then(r => r.json()).catch(() => ({ allowed: false }))
       setAllowed(!!access?.allowed)
+      setBlockedOrgName(typeof access?.org_name === 'string' ? access.org_name : null)
       if (!access?.allowed) { setLoaded(true); return }
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
@@ -117,9 +120,20 @@ export default function ProjectsPage() {
           Projects
         </h1>
         <div style={{ background: T.cream, borderRadius: 12, padding: '20px 24px' }}>
+{/* Blocked-state copy, shared shape across Pipeline / Projects /
+              Applications. Two jobs: name the ORGANISATION, because a
+              multi-org owner needs to know it is this profile and not their
+              account; and say the saved work is still there, because the
+              screen otherwise reads as though it was deleted. It is also the
+              screen a finished trial lands on, which is why "kept, not
+              deleted" is the second sentence rather than a footnote.
+              When checkout ships (item 6) this gains a subscribe link. */}
           <p style={{ fontFamily: BODY, fontSize: 14, color: T.textSecondary, margin: 0, lineHeight: 1.6 }}>
-            Projects are currently available to founding cohort members while we shape them
-            together. They will open more widely soon.
+            Projects are not switched on for {blockedOrgName ?? 'this organisation'}.
+          </p>
+          <p style={{ fontFamily: BODY, fontSize: 14, color: T.textSecondary, margin: '10px 0 0', lineHeight: 1.6 }}>
+            Anything you have already saved here is kept, not deleted. Get in touch
+            and we will switch it back on.
           </p>
         </div>
       </div>
