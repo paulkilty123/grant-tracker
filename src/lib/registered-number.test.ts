@@ -68,3 +68,41 @@ describe('columnFor', () => {
     expect(columnFor(null, 'registered_charity')).toBeNull()
   })
 })
+
+describe('expectedRegisterFor', () => {
+  it('never asks a CIO for a company number', async () => {
+    const { expectedRegisterFor } = await import('./registered-number')
+    const cio = expectedRegisterFor('cio')
+    expect(cio.label).toBe('Charity number')
+    expect(cio.hint).toContain('not Companies House')
+    // The empty state must not imply an omission.
+    expect(cio.emptyText).not.toMatch(/couldn't find/i)
+  })
+
+  it('asks a CIC for a company number', async () => {
+    const { expectedRegisterFor } = await import('./registered-number')
+    expect(expectedRegisterFor('cic_guarantee').label).toBe('Company number')
+    expect(expectedRegisterFor('cic_shares').label).toBe('Company number')
+  })
+
+  it('treats a blank as unremarkable where a number genuinely may not exist', async () => {
+    const { expectedRegisterFor } = await import('./registered-number')
+    for (const s of ['unincorporated', 'sole_trader', 'not_registered'] as const) {
+      expect(expectedRegisterFor(s).expected).toBe(false)
+      expect(expectedRegisterFor(s).emptyText).not.toMatch(/couldn't find/i)
+    }
+  })
+
+  it('still asks where a number does exist', async () => {
+    const { expectedRegisterFor } = await import('./registered-number')
+    for (const s of ['cio', 'scio', 'registered_charity', 'cic_guarantee', 'cooperative'] as const) {
+      expect(expectedRegisterFor(s).expected).toBe(true)
+    }
+  })
+
+  it('falls back to neutral wording when the structure is not known yet', async () => {
+    const { expectedRegisterFor } = await import('./registered-number')
+    expect(expectedRegisterFor('').label).toBe('Registered number')
+    expect(expectedRegisterFor(null).expected).toBe(false)
+  })
+})

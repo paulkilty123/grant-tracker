@@ -9,7 +9,7 @@ import { createClient } from '@/lib/supabase/client'
 import { getOrganisationByOwner, createOrganisation, updateOrganisation, writeActiveOrgCookie } from '@/lib/organisations'
 import { track } from '@/lib/analytics'
 import { computeMatchScore, MATCH_FLOOR } from '@/lib/matching'
-import { columnFor, normaliseNumber, detectRegister, registerLabel, isRecognisedNumber } from '@/lib/registered-number'
+import { columnFor, normaliseNumber, detectRegister, registerLabel, isRecognisedNumber, expectedRegisterFor } from '@/lib/registered-number'
 import { normaliseScrapedGrant } from '@/lib/grants-normalise'
 import type { LegalStructure, ImpactSector, BeneficiaryGroup, FundingType, SpendNeed } from '@/types'
 import Button from '@/components/ui/Button'
@@ -1414,9 +1414,15 @@ function StepReview({ extracted, confirmed, editingField, setEditingField, confi
     catch { return extracted.url }
   })()
 
+  // Structure may still be unconfirmed at this point, so fall back to the
+  // extracted value and then to generic wording.
+  const numberExpectation = expectedRegisterFor(
+    (wizardState.legalStructure || extracted.legalStructure || '') as LegalStructure | '',
+  )
+
   const fields: Array<{
     key: keyof typeof extracted.confidence
-    label: string; value: string | null; hint?: string | null
+    label: string; value: string | null; hint?: string | null; emptyText?: string | null
     stateKey?: string; type?: 'text' | 'select' | 'chips'
     options?: { value: string; label: string }[]
     chipOptions?: { value: string; label: string }[]
@@ -1426,16 +1432,18 @@ function StepReview({ extracted, confirmed, editingField, setEditingField, confi
     onMakePrimaryChip?: (val: string) => void
   }> = [
 { key: 'name',              label: 'Organisation name', value: extracted.name,            stateKey: 'name',              type: 'text' },
-    { key: 'registeredNumber',  label: 'Registered number', value: extracted.registeredNumber, stateKey: 'registeredNumber',  type: 'text',
-      // Says which register we recognised, so a typo is visible before it
-      // reaches the eligibility gate, and says why we ask. Never blocks: an
-      // unregistered group leaves it empty and the row reads as "missing"
-      // rather than "please confirm".
+    // Label, hint and empty state all follow the DECLARED STRUCTURE, because
+    // "no company number" is the normal state for much of this audience rather
+    // than a gap. A CIO has no Companies House number at all, by design; asking
+    // one for a company number and then saying "we couldn't find this" tells
+    // them something is wrong when nothing is. Never blocks either way.
+    { key: 'registeredNumber',  label: numberExpectation.label, value: extracted.registeredNumber, stateKey: 'registeredNumber',  type: 'text',
+      emptyText: numberExpectation.emptyText,
       hint: extracted.registeredNumber
         ? (isRecognisedNumber(extracted.registeredNumber)
             ? `Recognised as ${registerLabel(detectRegister(extracted.registeredNumber))}. We use it to check eligibility, so your matches are right.`
             : 'We don\u2019t recognise that format. Leave it if it\u2019s right, or correct it.')
-        : 'Charity, company or mutuals number. Optional, and it helps us check eligibility.' },
+        : numberExpectation.hint },
     { key: 'legalStructure',    label: 'Legal structure',   value: LEGAL_STRUCTURE_OPTIONS.find(o => o.value === extracted.legalStructure)?.label ?? extracted.legalStructure, stateKey: 'legalStructure', type: 'select', options: LEGAL_STRUCTURE_OPTIONS },
     { key: 'primaryLocation',   label: 'Primary location',  value: extracted.primaryLocation,  stateKey: 'primaryLocation',   type: 'text' },
     { key: 'annualIncomeBand',  label: 'Annual income',     value: extracted.annualIncomeBand, stateKey: 'annualIncomeBand',  type: 'select', options: INCOME_BANDS.map(b => ({ value: b, label: b })) },
@@ -1469,6 +1477,7 @@ function StepReview({ extracted, confirmed, editingField, setEditingField, confi
             onConfirm={val => confirmField(field.key, val)}
             onCancel={() => setEditingField(null)}
             hint={field.hint}
+            emptyText={field.emptyText}
             chipOptions={field.chipOptions}
             selectedChips={field.selectedChips}
             maxChips={field.maxChips}
@@ -1497,8 +1506,8 @@ function StepReview({ extracted, confirmed, editingField, setEditingField, confi
   )
 }
 
-function ReviewField({ label, value, hint, fieldState: fState, isConfirmed, isEditing, type, options, chipOptions, selectedChips, maxChips, onToggleChip, onMakePrimaryChip, onEdit, onConfirm, onCancel }: {
-  label: string; value: string | null; hint?: string | null
+function ReviewField({ label, value, hint, emptyText, fieldState: fState, isConfirmed, isEditing, type, options, chipOptions, selectedChips, maxChips, onToggleChip, onMakePrimaryChip, onEdit, onConfirm, onCancel }: {
+  label: string; value: string | null; hint?: string | null; emptyText?: string | null
   fieldState: FieldConfidence; isConfirmed: boolean; isEditing: boolean
   type?: 'text' | 'select' | 'chips'; options?: { value: string; label: string }[]
   chipOptions?: { value: string; label: string }[]
@@ -1625,7 +1634,7 @@ function ReviewField({ label, value, hint, fieldState: fState, isConfirmed, isEd
           </div>
         ) : (
           <div style={{ fontSize: 14, color: value ? T.textPrimary : T.textTertiary, fontWeight: value ? 500 : 400, fontStyle: value ? 'normal' : 'italic', fontFamily: 'var(--font-dm-sans)' }}>
-            {value ?? "We couldn't find this — add manually"}
+            {value ?? emptyText ?? "We couldn't find this — add manually"}
           </div>
         )}
         {!isEditing && hint && (

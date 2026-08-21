@@ -106,3 +106,96 @@ export function registerLabel(reg: Register): string {
     default:                return 'Not recognised'
   }
 }
+
+/**
+ * What number does THIS structure actually have?
+ *
+ * "No company number" is the normal state for a large part of this audience,
+ * not a gap to chase. A CIO or SCIO is fully incorporated and has no Companies
+ * House number at all — that is the entire point of the form. An unincorporated
+ * association may have a charity number or nothing. A co-op has an FCA mutuals
+ * number. Asking all of them for a "company number" and then showing "we
+ * couldn't find this" tells most of them something is wrong when nothing is.
+ *
+ * So the field names the register their structure uses, and when a number is
+ * not expected it says so plainly instead of implying an omission.
+ */
+export interface NumberExpectation {
+  /** Field label: what to call it for this structure. */
+  label: string
+  /** Why we ask, in their terms. */
+  hint: string
+  /** Whether leaving it blank is unremarkable. */
+  expected: boolean
+  /** Empty-state copy when nothing is entered. */
+  emptyText: string
+}
+
+export function expectedRegisterFor(structure: LegalStructure | '' | null | undefined): NumberExpectation {
+  const askWhy = 'We use it to check eligibility, so your matches are right.'
+  switch (structure) {
+    case 'cio':
+    case 'scio':
+      return {
+        label: 'Charity number',
+        // Worth saying out loud: CIO founders are regularly asked for a company
+        // number they have never had, and assume they have done something wrong.
+        hint: `A CIO is registered with the charity regulator, not Companies House, so there is no company number. ${askWhy}`,
+        expected: true,
+        emptyText: 'Add your charity number',
+      }
+    case 'registered_charity':
+      return {
+        label: 'Charity number',
+        hint: `If you are also a company limited by guarantee you can add that number too. ${askWhy}`,
+        expected: true,
+        emptyText: 'Add your charity number',
+      }
+    case 'cic_guarantee':
+    case 'cic_shares':
+    case 'ltd_guarantee':
+    case 'ltd_shares':
+    case 'llp':
+      return {
+        label: 'Company number',
+        hint: `Your 8 digit Companies House number. ${askWhy}`,
+        expected: true,
+        emptyText: 'Add your company number',
+      }
+    case 'cooperative':
+      return {
+        label: 'Registered number',
+        hint: `Your FCA mutuals register number, or Companies House if you are registered there. ${askWhy}`,
+        expected: true,
+        emptyText: 'Add your registered number',
+      }
+    case 'unincorporated':
+      return {
+        label: 'Charity number',
+        hint: `Only if you are registered with a charity regulator. Plenty of community groups are not, and that is fine. ${askWhy}`,
+        expected: false,
+        emptyText: 'Not registered with a charity regulator',
+      }
+    case 'sole_trader':
+      return {
+        label: 'Registered number',
+        hint: 'Sole traders do not have one. Leave this blank.',
+        expected: false,
+        emptyText: 'Not applicable to sole traders',
+      }
+    case 'not_registered':
+      return {
+        label: 'Registered number',
+        hint: 'You will have one once you register. Leave it blank for now.',
+        expected: false,
+        emptyText: 'Nothing to add yet',
+      }
+    default:
+      return {
+        label: 'Registered number',
+        hint: `Charity, company or mutuals number, whichever you have. ${askWhy}`,
+        expected: false,
+        emptyText: 'Add it if you have one',
+      }
+  }
+}
