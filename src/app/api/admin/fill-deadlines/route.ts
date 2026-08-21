@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
   const { count: isRolling }    = await db.from('scraped_grants').select('*', { count: 'exact', head: true }).eq('is_active', true).eq('is_rolling', true)
   const { count: missingAndNotRolling } = await db.from('scraped_grants').select('*', { count: 'exact', head: true })
     .eq('is_active', true)
-    .eq('is_rolling', false)
+    .not('is_rolling', 'is', true)
     .is('deadline', null)
 
   return NextResponse.json({ total, hasDeadline, isRolling, missingAndNotRolling })
@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
     .from('scraped_grants')
     .select('id, title, funder, description, deadline, is_rolling, apply_url')
     .eq('is_active', true)
-    .eq('is_rolling', false)
+    .not('is_rolling', 'is', true)
     .is('deadline', null)
     .order('id', { ascending: true })
     .range(offset, offset + limit - 1)

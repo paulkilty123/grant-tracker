@@ -2841,3 +2841,91 @@ judgement, 4 have link problems.
 
 160 rows marked published but not live, the expire-grants desync already in
 memory. Unchanged since it was logged.
+
+## 2026-08-21 — the rolling flag, fixed
+
+254 live cards said "apply any time". The funder's page backed 93 of them. Paul
+ruled on the fix and on the six contradicted rows worth flipping.
+
+**After: 119 rows claim rolling, and 78.2% of those are evidence-backed, up from
+36.6%.**
+
+### What was actually wrong
+
+`is_rolling` was derived as `!deadline` in three places, so a date the extractor
+could not parse became a positive promise to the user that there is no date. The
+rendering layer had already been fixed on 16 August — a row with `is_rolling`
+false or null and no deadline renders "Check website" — so this was a data fix
+plus closing the taps.
+
+### The direction matters
+
+This is a DE-ASSERTION, which is the direction the removal actuator was already
+authorised for on 17 August: it may take claims down unattended and may never put
+them up. Removing an unsupported "apply any time" sits squarely inside that.
+Nothing here asserts a fund is NOT rolling unless the page says so.
+
+### Two buckets, two sources, deliberately
+
+**The six** — the page names dated rounds. `is_rolling` → false, quoting the
+page, written `user_verified:` (trust 70) so `ai_enrich` at 60 cannot quietly
+flip them back. Not `admin:`, which auto-pins and would freeze the field.
+
+The armed actuator already has a `rolling_unset` class for exactly these rows and
+has been abstaining on all nine, because `abstainReason` with `requireYear`
+demands the quote name a year and "trustees meet 4 times a year" does not. That
+is the abstain rule working as designed: it held the call for a human. This was
+the human making it.
+
+**The 152 unevidenced** — `is_rolling` → NULL, not false. Null is "we do not
+know", the true state; false would be a second unsupported claim pointing the
+other way. Written `system:` (trust 50): above `scraper` (40) so the nightly
+crawl cannot re-derive `!deadline` over the top, below `ai_enrich` (60) so the
+engine can still set a real value the day it reads one.
+
+### Three of the nine contradicted rows were left alone, and that is the point
+
+Drapers' says "You can apply at any time of the year". Movement for Good says
+"Nominations open all year". Didymus takes expressions of interest continuously.
+The engine marked all three `agrees=false` because the page ALSO mentions a
+meeting cycle — but for a user, "apply whenever, decided at the next meeting" IS
+rolling. Flipping them would have replaced a right answer with a wrong one. Every
+pile in this fortnight has shrunk on being read rather than counted; nine became
+six.
+
+### The one-match guard earned its keep
+
+`THE_SIX` matches on title prefix and aborts unless each prefix hits exactly one
+row. "National Lottery Heritage Grants" matched two, and they genuinely differ:
+the £10,000–£250,000 tier's page says "There is no deadline so you can apply
+whenever you are ready" and IS rolling; only the £250,000–£10m tier has quarterly
+rounds. A bare prefix match would have flipped a correct row.
+
+### 25 writes were refused, and the refusal was right
+
+All 25 carried a PINNED `is_rolling` from an admin form save, and a pin can only
+be overridden by another `admin:` source. That is the guard doing its job: it is
+what stops an automated pass from undoing a human decision.
+
+Two were in the six, so the override IS what admin trust is for — a later human
+decision beating an earlier one. Corra was pinned 2026-07-09; the Strategic Legal
+Fund was pinned 2026-07-29 **over a stored `false`**, which is worth noticing:
+an admin form save pins every field on the form, looked at or not.
+
+The other 22 were not touched. They are Paul's own pins, he approved a class
+rather than these rows, and releasing a deliberate value on a class approval is
+the mistake the Aldi incident already taught. They are listed in
+`fix-rolling-pinned-2026-08-21.ts` for him to release as a batch if he wants.
+
+### Two queries would have gone blind
+
+`is_rolling` is now three-valued, and `.eq('is_rolling', false)` skips every NULL.
+`fill-deadlines` uses that filter to build the "needs a date" worklist — so the
+127 rows that most need a date would have vanished from the only tool for finding
+them. `expire-grants` used it too. Both widened to `IS NOT TRUE`, and verified
+against the database rather than asserted: 250 false + 127 null = 377, which is
+what the widened filter returns.
+
+The `ScrapedGrant.is_rolling` type was widened from `boolean` to `boolean | null`
+as part of this. The old type is what let `!deadline` look like a legitimate
+answer in the first place.

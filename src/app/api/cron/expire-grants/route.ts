@@ -126,7 +126,7 @@ export async function GET(req: NextRequest) {
       .from('scraped_grants')
       .select('id, external_id, title, deadline, next_open_date, funder_brief, deadline_cycle')
       .eq('is_active', true)
-      .eq('is_rolling', false)
+      .not('is_rolling', 'is', true)
       .not('deadline', 'is', null)
       .lt('deadline', today)
 

@@ -91,7 +91,9 @@ export async function POST(req: NextRequest) {
     row.description          = seedData.description          ?? null
     row.amount_min           = seedData.amountMin            ?? null
     row.amount_max           = seedData.amountMax            ?? null
-    row.is_rolling           = seedData.isRolling            ?? true
+    // `?? true` was the same fault as `is_rolling = !deadline`: a seed that
+    // says nothing about timing became a promise that there is no deadline.
+    row.is_rolling           = seedData.isRolling            ?? null
     row.deadline             = seedData.deadline             ?? null
     row.sectors              = seedData.sectors              ?? []
     row.eligibility_criteria = seedData.eligibilityCriteria ?? []

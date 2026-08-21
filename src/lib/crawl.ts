@@ -57,7 +57,10 @@ export interface ScrapedGrant {
   amount_min:           number | null
   amount_max:           number | null
   deadline:             string | null   // ISO date string or null
-  is_rolling:           boolean
+  /** Three-valued on purpose. NULL is "nobody has established this", which is
+   *  not the same as false and very much not the same as true. The old
+   *  `boolean` type is what let `!deadline` look like a legitimate answer. */
+  is_rolling:           boolean | null
   is_local:             boolean
   sectors:              string[]
   eligibility_criteria: string[]
@@ -1554,7 +1557,12 @@ async function crawlHenrySmithFoundation(): Promise<CrawlResult> {
       const dlM       = bodyText.match(/Application deadline[:\s]+([^\n]+)/i)
       const dlRaw     = dlM?.[1]?.trim() ?? ''
       const deadline  = parseUKRIDate(dlRaw) ?? parseDeadline(dlRaw)
-      const is_rolling = !deadline
+      // NOT `!deadline`. A date this extractor could not parse is not a funder
+      // saying "apply any time" — it is us not knowing. That derivation put
+      // "Rolling" on 152 live cards with nothing behind it (measured 2026-08-21,
+      // 254 rows claiming rolling, the page backing 93). Null means unknown, and
+      // the card renders "Check website" for it, which is the honest answer.
+      const is_rolling = deadline ? false : null
 
       // Description from first real <p> in article
       const desc = dRoot.querySelector('article p')?.textContent?.trim()
