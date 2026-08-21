@@ -900,12 +900,19 @@ export default function OnboardingWizardPage() {
   }
 
   /** Which visible fields are still holding Continue back, for the hint below it. */
+  const numberExpectationForBlockers = expectedRegisterFor(state.legalStructure)
   function reviewBlockers(): string[] {
     if (!extracted) return []
+    // Must cover exactly REVIEW_FIELD_KEYS. It still listed impactSectors and
+    // beneficiaryGroups after those rows moved to steps 3 and 4, and had no
+    // entry for registeredNumber — so a blocked Continue would have told the
+    // user to confirm "registeredNumber", the raw key.
     const LABELS: Record<string, string> = {
-      name: 'Organisation name', legalStructure: 'Legal structure',
-      primaryLocation: 'Primary location', impactSectors: 'Primary sector',
-      beneficiaryGroups: 'Who you serve', annualIncomeBand: 'Annual income',
+      name:             'Organisation name',
+      registeredNumber: numberExpectationForBlockers.label,
+      legalStructure:   'Legal structure',
+      primaryLocation:  'Primary location',
+      annualIncomeBand: 'Annual income',
     }
     return REVIEW_FIELD_KEYS
       .filter(k => fieldConf(extracted.confidence[k]) === 'uncertain' && !confirmed.has(k))
