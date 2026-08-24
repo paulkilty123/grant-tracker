@@ -7,7 +7,7 @@ import { getOrganisationsByOwner, updateOrganisation, deleteOrganisation, writeA
 import { Pencil, Plus, ChevronDown, RotateCcw, Globe, Check, X, Star, Trash2, AlertTriangle } from 'lucide-react'
 import type { Organisation, LegalStructure, OrgStage, ImpactSector, FundingType, FunderType, BeneficiaryGroup } from '@/types'
 import { useIsMobile } from '@/hooks/useIsMobile'
-import { trimMission } from '@/lib/utils'
+import { trimMission, formatCurrency } from '@/lib/utils'
 import ClearProfileButton from '@/app/dashboard/admin/ClearProfileButton'
 import CoreContentSection from '@/components/builder/CoreContentSection'
 
@@ -398,9 +398,9 @@ function fmtThousands(v: string | number | null | undefined): string {
   if (!v && v !== 0) return ''
   const n = typeof v === 'string' ? parseInt(v.replace(/[^0-9]/g, '')) : v
   if (isNaN(n)) return ''
-  if (n >= 1_000_000) return `£${(n / 1_000_000).toFixed(n % 1_000_000 === 0 ? 0 : 1)}m`
-  if (n >= 1_000)     return `£${Math.round(n / 1000)}k`
-  return `£${n}`
+  // `Math.round(n / 1000)` rounded £2,500 up to "£3k". One implementation now —
+  // see the note on formatCurrency.
+  return formatCurrency(n)
 }
 
 /* ═══════════════════════════════════════════════

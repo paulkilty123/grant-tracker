@@ -2759,3 +2759,361 @@ nobody discovers it at the entry form.
 
 Sources deliberately `system:` and not `admin:` — these are staged FOR review,
 not reviewed, and an admin stamp would permanently block re-enrichment.
+
+## 2026-08-21 — what shape is the catalogue in, measured
+
+Paul asked whether it is mainly accurate and whether he needs to worry. That
+deserves numbers rather than a feeling, so the gate the review queue uses was run
+over **every** row, including the live ones the queue never shows. A live row
+with a blocking reason is the thing that should worry him; a staged row with one
+is just work.
+
+1,924 rows. 639 live, 1,285 not. **528 of the 639 live rows have nothing the gate
+would block on, 82.6%.**
+
+### Three of the first-pass numbers were flattering and had to be retested
+
+*"100% of live rows read in the last 30 days"* is a proxy, and a hollow one. The
+`_page_read` stamp records the ATTEMPT, and its own docstring says so: a page
+that fails the gate produces no field stamps and would otherwise never drain from
+the work queue. The real question is whether the read produced facts.
+
+| | live rows | |
+|---|---|---|
+| a fresh stamp on a real field | 467 | 73.1% |
+| ...at least one carrying a quote | 459 | 71.8% |
+| visited, yielded nothing | 172 | 26.9% |
+
+True recent-evidence coverage is 72%, not 100%. Same lesson as the "names the
+fund" versus "could actually apply" re-baseline: state the check as a sentence
+about the user, then see whether the condition tests it.
+
+### The one systemic problem, and it is on the live surface
+
+254 live rows say "apply any time". The page agrees on 93 of them.
+
+| | rows | |
+|---|---|---|
+| page read and AGREES it is rolling | 93 | 36.6% |
+| page CONTRADICTS it | 9 | 3.5% |
+| no evidence either way | 152 | 59.8% |
+
+This is `is_rolling = !deadline` surfacing as a claim to the user. A date the
+extractor could not parse becomes a promise that there is no date. It has sat in
+memory as a known post-launch fix; it is now measured, and it is on 40% of the
+live catalogue.
+
+The 9 contradicted rows shrink on reading, as every pile in this session has.
+Three are arguably right: Drapers' says "You can apply at any time of the year",
+Movement for Good says "Nominations open all year", and Didymus takes expressions
+of interest continuously. Six are genuinely wrong: Toy Trust, Corra, the
+Strategic Legal Fund ("six closing dates ... roughly every two months"), Willan,
+National Lottery Heritage's quarterly deadlines, and the Social Investment
+Programme's four rounds a year.
+
+### 51 live rows point at a page the engine says is not about that fund
+
+All 51 carry the same note, `fixable_link: wrong_fund`. The URL pass earlier this
+week worked the queue, not the live set. Spot-checking the targets: the Sainsbury
+Family Charitable Trusts row points at an index of trusts, Bolton at a login
+page, DCR Allen at the Charity Commission register. Judge by evidence not
+appearance still applies, but here the evidence IS the engine's own read.
+
+### 10 live rows show a date the page contradicts
+
+Four of them we show as having no deadline at all where the page states one, and
+Suffolk Giving Fund's stated date has already passed. The evidence is already
+bought and stored, so applying it costs nothing.
+
+### What is genuinely healthy
+
+Worth saying, because the failure modes get all the attention. Every live row has
+an apply link. 97.7% say who can apply, 83.1% carry exclusions, and the
+eligibility rule is holding. No live row has a deadline already in the past. No
+live row has a link recorded as dead.
+
+### The queue
+
+65 rows: 26 need reading, 17 ready to publish, 11 exhausted, 7 need Paul's
+judgement, 4 have link problems.
+
+### Still open, unrelated to the above
+
+160 rows marked published but not live, the expire-grants desync already in
+memory. Unchanged since it was logged.
+
+## 2026-08-21 — the rolling flag, fixed
+
+254 live cards said "apply any time". The funder's page backed 93 of them. Paul
+ruled on the fix and on the six contradicted rows worth flipping.
+
+**After: 119 rows claim rolling, and 78.2% of those are evidence-backed, up from
+36.6%.**
+
+### What was actually wrong
+
+`is_rolling` was derived as `!deadline` in three places, so a date the extractor
+could not parse became a positive promise to the user that there is no date. The
+rendering layer had already been fixed on 16 August — a row with `is_rolling`
+false or null and no deadline renders "Check website" — so this was a data fix
+plus closing the taps.
+
+### The direction matters
+
+This is a DE-ASSERTION, which is the direction the removal actuator was already
+authorised for on 17 August: it may take claims down unattended and may never put
+them up. Removing an unsupported "apply any time" sits squarely inside that.
+Nothing here asserts a fund is NOT rolling unless the page says so.
+
+### Two buckets, two sources, deliberately
+
+**The six** — the page names dated rounds. `is_rolling` → false, quoting the
+page, written `user_verified:` (trust 70) so `ai_enrich` at 60 cannot quietly
+flip them back. Not `admin:`, which auto-pins and would freeze the field.
+
+The armed actuator already has a `rolling_unset` class for exactly these rows and
+has been abstaining on all nine, because `abstainReason` with `requireYear`
+demands the quote name a year and "trustees meet 4 times a year" does not. That
+is the abstain rule working as designed: it held the call for a human. This was
+the human making it.
+
+**The 152 unevidenced** — `is_rolling` → NULL, not false. Null is "we do not
+know", the true state; false would be a second unsupported claim pointing the
+other way. Written `system:` (trust 50): above `scraper` (40) so the nightly
+crawl cannot re-derive `!deadline` over the top, below `ai_enrich` (60) so the
+engine can still set a real value the day it reads one.
+
+### Three of the nine contradicted rows were left alone, and that is the point
+
+Drapers' says "You can apply at any time of the year". Movement for Good says
+"Nominations open all year". Didymus takes expressions of interest continuously.
+The engine marked all three `agrees=false` because the page ALSO mentions a
+meeting cycle — but for a user, "apply whenever, decided at the next meeting" IS
+rolling. Flipping them would have replaced a right answer with a wrong one. Every
+pile in this fortnight has shrunk on being read rather than counted; nine became
+six.
+
+### The one-match guard earned its keep
+
+`THE_SIX` matches on title prefix and aborts unless each prefix hits exactly one
+row. "National Lottery Heritage Grants" matched two, and they genuinely differ:
+the £10,000–£250,000 tier's page says "There is no deadline so you can apply
+whenever you are ready" and IS rolling; only the £250,000–£10m tier has quarterly
+rounds. A bare prefix match would have flipped a correct row.
+
+### 25 writes were refused, and the refusal was right
+
+All 25 carried a PINNED `is_rolling` from an admin form save, and a pin can only
+be overridden by another `admin:` source. That is the guard doing its job: it is
+what stops an automated pass from undoing a human decision.
+
+Two were in the six, so the override IS what admin trust is for — a later human
+decision beating an earlier one. Corra was pinned 2026-07-09; the Strategic Legal
+Fund was pinned 2026-07-29 **over a stored `false`**, which is worth noticing:
+an admin form save pins every field on the form, looked at or not.
+
+The other 22 were not touched. They are Paul's own pins, he approved a class
+rather than these rows, and releasing a deliberate value on a class approval is
+the mistake the Aldi incident already taught. They are listed in
+`fix-rolling-pinned-2026-08-21.ts` for him to release as a batch if he wants.
+
+### Two queries would have gone blind
+
+`is_rolling` is now three-valued, and `.eq('is_rolling', false)` skips every NULL.
+`fill-deadlines` uses that filter to build the "needs a date" worklist — so the
+127 rows that most need a date would have vanished from the only tool for finding
+them. `expire-grants` used it too. Both widened to `IS NOT TRUE`, and verified
+against the database rather than asserted: 250 false + 127 null = 377, which is
+what the widened filter returns.
+
+The `ScrapedGrant.is_rolling` type was widened from `boolean` to `boolean | null`
+as part of this. The old type is what let `!deadline` look like a legitimate
+answer in the first place.
+
+## 2026-08-21 — the ten contradicted dates: five applied, five refused
+
+Paul cleared the ten live rows whose stored deadline disagreed with the funder's
+page. Reading them turned ten into five, and the five that were wrong were wrong
+in two specific, nameable ways.
+
+### Three proposed an OPENING date as a CLOSING date
+
+> One Stop: "will re-open on Tuesday 1 September 2026."
+> Bethnal Green Ventures: "Applications ... will re-open in May 2026."
+> Heart of England: "We expect to reopen applications in September 2026."
+
+The extractor read each sentence correctly and filed it under `deadline`.
+Applying them would tell a fundraiser to apply BY the day the fund OPENS. That is
+an inversion, and worse than the blank we show today. All three rows already
+carry `next_open_date`, which is where the fact belongs.
+
+Same family as the index-vs-programme status trap: the sentence is extracted
+faithfully and assigned to the wrong field.
+
+**Checked whether it is systemic: it is not.** Six rows in the whole catalogue
+have a deadline proposal whose quote uses reopening language, five of them live,
+and all five are in this set. Worth the query — the assumption would have been
+that a bug like this is everywhere.
+
+### Two proposed a PAST date because the quote names no year
+
+Suffolk Giving Fund: "For applications up until 10th August" → proposed
+2025-08-10. Greggs: "open for applications until 28th August at 12 noon", read on
+16 August 2026 → proposed 2025-08-28, against our stored 2026-08-28, which is
+almost certainly right.
+
+This is exactly the failure the reopening detector's `quoteStatesTheYear` guard
+was built for, and the abstain rule's `requireYear` exists for it. Neither runs on
+this path, so both rows were reported rather than written. On Greggs the engine
+is wrong and we are right, which is worth stating plainly: a contradiction is not
+automatically our error.
+
+### The five applied
+
+| Row | Set to | The funder's sentence |
+|---|---|---|
+| JRCT Sustainable Future | 2026-09-02 | "The next open round ... closes on September 2, 2026." |
+| Barrhill Greener Homes | 2026-09-01 | "Apply by: 01/09/26" |
+| York Community Fund | 2026-10-12 | "Deadline: 12/10/2026" |
+| Grassroots Grants | 2027-02-28 | "submitted by end of February 2027 (TBC)" |
+| Merchant Taylors Small Grants | 2026-11-30 | "re-open ... from the 14th of September to the 30th of November 2026 (5pm)" |
+
+Every one names its year in the funder's own words. Two notes on judgement:
+
+**Grassroots** was showing 2027-03-31 and the page says end of February 2027
+"(TBC)". Neither date is certain, so the choice is which direction to be wrong
+in. A month earlier is the safe one, and it is the funder's figure rather than
+ours.
+
+**Merchant Taylors** got both dates, not one. The sentence carries an opening AND
+a closing date; storing only the deadline would make a fund that is shut until 14
+September read as open now.
+
+Adding a deadline PUTS A CLAIM UP, which the actuator may never do unattended.
+These five rest on Paul's clearance of 2026-08-21, not on an automated rule.
+
+## 2026-08-21 — the 51 "wrong fund" links: 51 flagged, 4 wrong, 2 fixed
+
+All 51 live rows carrying `fixable_link: wrong_fund` were fetched and read. No
+API spend — plain HTTP, with the reader proxy where a host refused.
+
+### My own probe produced a false finding first, which is the lesson again
+
+The first run reported 11 sites as unfetchable. They were nothing of the kind:
+`READER_PROXY_URL` is `https://r.jina.ai` with no trailing slash, and the
+fallback built `https://r.jina.aihttps%3A%2F%2F...`, which `fetch` rejects as
+unparseable. All 11 came back "0 chars, no detail" — **a probe failure wearing
+the costume of a finding.** Fixed; 10 of the 11 then read fine through the proxy.
+
+This is the third time in a fortnight a measuring instrument has been the thing
+that was broken. It is why the health run's "100% read" number got retested.
+
+### What the 51 actually are
+
+| | rows |
+|---|---|
+| a fundraiser landing there COULD apply | 10 |
+| the page names the fund but carries little detail — mostly the funder's own grants index | 26 |
+| certainly wrong | 4 |
+| my probe could not read them well enough to judge | 11 |
+
+The test used is the sentence about the user, not about the page: does the page
+carry two or more of a date, an eligibility statement, an amount, or an apply
+route, as well as naming the fund. Leathersellers', Idlewild, Skinners',
+Grocers', Baily Thomas and the Vicar's Relief Fund all carry all or most of it.
+**The flag is simply wrong on those ten.**
+
+The 26 are the case Paul settled on 17 August: "A link landing on a funder's
+homepage is fine and shouldn't appear as a problem; only dead links and pages
+that aren't about the fund belong there." Not touched.
+
+The 11 are reported as UNKNOWN, not as broken. The proxy returned about 490
+bytes for several, which is a rate-limit page, not a funder page. Calling those
+dead would be the same error the probe just made.
+
+### The four that are certainly wrong, and the two fixed
+
+**Bolton Housing Partnership** pointed at `services.boltoncvs.org.uk/user/login`
+— 327 characters of login form. The real page is
+`boltoncvs.org.uk/funding/bolton-housing-partnership-grants/`, headed "The Bolton
+Housing Partnership Grants", with the funding team's contact details and the
+route to the application forms. Corrected, `url_status` reset to `unchecked` so
+the checker makes its own call.
+
+**Improving life chances in Tyne & Wear** returns 404, and the funder's current
+grants index lists 17 funds, none of them this one. `url_status` set to `dead`.
+**Deliberately not given a guessed replacement** — none of the 17 is plausibly
+the same fund, and a wrong link that loads is worse than a dead one that does
+not. Needs Paul's call on removal.
+
+**DCR Allen Charitable Trust** and **Theatre and Charitable Grants** both point
+at a Charity Commission register entry. A register entry is not an application
+page — but for a small trust with no website it may be the only public record
+there is, and swapping it for nothing would make the row worse. Left, and
+flagged, rather than guessed at.
+
+### What this leaves
+
+The 10 false positives and the 26 index pages are not user harm; they are queue
+noise, and clearing them honestly means re-verifying, which costs money. That is
+Paul's call to make, quoted in rows, not something to slip into a cleanup.
+
+## 2026-08-24 — the discovery pipeline had been running in place since 26 July
+
+Paul asked what the automated runs had been doing. The accuracy side was fine.
+The sourcing side had been finding funds and importing none of them, and every
+run reported `ok: true` while doing it.
+
+### The bug
+
+`discovery_queue.duplicate_of` is a **uuid** column. The route wrote `item.url`
+into it. Postgres rejected the row with `invalid input syntax for type uuid`,
+nothing checked the error, so the item stayed `pending`, came back to the head of
+the queue the next morning, and was judged all over again.
+
+Only the duplicate path was affected: the `processed` update carries no uuid and
+succeeded, which is why the occasional genuinely-new item still got through and
+the pipeline never looked completely dead.
+
+### What it cost
+
+39 items stuck, the oldest from 26 July. The selection is oldest-first with a
+limit of 10, so the head filled with items that could never leave and every new
+discovery starved behind them. 18 funds were found in the four days to 24 August
+and not one was looked at. Four consecutive cron summaries said `ok: true`.
+
+### A second, compounding defect
+
+Two rows have failed since 26 July on `value "11700000000" is out of range for
+type integer` — an £11.7bn housing programme that will never fit the column. The
+write-error path sets the item back to `pending`, so a permanently-failing item
+holds a slot at the head every day for ever. The existing comment anticipated
+this exactly — *"an item that fails the same way every week should be findable,
+not silently re-attempted forever"* — but nothing acted on it.
+
+### The fix, three parts
+
+1. `duplicate_of` gets the matched catalogue row's uuid, which `findExisting`
+   already returns, or null for a duplicate of another item in the same batch.
+2. Every one of the five `discovery_queue` writes goes through `setQueueStatus`,
+   which returns the error, and any failure lands in `writeFailures` in the run
+   summary. `ok` is now false when a write was rejected. A pipeline that reports
+   success while saving nothing is worse than one that reports failure.
+3. Selection takes **fresh items first, retries only in leftover slots**. An item
+   that has been tried carries `notes`, so a permanent failure can consume a
+   spare slot but can never crowd out new funding again.
+
+### Cost of draining it, quoted before running
+
+30 of the 39 are duplicates and cost nothing — dedup runs before the model is
+called. 9 are genuinely new and take one Haiku call each. The nightly cron on
+production will clear it at 10 a day over about four nights.
+
+**The first cost estimate was wrong and worth recording.** A quick probe using
+only URL and title matching said 36 items needed a model call. The route's
+`findExisting` also matches on host-and-name, host-previously-turned-down, and
+bare-host front doors, and the real split is 30/9. Quoting 36 would have asked
+Paul to approve four times the spend actually needed. The estimate has to
+replicate the code path, not approximate it.
+
+Imports land `is_active: false`, so nothing reaches users without Paul.

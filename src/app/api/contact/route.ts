@@ -3,9 +3,11 @@ import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 import { enforceInferenceRateLimit } from '@/lib/mcp-rate-limit'
 import { MCP_CONTACT_EMAIL } from '@/lib/mcp-brand'
+import { EMAIL_FROM, EMAIL_NOTIFY_TO, EMAIL_ACCENT, EMAIL_BRAND_HOST } from '@/lib/mcp-brand'
 
-const FROM_EMAIL  = process.env.ALERT_FROM_EMAIL ?? 'alerts@granttracker.co.uk'
-const NOTIFY_TO   = process.env.FEEDBACK_NOTIFY_EMAIL ?? 'hello@granttracker.co.uk'
+const FROM_EMAIL = EMAIL_FROM
+const NOTIFY_TO  = EMAIL_NOTIFY_TO
+
 
 // Vercel-style X-Forwarded-For parsing. First entry is the real client IP.
 // Same shape as the copy in api/waitlist, which says the same of mcp-middleware.
@@ -98,9 +100,9 @@ export async function POST(req: NextRequest) {
           html: `
             <p><strong>From:</strong> ${escapeHtml(trimmedName ?? '(no name)')} &lt;${escapeHtml(trimmedEmail)}&gt;</p>
             <p><strong>Message:</strong></p>
-            <p style="white-space: pre-wrap; border-left: 3px solid #8ECB3C; padding-left: 12px; margin-left: 0;">${escapeHtml(trimmedMessage)}</p>
+            <p style="white-space: pre-wrap; border-left: 3px solid ${EMAIL_ACCENT}; padding-left: 12px; margin-left: 0;">${escapeHtml(trimmedMessage)}</p>
             <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
-            <p style="font-size: 12px; color: #888;">Sent via the contact form on granttracker.co.uk. Reply to this email to respond directly to the sender.</p>
+            <p style="font-size: 12px; color: #888;">Sent via the contact form on ${EMAIL_BRAND_HOST}. Reply to this email to respond directly to the sender.</p>
           `,
         })
       } catch (emailErr) {

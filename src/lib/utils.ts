@@ -37,10 +37,41 @@ export function trimMission(text: string, max = 200): string {
 
 // ── Currency formatting ───────────────────────
 
+/**
+ * A short money label that is never wrong.
+ *
+ * THE OLD VERSION ROUNDED TO THE NEAREST THOUSAND AND SOMETIMES ROUNDED UP.
+ * `(amount / 1_000).toFixed(0)` turned £2,400 into "£2k" and — worse — £2,500
+ * into "£3k". Paul found it on Buttle UK's Chances for Children Grants on
+ * 2026-08-24: the row correctly stores 2400 and the card said "Up to £2k".
+ *
+ * Measured across the live catalogue that day: 37 figures rendered inaccurately,
+ * **21 of them overstated**. Nine funds capped at £2,500 were advertising "£3k".
+ * Overstating a ceiling is the harmful direction — it sends a charity to build a
+ * budget around money the funder does not offer.
+ *
+ * THE RULE: use the short form only when it is EXACT. Try 0, then 1, then 2
+ * decimal places, and take the first that round-trips back to the original
+ * number. If none does, print the full figure with separators — "£33,333" is
+ * longer than "£33k" and it is true, which wins.
+ *
+ * £2,400 → "£2.4k" · £2,500 → "£2.5k" · £250,000 → "£250k" · £1,250,000 →
+ * "£1.25m" · £33,333 → "£33,333" · £11.7bn → "£11.7bn" (the old code had no
+ * billions case at all and rendered that as "£11700.0m").
+ */
 export function formatCurrency(amount: number): string {
-  if (amount >= 1_000_000) return `£${(amount / 1_000_000).toFixed(1)}m`
-  if (amount >= 1_000)     return `£${(amount / 1_000).toFixed(0)}k`
-  return `£${amount.toLocaleString()}`
+  const exact = (unit: number, suffix: string): string | null => {
+    for (const dp of [0, 1, 2]) {
+      const scaled = Number((amount / unit).toFixed(dp))
+      if (Math.round(scaled * unit) === amount) return `£${scaled}${suffix}`
+    }
+    return null
+  }
+  const full = `£${amount.toLocaleString()}`
+  if (amount >= 1_000_000_000) return exact(1_000_000_000, 'bn') ?? full
+  if (amount >= 1_000_000)     return exact(1_000_000, 'm')      ?? full
+  if (amount >= 1_000)         return exact(1_000, 'k')          ?? full
+  return full
 }
 
 export function formatRange(min: number | null, max: number | null, undisclosed = false): string {

@@ -1,0 +1,1001 @@
+[
+  {
+    "title": "The Health Lottery Foundation",
+    "url": "https://thehealthlotteryfoundation.org.uk/grants/grant-information/",
+    "final": "https://thehealthlotteryfoundation.org.uk/grants/grant-information/",
+    "status": 200,
+    "via": "direct",
+    "len": 2071,
+    "titleWords": 2,
+    "titleHits": 2,
+    "hitWords": [
+      "health",
+      "lottery"
+    ],
+    "funderHit": "2/2",
+    "detail": [],
+    "closed": true,
+    "readAt": "2026-08-17"
+  },
+  {
+    "title": "Cambridge Social Ventures",
+    "url": "https://www.jbs.cam.ac.uk/faculty-research/centres/social-innovation/",
+    "final": "https://www.jbs.cam.ac.uk/centres/social-innovation/",
+    "status": 200,
+    "via": "direct",
+    "len": 13871,
+    "titleWords": 3,
+    "titleHits": 3,
+    "hitWords": [
+      "cambridge",
+      "social",
+      "ventures"
+    ],
+    "funderHit": "4/4",
+    "detail": [],
+    "closed": false,
+    "readAt": "2026-08-17"
+  },
+  {
+    "title": "Skinners' Company Charity Programme",
+    "url": "https://skinners.org.uk/young-peoples-vocational-development-charities",
+    "final": "https://skinners.org.uk/young-peoples-vocational-development-charities",
+    "status": 200,
+    "via": "direct",
+    "len": 6984,
+    "titleWords": 3,
+    "titleHits": 3,
+    "hitWords": [
+      "skinners",
+      "company",
+      "charity"
+    ],
+    "funderHit": "2/2",
+    "detail": [
+      "dates",
+      "eligibility",
+      "amount"
+    ],
+    "closed": false,
+    "readAt": "2026-08-18"
+  },
+  {
+    "title": "Sainsbury Family Charitable Trusts",
+    "url": "https://www.sfct.org.uk/the-trusts/",
+    "final": "https://www.sfct.org.uk/the-trusts/",
+    "status": 200,
+    "via": "direct",
+    "len": 1170,
+    "titleWords": 3,
+    "titleHits": 3,
+    "hitWords": [
+      "sainsbury",
+      "family",
+      "trusts"
+    ],
+    "funderHit": "3/3",
+    "detail": [],
+    "closed": true,
+    "readAt": "2026-08-17"
+  },
+  {
+    "title": "Devon Community Foundation — Community Grants",
+    "url": "https://www.devoncf.com/current-funds/",
+    "final": "https://devoncf.com/current-funds/",
+    "status": 200,
+    "via": "direct",
+    "len": 12704,
+    "titleWords": 1,
+    "titleHits": 1,
+    "hitWords": [
+      "devon"
+    ],
+    "funderHit": "1/1",
+    "detail": [
+      "amount"
+    ],
+    "closed": false,
+    "readAt": "2026-08-17"
+  },
+  {
+    "title": "Tower Hamlets — Community Grant Programme",
+    "url": "https://www.towerhamlets.gov.uk/lgnl/community_and_living/voluntary-and-community-sector/Council-funding-for-VCS/Council-funding-for-VCS.aspx",
+    "final": "https://www.towerhamlets.gov.uk/lgnl/community_and_living/voluntary-and-community-sector/Council-funding-for-VCS/Council-funding-for-VCS.aspx",
+    "status": 200,
+    "via": "direct",
+    "len": 3499,
+    "titleWords": 2,
+    "titleHits": 2,
+    "hitWords": [
+      "tower",
+      "hamlets"
+    ],
+    "funderHit": "3/4",
+    "detail": [
+      "amount"
+    ],
+    "closed": false,
+    "readAt": "2026-08-17"
+  },
+  {
+    "title": "East Midlands Airport Community Fund Grant",
+    "url": "https://www.eastmidlandsairport.com/community/supporting-the-local-community/",
+    "final": "https://www.eastmidlandsairport.com/community/supporting-the-local-community/",
+    "status": 200,
+    "via": "direct",
+    "len": 9861,
+    "titleWords": 3,
+    "titleHits": 3,
+    "hitWords": [
+      "east",
+      "midlands",
+      "airport"
+    ],
+    "funderHit": "3/3",
+    "detail": [
+      "dates",
+      "amount",
+      "apply-route"
+    ],
+    "closed": false,
+    "readAt": "2026-08-21"
+  },
+  {
+    "title": "Essex Community Foundation — Grants Hub",
+    "url": "https://www.essexcommunityfoundation.org.uk/grant-eligibility/",
+    "final": "https://www.essexcommunityfoundation.org.uk/grant-eligibility/",
+    "status": 200,
+    "via": "direct",
+    "len": 4308,
+    "titleWords": 1,
+    "titleHits": 1,
+    "hitWords": [
+      "essex"
+    ],
+    "funderHit": "1/1",
+    "detail": [],
+    "closed": false,
+    "readAt": "2026-08-17"
+  },
+  {
+    "title": "National Archives - Project Grants",
+    "url": "https://www.nationalarchives.gov.uk/archives-sector/grants-and-funding/",
+    "final": "https://www.nationalarchives.gov.uk/archives-sector/grants-and-funding/",
+    "status": 200,
+    "via": "direct",
+    "len": 3136,
+    "titleWords": 2,
+    "titleHits": 2,
+    "hitWords": [
+      "national",
+      "archives"
+    ],
+    "funderHit": "2/2",
+    "detail": [
+      "eligibility",
+      "amount",
+      "apply-route"
+    ],
+    "closed": false,
+    "readAt": "2026-08-17"
+  },
+  {
+    "title": "HAPi & Matched Funding",
+    "url": "https://www.heathrowcommunitytrust.org/grants-for-heathrow-active-people-initiative-hapi-community-projects",
+    "final": "https://www.heathrowcommunitytrust.org/grants-for-heathrow-active-people-initiative-hapi-community-projects",
+    "status": 200,
+    "via": "direct",
+    "len": 3873,
+    "titleWords": 3,
+    "titleHits": 3,
+    "hitWords": [
+      "hapi",
+      "matched",
+      "funding"
+    ],
+    "funderHit": "1/1",
+    "detail": [
+      "dates",
+      "apply-route"
+    ],
+    "closed": false,
+    "readAt": "2026-08-17"
+  },
+  {
+    "title": "Get going with your Fund",
+    "url": "https://www.sycf.org.uk/apply/search-our-grants",
+    "final": "https://www.sycf.org.uk/apply/search-our-grants",
+    "status": 200,
+    "via": "direct",
+    "len": 4182,
+    "titleWords": 3,
+    "titleHits": 3,
+    "hitWords": [
+      "going",
+      "with",
+      "your"
+    ],
+    "funderHit": "2/2",
+    "detail": [
+      "eligibility"
+    ],
+    "closed": false,
+    "readAt": "2026-08-19"
+  },
+  {
+    "title": "SSE Start Up Programme",
+    "url": "https://www.the-sse.org/programmes/",
+    "final": "https://www.the-sse.org/learning-support/programmes/",
+    "status": 200,
+    "via": "direct",
+    "len": 8245,
+    "titleWords": 1,
+    "titleHits": 1,
+    "hitWords": [
+      "start"
+    ],
+    "funderHit": "3/3",
+    "detail": [
+      "dates"
+    ],
+    "closed": false,
+    "readAt": "2026-08-17"
+  },
+  {
+    "title": "Community Foundation Wales — Grants Hub",
+    "url": "https://communityfoundationwales.org.uk/grants-overview/",
+    "final": "https://communityfoundationwales.org.uk/grants-overview/",
+    "status": 200,
+    "via": "direct",
+    "len": 5600,
+    "titleWords": 1,
+    "titleHits": 1,
+    "hitWords": [
+      "wales"
+    ],
+    "funderHit": "1/1",
+    "detail": [
+      "apply-route"
+    ],
+    "closed": false,
+    "readAt": "2026-08-21"
+  },
+  {
+    "title": "UK Sport — National Lottery Awards",
+    "url": "https://www.uksport.gov.uk/our-work/investing-in-sport",
+    "final": "https://www.uksport.gov.uk/our-work/investing-in-sport",
+    "status": 200,
+    "via": "direct",
+    "len": 6186,
+    "titleWords": 4,
+    "titleHits": 4,
+    "hitWords": [
+      "sport",
+      "national",
+      "lottery",
+      "awards"
+    ],
+    "funderHit": "1/1",
+    "detail": [],
+    "closed": false,
+    "readAt": "2026-08-17"
+  },
+  {
+    "title": "Screen Scotland — Production & Development Funding",
+    "url": "https://www.screen.scot/funding-and-support/",
+    "final": "https://www.screen.scot/funding-and-support/",
+    "status": 200,
+    "via": "direct",
+    "len": 6386,
+    "titleWords": 5,
+    "titleHits": 5,
+    "hitWords": [
+      "screen",
+      "scotland",
+      "production",
+      "development"
+    ],
+    "funderHit": "2/2",
+    "detail": [],
+    "closed": false,
+    "readAt": "2026-08-17"
+  },
+  {
+    "title": "Crowdfunder — Match Funding",
+    "url": "https://www.crowdfunder.co.uk/funds",
+    "final": "https://www.crowdfunder.co.uk/funds",
+    "status": 403,
+    "via": "proxy",
+    "len": 17035,
+    "titleWords": 3,
+    "titleHits": 3,
+    "hitWords": [
+      "crowdfunder",
+      "match",
+      "funding"
+    ],
+    "funderHit": "1/1",
+    "detail": [],
+    "closed": false,
+    "readAt": "2026-08-21"
+  },
+  {
+    "title": "DCR Allen Charitable Trust",
+    "url": "https://register-of-charities.charitycommission.gov.uk/en/charity-search/-/charity-details/277293/charity-overview",
+    "final": "https://register-of-charities.charitycommission.gov.uk/en/charity-search/-/charity-details/277293/charity-overview",
+    "status": 200,
+    "via": "direct",
+    "len": 1318,
+    "titleWords": 1,
+    "titleHits": 1,
+    "hitWords": [
+      "allen"
+    ],
+    "funderHit": "1/1",
+    "detail": [
+      "amount"
+    ],
+    "closed": false,
+    "readAt": "2026-08-17"
+  },
+  {
+    "title": "Cadent Foundation — Community Grants",
+    "url": "https://cadentgas.com/foundation",
+    "final": "https://cadentgas.com/foundation",
+    "status": 200,
+    "via": "direct",
+    "len": 4456,
+    "titleWords": 1,
+    "titleHits": 1,
+    "hitWords": [
+      "cadent"
+    ],
+    "funderHit": "1/1",
+    "detail": [
+      "amount"
+    ],
+    "closed": false,
+    "readAt": "2026-08-17"
+  },
+  {
+    "title": "Community Shares — Booster Fund",
+    "url": "https://www.uk.coop/support-your-co-op/community-shares/support/booster-fund/apply",
+    "final": "https://www.uk.coop/support-your-co-op/community-shares/support/booster-fund/apply",
+    "status": 403,
+    "via": "proxy",
+    "len": 495,
+    "titleWords": 2,
+    "titleHits": 2,
+    "hitWords": [
+      "shares",
+      "booster"
+    ],
+    "funderHit": "1/1",
+    "detail": [],
+    "closed": false,
+    "readAt": "2026-08-17"
+  },
+  {
+    "title": "Grants for Organisations (Gateway, Project & Core)",
+    "url": "https://www.richmondfoundation.org.uk/our-funding/apply/",
+    "final": "https://www.richmondfoundation.org.uk/our-funding/apply/",
+    "status": 200,
+    "via": "direct",
+    "len": 2798,
+    "titleWords": 3,
+    "titleHits": 3,
+    "hitWords": [
+      "organisations",
+      "gateway",
+      "core"
+    ],
+    "funderHit": "3/6",
+    "detail": [
+      "eligibility",
+      "apply-route"
+    ],
+    "closed": false,
+    "readAt": "2026-08-18"
+  },
+  {
+    "title": "Theatre Breakthrough Fund (North)",
+    "url": "https://www.artscouncil.org.uk/theatre-breakthrough-fund-north",
+    "final": "https://www.artscouncil.org.uk/theatre-breakthrough-fund-north",
+    "status": 403,
+    "via": "proxy",
+    "len": 543,
+    "titleWords": 3,
+    "titleHits": 3,
+    "hitWords": [
+      "theatre",
+      "breakthrough",
+      "north"
+    ],
+    "funderHit": "2/3",
+    "detail": [],
+    "closed": false,
+    "readAt": "2026-08-17"
+  },
+  {
+    "title": "Catch22 — GoodTech Ventures Accelerator",
+    "url": "https://www.catch-22.org.uk/find-services/goodtech-ventures/",
+    "final": "https://www.catch-22.org.uk/find-services/goodtech-ventures/",
+    "status": 200,
+    "via": "direct",
+    "len": 22303,
+    "titleWords": 4,
+    "titleHits": 4,
+    "hitWords": [
+      "catch22",
+      "goodtech",
+      "ventures",
+      "accelerator"
+    ],
+    "funderHit": "1/1",
+    "detail": [],
+    "closed": false,
+    "readAt": "2026-08-17"
+  },
+  {
+    "title": "Historic England — Listed Places of Worship Grant Scheme",
+    "url": "https://historicengland.org.uk/advice/planning/consents/grants/",
+    "final": "https://historicengland.org.uk/advice/planning/consents/grants/",
+    "status": 403,
+    "via": "proxy",
+    "len": 23356,
+    "titleWords": 5,
+    "titleHits": 5,
+    "hitWords": [
+      "historic",
+      "england",
+      "listed",
+      "places"
+    ],
+    "funderHit": "2/2",
+    "detail": [],
+    "closed": false,
+    "readAt": "2026-08-17"
+  },
+  {
+    "title": "Historic England — Heritage at Risk Grants",
+    "url": "https://historicengland.org.uk/advice/heritage-at-risk/",
+    "final": "https://historicengland.org.uk/listing/heritage-at-risk/",
+    "status": 200,
+    "via": "direct",
+    "len": 8160,
+    "titleWords": 4,
+    "titleHits": 4,
+    "hitWords": [
+      "historic",
+      "england",
+      "heritage",
+      "risk"
+    ],
+    "funderHit": "2/2",
+    "detail": [],
+    "closed": false,
+    "readAt": "2026-08-17"
+  },
+  {
+    "title": "NHS Charities Together — Community Grants",
+    "url": "https://nhscharitiestogether.co.uk/about-us/our-programmes/",
+    "final": "https://nhscharitiestogether.co.uk/about-us/our-programmes/",
+    "status": 200,
+    "via": "direct",
+    "len": 9110,
+    "titleWords": 2,
+    "titleHits": 2,
+    "hitWords": [
+      "charities",
+      "together"
+    ],
+    "funderHit": "2/2",
+    "detail": [
+      "eligibility",
+      "amount"
+    ],
+    "closed": false,
+    "readAt": "2026-08-17"
+  },
+  {
+    "title": "Renew Community Fund",
+    "url": "https://gmet.org.uk/apply-funding/other-funding-opportunities",
+    "final": "https://gmet.org.uk/apply-funding/other-funding-opportunities",
+    "status": 200,
+    "via": "direct",
+    "len": 8625,
+    "titleWords": 1,
+    "titleHits": 1,
+    "hitWords": [
+      "renew"
+    ],
+    "funderHit": "3/3",
+    "detail": [
+      "amount"
+    ],
+    "closed": true,
+    "readAt": "2026-08-17"
+  },
+  {
+    "title": "The Pebble Trust",
+    "url": "https://www.pebbletrust.org/donations",
+    "final": "https://www.pebbletrust.org/donations",
+    "status": 200,
+    "via": "direct",
+    "len": 2349,
+    "titleWords": 1,
+    "titleHits": 1,
+    "hitWords": [
+      "pebble"
+    ],
+    "funderHit": "1/1",
+    "detail": [
+      "dates",
+      "amount",
+      "apply-route"
+    ],
+    "closed": false,
+    "readAt": "2026-08-17"
+  },
+  {
+    "title": "Co-op Foundation — Belong",
+    "url": "https://www.coopfoundation.org.uk/youth/belong/",
+    "final": "https://www.coopfoundation.org.uk/youth/belong/",
+    "status": 200,
+    "via": "direct",
+    "len": 3715,
+    "titleWords": 1,
+    "titleHits": 1,
+    "hitWords": [
+      "belong"
+    ],
+    "funderHit": "n/a",
+    "detail": [
+      "eligibility"
+    ],
+    "closed": false,
+    "readAt": "2026-08-17"
+  },
+  {
+    "title": "Hyde Foundation Community Investment",
+    "url": "https://www.hyde-housing.co.uk/hyde-foundation/",
+    "final": "https://www.hyde-housing.co.uk/the-hyde-group/our-social-purpose/hyde-foundation/",
+    "status": 200,
+    "via": "direct",
+    "len": 4297,
+    "titleWords": 2,
+    "titleHits": 2,
+    "hitWords": [
+      "hyde",
+      "investment"
+    ],
+    "funderHit": "1/1",
+    "detail": [],
+    "closed": false,
+    "readAt": "2026-08-17"
+  },
+  {
+    "title": "Leathersellers' Foundation Main Grants",
+    "url": "https://leathersellers.org/grant/charity-main-grants/",
+    "final": "https://leathersellers.org/grant/charity-main-grants/",
+    "status": 200,
+    "via": "direct",
+    "len": 13197,
+    "titleWords": 2,
+    "titleHits": 2,
+    "hitWords": [
+      "leathersellers",
+      "main"
+    ],
+    "funderHit": "1/1",
+    "detail": [
+      "dates",
+      "eligibility",
+      "amount",
+      "apply-route"
+    ],
+    "closed": false,
+    "readAt": "2026-08-20"
+  },
+  {
+    "title": "Idlewild Trust Conservation Grants",
+    "url": "https://www.idlewildtrust.org.uk/apply-grant",
+    "final": "https://www.idlewildtrust.org.uk/apply-grant",
+    "status": 200,
+    "via": "direct",
+    "len": 3183,
+    "titleWords": 2,
+    "titleHits": 2,
+    "hitWords": [
+      "idlewild",
+      "conservation"
+    ],
+    "funderHit": "1/1",
+    "detail": [
+      "dates",
+      "eligibility",
+      "amount",
+      "apply-route"
+    ],
+    "closed": false,
+    "readAt": "2026-08-17"
+  },
+  {
+    "title": "Community Energy GO!",
+    "url": "https://www.cse.org.uk/my-community/",
+    "final": "https://www.cse.org.uk/my-community/",
+    "status": 200,
+    "via": "direct",
+    "len": 5549,
+    "titleWords": 1,
+    "titleHits": 1,
+    "hitWords": [
+      "energy"
+    ],
+    "funderHit": "3/3",
+    "detail": [],
+    "closed": false,
+    "readAt": "2026-08-17"
+  },
+  {
+    "title": "London Social and Affordable Homes Programme 2026 to 2036",
+    "url": "https://www.london.gov.uk/programmes-strategies/housing-and-land/housing-and-land-funding-programmes/london-social-and-affordable-homes-programme-2026-36",
+    "final": "https://www.london.gov.uk/programmes-strategies/housing-and-land/housing-and-land-funding-programmes/london-social-and-affordable-homes-programme-2026-36",
+    "status": 403,
+    "via": "proxy",
+    "len": 584,
+    "titleWords": 6,
+    "titleHits": 5,
+    "hitWords": [
+      "london",
+      "social",
+      "affordable",
+      "homes"
+    ],
+    "funderHit": "1/3",
+    "detail": [],
+    "closed": false,
+    "readAt": "2026-08-17"
+  },
+  {
+    "title": "Nesta Innovation Challenges — Prize Competitions",
+    "url": "https://challengeworks.org/about-challenge-prizes/our-challenge-prizes/",
+    "final": "https://challengeworks.org/about-challenge-prizes/our-challenge-prizes/",
+    "status": 200,
+    "via": "direct",
+    "len": 3599,
+    "titleWords": 5,
+    "titleHits": 4,
+    "hitWords": [
+      "nesta",
+      "innovation",
+      "challenges",
+      "prize"
+    ],
+    "funderHit": "1/1",
+    "detail": [
+      "amount"
+    ],
+    "closed": false,
+    "readAt": "2026-08-17"
+  },
+  {
+    "title": "Esmée Fairbairn Foundation — Arts, Culture & Heritage",
+    "url": "https://esmeefairbairn.org.uk/apply-for-a-grant/creative-confident-communities-guidance/",
+    "final": "https://esmeefairbairn.org.uk/apply-for-a-grant/creative-confident-communities-guidance/",
+    "status": 200,
+    "via": "direct",
+    "len": 13193,
+    "titleWords": 4,
+    "titleHits": 3,
+    "hitWords": [
+      "fairbairn",
+      "arts",
+      "culture"
+    ],
+    "funderHit": "1/1",
+    "detail": [
+      "apply-route"
+    ],
+    "closed": false,
+    "readAt": "2026-08-17"
+  },
+  {
+    "title": "Grocers' Charity Memorial Grant",
+    "url": "https://grocershall.co.uk/the-charity/memorial-grants/",
+    "final": "https://grocershall.co.uk/the-charity/apply-for-a-grant",
+    "status": 200,
+    "via": "direct",
+    "len": 6680,
+    "titleWords": 3,
+    "titleHits": 2,
+    "hitWords": [
+      "grocers",
+      "charity"
+    ],
+    "funderHit": "2/2",
+    "detail": [
+      "dates",
+      "eligibility",
+      "amount"
+    ],
+    "closed": false,
+    "readAt": "2026-08-17"
+  },
+  {
+    "title": "One Croydon Alliance Community Funding",
+    "url": "https://www.croydon.gov.uk/community-and-safety/advice-and-funding-community-groups/funding-opportunities",
+    "final": "https://www.croydon.gov.uk/community-and-safety/advice-and-funding-community-groups/funding-opportunities",
+    "status": 200,
+    "via": "direct",
+    "len": 1972,
+    "titleWords": 3,
+    "titleHits": 2,
+    "hitWords": [
+      "croydon",
+      "funding"
+    ],
+    "funderHit": "1/2",
+    "detail": [
+      "amount"
+    ],
+    "closed": false,
+    "readAt": "2026-08-17"
+  },
+  {
+    "title": "The Cadogan Charity — General Grants",
+    "url": "https://www.cadogan.co.uk/the-cadogan-charity/",
+    "final": "https://www.cadogan.co.uk/the-cadogan-charity/",
+    "status": 200,
+    "via": "direct",
+    "len": 2675,
+    "titleWords": 3,
+    "titleHits": 2,
+    "hitWords": [
+      "cadogan",
+      "charity"
+    ],
+    "funderHit": "2/2",
+    "detail": [],
+    "closed": false,
+    "readAt": "2026-08-21"
+  },
+  {
+    "title": "Vicar's Relief Fund — St Martin-in-the-Fields Charity",
+    "url": "https://smitfc.org/the-vicars-relief-fund/",
+    "final": "https://smitfc.org/emergency-grants",
+    "status": 200,
+    "via": "direct",
+    "len": 4909,
+    "titleWords": 5,
+    "titleHits": 3,
+    "hitWords": [
+      "martin",
+      "fields",
+      "charity"
+    ],
+    "funderHit": "3/3",
+    "detail": [
+      "eligibility",
+      "amount",
+      "apply-route"
+    ],
+    "closed": false,
+    "readAt": "2026-08-17"
+  },
+  {
+    "title": "Severn Trent Community Fund — Children's Football Clubs",
+    "url": "https://www.stwater.co.uk/about-us/severn-trent-community-fund/",
+    "final": "https://www.stwater.co.uk/about-us/severn-trent-community-fund/",
+    "status": 403,
+    "via": "proxy",
+    "len": 19269,
+    "titleWords": 5,
+    "titleHits": 3,
+    "hitWords": [
+      "severn",
+      "trent",
+      "football"
+    ],
+    "funderHit": "2/2",
+    "detail": [],
+    "closed": false,
+    "readAt": "2026-08-17"
+  },
+  {
+    "title": "General and Small Grants (Learning Disability)",
+    "url": "https://www.bailythomas.org.uk/grants/general-programme",
+    "final": "https://www.bailythomas.org.uk/grants/general-programme",
+    "status": 200,
+    "via": "direct",
+    "len": 4153,
+    "titleWords": 4,
+    "titleHits": 2,
+    "hitWords": [
+      "general",
+      "small"
+    ],
+    "funderHit": "2/2",
+    "detail": [
+      "dates",
+      "amount",
+      "apply-route"
+    ],
+    "closed": false,
+    "readAt": "2026-08-17"
+  },
+  {
+    "title": "Swire Charitable Trust — Core Grant Programme",
+    "url": "https://www.swirecharitabletrust.org.uk/our-funding/eligibility-test/",
+    "final": "https://www.swirecharitabletrust.org.uk/our-funding/eligibility-test/",
+    "status": 200,
+    "via": "direct",
+    "len": 550,
+    "titleWords": 2,
+    "titleHits": 1,
+    "hitWords": [
+      "swire"
+    ],
+    "funderHit": "1/1",
+    "detail": [],
+    "closed": false,
+    "readAt": "2026-08-17"
+  },
+  {
+    "title": "Including Communities",
+    "url": "https://hiwcf.org.uk/including-communities-2024/",
+    "final": "https://hiwcf.org.uk/",
+    "status": 200,
+    "via": "direct",
+    "len": 3205,
+    "titleWords": 2,
+    "titleHits": 1,
+    "hitWords": [
+      "communities"
+    ],
+    "funderHit": "3/3",
+    "detail": [
+      "amount"
+    ],
+    "closed": false,
+    "readAt": "2026-08-17"
+  },
+  {
+    "title": "Arts Council National Lottery Project Grants",
+    "url": "https://www.artscouncil.org.uk/ProjectGrants",
+    "final": "https://www.artscouncil.org.uk/ProjectGrants",
+    "status": 403,
+    "via": "proxy",
+    "len": 490,
+    "titleWords": 4,
+    "titleHits": 2,
+    "hitWords": [
+      "arts",
+      "council"
+    ],
+    "funderHit": "2/3",
+    "detail": [],
+    "closed": false,
+    "readAt": "2026-08-17"
+  },
+  {
+    "title": "Hilden Charitable Fund — Main Grants",
+    "url": "https://www.hildencharitablefund.org/",
+    "final": "https://hildencharitablefund.org/",
+    "status": 200,
+    "via": "direct",
+    "len": 4207,
+    "titleWords": 2,
+    "titleHits": 1,
+    "hitWords": [
+      "hilden"
+    ],
+    "funderHit": "1/1",
+    "detail": [
+      "eligibility",
+      "apply-route"
+    ],
+    "closed": true,
+    "readAt": "2026-08-18"
+  },
+  {
+    "title": "Visa CatalyseHer Programme",
+    "url": "https://inco.co.uk/catalyseher",
+    "final": "https://inco.co.uk/catalyseher",
+    "status": 403,
+    "via": "proxy",
+    "len": 440,
+    "titleWords": 2,
+    "titleHits": 1,
+    "hitWords": [
+      "catalyseher"
+    ],
+    "funderHit": "1/2",
+    "detail": [],
+    "closed": false,
+    "readAt": "2026-08-17"
+  },
+  {
+    "title": "Chichester District Council — Community Grants Programme",
+    "url": "https://www.chichester.gov.uk/grantprogramme",
+    "final": "https://www.chichester.gov.uk/grantprogramme",
+    "status": 403,
+    "via": "proxy",
+    "len": 487,
+    "titleWords": 3,
+    "titleHits": 1,
+    "hitWords": [
+      "chichester"
+    ],
+    "funderHit": "1/3",
+    "detail": [],
+    "closed": false,
+    "readAt": "2026-08-17"
+  },
+  {
+    "title": "Bolton Housing Partnership — Community Investment Grants",
+    "url": "https://services.boltoncvs.org.uk/user/login",
+    "final": "https://services.boltoncvs.org.uk/user/login",
+    "status": 200,
+    "via": "direct",
+    "len": 327,
+    "titleWords": 4,
+    "titleHits": 1,
+    "hitWords": [
+      "bolton"
+    ],
+    "funderHit": "1/3",
+    "detail": [],
+    "closed": false,
+    "readAt": "2026-08-17"
+  },
+  {
+    "title": "Improving life chances in Tyne & Wear and Northumberland",
+    "url": "https://www.communityfoundation.org.uk/grants/reeds-grassroots/",
+    "final": "https://www.communityfoundation.org.uk/grants/reeds-grassroots/",
+    "status": 404,
+    "via": "proxy",
+    "len": 14743,
+    "titleWords": 6,
+    "titleHits": 1,
+    "hitWords": [
+      "tyne"
+    ],
+    "funderHit": "1/3",
+    "detail": [],
+    "closed": false,
+    "readAt": "2026-08-17"
+  },
+  {
+    "title": "Better Brighton & Hove Fund — Ward Pots 2026",
+    "url": "https://yourvoice.brighton-hove.gov.uk/projects/better-brighton-hove-fund",
+    "final": "https://yourvoice.brighton-hove.gov.uk/projects/better-brighton-hove-fund",
+    "status": 200,
+    "via": "direct",
+    "len": 27,
+    "titleWords": 6,
+    "titleHits": 0,
+    "hitWords": [],
+    "funderHit": "0/4",
+    "detail": [],
+    "closed": false,
+    "readAt": "2026-08-21"
+  },
+  {
+    "title": "Theatre and Charitable Grants",
+    "url": "https://register-of-charities.charitycommission.gov.uk/en/charity-search/-/charity-details/327751",
+    "final": "https://register-of-charities.charitycommission.gov.uk/en/charity-search/-/charity-details/327751",
+    "status": 200,
+    "via": "direct",
+    "len": 1714,
+    "titleWords": 1,
+    "titleHits": 0,
+    "hitWords": [],
+    "funderHit": "1/1",
+    "detail": [
+      "amount"
+    ],
+    "closed": false,
+    "readAt": "2026-08-17"
+  }
+]

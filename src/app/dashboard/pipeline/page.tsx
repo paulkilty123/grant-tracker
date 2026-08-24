@@ -15,7 +15,7 @@ import { getOrganisationByOwner } from '@/lib/organisations'
 import { setDismissSnooze, removeInteraction } from '@/lib/interactions'
 import { emitClientEvent } from '@/lib/events/client'
 import { track } from '@/lib/analytics'
-import { PIPELINE_STAGES, formatDeadline, formatRange, cn } from '@/lib/utils'
+import { PIPELINE_STAGES, formatDeadline, formatRange, formatCurrency, cn } from '@/lib/utils'
 import type { PipelineItem, PipelineStage, Organisation } from '@/types'
 import { Sparkles, Loader2, Link, ArrowRight, Calendar, AlarmClock, X as XIcon, GripVertical, StickyNote, User as UserIcon, BarChart3, Star } from 'lucide-react'
 import { PipelineModal, STAGE_ICONS, getWritingStage } from '@/components/PipelineModal'
@@ -783,11 +783,9 @@ export default function PipelinePage() {
             const activeTotal = activeItems.reduce((s, i) => s + (i.amount_max ?? i.amount_requested ?? 0), 0)
             const wonTotal    = items.filter(i => i.stage === 'won').reduce((s, i) => s + (i.amount_requested ?? i.amount_max ?? 0), 0)
             const total       = activeTotal + wonTotal
-            const fmt = (n: number) => n >= 1000000
-              ? `£${(n / 1000000).toFixed(1)}m`
-              : n >= 1000
-                ? `£${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}k`
-                : `£${n.toLocaleString()}`
+            // Closer than the others were, but a pipeline total is rarely a
+            // round number and one decimal still rounds it. Shared version.
+            const fmt = (n: number) => formatCurrency(n)
             return total > 0 ? (
               <div className="text-right">
                 <p className="text-[10px] font-semibold uppercase tracking-widest text-light">Total Pipeline</p>

@@ -315,6 +315,10 @@
   .cd-value:hover{text-decoration:underline;}
   .cd-sub{font-size:15px;color:#5f6b64;margin:0;}
   .contact-form{display:flex;flex-direction:column;gap:18px;}
+  /* The fields sit inside a real <form> so they can be submitted. That form is
+     the only flex child of .contact-form, so it has to carry the column layout
+     itself or the 18px gap between fields collapses. */
+  #ct-form{display:flex;flex-direction:column;gap:18px;}
   .contact-form label{font-family:'Space Grotesk',sans-serif;font-weight:500;font-size:15px;color:var(--deep);display:flex;flex-direction:column;gap:8px;}
   .contact-form input,.contact-form textarea{font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;color:var(--deep);background:#fff;border:1px solid rgba(29,60,62,0.14);border-radius:12px;padding:14px 16px;width:100%;box-sizing:border-box;resize:vertical;}
   .contact-form input::placeholder,.contact-form textarea::placeholder{color:#9aa5a0;}
@@ -473,7 +477,7 @@
       <nav>
         <a class="brand" href="#top"><svg class="brand-svg" viewBox="0 0 24 24" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 10a6 6 0 0 0 -6 -6h-3v2a6 6 0 0 0 6 6h3" stroke="#1D3C3E"/><path d="M12 14a6 6 0 0 1 6 -6h3v1a6 6 0 0 1 -6 6h-3" stroke="#1D3C3E"/><path d="M12 20l0 -10" stroke="#1D3C3E"/></svg><span class="logo">shoots</span></a>
         <div class="nav-center"><a href="#how">How it works</a><a href="#funding">Funding mix</a><a href="#pricing">Pricing</a><a href="#about" class="nav-opt">About</a><a href="#faq">FAQ</a></div>
-        <div class="nav-right"><a href="/auth/login" class="nav-signin" style="font-weight:600;">Sign in</a><a class="btn btn-primary nav-btn" href="#waitlist">Join the waitlist</a><button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="mobileMenu" aria-label="Open menu"><i class="ti ti-menu-2" aria-hidden="true"></i></button></div>
+        <div class="nav-right"><a href="/auth/login" class="nav-signin" style="font-weight:600;">Sign in</a><a class="btn btn-primary nav-btn" href="#pricing">Join the waitlist</a><button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="mobileMenu" aria-label="Open menu"><i class="ti ti-menu-2" aria-hidden="true"></i></button></div>
       </nav>
       <div class="mobile-menu" id="mobileMenu" hidden>
         <a href="#how">How it works</a>
@@ -501,7 +505,7 @@
             <span><i class="ti ti-users-group" aria-hidden="true"></i>Built with UK charities, CICs and social enterprises</span>
           </p>
           <div class="hero-cta">
-            <a href="#waitlist" class="btn btn-primary">Join the waitlist</a>
+            <a href="#pricing" class="btn btn-primary">Join the waitlist</a>
             <a href="#how" class="hero-cta-link">See how it works <span class="arw" aria-hidden="true">&rarr;</span></a>
           </div>
           <p class="hero-reassure">Tell us about your organisation and see what fits, in about three minutes.</p>
@@ -568,23 +572,23 @@
       <div class="prob-grid">
         <div class="prob">
           <span class="prob-ic" style="background:rgba(214,117,88,0.14);"><i class="ti ti-hourglass-empty" style="color:var(--terra);"></i></span>
-          <h3>Hours lost before you find out you don&rsquo;t qualify</h3>
+          <h3>Hours lost to dead ends</h3>
           <p>You find a fund that fits, start shaping a bid, then discover your structure ruled you out from the start.</p>
         </div>
         <div class="prob">
           <span class="prob-ic" style="background:rgba(78,170,180,0.16);"><i class="ti ti-layout-grid-remove" style="color:#2f7d86;"></i></span>
-          <h3>Then you lose track of what you found</h3>
+          <h3>Then you lose track</h3>
           <p>The search ends in a spreadsheet, and the spreadsheet goes stale. Deadlines pass unnoticed, half-written applications drift, and nobody can say what is actually in progress.</p>
         </div>
         <div class="prob">
           <span class="prob-ic" style="background:rgba(235,206,120,0.28);"><i class="ti ti-building-bank" style="color:#BA7517;"></i></span>
-          <h3>Funding rarely fits one shape</h3>
+          <h3>Never shaped for you</h3>
           <p>Charities, CICs, social enterprises and community groups each face different eligibility, but most funding search flattens that, so you chase funds that were never open to you.</p>
         </div>
         <div class="prob turn">
           <span class="prob-ic"><i class="ti ti-bulb"></i></span>
-          <h3>The funding you didn&rsquo;t know to look for</h3>
-          <p>Grants aren&rsquo;t the whole picture. Social investment, foundation grants, fellowships and in-kind support rarely make it onto your radar.</p>
+          <h3>The funding you never see</h3>
+          <p>Grants aren&rsquo;t the whole picture. Social investment, accelerator programmes, competitions and in-kind support rarely make it onto your radar.</p>
         </div>
       </div>
     </div>
@@ -802,7 +806,7 @@
       <p class="eyb">Pricing for charities, CICs and community groups</p>
       <h2>Pricing coming soon</h2>
       <p class="lead" style="color:#5f6b64;max-width:56ch;">Simple plans priced for smaller organisations, whilst catering for bigger teams. Join the waitlist to see launch pricing first.</p>
-      <div class="waitlist-card" id="waitlist" style="background:var(--deep);border-radius:16px;padding:clamp(28px,4vw,44px);margin-top:28px;">
+      <div class="waitlist-card" style="background:var(--deep);border-radius:16px;padding:clamp(28px,4vw,44px);margin-top:28px;">
         <h3 style="color:var(--cream);margin:0 0 6px;">Join the waitlist</h3>
         <p style="color:rgba(246,241,231,.75);margin:0 0 18px;font-size:.95rem;">Be first in when we launch.</p>
         <form id="wl-form" method="POST" action="/api/waitlist" style="display:flex;gap:10px;flex-wrap:wrap;align-items:stretch;">
@@ -832,7 +836,7 @@
     <div class="wrap">
       <h2>Start with funding you can actually win.</h2>
       <p>Launching soon. Join the waitlist for first access.</p>
-      <a class="btn btn-primary" style="padding:16px 40px;font-size:17px;" href="#waitlist">Join the waitlist</a>
+      <a class="btn btn-primary" style="padding:16px 40px;font-size:17px;" href="#pricing">Join the waitlist</a>
     </div>
   </section>
 
@@ -854,9 +858,13 @@
           </div>
         </div>
         <div class="contact-form">
-          <p class="cd-label">Send an email</p>
-          <p class="cd-sub">Tell me what you need and I'll reply, usually within a couple of days.</p>
-          <a class="btn btn-primary contact-send" href="mailto:hello@shootsfunding.co.uk">hello@shootsfunding.co.uk</a>
+          <form id="ct-form" method="POST" action="/api/contact">
+            <label>Name<input id="ct-name" type="text" name="name" placeholder="Your name"></label>
+            <label>Email<input id="ct-email" type="email" name="email" required placeholder="you@organisation.org"></label>
+            <label>Message<textarea id="ct-message" rows="5" name="message" required placeholder="How can I help?"></textarea></label>
+            <button id="ct-submit" type="submit" class="btn btn-primary contact-send">Send message</button>
+          </form>
+          <p id="ct-status" role="status" aria-live="polite" style="margin:14px 0 0;font-size:.9rem;min-height:1.25em;color:#5f6b64;"></p>
         </div>
       </div>
     </div>
@@ -1002,7 +1010,6 @@
     start();
   })();
   </script>
-
 <script>
   // Waitlist submit. Posts JSON to /api/waitlist, which stores the address and
   // its timestamp as the consent record. Same-origin: this document is served
@@ -1068,5 +1075,78 @@
     });
   })();
   </script>
+
+<script>
+  // Contact submit. Posts JSON to /api/contact, which stores the message and
+  // emails Paul. Mirrors the waitlist handler above deliberately: same shape,
+  // same failure handling, so there is one pattern on this page rather than two.
+  //
+  // The route is rate limited to 5 an hour per IP and fails CLOSED, so it can
+  // answer 429 or 503. Those are told apart here rather than collapsed into
+  // "something went wrong", because "try again" is the wrong advice for both:
+  // one means wait, the other means use the email address above.
+  (function(){
+    var form = document.getElementById('ct-form');
+    if(!form) return;
+    var name    = document.getElementById('ct-name');
+    var email   = document.getElementById('ct-email');
+    var message = document.getElementById('ct-message');
+    var button  = document.getElementById('ct-submit');
+    var status  = document.getElementById('ct-status');
+    var ERR = '#B14A2C', OK = '#3f6b52';
+    var done = false;
+
+    function say(text, isError){
+      status.textContent = text;
+      status.style.color = isError ? ERR : OK;
+    }
+
+    form.addEventListener('submit', function(event){
+      event.preventDefault();
+      if(done) return;
+
+      var body = {
+        name:    (name.value || '').trim(),
+        email:   (email.value || '').trim(),
+        message: (message.value || '').trim()
+      };
+      if(!body.email){ say('Please enter your email address.', true); email.focus(); return; }
+      if(body.message.length < 5){ say('Please tell me a little more.', true); message.focus(); return; }
+
+      button.disabled = true;
+      var original = button.textContent;
+      button.textContent = 'Sending...';
+      say('', false);
+
+      fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      }).then(function(res){
+        return res.json().then(function(data){ return { status: res.status, ok: res.ok, data: data }; });
+      }).then(function(result){
+        if(result.ok){
+          done = true;
+          form.hidden = true;
+          say('Thanks, that has reached me. I will reply within a couple of days.', false);
+          return;
+        }
+        button.disabled = false;
+        button.textContent = original;
+        if(result.status === 429){
+          say('That is a few too many messages. Please try again later, or email hello@shootsfunding.co.uk.', true);
+        } else if(result.status === 503){
+          say('I could not accept that just now. Please email hello@shootsfunding.co.uk instead.', true);
+        } else {
+          say((result.data && result.data.error) || 'Something went wrong. Please email hello@shootsfunding.co.uk.', true);
+        }
+      }).catch(function(){
+        button.disabled = false;
+        button.textContent = original;
+        say('Something went wrong. Please email hello@shootsfunding.co.uk.', true);
+      });
+    });
+  })();
+</script>
 </body>
 </html>

@@ -205,3 +205,38 @@ export function applyBrandTokens(text: string, runtime: Record<string, string | 
   }
   return out
 }
+
+/* ── Outbound email ─────────────────────────────────────────────────────────
+ *
+ * Six routes send mail (contact, feedback, send-alerts, and the three crons)
+ * and each one used to declare its own from address, notify address and link
+ * origin, every one falling back to a hardcoded granttracker.co.uk. That made
+ * the rebrand six edits instead of one, and it hid a live problem:
+ * NEXT_PUBLIC_APP_URL is not set in production, so every link inside the alert
+ * and reminder emails resolved to the old domain. Those crons are unscheduled
+ * today, so nobody has seen it, but enabling them is a launch item.
+ *
+ * These derive from the origin above, which IS set in production, so the
+ * fallbacks are right without needing a new environment variable. The explicit
+ * env overrides stay for the cases where the mail identity should differ from
+ * the site identity.
+ */
+
+/** Bare host for prose in email footers. Without the www, which reads oddly. */
+export const EMAIL_BRAND_HOST = MCP_APP_HOST.replace(/^www\./, '')
+
+/** Address outbound app email is sent FROM. Must be on a domain verified with
+ *  the mail provider, or the receiving domain's DMARC policy will act on it. */
+export const EMAIL_FROM = readString('ALERT_FROM_EMAIL', `alerts@${EMAIL_BRAND_HOST}`)
+
+/** Where internal notifications land: the contact form and in-app feedback. */
+export const EMAIL_NOTIFY_TO = readString('FEEDBACK_NOTIFY_EMAIL', MCP_CONTACT_EMAIL)
+
+/** Origin for links inside emails. Falls back to the app origin rather than a
+ *  second hardcoded copy of the domain. */
+export const EMAIL_APP_URL = readOrigin('NEXT_PUBLIC_APP_URL', MCP_APP_ORIGIN)
+
+/** Accent used on quoted message bodies in notification emails.
+ *  A raw hex on purpose: email clients do not resolve CSS custom properties,
+ *  so a var(--token) here would silently render as no colour at all. */
+export const EMAIL_ACCENT = '#9BCA9D'
