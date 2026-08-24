@@ -21,7 +21,7 @@ export default function NewProjectPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    document.title = 'New project · Grant Tracker'
+    document.title = 'New project · Shoots'
     async function init() {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()

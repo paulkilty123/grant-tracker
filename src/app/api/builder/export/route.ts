@@ -79,7 +79,7 @@ export async function GET(req: NextRequest) {
 </head>
 <body>
 <h1>${esc(title)}</h1>
-<p class="meta">${app.funder_name && app.grant_name ? esc(app.funder_name) + ' · ' : ''}Working document from Grant Tracker, ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}.
+<p class="meta">${app.funder_name && app.grant_name ? esc(app.funder_name) + ' · ' : ''}Working document from Shoots, ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}.
 Anything in [ADD: ...] brackets is a placeholder for your own material. Edit freely; this document is yours.</p>
 <hr/>
 ${sections}

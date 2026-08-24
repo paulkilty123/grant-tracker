@@ -77,7 +77,7 @@ export async function GET() {
 
   const body = {
     exported_at: new Date().toISOString(),
-    export_note: 'Your Grant Tracker data. It is yours, it persists beyond beta, and you can export it any time.',
+    export_note: 'Your Shoots data. It is yours, it persists beyond beta, and you can export it any time.',
     organisation: org,
     pipeline: pipeline ?? [],
     saved_opportunities: savedOpportunities,

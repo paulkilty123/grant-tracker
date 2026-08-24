@@ -37,7 +37,7 @@ const TABS: { id: TabId; label: string; icon: React.ElementType; introTitle: str
     label: 'Missing funder',
     icon: Search,
     introTitle: 'Suggest a funder',
-    introDesc: 'Know a funder that should be in Grant Tracker? Tell us about them.',
+    introDesc: 'Know a funder that should be in Shoots? Tell us about them.',
   },
   {
     id: 'general',

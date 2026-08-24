@@ -51,7 +51,7 @@ const fundingTypes = [
 const audiences = [
   {
     title: 'CICs & social enterprises',
-    desc: "Most funding databases were built with registered charities in mind. If you're a CIC or trading social enterprise, Grant Tracker matches funding to your legal structure and filters out grants you're not eligible to apply for.",
+    desc: "Most funding databases were built with registered charities in mind. If you're a CIC or trading social enterprise, Shoots matches funding to your legal structure and filters out grants you're not eligible to apply for.",
     Icon: Shield, iconBg: '#EAF3DE', iconColor: '#3B6D11',
   },
   {
@@ -911,7 +911,7 @@ export default function LandingPage() {
               <div style={{ background: 'rgba(255,255,255,0.08)', border: '0.5px solid rgba(142,203,60,0.2)', borderRadius: 14, padding: '32px 32px 30px', marginBottom: 28 }}>
                 <p style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 19, color: 'white', letterSpacing: '-0.01em', marginBottom: 14 }}>Filtered for you.</p>
                 <p style={{ fontSize: 14.5, color: '#C0DD97', lineHeight: 1.65 }}>
-                  There are thousands of UK funders, but only a fraction fit your organisation. Grant Tracker filters by your legal structure, sector, location and stage, so you only see what you can actually apply for.
+                  There are thousands of UK funders, but only a fraction fit your organisation. Shoots filters by your legal structure, sector, location and stage, so you only see what you can actually apply for.
                 </p>
               </div>
 
@@ -1018,7 +1018,7 @@ export default function LandingPage() {
               },
               {
                 label: 'Accessible',
-                body: "Good funding intelligence shouldn't only reach organisations with big budgets. Grant Tracker will always be priced to stay within reach of smaller ones.",
+                body: "Good funding intelligence shouldn't only reach organisations with big budgets. Shoots will always be priced to stay within reach of smaller ones.",
                 bg: '#F5F1E8', titleColor: '#173404', bodyColor: '#3B6D11',
               },
             ] as const).map((v, i) => (
@@ -1044,7 +1044,7 @@ export default function LandingPage() {
                   Funders are inundated with misaligned AI-written applications. We don&apos;t want to make the problem worse. So it&apos;s more important than ever to find the right match, and for your authentic voice to come through. That&apos;s how you stand out.
                 </p>
                 <p className="text-base leading-relaxed" style={{ color: '#5F5E5A' }}>
-                  Grant Tracker uses AI where it genuinely helps: matching your profile to the right opportunities, building intelligence about how funders make decisions, and cutting the time you spend searching.
+                  Shoots uses AI where it genuinely helps: matching your profile to the right opportunities, building intelligence about how funders make decisions, and cutting the time you spend searching.
                 </p>
               </div>
             </div>
@@ -1065,7 +1065,7 @@ export default function LandingPage() {
                 Building this with a <span style={{ color: '#8ECB3C' }}>small group.</span>
               </h2>
               <p style={{ fontSize: 16, color: '#5F5E5A', lineHeight: 1.6, maxWidth: 540, margin: '0 auto 12px' }}>
-                I&apos;m hand-picking 20&ndash;30 organisations to help shape Grant Tracker as I build it.
+                I&apos;m hand-picking 20&ndash;30 organisations to help shape Shoots as I build it.
               </p>
               <p style={{ fontSize: 16, color: '#5F5E5A', lineHeight: 1.6, maxWidth: 540, margin: '0 auto 32px' }}>
                 Free for six months. Plus a direct line to me whenever you need it. A genuine founding cohort, not a waitlist.
@@ -1168,7 +1168,7 @@ export default function LandingPage() {
             <span className="flex items-center gap-4">
               <Link href="/privacy" className="hover:text-white transition-colors no-underline" style={{ color: '#97C459' }}>Privacy</Link>
               <Link href="/terms" className="hover:text-white transition-colors no-underline" style={{ color: '#97C459' }}>Terms</Link>
-              <span>&copy; 2026 Grant Tracker</span>
+              <span>&copy; 2026 Shoots</span>
             </span>
           </div>
         </div>

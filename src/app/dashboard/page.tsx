@@ -442,7 +442,7 @@ export default async function DashboardPage() {
         {/* Greeting */}
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-charcoal mb-1.5" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.02em' }}>
-            Welcome to Grant Tracker, {displayName}.
+            Welcome to Shoots, {displayName}.
           </h2>
           <p className="text-sm text-mid">
             {profileComplete

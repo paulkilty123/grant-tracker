@@ -242,7 +242,7 @@ export default function ApplicationWorkspacePage() {
       if (!data) { router.push('/dashboard/applications'); return }
       setApp(data as ApplicationRecord)
       setOpenQid(((data as ApplicationRecord).questions ?? [])[0]?.id ?? null)
-      document.title = `${(data as ApplicationRecord).grant_name || (data as ApplicationRecord).funder_name || 'Application'} · Grant Tracker`
+      document.title = `${(data as ApplicationRecord).grant_name || (data as ApplicationRecord).funder_name || 'Application'} · Shoots`
       // Linked project (IA: applications visibly belong to their project).
       const projId = (data as { project_id?: string | null }).project_id
       if (projId) {

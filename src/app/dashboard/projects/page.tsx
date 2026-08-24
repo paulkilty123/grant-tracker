@@ -90,7 +90,7 @@ export default function ProjectsPage() {
   }
 
   useEffect(() => {
-    document.title = 'Projects · Grant Tracker'
+    document.title = 'Projects · Shoots'
     async function load() {
       const access = await fetch('/api/builder/access').then(r => r.json()).catch(() => ({ allowed: false }))
       setAllowed(!!access?.allowed)

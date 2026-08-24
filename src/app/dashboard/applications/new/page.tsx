@@ -315,7 +315,7 @@ export default function NewApplicationPage() {
               Who are you applying to?
             </h2>
             <p style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary, margin: '0 0 14px', lineHeight: 1.55 }}>
-              Choose a funder from the catalogue and we&apos;ll use everything Grant Tracker knows
+              Choose a funder from the catalogue and we&apos;ll use everything Shoots knows
               about them: priorities, exclusions, what a strong application covers. We&apos;ll also
               check your eligibility before you spend any time writing.
             </p>

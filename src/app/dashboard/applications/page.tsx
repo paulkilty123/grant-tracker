@@ -19,7 +19,7 @@ const STRONG_APPLICATION_PRINCIPLES = [
   { t: 'Lead with the need, backed by evidence', b: 'Show the problem and how you know it is real, not just that you care about it.' },
   { t: 'Show outcomes you can measure', b: 'What will change, and how you will know. Funders fund results, not activity.' },
   { t: 'Be specific and honest', b: 'Concrete numbers and plain claims beat polish. A gap you name reads better than one they find.' },
-  { t: 'Your voice, not ours', b: 'The application should sound like you. Grant Tracker drafts from your own material and sharpens it; the final words and the story stay yours.' },
+  { t: 'Your voice, not ours', b: 'The application should sound like you. Shoots drafts from your own material and sharpens it; the final words and the story stay yours.' },
 ]
 
 const HOW_IT_WORKS_STEPS = [
@@ -114,7 +114,7 @@ export default function ApplicationsPage() {
   }
 
   useEffect(() => {
-    document.title = 'Applications · Grant Tracker'
+    document.title = 'Applications · Shoots'
     async function load() {
       const access = await fetch('/api/builder/access').then(r => r.json()).catch(() => ({ allowed: false }))
       setAllowed(!!access?.allowed)
@@ -212,7 +212,7 @@ export default function ApplicationsPage() {
             Applications
           </h1>
           <p style={{ fontFamily: BODY, fontSize: 14, color: T.textSecondary, margin: '6px 0 0', lineHeight: 1.55, maxWidth: 620 }}>
-            Grant Tracker shapes each answer from your own material, shows you what a strong response
+            Shoots shapes each answer from your own material, shows you what a strong response
             to this funder needs to cover, and flags the gaps before you start. You write it in your
             own words.
           </p>

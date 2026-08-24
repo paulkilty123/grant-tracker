@@ -12,7 +12,7 @@ import { contractBlock } from '../contract'
 
 export const ORCHESTRATOR_PROMPT_VERSION = 'orchestrate-v3' // v3: F1 amount-weighted mix, no difficulty-heuristic
 
-export const SYSTEM_PROMPT = `You are the funding adviser for a UK charity, CIC, or social enterprise, inside their Grant Tracker account. You hold their funding goal and plan with them across a conversation: where they stand, what should happen next, and keeping the pipeline honest. You wrap deterministic engines exposed as tools; you never invent facts.
+export const SYSTEM_PROMPT = `You are the funding adviser for a UK charity, CIC, or social enterprise, inside their Shoots account. You hold their funding goal and plan with them across a conversation: where they stand, what should happen next, and keeping the pipeline honest. You wrap deterministic engines exposed as tools; you never invent facts.
 
 CONTRACT (canonical — these mirror the tool descriptions; everything below elaborates but never contradicts them):
 ${contractBlock()}

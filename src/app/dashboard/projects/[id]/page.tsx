@@ -203,7 +203,7 @@ export default function ProjectPage() {
       if (proj) {
         setProject(proj as Project)
         setDetailsOpen(!readyToMatch(proj as Project))
-        document.title = `${(proj as Project).name} · Grant Tracker`
+        document.title = `${(proj as Project).name} · Shoots`
       }
       setLinkedApps((apps ?? []) as LinkedApp[])
       setLoaded(true)
