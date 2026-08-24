@@ -212,21 +212,79 @@ export async function POST(req: NextRequest) {
  * the scheduled path has to hand that body to recordRun() as the run summary
  * before it becomes a response.
  */
+/**
+ * Every write to `discovery_queue` goes through here, because a silent one cost
+ * this pipeline a month.
+ *
+ * `duplicate_of` is a **uuid** column and the code wrote `item.url` into it, so
+ * Postgres rejected the row with `invalid input syntax for type uuid`. Nothing
+ * checked the error. The item stayed `pending`, came back to the head of the
+ * queue the next morning, and was re-judged. Found 2026-08-24: 39 items stuck,
+ * the oldest from 26 July, and the 18 funds discovered that week queued behind
+ * them, never looked at. Four days of cron summaries reported `ok: true`.
+ *
+ * The failure returns the message so the run summary carries it. A discovery
+ * pipeline that reports success while importing nothing is worse than one that
+ * reports failure.
+ */
+async function setQueueStatus(
+  db: SupabaseClient,
+  id: string,
+  fields: Record<string, unknown>,
+): Promise<string | null> {
+  const { error } = await db.from('discovery_queue').update(fields).eq('id', id)
+  return error ? error.message : null
+}
+
 async function runProcessing(
   db: SupabaseClient,
   limit: number,
   usage?: UsageTally,
 ): Promise<{ status: number; body: Record<string, unknown> }> {
-  // Fetch pending items
-  const { data: pendingItems, error: fetchErr } = await db
+  // Anything a queue write failed on gets reported, not swallowed.
+  const writeFailures: string[] = []
+
+  // FRESH ITEMS FIRST, THEN RETRIES.
+  //
+  // The selection used to be a plain oldest-first over everything pending, with
+  // a limit of 10. An item that fails permanently is written back to `pending`,
+  // so it sits at the head of that ordering and consumes a slot every single day
+  // — for ever. Two rows have done exactly that since 26 July, failing on
+  // `value "11700000000" is out of range for type integer`, an £11.7bn housing
+  // programme that will never fit the column.
+  //
+  // That alone would only cost 2 of 10 slots. Combined with the `duplicate_of`
+  // bug, which left ~30 correctly-judged duplicates stuck as pending too, the
+  // head of the queue filled entirely with items that could never leave, and
+  // every genuinely new discovery starved behind them.
+  //
+  // Fixing `duplicate_of` unjams today's queue. This makes the starvation
+  // impossible to recur: an item that has been tried before carries `notes`, so
+  // untried items are taken first and a retry can only ever use a LEFTOVER slot.
+  // Retries still happen — they just cannot crowd out new funding again.
+  const { data: freshItems, error: fetchErr } = await db
     .from('discovery_queue')
     .select('*')
     .eq('status', 'pending')
+    .is('notes', null)
     .order('discovered_at', { ascending: true })
     .limit(limit)
 
   if (fetchErr) {
     return { status: 500, body: { error: fetchErr.message } }
+  }
+
+  const pendingItems = [...(freshItems ?? [])]
+  if (pendingItems.length < limit) {
+    const { data: retries, error: retryErr } = await db
+      .from('discovery_queue')
+      .select('*')
+      .eq('status', 'pending')
+      .not('notes', 'is', null)
+      .order('discovered_at', { ascending: true })
+      .limit(limit - pendingItems.length)
+    if (retryErr) return { status: 500, body: { error: retryErr.message } }
+    pendingItems.push(...(retries ?? []))
   }
 
   if (!pendingItems?.length) {
@@ -322,8 +380,11 @@ async function runProcessing(
 
     // Already imported earlier in this same run.
     if (importedThisRun.urls.has(urlLower) || importedThisRun.titles.has(titleLower)) {
-      await db.from('discovery_queue').update({ status: 'duplicate', duplicate_of: item.url, processed_at: new Date().toISOString() }).eq('id', item.id)
-      results.push({ id: item.id, title: item.title, status: 'duplicate', reason: 'Duplicate within this batch' })
+      // No catalogue row to point at — the twin is another queue item in this
+      // same run — so `duplicate_of` stays null rather than holding a URL.
+      const err = await setQueueStatus(db, item.id, { status: 'duplicate', duplicate_of: null, processed_at: new Date().toISOString() })
+      results.push({ id: item.id, title: item.title, status: 'duplicate', reason: err ? `Duplicate within this batch, BUT NOT SAVED: ${err}` : 'Duplicate within this batch' })
+      if (err) writeFailures.push(`${item.title}: ${err}`)
       continue
     }
 
@@ -339,7 +400,10 @@ async function runProcessing(
         : (row.pipeline_state === 'archived' || row.pipeline_state === 'rejected')
           ? `previously ${row.pipeline_state}`
           : String(row.pipeline_state ?? 'not live')
-      await db.from('discovery_queue').update({ status: 'duplicate', duplicate_of: item.url, processed_at: new Date().toISOString() }).eq('id', item.id)
+      // `row.id` — the uuid of the catalogue row this duplicates. The old code
+      // put `item.url` here, which is what jammed the queue.
+      const err = await setQueueStatus(db, item.id, { status: 'duplicate', duplicate_of: row.id, processed_at: new Date().toISOString() })
+      if (err) writeFailures.push(`${item.title}: ${err}`)
       results.push({
         id: item.id,
         title: item.title,
@@ -356,9 +420,8 @@ async function runProcessing(
       // Record WHY on the queue row, not just "failed". Left pending so it
       // retries, but with the reason visible — an item that fails the same way
       // every week should be findable, not silently re-attempted forever.
-      await db.from('discovery_queue')
-        .update({ status: 'pending', notes: `Enrichment failed ${new Date().toISOString().slice(0, 10)}: ${outcome.reason}`.slice(0, 500) })
-        .eq('id', item.id)
+      const err = await setQueueStatus(db, item.id, { status: 'pending', notes: `Enrichment failed ${new Date().toISOString().slice(0, 10)}: ${outcome.reason}`.slice(0, 500) })
+      if (err) writeFailures.push(`${item.title}: ${err}`)
       results.push({ id: item.id, title: item.title, status: 'failed', reason: outcome.reason })
       continue
     }
@@ -443,13 +506,15 @@ async function runProcessing(
     }
 
     if (writeErr) {
-      await db.from('discovery_queue').update({ status: 'pending', notes: `Write error: ${writeErr.message}` }).eq('id', item.id)
+      const err = await setQueueStatus(db, item.id, { status: 'pending', notes: `Write error: ${writeErr.message}`.slice(0, 500) })
+      if (err) writeFailures.push(`${item.title}: ${err}`)
       results.push({ id: item.id, title: item.title, status: 'failed', reason: writeErr.message })
       continue
     }
 
     // Mark queue item as processed
-    await db.from('discovery_queue').update({ status: 'processed', processed_at: new Date().toISOString() }).eq('id', item.id)
+    const doneErr = await setQueueStatus(db, item.id, { status: 'processed', processed_at: new Date().toISOString() })
+    if (doneErr) writeFailures.push(`${item.title}: ${doneErr}`)
     importedThisRun.urls.add(urlLower)
     importedThisRun.titles.add(titleLower)
     results.push({ id: item.id, title: item.title, status: 'imported', funding_type: grantRow.funding_type })
@@ -501,7 +566,17 @@ async function runProcessing(
     console.error('[process-discovery-queue] yield snapshot failed:', e)
   }
 
-  return { status: 200, body: { ok: true, processed: results.length, imported, duplicates, failed, yield: runYield, results } }
+  // `ok` is false when a queue write was rejected. The old summary said
+  // `ok: true` for four days while nothing at all was being saved.
+  return {
+    status: 200,
+    body: {
+      ok: writeFailures.length === 0,
+      processed: results.length, imported, duplicates, failed,
+      yield: runYield, results,
+      ...(writeFailures.length ? { writeFailures } : {}),
+    },
+  }
 }
 
 // GET — return queue stats

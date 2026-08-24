@@ -3057,3 +3057,63 @@ flagged, rather than guessed at.
 The 10 false positives and the 26 index pages are not user harm; they are queue
 noise, and clearing them honestly means re-verifying, which costs money. That is
 Paul's call to make, quoted in rows, not something to slip into a cleanup.
+
+## 2026-08-24 — the discovery pipeline had been running in place since 26 July
+
+Paul asked what the automated runs had been doing. The accuracy side was fine.
+The sourcing side had been finding funds and importing none of them, and every
+run reported `ok: true` while doing it.
+
+### The bug
+
+`discovery_queue.duplicate_of` is a **uuid** column. The route wrote `item.url`
+into it. Postgres rejected the row with `invalid input syntax for type uuid`,
+nothing checked the error, so the item stayed `pending`, came back to the head of
+the queue the next morning, and was judged all over again.
+
+Only the duplicate path was affected: the `processed` update carries no uuid and
+succeeded, which is why the occasional genuinely-new item still got through and
+the pipeline never looked completely dead.
+
+### What it cost
+
+39 items stuck, the oldest from 26 July. The selection is oldest-first with a
+limit of 10, so the head filled with items that could never leave and every new
+discovery starved behind them. 18 funds were found in the four days to 24 August
+and not one was looked at. Four consecutive cron summaries said `ok: true`.
+
+### A second, compounding defect
+
+Two rows have failed since 26 July on `value "11700000000" is out of range for
+type integer` — an £11.7bn housing programme that will never fit the column. The
+write-error path sets the item back to `pending`, so a permanently-failing item
+holds a slot at the head every day for ever. The existing comment anticipated
+this exactly — *"an item that fails the same way every week should be findable,
+not silently re-attempted forever"* — but nothing acted on it.
+
+### The fix, three parts
+
+1. `duplicate_of` gets the matched catalogue row's uuid, which `findExisting`
+   already returns, or null for a duplicate of another item in the same batch.
+2. Every one of the five `discovery_queue` writes goes through `setQueueStatus`,
+   which returns the error, and any failure lands in `writeFailures` in the run
+   summary. `ok` is now false when a write was rejected. A pipeline that reports
+   success while saving nothing is worse than one that reports failure.
+3. Selection takes **fresh items first, retries only in leftover slots**. An item
+   that has been tried carries `notes`, so a permanent failure can consume a
+   spare slot but can never crowd out new funding again.
+
+### Cost of draining it, quoted before running
+
+30 of the 39 are duplicates and cost nothing — dedup runs before the model is
+called. 9 are genuinely new and take one Haiku call each. The nightly cron on
+production will clear it at 10 a day over about four nights.
+
+**The first cost estimate was wrong and worth recording.** A quick probe using
+only URL and title matching said 36 items needed a model call. The route's
+`findExisting` also matches on host-and-name, host-previously-turned-down, and
+bare-host front doors, and the real split is 30/9. Quoting 36 would have asked
+Paul to approve four times the spend actually needed. The estimate has to
+replicate the code path, not approximate it.
+
+Imports land `is_active: false`, so nothing reaches users without Paul.
