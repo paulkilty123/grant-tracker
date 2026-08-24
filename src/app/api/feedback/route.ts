@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { createClient } from '@/lib/supabase/server'
+import { EMAIL_FROM, EMAIL_NOTIFY_TO, EMAIL_ACCENT, EMAIL_BRAND_HOST } from '@/lib/mcp-brand'
 
-const FROM_EMAIL = process.env.ALERT_FROM_EMAIL ?? 'alerts@granttracker.co.uk'
-const NOTIFY_TO  = process.env.FEEDBACK_NOTIFY_EMAIL ?? 'hello@granttracker.co.uk'
+const FROM_EMAIL = EMAIL_FROM
+const NOTIFY_TO  = EMAIL_NOTIFY_TO
+
 
 const TYPE_LABELS: Record<string, string> = {
   feature:        'Feature idea',
@@ -63,7 +65,7 @@ export async function POST(req: NextRequest) {
             <p><strong>Type:</strong> ${escapeHtml(typeLabel)}</p>
             <p><strong>From:</strong> ${escapeHtml(user?.email ?? '(anonymous)')}</p>
             <p><strong>Message:</strong></p>
-            <p style="white-space: pre-wrap; border-left: 3px solid #8ECB3C; padding-left: 12px; margin-left: 0;">${escapeHtml(message.trim())}</p>
+            <p style="white-space: pre-wrap; border-left: 3px solid ${EMAIL_ACCENT}; padding-left: 12px; margin-left: 0;">${escapeHtml(message.trim())}</p>
             ${extraLines ? `<hr style="border: none; border-top: 1px solid #eee; margin: 16px 0;" />${extraLines}` : ''}
             <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
             <p style="font-size: 12px; color: #888;">Sent from the in-app Feedback page. ${user?.email ? 'Reply to this email to respond directly to the submitter.' : 'Submitter was not signed in — no reply address available.'}</p>

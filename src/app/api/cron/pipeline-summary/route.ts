@@ -4,11 +4,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 import { recordRun } from '@/lib/admin/cron-runs'
+import { EMAIL_FROM, EMAIL_APP_URL } from '@/lib/mcp-brand'
+
+const FROM_EMAIL = EMAIL_FROM
+const APP_URL    = EMAIL_APP_URL
 
 export const dynamic = 'force-dynamic'
 
-const FROM_EMAIL = process.env.ALERT_FROM_EMAIL ?? 'alerts@granttracker.co.uk'
-const APP_URL    = process.env.NEXT_PUBLIC_APP_URL ?? 'https://granttracker.co.uk'
 
 function adminClient() {
   return createClient(

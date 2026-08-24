@@ -3,11 +3,13 @@ import { Resend } from 'resend'
 import { getOrgsWithAlertsEnabled, getUnsentAlerts, markAlertsSent } from '@/lib/alerts'
 import type { AlertGrant } from '@/lib/alerts'
 import type { Organisation } from '@/types'
+import { EMAIL_FROM, EMAIL_APP_URL } from '@/lib/mcp-brand'
+
+const FROM_EMAIL = EMAIL_FROM
+const APP_URL    = EMAIL_APP_URL
 
 export const dynamic = 'force-dynamic'
 
-const FROM_EMAIL = process.env.ALERT_FROM_EMAIL ?? 'alerts@granttracker.co.uk'
-const APP_URL    = process.env.NEXT_PUBLIC_APP_URL ?? 'https://granttracker.co.uk'
 
 // ── Email HTML template ───────────────────────────────────────────────────────
 function buildEmailHtml(orgName: string, grants: AlertGrant[]): string {

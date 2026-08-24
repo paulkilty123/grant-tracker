@@ -5,11 +5,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 import { recordRun } from '@/lib/admin/cron-runs'
+import { EMAIL_FROM, EMAIL_APP_URL, MCP_BRAND_NAME } from '@/lib/mcp-brand'
+
+const FROM_EMAIL = EMAIL_FROM
+const APP_URL    = EMAIL_APP_URL
 
 export const dynamic = 'force-dynamic'
 
-const FROM_EMAIL = process.env.ALERT_FROM_EMAIL ?? 'alerts@granttracker.co.uk'
-const APP_URL    = process.env.NEXT_PUBLIC_APP_URL ?? 'https://granttracker.co.uk'
 
 function adminClient() {
   return createClient(
@@ -105,7 +107,7 @@ function buildReminderHtml(orgName: string, items: ReminderItem[]): string {
 
       <!-- Header -->
       <div style="text-align:center;margin-bottom:32px;">
-        <p style="margin:0 0 8px;font-size:13px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#4a7c59;">Grant Tracker</p>
+        <p style="margin:0 0 8px;font-size:13px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#4a7c59;">${MCP_BRAND_NAME}</p>
         <h1 style="margin:0 0 8px;font-size:24px;font-weight:800;color:#1a3c2e;">Upcoming grant deadlines</h1>
         <p style="margin:0;font-size:14px;color:#6b6b6b;">
           You have ${items.length} grant deadline${items.length === 1 ? '' : 's'} approaching for <strong>${orgName}</strong>
@@ -130,7 +132,7 @@ function buildReminderHtml(orgName: string, items: ReminderItem[]): string {
       <!-- Footer -->
       <div style="border-top:1px solid #e8ddd0;padding-top:20px;text-align:center;">
         <p style="margin:0;font-size:12px;color:#9b9b9b;">
-          Deadline reminders from Grant Tracker for ${orgName}.<br>
+          Deadline reminders from ${MCP_BRAND_NAME} for ${orgName}.<br>
           <a href="${APP_URL}/dashboard/profile" style="color:#4a7c59;">Manage settings</a>
         </p>
       </div>
