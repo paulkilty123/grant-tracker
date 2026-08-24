@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { CalendarClock, CalendarCheck, ExternalLink, ArrowRight, Calendar, CalendarDays, AlarmClock, ChevronDown, ChevronUp, Send, ChevronLeft, ChevronRight, Info, Plus, X as XIcon, Check, Landmark, Rocket, TrendingUp, Gift, Pencil, CheckCircle2, Users, MapPin, Star, DollarSign, Lightbulb, AlertTriangle, type LucideIcon } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { getDeadlineAlerts, formatDeadline, formatRange, PIPELINE_STAGES } from '@/lib/utils'
+import { getDeadlineAlerts, formatDeadline, formatRange, formatCurrency, PIPELINE_STAGES } from '@/lib/utils'
 import { updatePipelineStage, updatePipelineItem, createPipelineItem, deletePipelineItem } from '@/lib/pipeline'
 import { PipelineModal } from '@/components/PipelineModal'
 import { recordInteraction } from '@/lib/interactions'
@@ -75,7 +75,9 @@ function buildCalendarDays(year: number, month: number, alerts: DeadlineAlert[])
 }
 
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December']
-const fmtAmt = (n: number) => n >= 1000000 ? `£${(n/1000000).toFixed(1)}m` : n >= 1000 ? `£${Math.round(n/1000)}k` : `£${n}`
+// Was a local copy of the old rounding, so it showed £2,500 as "£3k" too.
+// One implementation now — see the note on formatCurrency.
+const fmtAmt = (n: number) => formatCurrency(n)
 
 // ── Add Deadline Modal ────────────────────────────────────────────────────────
 
