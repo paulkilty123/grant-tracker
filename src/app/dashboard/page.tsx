@@ -177,7 +177,7 @@ export default async function DashboardPage() {
   // ── "Your work" band (cohort/builder only) — in-progress applications +
   // projects. Fully gated: non-builder users get the byte-identical dashboard.
   const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-  type WorkApp = { id: string; title: string; funder: string | null; answered: number; total: number; pill: { label: string; coral: boolean } }
+  type WorkApp = { id: string; title: string; funder: string | null; updatedAt: string | null; createdAt: string | null; projectId: string | null; answered: number; total: number; pill: { label: string; coral: boolean } }
   type WorkProject = { id: string; name: string; ready: boolean; budget: number | null; fitCount: number | null }
   let builderAllowed = false
   let workApps: WorkApp[] = []
@@ -188,13 +188,20 @@ export default async function DashboardPage() {
     if (builderAllowed) {
       const { data: apps } = await supabase
         .from('applications')
-        .select('id, grant_name, funder_name, status, questions, opportunity_id')
+        // project_id is selected but currently null on every row: the creation
+        // flow has no picker, only a ?project= parameter, so it only ever
+        // arrives if the user came from a project page. See
+        // docs/application-project-picker-missing-2026-08-24.md. Selected now so
+        // the second line fills in on the day a picker ships, without a query
+        // change. updated_at/created_at are what disambiguate rows meanwhile.
+        .select('id, grant_name, funder_name, status, questions, opportunity_id, project_id, updated_at, created_at')
         .eq('org_id', typedOrg.id)
         .neq('status', 'complete')
         .order('updated_at', { ascending: false })
       const appRows = (apps ?? []) as {
         id: string; grant_name: string | null; funder_name: string | null
         questions: { user_answer?: string | null }[] | null; opportunity_id: string | null
+        project_id: string | null; updated_at: string | null; created_at: string | null
       }[]
       // Deadlines live on the linked opportunity, not the application.
       const oppIds = Array.from(new Set(appRows.map(a => a.opportunity_id).filter((id): id is string => !!id && UUID_RE.test(id))))
@@ -203,7 +210,10 @@ export default async function DashboardPage() {
         const { data: gr } = await supabase.from('grants_with_funder').select('id, deadline').in('id', oppIds)
         for (const g of (gr ?? []) as { id: string; deadline: string | null }[]) if (g.deadline) deadlineMap[String(g.id)] = g.deadline
       }
-      workApps = appRows.map(a => {
+      workApps = appRows
+        .slice()
+        .sort((x, y) => (y.updated_at ?? y.created_at ?? '').localeCompare(x.updated_at ?? x.created_at ?? ''))
+        .map(a => {
         const dl = a.opportunity_id ? deadlineMap[a.opportunity_id] ?? null : null
         const days = dl ? Math.ceil((new Date(dl).getTime() - new Date(today).getTime()) / 86400000) : null
         const pill = days !== null && days < 0 ? { label: 'Overdue', coral: true }
@@ -212,7 +222,12 @@ export default async function DashboardPage() {
         return {
           id: a.id,
           title: a.grant_name || a.funder_name || 'Untitled application',
+          // Only when it differs from the title — otherwise the second line
+          // would repeat the first.
           funder: a.grant_name && a.funder_name ? a.funder_name : null,
+          updatedAt: a.updated_at,
+          createdAt: a.created_at,
+          projectId: a.project_id,
           answered: (a.questions ?? []).filter(q => q.user_answer?.trim()).length,
           total: (a.questions ?? []).length,
           pill,
@@ -443,7 +458,37 @@ export default async function DashboardPage() {
   // legal_structure on finish. If either is missing the user is in a "Set up
   // later" / cleared state and the dashboard should prompt them to onboard
   // rather than celebrate matches.
-  const profileComplete = !!(typedOrg && (typedOrg.impact_sectors?.length ?? 0) > 0 && typedOrg.legal_structure)
+  /**
+   * Whether the matcher has enough to run: a sector and a legal structure, its
+   * two hard gates. NOT a measure of profile completeness.
+   *
+   * It was called profileComplete, and the page said "Your profile's complete"
+   * on the strength of it. The sidebar's badge is matchProfileScore, seven
+   * fields — so an org could read "complete" here and 29% there. Measured
+   * against real data: 40 of 41 orgs pass this test, and the lowest of them
+   * shows 57% in the sidebar.
+   *
+   * Renamed rather than unified, deliberately. Making the two the same number
+   * would flip 40 orgs out of the "matches ready" state to fix a sentence.
+   * The gate keeps the two-field test; the COPY below uses the seven-field
+   * score, so the page stops claiming more than it checked.
+   */
+  const canRunMatching = !!(typedOrg && (typedOrg.impact_sectors?.length ?? 0) > 0 && typedOrg.legal_structure)
+
+  /** The sidebar's measure, so the greeting can speak to the real gap. */
+  const profileScore = (() => {
+    if (!typedOrg) return 0
+    const fields = [
+      (typedOrg.impact_sectors?.length     ?? 0) > 0,
+      (typedOrg.beneficiary_groups?.length ?? 0) > 0,
+      !!typedOrg.primary_location,
+      !!typedOrg.legal_structure,
+      !!typedOrg.annual_income_band,
+      !!(typedOrg.min_grant_target || typedOrg.max_grant_target),
+      !!typedOrg.mission,
+    ]
+    return Math.round((fields.filter(Boolean).length / fields.length) * 100)
+  })()
 
   // ══════════════════════════════════════════════════════════════════════════
   // EMPTY STATE (Day 1) — welcome banner, 5-item checklist, preview tiles
@@ -457,7 +502,7 @@ export default async function DashboardPage() {
             Welcome to Shoots, {displayName}.
           </h2>
           <p className="text-sm text-mid">
-            {profileComplete
+            {canRunMatching
               ? "Your profile's complete — time to find some funding."
               : 'Tell us about your organisation so we can match you to the right funding.'}
           </p>
@@ -479,21 +524,21 @@ export default async function DashboardPage() {
               style={{ background: 'rgba(246,241,231,0.13)', color: '#F6F1E7', borderRadius: 999, padding: '6px 13px', letterSpacing: '0.11em' }}
             >
               <Sparkles className="w-3 h-3" />
-              {profileComplete ? `${totalMatchCount} matches ready` : 'Profile incomplete'}
+              {canRunMatching ? `${totalMatchCount} matches ready` : 'Profile incomplete'}
             </span>
           </div>
           <h3 className="text-2xl md:text-3xl font-bold leading-tight mb-2" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.025em', color: '#F6F1E7' }}>
-            {profileComplete
+            {canRunMatching
               ? "We've found funding that fits your profile."
               : 'Set up your profile to unlock matches.'}
           </h3>
           <p className="text-sm md:text-base mb-6 max-w-2xl leading-relaxed" style={{ color: 'rgba(246,241,231,0.76)' }}>
-            {profileComplete
+            {canRunMatching
               ? "Browse your matches, save the ones worth a closer look, and move them into your pipeline when you're ready to apply. Everything you do here feeds the matching — the more you engage, the sharper it gets."
               : 'Takes about 2 minutes. Tell us your org type, where you work, who you serve and what you do — and we’ll score every UK funder against you.'}
           </p>
           <div className="flex flex-wrap gap-3">
-            {profileComplete ? (
+            {canRunMatching ? (
               <>
                 <a
                   href="/dashboard/search"
@@ -524,8 +569,8 @@ export default async function DashboardPage() {
           </h3>
           <div className="bg-white rounded-xl border border-warm overflow-hidden" style={{ boxShadow: '0 2px 16px rgba(26,46,43,0.04)' }}>
             {/* 1. Complete profile — done if onboarded, active otherwise */}
-            <div className="flex items-center gap-4 p-5 border-b border-warm" style={profileComplete ? undefined : { background: '#E1EFE2' }}>
-              {profileComplete ? (
+            <div className="flex items-center gap-4 p-5 border-b border-warm" style={canRunMatching ? undefined : { background: '#E1EFE2' }}>
+              {canRunMatching ? (
                 <div className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center" style={{ background: '#1D3C3E' }}>
                   <Check className="w-5 h-5 text-white" strokeWidth={3} />
                 </div>
@@ -544,16 +589,16 @@ export default async function DashboardPage() {
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <p className={`text-sm font-semibold text-charcoal ${profileComplete ? 'line-through decoration-charcoal/30' : ''}`} style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+                <p className={`text-sm font-semibold text-charcoal ${canRunMatching ? 'line-through decoration-charcoal/30' : ''}`} style={{ fontFamily: 'var(--font-space-grotesk)' }}>
                   Complete your profile
                 </p>
                 <p className="text-xs text-mid mt-0.5">
-                  {profileComplete
+                  {canRunMatching
                     ? 'Nice work — matches are running against your org now.'
                     : 'Tell us your org type, location, and who you serve so we can score funders for you.'}
                 </p>
               </div>
-              {!profileComplete && (
+              {!canRunMatching && (
                 <a
                   href="/onboarding/wizard"
                   className="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg hover:opacity-90 transition-opacity"
@@ -566,10 +611,10 @@ export default async function DashboardPage() {
             </div>
 
             {/* 2. Browse first matches — only "active" once profile is done */}
-            <div className="flex items-center gap-4 p-5 border-b border-warm" style={profileComplete ? { background: '#E1EFE2' } : undefined}>
+            <div className="flex items-center gap-4 p-5 border-b border-warm" style={canRunMatching ? { background: '#E1EFE2' } : undefined}>
               <div
                 className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold"
-                style={profileComplete ? {
+                style={canRunMatching ? {
                   background: '#FFFFFF',
                   border: '2px solid #1D3C3E',
                   color: '#1D3C3E',
@@ -589,12 +634,12 @@ export default async function DashboardPage() {
                   Browse your first matches
                 </p>
                 <p className="text-xs text-mid mt-0.5">
-                  {profileComplete
+                  {canRunMatching
                     ? `${totalMatchCount} opportunities scored against your profile.`
                     : 'Unlocks once your profile is set up.'}
                 </p>
               </div>
-              {profileComplete && (
+              {canRunMatching && (
                 <a
                   href="/dashboard/search"
                   className="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg hover:opacity-90 transition-opacity"
@@ -710,15 +755,49 @@ export default async function DashboardPage() {
     )
   }
 
+  /**
+   * Relative under a week, absolute beyond.
+   *
+   * "Edited 2 days ago" beats a date when it is recent; "started 9 Aug" beats
+   * "16 days ago" when it is not. These timestamps are doing real work here —
+   * with no project name available they are what tells three applications to
+   * the same funder apart.
+   */
+  function whenLabel(iso: string | null, verb: 'Edited' | 'Started'): string | null {
+    if (!iso) return null
+    const then = new Date(iso).getTime()
+    if (Number.isNaN(then)) return null
+    const days = Math.floor((Date.now() - then) / 86400000)
+    if (days <= 0) return `${verb} today`
+    if (days === 1) return `${verb} yesterday`
+    if (days < 7) return `${verb} ${days} days ago`
+    return `${verb} ${new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
+  }
+
   // ══════════════════════════════════════════════════════════════════════════
   // POPULATED STATE (Week 2+) — dynamic subtitle, deadlines, pipeline, matches
   // ══════════════════════════════════════════════════════════════════════════
+  /**
+   * The greeting used to assemble five fragments — projects ready, deadlines
+   * this week, applications in progress, new matches — every one of which the
+   * act-now strip now states directly underneath it. Repeating them made the
+   * first thing on the page a summary of the second.
+   *
+   * What it says instead is what the score claims, and it never claims
+   * completeness. At 57% the matching genuinely is running, just on less than
+   * it could be, so the low-score line is an offer rather than a warning.
+   */
   const subtitleParts: string[] = []
-  if (builderAllowed && projectsReady > 0) subtitleParts.push(`${projectsReady} project${projectsReady === 1 ? '' : 's'} ready to match`)
-  if (deadlinesThisWeek > 0) subtitleParts.push(`${deadlinesThisWeek} deadline${deadlinesThisWeek === 1 ? '' : 's'} this week`)
-  if (inProgressCount > 0)   subtitleParts.push(`${inProgressCount} application${inProgressCount === 1 ? '' : 's'} in progress`)
-  if (newMatchesThisWeek > 0) subtitleParts.push(`${newMatchesThisWeek} new match${newMatchesThisWeek === 1 ? '' : 'es'} since Monday`)
-  if (subtitleParts.length === 0) subtitleParts.push(`${totalMatchCount} opportunities waiting for you`)
+  if (!canRunMatching) {
+    subtitleParts.push('Tell us about your organisation so we can match you to the right funding.')
+  } else if (profileScore < 70) {
+    subtitleParts.push(`${totalMatchCount} opportunities scored so far. Filling in the rest of your profile will sharpen them.`)
+  } else {
+    subtitleParts.push(`${totalMatchCount} opportunities scored against your profile.`)
+    if (newMatchesThisWeek > 0) {
+      subtitleParts.push(`${newMatchesThisWeek} new since Monday`)
+    }
+  }
 
   return (
     <div>
@@ -775,36 +854,77 @@ export default async function DashboardPage() {
 
       {builderAllowed && hasWork && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-8">
-          {/* Continue writing */}
+          {/* Your applications */}
           <div className="card rounded-xl p-6">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
-              <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 20, fontWeight: 700, color: '#2C2C2A' }}>Continue writing</span>
-              <a href="/dashboard/applications" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: '#3B6D11', textDecoration: 'none' }}>
+              <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 20, fontWeight: 700, color: '#1D3C3E' }}>Your applications</span>
+              <a href="/dashboard/applications" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: '#1D3C3E', textDecoration: 'none' }}>
                 View all{workApps.length > 4 ? ` ${workApps.length}` : ''} →
               </a>
             </div>
-            <p className="text-mid" style={{ fontSize: 12.5, marginBottom: 12 }}>The answers you&apos;re drafting.</p>
+            <p className="text-mid" style={{ fontSize: 12.5, marginBottom: 12 }}>Newest first.</p>
             {workApps.length === 0 ? (
               <p className="text-mid" style={{ fontSize: 13.5, lineHeight: 1.55 }}>No applications yet. Pick a funder from a project to start one.</p>
-            ) : workApps.slice(0, 4).map((a, i, arr) => {
-              const mono = (a.funder || a.title).trim().split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase() || '?'
-              const pct = a.total > 0 ? Math.round((a.answered / a.total) * 100) : 0
-              return (
-                <a key={a.id} href={`/dashboard/applications/${a.id}`} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 0', borderBottom: i < arr.length - 1 ? '1px solid rgba(23,52,4,0.06)' : 'none', textDecoration: 'none' }}>
-                  <span style={{ width: 40, height: 40, borderRadius: 11, background: '#F1F7E4', color: '#3B6D11', fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{mono}</span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 15, fontWeight: 500, color: '#2C2C2A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.title}</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 }}>
-                      <span style={{ height: 6, flex: 1, maxWidth: 150, background: '#EFE9DD', borderRadius: 999, overflow: 'hidden' }}>
-                        <span style={{ display: 'block', height: '100%', width: `${pct}%`, background: '#8ECB3C' }} />
-                      </span>
-                      <span className="text-mid" style={{ fontSize: 12 }}>{a.answered} of {a.total} · {pct}%</span>
-                    </div>
-                  </div>
-                  <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 999, whiteSpace: 'nowrap', flexShrink: 0, ...(a.pill.coral ? { color: '#993C1D', background: '#FAECE7' } : { color: '#5F5E5A', background: '#F1ECE1' }) }}>{a.pill.label}</span>
-                </a>
-              )
-            })}
+            ) : (() => {
+              /* Grouped, because "Continue writing" was wrong for the half of
+                 them sitting at 0 of 8 — never opened, nothing to continue.
+                 Started rows keep the progress bar; not-started show the
+                 question count, which is the only useful number they have.
+
+                 The second line is funder plus timestamp rather than the
+                 project name the design called for: project_id is null on
+                 every application because the creation flow has no picker.
+                 The slot and geometry are the designed ones, so the day that
+                 changes, the project name and colour drop straight in and
+                 nothing moves. It deliberately says NOTHING about the missing
+                 project — a label that fires on every row for every user, about
+                 a gap they cannot close, is chrome rather than a warning. */
+              const shown     = workApps.slice(0, 4)
+              const started   = shown.filter(a => a.answered > 0)
+              const notStarted = shown.filter(a => a.answered === 0)
+              const groups: { label: string; rows: WorkApp[] }[] = [
+                { label: 'In progress', rows: started },
+                { label: 'Not started', rows: notStarted },
+              ].filter(g => g.rows.length > 0)
+
+              return groups.map(group => (
+                <div key={group.label} style={{ marginTop: 4 }}>
+                  <p style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 11, fontWeight: 600, letterSpacing: '0.09em', textTransform: 'uppercase', color: '#5F5E5A', margin: '10px 0 2px' }}>
+                    {group.label}
+                  </p>
+                  {group.rows.map(a => {
+                    const mono = (a.funder || a.title).trim().split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase() || '?'
+                    const pct  = a.total > 0 ? Math.round((a.answered / a.total) * 100) : 0
+                    const when = a.answered > 0
+                      ? whenLabel(a.updatedAt ?? a.createdAt, 'Edited')
+                      : whenLabel(a.createdAt ?? a.updatedAt, 'Started')
+                    const second = [a.funder, when].filter(Boolean).join(' · ')
+                    return (
+                      <a key={a.id} href={`/dashboard/applications/${a.id}`} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 0', borderBottom: '1px solid rgba(29,60,62,0.08)', textDecoration: 'none' }}>
+                        {/* Neutral until a project exists to colour it. */}
+                        <span style={{ width: 40, height: 40, borderRadius: 11, background: '#F1EDE3', color: '#1D3C3E', fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{mono}</span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 15, fontWeight: 500, color: '#1D3C3E', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.title}</div>
+                          {second && (
+                            <div className="text-mid" style={{ fontSize: 12.5, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{second}</div>
+                          )}
+                          {a.answered > 0 ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 }}>
+                              <span style={{ height: 6, flex: 1, maxWidth: 150, background: '#EFE9DD', borderRadius: 999, overflow: 'hidden' }}>
+                                <span style={{ display: 'block', height: '100%', width: `${pct}%`, background: '#1D3C3E' }} />
+                              </span>
+                              <span className="text-mid" style={{ fontSize: 12 }}>{a.answered} of {a.total}</span>
+                            </div>
+                          ) : (
+                            <div className="text-mid" style={{ fontSize: 12, marginTop: 5 }}>{a.total} question{a.total === 1 ? '' : 's'}</div>
+                          )}
+                        </div>
+                      </a>
+                    )
+                  })}
+                </div>
+              ))
+            })()}
           </div>
 
           {/* Your projects */}
