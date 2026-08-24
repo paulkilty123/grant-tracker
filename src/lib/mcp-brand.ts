@@ -23,13 +23,45 @@
 //
 // If a future domain has no apex/www split, set both to the same value.
 //
-// Defaults reproduce current production exactly, so an unset environment is a
-// no-op. A malformed override throws at module load rather than silently
+// Defaults name the CURRENT brand and domain, not the retired ones.
+//
+// They used to reproduce the pre-cutover values, on the reasoning that an unset
+// environment should be a no-op. The two failure modes are not symmetric. A
+// missing var in local dev is a nuisance you spot in seconds; a missing var in
+// production silently reinstates a retired brand and a retired domain across
+// /mcp, the OAuth authorize screen and every error message — and nobody
+// notices, because it reads as a deliberate string rather than a fault.
+// MCP_PUBLIC_ORIGIN and MCP_APP_ORIGIN are worse than the name: they make OAuth
+// server metadata advertise a different domain, which is an auth failure
+// wearing a branding costume, and readOrigin cannot catch it because a
+// stale-but-valid URL passes every check it makes.
+//
+// A fallback should never be confidently wrong in a user-visible way. So the
+// defaults are current, and absence is announced instead (see warnIfAbsent).
+//
+// A malformed override still throws at module load rather than silently
 // emitting broken URLs — same fail-loud posture as mcp-upgrade-notes.ts.
+
+/**
+ * Say so when a variable is missing, once per variable per process.
+ *
+ * This is what keeps local dev honest now that the defaults are the real
+ * values: without it, an unset environment looks identical to a configured one.
+ * Warn rather than throw — a production build SHOULD arguably fail loudly with
+ * MCP_* absent rather than serve five stale values, but that is a bigger change
+ * than this file and is flagged rather than folded in here.
+ */
+const warned = new Set<string>()
+function warnIfAbsent(name: string, fallback: string): void {
+  if (process.env[name]?.trim()) return
+  if (warned.has(name)) return
+  warned.add(name)
+  console.warn(`[mcp-brand] ${name} is not set — falling back to ${JSON.stringify(fallback)}.`)
+}
 
 function readOrigin(name: string, fallback: string): string {
   const raw = process.env[name]?.trim()
-  if (!raw) return fallback
+  if (!raw) { warnIfAbsent(name, fallback); return fallback }
 
   const trimmed = raw.replace(/\/+$/, '')
   let parsed: URL
@@ -45,26 +77,40 @@ function readOrigin(name: string, fallback: string): string {
 }
 
 function readString(name: string, fallback: string): string {
-  return process.env[name]?.trim() || fallback
+  const raw = process.env[name]?.trim()
+  if (!raw) { warnIfAbsent(name, fallback); return fallback }
+  return raw
 }
 
 /** Protocol / canonical origin. OAuth + server metadata address this host. */
-export const MCP_PUBLIC_ORIGIN = readOrigin('MCP_PUBLIC_ORIGIN', 'https://www.granttracker.co.uk')
+export const MCP_PUBLIC_ORIGIN = readOrigin('MCP_PUBLIC_ORIGIN', 'https://www.shootsfunding.co.uk')
 
 /** User-facing origin. Links handed to a human resolve here. */
-export const MCP_APP_ORIGIN = readOrigin('MCP_APP_ORIGIN', 'https://granttracker.co.uk')
+export const MCP_APP_ORIGIN = readOrigin('MCP_APP_ORIGIN', 'https://shootsfunding.co.uk')
 
 /** Display name used in attribution and prose. */
-export const MCP_BRAND_NAME = readString('MCP_BRAND_NAME', 'Grant Tracker')
+export const MCP_BRAND_NAME = readString('MCP_BRAND_NAME', 'Shoots')
 
 /**
  * Protocol identifier: MCP serverInfo.name and the WWW-Authenticate realm.
  * Distinct from MCP_BRAND_NAME — this is a machine-facing slug, not a label.
+ *
+ * DELIBERATELY NOT RENAMED with the rest. Already-registered clients hold this
+ * identifier; changing it is a protocol-identity change, not a branding one.
+ * It is the single default here that should not be made consistent.
  */
 export const MCP_SERVER_SLUG = readString('MCP_SERVER_SLUG', 'grant-tracker-mcp')
 
-/** Support address surfaced in error messages. */
-export const MCP_CONTACT_EMAIL = readString('MCP_CONTACT_EMAIL', 'hello@granttracker.co.uk')
+/**
+ * Support address surfaced in error messages.
+ *
+ * This var exists so it could lag the domain move until mail worked on the new
+ * domain. It does: shootsfunding.co.uk carries the same Google Workspace MX
+ * records as the old domain, and the landing page already publishes this
+ * address publicly. Checked by DNS, not by sending anything, so delivery to
+ * this specific mailbox is inferred rather than tested.
+ */
+export const MCP_CONTACT_EMAIL = readString('MCP_CONTACT_EMAIL', 'hello@shootsfunding.co.uk')
 
 /** Bare host of MCP_APP_ORIGIN, for prose such as "<host>/mcp". */
 export const MCP_APP_HOST = new URL(MCP_APP_ORIGIN).host
