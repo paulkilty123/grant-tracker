@@ -811,152 +811,16 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      {/* ── Your work band (cohort/builder only): resume in-flight work before
-          scanning new matches. Empty state steers to the project route. ── */}
-      {builderAllowed && !hasWork && (
-        <div className="card rounded-xl mb-8" style={{ padding: 28, display: 'grid', gridTemplateColumns: 'minmax(0,1.4fr) minmax(0,1fr)', gap: 28, alignItems: 'center' }}>
-          <div>
-            <div style={{ width: 46, height: 46, borderRadius: 13, background: '#F1F7E4', color: '#3B6D11', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
-              <Lightbulb size={23} />
-            </div>
-            <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 22, fontWeight: 600, color: '#2C2C2A', marginBottom: 8 }}>Start your first project</div>
-            <p className="text-mid" style={{ fontSize: 14.5, lineHeight: 1.6, marginBottom: 20, maxWidth: 420 }}>
-              Describe what you need funded once. We&apos;ll match it against the{' '}
-              <span style={{ color: '#2C2C2A', fontWeight: 500 }}>{totalMatchCount} funders that already fit your organisation</span>,
-              then help you build a tailored application for each one you choose.
-            </p>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap' }}>
-              <a href="/dashboard/projects/new" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#8ECB3C', color: '#173404', fontFamily: 'var(--font-space-grotesk)', fontSize: 14.5, fontWeight: 600, padding: '12px 20px', borderRadius: 11, textDecoration: 'none' }}>
-                <Lightbulb size={16} /> Describe a project
-              </a>
-              <a href="/dashboard/applications/new" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 14, fontWeight: 600, color: '#3B6D11', textDecoration: 'none' }}>
-                Know which funder to apply to? Start a direct application →
-              </a>
-            </div>
-          </div>
-          <div style={{ background: '#FBFDF7', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 16, padding: 22 }}>
-            {[
-              { t: 'Describe it once', b: 'A few sentences or paste an old plan.' },
-              { t: 'See who fits', b: 'We rank funders against your project.' },
-              { t: 'Apply to each', b: 'Build a tailored application per funder.' },
-            ].map((s, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: i < 2 ? 16 : 0 }}>
-                <span style={{ width: 26, height: 26, borderRadius: 999, background: '#173404', color: '#F1F7E4', fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</span>
-                <div>
-                  <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: '#2C2C2A' }}>{s.t}</div>
-                  <div className="text-mid" style={{ fontSize: 12 }}>{s.b}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* ── Act-now strip ──────────────────────────────────────────────────
+          Deliberately empty. The strip is the only genuinely new component on
+          this page and the piece with the widest gap between specced and known
+          good, so it is built last and kept separable: if the date gets tight
+          it can slip a week without holding the four finished cards back.
+          Slot reserved here so adding it does not move anything again. */}
 
-      {builderAllowed && hasWork && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-8">
-          {/* Your applications */}
-          <div className="card rounded-xl p-6">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
-              <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 20, fontWeight: 700, color: '#1D3C3E' }}>Your applications</span>
-              <a href="/dashboard/applications" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: '#1D3C3E', textDecoration: 'none' }}>
-                View all{workApps.length > 4 ? ` ${workApps.length}` : ''} →
-              </a>
-            </div>
-            <p className="text-mid" style={{ fontSize: 12.5, marginBottom: 12 }}>Newest first.</p>
-            {workApps.length === 0 ? (
-              <p className="text-mid" style={{ fontSize: 13.5, lineHeight: 1.55 }}>No applications yet. Pick a funder from a project to start one.</p>
-            ) : (() => {
-              /* Grouped, because "Continue writing" was wrong for the half of
-                 them sitting at 0 of 8 — never opened, nothing to continue.
-                 Started rows keep the progress bar; not-started show the
-                 question count, which is the only useful number they have.
-
-                 The second line is funder plus timestamp rather than the
-                 project name the design called for: project_id is null on
-                 every application because the creation flow has no picker.
-                 The slot and geometry are the designed ones, so the day that
-                 changes, the project name and colour drop straight in and
-                 nothing moves. It deliberately says NOTHING about the missing
-                 project — a label that fires on every row for every user, about
-                 a gap they cannot close, is chrome rather than a warning. */
-              const shown     = workApps.slice(0, 4)
-              const started   = shown.filter(a => a.answered > 0)
-              const notStarted = shown.filter(a => a.answered === 0)
-              const groups: { label: string; rows: WorkApp[] }[] = [
-                { label: 'In progress', rows: started },
-                { label: 'Not started', rows: notStarted },
-              ].filter(g => g.rows.length > 0)
-
-              return groups.map(group => (
-                <div key={group.label} style={{ marginTop: 4 }}>
-                  <p style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 11, fontWeight: 600, letterSpacing: '0.09em', textTransform: 'uppercase', color: '#5F5E5A', margin: '10px 0 2px' }}>
-                    {group.label}
-                  </p>
-                  {group.rows.map(a => {
-                    const mono = (a.funder || a.title).trim().split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase() || '?'
-                    const pct  = a.total > 0 ? Math.round((a.answered / a.total) * 100) : 0
-                    const when = a.answered > 0
-                      ? whenLabel(a.updatedAt ?? a.createdAt, 'Edited')
-                      : whenLabel(a.createdAt ?? a.updatedAt, 'Started')
-                    const second = [a.funder, when].filter(Boolean).join(' · ')
-                    return (
-                      <a key={a.id} href={`/dashboard/applications/${a.id}`} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 0', borderBottom: '1px solid rgba(29,60,62,0.08)', textDecoration: 'none' }}>
-                        {/* Neutral until a project exists to colour it. */}
-                        <span style={{ width: 40, height: 40, borderRadius: 11, background: '#F1EDE3', color: '#1D3C3E', fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{mono}</span>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 15, fontWeight: 500, color: '#1D3C3E', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.title}</div>
-                          {second && (
-                            <div className="text-mid" style={{ fontSize: 12.5, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{second}</div>
-                          )}
-                          {a.answered > 0 ? (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 }}>
-                              <span style={{ height: 6, flex: 1, maxWidth: 150, background: '#EFE9DD', borderRadius: 999, overflow: 'hidden' }}>
-                                <span style={{ display: 'block', height: '100%', width: `${pct}%`, background: '#1D3C3E' }} />
-                              </span>
-                              <span className="text-mid" style={{ fontSize: 12 }}>{a.answered} of {a.total}</span>
-                            </div>
-                          ) : (
-                            <div className="text-mid" style={{ fontSize: 12, marginTop: 5 }}>{a.total} question{a.total === 1 ? '' : 's'}</div>
-                          )}
-                        </div>
-                      </a>
-                    )
-                  })}
-                </div>
-              ))
-            })()}
-          </div>
-
-          {/* Your projects */}
-          <div className="card rounded-xl p-6">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-              <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 20, fontWeight: 700, color: '#2C2C2A' }}>Your projects</span>
-              <a href="/dashboard/projects" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: '#3B6D11', textDecoration: 'none' }}>View all →</a>
-            </div>
-            {workProjects.length === 0 ? (
-              <p className="text-mid" style={{ fontSize: 13.5, lineHeight: 1.55, marginBottom: 12 }}>Describe a project to match more funders than your organisation profile alone.</p>
-            ) : workProjects.slice(0, 4).map((p, i, arr) => (
-              <a key={p.id} href={`/dashboard/projects/${p.id}`} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 0', borderBottom: i < arr.length - 1 ? '1px solid rgba(23,52,4,0.06)' : 'none', textDecoration: 'none' }}>
-                <span style={{ width: 40, height: 40, borderRadius: 11, background: '#F1F7E4', color: '#3B6D11', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Lightbulb size={19} /></span>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 15, fontWeight: 500, color: '#2C2C2A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 5, fontSize: 12.5 }}>
-                    {p.ready
-                      ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#3B6D11', fontWeight: 500 }}><CircleCheck size={13} /> Ready to match</span>
-                      : <span className="text-mid">Needs a few more details</span>}
-                    {p.fitCount != null && p.fitCount > 0 ? <span className="text-mid">· {p.fitCount} funders fit</span> : null}
-                    {p.budget ? <span className="text-mid">· £{p.budget.toLocaleString('en-GB')}</span> : null}
-                  </div>
-                </div>
-              </a>
-            ))}
-            <div style={{ paddingTop: 10 }}>
-              <a href="/dashboard/projects/new" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: '#3B6D11', textDecoration: 'none' }}>+ New project</a>
-            </div>
-          </div>
-        </div>
-      )}
-
+      {/* What is out there — matches beside the deadlines they run against. */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-8 items-start">
+        <div>
       {/* ─────────────────────────────────────────────────────────────────────
           Your matches summary + Top matches for you
           Two-column hero. Left column shows the catalogue scoped to the user
@@ -1185,14 +1049,227 @@ export default async function DashboardPage() {
         )
       })()}
 
-      {/* Pipeline (60%) + Upcoming deadlines (40%) side-by-side on tablet+
-          (md, ≥768px). Below that they stack vertically — narrow screens
-          (e.g. iPhone 13SE @ 375px) can't fit both panels without one
-          overflowing off-screen. Reported by David 2026-05-28.
-          Pipeline gets more space because it's the information-dense panel —
-          four stage tiles + declined footer + total. Deadlines is a compact
-          scrollable list. */}
-      <div className="grid grid-cols-1 md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] gap-5 mb-8">
+        </div>
+        <div>
+        {/* Upcoming deadlines (40%) — title + count + view-all in header,
+            three deadlines visible in a ~170px scrollable list. */}
+        <div className="card rounded-xl flex flex-col">
+          <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+            <div className="flex items-center gap-2">
+              <h3 className="text-xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Upcoming deadlines</h3>
+              {alerts.length > 0 && (
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-md" style={{ background: '#F0EDE2', color: '#5F5E5A', fontFamily: 'var(--font-space-grotesk)' }}>
+                  {alerts.length}
+                </span>
+              )}
+            </div>
+            <a href="/dashboard/deadlines"
+              className="text-xs font-semibold hover:underline" style={{ color: '#3B6D11', fontFamily: 'var(--font-space-grotesk)' }}>
+              View all deadlines →
+            </a>
+          </div>
+
+          {alerts.length === 0 ? (
+            <div className="text-center py-6 text-mid">
+              <p className="text-sm">No deadlines yet.</p>
+              <p className="text-xs mt-1">They&rsquo;ll appear here as you save opportunities.</p>
+            </div>
+          ) : (
+            <>
+              {/* Scrollable list — max-height ~170px shows three rows;
+                  the fourth peeks under to signal more on scroll. */}
+              <div className="overflow-y-auto pr-1 -mr-1" style={{ maxHeight: 170 }}>
+                {alerts.map(row => {
+                  const dateObj = formatDeadlineDate(row.deadline)
+                  const d = row.daysUntil
+                  // Urgency: ≤30d → red numerals + red pill. Beyond stays grey.
+                  const isUrgent = d <= 30
+                  const pillLabel = d < 0 ? 'Overdue' : d === 0 ? 'Today' : d === 1 ? 'Tomorrow' : `${d}d`
+                  const pillCls = isUrgent
+                    ? 'bg-[#FAECE7] text-[#993C1D]'
+                    : 'bg-transparent text-[#5F5E5A] border border-[rgba(23,52,4,0.20)]'
+                  const dayCol   = isUrgent ? '#993C1D' : '#2C2C2A'
+                  const monthCol = isUrgent ? '#993C1D' : '#5F5E5A'
+                  return (
+                    <a key={row.id} href={row.href}
+                      className="flex items-center gap-3 py-2.5 border-b border-warm last:border-0 hover:bg-[#FAFAF7] -mx-2 px-2 rounded-md transition-colors">
+                      {dateObj ? (
+                        <div className="flex flex-col items-center flex-shrink-0 w-9 text-center">
+                          <span className="text-[9px] font-bold uppercase" style={{ color: monthCol }}>{dateObj.month}</span>
+                          <span className="text-lg font-bold leading-none" style={{ color: dayCol }}>{dateObj.day}</span>
+                        </div>
+                      ) : (
+                        <div className="w-9 flex-shrink-0" />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-charcoal truncate">{row.name}</p>
+                        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wide ${pillCls}`}>
+                            {pillLabel}
+                          </span>
+                          {row.amountStr && <span className="text-[10px] text-mid">{row.amountStr}</span>}
+                        </div>
+                      </div>
+                    </a>
+                  )
+                })}
+              </div>
+            </>
+          )}
+        </div>
+        </div>
+      </div>
+
+      {/* ── Your work band (cohort/builder only): resume in-flight work before
+          scanning new matches. Empty state steers to the project route. ── */}
+      {builderAllowed && !hasWork && (
+        <div className="card rounded-xl mb-8" style={{ padding: 28, display: 'grid', gridTemplateColumns: 'minmax(0,1.4fr) minmax(0,1fr)', gap: 28, alignItems: 'center' }}>
+          <div>
+            <div style={{ width: 46, height: 46, borderRadius: 13, background: '#F1F7E4', color: '#3B6D11', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+              <Lightbulb size={23} />
+            </div>
+            <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 22, fontWeight: 600, color: '#2C2C2A', marginBottom: 8 }}>Start your first project</div>
+            <p className="text-mid" style={{ fontSize: 14.5, lineHeight: 1.6, marginBottom: 20, maxWidth: 420 }}>
+              Describe what you need funded once. We&apos;ll match it against the{' '}
+              <span style={{ color: '#2C2C2A', fontWeight: 500 }}>{totalMatchCount} funders that already fit your organisation</span>,
+              then help you build a tailored application for each one you choose.
+            </p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap' }}>
+              <a href="/dashboard/projects/new" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#8ECB3C', color: '#173404', fontFamily: 'var(--font-space-grotesk)', fontSize: 14.5, fontWeight: 600, padding: '12px 20px', borderRadius: 11, textDecoration: 'none' }}>
+                <Lightbulb size={16} /> Describe a project
+              </a>
+              <a href="/dashboard/applications/new" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 14, fontWeight: 600, color: '#3B6D11', textDecoration: 'none' }}>
+                Know which funder to apply to? Start a direct application →
+              </a>
+            </div>
+          </div>
+          <div style={{ background: '#FBFDF7', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 16, padding: 22 }}>
+            {[
+              { t: 'Describe it once', b: 'A few sentences or paste an old plan.' },
+              { t: 'See who fits', b: 'We rank funders against your project.' },
+              { t: 'Apply to each', b: 'Build a tailored application per funder.' },
+            ].map((s, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: i < 2 ? 16 : 0 }}>
+                <span style={{ width: 26, height: 26, borderRadius: 999, background: '#173404', color: '#F1F7E4', fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</span>
+                <div>
+                  <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: '#2C2C2A' }}>{s.t}</div>
+                  <div className="text-mid" style={{ fontSize: 12 }}>{s.b}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {builderAllowed && hasWork && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-8">
+          {/* Your applications */}
+          <div className="card rounded-xl p-6">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
+              <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 20, fontWeight: 700, color: '#1D3C3E' }}>Your applications</span>
+              <a href="/dashboard/applications" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: '#1D3C3E', textDecoration: 'none' }}>
+                View all{workApps.length > 4 ? ` ${workApps.length}` : ''} →
+              </a>
+            </div>
+            <p className="text-mid" style={{ fontSize: 12.5, marginBottom: 12 }}>Newest first.</p>
+            {workApps.length === 0 ? (
+              <p className="text-mid" style={{ fontSize: 13.5, lineHeight: 1.55 }}>No applications yet. Pick a funder from a project to start one.</p>
+            ) : (() => {
+              /* Grouped, because "Continue writing" was wrong for the half of
+                 them sitting at 0 of 8 — never opened, nothing to continue.
+                 Started rows keep the progress bar; not-started show the
+                 question count, which is the only useful number they have.
+
+                 The second line is funder plus timestamp rather than the
+                 project name the design called for: project_id is null on
+                 every application because the creation flow has no picker.
+                 The slot and geometry are the designed ones, so the day that
+                 changes, the project name and colour drop straight in and
+                 nothing moves. It deliberately says NOTHING about the missing
+                 project — a label that fires on every row for every user, about
+                 a gap they cannot close, is chrome rather than a warning. */
+              const shown     = workApps.slice(0, 4)
+              const started   = shown.filter(a => a.answered > 0)
+              const notStarted = shown.filter(a => a.answered === 0)
+              const groups: { label: string; rows: WorkApp[] }[] = [
+                { label: 'In progress', rows: started },
+                { label: 'Not started', rows: notStarted },
+              ].filter(g => g.rows.length > 0)
+
+              return groups.map(group => (
+                <div key={group.label} style={{ marginTop: 4 }}>
+                  <p style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 11, fontWeight: 600, letterSpacing: '0.09em', textTransform: 'uppercase', color: '#5F5E5A', margin: '10px 0 2px' }}>
+                    {group.label}
+                  </p>
+                  {group.rows.map(a => {
+                    const mono = (a.funder || a.title).trim().split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase() || '?'
+                    const pct  = a.total > 0 ? Math.round((a.answered / a.total) * 100) : 0
+                    const when = a.answered > 0
+                      ? whenLabel(a.updatedAt ?? a.createdAt, 'Edited')
+                      : whenLabel(a.createdAt ?? a.updatedAt, 'Started')
+                    const second = [a.funder, when].filter(Boolean).join(' · ')
+                    return (
+                      <a key={a.id} href={`/dashboard/applications/${a.id}`} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 0', borderBottom: '1px solid rgba(29,60,62,0.08)', textDecoration: 'none' }}>
+                        {/* Neutral until a project exists to colour it. */}
+                        <span style={{ width: 40, height: 40, borderRadius: 11, background: '#F1EDE3', color: '#1D3C3E', fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{mono}</span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 15, fontWeight: 500, color: '#1D3C3E', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.title}</div>
+                          {second && (
+                            <div className="text-mid" style={{ fontSize: 12.5, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{second}</div>
+                          )}
+                          {a.answered > 0 ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 }}>
+                              <span style={{ height: 6, flex: 1, maxWidth: 150, background: '#EFE9DD', borderRadius: 999, overflow: 'hidden' }}>
+                                <span style={{ display: 'block', height: '100%', width: `${pct}%`, background: '#1D3C3E' }} />
+                              </span>
+                              <span className="text-mid" style={{ fontSize: 12 }}>{a.answered} of {a.total}</span>
+                            </div>
+                          ) : (
+                            <div className="text-mid" style={{ fontSize: 12, marginTop: 5 }}>{a.total} question{a.total === 1 ? '' : 's'}</div>
+                          )}
+                        </div>
+                      </a>
+                    )
+                  })}
+                </div>
+              ))
+            })()}
+          </div>
+
+          {/* Your projects */}
+          <div className="card rounded-xl p-6">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+              <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 20, fontWeight: 700, color: '#2C2C2A' }}>Your projects</span>
+              <a href="/dashboard/projects" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: '#3B6D11', textDecoration: 'none' }}>View all →</a>
+            </div>
+            {workProjects.length === 0 ? (
+              <p className="text-mid" style={{ fontSize: 13.5, lineHeight: 1.55, marginBottom: 12 }}>Describe a project to match more funders than your organisation profile alone.</p>
+            ) : workProjects.slice(0, 4).map((p, i, arr) => (
+              <a key={p.id} href={`/dashboard/projects/${p.id}`} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 0', borderBottom: i < arr.length - 1 ? '1px solid rgba(23,52,4,0.06)' : 'none', textDecoration: 'none' }}>
+                <span style={{ width: 40, height: 40, borderRadius: 11, background: '#F1F7E4', color: '#3B6D11', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Lightbulb size={19} /></span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 15, fontWeight: 500, color: '#2C2C2A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 5, fontSize: 12.5 }}>
+                    {p.ready
+                      ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#3B6D11', fontWeight: 500 }}><CircleCheck size={13} /> Ready to match</span>
+                      : <span className="text-mid">Needs a few more details</span>}
+                    {p.fitCount != null && p.fitCount > 0 ? <span className="text-mid">· {p.fitCount} funders fit</span> : null}
+                    {p.budget ? <span className="text-mid">· £{p.budget.toLocaleString('en-GB')}</span> : null}
+                  </div>
+                </div>
+              </a>
+            ))}
+            <div style={{ paddingTop: 10 }}>
+              <a href="/dashboard/projects/new" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: '#3B6D11', textDecoration: 'none' }}>+ New project</a>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+      {/* Where the money is. Full width: four stage tiles plus a footer were
+          cramped at half width, and the proportion bar needs the room. */}
+      <div className="mb-8">
 
         {/* Pipeline Overview — 4 active stages + Declined as footer line.
             Declined is closed state, not active state; reduced visual weight
@@ -1278,74 +1355,8 @@ export default async function DashboardPage() {
             )
           })()}
         </div>
-
-        {/* Upcoming deadlines (40%) — title + count + view-all in header,
-            three deadlines visible in a ~170px scrollable list. */}
-        <div className="card rounded-xl flex flex-col">
-          <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
-            <div className="flex items-center gap-2">
-              <h3 className="text-xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Upcoming deadlines</h3>
-              {alerts.length > 0 && (
-                <span className="text-xs font-semibold px-2 py-0.5 rounded-md" style={{ background: '#F0EDE2', color: '#5F5E5A', fontFamily: 'var(--font-space-grotesk)' }}>
-                  {alerts.length}
-                </span>
-              )}
-            </div>
-            <a href="/dashboard/deadlines"
-              className="text-xs font-semibold hover:underline" style={{ color: '#3B6D11', fontFamily: 'var(--font-space-grotesk)' }}>
-              View all deadlines →
-            </a>
-          </div>
-
-          {alerts.length === 0 ? (
-            <div className="text-center py-6 text-mid">
-              <p className="text-sm">No deadlines yet.</p>
-              <p className="text-xs mt-1">They&rsquo;ll appear here as you save opportunities.</p>
-            </div>
-          ) : (
-            <>
-              {/* Scrollable list — max-height ~170px shows three rows;
-                  the fourth peeks under to signal more on scroll. */}
-              <div className="overflow-y-auto pr-1 -mr-1" style={{ maxHeight: 170 }}>
-                {alerts.map(row => {
-                  const dateObj = formatDeadlineDate(row.deadline)
-                  const d = row.daysUntil
-                  // Urgency: ≤30d → red numerals + red pill. Beyond stays grey.
-                  const isUrgent = d <= 30
-                  const pillLabel = d < 0 ? 'Overdue' : d === 0 ? 'Today' : d === 1 ? 'Tomorrow' : `${d}d`
-                  const pillCls = isUrgent
-                    ? 'bg-[#FAECE7] text-[#993C1D]'
-                    : 'bg-transparent text-[#5F5E5A] border border-[rgba(23,52,4,0.20)]'
-                  const dayCol   = isUrgent ? '#993C1D' : '#2C2C2A'
-                  const monthCol = isUrgent ? '#993C1D' : '#5F5E5A'
-                  return (
-                    <a key={row.id} href={row.href}
-                      className="flex items-center gap-3 py-2.5 border-b border-warm last:border-0 hover:bg-[#FAFAF7] -mx-2 px-2 rounded-md transition-colors">
-                      {dateObj ? (
-                        <div className="flex flex-col items-center flex-shrink-0 w-9 text-center">
-                          <span className="text-[9px] font-bold uppercase" style={{ color: monthCol }}>{dateObj.month}</span>
-                          <span className="text-lg font-bold leading-none" style={{ color: dayCol }}>{dateObj.day}</span>
-                        </div>
-                      ) : (
-                        <div className="w-9 flex-shrink-0" />
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-charcoal truncate">{row.name}</p>
-                        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wide ${pillCls}`}>
-                            {pillLabel}
-                          </span>
-                          {row.amountStr && <span className="text-[10px] text-mid">{row.amountStr}</span>}
-                        </div>
-                      </div>
-                    </a>
-                  )
-                })}
-              </div>
-            </>
-          )}
-        </div>
       </div>
+
 
     </div>
   )
