@@ -68,17 +68,37 @@ function matchProfileScore(org: Organisation | null): number {
 
 const ADMIN_EMAIL = 'paulkilty1@gmail.com'
 
+/**
+ * Sidebar colours, on --deep rather than forest.
+ *
+ * THE ALPHA BUMPS ARE NOT PREFERENCE. Forest #173404 is darker than deep
+ * #1D3C3E, so every alpha-based colour here LOSES contrast when the background
+ * lightens. Swapping the background alone would have drifted the whole sidebar
+ * down about half a point, invisibly:
+ *
+ *   Nav label, inactive   7.04:1 on forest -> 6.29:1 on deep at 72%
+ *                                          -> 7.40:1 on deep at 80%
+ *   Nav icon, inactive    4.76:1 on forest -> 4.39:1 on deep at 55%
+ *                                          -> 6.07:1 on deep at 70%
+ *
+ * Nothing failed either way — icons are non-text UI at a 3:1 threshold — but
+ * the direction was wrong and unmeasurable by eye. Change these with the
+ * background, never after it.
+ *
+ * Values are literals rather than var(--token) on purpose: this component
+ * renders outside the .shoots-a scope, so a bare var() would collapse.
+ */
 const SB = {
-  text:       'rgba(245,241,232,0.72)',
-  textBright: '#F5F1E8',
-  icon:       'rgba(245,241,232,0.55)',
-  iconActive: '#8ECB3C',
+  text:       'rgba(246,241,231,0.80)',
+  textBright: '#F6F1E7',
+  icon:       'rgba(246,241,231,0.70)',
+  iconActive: '#9BCA9D',
   hover:      'rgba(245,241,232,0.06)',
-  activeBg:   'rgba(142,203,60,0.14)',
-  accent:     '#8ECB3C',
-  divider:    'rgba(245,241,232,0.08)',
-  badgeBg:    'rgba(142,203,60,0.18)',
-  badgeText:  '#C0DD97',
+  activeBg:   'rgba(246,241,231,0.10)',
+  accent:     '#9BCA9D',
+  divider:    'rgba(246,241,231,0.10)',
+  badgeBg:    '#9BCA9D',
+  badgeText:  '#1D3C3E',
 }
 
 const MAIN_NAV = [
@@ -231,7 +251,7 @@ export default function Sidebar({ org, userEmail, companionSurface = false, appl
         'md:translate-x-0',
         mobileOpen ? 'translate-x-0' : '-translate-x-full',
       )}
-      style={{ background: '#173404', padding: '20px 12px 12px' }}
+      style={{ background: '#1D3C3E', padding: '20px 12px 12px' }}
     >
       {/* Logo */}
       <div
@@ -353,7 +373,7 @@ export default function Sidebar({ org, userEmail, companionSurface = false, appl
         >
           <div style={{
             width: 30, height: 30, borderRadius: '50%', flexShrink: 0,
-            background: '#8ECB3C', color: '#173404',
+            background: '#9BCA9D', color: '#1D3C3E',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-space-grotesk)',
           }}>
@@ -430,7 +450,7 @@ export default function Sidebar({ org, userEmail, companionSurface = false, appl
           'transition-opacity duration-200',
           mobileOpen ? 'opacity-0 pointer-events-none' : 'opacity-100',
         )}
-        style={{ background: '#173404', color: '#F5F1E8' }}
+        style={{ background: '#1D3C3E', color: '#F6F1E7' }}
         aria-label="Open menu"
       >
         <Menu className="h-5 w-5" />

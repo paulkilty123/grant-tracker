@@ -48,7 +48,14 @@ export default async function AppLayout({
         <Sidebar org={org} userEmail={user.email ?? ''} companionSurface={companionSurface} applyAccess={applyAccess} />
         <main
           className="md:ml-60 flex-1 min-h-screen overflow-x-hidden flex flex-col"
-          style={{ background: '#FAFAF7' }}
+          // Cream, but NOT the .shoots-a token scope. This element is the
+          // parent of 40 pages, and --cream and --sage hold different values
+          // inside that scope than outside it (--sage is #639922 globally,
+          // #9BCA9D inside). Two admin surfaces consume the colliding tokens
+          // today, so scoping here would silently recolour tools nobody asked
+          // us to touch. The scope goes on the Sidebar and the dashboard page
+          // only; widening it is a 40-page audit, not a one-line change.
+          style={{ background: '#F6F1E7' }}
         >
           <div className="flex-1 px-4 pt-16 pb-8 md:pt-8 md:px-16">
             {children}

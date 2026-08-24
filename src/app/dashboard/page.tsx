@@ -334,17 +334,29 @@ export default async function DashboardPage() {
   const inProgressCount = items.filter(i => ['applying', 'submitted'].includes(i.stage)).length
   const newMatchesThisWeek = scoredAll.filter(x => x.lastSeenAt && x.lastSeenAt >= mondayISO).length
 
-  // ── Pipeline tonal ladder — spec §1.4 + §8.2 ────────────────────────────
-  // Identified cream → Applying pale green → Submitted mid green → Won
-  // saturated green (cream text) → Declined soft coral (deep coral text).
-  // Break to coral at Declined is intentional per spec: not the next rung
-  // up, a different kind of outcome.
+  // ── Pipeline tonal ladder ────────────────────────────────────────────────
+  // Warm neutral → sage tint → sage → deep, with Declined breaking to the
+  // danger tint because it is a different kind of outcome, not the next rung.
+  //
+  // The property that matters is that it darkens MONOTONICALLY toward Won, so
+  // it still reads as advancement in greyscale rather than leaning on hue:
+  // luminance runs 0.848 → 0.832 → 0.516 → 0.038, with Declined at 0.882
+  // deliberately outside the run. Every pair below was measured, not picked:
+  // 5.55, 9.98, 6.41, 10.55 and 4.81.
+  //
+  // NOT SHARED WITH THE PIPELINE PAGE. dashboard/pipeline/page.tsx carries its
+  // own STAGE_BG_HEX, and the two had ALREADY diverged before this change —
+  // the Pipeline's ladder is much paler and its Won (#EAF3DE) is nearly the
+  // lightest rung rather than the darkest, so it does not carry the greyscale
+  // property at all. Unifying them means reworking that page's header, count
+  // and divider tones, which are derived from assumptions about these
+  // backgrounds. That is its own pass, not something to absorb into this one.
   const stageData = [
-    { id: 'identified', label: 'Identified', bg: '#F5F1E8', labelCol: '#5F5E5A',            valCol: '#2C2C2A',            countCol: '#5F5E5A' },
-    { id: 'applying',   label: 'Applying',   bg: '#EAF3DE', labelCol: '#3F6814',            valCol: '#173404',            countCol: '#3F6814' },
-    { id: 'submitted',  label: 'Submitted',  bg: '#C0DD97', labelCol: '#3F6814',            valCol: '#173404',            countCol: '#3F6814' },
-    { id: 'won',        label: 'Won',        bg: '#639922', labelCol: 'rgba(250,247,242,0.78)', valCol: '#FAF7F2',        countCol: 'rgba(250,247,242,0.78)' },
-    { id: 'declined',   label: 'Declined',   bg: '#FAECE7', labelCol: '#993C1D',            valCol: '#993C1D',            countCol: '#993C1D' },
+    { id: 'identified', label: 'Identified', bg: '#F1EDE3', labelCol: '#5F5E5A',            valCol: '#2E2E2E',            countCol: '#5F5E5A' },
+    { id: 'applying',   label: 'Applying',   bg: '#E1EFE2', labelCol: '#1D3C3E',            valCol: '#1D3C3E',            countCol: '#1D3C3E' },
+    { id: 'submitted',  label: 'Submitted',  bg: '#9BCA9D', labelCol: '#1D3C3E',            valCol: '#1D3C3E',            countCol: '#1D3C3E' },
+    { id: 'won',        label: 'Won',        bg: '#1D3C3E', labelCol: 'rgba(246,241,231,0.80)', valCol: '#F6F1E7',        countCol: 'rgba(246,241,231,0.80)' },
+    { id: 'declined',   label: 'Declined',   bg: '#FBEFEA', labelCol: '#B4472A',            valCol: '#B4472A',            countCol: '#B4472A' },
   ]
   const stageValues = stageData.map(s => ({
     ...s,
@@ -441,7 +453,7 @@ export default async function DashboardPage() {
       <div>
         {/* Greeting */}
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-charcoal mb-1.5" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.02em' }}>
+          <h2 className="text-3xl font-bold mb-1.5" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.025em', color: '#1D3C3E' }}>
             Welcome to Shoots, {displayName}.
           </h2>
           <p className="text-sm text-mid">
@@ -451,29 +463,31 @@ export default async function DashboardPage() {
           </p>
         </div>
 
-        {/* Welcome banner — pale-green → neutral gradient */}
+        {/* Hero — option A, the deep panel.
+            The panel is a --deep fill that is NOT a button, which weakens
+            "deep = the thing to click". So the CTA inside it inverts to a
+            --cream fill: within the panel the button stays the lightest,
+            highest-contrast thing. A deep button on a deep panel is the
+            failure mode this avoids. */}
         <div
-          className="relative overflow-hidden rounded-xl p-8 md:p-10 mb-8 border"
-          style={{
-            background: 'linear-gradient(135deg, #EAF3DE 0%, #F1F8E4 50%, #FAFAF7 100%)',
-            borderColor: '#E4E2DA',
-          }}
+          className="relative overflow-hidden mb-8"
+          style={{ background: '#1D3C3E', borderRadius: 20, padding: '32px 34px' }}
         >
           <div className="flex items-center gap-2 mb-4">
             <span
-              className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-md"
-              style={{ background: 'rgba(132,204,22,0.20)', color: '#3F6814' }}
+              className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider"
+              style={{ background: 'rgba(246,241,231,0.13)', color: '#F6F1E7', borderRadius: 999, padding: '6px 13px', letterSpacing: '0.11em' }}
             >
               <Sparkles className="w-3 h-3" />
               {profileComplete ? `${totalMatchCount} matches ready` : 'Profile incomplete'}
             </span>
           </div>
-          <h3 className="text-2xl md:text-3xl font-bold text-charcoal leading-tight mb-2" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.02em' }}>
+          <h3 className="text-2xl md:text-3xl font-bold leading-tight mb-2" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.025em', color: '#F6F1E7' }}>
             {profileComplete
               ? "We've found funding that fits your profile."
               : 'Set up your profile to unlock matches.'}
           </h3>
-          <p className="text-sm md:text-base text-mid mb-6 max-w-2xl leading-relaxed">
+          <p className="text-sm md:text-base mb-6 max-w-2xl leading-relaxed" style={{ color: 'rgba(246,241,231,0.76)' }}>
             {profileComplete
               ? "Browse your matches, save the ones worth a closer look, and move them into your pipeline when you're ready to apply. Everything you do here feeds the matching — the more you engage, the sharper it gets."
               : 'Takes about 2 minutes. Tell us your org type, where you work, who you serve and what you do — and we’ll score every UK funder against you.'}
@@ -483,8 +497,8 @@ export default async function DashboardPage() {
               <>
                 <a
                   href="/dashboard/search"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity"
-                  style={{ background: '#8ECB3C', color: '#173404', fontFamily: 'var(--font-space-grotesk)', boxShadow: '0 2px 8px rgba(132,204,22,0.25)' }}
+                  className="inline-flex items-center gap-2 text-sm font-semibold hover:opacity-90 transition-opacity"
+                  style={{ background: '#F6F1E7', color: '#1D3C3E', fontFamily: 'var(--font-space-grotesk)', borderRadius: 999, padding: '12px 26px' }}
                 >
                   See my matches
                   <ArrowRight className="w-4 h-4" />
@@ -493,8 +507,8 @@ export default async function DashboardPage() {
             ) : (
               <a
                 href="/onboarding/wizard"
-                className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity"
-                style={{ background: '#8ECB3C', color: '#173404', fontFamily: 'var(--font-space-grotesk)', boxShadow: '0 2px 8px rgba(132,204,22,0.25)' }}
+                className="inline-flex items-center gap-2 text-sm font-semibold hover:opacity-90 transition-opacity"
+                style={{ background: '#F6F1E7', color: '#1D3C3E', fontFamily: 'var(--font-space-grotesk)', borderRadius: 999, padding: '12px 26px' }}
               >
                 Complete your profile
                 <ArrowRight className="w-4 h-4" />
@@ -510,9 +524,9 @@ export default async function DashboardPage() {
           </h3>
           <div className="bg-white rounded-xl border border-warm overflow-hidden" style={{ boxShadow: '0 2px 16px rgba(26,46,43,0.04)' }}>
             {/* 1. Complete profile — done if onboarded, active otherwise */}
-            <div className="flex items-center gap-4 p-5 border-b border-warm" style={profileComplete ? undefined : { background: '#EAF3DE' }}>
+            <div className="flex items-center gap-4 p-5 border-b border-warm" style={profileComplete ? undefined : { background: '#E1EFE2' }}>
               {profileComplete ? (
-                <div className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center" style={{ background: '#8ECB3C' }}>
+                <div className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center" style={{ background: '#1D3C3E' }}>
                   <Check className="w-5 h-5 text-white" strokeWidth={3} />
                 </div>
               ) : (
@@ -520,10 +534,10 @@ export default async function DashboardPage() {
                   className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold"
                   style={{
                     background: '#FFFFFF',
-                    border: '2px solid #8ECB3C',
-                    color: '#3F6814',
+                    border: '2px solid #1D3C3E',
+                    color: '#1D3C3E',
                     fontFamily: 'var(--font-space-grotesk)',
-                    boxShadow: '0 0 0 4px rgba(142,203,60,0.15)',
+                    boxShadow: '0 0 0 4px rgba(29,60,62,0.12)',
                   }}
                 >
                   1
@@ -543,7 +557,7 @@ export default async function DashboardPage() {
                 <a
                   href="/onboarding/wizard"
                   className="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg hover:opacity-90 transition-opacity"
-                  style={{ background: '#173404', color: '#FAF7F2', fontFamily: 'var(--font-space-grotesk)' }}
+                  style={{ background: '#1D3C3E', color: '#F6F1E7', fontFamily: 'var(--font-space-grotesk)', borderRadius: 999 }}
                 >
                   Start
                   <ArrowRight className="w-3 h-3" />
@@ -552,15 +566,15 @@ export default async function DashboardPage() {
             </div>
 
             {/* 2. Browse first matches — only "active" once profile is done */}
-            <div className="flex items-center gap-4 p-5 border-b border-warm" style={profileComplete ? { background: '#EAF3DE' } : undefined}>
+            <div className="flex items-center gap-4 p-5 border-b border-warm" style={profileComplete ? { background: '#E1EFE2' } : undefined}>
               <div
                 className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold"
                 style={profileComplete ? {
                   background: '#FFFFFF',
-                  border: '2px solid #8ECB3C',
-                  color: '#3F6814',
+                  border: '2px solid #1D3C3E',
+                  color: '#1D3C3E',
                   fontFamily: 'var(--font-space-grotesk)',
-                  boxShadow: '0 0 0 4px rgba(142,203,60,0.15)',
+                  boxShadow: '0 0 0 4px rgba(29,60,62,0.12)',
                 } : {
                   background: '#FFFFFF',
                   border: '1.5px solid #E4E2DA',
@@ -584,7 +598,7 @@ export default async function DashboardPage() {
                 <a
                   href="/dashboard/search"
                   className="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg hover:opacity-90 transition-opacity"
-                  style={{ background: '#173404', color: '#FAF7F2', fontFamily: 'var(--font-space-grotesk)' }}
+                  style={{ background: '#1D3C3E', color: '#F6F1E7', fontFamily: 'var(--font-space-grotesk)', borderRadius: 999 }}
                 >
                   Start
                   <ArrowRight className="w-3 h-3" />
