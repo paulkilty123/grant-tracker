@@ -33,6 +33,8 @@ import { normaliseScrapedGrant, type EnrichedGrant } from '@/lib/grants-normalis
 import { emitClientEvent } from '@/lib/events/client'
 import { toCatalogueUuid } from '@/lib/events/taxonomy'
 import type { InteractionAction } from '@/lib/interactions'
+import { typeColour, FUNDING_TYPE_COLOUR } from '@/lib/funding-type-colours'
+import { sectorColour, SECTOR_FAMILY, SECTOR_FAMILY_COLOUR, TAG_NEUTRAL } from '@/lib/sector-colours'
 
 // Normalise long or awkward free-text sector names for display on grant cards
 const SECTOR_DISPLAY: Record<string, string | null> = {
@@ -122,14 +124,17 @@ const FUNDER_TYPES = [
 
 // Funder categories from the funders table (our 8-category taxonomy)
 const FUNDER_CATEGORIES = [
-  { id: 'lottery',              label: '🎱 Lottery',               colour: 'bg-green-pale-1 text-green-text-deep border-green-pale-3' },
-  { id: 'government',           label: '🏛️ Government',            colour: 'bg-coral-pale text-coral-deep border-coral-mid' },
-  { id: 'major_trust',          label: '🏦 Major Trust',           colour: 'bg-[#F1F7E4] text-[#639922] border-[#C0DD97]' },
-  { id: 'community_foundation', label: '🌱 Community Foundation',  colour: 'bg-[#F1F7E4] text-[#639922] border-[#C0DD97]' },
-  { id: 'corporate',            label: '🏢 Corporate',             colour: 'bg-amber-pale text-amber-deep border-amber-mid' },
-  { id: 'social_investment',    label: '💰 Social Investment',     colour: 'bg-sky-50 text-sky-700 border-sky-200' },
-  { id: 'crowdfunding',         label: '🤝 Crowdfunding',          colour: 'bg-coral-pale text-coral-deep border-coral-mid' },
-  { id: 'sector_body',          label: '📋 Sector Body',           colour: 'bg-amber-pale text-amber-deep border-amber-mid' },
+  // No emoji: bands A and B have none anywhere, and a taxonomy is not the
+  // place to reintroduce them. Funder category is not an impact area, so these
+  // stay neutral in the tag row — see sector-colours.ts.
+  { id: 'lottery',              label: 'Lottery',               colour: 'bg-green-pale-1 text-green-text-deep border-green-pale-3' },
+  { id: 'government',           label: 'Government',            colour: 'bg-coral-pale text-coral-deep border-coral-mid' },
+  { id: 'major_trust',          label: 'Major Trust',           colour: 'bg-[#E3F0E4] text-[#1B6B3D] border-[#9BCA9D]' },
+  { id: 'community_foundation', label: 'Community Foundation',  colour: 'bg-[#E3F0E4] text-[#1B6B3D] border-[#9BCA9D]' },
+  { id: 'corporate',            label: 'Corporate',             colour: 'bg-amber-pale text-amber-deep border-amber-mid' },
+  { id: 'social_investment',    label: 'Social Investment',     colour: 'bg-sky-50 text-sky-700 border-sky-200' },
+  { id: 'crowdfunding',         label: 'Crowdfunding',          colour: 'bg-coral-pale text-coral-deep border-coral-mid' },
+  { id: 'sector_body',          label: 'Sector Body',           colour: 'bg-amber-pale text-amber-deep border-amber-mid' },
 ]
 
 // Geographic scope filter options
@@ -143,12 +148,12 @@ const GEO_SCOPES = [
   { id: 'regional',         label: 'Regional'        },
 ]
 
-const FUNDING_TYPES: { id: FundingType | 'all'; label: string; emoji: string; desc: string }[] = [
-  { id: 'all',        label: 'All types',   emoji: '⚡', desc: 'All funding types' },
-  { id: 'grant',      label: 'Grants',      emoji: '🎯', desc: 'Non-repayable cash: grants, awards, bursaries & prizes' },
-  { id: 'programme',  label: 'Programmes',  emoji: '🚀', desc: 'Accelerators, fellowships, incubators & support programmes' },
-  { id: 'investment', label: 'Investment',  emoji: '💰', desc: 'Repayable finance: loans, patient capital & blended finance' },
-  { id: 'in_kind',    label: 'In-Kind',     emoji: '🛠️', desc: 'Non-cash: software credits, ad grants, workspace & pro bono' },
+const FUNDING_TYPES: { id: FundingType | 'all'; label: string; desc: string }[] = [
+  { id: 'all',        label: 'All types',   desc: 'All funding types' },
+  { id: 'grant',      label: 'Grants',      desc: 'Non-repayable cash: grants, awards, bursaries & prizes' },
+  { id: 'programme',  label: 'Programmes',  desc: 'Accelerators, fellowships, incubators & support programmes' },
+  { id: 'investment', label: 'Investment',  desc: 'Repayable finance: loans, patient capital & blended finance' },
+  { id: 'in_kind',    label: 'In-kind',     desc: 'Non-cash: software credits, ad grants, workspace & pro bono' },
 ]
 
 interface AIResult {
@@ -320,7 +325,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
     return (
       <div className="bg-warm/40 px-5 py-3 mb-2 rounded-lg border border-warm flex items-center justify-between opacity-60">
         <p className="text-sm text-mid">{grant.title}{grant.funder && !grant.title.toLowerCase().includes(grant.funder.toLowerCase()) ? ` — ${grant.funder}` : ''}</p>
-        <button onClick={() => onUndismiss(grant.id)} className="text-xs hover:underline ml-4 flex-shrink-0" style={{ color: '#3B6D11', fontWeight: 600 }}>
+        <button onClick={() => onUndismiss(grant.id)} className="text-xs hover:underline ml-4 flex-shrink-0" style={{ color: '#1D3C3E', fontWeight: 600 }}>
           Restore
         </button>
       </div>
@@ -360,24 +365,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
     STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
   )
 
-  // ── Sector pill colours ──
-  const SECTOR_PILL: Record<string, { bg: string; color: string }> = {
-    // keys match the 14-sector ImpactSector taxonomy IDs
-    environment:   { bg: '#EAF3DE', color: '#27500A' },  // pale green deep
-    community:     { bg: '#F1F7E4', color: '#3B6D11' },  // pale green lighter
-    sport:         { bg: '#EAF3DE', color: '#27500A' },  // green
-    heritage:      { bg: '#FAEEDA', color: '#854F0B' },  // amber
-    social_economy:{ bg: '#E6F1FB', color: '#0C447C' },  // blue
-    justice:       { bg: '#FAECE7', color: '#993C1D' },  // coral
-    mental_health: { bg: '#E6F1FB', color: '#0C447C' },  // blue
-    health:        { bg: '#D3E8F7', color: '#093F72' },  // blue deep
-    tech:          { bg: '#E6F1FB', color: '#0C447C' },  // blue
-    creative:      { bg: '#FAEEDA', color: '#854F0B' },  // amber deep
-    food:          { bg: '#EAF3DE', color: '#27500A' },  // green (same as env)
-    education:     { bg: '#EEEDFE', color: '#3C3489' },  // purple
-    housing:       { bg: '#EEEDFE', color: '#3C3489' },  // purple
-    employment:    { bg: '#EEEDFE', color: '#3C3489' },  // purple
-  }
+
 
   // ── Reason strings ──
   const DIMENSION_LABELS: Record<string, string> = {
@@ -433,10 +421,31 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
 
   // ── Match tier ──
   const tier       = score >= 80 ? 'Strong match' : score >= 70 ? 'Good match' : score >= 50 ? 'Partial match' : 'Weak match'
-  const tierHue    = score >= 80 ? { ring: '#639922', title: '#3B6D11', panelBg: '#F4F9ED', border: '#639922', barBg: 'rgba(99,153,34,0.15)',    positive: '#639922', caveat: '#639922', caveatText: '#3B6D11' }
-                   : score >= 70 ? { ring: '#5A9080', title: '#2D6B5E', panelBg: '#EFF6F4', border: '#5A9080', barBg: 'rgba(90,144,128,0.15)',   positive: '#5A9080', caveat: '#5A9080', caveatText: '#2D6B5E' }
-                   : score >= 50 ? { ring: '#BA7517', title: '#7A4E10', panelBg: '#FBF7EE', border: '#BA7517', barBg: 'rgba(186,117,23,0.12)',   positive: '#BA7517', caveat: '#BA7517', caveatText: '#7A4E10' }
-                   :               { ring: '#A06060', title: '#7A3030', panelBg: '#FAF1EE', border: '#A06060', barBg: 'rgba(160,96,96,0.12)',    positive: '#A06060', caveat: '#A06060', caveatText: '#7A3030' }
+  /**
+   * The band is ONE neutral container in every state. The tier is carried by
+   * the numeral and the bar fill, not by the background.
+   *
+   * The old version tinted the whole panel per tier over a four-step ramp, and
+   * it did not work. Adjacent tiers separated by ΔE 20.4 at best, the top two
+   * steps shared an identical text colour (#3B6D11 for both Strong and Good in
+   * barText below), and the Good fill was #8ECB3C at 1.89:1 on its own tint —
+   * so the tier that most needs to read as "nearly strong" was the least
+   * visible thing on the card. Separation here is ΔE 38.5-46.5.
+   *
+   * Strong and Good deliberately SHARE #1B6B3D. That pair is the one colour
+   * genuinely cannot separate at this size, so the tier WORD tells them apart:
+   * language carries the fine distinction, colour carries the coarse one.
+   *
+   * Two rejected alternatives, recorded so they are not retried. Tinting the
+   * band by the card's FUNDING TYPE made the tier invisible — a strong in-kind
+   * match rendered gold, a partial grant rendered green. Tinting it by TIER
+   * produced a partial tint identical to the amber sector chip and ΔE 1.3 from
+   * the in-kind chip, so a Heritage or Creative card carried a chip the same
+   * colour as its own score band.
+   */
+  const tierInk    = score >= 70 ? '#1B6B3D' : score >= 50 ? '#7A5E11' : '#5F5E5A'
+  const tierHue    = { ring: tierInk, title: tierInk, panelBg: '#F1EDE3', border: 'transparent',
+                       barBg: 'rgba(29,60,62,0.20)', positive: tierInk, caveat: tierInk, caveatText: tierInk }
   const moduleTitle = score >= 80 ? 'Why this strongly matches' : score >= 70 ? 'Why this is a good match' : score >= 50 ? 'Why this partially matches' : 'Why this weakly matches'
 
   // ── Funder type label ──
@@ -459,13 +468,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
     : null
 
   // ── Funding type pill ──
-  const FUNDING_TYPE_PILL: Record<string, { label: string; bg: string; color: string }> = {
-    grant:      { label: 'Grant',      bg: '#F1F7E4', color: '#3B6D11' },
-    programme:  { label: 'Programme',  bg: '#FAECE7', color: '#993C1D' },
-    investment: { label: 'Investment', bg: '#E6F1FB', color: '#0C447C' },
-    in_kind:    { label: 'In-Kind',    bg: '#FAEEDA', color: '#854F0B' },
-  }
-  const ftPill = grant.fundingType ? FUNDING_TYPE_PILL[grant.fundingType] ?? null : null
+  const ftPill = typeColour(grant.fundingType)
 
   // ── Deadline display ──
   // Three-state rendering: a fixed deadline, "Opens [next round]" when the
@@ -569,7 +572,9 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                 const raw = IMPACT_SECTOR_FILTERS.find(f => f.id === s)?.label
                   ?? s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
                 const lbl = raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase()
-                const ps = SECTOR_PILL[s] ?? { bg: '#F5F1E8', color: '#5F5E5A' }
+                // Five families over the 14 sectors; anything unmapped falls
+                // through to neutral rather than to a wrong family.
+                const ps = sectorColour(s)
                 return (
                   <span key={s} style={{ fontSize: 10, padding: '3px 9px', borderRadius: 9999, fontWeight: 500, whiteSpace: 'nowrap', background: ps.bg, color: ps.color, fontFamily: 'var(--font-dm-sans)' }}>
                     {lbl}
@@ -595,7 +600,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                 )
               })()}
               {grant.isInviteOnly && (
-                <span style={{ fontSize: 10, padding: '3px 9px', borderRadius: 9999, fontWeight: 500, whiteSpace: 'nowrap', background: '#F3EDFA', color: '#6B21A8', fontFamily: 'var(--font-dm-sans)', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                <span style={{ fontSize: 10, padding: '3px 9px', borderRadius: 9999, fontWeight: 500, whiteSpace: 'nowrap', background: '#F1EDE3', color: '#5F5E5A', fontFamily: 'var(--font-dm-sans)', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
                   ✉ Invite only
                 </span>
               )}
@@ -628,18 +633,34 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                 ? (grant.description.length > 160 && !descExpanded
                     ? <>
                         {grant.description.slice(0, 160).trimEnd()}…{''}
-                        <button onClick={e => { e.stopPropagation(); setDescExpanded(true) }} style={{ background: 'none', border: 'none', padding: 0, fontSize: 14, color: '#3B6D11', fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Show more</button>
+                        <button onClick={e => { e.stopPropagation(); setDescExpanded(true) }} style={{ background: 'none', border: 'none', padding: 0, fontSize: 14, color: '#1D3C3E', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', borderBottom: '1.5px solid rgba(29,60,62,0.24)' }}>Show more</button>
                       </>
                     : grant.description)
-                : <>Full details on the funder&apos;s website.{''}{grant.applyUrl && <a href={grant.applyUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#3B6D11', fontWeight: 500, textDecoration: 'none' }}>Visit site ↗</a>}</>
+                : <>Full details on the funder&apos;s website.{''}{grant.applyUrl && <a href={grant.applyUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#1D3C3E', fontWeight: 600, textDecoration: 'none', borderBottom: '1.5px solid rgba(29,60,62,0.24)' }}>Visit site ↗</a>}</>
               }
             </p>
 
             {/* Meta grid: Amount / Deadline / Eligible / Type */}
             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: isMobile ? 10 : 16, paddingTop: 12, borderTop: '0.5px solid rgba(0,0,0,0.06)' }}>
+              {/* Funding type leads, in its own foreground colour. It used to
+                  be a tinted chip in the tag row above, which cannot work:
+                  measured against the sector families it collides at ΔE
+                  1.3-2.6, so an in-kind chip and an amber sector chip were
+                  effectively the same colour. Two categorical systems cannot
+                  share one chip row. Subtypes fold in here beside it — they
+                  refine the type rather than being a category of their own. */}
+              <div>
+                <div style={{ fontSize: 10, color: '#8A8986', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3, fontFamily: 'var(--font-dm-sans)' }}>Type</div>
+                <div style={{ fontSize: 13, fontWeight: 500, fontFamily: 'var(--font-dm-sans)', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                  <span style={{ color: ftPill?.fg ?? '#2C2C2A' }}>{ftPill?.label ?? '—'}</span>
+                  {subtypeLabels.map(lbl => (
+                    <span key={lbl} style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', background: '#F1EDE3', color: '#5F5E5A', padding: '2px 7px', borderRadius: 9999, fontFamily: 'var(--font-space-grotesk)' }}>{lbl}</span>
+                  ))}
+                </div>
+              </div>
               <div>
                 <div style={{ fontSize: 10, color: '#8A8986', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3, fontFamily: 'var(--font-dm-sans)' }}>Amount</div>
-                <div style={{ fontSize: 13, color: '#3B6D11', fontWeight: 500, fontFamily: 'var(--font-dm-sans)' }}>{
+                <div style={{ fontSize: 13, color: '#1D3C3E', fontWeight: 500, fontFamily: 'var(--font-dm-sans)' }}>{
                   !grant.amountMin && !grant.amountMax && grant.fundingType === 'in_kind'    ? 'In-kind'
                 : !grant.amountMin && !grant.amountMax && grant.fundingType === 'programme'  ? 'Programme only'
                 : (formatRange(grant.amountMin, grant.amountMax) || '—')
@@ -650,7 +671,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                 <div style={{ fontSize: 13, color: '#2C2C2A', fontFamily: 'var(--font-dm-sans)', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                   <span>{deadlineDisplay}</span>
                   {grant.isMultiRound && (
-                    <span title="Multiple application rounds per year — check the brief for the full schedule" style={{ fontSize: 10, fontWeight: 600, padding: '2px 6px', borderRadius: 6, background: '#F1F7E4', color: '#3B6D11', fontFamily: 'var(--font-space-grotesk)' }}>
+                    <span title="Multiple application rounds per year — check the brief for the full schedule" style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', padding: '2px 7px', borderRadius: 9999, background: '#F1EDE3', color: '#5F5E5A', fontFamily: 'var(--font-space-grotesk)' }}>
                       Multi-round
                     </span>
                   )}
@@ -667,19 +688,9 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                       <span style={{ color: '#8A8986' }}> +{structureLabels.length - 2}</span>
                     )}
                   </span>
-                  {qualifies && <span style={{ color: '#639922', fontSize: 11 }}>✓</span>}
+                  {qualifies && <span style={{ color: '#1B6B3D', fontSize: 11 }}>✓</span>}
                 </div>
               </div>
-              {subtypeLabels.length > 0 && (
-                <div>
-                  <div style={{ fontSize: 10, color: '#8A8986', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3, fontFamily: 'var(--font-dm-sans)' }}>Type</div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                    {subtypeLabels.map(lbl => (
-                      <span key={lbl} style={{ fontSize: 11, background: '#F1F7E4', color: '#3B6D11', padding: '2px 8px', borderRadius: 9999, fontWeight: 500, fontFamily: 'var(--font-dm-sans)', display: 'inline-block' }}>{lbl}</span>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
 
           </div>{/* end content-col */}
@@ -697,6 +708,11 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                 {/* In pipeline — single toggle button. Shows status by default;
                     on hover it reveals the remove affordance. Click opens a
                     confirm (remove is destructive — see performRemoveFromPipeline). */}
+                {/* Already in the pipeline: the primary slot stops being a
+                    button and becomes a status. Two lines rather than one,
+                    because "In pipeline · Applying" needs about 174px of a
+                    168px slot and breaks mid-phrase — and stacking puts the
+                    fact above the stage rather than beside it. */}
                 {state === 'pipeline' && (
                   <button
                     onClick={() => onRemoveFromPipeline?.(grant)}
@@ -704,16 +720,26 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                     onMouseLeave={() => setRemoveHover(false)}
                     title="Click to remove from pipeline"
                     style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-                      fontSize: 13, fontWeight: 500, padding: '9px 14px', borderRadius: 10,
-                      cursor: 'pointer', fontFamily: 'var(--font-dm-sans)', whiteSpace: 'nowrap',
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
+                      padding: '9px 14px', borderRadius: 16, width: '100%',
+                      cursor: 'pointer', fontFamily: 'var(--font-space-grotesk)', whiteSpace: 'nowrap',
                       transition: 'all 120ms ease',
-                      background: removeHover ? '#FAECE7' : '#F1F7E4',
-                      color:      removeHover ? '#993C1D' : '#3B6D11',
+                      background: removeHover ? '#FAECE7' : '#E3F0E4',
+                      color:      removeHover ? '#993C1D' : '#1B6B3D',
                       border: `0.5px solid ${removeHover ? 'rgba(0,0,0,0.14)' : 'transparent'}`,
                     }}
                   >
-                    {removeHover ? 'Remove from pipeline' : `✓ In pipeline · ${stageLabel}`}
+                    {removeHover ? (
+                      <span style={{ fontSize: 13, fontWeight: 600 }}>Remove from pipeline</span>
+                    ) : (
+                      <>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13, fontWeight: 600 }}>
+                          <span style={{ width: 16, height: 16, borderRadius: 999, background: '#22874C', color: '#fff', fontSize: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>✓</span>
+                          In pipeline
+                        </span>
+                        <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', opacity: 0.85 }}>{stageLabel}</span>
+                      </>
+                    )}
                   </button>
                 )}
 
@@ -736,11 +762,14 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                     title={cardApplyAccess ? undefined : 'Pipeline is part of the Apply plan'}
                     style={{
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-                      borderRadius: 10, padding: '9px 14px', fontSize: 13, fontWeight: 500,
-                      cursor: 'pointer', fontFamily: 'var(--font-dm-sans)', whiteSpace: 'nowrap',
+                      borderRadius: 999, padding: '10px 18px', fontSize: 13.5, fontWeight: 600,
+                      cursor: 'pointer', fontFamily: 'var(--font-space-grotesk)', whiteSpace: 'nowrap',
+                      // Deep, not lime. #8ECB3C is 1.95:1 against the white
+                      // card — its LABEL was fine at 7.03:1, but a button's own
+                      // edge has to clear 3:1 too, and it did not.
                       ...(cardApplyAccess
-                        ? { background: '#8ECB3C', color: '#173404', border: 'none' }
-                        : { background: '#fff', color: '#8A8986', border: '0.5px solid rgba(0,0,0,0.14)' }),
+                        ? { background: '#1D3C3E', color: '#F6F1E7', border: 'none' }
+                        : { background: '#fff', color: '#8A8986', border: '1.5px solid rgba(29,60,62,0.24)' }),
                     }}
                   >
                     + Add to pipeline
@@ -751,7 +780,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                 {state === 'neutral' && (
                   <button
                     onClick={() => onSave?.(grant.id)}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, borderRadius: 10, background: '#fff', color: '#2C2C2A', border: '0.5px solid rgba(0,0,0,0.14)', padding: '9px 14px', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-dm-sans)', whiteSpace: 'nowrap' }}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, borderRadius: 999, background: '#fff', color: '#1D3C3E', border: '1.5px solid rgba(29,60,62,0.24)', padding: '10px 18px', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-space-grotesk)', whiteSpace: 'nowrap' }}
                   >
                     Save for later
                   </button>
@@ -760,9 +789,20 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                 {/* Visit site */}
                 {grant.applyUrl && (
                   <a href={grant.applyUrl} target="_blank" rel="noopener noreferrer"
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, borderRadius: 10, background: '#fff', color: '#2C2C2A', border: '0.5px solid rgba(0,0,0,0.14)', padding: '9px 14px', fontSize: 13, fontWeight: 500, fontFamily: 'var(--font-dm-sans)', textDecoration: 'none' }}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, borderRadius: 999, background: '#fff', color: '#1D3C3E', border: '1.5px solid rgba(29,60,62,0.24)', padding: '10px 18px', fontSize: 13.5, fontWeight: 600, fontFamily: 'var(--font-space-grotesk)', textDecoration: 'none' }}
                   >
                     Visit site ↗
+                  </a>
+                )}
+
+                {/* Move stage — the card can still do something once the
+                    opportunity is in the pipeline. "Save for later" is already
+                    suppressed in that state, which is right: saving something
+                    you are applying for is a no-op. */}
+                {state === 'pipeline' && (
+                  <a href="/dashboard/pipeline"
+                    style={{ alignSelf: 'center', fontFamily: 'var(--font-space-grotesk)', fontSize: 11.8, fontWeight: 600, color: '#1D3C3E', borderBottom: '1.5px solid rgba(29,60,62,0.24)', paddingBottom: 1, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                    Move stage →
                   </a>
                 )}
 
@@ -819,10 +859,13 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
             })
             .filter(d => !(d.hideAt100 && d.pct >= 100))
 
+          // Same three steps as the band above, for the same reason: the old
+          // four-step ramp gave its top two steps one identical text colour,
+          // which is why they were impossible to tell apart, and put #8ECB3C
+          // at 1.89:1 on the panel it sat on.
           const barFill = (pct: number) =>
-            pct >= 80 ? '#639922' : pct >= 70 ? '#8ECB3C' : pct >= 50 ? '#BA7517' : '#A06060'
-          const barText = (pct: number) =>
-            pct >= 80 ? '#3B6D11' : pct >= 70 ? '#3B6D11' : pct >= 50 ? '#7A4E10' : '#7A3030'
+            pct >= 70 ? '#1B6B3D' : pct >= 50 ? '#7A5E11' : '#5F5E5A'
+          const barText = barFill
 
           const ChevronIcon = () => (
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -831,17 +874,17 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
           )
 
           return (
-            <div style={{ marginTop: 14, background: tierHue.panelBg, borderRadius: 10, borderLeft: `3px solid ${tierHue.border}` }}>
+            <div style={{ marginTop: 14, background: tierHue.panelBg, borderRadius: 14 }}>
               {/* Header row — identical in both states */}
               <div style={{ padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                 {/* Score + bar stack */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flexShrink: 0, minWidth: 100 }}>
                   <div style={{ display: 'inline-flex', alignItems: 'baseline', gap: 6 }}>
-                    <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 18, fontWeight: 500, color: tierHue.title, letterSpacing: '-0.01em' }}>{displayScore}%</span>
-                    <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 10.5, color: tierHue.title, letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 500 }}>{displayScore >= 80 ? 'Strong match' : displayScore >= 70 ? 'Good match' : displayScore >= 50 ? 'Partial match' : 'Weak match'}</span>
+                    <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 23, fontWeight: 600, color: tierHue.title, letterSpacing: '-0.02em' }}>{displayScore}%</span>
+                    <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 10, color: tierHue.title, letterSpacing: '0.13em', textTransform: 'uppercase', fontWeight: 700 }}>{displayScore >= 80 ? 'Strong match' : displayScore >= 70 ? 'Good match' : displayScore >= 50 ? 'Partial match' : 'Weak match'}</span>
                   </div>
-                  <div style={{ height: 3, background: tierHue.barBg, borderRadius: 2, overflow: 'hidden' }}>
-                    <div style={{ height: '100%', background: tierHue.ring, borderRadius: 2, width: `${displayScore}%` }} />
+                  <div style={{ height: 6, background: tierHue.barBg, borderRadius: 999, overflow: 'hidden' }}>
+                    <div style={{ height: '100%', background: tierHue.ring, borderRadius: 999, width: `${displayScore}%` }} />
                   </div>
                 </div>
                 {!!feedbackBoost && (
@@ -854,7 +897,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                       display: 'inline-flex', alignItems: 'center', gap: 4,
                       padding: '4px 9px', borderRadius: 999, flexShrink: 0,
                       fontFamily: 'var(--font-space-grotesk)', fontSize: 11, fontWeight: 600,
-                      background: feedbackBoost > 0 ? '#639922' : '#D85A30',
+                      background: feedbackBoost > 0 ? '#22874C' : '#993C1D',
                       color: '#fff',
                       border: 'none',
                     }}
@@ -962,9 +1005,9 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
           style={{
             width: '100%', display: 'flex', alignItems: 'center', gap: 12,
             padding: '13px 20px 13px 17px',
-            background: insightsExpanded || insightsHover ? '#F1F7E4' : '#fff',
+            background: insightsExpanded || insightsHover ? '#E3F0E4' : '#fff',
             borderTop: '0.5px solid rgba(0,0,0,0.06)',
-            borderLeft: '3px solid #8ECB3C',
+            borderLeft: `4px solid ${ftPill?.rail ?? '#22874C'}`,
             borderRight: 'none',
             borderBottom: insightsExpanded ? '0.5px dashed rgba(57,109,17,0.2)' : 'none',
             cursor: 'pointer', textAlign: 'left',
@@ -972,7 +1015,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
           }}
         >
           <svg
-            style={{ color: insightsHover || insightsExpanded ? '#639922' : '#173404', flexShrink: 0, transition: 'color 160ms ease' }}
+            style={{ color: insightsHover || insightsExpanded ? '#1B6B3D' : '#1D3C3E', flexShrink: 0, transition: 'color 160ms ease' }}
             width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
           >
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -1000,7 +1043,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
               border: '0.5px solid rgba(99,153,34,0.40)',
               background: 'transparent',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: insightsExpanded ? '#3B6D11' : '#173404',
+              color: insightsExpanded ? '#1B6B3D' : '#1D3C3E',
               transform: insightsExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
               transition: 'transform 0.25s ease, color 160ms ease',
             }}
@@ -1020,7 +1063,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
           : null
 
         const PAL = {
-          green: { bg: '#F1F7E4', stroke: '#3B6D11' },
+          green: { bg: '#E3F0E4', stroke: '#1B6B3D' },
           coral: { bg: '#FAECE7', stroke: '#993C1D' },
           amber: { bg: '#FAEEDA', stroke: '#854F0B' },
         } as const
@@ -1132,7 +1175,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                         href={grant.applyUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 10, background: '#8ECB3C', color: '#173404', fontSize: 13, fontWeight: 600, padding: '10px 18px', border: 'none', whiteSpace: 'nowrap', textDecoration: 'none', flexShrink: 0 }}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 999, background: '#1D3C3E', color: '#F6F1E7', fontSize: 13.5, fontWeight: 600, padding: '10px 18px', border: 'none', whiteSpace: 'nowrap', textDecoration: 'none', flexShrink: 0 }}
                       >
                         Apply at {grant.funder}
                         <ExternalLink style={{ width: 12, height: 12 }} />
@@ -1156,7 +1199,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                     <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
                       {grant.eligibilityCriteria.map((c, i) => (
                         <li key={i} style={{ display: 'flex', gap: 10, fontFamily: 'var(--font-dm-sans)', fontSize: 13, color: '#5F5E5A' }}>
-                          <CheckCircle2 style={{ width: 14, height: 14, flexShrink: 0, marginTop: 2, color: '#639922' }} />
+                          <CheckCircle2 style={{ width: 14, height: 14, flexShrink: 0, marginTop: 2, color: '#1B6B3D' }} />
                           <span style={{ lineHeight: 1.45 }}>{c}</span>
                         </li>
                       ))}
@@ -1168,7 +1211,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                   {eligibilityStated((grant as EnrichedGrant).eligibleStructures) ? (
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                       {((grant as EnrichedGrant).eligibleStructures ?? []).map(s => (
-                        <span key={s} style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 11, fontWeight: 500, padding: '4px 10px', borderRadius: 9999, background: 'rgba(142,203,60,0.12)', color: '#639922' }}>
+                        <span key={s} style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 11, fontWeight: 500, padding: '4px 10px', borderRadius: 9999, background: '#E3F0E4', color: '#1B6B3D' }}>
                           {STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())}
                         </span>
                       ))}
@@ -1184,7 +1227,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                       href={grant.applyUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 10, background: '#8ECB3C', color: '#173404', fontSize: 13, fontWeight: 600, padding: '10px 18px', textDecoration: 'none', flexShrink: 0 }}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 999, background: '#1D3C3E', color: '#F6F1E7', fontSize: 13.5, fontWeight: 600, padding: '10px 18px', textDecoration: 'none', flexShrink: 0 }}
                     >
                       Apply
                       <ExternalLink style={{ width: 12, height: 12 }} />
@@ -2532,7 +2575,7 @@ export default function SearchPage() {
     { id: 'grant'      as const, label: 'Grants',      icon: <Landmark size={17} strokeWidth={2} />,  count: crossTabCounts.grant ?? 0 },
     { id: 'programme'  as const, label: 'Programmes',  icon: <Rocket size={17} strokeWidth={2} />,     count: crossTabCounts.programme ?? 0 },
     { id: 'investment' as const, label: 'Investment',  icon: <TrendingUp size={17} strokeWidth={2} />, count: crossTabCounts.investment ?? 0 },
-    { id: 'in_kind'    as const, label: 'In-Kind',     icon: <Gift size={17} strokeWidth={2} />,       count: crossTabCounts.in_kind ?? 0 },
+    { id: 'in_kind'    as const, label: 'In-kind',     icon: <Gift size={17} strokeWidth={2} />,       count: crossTabCounts.in_kind ?? 0 },
   ]
 
   const TAB_DESCS: Record<string, string> = {
@@ -2540,20 +2583,6 @@ export default function SearchPage() {
     programme:  'Structured support that may include cash: accelerators, fellowships, incubators, cohort programmes and capacity-building schemes.',
     investment: 'Repayable finance for social-purpose organisations — loans, patient capital, blended finance and community shares.',
     in_kind:    'Non-cash support: software credits, ad grants, free workspace, pro bono legal advice and expert services.',
-  }
-
-  const TAB_ACTIVE_STYLES: Record<string, { bg: string; border: string; text: string; count: string }> = {
-    grant:      { bg: '#F1F7E4', border: '#8ECB3C', text: '#173404', count: '#639922' },
-    programme:  { bg: '#FAECE7', border: '#993C1D', text: '#993C1D', count: '#993C1D' },
-    investment: { bg: '#E6F1FB', border: '#0C447C', text: '#0C447C', count: '#0C447C' },
-    in_kind:    { bg: '#FAEEDA', border: '#854F0B', text: '#854F0B', count: '#854F0B' },
-  }
-
-  const TAB_INACTIVE_STYLES: Record<string, { bg: string; iconColor: string; countColor: string }> = {
-    grant:      { bg: '#F7F9F4', iconColor: '#639922', countColor: '#639922' },
-    programme:  { bg: '#FDF6F4', iconColor: '#993C1D', countColor: '#993C1D' },
-    investment: { bg: '#F4F8FD', iconColor: '#0C447C', countColor: '#0C447C' },
-    in_kind:    { bg: '#FDF8F2', iconColor: '#854F0B', countColor: '#854F0B' },
   }
 
   const CATEGORY_TABS = [
@@ -2600,7 +2629,7 @@ export default function SearchPage() {
       {isWelcome && !welcomeDismissed && (
         <div className="mb-5 p-4 flex items-start justify-between gap-4 rounded-xl" style={{ border: '1px solid rgba(142,203,60,0.3)', background: 'rgba(142,203,60,0.06)' }}>
           <div>
-            <p className="text-sm font-semibold" style={{ color: '#639922' }}>🎉 Profile saved — here are your matches</p>
+            <p className="text-sm font-semibold" style={{ color: '#1B6B3D' }}>Profile saved. Here are your matches.</p>
             <p className="text-xs text-mid mt-0.5">Results are filtered to grants you&apos;re eligible for. Use &ldquo;Show all grants&rdquo; below to browse everything.</p>
           </div>
           <button onClick={() => setWelcomeDismissed(true)} className="text-mid hover:text-charcoal text-lg leading-none flex-shrink-0">×</button>
@@ -2613,7 +2642,7 @@ export default function SearchPage() {
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-mid min-w-0">
           {activeView === 'browse' && org && (
             <>
-              <span className="w-2 h-2 flex-shrink-0 rounded-full" style={{ backgroundColor: '#8ECB3C' }} />
+              <span className="w-2 h-2 flex-shrink-0 rounded-full" style={{ backgroundColor: '#22874C' }} />
               <span>Matched for <strong className="text-charcoal">{org.name ?? 'your organisation'}</strong>{org.primary_location && <span className="text-mid"> · {org.primary_location}</span>}</span>
             </>
           )}
@@ -2625,25 +2654,29 @@ export default function SearchPage() {
           )}
         </div>
         {/* Right: tabs always visible */}
-        <div className="flex items-center gap-0 bg-white border border-warm/60 shadow-sm overflow-hidden flex-shrink-0" style={{ borderRadius: 9999 }}>
-          {(['browse', 'saved', 'hidden'] as const).map((v, i) => (
-            <>
-              {i > 0 && <div key={`sep-${v}`} className="w-px h-5 bg-warm/80" />}
+        <div className="flex items-center gap-0.5 bg-white shadow-sm flex-shrink-0" style={{ borderRadius: 9999, border: '1px solid rgba(29,60,62,0.10)', padding: 3 }}>
+          {/* Deep fill for the active view, not a lime underline. This
+              switcher changes WHAT you are looking at, so it carries the
+              heavier of the two selected treatments; sort, which only reorders
+              the same list, stays neutral. */}
+          {(['browse', 'saved', 'hidden'] as const).map(v => {
+            const on = activeView === v
+            const n  = v === 'saved' ? savedCount : v === 'hidden' ? hiddenCount : 0
+            return (
               <button
                 key={v}
                 onClick={() => setActiveView(v)}
-                className={`px-5 py-2 text-sm font-medium transition-colors flex items-center gap-1.5 ${activeView === v ? 'border-b-2 border-[#8ECB3C] text-[#2C2C2A] font-bold' : 'border-b-2 border-transparent text-gray-500 hover:text-charcoal'}`}
+                className="px-5 py-2 text-sm font-semibold transition-colors flex items-center gap-1.5"
+                style={{ borderRadius: 9999, background: on ? '#1D3C3E' : 'transparent', color: on ? '#F6F1E7' : '#5F5E5A' }}
               >
                 {v === 'browse' ? 'Browse' : v === 'saved' ? 'Saved' : 'Hidden'}
-                {v === 'saved' && savedCount > 0 && (
-                  <span className="text-xs px-1.5 py-0.5 ml-1 font-bold" style={{ borderRadius: 9999, background: '#F1F7E4', color: '#3B6D11' }}>{savedCount}</span>
-                )}
-                {v === 'hidden' && hiddenCount > 0 && (
-                  <span className="text-xs px-1.5 py-0.5 ml-1 font-bold" style={{ borderRadius: 9999, background: '#F5F1E8', color: '#5F5E5A' }}>{hiddenCount}</span>
+                {n > 0 && (
+                  <span className="text-xs px-1.5 py-0.5 ml-1 font-bold"
+                    style={{ borderRadius: 9999, background: on ? 'rgba(246,241,231,0.20)' : '#F1EDE3', color: on ? '#F6F1E7' : '#5F5E5A' }}>{n}</span>
                 )}
               </button>
-            </>
-          ))}
+            )
+          })}
         </div>
       </div>
 
@@ -2657,8 +2690,8 @@ export default function SearchPage() {
           {activeView === 'browse' && (
             <div className="flex gap-3 items-center">
               {/* Single pill container */}
-              <div className="flex-1 flex items-center bg-white border border-gray-200 rounded-full h-12 overflow-hidden"
-                style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+              <div className="flex-1 flex items-center bg-white rounded-full"
+                style={{ boxShadow: '0 1px 4px rgba(29,60,62,0.06)', border: '1px solid rgba(29,60,62,0.10)', padding: 6, gap: 4 }}>
                 {/* Search icon + input */}
                 <div className="flex items-center flex-1 min-w-0 px-4">
                   <Search className="h-4 w-4 text-gray-400 flex-shrink-0 mr-2.5" />
@@ -2720,18 +2753,20 @@ export default function SearchPage() {
                   )}
                   <ChevronDown size={12} strokeWidth={2} className={`transition-transform duration-200 ${filtersOpen ? 'rotate-180' : ''}`} />
                 </button>
+                {/* Search sits inside the bar, as the reference has it, so the
+                    control reads as one object rather than a field plus a
+                    detached button. */}
+                <button
+                  onClick={() => { setHasSearched(true); handleAISearch(inputValue) }}
+                  disabled={!inputValue.trim() && !locationFilter.trim()}
+                  className={`px-6 text-sm font-semibold flex-shrink-0 transition-opacity disabled:opacity-40 flex items-center gap-2 appearance-none ${aiLoading ? 'pointer-events-none' : ''}`}
+                  style={{ background: '#1D3C3E', color: '#F6F1E7', borderRadius: 999, height: 40, fontFamily: 'var(--font-space-grotesk)' }}
+                >
+                  {aiLoading
+                    ? <><span className="dot-bounce flex gap-0.5"><span/><span/><span/></span> Searching…</>
+                    : <><Search size={14} strokeWidth={2} /> Search</>}
+                </button>
               </div>
-              {/* Search button — outside the pill */}
-              <button
-                onClick={() => { setHasSearched(true); handleAISearch(inputValue) }}
-                disabled={!inputValue.trim() && !locationFilter.trim()}
-                className={`h-12 px-6 text-sm font-bold flex-shrink-0 transition-opacity disabled:opacity-40 flex items-center gap-2 rounded-full appearance-none ${aiLoading ? 'pointer-events-none' : ''}`}
-                style={{ background: '#8ECB3C', color: '#173404', borderRadius: 10 }}
-              >
-                {aiLoading
-                  ? <><span className="dot-bounce flex gap-0.5"><span/><span/><span/></span> Searching…</>
-                  : <><Search size={14} strokeWidth={2} /> Search</>}
-              </button>
             </div>
           )}
 
@@ -2739,7 +2774,7 @@ export default function SearchPage() {
           {activeView === 'browse' && (aiResults || aiError) && (
             <div className="mt-2 flex items-center gap-2">
               {aiResults && (
-                <button onClick={() => { setAiResults(null); setSmartMatched(false); setQuery(''); setInputValue(''); setFilterQuery('') }} className="px-3 py-1 border border-warm text-xs font-medium text-mid hover:border-[#8ECB3C] hover:text-[#639922] transition-all bg-white rounded-md">
+                <button onClick={() => { setAiResults(null); setSmartMatched(false); setQuery(''); setInputValue(''); setFilterQuery('') }} className="px-3 py-1 border border-warm text-xs font-medium text-mid hover:border-[#1D3C3E] hover:text-[#1D3C3E] transition-all bg-white rounded-md">
                   Clear results
                 </button>
               )}
@@ -2757,7 +2792,7 @@ export default function SearchPage() {
               <div className="flex items-center gap-2.5">
                 <p className="text-sm font-bold text-charcoal">Refine your results</p>
                 {activeFilterCount > 0 && (
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: '#F1F7E4', color: '#3B6D11' }}>{activeFilterCount}</span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: '#E3F0E4', color: '#1B6B3D' }}>{activeFilterCount}</span>
                 )}
                 <span className="text-xs text-light">Results update as you go.</span>
               </div>
@@ -2765,7 +2800,7 @@ export default function SearchPage() {
                 {activeFilterCount > 0 && (
                   <button onClick={resetAllFilters} className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium transition-colors" style={{ borderRadius: 9999, color: '#5F5E5A', background: 'transparent' }} onMouseEnter={e => { e.currentTarget.style.color = '#993C1D'; e.currentTarget.style.background = '#FAECE7' }} onMouseLeave={e => { e.currentTarget.style.color = '#5F5E5A'; e.currentTarget.style.background = 'transparent' }}><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Reset all</button>
                 )}
-                <button onClick={() => setFiltersOpen(false)} className="px-3 py-1.5 text-xs font-bold rounded-md appearance-none" style={{ background: '#8ECB3C', color: '#173404' }}>Done</button>
+                <button onClick={() => setFiltersOpen(false)} className="px-3 py-1.5 text-xs font-bold appearance-none" style={{ background: '#1D3C3E', color: '#F6F1E7', borderRadius: 999 }}>Done</button>
               </div>
             </div>
 
@@ -2924,48 +2959,50 @@ export default function SearchPage() {
         </div>{/* end p-5 */}
       </div>{/* end search card */}
 
-      {/* ── Funding type tabs — horizontal: badge LEFT, label+count RIGHT ── */}
+      {/* ── The funding-type filter, inside a white panel ──────────────────
+          The four buttons used to free-stand on cream, the same white as the
+          result cards below them, so the only thing separating "the controls"
+          from "the list" was a gap. In one panel the page splits cleanly in two.
+
+          The panel's radius (20px) is deliberately NOT the search bar's pill.
+          A pill-shaped panel wrapped around a grid of rectangles reads as a
+          mistake; if the two radii ever drift together it will look sloppy
+          rather than intentional.
+
+          Icon tiles stay WHITE on the tint, never saturated. Measured: a deep
+          glyph on the four saturated hues gives 2.62 / 1.71 / 2.56 / 3.68 —
+          three under the 3:1 floor — and a cream glyph fixes those three but
+          breaks in-kind at 2.87. No single glyph colour works across the set,
+          so the tile carries no colour and the tint does the work. */}
       {activeView === 'browse' && (
-        <div className="flex gap-2 mb-5 overflow-x-auto -mx-1 px-1">
+        <div className="mb-5" style={{ background: '#fff', border: '1px solid rgba(29,60,62,0.10)', borderRadius: 20, padding: 8 }}>
+          <div className="flex gap-1.5 overflow-x-auto">
           {TYPE_TABS.map(tab => {
             const isActive = activeTab === tab.id
-            // Active badge: light sage bg + dark icon (matches categorical inactive tint logic)
-            const badgeBg = isActive
-              ? (tab.id === 'grant' ? '#C0DD97' : tab.id === 'programme' ? '#F5C9BC' : tab.id === 'investment' ? '#B8D4EE' : '#F0D4A8')
-              : (tab.id === 'grant' ? '#E4F0D4' : tab.id === 'programme' ? '#FAECE7' : tab.id === 'investment' ? '#E6F1FB' : '#FAEEDA')
-            const badgeColor = isActive
-              ? (tab.id === 'grant' ? '#173404' : tab.id === 'programme' ? '#6B2010' : tab.id === 'investment' ? '#073060' : '#5C3507')
-              : (tab.id === 'grant' ? '#3B6D11' : tab.id === 'programme' ? '#993C1D' : tab.id === 'investment' ? '#0C447C' : '#854F0B')
+            const c = FUNDING_TYPE_COLOUR[tab.id]
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className="flex-1 min-w-[160px] flex flex-row items-center gap-3 px-4 py-3.5 rounded-xl transition-colors outline-none"
-                style={isActive ? {
-                  background: tab.id === 'grant' ? '#F1F7E4' : tab.id === 'programme' ? '#FAECE7' : tab.id === 'investment' ? '#E6F1FB' : '#FAEEDA',
-                  border: `1px solid ${tab.id === 'grant' ? 'rgba(99,153,34,0.35)' : tab.id === 'programme' ? 'rgba(153,60,29,0.3)' : tab.id === 'investment' ? 'rgba(12,68,124,0.3)' : 'rgba(133,79,11,0.3)'}`,
-                } : {
-                  background: '#fff',
-                  border: '1px solid #E8E0D1',
+                className="flex-1 min-w-[160px] flex flex-row items-center gap-3 px-4 py-3 transition-colors outline-none"
+                style={{
+                  borderRadius: 15,
+                  // No border of its own: the panel is the container.
+                  border: '1px solid transparent',
+                  background: isActive ? c.tint : 'transparent',
                 }}
               >
-                {/* 40×40 icon badge */}
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ background: badgeBg, color: badgeColor }}>
+                <div className="w-10 h-10 flex items-center justify-center flex-shrink-0"
+                  style={{ borderRadius: 999, background: isActive ? '#fff' : c.tint, color: c.fg }}>
                   {tab.icon}
                 </div>
                 <div className="flex flex-col items-start gap-0.5 min-w-0">
-                  <span className="text-sm font-semibold leading-tight"
-                    style={{ color: isActive
-                      ? (tab.id === 'grant' ? '#173404' : tab.id === 'programme' ? '#1A1A18' : tab.id === 'investment' ? '#073060' : '#5C3507')
-                      : '#2C2C2A' }}>
+                  <span className="text-[15px] font-semibold leading-tight" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#1D3C3E', letterSpacing: '-0.01em' }}>
                     {tab.label}
                   </span>
                   {tab.count > 0 && (
-                    <span className="text-xs font-medium leading-none"
-                      style={{ color: isActive
-                        ? (tab.id === 'grant' ? '#639922' : tab.id === 'programme' ? '#993C1D' : tab.id === 'investment' ? '#0C447C' : '#854F0B')
-                        : '#8A8986' }}>
+                    <span className="text-xs leading-none"
+                      style={{ color: isActive ? c.fg : '#5F5E5A', fontWeight: isActive ? 600 : 400 }}>
                       {/* "eligible", not "matches". These counts have no score
                           floor — they are every row this org is allowed to apply
                           to. Deliberately so: a fundraiser wants to see
@@ -2984,12 +3021,13 @@ export default function SearchPage() {
               </button>
             )
           })}
+          </div>
         </div>
       )}
 
       {/* ── Profile-off amber nudge ── */}
       {activeView === 'browse' && org && !profileFilterOn && !aiResults && (
-        <div className="mb-3 px-4 py-3.5 rounded-xl flex items-center justify-between gap-4" style={{ background: '#F1F7E4', border: '0.5px solid rgba(57,109,17,0.12)' }}>
+        <div className="mb-3 px-4 py-3.5 rounded-xl flex items-center justify-between gap-4" style={{ background: '#E3F0E4', border: '0.5px solid rgba(27,107,61,0.14)' }}>
           <div className="flex items-center gap-3 min-w-0">
             {/* Icon badge — search magnifier, green */}
             <div className="flex-shrink-0 flex items-center justify-center w-8 h-8"
@@ -2999,7 +3037,7 @@ export default function SearchPage() {
             {/* Two-line copy */}
             <div className="min-w-0">
               <p className="text-sm font-semibold leading-snug" style={{ color: '#2C2C2A' }}>Searching the full catalogue</p>
-              <p className="text-xs leading-snug mt-0.5" style={{ color: '#3B6D11' }}>Use search and filters to explore beyond your profile matches. Results aren&rsquo;t ranked by fit.</p>
+              <p className="text-xs leading-snug mt-0.5" style={{ color: '#1B6B3D' }}>Use search and filters to explore beyond your profile matches. Results aren&rsquo;t ranked by fit.</p>
             </div>
           </div>
           <button
@@ -3142,7 +3180,7 @@ export default function SearchPage() {
                     <strong className="text-3xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>{displayGrants.length}</strong>
                     <span className="text-base text-mid">{tabNoun}</span>
                     {profileFilterOn && (
-                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: '#EAF3DE', color: '#173404' }}>✓ you can apply for</span>
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: '#E3F0E4', color: '#1B6B3D' }}>✓ you can apply for</span>
                     )}
                     {!profileFilterOn && !filterQuery && !aiResults && (
                       <span className="text-sm" style={{ color: '#9A9895' }}>&middot; all UK funding &middot; unfiltered</span>
@@ -3150,8 +3188,8 @@ export default function SearchPage() {
                     {profileFilterOn && allCount > displayGrants.length && (
                       <button
                         onClick={resetAllFilters}
-                        className="text-sm font-semibold px-5 py-2 rounded-lg transition-colors"
-                        style={{ background: '#fff', color: '#2C2C2A', border: '1px solid #D0CCC4' }}
+                        className="text-sm font-semibold px-5 py-2 transition-colors"
+                        style={{ background: '#fff', color: '#1D3C3E', border: '1.5px solid rgba(29,60,62,0.24)', borderRadius: 999 }}
                       >
                         Show all {allCount} grants
                       </button>
@@ -3165,7 +3203,19 @@ export default function SearchPage() {
                 <span className="text-[10px] font-semibold text-[#8A8986] uppercase tracking-wider whitespace-nowrap">
                   Sort by
                 </span>
-                <div className="flex items-center" style={{ background: '#F1F0EA', borderRadius: 9999, padding: 3, gap: 2 }}>
+                {/* A white track, so the selected fill has something to read
+                    against. The track used to be #F1F0EA sitting directly on
+                    the cream page — near enough identical that the control had
+                    no visible boundary at all. --warm-neutral measures ΔE 8.5
+                    inside a white track against ΔE 1.5 on cream, which is why
+                    the fix is the track and NOT the token: every other use of
+                    --warm-neutral as a selected fill sits on a white card and
+                    reads correctly. This row was the only one on cream.
+
+                    Neutral active here, deep active on the Browse switcher —
+                    sort reorders the same list, the switcher changes what you
+                    are looking at. */}
+                <div className="flex items-center" style={{ background: '#fff', border: '1px solid rgba(29,60,62,0.10)', borderRadius: 9999, padding: 3, gap: 2 }}>
                   {([
                     { id: 'match',    label: 'Best match'   },
                     { id: 'freshest', label: 'Newest'       },
@@ -3176,7 +3226,7 @@ export default function SearchPage() {
                       onClick={() => setSortBy(tab.id as 'match' | 'freshest' | 'deadline')}
                       className="px-3.5 py-1.5 text-xs font-medium transition-all whitespace-nowrap"
                       style={sortBy === tab.id
-                        ? { background: '#fff', color: '#1A1A18', borderRadius: 9999, boxShadow: '0 1px 2px rgba(0,0,0,0.06)' }
+                        ? { background: '#F1EDE3', color: '#1D3C3E', borderRadius: 9999 }
                         : { background: 'transparent', color: '#5F5E5A', borderRadius: 9999 }}
                     >{tab.label}</button>
                   ))}
@@ -3199,11 +3249,11 @@ export default function SearchPage() {
           </span>
         ))
         return (
-          <div className="mb-4 px-4 py-3.5 rounded-xl flex items-center justify-between gap-4" style={{ background: '#F1F7E4', border: '0.5px solid rgba(57,109,17,0.12)' }}>
+          <div className="mb-4 px-4 py-3.5 rounded-xl flex items-center justify-between gap-4" style={{ background: '#E3F0E4', border: '0.5px solid rgba(27,107,61,0.14)' }}>
             <div className="flex items-center gap-3 min-w-0">
               {/* Icon badge */}
               <div className="flex-shrink-0 flex items-center justify-center w-8 h-8"
-                style={{ background: '#8ECB3C', borderRadius: 9, color: '#fff' }}>
+                style={{ background: '#1D3C3E', borderRadius: 999, color: '#F6F1E7' }}>
                 <span className="text-[11px] font-bold leading-none">i</span>
               </div>
               {/* Two-line copy */}
@@ -3211,7 +3261,7 @@ export default function SearchPage() {
                 <p className="text-sm font-semibold leading-snug" style={{ color: '#2C2C2A' }}>
                   Your match quality is {matchQuality.score < 40 ? 'low' : matchQuality.score < 65 ? 'partial' : 'nearly there'}
                 </p>
-                <p className="text-xs leading-snug mt-0.5" style={{ color: '#3B6D11' }}>
+                <p className="text-xs leading-snug mt-0.5" style={{ color: '#1B6B3D' }}>
                   {fieldNodes}{extraCount > 0 ? `, and ${extraCount} more` : ''}{' '}are missing from your profile.
                 </p>
               </div>
@@ -3230,7 +3280,7 @@ export default function SearchPage() {
               <button
                 onClick={() => setBannerDismissed(true)}
                 className="flex-shrink-0 text-lg leading-none transition-colors appearance-none"
-                style={{ color: '#639922', background: 'none', border: 'none' }}
+                style={{ color: '#1D3C3E', background: 'none', border: 'none' }}
                 title="Dismiss"
               >
                 ✕
@@ -3252,7 +3302,7 @@ export default function SearchPage() {
               padding: '48px 40px', textAlign: 'center' as const,
             }
             const tabEmptyCfg: Record<string, { bg: string; color: string; icon: React.ReactNode }> = {
-              grant:      { bg: '#F1F7E4', color: '#3B6D11', icon: <Landmark    size={24} strokeWidth={1.5} /> },
+              grant:      { bg: '#E4F1EA', color: '#1B6B3D', icon: <Landmark    size={24} strokeWidth={1.5} /> },
               programme:  { bg: '#FAECE7', color: '#993C1D', icon: <Rocket      size={24} strokeWidth={1.5} /> },
               investment: { bg: '#E6F1FB', color: '#0C447C', icon: <TrendingUp  size={24} strokeWidth={1.5} /> },
               in_kind:    { bg: '#FAEEDA', color: '#854F0B', icon: <Gift        size={24} strokeWidth={1.5} /> },
@@ -3293,7 +3343,7 @@ export default function SearchPage() {
                 </button>
                 <p style={{ marginTop: 18, fontSize: 13, color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>
                   Know a funder we don&rsquo;t list?{' '}
-                  <a href="/dashboard/pipeline?add=1" style={{ color: '#3B6D11', fontWeight: 600, textDecoration: 'none' }}>
+                  <a href="/dashboard/pipeline?add=1" style={{ color: '#1D3C3E', fontWeight: 600, textDecoration: 'none', borderBottom: '1.5px solid rgba(29,60,62,0.24)' }}>
                     Add a fund that isn&rsquo;t listed →
                   </a>
                 </p>
@@ -3471,8 +3521,8 @@ export default function SearchPage() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', margin: '-6px 0 8px', padding: '0 4px', fontFamily: 'var(--font-space-grotesk)', fontSize: 12.5 }}>
                   {reminder ? (
                     <>
-                      <span style={{ color: '#3B6D11', fontWeight: 500 }}>
-                        ⏰ Reminder set for {new Date(reminder).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      <span style={{ color: '#1B6B3D', fontWeight: 600 }}>
+                        Reminder set for {new Date(reminder).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </span>
                       <span style={{ color: '#8A8986', fontSize: 11.5 }}>— emailed 2 weeks &amp; 1 week before, and on the day</span>
                       <button
@@ -3511,7 +3561,7 @@ export default function SearchPage() {
                       />
                       <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
                         <button onClick={() => saveNote(item.grant.id)}
-                          style={{ fontFamily: 'inherit', fontSize: 12, fontWeight: 600, padding: '5px 12px', borderRadius: 8, border: 'none', background: '#8ECB3C', color: '#173404', cursor: 'pointer' }}>
+                          style={{ fontFamily: 'inherit', fontSize: 12, fontWeight: 600, padding: '6px 14px', borderRadius: 999, border: 'none', background: '#1D3C3E', color: '#F6F1E7', cursor: 'pointer' }}>
                           Save note
                         </button>
                         <button onClick={() => setEditingNoteId(null)}
@@ -3524,7 +3574,7 @@ export default function SearchPage() {
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, flexWrap: 'wrap' }}>
                       <span style={{ color: '#5F5E5A', fontFamily: 'var(--font-dm-sans)', fontSize: 12.5, whiteSpace: 'pre-wrap' }}>📝 {note}</span>
                       <button onClick={() => startEditNote(item.grant.id)}
-                        style={{ background: 'transparent', border: 'none', color: '#3B6D11', cursor: 'pointer', textDecoration: 'underline', padding: 0, fontFamily: 'inherit', fontSize: 12, fontWeight: 600 }}>
+                        style={{ background: 'transparent', border: 'none', color: '#1D3C3E', cursor: 'pointer', textDecoration: 'underline', padding: 0, fontFamily: 'inherit', fontSize: 12, fontWeight: 600 }}>
                         Edit
                       </button>
                     </div>
@@ -3595,7 +3645,7 @@ export default function SearchPage() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', margin: '-6px 0 14px', padding: '0 4px', fontFamily: 'var(--font-space-grotesk)', fontSize: 12.5 }}>
                   {snooze ? (
                     <>
-                      <span style={{ color: '#3B6D11', fontWeight: 500 }}>↩ Comes back {new Date(snooze).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                      <span style={{ color: '#1B6B3D', fontWeight: 600 }}>↩ Comes back {new Date(snooze).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                       <button onClick={() => handleSetSnooze(item.grant.id, null)}
                         style={{ background: 'transparent', border: 'none', color: '#8A8986', cursor: 'pointer', textDecoration: 'underline', padding: 0, fontFamily: 'inherit', fontSize: 12 }}>
                         Keep hidden
@@ -3661,7 +3711,7 @@ export default function SearchPage() {
               onClick={e => e.stopPropagation()}
               style={{ width: '100%', maxWidth: 460, background: '#fff', borderRadius: 14, padding: '22px 24px', boxShadow: '0 12px 40px rgba(23,52,4,0.18)' }}
             >
-              <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 12, fontWeight: 600, color: '#3B6D11', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
+              <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 12, fontWeight: 600, color: '#1B6B3D', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
                 Already applied
               </div>
               <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 17, fontWeight: 700, color: '#173404', lineHeight: 1.3, marginBottom: 18 }}>
@@ -3681,10 +3731,10 @@ export default function SearchPage() {
                     </button>
                     <button
                       onClick={async () => { await handleMarkApplied(grant, 'won'); close() }}
-                      style={{ textAlign: 'left', padding: '12px 16px', borderRadius: 10, border: '1px solid #8ECB3C', background: '#F1F7E4', cursor: 'pointer', fontSize: 14, fontFamily: 'var(--font-dm-sans)', color: '#173404' }}
+                      style={{ textAlign: 'left', padding: '12px 16px', borderRadius: 12, border: '1.5px solid rgba(29,60,62,0.24)', background: '#E3F0E4', cursor: 'pointer', fontSize: 14, fontFamily: 'var(--font-dm-sans)', color: '#1D3C3E' }}
                     >
                       <strong>Won</strong>
-                      <div style={{ fontSize: 12, color: '#3B6D11', marginTop: 2 }}>Funded — congratulations</div>
+                      <div style={{ fontSize: 12, color: '#1B6B3D', marginTop: 2 }}>Funded, congratulations</div>
                     </button>
                     <button
                       onClick={() => setAppliedFlow(prev => prev ? { ...prev, step: 'declined-reasons' } : prev)}
@@ -3750,7 +3800,7 @@ export default function SearchPage() {
                         await handleMarkApplied(grant, 'declined', { tags: appliedFlow.reasons, freeText: appliedFlow.freeText })
                         close()
                       }}
-                      style={{ background: '#173404', color: '#F1F7E4', border: 'none', borderRadius: 18, padding: '8px 20px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-space-grotesk)' }}
+                      style={{ background: '#1D3C3E', color: '#F6F1E7', border: 'none', borderRadius: 999, padding: '8px 20px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-space-grotesk)' }}
                     >
                       {appliedFlow.reasons.length > 0 || appliedFlow.freeText.trim().length > 0 ? 'Save and remove' : 'Skip and remove'}
                     </button>

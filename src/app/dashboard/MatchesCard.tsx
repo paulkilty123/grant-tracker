@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { CARD_LINK } from './card-link'
+import { FUNDING_TYPE_COLOUR, TYPE_NEUTRAL } from '@/lib/funding-type-colours'
 
 /**
  * The Matches card, with the funding-type filter.
@@ -61,11 +62,15 @@ const TABS: { key: ScopeKey; label: string }[] = [
  * filtered by CANONICAL_TYPES before scoring, so they never arrive.
  */
 const TYPE: Record<ScopeKey, { label: string; rail: string; tint: string; fg: string }> = {
-  all:        { label: 'All',         rail: '#1D3C3E', tint: '#F0EDE2', fg: '#1D3C3E' },
-  grant:      { label: 'Grants',      rail: '#22874C', tint: '#E4F1EA', fg: '#1B6B3D' },
-  programme:  { label: 'Programmes',  rail: '#94402A', tint: '#F2E8E5', fg: '#7A331F' },
-  investment: { label: 'Investment',  rail: '#3C79AC', tint: '#E8EFF5', fg: '#2A5A85' },
-  in_kind:    { label: 'In-kind',     rail: '#B08A20', tint: '#F6EFD9', fg: '#7A5E11' },
+  all:        TYPE_NEUTRAL,
+  // Only the LABEL differs from the shared set: these are tab labels, so they
+  // are plural, where a chip on a single row says "Grant". The colours come
+  // from one place so this card and Find Funding cannot drift apart — they
+  // already had, by ΔE 23.1 on grants alone.
+  grant:      { ...FUNDING_TYPE_COLOUR.grant,      label: 'Grants' },
+  programme:  { ...FUNDING_TYPE_COLOUR.programme,  label: 'Programmes' },
+  investment: { ...FUNDING_TYPE_COLOUR.investment, label: 'Investment' },
+  in_kind:    { ...FUNDING_TYPE_COLOUR.in_kind,    label: 'In-kind' },
 }
 
 const DEEP        = '#1D3C3E'

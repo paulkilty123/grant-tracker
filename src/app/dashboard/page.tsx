@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import MatchesCard, { type MatchScope, type MatchRow, type TypeKey, type ScopeKey } from './MatchesCard'
 import { CARD_LINK } from './card-link'
 import { hueForIndex, hueMap } from '@/lib/project-hues'
+import { FUNDING_TYPE_COLOUR } from '@/lib/funding-type-colours'
 import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { getDeadlineAlerts, formatCurrency, formatNextOpen } from '@/lib/utils'
@@ -418,9 +419,12 @@ export default async function DashboardPage() {
   const projectHue = (id: string | null) => (id ? hueByProjectId.get(id) ?? null : null)
   const projectName = new Map(workProjects.map(pr => [pr.id, pr.name]))
 
-  /** The same four hues the matches card uses, so a rail and a tab agree. */
+  /** The same four hues every other surface uses. One definition, no drift. */
   const TYPE_RAIL: Record<TypeKey, string> = {
-    grant: '#22874C', programme: '#94402A', investment: '#3C79AC', in_kind: '#B08A20',
+    grant:      FUNDING_TYPE_COLOUR.grant.rail,
+    programme:  FUNDING_TYPE_COLOUR.programme.rail,
+    investment: FUNDING_TYPE_COLOUR.investment.rail,
+    in_kind:    FUNDING_TYPE_COLOUR.in_kind.rail,
   }
 
   // ── Upcoming deadlines (pipeline + catalogue) ───────────────────────
