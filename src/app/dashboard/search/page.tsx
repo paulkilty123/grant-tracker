@@ -11,7 +11,7 @@ import { createPipelineItem, deletePipelineItem, updatePipelineStage } from '@/l
 import { describePipelineWriteError, ENTITLEMENT_MESSAGE } from '@/lib/pipeline-errors'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { getOrganisationByOwner } from '@/lib/organisations'
-import { computeMatchScore, scoreColour, grantInGeoSelection, grantMatchesLocationText, MATCH_FLOOR } from '@/lib/matching'
+import { computeMatchScore, scoreColour, grantInGeoSelection, grantMatchesLocationText, MATCH_FLOOR, MATCH_TIER_STRONG, MATCH_TIER_GOOD } from '@/lib/matching'
 import type { FeedbackSignals, MatchBreakdown } from '@/lib/matching'
 import {
   countEligibleByStructure, structureIsLimiting, structureLabel,
@@ -432,12 +432,12 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
   })()
 
   // ── Match tier ──
-  const tier       = score >= 80 ? 'Strong match' : score >= 70 ? 'Good match' : score >= 50 ? 'Partial match' : 'Weak match'
-  const tierHue    = score >= 80 ? { ring: '#639922', title: '#3B6D11', panelBg: '#F4F9ED', border: '#639922', barBg: 'rgba(99,153,34,0.15)',    positive: '#639922', caveat: '#639922', caveatText: '#3B6D11' }
-                   : score >= 70 ? { ring: '#5A9080', title: '#2D6B5E', panelBg: '#EFF6F4', border: '#5A9080', barBg: 'rgba(90,144,128,0.15)',   positive: '#5A9080', caveat: '#5A9080', caveatText: '#2D6B5E' }
+  const tier       = score >= MATCH_TIER_STRONG ? 'Strong match' : score >= MATCH_TIER_GOOD ? 'Good match' : score >= 50 ? 'Partial match' : 'Weak match'
+  const tierHue    = score >= MATCH_TIER_STRONG ? { ring: '#639922', title: '#3B6D11', panelBg: '#F4F9ED', border: '#639922', barBg: 'rgba(99,153,34,0.15)',    positive: '#639922', caveat: '#639922', caveatText: '#3B6D11' }
+                   : score >= MATCH_TIER_GOOD ? { ring: '#5A9080', title: '#2D6B5E', panelBg: '#EFF6F4', border: '#5A9080', barBg: 'rgba(90,144,128,0.15)',   positive: '#5A9080', caveat: '#5A9080', caveatText: '#2D6B5E' }
                    : score >= 50 ? { ring: '#BA7517', title: '#7A4E10', panelBg: '#FBF7EE', border: '#BA7517', barBg: 'rgba(186,117,23,0.12)',   positive: '#BA7517', caveat: '#BA7517', caveatText: '#7A4E10' }
                    :               { ring: '#A06060', title: '#7A3030', panelBg: '#FAF1EE', border: '#A06060', barBg: 'rgba(160,96,96,0.12)',    positive: '#A06060', caveat: '#A06060', caveatText: '#7A3030' }
-  const moduleTitle = score >= 80 ? 'Why this strongly matches' : score >= 70 ? 'Why this is a good match' : score >= 50 ? 'Why this partially matches' : 'Why this weakly matches'
+  const moduleTitle = score >= MATCH_TIER_STRONG ? 'Why this strongly matches' : score >= MATCH_TIER_GOOD ? 'Why this is a good match' : score >= 50 ? 'Why this partially matches' : 'Why this weakly matches'
 
   // ── Funder type label ──
   const FUNDER_TYPE_LBLS: Record<string, string> = {
@@ -820,9 +820,9 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
             .filter(d => !(d.hideAt100 && d.pct >= 100))
 
           const barFill = (pct: number) =>
-            pct >= 80 ? '#639922' : pct >= 70 ? '#8ECB3C' : pct >= 50 ? '#BA7517' : '#A06060'
+            pct >= MATCH_TIER_STRONG ? '#639922' : pct >= MATCH_TIER_GOOD ? '#8ECB3C' : pct >= 50 ? '#BA7517' : '#A06060'
           const barText = (pct: number) =>
-            pct >= 80 ? '#3B6D11' : pct >= 70 ? '#3B6D11' : pct >= 50 ? '#7A4E10' : '#7A3030'
+            pct >= MATCH_TIER_STRONG ? '#3B6D11' : pct >= MATCH_TIER_GOOD ? '#3B6D11' : pct >= 50 ? '#7A4E10' : '#7A3030'
 
           const ChevronIcon = () => (
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -838,7 +838,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flexShrink: 0, minWidth: 100 }}>
                   <div style={{ display: 'inline-flex', alignItems: 'baseline', gap: 6 }}>
                     <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 18, fontWeight: 500, color: tierHue.title, letterSpacing: '-0.01em' }}>{displayScore}%</span>
-                    <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 10.5, color: tierHue.title, letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 500 }}>{displayScore >= 80 ? 'Strong match' : displayScore >= 70 ? 'Good match' : displayScore >= 50 ? 'Partial match' : 'Weak match'}</span>
+                    <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 10.5, color: tierHue.title, letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 500 }}>{displayScore >= MATCH_TIER_STRONG ? 'Strong match' : displayScore >= MATCH_TIER_GOOD ? 'Good match' : displayScore >= 50 ? 'Partial match' : 'Weak match'}</span>
                   </div>
                   <div style={{ height: 3, background: tierHue.barBg, borderRadius: 2, overflow: 'hidden' }}>
                     <div style={{ height: '100%', background: tierHue.ring, borderRadius: 2, width: `${displayScore}%` }} />

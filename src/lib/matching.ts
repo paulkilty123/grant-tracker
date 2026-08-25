@@ -2207,16 +2207,48 @@ export function scoreColour(score: number): { bg: string; text: string; bar: str
 // BADGES/dots that render with inline styles (project funder-fit list,
 // dashboard quality legend). scoreColour above is the Tailwind-class sibling
 // for Find Funding's bars; both are the same green family, kept in step here.
+/**
+ * Where the match LABELS change, and why they sit here rather than in five
+ * inline ternaries across the search page.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * GOOD MOVED 70 -> 65 ON 2026-08-25, at Paul's instruction.
+ *
+ * He looked at a 68% card reading "Partial match" and said it seemed high. It
+ * was. The bands had been cut on the 0-100 scale, but the scores do not use that
+ * scale: measured across all 40 real org profiles against the live catalogue,
+ * the results that clear MATCH_FLOOR run from 55 to a maximum of 91 and cluster
+ * at 55-65. On that distribution the old boundaries meant:
+ *
+ *     Partial (55-69)   85.4% of everything a user is ever shown
+ *     Good    (70-79)   13.3%
+ *     Strong  (80+)      1.3%
+ *
+ * "Good" required beating 85% of the field and "Strong" 99%. That is a
+ * percentile ranking wearing quality words, and the word five results in six
+ * carried was "Partial". A 68% match beats 80% of everything a user sees.
+ *
+ * At 65, Good means roughly the top 30% instead of the top 15%.
+ *
+ * TWO THINGS DELIBERATELY NOT CHANGED, both dead rather than wrong:
+ *   - Partial's lower bound is 50 while MATCH_FLOOR is 55, so 50-54 has no
+ *     members on any surface that respects the floor.
+ *   - "Weak match" (<50) can therefore never render at all.
+ * Both are noted in the parked band-design work; neither is this change.
+ */
+export const MATCH_TIER_STRONG = 80
+export const MATCH_TIER_GOOD   = 65
+
 export const MATCH_TIER = {
   strong:  { label: 'Strong',  bg: '#C0DD97', color: '#173404', dot: '#639922' },
   good:    { label: 'Good',    bg: '#EAF3DE', color: '#3B6D11', dot: '#8ECB3C' },
   partial: { label: 'Partial', bg: '#F5F1E8', color: '#5F5E5A', dot: '#C0DD97' },
 } as const
 
-/** Score -> tier colours. Thresholds match the project funder-fit list
- *  (strong >=80, good >=70, else partial). */
+/** Score -> tier colours. Reads the shared boundaries above so this cannot
+ *  drift from the labels on the card. */
 export function matchTier(score: number): { label: string; bg: string; color: string; dot: string } {
-  if (score >= 80) return MATCH_TIER.strong
-  if (score >= 70) return MATCH_TIER.good
+  if (score >= MATCH_TIER_STRONG) return MATCH_TIER.strong
+  if (score >= MATCH_TIER_GOOD)   return MATCH_TIER.good
   return MATCH_TIER.partial
 }

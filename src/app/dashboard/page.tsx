@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getDeadlineAlerts, formatCurrency, formatNextOpen } from '@/lib/utils'
 import type { PipelineItem, Organisation } from '@/types'
 import { Award, TrendingUp, Users, Rocket, GraduationCap, Gift, ArrowRight, CalendarDays, Check, Sparkles, Bookmark, ListChecks, UserPlus, FilePenLine, Lightbulb, CircleCheck } from 'lucide-react'
-import { computeMatchScore, MATCH_TIER, MATCH_FLOOR } from '@/lib/matching'
+import { computeMatchScore, MATCH_TIER, MATCH_FLOOR, MATCH_TIER_STRONG, MATCH_TIER_GOOD } from '@/lib/matching'
 import { normaliseScrapedGrant } from '@/lib/grants-normalise'
 import { getBuilderUser } from '@/lib/builder/access'
 import { agentEnabledForOrg } from '@/lib/agent/orchestrator/config'
@@ -259,13 +259,14 @@ export default async function DashboardPage() {
   const projectsReady = workProjects.filter(p => p.ready).length
   const hasWork = workApps.length > 0 || workProjects.length > 0
 
-  // ── Quality buckets — Strong ≥80, Good 70–79, Partial 50–69, Weak <50.
-  // Aligned with Find Funding's tier labels (search/page.tsx:522).
+  // ── Quality buckets. The boundaries live in matching.ts so this and the
+  // Find Funding card cannot disagree — they used to be two hand-copied
+  // ternaries, and a line-number citation that had gone stale.
   // The dashboard surfaces strong+good+partial as "Worth your attention"
   // (the actionable subset) while keeping Weak in the wider browse pool.
   function qualityBucket(score: number): 'strong' | 'good' | 'partial' | 'weak' {
-    if (score >= 80) return 'strong'
-    if (score >= 70) return 'good'
+    if (score >= MATCH_TIER_STRONG) return 'strong'
+    if (score >= MATCH_TIER_GOOD)   return 'good'
     if (score >= 50) return 'partial'
     return 'weak'
   }
