@@ -874,20 +874,19 @@ export default function PipelinePage() {
               onDrop={e => onColDrop(e, stage.id as PipelineStage)}
             >
               <div
-                className="flex items-center gap-2 mb-2"
+                className="flex items-center gap-2"
                 style={{
                   position: 'sticky',
                   top: 0,
                   zIndex: 1,
                   background: STAGE_BG_HEX[stage.id],
-                  paddingTop: 6,
-                  // Negative margins to bleed the sticky header to the column
-                  // padding edge while stuck, so the column bg under the
-                  // header doesn't peek out at the sides.
-                  marginLeft: -14,
-                  marginRight: -14,
-                  paddingLeft: 14,
-                  paddingRight: 14,
+                  padding: '6px 7px 9px',
+                  // No negative margins. They used to bleed the header ±14px to
+                  // reach the column's padding edge, which did nothing: the
+                  // header's background IS the column's background, so there
+                  // was never anything behind it to hide. Once the column
+                  // padding went 14 -> 9 the bleed simply overhung the column
+                  // by 5px a side and put a step in its edge.
                 }}
               >
                 <span className="flex items-center" style={{ color: headerCol, opacity: 0.75 }}>{STAGE_ICONS[stage.id]}</span>
