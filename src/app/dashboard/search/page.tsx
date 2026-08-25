@@ -11,7 +11,7 @@ import { createPipelineItem, deletePipelineItem, updatePipelineStage } from '@/l
 import { describePipelineWriteError, ENTITLEMENT_MESSAGE } from '@/lib/pipeline-errors'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { getOrganisationByOwner } from '@/lib/organisations'
-import { computeMatchScore, scoreColour, grantInGeoSelection, grantMatchesLocationText, MATCH_FLOOR } from '@/lib/matching'
+import { computeMatchScore, scoreColour, grantInGeoSelection, grantMatchesLocationText, MATCH_FLOOR, MATCH_TIER_STRONG, MATCH_TIER_GOOD } from '@/lib/matching'
 import type { FeedbackSignals, MatchBreakdown } from '@/lib/matching'
 import {
   countEligibleByStructure, structureIsLimiting, structureLabel,
@@ -420,7 +420,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
   })()
 
   // ── Match tier ──
-  const tier       = score >= 80 ? 'Strong match' : score >= 70 ? 'Good match' : score >= 50 ? 'Partial match' : 'Weak match'
+  const tier       = score >= MATCH_TIER_STRONG ? 'Strong match' : score >= MATCH_TIER_GOOD ? 'Good match' : score >= 50 ? 'Partial match' : 'Weak match'
   /**
    * The band is ONE neutral container in every state. The tier is carried by
    * the numeral and the bar fill, not by the background.
@@ -436,6 +436,11 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
    * genuinely cannot separate at this size, so the tier WORD tells them apart:
    * language carries the fine distinction, colour carries the coarse one.
    *
+   * The boundaries are MATCH_TIER_STRONG / MATCH_TIER_GOOD rather than
+   * literals, so the colour and the WORD cannot drift apart. Good moved from
+   * 70 to 65 on main while this was in flight; with a literal here the band
+   * would have coloured a 68% card as Partial while labelling it Good.
+   *
    * Two rejected alternatives, recorded so they are not retried. Tinting the
    * band by the card's FUNDING TYPE made the tier invisible — a strong in-kind
    * match rendered gold, a partial grant rendered green. Tinting it by TIER
@@ -443,10 +448,10 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
    * the in-kind chip, so a Heritage or Creative card carried a chip the same
    * colour as its own score band.
    */
-  const tierInk    = score >= 70 ? '#1B6B3D' : score >= 50 ? '#7A5E11' : '#5F5E5A'
+  const tierInk    = score >= MATCH_TIER_GOOD ? '#1B6B3D' : score >= 50 ? '#7A5E11' : '#5F5E5A'
   const tierHue    = { ring: tierInk, title: tierInk, border: 'transparent',
                        barBg: 'rgba(29,60,62,0.20)', positive: tierInk, caveat: tierInk, caveatText: tierInk }
-  const moduleTitle = score >= 80 ? 'Why this strongly matches' : score >= 70 ? 'Why this is a good match' : score >= 50 ? 'Why this partially matches' : 'Why this weakly matches'
+  const moduleTitle = score >= MATCH_TIER_STRONG ? 'Why this strongly matches' : score >= MATCH_TIER_GOOD ? 'Why this is a good match' : score >= 50 ? 'Why this partially matches' : 'Why this weakly matches'
 
   // ── Funder type label ──
   const FUNDER_TYPE_LBLS: Record<string, string> = {
@@ -864,7 +869,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
           // which is why they were impossible to tell apart, and put #8ECB3C
           // at 1.89:1 on the panel it sat on.
           const barFill = (pct: number) =>
-            pct >= 70 ? '#1B6B3D' : pct >= 50 ? '#7A5E11' : '#5F5E5A'
+            pct >= MATCH_TIER_GOOD ? '#1B6B3D' : pct >= 50 ? '#7A5E11' : '#5F5E5A'
           const barText = barFill
 
           const ChevronIcon = () => (
