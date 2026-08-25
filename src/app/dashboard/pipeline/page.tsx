@@ -911,12 +911,29 @@ export default function PipelinePage() {
                   <span style={{ fontWeight: 600, opacity: 0.7, marginLeft: 4, letterSpacing: 0 }}>{STAGE_VOCAB[stage.id]}</span>
                 </span>
               </div>
-              {stageItems.length === 0 && (
-                <div className="flex items-center justify-center text-center" style={{
-                  minHeight: 152, borderRadius: 11, fontSize: 11.8, color: '#5F5E5A',
+              {stageItems.length === 0 && (() => {
+                /* With nothing anywhere on the board there is nothing TO drag,
+                   so "Drag here" is a dead instruction on every column at once
+                   — exactly when a first-time user is reading them. It becomes
+                   "Add here" instead, and it opens the add form, because a
+                   zone that says Add and does nothing when clicked is worse
+                   than one that says nothing at all. */
+                const boardEmpty = items.length === 0
+                const box: React.CSSProperties = {
+                  minHeight: 152, borderRadius: 11, fontSize: 13.5, fontWeight: 500,
+                  color: '#5F5E5A', width: '100%', background: 'transparent',
                   border: `1.5px dashed ${stage.id === 'declined' ? 'rgba(153,60,29,0.24)' : 'rgba(29,60,62,0.20)'}`,
-                }}>Drag a grant here</div>
-              )}
+                }
+                return boardEmpty ? (
+                  <button type="button" onClick={() => setShowAdd(true)}
+                    className="flex items-center justify-center text-center transition-colors hover:bg-[rgba(255,255,255,0.45)]"
+                    style={{ ...box, cursor: 'pointer', fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, color: '#1D3C3E' }}>
+                    + Add here
+                  </button>
+                ) : (
+                  <div className="flex items-center justify-center text-center" style={box}>Drag here</div>
+                )
+              })()}
               {stageItems.map(item => (
                 <div key={item.id} data-card-id={item.id}>
                   <PipelineCard
