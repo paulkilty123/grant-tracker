@@ -845,8 +845,16 @@ export default function PipelinePage() {
           <button
             onClick={() => setShowAdd(true)}
             title="Add a grant or funder that isn't in our catalogue — including ones you already fund"
-            className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-white hover:bg-[#1D3C3E] hover:text-[#F6F1E7] transition-colors whitespace-nowrap"
-            style={{ border: '1.5px solid rgba(29,60,62,0.24)', color: '#1D3C3E', borderRadius: 999 }}
+            /* Hover is handled in JS, not by hover: classes. An inline style
+               beats a class, so `hover:text-[#F6F1E7]` alongside an inline
+               `color` left the label deep while the background went deep —
+               the button turned into a solid black lozenge with the text
+               still in it, invisible. Keeping both halves of the hover in the
+               same place makes that impossible. */
+            className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold transition-colors whitespace-nowrap"
+            style={{ border: '1.5px solid rgba(29,60,62,0.24)', color: '#1D3C3E', background: '#fff', borderRadius: 999 }}
+            onMouseEnter={e => { e.currentTarget.style.background = '#1D3C3E'; e.currentTarget.style.color = '#F6F1E7' }}
+            onMouseLeave={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.color = '#1D3C3E' }}
           >
             + Add a fund not listed
           </button>
