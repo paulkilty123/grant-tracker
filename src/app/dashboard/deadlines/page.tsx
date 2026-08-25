@@ -1803,7 +1803,7 @@ export default function DeadlinesPage() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
               <button onClick={() => { if (calMonth === 0) { setCalMonth(11); setCalYear(y => y - 1) } else setCalMonth(m => m - 1) }}
                 style={{ width: 24, height: 24, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  background: 'transparent', border: 'none', color: '#5F5E5A', cursor: 'pointer', borderRadius: 6 }}
+                  background: 'transparent', border: 'none', color: '#5F5E5A', cursor: 'pointer', borderRadius: 999 }}
                 onMouseEnter={e => { e.currentTarget.style.background = '#FAFAF7' }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
                 <ChevronLeft size={14} />
@@ -1813,7 +1813,7 @@ export default function DeadlinesPage() {
               </span>
               <button onClick={() => { if (calMonth === 11) { setCalMonth(0); setCalYear(y => y + 1) } else setCalMonth(m => m + 1) }}
                 style={{ width: 24, height: 24, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  background: 'transparent', border: 'none', color: '#5F5E5A', cursor: 'pointer', borderRadius: 6 }}
+                  background: 'transparent', border: 'none', color: '#5F5E5A', cursor: 'pointer', borderRadius: 999 }}
                 onMouseEnter={e => { e.currentTarget.style.background = '#FAFAF7' }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
                 <ChevronRight size={14} />

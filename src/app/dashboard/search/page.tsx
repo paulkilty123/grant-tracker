@@ -822,7 +822,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                 {state === 'saved' && (
                   <button
                     onClick={() => onUnsave?.(grant.id)}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 10, background: 'transparent', border: 'none', color: '#5F5E5A', padding: '9px 14px', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 999, background: 'transparent', border: 'none', color: '#5F5E5A', padding: '9px 14px', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
                   >
                     Unsave
                   </button>

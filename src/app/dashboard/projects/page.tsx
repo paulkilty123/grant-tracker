@@ -253,7 +253,7 @@ export default function ProjectsPage() {
                     onClick={e => { e.preventDefault(); e.stopPropagation(); handleDelete(p.id) }}
                     style={{
                       fontFamily: UI, fontWeight: 600, fontSize: 12, color: '#fff',
-                      background: T.coral, border: 'none', padding: '5px 12px', borderRadius: 8, cursor: 'pointer',
+                      background: T.coral, border: 'none', padding: '6px 14px', borderRadius: 999, cursor: 'pointer',
                     }}
                   >
                     Delete

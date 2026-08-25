@@ -910,7 +910,7 @@ function ScanBar({ orgId, website, onSaved }: { orgId: string; website?: string 
             <div style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, color: T.textSecondary, marginBottom: 2 }}>No website on file</div>
             <div style={{ fontFamily: BODY, fontSize: 13, color: T.textTertiary }}>Add your website so we can keep your profile up to date automatically</div>
           </div>
-          <button onClick={startEdit} style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, background: T.deep, color: T.creamLabel, border: 'none', padding: '7px 16px', borderRadius: 8, cursor: 'pointer', flexShrink: 0, flexBasis: isMobile ? '100%' : 'auto' }}>
+          <button onClick={startEdit} style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, background: T.deep, color: T.creamLabel, border: 'none', padding: '8px 18px', borderRadius: 999, cursor: 'pointer', flexShrink: 0, flexBasis: isMobile ? '100%' : 'auto' }}>
             Add website
           </button>
         </>
@@ -1014,7 +1014,7 @@ function SaveBtn({ saving, onClick }: { saving: boolean; onClick: () => void }) 
       style={{
         fontFamily: UI, fontWeight: 500, fontSize: 13.5,
         background: saving ? T.warmNeutral : T.deep, color: saving ? T.textTertiary : T.creamLabel,
-        border: 'none', padding: '8px 18px', borderRadius: 8,
+        border: 'none', padding: '9px 20px', borderRadius: 999,
         cursor: saving ? 'not-allowed' : 'pointer',
       }}
     >
@@ -1028,8 +1028,8 @@ function CancelBtn({ onClick }: { onClick: () => void }) {
       onClick={onClick}
       style={{
         fontFamily: UI, fontWeight: 500, fontSize: 13.5,
-        background: T.white, color: T.textPrimary,
-        border: `0.5px solid ${T.borderStrong}`, padding: '8px 16px', borderRadius: 8,
+        background: T.white, color: T.deep,
+        border: `1.5px solid ${T.borderStrong}`, padding: '9px 18px', borderRadius: 999,
         cursor: 'pointer',
       }}
     >
@@ -2042,7 +2042,7 @@ function StoryCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
                 style={{
                   fontFamily: UI, fontWeight: 500, fontSize: 13.5,
                   background: T.deep, color: T.creamLabel, border: 'none',
-                  padding: '8px 16px', borderRadius: 8, cursor: 'pointer',
+                  padding: '9px 20px', borderRadius: 999, cursor: 'pointer',
                 }}
               >
                 Add mission statement
