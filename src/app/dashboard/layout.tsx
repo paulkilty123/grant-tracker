@@ -48,9 +48,13 @@ export default async function AppLayout({
         <Sidebar org={org} userEmail={user.email ?? ''} companionSurface={companionSurface} applyAccess={applyAccess} />
         <main
           className="md:ml-60 flex-1 min-h-screen overflow-x-hidden flex flex-col"
-          // EXPERIMENT (branch exp/white-ground): white instead of cream, to
-          // look at the whole app on a white ground before deciding anything.
-          // Revert this branch to undo. The --cream TOKEN is deliberately NOT
+          // EXPERIMENT (branch exp/white-ground). Third value tried here:
+          //   #F6F1E7  the original cream — a white card sits ΔE 5.56 off it
+          //   #FFFFFF  white            — ΔE 0.00, cards defined by border alone
+          //   #FBF8F2  this one         — ΔE 3.30, about 60% of the original step
+          // Lighter neighbours if this still reads too warm: #FCFAF5 (2.68),
+          // #FDFBF7 (2.19). Heavier: #FAF7F0 (3.78), #F9F5EC (4.77).
+          // Revert the branch to undo. The --cream TOKEN is deliberately NOT
           // touched — see the note below on why moving it would drag in
           // surfaces this experiment is not about.
           //
@@ -61,7 +65,7 @@ export default async function AppLayout({
           // today, so scoping here would silently recolour tools nobody asked
           // us to touch. The scope goes on the Sidebar and the dashboard page
           // only; widening it is a 40-page audit, not a one-line change.
-          style={{ background: '#FFFFFF' }}
+          style={{ background: '#FBF8F2' }}
         >
           <div className="flex-1 px-4 pt-16 pb-8 md:pt-8 md:px-16">
             {children}
