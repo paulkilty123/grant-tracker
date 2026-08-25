@@ -32,6 +32,7 @@ import {
   Lightbulb,
   Library,
   Mail,
+  Plug,
 } from 'lucide-react'
 
 interface Props {
@@ -106,6 +107,10 @@ const MAIN_NAV = [
   { href: '/dashboard/pipeline',  label: 'Pipeline',     Icon: FolderKanban  },
   { href: '/dashboard/deadlines', label: 'Deadlines',    Icon: CalendarClock },
   { href: '/dashboard/profile',   label: 'Profile',      Icon: User          },
+  // Names one vendor for a connection that works in several — deliberate.
+  // Members use Claude, and vagueness costs more comprehension here than the
+  // specificity costs accuracy. Revisit if a second assistant gets real use.
+  { href: '/dashboard/connect',   label: 'Connect to Claude', Icon: Plug     },
   // Notifications slots in here (bell icon, unread badge) when the inbox ships in v1.1
 ]
 
@@ -360,10 +365,10 @@ export default function Sidebar({ org, userEmail, companionSurface = false, appl
       <div ref={userMenuRef} style={{ position: 'relative', marginTop: 2 }}>
         <button
           onClick={() => setUserMenuOpen(v => !v)}
-          className="w-full flex items-center gap-2.5 px-3 py-2.5"
+          className="w-full flex items-center gap-2.5 px-3 py-2.5 sb-account-trigger"
           style={{
-            borderRadius: 8,
-            background: userMenuOpen ? SB.hover : 'transparent',
+            borderRadius: 12,
+            background: userMenuOpen ? SB.activeBg : 'transparent',
             border: 'none',
             cursor: 'pointer',
             fontFamily: 'var(--font-space-grotesk)',
@@ -403,30 +408,34 @@ export default function Sidebar({ org, userEmail, companionSurface = false, appl
             position: 'absolute',
             bottom: 'calc(100% + 6px)',
             left: 0, right: 0,
-            background: '#1E3D06',
-            borderRadius: 10,
+            // Was #1E3D06 — the old forest — while the sidebar around it is
+            // #1D3C3E. Two different greens stacked on each other, which is
+            // what made the popup read as a foreign panel.
+            background: '#24494B',
+            borderRadius: 14,
             border: `0.5px solid ${SB.divider}`,
             overflow: 'hidden',
-            boxShadow: '0 -4px 16px -4px rgba(0,0,0,0.4)',
+            padding: 4,
+            boxShadow: '0 -6px 20px -4px rgba(0,0,0,0.45)',
           }}>
             <Link
               href="/dashboard/account"
               onClick={() => { setUserMenuOpen(false); setMobileOpen(false) }}
               className="flex items-center gap-2.5 px-3 py-2.5 no-underline"
-              style={{ color: SB.text, fontSize: 13, fontFamily: 'var(--font-space-grotesk)' }}
+              style={{ color: SB.text, fontSize: 13, fontFamily: 'var(--font-space-grotesk)', borderRadius: 10 }}
               onMouseEnter={e => { e.currentTarget.style.background = SB.hover; e.currentTarget.style.color = SB.textBright }}
               onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = SB.text }}
             >
               <User style={{ width: 14, height: 14, flexShrink: 0 }} />
               Account
             </Link>
-            <div style={{ height: '0.5px', background: SB.divider }} />
+            <div style={{ height: '0.5px', background: SB.divider, margin: '2px 8px' }} />
             <button
               onClick={handleSignOut}
               className="w-full flex items-center gap-2.5 px-3 py-2.5"
               style={{
                 color: SB.text, fontSize: 13, fontFamily: 'var(--font-space-grotesk)',
-                background: 'transparent', border: 'none', cursor: 'pointer',
+                background: 'transparent', border: 'none', cursor: 'pointer', borderRadius: 10,
               }}
               onMouseEnter={e => { e.currentTarget.style.background = SB.hover; e.currentTarget.style.color = SB.textBright }}
               onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = SB.text }}

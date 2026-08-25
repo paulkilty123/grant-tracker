@@ -84,8 +84,8 @@ function StepDot({ n, label, active, done }: { n: number; label: string; active:
       <div style={{
         width: 24, height: 24, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontFamily: UI, fontWeight: 700, fontSize: 12,
-        background: done ? T.lime : active ? T.greenDeep : T.cream,
-        color: done ? T.greenDeep : active ? '#F1F7E4' : T.textTertiary,
+        background: done ? '#E3F0E4' : active ? '#1D3C3E' : '#F1EDE3',
+        color: done ? '#1B6B3D' : active ? '#F6F1E7' : T.textTertiary,
       }}>
         {done ? <Check size={13} /> : n}
       </div>
@@ -113,6 +113,15 @@ export default function NewApplicationPage() {
   // match list carries ?opportunity= and ?project=; a general proposal
   // carries ?project= alone and goes straight to the outline.
   const [projectId, setProjectId] = useState<string | null>(null)
+  /**
+   * The org's projects, newest first, for the picker.
+   *
+   * `projectFromParam` records that ?project= answered the question already —
+   * that path came from a project's own "Find funders" flow, so re-asking would
+   * be worse than not asking. The picker renders as a stated fact instead.
+   */
+  const [projects, setProjects] = useState<{ id: string; name: string }[]>([])
+  const [projectFromParam, setProjectFromParam] = useState(false)
   // Pipeline link-through: arriving from a "Ready to start" pipeline item
   // (?pipeline=) prefills the funder by name and links the new application back.
   const [pipelineItemId, setPipelineItemId] = useState<string | null>(null)
@@ -147,6 +156,26 @@ export default function NewApplicationPage() {
       const oppParam = searchParams.get('opportunity')
       const projParam = searchParams.get('project')
       const pipeParam = searchParams.get('pipeline')
+
+      // Projects for the picker. Newest first, which is also the default.
+      if (org) {
+        const { data: projRows } = await supabase
+          .from('projects')
+          .select('id, name')
+          .eq('org_id', org.id)
+          .order('created_at', { ascending: false })
+        const list = (projRows ?? []) as { id: string; name: string }[]
+        setProjects(list)
+        if (projParam && UUID_RE.test(projParam)) {
+          setProjectFromParam(true)
+        } else if (list.length > 0) {
+          // Pre-selected rather than blank: a sensible default beats an empty
+          // required field. It is safe to default only because the control is
+          // visible on the form — a silent pre-selection nobody notices
+          // produces confidently wrong data, which is worse than a null.
+          setProjectId(list[0].id)
+        }
+      }
       if (projParam && UUID_RE.test(projParam)) setProjectId(projParam)
       if (pipeParam && UUID_RE.test(pipeParam)) {
         const { data: pi } = await supabase
@@ -261,7 +290,8 @@ export default function NewApplicationPage() {
   }
 
   return (
-    <div style={{ maxWidth: 760, marginInline: 'auto' }}>
+    /* Full width, matching the rest of band C. */
+    <div>
       {/* Breadcrumb + stepper */}
       <Link href="/dashboard/applications" style={{
         fontFamily: UI, fontWeight: 500, fontSize: 13, color: T.textSecondary,
@@ -270,7 +300,7 @@ export default function NewApplicationPage() {
         <ArrowLeft size={14} /> Applications
       </Link>
 
-      <h1 style={{ fontFamily: UI, fontWeight: 600, fontSize: 24, color: T.textPrimary, letterSpacing: '-0.01em', margin: '0 0 16px' }}>
+      <h1 style={{ fontFamily: UI, fontWeight: 600, fontSize: 31, color: '#1D3C3E', letterSpacing: '-0.025em', margin: '0 0 16px' }}>
         New application
       </h1>
 
@@ -301,7 +331,7 @@ export default function NewApplicationPage() {
                 router.push('/dashboard/projects/new')
               }}
               style={{
-                fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.greenDeep, background: 'transparent',
+                fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: '#1D3C3E', background: 'transparent',
                 border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: 4,
               }}
             >
@@ -441,7 +471,7 @@ export default function NewApplicationPage() {
                       target="_blank"
                       rel="noopener noreferrer"
                       style={{
-                        fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.greenDeep,
+                        fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: '#1D3C3E',
                         background: T.white, border: `1px solid ${T.borderStrong}`,
                         padding: '6px 12px', borderRadius: 8, textDecoration: 'none',
                         display: 'inline-flex', alignItems: 'center', gap: 6,
@@ -461,6 +491,54 @@ export default function NewApplicationPage() {
               placeholder={'1. Tell us about your organisation (max 300 words)\n2. What do you want to do with this funding? (max 500 words)\n3. Who will benefit, and how do you know they need it?\n…'}
               style={{ ...inputStyle(), resize: 'vertical', lineHeight: 1.6, fontSize: 13.5 }}
             />
+          </div>
+
+          {/* Which project is this for?
+
+              Its own card, above the fold, because the field being SEEN is what
+              makes the pre-selected default safe. Tucked below the fold, a
+              default nobody notices produces confidently wrong attribution,
+              which is worse than the nulls it replaces.
+
+              "Not part of a project" is an explicit option rather than the
+              absence of a choice: applications that genuinely stand alone are
+              legitimate (the builder reads project_brief as the alternative),
+              and a null should record a decision, not an oversight. */}
+          <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, padding: '20px 24px' }}>
+            <h2 style={{ fontFamily: UI, fontWeight: 600, fontSize: 16, color: T.textPrimary, margin: '0 0 4px' }}>
+              Which project is this for?
+            </h2>
+            {projectFromParam ? (
+              <p style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary, margin: 0, lineHeight: 1.55 }}>
+                You started this from{' '}
+                <span style={{ fontWeight: 600, color: T.textPrimary }}>
+                  {projects.find(pr => pr.id === projectId)?.name ?? 'a project'}
+                </span>
+                , so it will be filed there.
+              </p>
+            ) : projects.length === 0 ? (
+              <p style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary, margin: 0, lineHeight: 1.55 }}>
+                You have no projects yet, so this will stand on its own. You can file it later from
+                your applications list.
+              </p>
+            ) : (
+              <>
+                <p style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary, margin: '0 0 14px', lineHeight: 1.55 }}>
+                  Filing it against a project is what tells your applications apart when several go to
+                  the same funder, and it colours them to match on your dashboard.
+                </p>
+                <select
+                  value={projectId ?? 'none'}
+                  onChange={e => setProjectId(e.target.value === 'none' ? null : e.target.value)}
+                  style={{ ...inputStyle(), fontFamily: BODY, fontSize: 13.5, cursor: 'pointer', maxWidth: 460 }}
+                >
+                  {projects.map(pr => (
+                    <option key={pr.id} value={pr.id}>{pr.name}</option>
+                  ))}
+                  <option value="none">Not part of a project</option>
+                </select>
+              </>
+            )}
           </div>
 
           {/* Describe this project — optional material fed into the Build step

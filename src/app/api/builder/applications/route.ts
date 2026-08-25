@@ -124,3 +124,83 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ id: created.id })
 }
+
+
+/**
+ * PATCH /api/builder/applications — assign (or clear) an application's project.
+ *
+ * Body: { application_id: string, project_id: string | null }
+ *
+ * A route rather than a client-side update, for the reason POST already gives:
+ * foreign key checks bypass RLS, and the UPDATE policy on applications only
+ * checks the APPLICATION's org. Nothing in it stops a client writing another
+ * org's project id into the column. So ownership of both ends is verified here
+ * against the session client, which can only see own-org rows.
+ *
+ * project_id: null is a real value, not a missing one — it is how "not part of
+ * a project" is recorded, and it must be distinguishable from "field absent".
+ */
+export async function PATCH(req: NextRequest) {
+  const user = await getBuilderUser()
+  if (!user) return NextResponse.json({ error: 'Applications are not switched on for this organisation' }, { status: 403 })
+
+  let body: { application_id?: string; project_id?: string | null }
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
+  }
+
+  if (!body.application_id || !UUID_RE.test(body.application_id)) {
+    return NextResponse.json({ error: 'A valid application id is required' }, { status: 400 })
+  }
+  // Absent and null mean different things; only null clears the field.
+  if (!('project_id' in body)) {
+    return NextResponse.json({ error: 'project_id is required (null to clear it)' }, { status: 400 })
+  }
+
+  const supabase = await createServerClient()
+
+  // The application, and the org it belongs to. RLS means a row from another
+  // org simply is not here, so a miss is indistinguishable from not existing —
+  // which is the answer we want to give either way.
+  const { data: app } = await supabase
+    .from('applications')
+    .select('id, org_id')
+    .eq('id', body.application_id)
+    .maybeSingle()
+  if (!app) return NextResponse.json({ error: 'Application not found' }, { status: 404 })
+
+  let projectId: string | null = null
+  if (body.project_id !== null) {
+    if (!UUID_RE.test(body.project_id ?? '')) {
+      return NextResponse.json({ error: 'A valid project id is required' }, { status: 400 })
+    }
+    const { data: proj } = await supabase
+      .from('projects')
+      .select('id')
+      .eq('id', body.project_id)
+      .eq('org_id', app.org_id)
+      .maybeSingle()
+    // Explicitly a 400, not a silent null: an unassignable project is a failed
+    // assignment, and swallowing it would show the user a row that stayed grey
+    // with no explanation.
+    if (!proj) return NextResponse.json({ error: 'That project is not available on this organisation' }, { status: 400 })
+    projectId = proj.id as string
+  }
+
+  const { error } = await supabase
+    .from('applications')
+    .update({ project_id: projectId })
+    .eq('id', body.application_id)
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  await emitEvent(
+    { surface: 'app', orgId: app.org_id as string, userId: user.id },
+    'builder_application_project_set',
+    { application_id: body.application_id, project_id: projectId, cleared: projectId === null },
+  )
+
+  return NextResponse.json({ ok: true, project_id: projectId })
+}

@@ -1099,7 +1099,7 @@ export default function LandingPage() {
                   </div>
                   <div>
                     <p className="text-sm font-semibold mb-0.5" style={{ color: '#2C2C2A', fontFamily: 'var(--font-space-grotesk)' }}>Email us</p>
-                    <a href="mailto:hello@granttracker.co.uk" className="text-sm hover:underline" style={{ color: '#8ECB3C' }}>hello@granttracker.co.uk</a>
+                    <a href="mailto:hello@shootsfunding.co.uk" className="text-sm hover:underline" style={{ color: '#8ECB3C' }}>hello@shootsfunding.co.uk</a>
                   </div>
                 </div>
                 <div className="flex items-center gap-4">

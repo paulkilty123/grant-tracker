@@ -14,29 +14,57 @@ import { normaliseScrapedGrant, type EnrichedGrant } from '@/lib/grants-normalis
 import { computeMatchScore, MATCH_FLOOR } from '@/lib/matching'
 import { eligibilityStated, ELIGIBILITY_NOT_STATED } from '@/lib/eligibility-disclosure'
 import type { DeadlineAlert, PipelineItem, PipelineStage, FundingType, Organisation } from '@/types'
+import { typeColour, FUNDING_TYPE_COLOUR, type FundingTypeKey } from '@/lib/funding-type-colours'
 
 const ACTIVE_STAGES = ['identified', 'applying'] // 'submitted' excluded — those need a decision date, not a deadline
 
-// ── Funding-type dot colours ──────────────────────────────────────────────────
-const TYPE_DOT: Record<string, string> = {
-  grant:      '#97C459',
-  programme:  '#F0997B',
-  investment: '#85B7EB',
-  in_kind:    '#EF9F27',
-}
-const TYPE_LABEL: Record<string, string> = {
-  grant: 'Grant', programme: 'Programme', investment: 'Investment', in_kind: 'In-Kind',
-}
-const TYPE_BG: Record<string, string> = {
-  grant: '#F1F7E4', programme: '#FAECE7', investment: '#E6F1FB', in_kind: '#FAEEDA',
-}
-const TYPE_TEXT: Record<string, string> = {
-  grant: '#3B6D11', programme: '#993C1D', investment: '#0C447C', in_kind: '#854F0B',
-}
+/**
+ * Funding type on a pipeline item: we do not know it.
+ *
+ * This used to return 'grant' unconditionally, described as a placeholder
+ * until the view is enriched. In practice it was not a placeholder — it told
+ * the user that a programme or an investment sitting in their pipeline was a
+ * grant, in a chip that looked authoritative. A missing chip is honest, a
+ * wrong one is not, so the callers now render nothing when this returns null.
+ */
+function itemFundingType(_item: PipelineItem): string | null { return null }
 
-// Pipeline items don't carry funding_type directly — default to 'grant' until
-// the view is enriched from scraped_grants / saved_grants.
-function itemFundingType(_item: PipelineItem): string { return 'grant' }
+/**
+ * The homepage accents, used as SOLID countdown tiles.
+ *
+ * Solid rather than the obvious pale tints, because every pale tint worth
+ * using is already spoken for by a funding-type chip sitting on the same row:
+ * amber would be ΔE 0.0 from In-kind, green ΔE 0.0 from Grant, pink 2.4 from
+ * Programme. The saturated accents sit ΔE 29-62 from every type chip, so the
+ * two systems can never be read as each other — pale tint means what kind of
+ * money, solid tile means how long you have.
+ *
+ * The numeral is --deep at 19px BOLD, and the size is load-bearing. At 15px it
+ * is normal text needing 4.5:1, which terracotta's 3.70 fails. At 19px bold it
+ * is WCAG large text, the floor drops to 3:1, and --deep clears all four. Same
+ * constraint as the How it works circles on Projects.
+ *
+ * The DATE sits below the tile, not inside it: at 11px it is normal text in
+ * every case and would fail on terracotta and teal. On white it is 6.49.
+ *
+ * Tile edges are low-contrast against a white card (gold 1.54, sage 1.85).
+ * That is fine for a filled container whose content carries the contrast, but
+ * nothing may depend on the edge — no borders, no two tiles touching.
+ */
+const COUNTDOWN_TILE = {
+  // The homepage accents at 35% toward white. Full strength read as too heavy
+  // beside everything else on the row; fading them also RAISES the numeral's
+  // contrast (5.7 / 9.0 / 8.1 / 6.4, all up on the solid versions), so the
+  // 19px-bold rule below has more headroom, not less.
+  //
+  // 35% is where it stops. The weakest separation from any funding-type chip
+  // is 10.1 here, against 16.7 at full strength; at 45% it falls to 7.7 and by
+  // 65% to 2.7, which is the collision this palette exists to avoid.
+  urgent: '#E4A592',   // <= 7 days
+  soon:   '#F2DFA7',   // 8-42 days
+  later:  '#BEDDBF',   // beyond
+  none:   '#8CC8CE',   // no deadline set — the one state that is not a countdown
+} as const
 
 // ── Calendar helpers ──────────────────────────────────────────────────────────
 type CalDay = {
@@ -81,18 +109,12 @@ const fmtAmt = (n: number) => formatCurrency(n)
 
 // ── Add Deadline Modal ────────────────────────────────────────────────────────
 
-const TYPE_CHIPS: {
-  key: string
-  label: string
-  dot: string
-  bg: string
-  text: string
-  Icon: LucideIcon
-}[] = [
-  { key: 'grant',      label: 'Grant',      dot: '#97C459', bg: '#F1F7E4', text: '#3B6D11', Icon: Landmark   },
-  { key: 'programme',  label: 'Programme',  dot: '#F0997B', bg: '#FAECE7', text: '#993C1D', Icon: Rocket     },
-  { key: 'investment', label: 'Investment', dot: '#85B7EB', bg: '#E6F1FB', text: '#0C447C', Icon: TrendingUp  },
-  { key: 'in_kind',    label: 'In-Kind',    dot: '#EF9F27', bg: '#FAEEDA', text: '#854F0B', Icon: Gift       },
+/** The shared four, not a sixth palette. Icons are local to this control. */
+const TYPE_CHIPS: { key: FundingTypeKey; Icon: LucideIcon }[] = [
+  { key: 'grant',      Icon: Landmark   },
+  { key: 'programme',  Icon: Rocket     },
+  { key: 'investment', Icon: TrendingUp },
+  { key: 'in_kind',    Icon: Gift       },
 ]
 
 function AddDeadlineModal({ orgId, userId, onClose, onSaved }: {
@@ -157,7 +179,7 @@ function AddDeadlineModal({ orgId, userId, onClose, onSaved }: {
           display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexShrink: 0 }}>
           <div>
             <h3 style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 17, fontWeight: 500,
-              letterSpacing: '-0.01em', margin: '0 0 4px', color: '#2C2C2A' }}>Add a deadline</h3>
+              letterSpacing: '-0.02em', margin: '0 0 4px', color: '#1D3C3E' }}>Add a deadline</h3>
             <p style={{ fontSize: 12, color: '#5F5E5A', margin: 0, lineHeight: 1.5 }}>
               Log an opportunity not already in your pipeline or saved list.
             </p>
@@ -185,21 +207,21 @@ function AddDeadlineModal({ orgId, userId, onClose, onSaved }: {
               style={{ width: '100%', height: 40, border: '0.5px solid rgba(0,0,0,0.14)', borderRadius: 10,
                 padding: '0 12px', fontFamily: 'inherit', fontSize: 13, color: '#2C2C2A',
                 background: '#fff', outline: 'none', boxSizing: 'border-box' }}
-              onFocus={e => { e.currentTarget.style.borderColor = '#639922' }}
+              onFocus={e => { e.currentTarget.style.borderColor = '#1D3C3E' }}
               onBlur={e => { e.currentTarget.style.borderColor = 'rgba(0,0,0,0.14)' }} />
           </div>
 
           {/* Funder */}
           <div style={{ marginBottom: 16 }}>
             <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#2C2C2A', marginBottom: 6 }}>
-              Funder <span style={{ color: '#8A8986', fontWeight: 400 }}>&middot; optional</span>
+              Funder <span style={{ color: '#74736E', fontWeight: 400 }}>&middot; optional</span>
             </label>
             <input type="text" value={funderName} onChange={e => setFunderName(e.target.value)}
               placeholder="e.g. Arts Council England"
               style={{ width: '100%', height: 40, border: '0.5px solid rgba(0,0,0,0.14)', borderRadius: 10,
                 padding: '0 12px', fontFamily: 'inherit', fontSize: 13, color: '#2C2C2A',
                 background: '#fff', outline: 'none', boxSizing: 'border-box' }}
-              onFocus={e => { e.currentTarget.style.borderColor = '#639922' }}
+              onFocus={e => { e.currentTarget.style.borderColor = '#1D3C3E' }}
               onBlur={e => { e.currentTarget.style.borderColor = 'rgba(0,0,0,0.14)' }} />
           </div>
 
@@ -213,22 +235,22 @@ function AddDeadlineModal({ orgId, userId, onClose, onSaved }: {
                 style={{ width: '100%', height: 40, border: '0.5px solid rgba(0,0,0,0.14)', borderRadius: 10,
                   padding: '0 12px', fontFamily: 'inherit', fontSize: 13, color: '#2C2C2A',
                   background: '#fff', outline: 'none', boxSizing: 'border-box' }}
-                onFocus={e => { e.currentTarget.style.borderColor = '#639922' }}
+                onFocus={e => { e.currentTarget.style.borderColor = '#1D3C3E' }}
                 onBlur={e => { e.currentTarget.style.borderColor = 'rgba(0,0,0,0.14)' }} />
             </div>
             <div>
               <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#2C2C2A', marginBottom: 6 }}>
-                Amount <span style={{ color: '#8A8986', fontWeight: 400 }}>&middot; optional</span>
+                Amount <span style={{ color: '#74736E', fontWeight: 400 }}>&middot; optional</span>
               </label>
               <div style={{ position: 'relative' }}>
                 <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
-                  color: '#8A8986', fontSize: 13, pointerEvents: 'none' }}>£</span>
+                  color: '#74736E', fontSize: 13, pointerEvents: 'none' }}>£</span>
                 <input type="text" inputMode="numeric" value={amount} onChange={e => setAmount(e.target.value)}
                   placeholder="0"
                   style={{ width: '100%', height: 40, border: '0.5px solid rgba(0,0,0,0.14)', borderRadius: 10,
                     padding: '0 12px 0 24px', fontFamily: 'inherit', fontSize: 13, color: '#2C2C2A',
                     background: '#fff', outline: 'none', boxSizing: 'border-box' }}
-                  onFocus={e => { e.currentTarget.style.borderColor = '#639922' }}
+                  onFocus={e => { e.currentTarget.style.borderColor = '#1D3C3E' }}
                   onBlur={e => { e.currentTarget.style.borderColor = 'rgba(0,0,0,0.14)' }} />
               </div>
             </div>
@@ -242,22 +264,27 @@ function AddDeadlineModal({ orgId, userId, onClose, onSaved }: {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
               {TYPE_CHIPS.map(tc => {
                 const sel = fundingType === tc.key
+                const c   = FUNDING_TYPE_COLOUR[tc.key]
                 return (
                   <button key={tc.key} type="button" onClick={() => setFundingType(tc.key)}
                     style={{
-                      border: sel ? `1.5px solid ${tc.dot}` : '0.5px solid rgba(0,0,0,0.10)',
-                      background: sel ? tc.bg : '#fff',
-                      borderRadius: 10, padding: '10px 8px', textAlign: 'center',
+                      border: sel ? `1.5px solid ${c.fg}` : '1px solid rgba(29,60,62,0.12)',
+                      background: sel ? c.tint : '#fff',
+                      borderRadius: 12, padding: '11px 8px', textAlign: 'center',
                       cursor: 'pointer', fontFamily: 'inherit',
                     }}>
-                    <div style={{ width: 24, height: 24, borderRadius: 8, margin: '0 auto 6px',
+                    {/* The glyph tile is WHITE on the tint when selected, never
+                        the saturated rail: a glyph on the saturated hues
+                        measures 2.62 / 1.71 / 2.56 / 3.68, three of them under
+                        the 3:1 floor, and no single glyph colour fixes all
+                        four. Same call as the Find Funding type panel. */}
+                    <div style={{ width: 26, height: 26, borderRadius: 999, margin: '0 auto 7px',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      background: sel ? tc.dot : tc.bg }}>
-                      <tc.Icon size={12} strokeWidth={sel ? 2.5 : 2}
-                        style={{ color: sel ? '#fff' : tc.dot }} />
+                      background: sel ? '#fff' : c.tint }}>
+                      <tc.Icon size={13} strokeWidth={2} style={{ color: c.fg }} />
                     </div>
-                    <div style={{ fontSize: 11, fontWeight: sel ? 600 : 500,
-                      color: sel ? tc.text : '#5F5E5A' }}>{tc.label}</div>
+                    <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 11.5, fontWeight: 600,
+                      color: sel ? c.fg : '#5F5E5A' }}>{c.label}</div>
                   </button>
                 )
               })}
@@ -267,7 +294,7 @@ function AddDeadlineModal({ orgId, userId, onClose, onSaved }: {
           {/* Notes */}
           <div style={{ marginBottom: 16 }}>
             <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#2C2C2A', marginBottom: 6 }}>
-              Notes <span style={{ color: '#8A8986', fontWeight: 400 }}>&middot; optional</span>
+              Notes <span style={{ color: '#74736E', fontWeight: 400 }}>&middot; optional</span>
             </label>
             <textarea value={notes} onChange={e => setNotes(e.target.value)}
               placeholder="Link to guidelines, application notes, or anything else you want to remember."
@@ -276,7 +303,7 @@ function AddDeadlineModal({ orgId, userId, onClose, onSaved }: {
                 padding: '10px 12px', fontFamily: 'inherit', fontSize: 13, color: '#2C2C2A',
                 background: '#fff', outline: 'none', resize: 'vertical', lineHeight: 1.5,
                 boxSizing: 'border-box' }}
-              onFocus={e => { e.currentTarget.style.borderColor = '#639922' }}
+              onFocus={e => { e.currentTarget.style.borderColor = '#1D3C3E' }}
               onBlur={e => { e.currentTarget.style.borderColor = 'rgba(0,0,0,0.14)' }} />
           </div>
 
@@ -286,7 +313,7 @@ function AddDeadlineModal({ orgId, userId, onClose, onSaved }: {
             onClick={() => setAddToPipeline(v => !v)}>
             <div style={{ width: 16, height: 16, borderRadius: 4, flexShrink: 0, marginTop: 2,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: addToPipeline ? '#639922' : '#fff',
+              background: addToPipeline ? '#1D3C3E' : '#fff',
               border: addToPipeline ? 'none' : '1.5px solid #D9D6CB',
               cursor: 'pointer' }}>
               {addToPipeline && <Check size={9} strokeWidth={3.5} style={{ color: '#fff' }} />}
@@ -304,22 +331,32 @@ function AddDeadlineModal({ orgId, userId, onClose, onSaved }: {
         {/* Footer */}
         <div style={{ padding: '14px 24px', borderTop: '0.5px solid rgba(0,0,0,0.08)',
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          background: '#FAFAF7', flexShrink: 0, gap: 12 }}>
-          <span style={{ fontSize: 11, color: '#8A8986' }}>
+          flexShrink: 0, gap: 12 }}>
+          <span style={{ fontSize: 11, color: '#74736E' }}>
             Manual deadlines show on the calendar with a pencil icon.
           </span>
           <div style={{ display: 'flex', gap: 8 }}>
             <button type="button" onClick={onClose}
               style={{ fontSize: 12, fontWeight: 500, color: '#5F5E5A', padding: '8px 14px',
-                borderRadius: 10, cursor: 'pointer', background: 'transparent', border: 'none', fontFamily: 'inherit' }}
+                borderRadius: 999, cursor: 'pointer', background: 'transparent', border: 'none', fontFamily: 'inherit' }}
               onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.04)' }}
               onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
               Cancel
             </button>
             <button type="button" onClick={handleSave} disabled={!grantName.trim() || !deadline || saving}
-              style={{ fontSize: 12, fontWeight: 500, background: '#8ECB3C', color: '#173404',
-                padding: '8px 16px', borderRadius: 10, cursor: 'pointer', border: 'none', fontFamily: 'inherit',
-                opacity: (!grantName.trim() || !deadline || saving) ? 0.5 : 1 }}>
+              style={(() => {
+                const off = !grantName.trim() || !deadline || saving
+                return {
+                  fontSize: 12.5, fontWeight: 600, fontFamily: 'inherit', border: 'none',
+                  padding: '9px 18px', borderRadius: 999,
+                  cursor: off ? 'not-allowed' : 'pointer',
+                  // Not opacity on the deep fill: at 50% over white that lands
+                  // on a muddy sage that reads as a colour choice rather than
+                  // as "not yet". A neutral fill with muted text says it plainly.
+                  background: off ? '#F1EDE3' : '#1D3C3E',
+                  color:      off ? '#74736E' : '#F6F1E7',
+                }
+              })()}>
               {saving ? 'Saving\u2026' : 'Save deadline'}
             </button>
           </div>
@@ -385,22 +422,22 @@ function EditDeadlineModal({ item, onClose, onSaved }: {
             style={{ width: '100%', height: 40, border: '0.5px solid rgba(0,0,0,0.14)', borderRadius: 10,
               padding: '0 12px', fontFamily: 'inherit', fontSize: 13, color: '#2C2C2A',
               background: '#fff', outline: 'none', boxSizing: 'border-box' }}
-            onFocus={e => { e.currentTarget.style.borderColor = '#639922' }}
+            onFocus={e => { e.currentTarget.style.borderColor = '#1D3C3E' }}
             onBlur={e => { e.currentTarget.style.borderColor = 'rgba(0,0,0,0.14)' }} />
         </div>
         {/* Footer */}
         <div style={{ padding: '12px 22px 18px', display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
           <button type="button" onClick={onClose}
             style={{ fontSize: 12, fontWeight: 500, color: '#5F5E5A', padding: '8px 14px',
-              borderRadius: 10, cursor: 'pointer', background: 'transparent', border: 'none', fontFamily: 'inherit' }}
+              borderRadius: 999, cursor: 'pointer', background: 'transparent', border: 'none', fontFamily: 'inherit' }}
             onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.04)' }}
             onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
             Cancel
           </button>
           <button type="button" onClick={handleSave} disabled={!deadline || saving}
-            style={{ fontSize: 12, fontWeight: 500, background: deadline ? '#8ECB3C' : '#F5F1E8',
-              color: deadline ? '#173404' : '#8A8986',
-              padding: '8px 16px', borderRadius: 10, cursor: deadline ? 'pointer' : 'not-allowed',
+            style={{ fontSize: 12.5, fontWeight: 600, background: deadline ? '#1D3C3E' : '#F1EDE3',
+              color: deadline ? '#F6F1E7' : '#74736E',
+              padding: '9px 18px', borderRadius: 999, cursor: deadline ? 'pointer' : 'not-allowed',
               border: 'none', fontFamily: 'inherit' }}>
             {saving ? 'Saving\u2026' : 'Save deadline'}
           </button>
@@ -454,11 +491,8 @@ function DayAlertsSheet({ alerts, onSelect, onClose }: {
                     overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.item.grant_name}</p>
                   <p style={{ fontSize: 11, color: '#5F5E5A', margin: 0 }}>{a.item.funder_name}</p>
                 </div>
-                <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 999, fontWeight: 500,
-                  background: TYPE_BG[type], color: TYPE_TEXT[type], flexShrink: 0 }}>
-                  {TYPE_LABEL[type]}
-                </span>
-                <Pencil size={13} style={{ color: '#8A8986', flexShrink: 0 }} />
+                <TypeChip type={type} />
+                <Pencil size={13} style={{ color: '#74736E', flexShrink: 0 }} />
               </button>
             )
           })}
@@ -503,11 +537,11 @@ function DatePickerInput({ value, onChange, popoverSide = 'right' }: { value: st
   return (
     <div ref={ref} style={{ position: 'relative', flexShrink: 0 }}>
       <button type="button" onClick={() => setOpen(o => !o)}
-        style={{ width: 120, height: 26, border: `0.5px solid ${open ? '#639922' : 'rgba(0,0,0,0.14)'}`,
+        style={{ width: 120, height: 26, border: `0.5px solid ${open ? '#1D3C3E' : 'rgba(0,0,0,0.14)'}`,
           borderRadius: 10, padding: '0 8px', fontSize: 11, fontFamily: 'inherit',
-          color: value ? '#2C2C2A' : '#8A8986', background: '#fff', cursor: 'pointer',
+          color: value ? '#2C2C2A' : '#74736E', background: '#fff', cursor: 'pointer',
           display: 'inline-flex', alignItems: 'center', gap: 6, textAlign: 'left', boxSizing: 'border-box' }}>
-        <Calendar size={10} strokeWidth={2} style={{ color: '#8A8986', flexShrink: 0 }} />
+        <Calendar size={10} strokeWidth={2} style={{ color: '#74736E', flexShrink: 0 }} />
         <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayStr}</span>
       </button>
       {open && (
@@ -532,7 +566,7 @@ function DatePickerInput({ value, onChange, popoverSide = 'right' }: { value: st
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 2 }}>
             {['M','T','W','T','F','S','S'].map((d, i) => (
-              <div key={i} style={{ textAlign: 'center', color: '#8A8986', fontSize: 9,
+              <div key={i} style={{ textAlign: 'center', color: '#74736E', fontSize: 9,
                 letterSpacing: '0.05em', padding: '2px 0' }}>{d}</div>
             ))}
             {calDp.map((day, i) => {
@@ -544,8 +578,8 @@ function DatePickerInput({ value, onChange, popoverSide = 'right' }: { value: st
                   onClick={() => { if (!day.isCurrentMonth) return; onChange(iso); setOpen(false) }}
                   style={{ textAlign: 'center', padding: '4px 1px', borderRadius: 6, border: 'none',
                     cursor: day.isCurrentMonth ? 'pointer' : 'default',
-                    background: isSel ? '#639922' : isToday ? '#F1F7E4' : 'transparent',
-                    color: isSel ? '#fff' : !day.isCurrentMonth ? '#D9D6CB' : isToday ? '#3B6D11' : '#2C2C2A',
+                    background: isSel ? '#1D3C3E' : isToday ? '#F1EDE3' : 'transparent',
+                    color: isSel ? '#F6F1E7' : !day.isCurrentMonth ? '#D9D6CB' : isToday ? '#1D3C3E' : '#2C2C2A',
                     fontFamily: 'inherit', fontSize: 11, fontWeight: isSel ? 600 : 400 }}>
                   {day.date.getDate()}
                 </button>
@@ -559,31 +593,38 @@ function DatePickerInput({ value, onChange, popoverSide = 'right' }: { value: st
 }
 
 // ── Shared pill helpers ───────────────────────────────────────────────────────
-const STAGE_STYLE: Record<string, { bg: string; color: string }> = {
-  identified: { bg: '#F5F1E8', color: '#5F5E5A' },
-  applying:   { bg: '#EAF3DE', color: '#3B6D11' },
-  submitted:  { bg: '#C0DD97', color: '#173404' },
-  won:        { bg: '#639922', color: '#fff'    },
-  declined:   { bg: '#FAECE7', color: '#993C1D' },
-}
 
+/**
+ * Every stage chip on this page is ONE neutral, and the label carries the
+ * meaning. It replaces a fifth pipeline-stage palette, which was non-monotonic
+ * in the same way the Pipeline board's ladder used to be.
+ *
+ * Only three stages ever reach this page and they are secondary information.
+ * Giving them a colour ramp would add a fifth stage palette to the app and
+ * collide with the type chips two inches to the left. Same decision already
+ * taken on Applications, where "Identified" stays neutral because it describes
+ * the pipeline rather than the thing in front of you.
+ */
 function StageChip({ stage }: { stage: string }) {
-  const s  = PIPELINE_STAGES.find(p => p.id === stage)
-  const st = STAGE_STYLE[stage] ?? { bg: '#F5F1E8', color: '#5F5E5A' }
+  const s = PIPELINE_STAGES.find(p => p.id === stage)
   return (
-    <span style={{ fontSize: 11, padding: '2px 7px', borderRadius: 999, fontWeight: 500,
-      whiteSpace: 'nowrap', background: st.bg, color: st.color, flexShrink: 0 }}>
+    <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 10.5, fontWeight: 700, letterSpacing: '0.05em',
+      textTransform: 'uppercase', padding: '3px 9px', borderRadius: 999,
+      whiteSpace: 'nowrap', background: '#F1EDE3', color: '#1D3C3E', flexShrink: 0 }}>
       {s?.label ?? stage}
     </span>
   )
 }
 
-function TypeChip({ type }: { type: string }) {
+/** The validated four-hue set, shared with every other surface. */
+function TypeChip({ type }: { type: string | null }) {
+  const c = typeColour(type)
+  if (!c) return null
   return (
-    <span style={{ fontSize: 11, padding: '2px 7px', borderRadius: 999, fontWeight: 500,
-      whiteSpace: 'nowrap', background: TYPE_BG[type] ?? '#F1F7E4',
-      color: TYPE_TEXT[type] ?? '#3B6D11', flexShrink: 0 }}>
-      {TYPE_LABEL[type] ?? type}
+    <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 10.5, fontWeight: 700, letterSpacing: '0.05em',
+      textTransform: 'uppercase', padding: '3px 9px', borderRadius: 999,
+      whiteSpace: 'nowrap', background: c.tint, color: c.fg, flexShrink: 0 }}>
+      {c.label}
     </span>
   )
 }
@@ -643,7 +684,7 @@ function GrantPreviewModal({
   const stripSub = brief ? 'What they fund, who qualifies, tips for applying' : 'Eligibility, who qualifies, and more'
 
   const PAL = {
-    green: { bg: '#F1F7E4', stroke: '#3B6D11' },
+    green: { bg: '#E3F0E4', stroke: '#1B6B3D' },
     coral: { bg: '#FAECE7', stroke: '#993C1D' },
     amber: { bg: '#FAEEDA', stroke: '#854F0B' },
   } as const
@@ -684,7 +725,7 @@ function GrantPreviewModal({
               <TypeChip type={fundingType} />
               {grant.eligibilityStatus === 'eligible' && (
                 <span style={{ fontFamily: UI_FONT, fontSize: 11, padding: '2px 8px', borderRadius: 999, fontWeight: 500,
-                  background: '#F1F7E4', color: '#3B6D11' }}>Eligible</span>
+                  background: '#E3F0E4', color: '#1B6B3D' }}>Eligible</span>
               )}
               {grant.eligibilityStatus === 'check_required' && (
                 <span style={{ fontFamily: UI_FONT, fontSize: 11, padding: '2px 8px', borderRadius: 999, fontWeight: 500,
@@ -715,18 +756,18 @@ function GrantPreviewModal({
           {/* Amount & deadline strip */}
           {(amtStr || dlLabel) && (
             <div style={{ display: 'grid', gridTemplateColumns: amtStr && dlLabel ? '1fr 1fr' : '1fr',
-              padding: '16px 24px', gap: 16, borderBottom: '0.5px solid rgba(0,0,0,0.06)', background: '#FAFAF7' }}>
+              padding: '16px 24px', gap: 16, borderBottom: '0.5px solid rgba(0,0,0,0.06)' }}>
               {amtStr && (
                 <div>
                   <p style={{ fontFamily: UI_FONT, fontSize: 10, fontWeight: 500, letterSpacing: '0.08em',
-                    textTransform: 'uppercase', color: '#8A8986', margin: '0 0 4px' }}>Grant amount</p>
-                  <p style={{ fontFamily: UI_FONT, fontSize: 18, fontWeight: 600, color: '#3B6D11', margin: 0 }}>{amtStr}</p>
+                    textTransform: 'uppercase', color: '#74736E', margin: '0 0 4px' }}>Grant amount</p>
+                  <p style={{ fontFamily: UI_FONT, fontSize: 18, fontWeight: 600, color: '#1B6B3D', margin: 0 }}>{amtStr}</p>
                 </div>
               )}
               {dlLabel && (
                 <div>
                   <p style={{ fontFamily: UI_FONT, fontSize: 10, fontWeight: 500, letterSpacing: '0.08em',
-                    textTransform: 'uppercase', color: '#8A8986', margin: '0 0 4px' }}>Deadline</p>
+                    textTransform: 'uppercase', color: '#74736E', margin: '0 0 4px' }}>Deadline</p>
                   <p style={{ fontFamily: UI_FONT, fontSize: 14, fontWeight: 500, color: '#2C2C2A', margin: 0,
                     display: 'flex', alignItems: 'center', gap: 6 }}>
                     <Calendar size={13} strokeWidth={2} style={{ color: '#5F5E5A' }} />
@@ -741,7 +782,7 @@ function GrantPreviewModal({
           {grant.description && (
             <div style={{ padding: '18px 24px', borderBottom: '0.5px solid rgba(0,0,0,0.06)' }}>
               <p style={{ fontFamily: UI_FONT, fontSize: 10, fontWeight: 500, letterSpacing: '0.08em',
-                textTransform: 'uppercase', color: '#8A8986', margin: '0 0 8px' }}>About this grant</p>
+                textTransform: 'uppercase', color: '#74736E', margin: '0 0 8px' }}>About this grant</p>
               <p style={{ fontFamily: BODY_FONT, fontSize: 13.5, lineHeight: 1.55, color: '#2C2C2A', margin: 0 }}>
                 {grant.description}
               </p>
@@ -752,11 +793,11 @@ function GrantPreviewModal({
           {grant.impactSectors && grant.impactSectors.length > 0 && (
             <div style={{ padding: '16px 24px', borderBottom: '0.5px solid rgba(0,0,0,0.06)' }}>
               <p style={{ fontFamily: UI_FONT, fontSize: 10, fontWeight: 500, letterSpacing: '0.08em',
-                textTransform: 'uppercase', color: '#8A8986', margin: '0 0 10px' }}>Impact sectors</p>
+                textTransform: 'uppercase', color: '#74736E', margin: '0 0 10px' }}>Impact sectors</p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {grant.impactSectors.map(s => (
                   <span key={s} style={{ fontFamily: BODY_FONT, fontSize: 12, padding: '4px 10px', borderRadius: 999,
-                    background: '#F1F7E4', color: '#3B6D11', fontWeight: 500 }}>{s}</span>
+                    background: '#E3F0E4', color: '#1B6B3D', fontWeight: 500 }}>{s}</span>
                 ))}
               </div>
             </div>
@@ -766,17 +807,17 @@ function GrantPreviewModal({
           {(!grant.deadline || grant.isRolling) && (
             <div style={{ padding: '16px 24px', borderBottom: '0.5px solid rgba(0,0,0,0.06)' }}>
               <p style={{ fontFamily: UI_FONT, fontSize: 10, fontWeight: 500, letterSpacing: '0.08em',
-                textTransform: 'uppercase', color: '#8A8986', margin: '0 0 8px' }}>Add a deadline</p>
+                textTransform: 'uppercase', color: '#74736E', margin: '0 0 8px' }}>Add a deadline</p>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                 <DatePickerInput value={deadlineValue} onChange={setDeadlineValue} popoverSide="left" />
                 <button onClick={handleSetDeadlineClick} disabled={!deadlineValue || saving}
-                  style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 500, padding: '7px 14px', border: 'none', borderRadius: 8,
+                  style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 600, padding: '8px 16px', border: 'none', borderRadius: 999,
                     cursor: deadlineValue && !saving ? 'pointer' : 'not-allowed',
-                    background: deadlineValue ? '#8ECB3C' : '#F0EFEB', color: deadlineValue ? '#173404' : '#8A8986' }}>
+                    background: deadlineValue ? '#1D3C3E' : '#F1EDE3', color: deadlineValue ? '#F6F1E7' : '#74736E' }}>
                   {saving ? '…' : inPipeline ? 'Set deadline' : 'Set date & save to pipeline'}
                 </button>
               </div>
-              <p style={{ fontFamily: BODY_FONT, fontSize: 11.5, color: '#8A8986', margin: '8px 0 0' }}>
+              <p style={{ fontFamily: BODY_FONT, fontSize: 11.5, color: '#74736E', margin: '8px 0 0' }}>
                 {grant.isRolling
                   ? 'This funder accepts rolling applications. Set your own target submission date.'
                   : inPipeline
@@ -797,15 +838,15 @@ function GrantPreviewModal({
                   style={{
                     width: '100%', display: 'flex', alignItems: 'center', gap: 12,
                     padding: '14px 22px 14px 19px',
-                    background: insightsHover ? '#F1F7E4' : '#fff',
-                    borderLeft: '3px solid #8ECB3C',
+                    background: insightsHover ? '#E3F0E4' : '#fff',
+                    borderLeft: '3px solid #1D3C3E',
                     borderRight: 'none', borderTop: 'none', borderBottom: 'none',
                     cursor: 'pointer', textAlign: 'left',
                     transition: 'background-color 160ms ease',
                     fontFamily: BODY_FONT,
                   }}
                 >
-                  <Info size={16} strokeWidth={2} style={{ color: insightsHover ? '#639922' : '#173404', flexShrink: 0, transition: 'color 160ms ease' }} />
+                  <Info size={16} strokeWidth={2} style={{ color: insightsHover ? '#1D3C3E' : '#1D3C3E', flexShrink: 0, transition: 'color 160ms ease' }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 500, color: '#2C2C2A' }}>{stripTitle}</div>
                     <div style={{ fontSize: 11, marginTop: 1, color: '#5F5E5A' }}>{stripSub}</div>
@@ -815,11 +856,11 @@ function GrantPreviewModal({
               ) : (
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center',
-                    padding: '12px 22px', background: '#F1F7E4', borderBottom: '0.5px dashed rgba(57,109,17,0.2)' }}>
+                    padding: '12px 22px', background: '#E3F0E4', borderBottom: '0.5px dashed rgba(57,109,17,0.2)' }}>
                     <button onClick={() => setInsightsExpanded(false)}
                       style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: BODY_FONT,
                         fontSize: 11, fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase',
-                        color: '#3B6D11', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}>
+                        color: '#1B6B3D', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}>
                       <ChevronUp size={12} strokeWidth={2.5} />
                       Hide insights
                     </button>
@@ -869,11 +910,11 @@ function GrantPreviewModal({
                       {grant.eligibilityCriteria && grant.eligibilityCriteria.length > 0 && (
                         <div style={{ marginBottom: 16 }}>
                           <p style={{ fontFamily: BODY_FONT, fontSize: 10, fontWeight: 500, letterSpacing: '0.08em',
-                            textTransform: 'uppercase', color: '#8A8986', margin: '0 0 10px' }}>Eligibility criteria</p>
+                            textTransform: 'uppercase', color: '#74736E', margin: '0 0 10px' }}>Eligibility criteria</p>
                           <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
                             {grant.eligibilityCriteria.map((c, i) => (
                               <li key={i} style={{ display: 'flex', gap: 10, fontFamily: BODY_FONT, fontSize: 13, color: '#5F5E5A' }}>
-                                <CheckCircle2 size={14} style={{ flexShrink: 0, marginTop: 2, color: '#639922' }} />
+                                <CheckCircle2 size={14} style={{ flexShrink: 0, marginTop: 2, color: '#1D3C3E' }} />
                                 <span style={{ lineHeight: 1.45 }}>{c}</span>
                               </li>
                             ))}
@@ -882,12 +923,12 @@ function GrantPreviewModal({
                       )}
                       <div>
                         <p style={{ fontFamily: BODY_FONT, fontSize: 10, fontWeight: 500, letterSpacing: '0.08em',
-                          textTransform: 'uppercase', color: '#8A8986', margin: '0 0 8px' }}>Eligible organisations</p>
+                          textTransform: 'uppercase', color: '#74736E', margin: '0 0 8px' }}>Eligible organisations</p>
                         {eligibilityStated(grant.eligibleStructures) ? (
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                             {grant.eligibleStructures!.map(s => (
                               <span key={s} style={{ fontFamily: BODY_FONT, fontSize: 11, fontWeight: 500, padding: '4px 10px',
-                                borderRadius: 9999, background: 'rgba(142,203,60,0.12)', color: '#639922' }}>
+                                borderRadius: 9999, background: 'rgba(142,203,60,0.12)', color: '#1D3C3E' }}>
                                 {STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
                               </span>
                             ))}
@@ -906,13 +947,13 @@ function GrantPreviewModal({
         </div>
 
         {/* Footer actions */}
-        <div style={{ padding: '14px 22px', borderTop: '0.5px solid rgba(0,0,0,0.08)', background: '#FAFAF7',
+        <div style={{ padding: '14px 22px', borderTop: '0.5px solid rgba(0,0,0,0.08)',
           display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 10, flexWrap: 'wrap', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
             {grant.applyUrl && (
               <a href={grant.applyUrl} target="_blank" rel="noopener noreferrer"
                 style={{ fontFamily: UI_FONT, fontSize: 12.5, fontWeight: 500,
-                  background: '#173404', color: '#F1F7E4', padding: '8px 14px', borderRadius: 8,
+                  background: '#1D3C3E', color: '#F6F1E7', padding: '9px 16px', borderRadius: 999,
                   textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
                 Apply now <ExternalLink size={11} />
               </a>
@@ -920,9 +961,9 @@ function GrantPreviewModal({
             {!inPipeline && (
               <button onClick={onAddToPipeline} disabled={saving}
                 style={{ fontFamily: UI_FONT, fontSize: 12.5, fontWeight: 500,
-                  background: saving ? '#F5F1E8' : '#8ECB3C',
-                  color: saving ? '#8A8986' : '#173404',
-                  padding: '8px 14px', borderRadius: 8, border: 'none',
+                  background: saving ? '#F1EDE3' : '#1D3C3E',
+                  color: saving ? '#74736E' : '#F6F1E7',
+                  padding: '9px 16px', borderRadius: 999, border: 'none',
                   cursor: saving ? 'not-allowed' : 'pointer',
                   display: 'inline-flex', alignItems: 'center', gap: 5 }}>
                 <Plus size={11} /> Add to Pipeline
@@ -930,7 +971,7 @@ function GrantPreviewModal({
             )}
             {inPipeline && (
               <span style={{ fontFamily: UI_FONT, fontSize: 11.5, fontWeight: 500,
-                color: '#3B6D11', background: '#F1F7E4', padding: '6px 10px', borderRadius: 8,
+                color: '#1B6B3D', background: '#E3F0E4', padding: '6px 10px', borderRadius: 8,
                 display: 'inline-flex', alignItems: 'center', gap: 5 }}>
                 <Check size={11} strokeWidth={2.5} /> In pipeline
               </span>
@@ -1266,10 +1307,10 @@ export default function DeadlinesPage() {
 
   // Calendar marker map — all three sources for dot rendering
   const calMarkerMap = new Map<string, { types: string[]; hasUrgent: boolean }>()
-  function addMarker(date: string | null | undefined, type: string, urgent: boolean) {
+  function addMarker(date: string | null | undefined, type: string | null, urgent: boolean) {
     if (!date) return
     const m = calMarkerMap.get(date) ?? { types: [], hasUrgent: false }
-    if (!m.types.includes(type)) m.types.push(type)
+    if (type && !m.types.includes(type)) m.types.push(type)
     if (urgent) m.hasUrgent = true
     calMarkerMap.set(date, m)
   }
@@ -1303,7 +1344,7 @@ export default function DeadlinesPage() {
   }
 
   function dot(label: string): React.ReactNode {
-    return <span style={{ color: '#8A8986', margin: '0 2px' }}>&middot;</span>
+    return <span style={{ color: '#74736E', margin: '0 2px' }}>&middot;</span>
   }
 
   // ── Loading / error states ────────────────────────────────────────────────────
@@ -1349,13 +1390,17 @@ export default function DeadlinesPage() {
     const dl       = row.kind === 'pipeline' ? row.alert.item.deadline : row.grant.deadline
     const dlLabel  = dateLabel(dl ?? null)
 
-    // Countdown pill colours
-    const ctBg     = bucket === 'week'  ? '#FAECE7' : bucket === 'month' ? '#F4F9ED' : '#FAFAF7'
-    const ctColor  = bucket === 'week'  ? '#993C1D' : bucket === 'month' ? '#639922' : '#5F5E5A'
-    const ctBorder = bucket === 'later' ? '1px solid rgba(23,52,4,0.08)' : 'none'
+    // Countdown tile — see COUNTDOWN_TILE for why these are solid accents
+    // rather than the pale tints this used to use. The old month tint pair
+    // (#E3F0E4 / #1D3C3E) measured 3.21 and failed outright.
+    const ctBg = bucket === 'week' ? COUNTDOWN_TILE.urgent
+               : bucket === 'month' ? COUNTDOWN_TILE.soon
+               : COUNTDOWN_TILE.later
 
     // Body data
-    let title = '', funder = '', amtStr = '', fundingType = 'grant'
+    let title = '', funder = '', amtStr = ''
+    // Null on a pipeline row: we do not know its type, so no chip is rendered.
+    let fundingType: string | null = null
     if (row.kind === 'pipeline') {
       const item  = row.alert.item
       title       = item.grant_name
@@ -1371,43 +1416,63 @@ export default function DeadlinesPage() {
     }
 
     // Actions
+    /**
+     * ONE SHAPE FOR EVERY ROW: a state chip, then a single action.
+     *
+     * Three action vocabularies used to run down this list depending on which
+     * QUERY the row arrived through rather than on what you would do about it
+     * — a live match got three buttons, a saved grant got two, and a pipeline
+     * item at "identified" got a bare arrow and nothing else, which is why one
+     * row looked broken beside its sibling. Worse, a match that was already in
+     * the pipeline did get a stage chip, so the same state rendered two ways.
+     */
+    const ghostBtn: React.CSSProperties = {
+      fontFamily: UI_FONT, fontSize: 12, fontWeight: 600, color: '#74736E',
+      padding: '7px 10px', borderRadius: 999, border: 'none',
+      background: 'transparent', cursor: 'pointer', whiteSpace: 'nowrap',
+    }
+    const outlineBtn: React.CSSProperties = {
+      fontFamily: UI_FONT, fontSize: 12, fontWeight: 600, color: '#1D3C3E',
+      padding: '7px 14px', borderRadius: 999, border: '1.5px solid rgba(29,60,62,0.24)',
+      background: '#fff', cursor: 'pointer', whiteSpace: 'nowrap',
+    }
+    const fillBtn: React.CSSProperties = {
+      fontFamily: UI_FONT, fontSize: 12, fontWeight: 600, color: '#F6F1E7',
+      padding: '7px 14px', borderRadius: 999, border: 'none', background: '#1D3C3E',
+      cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap',
+    }
+    const arrowLink = (
+      <a href="/dashboard/pipeline"
+        style={{ width: 30, height: 30, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          color: '#74736E', borderRadius: 999, textDecoration: 'none', background: 'transparent' }}
+        onMouseEnter={e => { e.currentTarget.style.background = '#F1EDE3'; e.currentTarget.style.color = '#1D3C3E' }}
+        onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#74736E' }}>
+        <ArrowRight size={14} />
+      </a>
+    )
+    const savedChip = (
+      <span style={{ fontFamily: UI_FONT, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.05em',
+        textTransform: 'uppercase', padding: '3px 9px', borderRadius: 999,
+        background: '#F1EDE3', color: '#1D3C3E', whiteSpace: 'nowrap' }}>Saved</span>
+    )
+
     let actions: React.ReactNode = null
     if (row.kind === 'pipeline') {
-      const stage = row.alert.item.stage
+      // In pipeline: stage chip, then the way through to it.
       actions = (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-          {stage === 'applying' && (
-            <span style={{ fontFamily: UI_FONT, fontSize: 11, padding: '2px 8px', borderRadius: 10, fontWeight: 500,
-              background: '#EEEDFE', color: '#3C3489', whiteSpace: 'nowrap' }}>Applying</span>
-          )}
-          {stage === 'submitted' && (
-            <span style={{ fontFamily: UI_FONT, fontSize: 11, padding: '2px 8px', borderRadius: 10, fontWeight: 500,
-              background: '#F4F9ED', color: '#639922', whiteSpace: 'nowrap' }}>Submitted</span>
-          )}
-          <a href="/dashboard/pipeline"
-            style={{ width: 28, height: 28, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              color: '#8A8986', borderRadius: 6, textDecoration: 'none', background: 'transparent' }}
-            onMouseEnter={e => { e.currentTarget.style.background = '#F5F1E8'; e.currentTarget.style.color = '#173404' }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#8A8986' }}>
-            <ArrowRight size={14} />
-          </a>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          <StageChip stage={row.alert.item.stage} />
+          {arrowLink}
         </div>
       )
     } else if (row.kind === 'saved') {
+      // Saved: the chip says so, so "Not for us" comes off — the user has
+      // already made a judgement about this one.
       actions = (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-          <button onClick={() => handleDismissMatch(row.grant)}
-            style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 500, color: '#8A8986', padding: '6px 8px', borderRadius: 6,
-              border: 'none', background: 'transparent', cursor: 'pointer', whiteSpace: 'nowrap' }}
-            title="Not for us — hide this grant">
-            Not for us
-          </button>
-          <button
-            onClick={() => handlePipelineMatch(row.grant)}
-            style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 500, padding: '6px 12px', borderRadius: 6,
-              border: 'none', background: '#8ECB3C', color: '#173404', cursor: 'pointer',
-              display: 'inline-flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
-            <Plus size={10} />Pipeline
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          {savedChip}
+          <button onClick={() => handlePipelineMatch(row.grant)} style={fillBtn}>
+            <Plus size={11} />Pipeline
           </button>
         </div>
       )
@@ -1417,59 +1482,43 @@ export default function DeadlinesPage() {
       const actioning = matchActioning[gId]
       if (state === 'saved') {
         actions = (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-            <span style={{ fontFamily: UI_FONT, fontSize: 11, padding: '2px 8px', borderRadius: 10, fontWeight: 500,
-              background: '#FAFAF7', color: '#5F5E5A', border: '1px solid rgba(23,52,4,0.14)', whiteSpace: 'nowrap' }}>Saved</span>
-            <button onClick={() => handlePipelineMatch(row.grant)}
-              style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 500, padding: '6px 12px', borderRadius: 6,
-                border: 'none', background: '#8ECB3C', color: '#173404', cursor: 'pointer',
-                display: 'inline-flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
-              <Plus size={10} />Pipeline
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+            {savedChip}
+            <button onClick={() => handlePipelineMatch(row.grant)} style={fillBtn}>
+              <Plus size={11} />Pipeline
             </button>
           </div>
         )
       } else if (state === 'pipeline') {
+        // Same state as a row.kind === 'pipeline' row, so the same rendering.
         actions = (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-            <span style={{ fontFamily: UI_FONT, fontSize: 11, padding: '2px 8px', borderRadius: 10, fontWeight: 500,
-              background: '#F4F9ED', color: '#639922', whiteSpace: 'nowrap' }}>Identified</span>
-            <a href="/dashboard/pipeline"
-              style={{ width: 28, height: 28, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                color: '#8A8986', borderRadius: 6, textDecoration: 'none' }}>
-              <ArrowRight size={14} />
-            </a>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+            <StageChip stage="identified" />
+            {arrowLink}
           </div>
         )
       } else if (actioning === 'done') {
         actions = (
-          <span style={{ fontFamily: UI_FONT, fontSize: 11, fontWeight: 500, color: '#3B6D11',
-            display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-            <Check size={10} strokeWidth={3} /> Added
+          <span style={{ fontFamily: UI_FONT, fontSize: 11.5, fontWeight: 600, color: '#1B6B3D',
+            display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            <Check size={11} strokeWidth={3} /> Added
           </span>
         )
       } else {
         actions = (
-          <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
             <button onClick={() => handleDismissMatch(row.grant)} disabled={!!actioning}
-              style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 500, color: '#8A8986', padding: '6px 8px',
-                borderRadius: 6, border: 'none', background: 'transparent',
-                cursor: actioning ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap' }}
+              style={{ ...ghostBtn, cursor: actioning ? 'not-allowed' : 'pointer' }}
               title="Not for us — hide this grant">
               Not for us
             </button>
             <button onClick={() => handleSaveMatch(gId)} disabled={!!actioning}
-              style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 500, color: '#5F5E5A', padding: '6px 10px',
-                borderRadius: 6, border: '0.5px solid rgba(23,52,4,0.14)', background: '#fff',
-                cursor: actioning ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap' }}>
+              style={{ ...outlineBtn, cursor: actioning ? 'not-allowed' : 'pointer' }}>
               {actioning === 'saving' ? '…' : 'Save'}
             </button>
             <button onClick={() => handlePipelineMatch(row.grant)} disabled={!!actioning}
-              style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 500, padding: '6px 12px', borderRadius: 6,
-                border: 'none', cursor: actioning ? 'not-allowed' : 'pointer',
-                background: actioning ? '#F5F1E8' : '#8ECB3C',
-                color: actioning ? '#8A8986' : '#173404',
-                display: 'inline-flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
-              {actioning === 'pipelining' ? '…' : <><Plus size={10} />Pipeline</>}
+              style={{ ...fillBtn, cursor: actioning ? 'not-allowed' : 'pointer', opacity: actioning ? 0.5 : 1 }}>
+              {actioning === 'pipelining' ? '…' : <><Plus size={11} />Pipeline</>}
             </button>
           </div>
         )
@@ -1479,25 +1528,29 @@ export default function DeadlinesPage() {
     return (
       <div key={rowKey}
         style={{
-          display: 'grid', gridTemplateColumns: '72px 1fr auto', gap: 16, alignItems: 'center',
+          display: 'grid', gridTemplateColumns: '74px 1fr auto', gap: 16, alignItems: 'center',
           padding: '14px 22px',
           borderBottom: isLast ? 'none' : '1px solid rgba(23,52,4,0.08)',
         }}
-        onMouseEnter={e => { e.currentTarget.style.background = '#FAFAF7' }}
+        onMouseEnter={e => { e.currentTarget.style.background = '#FAF9F5' }}
         onMouseLeave={e => { e.currentTarget.style.background = '' }}>
 
-        {/* Countdown pill */}
-        <div style={{
-          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          padding: '6px 4px', borderRadius: 8, flexShrink: 0,
-          background: ctBg, color: ctColor, border: ctBorder,
-        }}>
-          <div style={{ fontFamily: UI_FONT, fontWeight: 600, fontSize: 14, letterSpacing: '-0.01em', lineHeight: 1 }}>
-            {dayStr}
+        {/* Countdown tile, with the date BELOW it rather than inside. No
+            border: nothing may depend on the tile's edge, which is 1.54 on
+            gold and 1.85 on sage. The numeral inside carries the contrast. */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
+          <div style={{
+            width: 56, height: 46, borderRadius: 12, flexShrink: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: ctBg,
+          }}>
+            <span style={{ fontFamily: UI_FONT, fontWeight: 700, fontSize: 19, letterSpacing: '-0.01em', color: '#1D3C3E' }}>
+              {dayStr}
+            </span>
           </div>
-          <div style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 11, opacity: 0.75, marginTop: 3 }}>
+          <span style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 11, color: '#5F5E5A', whiteSpace: 'nowrap' }}>
             {dlLabel}
-          </div>
+          </span>
         </div>
 
         {/* Body */}
@@ -1515,10 +1568,10 @@ export default function DeadlinesPage() {
             </span>
             <TypeChip type={fundingType} />
           </div>
-          <div style={{ fontFamily: BODY_FONT, fontSize: 13, color: '#8A8986', display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
+          <div style={{ fontFamily: BODY_FONT, fontSize: 13, color: '#74736E', display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
             {funder && <span style={{ color: '#5F5E5A' }}>{funder}</span>}
             {funder && amtStr && <span style={{ opacity: 0.5 }}>·</span>}
-            {amtStr && <span style={{ color: '#639922', fontFamily: UI_FONT, fontWeight: 500, fontSize: 12.5 }}>{amtStr}</span>}
+            {amtStr && <span style={{ color: '#1D3C3E', fontFamily: UI_FONT, fontWeight: 500, fontSize: 12.5 }}>{amtStr}</span>}
           </div>
         </button>
 
@@ -1534,15 +1587,15 @@ export default function DeadlinesPage() {
       {/* Page header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 28 }}>
         <div>
-          <h1 style={{ fontFamily: UI_FONT, fontSize: 28, fontWeight: 600, letterSpacing: '-0.02em',
-            margin: '0 0 4px', color: '#2C2C2A' }}>Deadlines</h1>
-          <p style={{ fontFamily: BODY_FONT, fontSize: 14.5, color: '#5F5E5A', margin: 0 }}>
+          <h1 style={{ fontFamily: UI_FONT, fontSize: 31, fontWeight: 600, letterSpacing: '-0.025em',
+            margin: '0 0 5px', color: '#1D3C3E' }}>Deadlines</h1>
+          <p style={{ fontFamily: BODY_FONT, fontSize: 13.5, color: '#5F5E5A', margin: 0 }}>
             What's coming up across your pipeline, saved grants, and live matches.
           </p>
         </div>
         <button onClick={() => setAddOpen(true)}
-          style={{ fontFamily: UI_FONT, fontSize: 13.5, fontWeight: 500, background: '#8ECB3C', color: '#173404',
-            border: 'none', padding: '9px 16px', borderRadius: 8, cursor: 'pointer',
+          style={{ fontFamily: UI_FONT, fontSize: 13.5, fontWeight: 600, background: '#1D3C3E', color: '#F6F1E7',
+            border: 'none', padding: '11px 20px', borderRadius: 999, cursor: 'pointer',
             display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0 }}
           onMouseEnter={e => { e.currentTarget.style.filter = 'brightness(0.95)' }}
           onMouseLeave={e => { e.currentTarget.style.filter = 'none' }}>
@@ -1566,7 +1619,7 @@ export default function DeadlinesPage() {
                   <span style={{ fontFamily: UI_FONT, fontWeight: 600, fontSize: 15, color: '#2C2C2A', letterSpacing: '-0.01em' }}>This week</span>
                   <span style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 12, color: '#993C1D', background: '#FAECE7', padding: '3px 9px', borderRadius: 10 }}>{thisWeek.length}</span>
                 </div>
-                <span style={{ fontFamily: BODY_FONT, fontSize: 12, color: '#8A8986' }}>Due in the next 7 days</span>
+                <span style={{ fontFamily: BODY_FONT, fontSize: 12, color: '#74736E' }}>Due in the next 7 days</span>
               </div>
               {thisWeek.map((row, i) => renderScheduledRow(row, 'week', i === thisWeek.length - 1,
                 row.kind === 'pipeline' ? row.alert.item.id : row.grant.id + '-week-' + i))}
@@ -1579,9 +1632,9 @@ export default function DeadlinesPage() {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '16px 22px', borderBottom: '1px solid rgba(23,52,4,0.08)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <span style={{ fontFamily: UI_FONT, fontWeight: 600, fontSize: 15, color: '#2C2C2A', letterSpacing: '-0.01em' }}>Next 6 weeks</span>
-                  <span style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 12, color: '#8A8986', background: '#FAFAF7', padding: '3px 9px', borderRadius: 10 }}>{nextSixWeeks.length}</span>
+                  <span style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 12, color: '#74736E', padding: '3px 9px', borderRadius: 10 }}>{nextSixWeeks.length}</span>
                 </div>
-                <span style={{ fontFamily: BODY_FONT, fontSize: 12, color: '#8A8986' }}>{windowMeta}</span>
+                <span style={{ fontFamily: BODY_FONT, fontSize: 12, color: '#74736E' }}>{windowMeta}</span>
               </div>
               {nextSixWeeks.map((row, i) => renderScheduledRow(row, 'month', i === nextSixWeeks.length - 1,
                 row.kind === 'pipeline' ? row.alert.item.id : row.grant.id + '-month-' + i))}
@@ -1591,7 +1644,7 @@ export default function DeadlinesPage() {
           {/* Empty state */}
           {displayedScheduled.length === 0 && (
             <div style={{ background: '#fff', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 12, padding: '32px 22px', textAlign: 'center', marginBottom: 16 }}>
-              <p style={{ fontFamily: BODY_FONT, color: '#8A8986', fontSize: 14, margin: 0 }}>
+              <p style={{ fontFamily: BODY_FONT, color: '#74736E', fontSize: 14, margin: 0 }}>
                 {dayFilter ? `No deadlines on ${dateLabel(dayFilter)}.` : 'No scheduled deadlines yet. Add one to get started.'}
               </p>
             </div>
@@ -1601,12 +1654,12 @@ export default function DeadlinesPage() {
           {/* Needs a deadline */}
           {needsDeadlineAll.length > 0 && (
             <div style={{ background: '#fff', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '16px 22px', borderBottom: '1px solid rgba(23,52,4,0.08)', background: '#FAFAF7' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '16px 22px', borderBottom: '1px solid rgba(23,52,4,0.08)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <span style={{ fontFamily: UI_FONT, fontWeight: 600, fontSize: 15, color: '#2C2C2A', letterSpacing: '-0.01em' }}>Needs a deadline</span>
-                  <span style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 12, color: '#8A8986', background: '#F0EFEB', padding: '3px 9px', borderRadius: 10 }}>{needsDeadlineAll.length}</span>
+                  <span style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 12, color: '#74736E', background: '#F0EFEB', padding: '3px 9px', borderRadius: 10 }}>{needsDeadlineAll.length}</span>
                 </div>
-                <span style={{ fontFamily: BODY_FONT, fontSize: 12, color: '#8A8986' }}>Pick a date to schedule</span>
+                <span style={{ fontFamily: BODY_FONT, fontSize: 12, color: '#74736E' }}>Pick a date to schedule</span>
               </div>
               <div>
                   {needsDeadlineAll.map((row, idx) => {
@@ -1619,32 +1672,44 @@ export default function DeadlinesPage() {
                       const success = deadlineSuccesses.has(item.id)
                       return (
                         <div key={item.id} style={{
-                          display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 12, alignItems: 'center',
+                          display: 'grid', gridTemplateColumns: '74px 1fr auto auto', gap: 12, alignItems: 'center',
                           padding: '12px 22px', borderBottom: isLast ? 'none' : '1px solid rgba(23,52,4,0.06)',
                         }}
-                          onMouseEnter={e => { e.currentTarget.style.background = '#FAFAF7' }}
+                          onMouseEnter={e => { e.currentTarget.style.background = '#FAF9F5' }}
                           onMouseLeave={e => { e.currentTarget.style.background = '' }}>
+                          {/* The fourth accent, and the one state that is not a
+                              countdown. It also gives these rows the same 74px
+                              first column as every other row on the page —
+                              without it their titles started at the card edge
+                              and nothing lined up down the list. */}
+                          <div style={{ display: 'flex', justifyContent: 'center' }}>
+                            <div style={{ width: 56, height: 46, borderRadius: 12, flexShrink: 0,
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              background: COUNTDOWN_TILE.none }}>
+                              <CalendarDays size={19} style={{ color: '#1D3C3E' }} />
+                            </div>
+                          </div>
                           <button type="button" onClick={() => openPipelineForDeadline(item)}
                             style={{ color: 'inherit', background: 'transparent', border: 'none', padding: 0,
                               textAlign: 'left', cursor: 'pointer', font: 'inherit', minWidth: 0 }}>
                             <div style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 14, color: '#2C2C2A', marginBottom: 2 }}>{item.grant_name}</div>
-                            <div style={{ fontFamily: BODY_FONT, fontSize: 12.5, color: '#8A8986' }}>
+                            <div style={{ fontFamily: BODY_FONT, fontSize: 12.5, color: '#74736E' }}>
                               {item.funder_name !== item.grant_name && <span>{item.funder_name} &middot; </span>}
-                              {amtStr && <span style={{ color: '#639922', fontFamily: UI_FONT, fontWeight: 500 }}>{amtStr}</span>}
+                              {amtStr && <span style={{ color: '#1D3C3E', fontFamily: UI_FONT, fontWeight: 500 }}>{amtStr}</span>}
                             </div>
                           </button>
                           <DatePickerInput value={val}
                             onChange={v => setDeadlineInputs(prev => ({ ...prev, [item.id]: v }))} />
                           {success ? (
-                            <span style={{ fontFamily: UI_FONT, fontSize: 11, fontWeight: 500, color: '#3B6D11', padding: '4px 10px',
-                              background: '#F4F9ED', borderRadius: 6, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                            <span style={{ fontFamily: UI_FONT, fontSize: 11, fontWeight: 500, color: '#1B6B3D', padding: '4px 10px',
+                              background: '#E3F0E4', borderRadius: 6, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                               <Check size={11} strokeWidth={3} /> Set
                             </span>
                           ) : (
                             <button onClick={() => handleSetDeadline(item.id, val)} disabled={!val || saving}
-                              style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 500, padding: '6px 12px', border: 'none', borderRadius: 6,
+                              style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 600, padding: '7px 14px', border: 'none', borderRadius: 999,
                                 cursor: val && !saving ? 'pointer' : 'not-allowed',
-                                background: val ? '#8ECB3C' : '#F0EFEB', color: val ? '#173404' : '#8A8986' }}>
+                                background: val ? '#1D3C3E' : '#F1EDE3', color: val ? '#F6F1E7' : '#74736E' }}>
                               {saving ? '…' : 'Set date'}
                             </button>
                           )}
@@ -1658,32 +1723,44 @@ export default function DeadlinesPage() {
                       const success = savedSuccesses.has(g.id)
                       return (
                         <div key={g.id} style={{
-                          display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 12, alignItems: 'center',
+                          display: 'grid', gridTemplateColumns: '74px 1fr auto auto', gap: 12, alignItems: 'center',
                           padding: '12px 22px', borderBottom: isLast ? 'none' : '1px solid rgba(23,52,4,0.06)',
                         }}
-                          onMouseEnter={e => { e.currentTarget.style.background = '#FAFAF7' }}
+                          onMouseEnter={e => { e.currentTarget.style.background = '#FAF9F5' }}
                           onMouseLeave={e => { e.currentTarget.style.background = '' }}>
+                          {/* The fourth accent, and the one state that is not a
+                              countdown. It also gives these rows the same 74px
+                              first column as every other row on the page —
+                              without it their titles started at the card edge
+                              and nothing lined up down the list. */}
+                          <div style={{ display: 'flex', justifyContent: 'center' }}>
+                            <div style={{ width: 56, height: 46, borderRadius: 12, flexShrink: 0,
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              background: COUNTDOWN_TILE.none }}>
+                              <CalendarDays size={19} style={{ color: '#1D3C3E' }} />
+                            </div>
+                          </div>
                           <button type="button" onClick={() => setPreviewGrant(g)}
                             style={{ color: 'inherit', background: 'transparent', border: 'none', padding: 0,
                               textAlign: 'left', cursor: 'pointer', font: 'inherit', minWidth: 0 }}>
                             <div style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 14, color: '#2C2C2A', marginBottom: 2 }}>{g.title}</div>
-                            <div style={{ fontFamily: BODY_FONT, fontSize: 12.5, color: '#8A8986' }}>
+                            <div style={{ fontFamily: BODY_FONT, fontSize: 12.5, color: '#74736E' }}>
                               {g.funder && g.funder !== g.title && <span>{g.funder} &middot; </span>}
-                              {amtStr && <span style={{ color: '#639922', fontFamily: UI_FONT, fontWeight: 500 }}>{amtStr}</span>}
+                              {amtStr && <span style={{ color: '#1D3C3E', fontFamily: UI_FONT, fontWeight: 500 }}>{amtStr}</span>}
                             </div>
                           </button>
                           <DatePickerInput value={val}
                             onChange={v => setSavedInputs(prev => ({ ...prev, [g.id]: v }))} />
                           {success ? (
-                            <span style={{ fontFamily: UI_FONT, fontSize: 11, fontWeight: 500, color: '#3B6D11', padding: '4px 10px',
-                              background: '#F4F9ED', borderRadius: 6, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                            <span style={{ fontFamily: UI_FONT, fontSize: 11, fontWeight: 500, color: '#1B6B3D', padding: '4px 10px',
+                              background: '#E3F0E4', borderRadius: 6, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                               <Check size={11} strokeWidth={3} /> Set
                             </span>
                           ) : (
                             <button onClick={() => handleSetSavedDeadline(g, val)} disabled={!val || saving}
-                              style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 500, padding: '6px 12px', border: 'none', borderRadius: 6,
+                              style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 600, padding: '7px 14px', border: 'none', borderRadius: 999,
                                 cursor: val && !saving ? 'pointer' : 'not-allowed',
-                                background: val ? '#8ECB3C' : '#F0EFEB', color: val ? '#173404' : '#8A8986' }}>
+                                background: val ? '#1D3C3E' : '#F1EDE3', color: val ? '#F6F1E7' : '#74736E' }}>
                               {saving ? '…' : 'Set date'}
                             </button>
                           )}
@@ -1698,12 +1775,12 @@ export default function DeadlinesPage() {
           {/* Later */}
           {laterRows.length > 0 && (
             <div style={{ background: '#fff', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '16px 22px', borderBottom: '1px solid rgba(23,52,4,0.08)', background: '#FAFAF7' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '16px 22px', borderBottom: '1px solid rgba(23,52,4,0.08)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <span style={{ fontFamily: UI_FONT, fontWeight: 600, fontSize: 15, color: '#2C2C2A', letterSpacing: '-0.01em' }}>Later</span>
-                  <span style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 12, color: '#8A8986', background: '#F0EFEB', padding: '3px 9px', borderRadius: 10 }}>{laterRows.length}</span>
+                  <span style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 12, color: '#74736E', background: '#F0EFEB', padding: '3px 9px', borderRadius: 10 }}>{laterRows.length}</span>
                 </div>
-                <span style={{ fontFamily: BODY_FONT, fontSize: 12, color: '#8A8986' }}>Awareness only</span>
+                <span style={{ fontFamily: BODY_FONT, fontSize: 12, color: '#74736E' }}>Awareness only</span>
               </div>
               {laterRows.map((row, i) => renderScheduledRow(row, 'later', i === laterRows.length - 1,
                 row.kind === 'pipeline' ? row.alert.item.id : row.grant.id + '-later-' + i))}
@@ -1719,14 +1796,14 @@ export default function DeadlinesPage() {
           <div style={{ background: '#fff', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 12, padding: '18px 20px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
               <span style={{ fontFamily: UI_FONT, fontWeight: 600, fontSize: 14, color: '#2C2C2A' }}>Calendar</span>
-              <span style={{ fontFamily: UI_FONT, fontSize: 11.5, color: '#8A8986', fontWeight: 500 }}>{MONTH_NAMES[calMonth]} {calYear}</span>
+              <span style={{ fontFamily: UI_FONT, fontSize: 11.5, color: '#74736E', fontWeight: 500 }}>{MONTH_NAMES[calMonth]} {calYear}</span>
             </div>
 
             {/* Nav */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
               <button onClick={() => { if (calMonth === 0) { setCalMonth(11); setCalYear(y => y - 1) } else setCalMonth(m => m - 1) }}
                 style={{ width: 24, height: 24, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  background: 'transparent', border: 'none', color: '#5F5E5A', cursor: 'pointer', borderRadius: 6 }}
+                  background: 'transparent', border: 'none', color: '#5F5E5A', cursor: 'pointer', borderRadius: 999 }}
                 onMouseEnter={e => { e.currentTarget.style.background = '#FAFAF7' }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
                 <ChevronLeft size={14} />
@@ -1736,7 +1813,7 @@ export default function DeadlinesPage() {
               </span>
               <button onClick={() => { if (calMonth === 11) { setCalMonth(0); setCalYear(y => y + 1) } else setCalMonth(m => m + 1) }}
                 style={{ width: 24, height: 24, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  background: 'transparent', border: 'none', color: '#5F5E5A', cursor: 'pointer', borderRadius: 6 }}
+                  background: 'transparent', border: 'none', color: '#5F5E5A', cursor: 'pointer', borderRadius: 999 }}
                 onMouseEnter={e => { e.currentTarget.style.background = '#FAFAF7' }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
                 <ChevronRight size={14} />
@@ -1747,7 +1824,7 @@ export default function DeadlinesPage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 2 }}>
               {['M','T','W','T','F','S','S'].map((d, i) => (
                 <div key={i} style={{ textAlign: 'center', fontFamily: UI_FONT, fontWeight: 500, fontSize: 10.5,
-                  color: '#8A8986', padding: '4px 0', letterSpacing: '0.02em' }}>{d}</div>
+                  color: '#74736E', padding: '4px 0', letterSpacing: '0.02em' }}>{d}</div>
               ))}
               {calDays.map((day, i) => {
                 const cellIso  = day.date.toISOString().split('T')[0]
@@ -1756,22 +1833,40 @@ export default function DeadlinesPage() {
                 const isActive = dayFilter === cellIso
                 const hasUrgent= markers?.hasUrgent ?? false
                 let bg = 'transparent', textColor = day.isCurrentMonth ? '#2C2C2A' : '#C5C3BC', border = 'none', fw = 400
+                /* The marker is a DOT under the numeral rather than a tint
+                   behind it. Every tint failed at 10px in the legend — urgent
+                   1.15, has-deadline 1.07, today's lime ring 1.95 — so three
+                   of the four keys were blank squares, and the numeral inside
+                   a has-deadline cell was the same failing 3.21 pair as the
+                   old countdown pill.
+
+                   The dots use the DARK red and green, not the §2 accent
+                   tiles, even though they mean the same thing: a 5px dot is a
+                   non-text UI element carrying its own 3:1 against white, and
+                   gold (1.54) and sage (1.85) would vanish at that size. A
+                   46px tile has no such problem because its numeral carries
+                   the contrast. Same signal, different size, different floor. */
+                let dot: string | null = null
                 if (day.isCurrentMonth) {
-                  if      (isActive)   { bg = '#8ECB3C'; textColor = '#173404'; fw = 600 }
-                  else if (hasUrgent)  { bg = '#FAECE7'; textColor = '#993C1D'; fw = 600 }
-                  else if (hasAlerts)  { bg = '#F4F9ED'; textColor = '#639922'; fw = 600 }
-                  else if (day.isToday){ bg = '#FDFCF8'; border = '1.5px solid #8ECB3C'; textColor = '#639922'; fw = 600 }
+                  if      (isActive)   { bg = '#1D3C3E'; textColor = '#F6F1E7'; fw = 600; dot = hasAlerts ? '#F6F1E7' : null }
+                  else if (hasUrgent)  { dot = '#993C1D'; fw = 600 }
+                  else if (hasAlerts)  { dot = '#1B6B3D'; fw = 600 }
+                  else if (day.isToday){ border = '1.5px solid #1D3C3E'; fw = 600 }
                 }
                 return (
                   <div key={i}
                     onClick={() => { if (!day.isCurrentMonth || !hasAlerts) return; setDayFilter(prev => prev === cellIso ? null : cellIso) }}
-                    style={{ height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      borderRadius: 6, fontSize: 12, userSelect: 'none' as const, fontFamily: UI_FONT,
+                    style={{ height: 34, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
+                      borderRadius: 8, fontSize: 12, userSelect: 'none' as const, fontFamily: UI_FONT,
                       color: textColor, background: bg, border, fontWeight: fw,
                       cursor: hasAlerts && day.isCurrentMonth ? 'pointer' : 'default' }}
                     onMouseEnter={e => { if (day.isCurrentMonth && (hasAlerts || day.isToday)) e.currentTarget.style.opacity = '0.85' }}
                     onMouseLeave={e => { e.currentTarget.style.opacity = '1' }}>
-                    {day.date.getDate()}
+                    <span style={{ lineHeight: 1 }}>{day.date.getDate()}</span>
+                    {/* Reserved whether or not there is a dot, so numerals sit
+                        on one baseline across the whole grid. */}
+                    <span style={{ width: 5, height: 5, borderRadius: 999, flexShrink: 0,
+                      background: dot ?? 'transparent' }} />
                   </div>
                 )
               })}
@@ -1796,14 +1891,15 @@ export default function DeadlinesPage() {
             {/* Legend */}
             <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid rgba(23,52,4,0.08)',
               display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 12px' }}>
+              {/* A solid dot reads at 10px where a 7% tint does not. */}
               {[
-                { bg: '#FAECE7', label: 'Urgent (≤7d)' },
-                { bg: '#F4F9ED', label: 'Has deadline' },
-                { bg: '#8ECB3C', label: 'Selected' },
-                { bg: '#FDFCF8', border: '1.5px solid #8ECB3C', label: 'Today' },
-              ].map(({ bg: d, label, border: b }) => (
-                <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ width: 10, height: 10, borderRadius: 3, background: d,
+                { bg: '#993C1D', label: 'Urgent (≤7d)' },
+                { bg: '#1B6B3D', label: 'Has deadline' },
+                { bg: '#1D3C3E', label: 'Selected', square: true },
+                { bg: 'transparent', border: '1.5px solid #1D3C3E', label: 'Today', square: true },
+              ].map(({ bg: d, label, border: b, square }) => (
+                <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                  <span style={{ width: 10, height: 10, borderRadius: square ? 3 : 999, background: d,
                     border: b ?? 'none', display: 'inline-block', flexShrink: 0 }} />
                   <span style={{ fontFamily: BODY_FONT, fontSize: 11.5, color: '#5F5E5A' }}>{label}</span>
                 </div>
@@ -1830,13 +1926,13 @@ export default function DeadlinesPage() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <div style={{ width: 16, height: 16, borderRadius: 4, flexShrink: 0,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      background: checked ? '#173404' : '#fff',
+                      background: checked ? '#1D3C3E' : '#fff',
                       border: checked ? 'none' : '1.5px solid rgba(23,52,4,0.14)' }}>
                       {checked && <Check size={10} strokeWidth={3} style={{ color: '#fff' }} />}
                     </div>
                     <span style={{ fontFamily: UI_FONT, fontSize: 13, color: '#2C2C2A' }}>{label}</span>
                   </div>
-                  <span style={{ fontFamily: UI_FONT, fontSize: 11.5, color: '#8A8986' }}>{count}</span>
+                  <span style={{ fontFamily: UI_FONT, fontSize: 11.5, color: '#74736E' }}>{count}</span>
                 </div>
               ))}
             </div>
@@ -1970,7 +2066,7 @@ export default function DeadlinesPage() {
 
       {toast && (
         <div className="fixed bottom-6 right-6 px-5 py-3 rounded-xl shadow-lg text-sm z-50"
-          style={{ background: '#173404', color: '#F1F7E4' }}>
+          style={{ background: '#1D3C3E', color: '#E3F0E4' }}>
           ✓ {toast}
         </div>
       )}

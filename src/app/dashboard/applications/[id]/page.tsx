@@ -854,7 +854,7 @@ export default function ApplicationWorkspacePage() {
     const btn: React.CSSProperties = {
       fontFamily: UI, fontWeight: 600, fontSize: compact ? 12.5 : 13, color: T.textPrimary,
       background: T.white, border: `1px solid ${T.textPrimary}`, padding: compact ? '6px 11px' : '8px 14px',
-      borderRadius: 8, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6,
+      borderRadius: 999, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6,
     }
     const item: React.CSSProperties = {
       display: 'block', width: '100%', textAlign: 'left', fontFamily: UI, fontWeight: 500,
@@ -919,7 +919,7 @@ export default function ApplicationWorkspacePage() {
           <button onClick={markSubmitted} style={{
             fontFamily: UI, fontWeight: 600, fontSize: compact ? 12.5 : 13, color: '#F1F7E4',
             background: T.greenDeep, border: 'none', padding: compact ? '6px 12px' : '8px 14px',
-            borderRadius: 8, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6,
+            borderRadius: 999, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6,
           }}>
             <Check size={14} /> Mark as submitted
           </button>
@@ -944,7 +944,8 @@ export default function ApplicationWorkspacePage() {
   }
 
   return (
-    <div style={{ maxWidth: 980 }}>
+    /* Full width, matching the rest of band C. */
+    <div>
       {/* Header */}
       <Link
         href="/dashboard/applications"
@@ -981,7 +982,7 @@ export default function ApplicationWorkspacePage() {
 
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 12, flexWrap: 'wrap' }}>
         <div style={{ minWidth: 0 }}>
-          <h1 style={{ fontFamily: UI, fontWeight: 600, fontSize: 23, color: T.textPrimary, letterSpacing: '-0.01em', margin: 0 }}>
+          <h1 style={{ fontFamily: UI, fontWeight: 600, fontSize: 31, color: '#1D3C3E', letterSpacing: '-0.025em', margin: 0 }}>
             {app.grant_name || app.funder_name || 'Application'}
           </h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 6 }}>
@@ -1048,11 +1049,11 @@ export default function ApplicationWorkspacePage() {
             </span>
           )}
         </div>
-        <div style={{ height: 6, background: T.cream, borderRadius: 999, overflow: 'hidden' }}>
+        <div style={{ height: 6, background: 'rgba(29,60,62,0.15)', borderRadius: 999, overflow: 'hidden' }}>
           <div style={{
             height: '100%',
             width: `${app.questions.length ? Math.round((answeredCount / app.questions.length) * 100) : 0}%`,
-            background: T.lime, borderRadius: 999, transition: 'width 300ms ease',
+            background: '#1D3C3E', borderRadius: 999, transition: 'width 300ms ease',
           }} />
         </div>
       </div>
@@ -1074,7 +1075,7 @@ export default function ApplicationWorkspacePage() {
               <button onClick={() => runGate(app.id)} style={{
                 fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.amberText,
                 background: 'transparent', border: `1px solid rgba(133,79,11,0.35)`,
-                padding: '6px 13px', borderRadius: 8, cursor: 'pointer',
+                padding: '6px 13px', borderRadius: 999, cursor: 'pointer',
               }}>
                 Try again
               </button>
@@ -1186,7 +1187,7 @@ export default function ApplicationWorkspacePage() {
                 style={{
                   fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.textPrimary,
                   background: T.white, border: `1px solid ${T.textPrimary}`, padding: '6px 13px',
-                  borderRadius: 8, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
+                  borderRadius: 999, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
                 }}
               >
                 Add their guidance
@@ -1352,11 +1353,11 @@ export default function ApplicationWorkspacePage() {
             </button>
           )}
           {generating && (
-            <div style={{ height: 5, background: T.cream, borderRadius: 999, overflow: 'hidden', maxWidth: 320, margin: '0 auto' }}>
+            <div style={{ height: 5, background: 'rgba(29,60,62,0.15)', borderRadius: 999, overflow: 'hidden', maxWidth: 320, margin: '0 auto' }}>
               <div style={{
                 height: '100%',
                 width: `${Math.max(8, Math.round((streamedCount / Math.max(1, app.questions.length)) * 100))}%`,
-                background: T.lime, borderRadius: 999, transition: 'width 400ms ease',
+                background: '#1D3C3E', borderRadius: 999, transition: 'width 400ms ease',
               }} />
             </div>
           )}
@@ -1371,8 +1372,8 @@ export default function ApplicationWorkspacePage() {
             Your material grew since these answer plans were made. Re-plan to map your new material in.
           </span>
           <button onClick={generate} style={{
-            fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.greenDeep,
-            background: T.lime, border: 'none', padding: '7px 14px', borderRadius: 8, cursor: 'pointer',
+            fontFamily: UI, fontWeight: 600, fontSize: 12.5,
+            background: '#1D3C3E', color: '#F6F1E7', border: 'none', padding: '9px 16px', borderRadius: 999, cursor: 'pointer',
           }}>
             Re-plan the answers
           </button>
@@ -1697,7 +1698,7 @@ function ScoreRing({ score, stale }: { score: number | null; stale: boolean }) {
     : score < 5 ? T.coral
     : score < 7 ? T.amber
     : score < 8.5 ? T.greenMid
-    : T.lime
+    : '#1B6B3D'
   return (
     <svg width={52} height={52} viewBox="0 0 52 52" style={{ opacity: stale ? 0.45 : 1, flexShrink: 0 }}>
       <circle cx={26} cy={26} r={r} fill="none" stroke={T.cream} strokeWidth={5} />
@@ -1987,7 +1988,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
                     style={{
                       fontFamily: UI, fontWeight: 600, fontSize: 11.5, color: preview ? T.sage : T.textSecondary,
                       background: preview ? T.paleGreen : 'transparent', border: `1px solid ${preview ? 'rgba(59,109,17,0.3)' : T.borderStrong}`,
-                      borderRadius: 8, padding: '4px 10px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5,
+                      borderRadius: 999, padding: '4px 10px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5,
                     }}
                   >
                     {preview ? <PenLine size={13} /> : <Eye size={13} />}
@@ -2083,7 +2084,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
                 placeholder={hasScaffold ? 'Write in your own voice, or draft a starting version below.' : 'Plan your answers first, or just start writing.'}
                 style={{
                   fontFamily: BODY, fontSize: 14, color: T.textPrimary, width: '100%',
-                  padding: '10px 12px', borderRadius: 8, border: `1px solid ${drafting ? T.lime : T.border}`,
+                  padding: '10px 12px', borderRadius: 8, border: `1px solid ${drafting ? '#1B6B3D' : T.border}`,
                   background: T.editorBg, outline: 'none', resize: 'vertical', lineHeight: 1.65,
                 }}
               />

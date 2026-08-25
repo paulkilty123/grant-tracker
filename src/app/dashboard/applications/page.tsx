@@ -11,6 +11,8 @@ import { createClient } from '@/lib/supabase/client'
 import { getOrganisationByOwner } from '@/lib/organisations'
 import { T, UI, BODY } from '@/components/builder/tokens'
 import type { ApplicationRecord } from '@/lib/builder/types'
+import { hueMap, PROJECT_HUE_INK, PROJECT_HUE_NONE } from '@/lib/project-hues'
+import { HowItWorksPanel, DisclosureControl } from '@/components/HowItWorksPanel'
 
 // The Apply-tier ethos as a few plain principles. Leads with the funder's-eye
 // reframe (the highest-value move for first-time applicants), closes on voice.
@@ -31,48 +33,21 @@ const HOW_IT_WORKS_STEPS = [
 
 function HowItWorks({ withCta }: { withCta?: boolean }) {
   return (
-    <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, padding: '22px 24px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18 }}>
-        <HelpCircle size={18} color={T.sage} />
-        <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 16, color: T.textPrimary }}>How it works</span>
-      </div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14 }}>
-        {HOW_IT_WORKS_STEPS.map((s, i) => (
-          <div key={i} style={{ flex: '1 1 150px', minWidth: 150 }}>
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
-              <span style={{
-                fontFamily: UI, fontWeight: 700, fontSize: 13, color: '#F1F7E4', background: T.greenDeep,
-                width: 30, height: 30, borderRadius: 999, display: 'inline-flex', alignItems: 'center',
-                justifyContent: 'center', flexShrink: 0,
-              }}>
-                {i + 1}
-              </span>
-              {i < HOW_IT_WORKS_STEPS.length - 1 && (
-                <span style={{ flex: 1, height: 2, background: 'rgba(23,52,4,0.12)', marginLeft: 10, borderRadius: 2 }} />
-              )}
-            </div>
-            <p style={{ fontFamily: UI, fontWeight: 600, fontSize: 14.5, color: T.textPrimary, margin: '0 0 4px' }}>{s.title}</p>
-            <p style={{ fontFamily: BODY, fontSize: 12.5, color: T.textSecondary, margin: 0, lineHeight: 1.5 }}>{s.body}</p>
-          </div>
-        ))}
-      </div>
-      {withCta && (
-        <Link href="/dashboard/applications/new" style={{
-          fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.greenDeep, background: T.lime,
-          padding: '9px 16px', borderRadius: 8, textDecoration: 'none', display: 'inline-flex',
-          alignItems: 'center', gap: 6, marginTop: 18,
-        }}>
-          <Plus size={14} /> New application
-        </Link>
-      )}
-    </div>
+    <HowItWorksPanel
+      steps={HOW_IT_WORKS_STEPS}
+      cta={withCta ? { href: '/dashboard/applications/new', label: 'New application' } : undefined}
+    />
   )
 }
 
 const STATUS_STYLE: Record<string, { bg: string; color: string; label: string }> = {
-  draft:       { bg: T.cream,      color: T.textSecondary, label: 'Draft' },
-  in_progress: { bg: T.paleGreen2, color: T.sage,          label: 'In progress' },
-  complete:    { bg: '#C0DD97',    color: T.greenDeep,     label: 'Complete' },
+  // "In progress" and "Complete" are states of the application, so they take
+  // the green that means "this is true". Draft is the absence of one and stays
+  // neutral — as does the "Identified" chip on a Ready-to-start row, which is a
+  // pipeline stage rather than a state of anything drafted.
+  draft:       { bg: '#F1EDE3',    color: '#5F5E5A',       label: 'Draft' },
+  in_progress: { bg: '#E3F0E4',    color: '#1B6B3D',       label: 'In progress' },
+  complete:    { bg: '#B4D496',    color: '#1D3C3E',       label: 'Complete' },
 }
 
 interface PipeItem {
@@ -105,6 +80,44 @@ export default function ApplicationsPage() {
   const [deadlineSoon, setDeadlineSoon] = useState(0)
   const [readyToStart, setReadyToStart] = useState<PipeItem[]>([])
   const [projectNames, setProjectNames] = useState<Record<string, string>>({})
+  /**
+   * Projects in creation order, newest first, for the assign control.
+   *
+   * The picker on the new-application form only sets project_id going forward.
+   * Without this, every application that already exists stays unattributed for
+   * ever and the colour arrives for nobody until they happen to start a new
+   * one. This is the half that changes something today.
+   */
+  const [projectList, setProjectList] = useState<{ id: string; name: string; created_at?: string | null }[]>([])
+  const [assigningId, setAssigningId] = useState<string | null>(null)
+  const [assignError, setAssignError] = useState<string | null>(null)
+
+  /**
+   * Assign or clear a project. Optimistic, with a revert on failure.
+   *
+   * Goes through the route rather than a direct update: the UPDATE policy on
+   * applications only checks the application's org, so a client-side write
+   * could put a foreign project id in the column. The route checks both ends.
+   *
+   * NO BACKFILL, and none inferred. There is genuinely no project recorded on
+   * these rows, and guessing one from the funder name is what produced the
+   * wrong claim that three of them shared a project. They share a funder.
+   */
+  async function assignProject(applicationId: string, projectId: string | null) {
+    const before = apps
+    setApps(prev => prev.map(a => (a.id === applicationId ? { ...a, project_id: projectId } : a)))
+    setAssigningId(null)
+    setAssignError(null)
+    const res = await fetch('/api/builder/applications', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ application_id: applicationId, project_id: projectId }),
+    }).catch(() => null)
+    if (!res || !res.ok) {
+      setApps(before)
+      setAssignError('That did not save. Try again in a moment.')
+    }
+  }
 
   async function deleteApplication(id: string) {
     setApps(prev => prev.filter(a => a.id !== id))
@@ -112,6 +125,10 @@ export default function ApplicationsPage() {
     const supabase = createClient()
     await supabase.from('applications').delete().eq('id', id)
   }
+
+  // hueMap sorts internally, so this page's query order cannot disagree with
+  // the dashboard's. It used to: this one reads created_at, that one updated_at.
+  const hues = hueMap(projectList)
 
   useEffect(() => {
     document.title = 'Applications · Shoots'
@@ -134,10 +151,14 @@ export default function ApplicationsPage() {
         setApps(rows)
 
         // Project names for the "Part of: …" differentiator on rows.
-        const { data: projs } = await supabase.from('projects').select('id, name').eq('org_id', org.id)
+        const { data: projs } = await supabase
+          .from('projects').select('id, name, created_at').eq('org_id', org.id)
+          .order('created_at', { ascending: false })
+        const plist = (projs ?? []) as { id: string; name: string; created_at: string | null }[]
         const pmap: Record<string, string> = {}
-        for (const pr of (projs ?? []) as { id: string; name: string }[]) pmap[pr.id] = pr.name
+        for (const pr of plist) pmap[pr.id] = pr.name
         setProjectNames(pmap)
+        setProjectList(plist)
 
         // "Deadline soon" tile: deadlines live on the linked opportunity, not
         // the application, so join through opportunity_id (UUIDs only).
@@ -204,45 +225,56 @@ export default function ApplicationsPage() {
   }
 
   return (
-    <div style={{ maxWidth: 860, marginInline: 'auto' }}>
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 6 }}>
-        <div>
-          <h1 style={{ fontFamily: UI, fontWeight: 600, fontSize: 24, color: T.textPrimary, letterSpacing: '-0.01em', margin: 0 }}>
+    /* Full width, matching Find Funding, Pipeline and Projects. The heading
+       colour is set here rather than on T.textPrimary — that token is shared
+       across every builder surface. */
+    <div>
+      {/* Header. flexWrap so the counts and the button drop below the heading
+          when space is tight, rather than compressing the button. */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24, marginBottom: 6, flexWrap: 'wrap' }}>
+        <div style={{ minWidth: 280, flex: '1 1 440px' }}>
+          <h1 style={{ fontFamily: UI, fontWeight: 600, fontSize: 31, color: '#1D3C3E', letterSpacing: '-0.025em', margin: 0 }}>
             Applications
           </h1>
-          <p style={{ fontFamily: BODY, fontSize: 14, color: T.textSecondary, margin: '6px 0 0', lineHeight: 1.55, maxWidth: 620 }}>
+          <p style={{ fontFamily: BODY, fontSize: 13.5, color: '#5F5E5A', margin: '5px 0 0', lineHeight: 1.55, maxWidth: 600 }}>
             Shoots shapes each answer from your own material, shows you what a strong response
             to this funder needs to cover, and flags the gaps before you start. You write it in your
             own words.
           </p>
         </div>
-        <Link
-          href="/dashboard/applications/new"
-          style={{
-            fontFamily: UI, fontWeight: 600, fontSize: 14, color: T.textPrimary,
-            background: T.white, border: `1px solid ${T.textPrimary}`, padding: '9px 18px',
-            borderRadius: 8, textDecoration: 'none', display: 'inline-flex', alignItems: 'center',
-            gap: 7, whiteSpace: 'nowrap', flexShrink: 0,
-          }}
-        >
-          <Plus size={15} /> New application
-        </Link>
+        <div style={{ display: 'flex', gap: 26, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+          {loaded && apps.length > 0 && (() => {
+            const counts = [
+              { n: apps.filter(a => a.status === 'in_progress' || a.status === 'draft').length, label: 'In progress' },
+              { n: apps.filter(a => a.status === 'complete').length, label: 'Complete' },
+              { n: deadlineSoon, label: 'Deadline soon' },
+            ]
+            return counts.map(c => (
+              <span key={c.label} style={{ textAlign: 'right' }}>
+                <span style={{ fontFamily: UI, fontSize: 27, fontWeight: 600, color: c.label === 'Deadline soon' && c.n > 0 ? '#993C1D' : '#1D3C3E', letterSpacing: '-0.03em', lineHeight: 1, display: 'block' }}>{c.n}</span>
+                <span style={{ fontFamily: UI, fontSize: 9.5, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#5F5E5A', display: 'block', marginTop: 5 }}>{c.label}</span>
+              </span>
+            ))
+          })()}
+          <Link
+            href="/dashboard/applications/new"
+            style={{
+              fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: '#F6F1E7',
+              background: '#1D3C3E', border: 'none', padding: '11px 20px',
+              borderRadius: 999, textDecoration: 'none', display: 'inline-flex', alignItems: 'center',
+              gap: 7, whiteSpace: 'nowrap', flexShrink: 0,
+            }}
+          >
+            <Plus size={15} /> New application
+          </Link>
+        </div>
       </div>
 
       {/* Ethos: what makes a strong application (collapsible, light) */}
       <div style={{ marginTop: 14 }}>
-        <button
-          onClick={() => setPrinciplesOpen(o => !o)}
-          aria-expanded={principlesOpen}
-          style={{
-            fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.sage, background: 'transparent',
-            border: 'none', cursor: 'pointer', padding: 0, display: 'inline-flex', alignItems: 'center', gap: 6,
-          }}
-        >
-          <Lightbulb size={14} /> What makes a strong application
-          <ChevronDown size={14} style={{ transform: principlesOpen ? 'rotate(180deg)' : 'none', transition: 'transform 150ms ease' }} />
-        </button>
+        <DisclosureControl open={principlesOpen} onClick={() => setPrinciplesOpen(o => !o)} icon={<Lightbulb size={15} />}>
+          What makes a strong application
+        </DisclosureControl>
         {principlesOpen && (
           <div style={{
             background: T.softGreen, border: `1px solid ${T.border}`, borderRadius: 12,
@@ -251,7 +283,7 @@ export default function ApplicationsPage() {
             {STRONG_APPLICATION_PRINCIPLES.map((p, i) => (
               <div key={i} style={{ display: 'flex', gap: 11 }}>
                 <span style={{
-                  fontFamily: UI, fontWeight: 700, fontSize: 11, color: T.sage, background: T.paleGreen,
+                  fontFamily: UI, fontWeight: 700, fontSize: 11, color: '#1D3C3E', background: '#F1EDE3',
                   width: 22, height: 22, borderRadius: 999, display: 'flex', alignItems: 'center',
                   justifyContent: 'center', flexShrink: 0, marginTop: 1,
                 }}>
@@ -267,26 +299,7 @@ export default function ApplicationsPage() {
         )}
       </div>
 
-      {/* Status strip — lead with state (real application states only) */}
-      {loaded && apps.length > 0 && (() => {
-        const inProgress = apps.filter(a => a.status === 'in_progress' || a.status === 'draft').length
-        const complete = apps.filter(a => a.status === 'complete').length
-        const tiles = [
-          { n: inProgress, label: 'In progress', accent: T.sage },
-          { n: complete, label: 'Complete', accent: T.greenDeep },
-          { n: deadlineSoon, label: 'Deadline soon', accent: deadlineSoon > 0 ? T.coral : T.textTertiary },
-        ]
-        return (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginTop: 18 }}>
-            {tiles.map(t => (
-              <div key={t.label} style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 10, padding: '12px 16px' }}>
-                <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 22, color: t.accent, display: 'block', lineHeight: 1.1 }}>{t.n}</span>
-                <span style={{ fontFamily: BODY, fontSize: 12.5, color: T.textSecondary }}>{t.label}</span>
-              </div>
-            ))}
-          </div>
-        )
-      })()}
+      {/* The three stat cards that sat here are now the header cluster above. */}
 
       {/* List */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 22 }}>
@@ -303,9 +316,15 @@ export default function ApplicationsPage() {
           </div>
         ))}
         {loaded && apps.length === 0 && readyToStart.length === 0 && <HowItWorks withCta />}
+        {assignError && (
+          <p style={{ fontFamily: BODY, fontSize: 13, color: T.coralText, margin: '0 0 4px' }}>{assignError}</p>
+        )}
 
         {apps.map(app => {
           const status = STATUS_STYLE[app.status] ?? STATUS_STYLE.draft
+          const pid  = app.project_id ?? null
+          const hue  = pid ? hues.get(pid) ?? null : null
+          const pName = pid ? projectNames[pid] ?? null : null
           const total = app.questions?.length ?? 0
           const answered = (app.questions ?? []).filter(q => q.user_answer?.trim()).length
           return (
@@ -320,9 +339,13 @@ export default function ApplicationsPage() {
                 display: 'flex', alignItems: 'center', gap: 14,
               }}
             >
+              {/* The project's hue, or neutral. Neutral is the honest state,
+                  not a placeholder: colour that means nothing is worse than no
+                  colour, so an unfiled row simply has none. */}
               <span style={{
                 width: 42, height: 42, borderRadius: 10, flexShrink: 0,
-                background: T.paleGreen, color: T.sage, fontFamily: UI, fontWeight: 600, fontSize: 14.5,
+                background: hue ?? PROJECT_HUE_NONE, color: PROJECT_HUE_INK,
+                fontFamily: UI, fontWeight: 600, fontSize: 14.5,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
                 {monogram(app.funder_name || app.grant_name || '?')}
@@ -343,10 +366,52 @@ export default function ApplicationsPage() {
                   {app.funder_name && app.grant_name
                     ? app.funder_name
                     : `${total} ${total === 1 ? 'question' : 'questions'}`}
-                  {(() => { const pid = (app as { project_id?: string | null }).project_id; return pid && projectNames[pid] ? ` · Part of ${projectNames[pid]}` : '' })()}
                   {(app as { created_at?: string }).created_at
                     ? ` · ${new Date((app as { created_at: string }).created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
                     : ''}
+                </span>
+                {/* Filed, or the control to file it. The affordance is
+                    self-cancelling — choose a project and the swatch takes its
+                    place — so it needs no empty state of its own, and it never
+                    nags: an unfiled row says nothing about being unfiled. */}
+                <span
+                  onClick={e => { e.preventDefault(); e.stopPropagation() }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 7, marginTop: 5 }}
+                >
+                  {pid && pName ? (
+                    <>
+                      <span style={{ width: 9, height: 9, borderRadius: 2, background: hue ?? PROJECT_HUE_NONE, flexShrink: 0 }} />
+                      <span style={{ fontFamily: BODY, fontSize: 12.5, color: T.textSecondary }}>Part of {pName}</span>
+                    </>
+                  ) : projectList.length === 0 ? null : assigningId === app.id ? (
+                    <select
+                      autoFocus
+                      defaultValue=""
+                      onChange={e => assignProject(app.id, e.target.value || null)}
+                      onBlur={() => setAssigningId(null)}
+                      style={{
+                        fontFamily: BODY, fontSize: 12.5, color: T.textPrimary, background: T.white,
+                        border: `1px solid ${T.borderStrong}`, borderRadius: 8, padding: '5px 8px',
+                        cursor: 'pointer', maxWidth: 260,
+                      }}
+                    >
+                      <option value="" disabled>Choose a project…</option>
+                      {projectList.map(pr => (
+                        <option key={pr.id} value={pr.id}>{pr.name}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <button
+                      onClick={() => { setAssignError(null); setAssigningId(app.id) }}
+                      style={{
+                        fontFamily: UI, fontWeight: 600, fontSize: 11.5, color: T.textSecondary,
+                        background: 'transparent', border: `1px dashed ${T.borderStrong}`,
+                        borderRadius: 999, padding: '4px 10px', cursor: 'pointer',
+                      }}
+                    >
+                      Assign project
+                    </button>
+                  )}
                 </span>
               </div>
               {total > 0 && (
@@ -355,14 +420,15 @@ export default function ApplicationsPage() {
                     <span style={{ fontFamily: BODY, fontSize: 11.5, color: T.textSecondary }}>
                       {answered} of {total} written
                     </span>
-                    <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 11.5, color: T.sage }}>
+                    <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: '#1D3C3E' }}>
                       {Math.round((answered / total) * 100)}%
                     </span>
                   </div>
-                  <div style={{ height: 6, background: T.cream, borderRadius: 999, overflow: 'hidden' }}>
+                  {/* Track was T.cream on a white card — 1.04:1, invisible, so the bar read as a floating stub. Same bug as the Find Funding sort pill. */}
+                  <div style={{ height: 6, background: 'rgba(29,60,62,0.15)', borderRadius: 999, overflow: 'hidden' }}>
                     <div style={{
                       height: '100%', width: `${Math.round((answered / total) * 100)}%`,
-                      background: T.lime, borderRadius: 999, transition: 'width 200ms ease',
+                      background: '#1D3C3E', borderRadius: 999, transition: 'width 200ms ease',
                     }} />
                   </div>
                 </div>
@@ -374,7 +440,7 @@ export default function ApplicationsPage() {
                     onClick={e => { e.preventDefault(); e.stopPropagation(); deleteApplication(app.id) }}
                     style={{
                       fontFamily: UI, fontWeight: 600, fontSize: 12, color: '#fff',
-                      background: T.coral, border: 'none', padding: '5px 12px', borderRadius: 8, cursor: 'pointer',
+                      background: T.coral, border: 'none', padding: '6px 14px', borderRadius: 999, cursor: 'pointer',
                     }}
                   >
                     Delete
@@ -422,10 +488,10 @@ export default function ApplicationsPage() {
             application yet. Bridges pipeline intent -> drafting. */}
         {loaded && readyToStart.length > 0 && (
           <div style={{ marginTop: apps.length > 0 ? 14 : 0 }}>
-            <h2 style={{ fontFamily: UI, fontWeight: 600, fontSize: 16, color: T.textPrimary, margin: '0 0 3px' }}>
+            <h2 style={{ fontFamily: UI, fontWeight: 600, fontSize: 19, color: '#1D3C3E', margin: '0 0 4px', letterSpacing: '-0.015em' }}>
               Ready to start
             </h2>
-            <p style={{ fontFamily: BODY, fontSize: 12.5, color: T.textSecondary, margin: '0 0 10px', lineHeight: 1.5 }}>
+            <p style={{ fontFamily: BODY, fontSize: 13.2, color: '#5F5E5A', margin: '0 0 12px', lineHeight: 1.5 }}>
               In your pipeline, not drafted yet. Start an application when you&apos;re ready.
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -470,8 +536,8 @@ export default function ApplicationsPage() {
                     <Link
                       href={`/dashboard/applications/new?pipeline=${p.id}`}
                       style={{
-                        fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.greenDeep, background: T.lime,
-                        padding: '8px 14px', borderRadius: 8, textDecoration: 'none', whiteSpace: 'nowrap',
+                        fontFamily: UI, fontWeight: 600, fontSize: 13, color: '#F6F1E7', background: '#1D3C3E',
+                        padding: '11px 18px', borderRadius: 999, textDecoration: 'none', whiteSpace: 'nowrap',
                         flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 5,
                       }}
                     >
@@ -490,13 +556,13 @@ export default function ApplicationsPage() {
           howOpen
             ? <HowItWorks />
             : (
-              <button onClick={() => setHowOpen(true)} style={{
-                fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.sage,
-                background: 'transparent', border: 'none', cursor: 'pointer',
-                padding: '6px 0', textAlign: 'left', alignSelf: 'flex-start',
-              }}>
-                How it works
-              </button>
+              /* Matches the disclosure at the top of the page rather than
+                 being a second pattern — it was a bare green link. */
+              <span style={{ alignSelf: 'flex-start', marginTop: 6 }}>
+                <DisclosureControl open={false} onClick={() => setHowOpen(true)} icon={<HelpCircle size={15} />}>
+                  How it works
+                </DisclosureControl>
+              </span>
             )
         )}
       </div>

@@ -35,6 +35,76 @@ the new version.
 
 # Waiting
 
+## `exp/white-ground` — MERGED 25 August, on Paul's explicit go
+
+**What it does:** band C. Every dashboard surface moves onto the Shoots brand
+— Find Funding, Pipeline, Projects, Applications, Deadlines, Profile, Account,
+Feedback, the dashboard itself and both project and application sub-pages —
+plus a new Connect to Claude page at `/dashboard/connect`, a project picker
+that finally lets an application be filed against a project, and the page
+ground moving from cream `#F6F1E7` to a lighter `#FBF8F2`.
+
+Started as a one-revert experiment on the page ground; Paul kept the lighter
+cream and the branch carried the rest of band C.
+
+### Deploy gate
+
+```
+Regression: tsc clean.
+            687 tests pass across 48 files, up from 682 pre-merge (5 new from
+            main's match-tiers suite, which arrived in the merge).
+            eslint: 9 errors across the 34 changed app files, ALL nine verified
+            pre-existing on origin/main line by line — every one is
+            react/no-unescaped-entities on copy that predates this branch. No
+            new error, no new warning.
+            next build: compiled successfully, 65/65 static pages generated,
+            /dashboard/connect routed at 1.44 kB.
+
+Accent check: 464 retired brand values -> 64 across the changed surfaces, a
+            net -400 and NOTHING added in any category.
+              #8ECB3C  56 -> 2      #3B6D11  80 -> 1
+              #173404  87 -> 1      #8A8986  98 -> 42
+              #639922  57 -> 1      #F1F7E4  51 -> 5
+            The 64 that remain are pre-existing leftovers in surfaces only
+            partially in scope, chiefly #8A8986 on pages whose specs never
+            listed it. None is a regression; each is countable and named above.
+            LandingPage.tsx (101) and builder/tokens.ts (8) are excluded by
+            design: the first had a single address line changed, the second is
+            shared with the application workspace and must not move alone.
+
+            Also checked with a purpose-built script rather than by eye:
+            scripts/check-colour-collisions.py parses every style block and
+            reports where background and color can resolve to the same value.
+            Three reports remain, each verified by hand as a false positive
+            (mutually exclusive ternary branches). That script exists because
+            an earlier version of the same check gave a FALSE PASS — it read
+            only the first branch of each ternary and shipped an invisible
+            deep-on-deep button.
+
+Free-surface fingerprint: NOT APPLICABLE, and checked rather than assumed.
+            No file under src/app/api/mcp/**, mcp-brand.ts, mcp-entitlement.ts,
+            mcp-oauth.ts or opportunity-adapter.ts is touched by this branch.
+            No MCP route, tool, schema or response shape changes.
+            /dashboard/connect READS MCP_RESOURCE_URL and queries oauth_tokens
+            for a boolean; it contains no insert, update or delete.
+
+Named rollback: `git revert -m 1 <merge sha>`, or reset main to c485273
+            ("data(briefs): the other ten empty briefs"), which is main's head
+            immediately before this merge.
+```
+
+**Merge conflict resolved, and worth recording.** Main landed
+`MATCH_TIER_GOOD = 65` while band C was in flight, and band C had rewritten the
+same score band with literal thresholds. Resolved in favour of both: the
+neutral band from band C, reading its boundaries from main's constants. With
+the literal 70 left in place the band would have coloured a 68% card as Partial
+while its own label said Good.
+
+**Open, and not blocking:** `/mcp` and the OAuth consent screen still describe
+a Shoots free tier that reads only. The connect spec flagged this — until those
+get the same pass, one grant is described three ways again.
+
+
 ## `worktree-grants-b` — MERGED 21 August, on Paul's explicit go
 
 **What it does:** an equity offer to an organisation with no share capital is

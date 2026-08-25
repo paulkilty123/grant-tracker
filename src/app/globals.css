@@ -61,7 +61,16 @@
 
     /* Borders */
     --border-light:  rgba(0, 0, 0, 0.06);
-    --border-med:    rgba(0, 0, 0, 0.08);
+    /* exp/white-ground: was rgba(0,0,0,0.08). On cream a card was defined by
+       its luminance step against the page; on white it has nothing but this
+       border, so the hairline has to do the whole job. */
+    --border-med:    rgba(29, 60, 62, 0.15);
+    /* Hairline: a rule INSIDE a card, separating its sections. */
+    --border-hair:   rgba(29, 60, 62, 0.10);
+    /* Ghost: the visible edge a control needs when it sits on white with no
+       fill of its own. Heavier than a hairline on purpose — a hairline
+       separates, this one has to make a button look like a button. */
+    --border-ghost:  rgba(29, 60, 62, 0.24);
     --border-input:  rgba(0, 0, 0, 0.14);
     --border-subtle: rgba(0, 0, 0, 0.10);
 
@@ -121,6 +130,7 @@
     border: 0.5px solid var(--border-med);
     border-radius: var(--radius-card);
     padding: 24px;
+    box-shadow: 0 1px 2px rgba(29,60,62,0.04), 0 4px 12px rgba(29,60,62,0.04);
   }
 
   .surface-cream {
@@ -158,9 +168,9 @@
   .btn-secondary,
   .btn-outline {
     background: #fff;
-    color: var(--color-text-primary);
-    border: 0.5px solid rgba(0,0,0,0.14);
-    border-radius: 10px;
+    color: #1D3C3E;
+    border: 1.5px solid rgba(29,60,62,0.24);
+    border-radius: 999px;
   }
   .btn-secondary:hover,
   .btn-outline:hover {
@@ -218,18 +228,21 @@
 
   /* Legacy — remapped so existing call-sites render in the new system.
      Prefer .btn-primary / .btn-utility going forward. */
+  /* Deep, not lime. #8ECB3C measures 1.95:1 against a white card, under the
+     3:1 a UI component's own edge needs — the label passed and the button did
+     not. Only the two "add to pipeline" call sites use this class. */
   .btn-gold {
-    background: var(--green-lime);
-    color: var(--green-deep);
+    background: #1D3C3E;
+    color: #F6F1E7;
     padding: 11px 22px;
-    border-radius: 10px;
+    border-radius: 999px;
     border: none;
     font-weight: 600;
     font-size: 14px;
     cursor: pointer;
     transition: background 0.15s;
   }
-  .btn-gold:hover { background: #7BB82F; }
+  .btn-gold:hover { background: #16302F; }
 
   /* ─── Form fields ──────────────────────────────────────── */
   .form-input,
@@ -292,6 +305,7 @@
     padding: 20px;
     border: 0.5px solid var(--border-med);
     border-radius: var(--radius-card);
+    box-shadow: 0 1px 2px rgba(29,60,62,0.04), 0 4px 12px rgba(29,60,62,0.04);
   }
 
   /* ─── Pipeline stage ladder ─────────────────────────────── */
@@ -310,9 +324,12 @@
   }
 
   .pipeline-col {
-    padding: 14px;
+    padding: 9px;
     min-height: 300px;
-    border-radius: var(--radius-card);
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
   }
   .pipeline-col-identified { background: var(--cream-1); }
   .pipeline-col-applying   { background: var(--green-pale-2); }
@@ -320,8 +337,29 @@
   .pipeline-col-won        { background: var(--green-mid); }
   .pipeline-col-declined   { background: var(--coral-pale); }
 
+  /* The sidebar's account trigger sits on #1D3C3E, where the browser's default
+     focus ring is a bright blue — the only blue anywhere in the app, and the
+     thing that made this control look broken rather than focused. A cream ring
+     reads on the deep ground and matches the sidebar's own palette. */
+  .sb-account-trigger:focus-visible {
+    outline: 2px solid rgba(246, 241, 231, 0.85);
+    outline-offset: 2px;
+  }
+
+  /* Connect page. Reflows to 2-up under 1100px and 1-up under 960px, where the
+     three-node flow stacks and its arrows rotate to point down. */
+  @media (max-width: 1100px) {
+    .connect-examples { grid-template-columns: repeat(2, 1fr) !important; }
+  }
+  @media (max-width: 960px) {
+    .connect-examples { grid-template-columns: 1fr !important; }
+    .connect-two      { grid-template-columns: 1fr !important; }
+    .connect-flow     { grid-template-columns: 1fr !important; }
+    .connect-arrow    { transform: rotate(90deg); justify-content: center; }
+  }
+
   .pipeline-col.drag-over {
-    outline: 2px dashed var(--green-lime);
+    outline: 2px dashed #1D3C3E;
     outline-offset: -4px;
   }
 

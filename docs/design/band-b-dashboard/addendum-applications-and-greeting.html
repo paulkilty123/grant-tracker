@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shoots — applications fallback</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#F6F1E7; --deep:#1D3C3E; --charcoal:#2E2E2E; --ink-muted:#5F5E5A;
+  --ink-placeholder:#74736E; --warm-neutral:#F1EDE3;
+  --sage:#9BCA9D; --gold:#EBCE78; --terra:#D67558;
+  --tint-sage:#E3F0E4; --tint-gold:#F9F1D9; --fg-sage:#1B6B3D; --fg-gold:#7A5E11;
+  --danger:#B4472A; --danger-tint:#FBEFEA;
+  --border-hair:rgba(29,60,62,.10); --border-ghost:rgba(29,60,62,.22);
+  --ui:"Space Grotesk",system-ui,sans-serif; --body:"Plus Jakarta Sans",system-ui,sans-serif;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:#EFE9DD;font-family:var(--body);color:var(--charcoal);-webkit-font-smoothing:antialiased;}
+.wrap{max-width:1080px;margin:0 auto;padding:40px 26px 90px;}
+.kicker{font-family:var(--ui);font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;font-weight:600;color:var(--ink-muted);margin:0 0 10px;}
+h1.doc{font-family:var(--ui);font-size:30px;font-weight:700;color:var(--deep);margin:0 0 8px;letter-spacing:-.02em;}
+p.doc{font-size:15.5px;line-height:1.65;color:var(--ink-muted);margin:0 0 26px;max-width:790px;}
+.sec{background:#fff;border:1px solid var(--border-hair);border-radius:18px;padding:24px 26px;margin-bottom:20px;box-shadow:0 1px 2px rgba(29,60,62,.03);}
+.sec.warn{border-left:4px solid var(--terra);}
+.sec h2{font-family:var(--ui);font-size:16.5px;font-weight:600;color:var(--deep);margin:0 0 7px;}
+.sec p{font-size:13.8px;line-height:1.68;color:var(--ink-muted);margin:0 0 10px;}
+.sec p:last-child{margin-bottom:0;}
+.sec b{color:var(--deep);}
+code{background:var(--cream);border-radius:5px;padding:1px 6px;font-size:12.2px;font-family:ui-monospace,Menlo,monospace;color:var(--charcoal);}
+.lab{font-family:var(--ui);display:flex;align-items:baseline;gap:11px;margin:30px 0 12px;flex-wrap:wrap;}
+.lab .n{font-size:10.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;background:var(--deep);color:var(--cream);border-radius:999px;padding:5px 11px;}
+.lab .n.later{background:var(--warm-neutral);color:var(--ink-muted);}
+.lab h3{font-size:18px;font-weight:600;color:var(--deep);margin:0;letter-spacing:-.01em;}
+.lab .w{font-size:12.6px;color:var(--ink-muted);}
+.stage{background:#EDE7DA;border:1px solid var(--border-hair);border-radius:16px;padding:24px 22px;margin-bottom:10px;}
+.cap{font-size:12.6px;color:var(--ink-muted);margin:0 0 6px;line-height:1.6;}
+.card{background:#fff;border:1px solid var(--border-hair);border-radius:18px;padding:20px 22px;max-width:560px;}
+.ch{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:13px;}
+.ch h3{font-family:var(--ui);font-size:17.5px;font-weight:600;color:var(--deep);margin:0;letter-spacing:-.015em;}
+.ch .r{font-family:var(--ui);font-size:12.5px;font-weight:600;color:var(--deep);border-bottom:1.5px solid rgba(29,60,62,.28);padding-bottom:1px;}
+.grp{font-family:var(--ui);font-size:9.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-muted);margin:13px 0 6px;}
+.grp:first-of-type{margin-top:0;}
+.dr{display:flex;align-items:center;gap:11px;padding:9px 0;border-top:1px solid var(--border-hair);}
+.dr.first{border-top:0;}
+.mono{width:36px;height:36px;border-radius:10px;flex:0 0 36px;font-family:var(--ui);font-weight:700;font-size:11.5px;display:flex;align-items:center;justify-content:center;color:var(--deep);background:var(--warm-neutral);}
+.mono.pjA{background:var(--sage);} .mono.pjB{background:var(--gold);}
+.grow{flex:1;min-width:0;}
+.dr .nm{display:block;font-family:var(--ui);font-size:13.6px;font-weight:600;color:var(--deep);}
+.dr .sub{font-size:11.8px;color:var(--ink-muted);margin-bottom:5px;display:flex;align-items:center;gap:6px;}
+.dot{width:7px;height:7px;border-radius:2px;display:inline-block;flex:0 0 7px;}
+.bar{height:5px;border-radius:999px;background:var(--warm-neutral);overflow:hidden;width:150px;display:inline-block;vertical-align:middle;}
+.bar i{display:block;height:100%;background:var(--deep);border-radius:999px;}
+.pctl{font-size:11.4px;color:var(--ink-muted);margin-left:9px;font-variant-numeric:tabular-nums;}
+.greet{background:var(--cream);border:1px solid var(--border-hair);border-radius:14px;padding:17px 19px;margin-bottom:10px;}
+.greet .h{font-family:var(--ui);font-size:25px;font-weight:600;letter-spacing:-.025em;color:var(--deep);margin-bottom:5px;}
+.greet .s{font-size:14px;color:var(--ink-muted);}
+.greet .tag{font-family:var(--ui);font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-placeholder);display:block;margin-bottom:9px;}
+.no{color:var(--danger);font-weight:600;} .yes{color:#2C6B3F;font-weight:600;}
+@media(max-width:700px){.wrap{padding:22px 12px 60px}h1.doc{font-size:23px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<p class="kicker">Shoots rebrand · Band B · addendum to §0</p>
+<h1 class="doc">Applications fallback, and the greeting</h1>
+<p class="doc">Your §0a finding kills the second line I designed. Here's what the row does instead — and why it shouldn't announce the missing project.</p>
+
+<div class="sec warn">
+  <h2>Don't render "No project assigned" — it's true of every row</h2>
+  <p>My earlier mockup styled one unassigned application as a grey tile with that label, on the assumption it was an outlier worth flagging. It isn't an outlier: <b>it's 100% of applications, for structural reasons</b>. A warning that fires on everything isn't a warning, it's chrome — and it would tell every user, on every row, about a gap they can't close because there's no picker to close it with.</p>
+  <p>So the fallback says nothing about projects at all. The <b>project colour system in §4 goes dormant</b> — not deleted. The row keeps a second-line slot; when <code>project_id</code> starts populating, the project name and its colour fill it and the tile stops being neutral. Nothing about the layout changes on that day.</p>
+</div>
+
+<div class="lab"><span class="n">Now</span><h3>Fallback — no project data</h3><span class="w">what ships</span></div>
+<div class="stage">
+  <div class="card">
+    <div class="ch"><h3>Your applications</h3><span class="r">View all →</span></div>
+    <div class="grp">In progress</div>
+    <div class="dr first"><span class="mono">NL</span><span class="grow"><span class="nm">National Lottery Awards for All England</span><span class="sub">Edited 2 days ago</span><span class="bar"><i style="width:44%"></i></span><span class="pctl">4 of 9</span></span></div>
+    <div class="dr"><span class="mono">PH</span><span class="grow"><span class="nm">Youth Fund</span><span class="sub">Paul Hamlyn Foundation · edited 6 days ago</span><span class="bar"><i style="width:25%"></i></span><span class="pctl">2 of 8</span></span></div>
+    <div class="grp">Not started</div>
+    <div class="dr first"><span class="mono">PH</span><span class="grow"><span class="nm">Youth Fund</span><span class="sub">Paul Hamlyn Foundation · started 14 Aug · 8 questions</span></span></div>
+    <div class="dr"><span class="mono">PH</span><span class="grow"><span class="nm">Youth Fund</span><span class="sub">Paul Hamlyn Foundation · started 9 Aug · 4 questions</span></span></div>
+  </div>
+</div>
+<p class="cap">Second line carries <code>funder_name</code> plus a timestamp from <code>updated_at</code> / <code>created_at</code> — both already on the record. Three "Youth Fund" rows become three distinguishable rows.</p>
+
+<div class="lab"><span class="n later">Later</span><h3>Once a picker exists</h3><span class="w">same layout, slot filled</span></div>
+<div class="stage">
+  <div class="card">
+    <div class="ch"><h3>Your applications</h3><span class="r">View all →</span></div>
+    <div class="grp">In progress</div>
+    <div class="dr first"><span class="mono pjA">NL</span><span class="grow"><span class="nm">National Lottery Awards for All England</span><span class="sub"><i class="dot" style="background:var(--sage)"></i>Sea Change: surf and wellbeing</span><span class="bar"><i style="width:44%"></i></span><span class="pctl">4 of 9</span></span></div>
+    <div class="dr"><span class="mono pjB">PH</span><span class="grow"><span class="nm">Youth Fund</span><span class="sub"><i class="dot" style="background:var(--gold)"></i>Women's empowerment and employability</span><span class="bar"><i style="width:25%"></i></span><span class="pctl">2 of 8</span></span></div>
+    <div class="grp">Not started</div>
+    <div class="dr first"><span class="mono pjA">PH</span><span class="grow"><span class="nm">Youth Fund</span><span class="sub"><i class="dot" style="background:var(--sage)"></i>Sea Change: surf and wellbeing · 8 questions</span></span></div>
+  </div>
+</div>
+<p class="cap">Identical geometry. The only differences are what the second line holds and whether the tile is coloured.</p>
+
+<div class="sec">
+  <h2>Two rules that come with the fallback</h2>
+  <p><b>Sort by <code>updated_at</code>, newest first, within each group.</b> Without projects, recency is the only ordering that carries meaning — and it's the one that matches what the card is for, which is resuming work. It also makes the timestamps do double duty: they disambiguate <i>and</i> they explain the order.</p>
+  <p><b>Show <code>funder_name</code> only when it differs from <code>grant_name</code>.</b> `WorkApp.funder` at <code>:215</code> already does exactly this — it's set only when both exist. Right rule, currently feeding nothing but a monogram.</p>
+  <p><b>Relative dates under a week, absolute beyond.</b> "Edited 2 days ago" is more useful than a date when it's recent; "started 9 Aug" is more useful than "16 days ago" when it isn't.</p>
+</div>
+
+<div class="sec">
+  <h2>The greeting — use the richer score for the copy, not for the gate</h2>
+  <p>Agreed on <code>canRunMatching</code>, and agreed on not unifying: flipping 40 of 41 orgs out of "matches ready" to fix a sentence would be a bad trade.</p>
+  <p>But the fix for the user-visible half is already in the codebase. <b>Keep <code>canRunMatching</code> as the gate and use <code>matchProfileScore</code> for the message.</b> Same two-field test decides whether matching runs; the seven-field score decides what the page claims. Nothing flips state, and the sentence stops overstating.</p>
+  <div class="greet" style="margin-top:14px;">
+    <span class="tag">Today — shown at 57%</span>
+    <div class="h">Good evening, Paul.</div>
+    <div class="s"><span class="no">Your profile's complete</span> — time to find some funding.</div>
+  </div>
+  <div class="greet">
+    <span class="tag">Proposed — high score</span>
+    <div class="h">Good evening, Paul.</div>
+    <div class="s"><span class="yes">377 opportunities scored against your profile.</span></div>
+  </div>
+  <div class="greet" style="margin-bottom:0;">
+    <span class="tag">Proposed — below ~70%</span>
+    <div class="h">Good evening, Paul.</div>
+    <div class="s"><span class="yes">377 opportunities scored so far.</span> Filling in the rest of your profile will sharpen them.</div>
+  </div>
+  <p style="margin-top:14px;">Neither version claims completeness. The low-score variant turns the gap into an offer rather than a warning — which matters, because at 57% the matching genuinely is running, it's just running on less than it could.</p>
+</div>
+
+<div class="sec">
+  <h2>What I'd change in the spec as a result</h2>
+  <p><b>§3, Your applications:</b> second line is funder + timestamp, not project. Sort by <code>updated_at</code> desc within group.</p>
+  <p><b>§4, project colours:</b> marked dormant. Tiles are <code>--warm-neutral</code> until <code>project_id</code> populates. The fixed hue order and the never-cycle rule stand for when it does.</p>
+  <p><b>§4, last paragraph:</b> delete it. It says an application with no project is "probably a data problem worth reporting rather than styling politely" — which was right about the cause and wrong about the remedy. The dashboard is not where that gets reported.</p>
+  <p><b>§0b:</b> resolved — rename, plus the greeting copy above.</p>
+  <p><b>New, outside Band B:</b> the missing picker in the application creation flow. Worth its own note so it doesn't live only in this conversation — it's a product gap, not a design one, and every application created between now and the fix will have the same hole.</p>
+</div>
+
+</div>
+</body>
+</html>

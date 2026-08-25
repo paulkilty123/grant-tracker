@@ -50,11 +50,21 @@ const TABS: { id: TabId; label: string; icon: React.ElementType; introTitle: str
 
 const PAGES = ['Dashboard', 'Find Funding', 'Pipeline', 'Deadlines', 'Profile', 'Onboarding', 'Other']
 
+/**
+ * Four passing pairs, from the validated set. Two of these failed: actioned
+ * was #5A9080 on #F0F5F3 (3.32) and shipped #639922 on #F4F9ED (3.21) — the
+ * same two pairs that failed on the profile completeness meter.
+ *
+ * They are treated as four CATEGORIES rather than as a ramp, which is why
+ * distinct hues work here where a sequential ramp of one hue would not. There
+ * are no funding-type chips on this page, so borrowing three of those tints
+ * carries no risk of the two systems being read as each other.
+ */
 const STATUS_CONFIG: Record<SubmissionStatus, { label: string; bg: string; color: string }> = {
-  received:  { label: 'Received',  bg: '#F5F1E8', color: '#5F5E5A' },
-  reviewing: { label: 'In review', bg: '#FAEEDA', color: '#854F0B' },
-  actioned:  { label: 'Actioned',  bg: '#F0F5F3', color: '#5A9080' },
-  shipped:   { label: 'Shipped',   bg: '#F4F9ED', color: '#639922' },
+  received:  { label: 'Received',  bg: '#F1EDE3', color: '#5F5E5A' },
+  reviewing: { label: 'In review', bg: '#F6EFD9', color: '#7A5E11' },
+  actioned:  { label: 'Actioned',  bg: '#E8EFF5', color: '#2A5A85' },
+  shipped:   { label: 'Shipped',   bg: '#E3F0E4', color: '#1B6B3D' },
 }
 
 const TAB_TYPE_LABELS: Record<TabId, string> = {
@@ -75,7 +85,7 @@ const inputStyle: React.CSSProperties = {
   fontFamily: 'var(--font-dm-sans)',
   fontSize: 14.5,
   color: '#2C2C2A',
-  background: '#FAFAF7',
+  background: '#FAF9F5',
   border: '1px solid rgba(23,52,4,0.14)',
   borderRadius: 8,
   padding: '10px 12px',
@@ -167,14 +177,14 @@ export default function FeedbackPage() {
   const meta = TABS.find(t => t.id === activeTab)!
 
   return (
-    <div style={{ padding: isMobile ? '24px 16px 60px' : '40px 48px 80px', maxWidth: 1100, margin: '0 auto' }}>
+    <div style={{ padding: isMobile ? '24px 16px 60px' : '40px 48px 80px' }}>
 
       {/* Header */}
       <div style={{ marginBottom: 32 }}>
-        <h1 style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, fontSize: 28, letterSpacing: '-0.02em', color: '#2C2C2A', marginBottom: 6 }}>
+        <h1 style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, fontSize: 31, letterSpacing: '-0.025em', color: '#1D3C3E', marginBottom: 6 }}>
           Feedback
         </h1>
-        <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 15, color: '#5F5E5A', maxWidth: 560 }}>
+        <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 13.5, color: '#5F5E5A', maxWidth: 600 }}>
           Tell us what&apos;s working, what isn&apos;t, and what&apos;s missing. We read every message and use it to shape what we build next.
         </p>
       </div>
@@ -200,9 +210,9 @@ export default function FeedbackPage() {
                   onClick={() => { setActiveTab(tab.id); setStatus('idle') }}
                   style={{
                     fontFamily: 'var(--font-space-grotesk)', fontWeight: isActive ? 600 : 500,
-                    fontSize: 13.5, color: isActive ? '#173404' : '#5F5E5A',
-                    background: isActive ? '#F5F1E8' : 'transparent',
-                    border: 'none', padding: '10px 12px', borderRadius: 7,
+                    fontSize: 13.5, color: isActive ? '#1D3C3E' : '#5F5E5A',
+                    background: isActive ? '#F1EDE3' : 'transparent',
+                    border: 'none', padding: '10px 14px', borderRadius: 999,
                     cursor: 'pointer', display: 'flex', alignItems: 'center',
                     justifyContent: 'center', gap: 7, whiteSpace: 'nowrap',
                     transition: 'background 0.15s, color 0.15s',
@@ -221,7 +231,7 @@ export default function FeedbackPage() {
             {status === 'sent' ? (
               <div style={{ textAlign: 'center', padding: '56px 32px' }}>
                 <div style={{ width: 48, height: 48, background: 'rgba(23,52,4,0.08)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-                  <CheckCircle size={22} color="#173404" />
+                  <CheckCircle size={22} color="#1B6B3D" />
                 </div>
                 <p style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 20, fontWeight: 700, color: '#2C2C2A', marginBottom: 6 }}>Thank you!</p>
                 <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 14, color: '#5F5E5A', marginBottom: 24, lineHeight: 1.6 }}>
@@ -238,7 +248,7 @@ export default function FeedbackPage() {
                   {/* Intro */}
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, paddingBottom: 18, borderBottom: '1px solid rgba(23,52,4,0.08)' }}>
                     <div style={{ width: 36, height: 36, background: '#F5F1E8', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <meta.icon size={18} color="#173404" />
+                      <meta.icon size={18} color="#1D3C3E" />
                     </div>
                     <div style={{ paddingTop: 2 }}>
                       <div style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, fontSize: 15, color: '#2C2C2A', marginBottom: 2 }}>{meta.introTitle}</div>
@@ -257,7 +267,7 @@ export default function FeedbackPage() {
                       <textarea value={bugHow} onChange={e => setBugHow(e.target.value)} placeholder="Describe what went wrong. Include any error messages you saw." style={{ ...inputStyle, minHeight: 110, resize: 'vertical' }} />
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-                      <label style={labelStyle}>Where did this happen? <span style={{ fontWeight: 400, fontSize: 12, color: '#8A8986' }}>Optional</span></label>
+                      <label style={labelStyle}>Where did this happen? <span style={{ fontWeight: 400, fontSize: 12, color: '#74736E' }}>Optional</span></label>
                       <select value={bugPage} onChange={e => setBugPage(e.target.value)} style={inputStyle}>
                         <option value="">Choose a page…</option>
                         {PAGES.map(p => <option key={p} value={p}>{p}</option>)}
@@ -272,11 +282,11 @@ export default function FeedbackPage() {
                       <input type="text" value={funderName} onChange={e => setFunderName(e.target.value)} placeholder="e.g. Esmée Fairbairn Foundation" style={inputStyle} />
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-                      <label style={labelStyle}>Website <span style={{ fontWeight: 400, fontSize: 12, color: '#8A8986' }}>Optional</span></label>
+                      <label style={labelStyle}>Website <span style={{ fontWeight: 400, fontSize: 12, color: '#74736E' }}>Optional</span></label>
                       <input type="url" value={funderUrl} onChange={e => setFunderUrl(e.target.value)} placeholder="https://…" style={inputStyle} />
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-                      <label style={labelStyle}>Why is it relevant? <span style={{ fontWeight: 400, fontSize: 12, color: '#8A8986' }}>Optional</span></label>
+                      <label style={labelStyle}>Why is it relevant? <span style={{ fontWeight: 400, fontSize: 12, color: '#74736E' }}>Optional</span></label>
                       <textarea value={funderWhy} onChange={e => setFunderWhy(e.target.value)} placeholder="What sector do they fund? Who can apply?" style={{ ...inputStyle, minHeight: 90, resize: 'vertical' }} />
                     </div>
                   </>)}
@@ -297,14 +307,14 @@ export default function FeedbackPage() {
                   {status === 'error' && (
                     <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 12.5, color: '#993C1D' }}>
                       Something went wrong — please try again or email{' '}
-                      <a href="mailto:hello@granttracker.co.uk" style={{ color: 'inherit' }}>hello@granttracker.co.uk</a>
+                      <a href="mailto:hello@shootsfunding.co.uk" style={{ color: 'inherit' }}>hello@shootsfunding.co.uk</a>
                     </p>
                   )}
                 </div>
 
                 {/* Form footer — stacks on mobile so the submit button stays full-width and reachable */}
-                <div style={{ background: '#FAFAF7', borderTop: '1px solid rgba(23,52,4,0.08)', padding: isMobile ? '14px 18px' : '14px 26px', display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'center', justifyContent: 'space-between', gap: isMobile ? 12 : 16 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-dm-sans)', fontSize: 12.5, color: '#8A8986' }}>
+                <div style={{ background: '#FAF9F5', borderTop: '1px solid rgba(23,52,4,0.08)', padding: isMobile ? '14px 18px' : '14px 26px', display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'center', justifyContent: 'space-between', gap: isMobile ? 12 : 16 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-dm-sans)', fontSize: 12.5, color: '#74736E' }}>
                     <CheckCircle size={13} />
                     Your account and browser details are attached automatically
                   </div>
@@ -313,7 +323,7 @@ export default function FeedbackPage() {
                     disabled={status === 'sending' || !isValid()}
                     style={{
                       fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 14,
-                      background: '#8ECB3C', color: '#173404', border: 'none',
+                      background: '#1D3C3E', color: '#F6F1E7', border: 'none',
                       padding: '10px 20px', borderRadius: 8,
                       cursor: (status === 'sending' || !isValid()) ? 'not-allowed' : 'pointer',
                       display: 'inline-flex', alignItems: 'center', gap: 8, transition: 'filter 0.15s',
@@ -329,11 +339,11 @@ export default function FeedbackPage() {
 
           {/* Email fallback */}
           <div style={{ marginTop: 24, padding: '16px 20px', background: '#FFFFFF', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 12, fontFamily: 'var(--font-dm-sans)', fontSize: 13.5, color: '#5F5E5A' }}>
-            <Mail size={16} color="#8A8986" style={{ flexShrink: 0 }} />
+            <Mail size={16} color="#74736E" style={{ flexShrink: 0 }} />
             <span>
               Need a faster response, or prefer email? Write to{' '}
-              <a href="mailto:hello@granttracker.co.uk" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, color: '#173404', textDecoration: 'none' }}>
-                hello@granttracker.co.uk
+              <a href="mailto:hello@shootsfunding.co.uk" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, color: '#1D3C3E', textDecoration: 'none' }}>
+                hello@shootsfunding.co.uk
               </a>
             </span>
           </div>
@@ -345,12 +355,12 @@ export default function FeedbackPage() {
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 14, paddingBottom: 14, borderBottom: '1px solid rgba(23,52,4,0.08)' }}>
             <span style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, fontSize: 14.5, color: '#2C2C2A' }}>Your recent submissions</span>
             {submissions.length > 0 && (
-              <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 12, color: '#8A8986' }}>{submissions.length} total</span>
+              <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 12, color: '#74736E' }}>{submissions.length} total</span>
             )}
           </div>
 
           {submissions.length === 0 ? (
-            <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 13, color: '#8A8986', lineHeight: 1.6, paddingTop: 4 }}>
+            <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 13, color: '#74736E', lineHeight: 1.6, paddingTop: 4 }}>
               Nothing yet — we&apos;ll show your submissions here once you send one.
             </p>
           ) : (
@@ -376,7 +386,7 @@ export default function FeedbackPage() {
                   <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 13, color: '#2C2C2A', lineHeight: 1.45, marginBottom: 4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                     {preview}
                   </p>
-                  <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 11.5, color: '#8A8986' }}>
+                  <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 11.5, color: '#74736E' }}>
                     Sent {formatDate(sub.created_at)}
                   </span>
                 </div>

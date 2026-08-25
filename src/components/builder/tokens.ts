@@ -48,6 +48,22 @@ export function primaryBtn(disabled = false): React.CSSProperties {
   }
 }
 
+/**
+ * Deep fill — the band C primary.
+ *
+ * Separate from primaryBtn() rather than replacing it: that one is lime and is
+ * shared with the applications pages and two admin surfaces, where the colour
+ * cleanup has not been done. Swapping it here would recolour all of them at
+ * once, including admin, whose rebuild is deliberately parked.
+ */
+export function deepBtn(disabled = false): React.CSSProperties {
+  return {
+    fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: '#F6F1E7',
+    background: '#1D3C3E', border: 'none', padding: '11px 20px', borderRadius: 999,
+    cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.6 : 1,
+  }
+}
+
 /** Forest fill — utility / navigation (Continue, Done). */
 export function forestBtn(disabled = false): React.CSSProperties {
   return {

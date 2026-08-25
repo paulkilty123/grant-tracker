@@ -99,7 +99,7 @@ function MatchDetail({ m }: { m: ScoredMatch }) {
           </p>
           {m.positives.slice(0, 4).map((r, i) => (
             <p key={i} style={{ fontFamily: BODY, fontSize: 13, color: T.textPrimary, margin: '0 0 3px', lineHeight: 1.55, display: 'flex', gap: 7 }}>
-              <span style={{ width: 6, height: 6, borderRadius: 999, background: T.lime, flexShrink: 0, marginTop: 7 }} />
+              <span style={{ width: 6, height: 6, borderRadius: 999, background: '#1B6B3D', flexShrink: 0, marginTop: 7 }} />
               <span>{r}</span>
             </p>
           ))}
@@ -445,9 +445,9 @@ export default function ProjectPage() {
               disabled={full}
               style={{
                 fontFamily: UI, fontWeight: on ? 600 : 500, fontSize: 12,
-                color: on ? T.greenDeep : T.textSecondary,
-                background: on ? '#C0DD97' : T.white,
-                border: `1px solid ${on ? '#C0DD97' : T.borderStrong}`,
+                color: on ? '#1B6B3D' : T.textSecondary,
+                background: on ? '#E3F0E4' : T.white,
+                border: `1px solid ${on ? '#1B6B3D' : T.borderStrong}`,
                 padding: '5px 12px', borderRadius: 999, cursor: full ? 'not-allowed' : 'pointer',
                 opacity: full ? 0.45 : 1,
               }}
@@ -461,7 +461,8 @@ export default function ProjectPage() {
   )
 
   return (
-    <div style={{ maxWidth: 820, marginInline: 'auto' }}>
+    /* Full width, matching the rest of band C. */
+    <div>
       <Link href="/dashboard/projects" style={{
         fontFamily: UI, fontWeight: 500, fontSize: 13, color: T.textSecondary,
         textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 16,
@@ -476,7 +477,7 @@ export default function ProjectPage() {
           onChange={e => queueSave({ name: e.target.value })}
           aria-label="Project name"
           style={{
-            fontFamily: UI, fontWeight: 600, fontSize: 24, color: T.textPrimary, letterSpacing: '-0.01em',
+            fontFamily: UI, fontWeight: 600, fontSize: 31, color: '#1D3C3E', letterSpacing: '-0.025em',
             border: 'none', background: 'transparent', outline: 'none', padding: 0,
             flex: '1 1 280px', minWidth: 200,
           }}
@@ -507,9 +508,9 @@ export default function ProjectPage() {
             {ready ? 'Ready to match' : 'Not ready to match yet'}
           </span>
         </div>
-        <div style={{ height: 7, background: T.cream, borderRadius: 999, overflow: 'hidden' }}>
+        <div style={{ height: 7, background: 'rgba(29,60,62,0.15)', borderRadius: 999, overflow: 'hidden' }}>
           <div style={{
-            height: '100%', width: `${pct}%`, background: ready ? T.lime : T.greenMid,
+            height: '100%', width: `${pct}%`, background: '#1D3C3E',
             borderRadius: 999, transition: 'width 250ms ease',
           }} />
         </div>
@@ -743,11 +744,11 @@ export default function ProjectPage() {
                                     onClick={e => e.stopPropagation()}
                                     style={{
                                       fontFamily: UI, fontWeight: 600, fontSize: 12.5, whiteSpace: 'nowrap', flexShrink: 0,
-                                      padding: '7px 14px', borderRadius: 8, textDecoration: 'none',
+                                      padding: '9px 16px', borderRadius: 999, textDecoration: 'none',
                                       display: 'inline-flex', alignItems: 'center', gap: 5,
                                       ...(id === topMatchId
-                                        ? { color: T.greenDeep, background: T.lime, border: '1px solid transparent' }
-                                        : { color: T.greenDeep, background: T.white, border: `1px solid ${T.borderStrong}` }),
+                                        ? { color: '#F6F1E7', background: '#1D3C3E', border: '1px solid transparent' }
+                                        : { color: '#1D3C3E', background: T.white, border: '1.5px solid rgba(29,60,62,0.24)' }),
                                     }}
                                   >
                                     <FilePenLine size={12} /> Start an application

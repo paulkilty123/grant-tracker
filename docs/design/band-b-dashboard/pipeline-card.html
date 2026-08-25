@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shoots — pipeline card</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#F6F1E7; --deep:#1D3C3E; --charcoal:#2E2E2E; --ink-muted:#5F5E5A;
+  --ink-placeholder:#74736E; --warm-neutral:#F1EDE3;
+  --sage:#9BCA9D; --gold:#EBCE78; --terra:#D67558;
+  --tint-sage:#E3F0E4; --fg-sage:#1B6B3D;
+  --danger:#B4472A; --danger-tint:#FBEFEA;
+  --border-hair:rgba(29,60,62,.10); --border-ghost:rgba(29,60,62,.22);
+  --ui:"Space Grotesk",system-ui,sans-serif; --body:"Plus Jakarta Sans",system-ui,sans-serif;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:#EFE9DD;font-family:var(--body);color:var(--charcoal);-webkit-font-smoothing:antialiased;}
+.wrap{max-width:1160px;margin:0 auto;padding:40px 26px 90px;}
+.kicker{font-family:var(--ui);font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;font-weight:600;color:var(--ink-muted);margin:0 0 10px;}
+h1.doc{font-family:var(--ui);font-size:31px;font-weight:700;color:var(--deep);margin:0 0 8px;letter-spacing:-.02em;}
+p.doc{font-size:15.5px;line-height:1.65;color:var(--ink-muted);margin:0 0 26px;max-width:790px;}
+.sec{background:#fff;border:1px solid var(--border-hair);border-radius:18px;padding:24px 26px;margin-bottom:22px;box-shadow:0 1px 2px rgba(29,60,62,.03);}
+.sec h2{font-family:var(--ui);font-size:16.5px;font-weight:600;color:var(--deep);margin:0 0 7px;}
+.sec p{font-size:13.8px;line-height:1.68;color:var(--ink-muted);margin:0 0 10px;}
+.sec p:last-child{margin-bottom:0;}
+.sec b{color:var(--deep);}
+code{background:var(--cream);border-radius:5px;padding:1px 6px;font-size:12.2px;font-family:ui-monospace,Menlo,monospace;}
+.lab{font-family:var(--ui);display:flex;align-items:baseline;gap:11px;margin:32px 0 12px;flex-wrap:wrap;}
+.lab .n{font-size:10.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;background:var(--deep);color:var(--cream);border-radius:999px;padding:5px 11px;}
+.lab h3{font-size:18px;font-weight:600;color:var(--deep);margin:0;letter-spacing:-.01em;}
+.lab .w{font-size:12.6px;color:var(--ink-muted);}
+.stage{background:#EDE7DA;border:1px solid var(--border-hair);border-radius:16px;padding:24px 22px;margin-bottom:10px;}
+.cap{font-size:12.6px;color:var(--ink-muted);margin:0 0 6px;line-height:1.6;}
+
+.card{background:#fff;border:1px solid var(--border-hair);border-radius:18px;padding:22px 24px;box-shadow:0 1px 2px rgba(29,60,62,.03);}
+.ch{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:16px;}
+.ch h3{font-family:var(--ui);font-size:18px;font-weight:600;color:var(--deep);margin:0;letter-spacing:-.015em;}
+.ch .r{font-family:var(--ui);font-size:12.8px;font-weight:600;color:var(--deep);border-bottom:1.5px solid rgba(29,60,62,.28);padding-bottom:1px;white-space:nowrap;}
+
+/* total headline */
+.tot{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:16px;}
+.tot .v{font-family:var(--ui);font-size:40px;font-weight:700;letter-spacing:-.03em;color:var(--deep);line-height:1;}
+.tot .l{font-family:var(--ui);font-size:14.5px;font-weight:600;color:var(--deep);}
+.tot .x{font-size:13px;color:var(--ink-muted);margin-left:auto;display:inline-flex;align-items:center;gap:8px;}
+.tot .x i{width:10px;height:10px;border-radius:2px;background:var(--danger);display:block;flex:0 0 10px;}
+
+/* proportion bar */
+.prop{display:flex;height:8px;border-radius:999px;overflow:hidden;gap:2px;margin-bottom:18px;}
+.prop i{display:block;height:100%;border-radius:2px;}
+
+/* tiles */
+.stg{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;}
+.st{border-radius:14px;padding:16px 17px 18px;min-height:132px;display:flex;flex-direction:column;}
+.st .k{font-family:var(--ui);font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;display:block;}
+.st .v{font-family:var(--ui);font-size:30px;font-weight:700;letter-spacing:-.03em;display:block;line-height:1;margin-top:auto;}
+.st .o{font-size:12px;margin-top:7px;display:block;}
+.s1{background:var(--warm-neutral);} .s1 .k{color:var(--ink-muted);} .s1 .v{color:var(--deep);} .s1 .o{color:var(--ink-muted);}
+.s2{background:var(--tint-sage);} .s2 .k{color:var(--fg-sage);} .s2 .v{color:var(--deep);} .s2 .o{color:var(--ink-muted);}
+.s3{background:var(--sage);} .s3 .k{color:var(--deep);opacity:.8;} .s3 .v{color:var(--deep);} .s3 .o{color:var(--deep);opacity:.75;}
+.s4{background:var(--deep);} .s4 .k{color:rgba(246,241,231,.72);} .s4 .v{color:var(--cream);} .s4 .o{color:rgba(246,241,231,.65);}
+.st.off{background:var(--warm-neutral);opacity:.72;} .st.off .k{color:var(--ink-placeholder);} .st.off .v{color:var(--ink-placeholder);} .st.off .o{color:var(--ink-placeholder);}
+
+/* variant B: total as left column */
+.splitb{display:grid;grid-template-columns:220px 1fr;gap:14px;}
+.totbox{background:var(--cream);border:1px solid var(--border-hair);border-radius:14px;padding:17px 18px;display:flex;flex-direction:column;}
+.totbox .k{font-family:var(--ui);font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-muted);}
+.totbox .v{font-family:var(--ui);font-size:37px;font-weight:700;letter-spacing:-.03em;color:var(--deep);line-height:1;margin-top:auto;}
+.totbox .o{font-size:12px;color:var(--ink-muted);margin-top:7px;}
+.totbox .d{font-size:11.8px;color:var(--ink-muted);margin-top:11px;padding-top:10px;border-top:1px solid var(--border-hair);display:inline-flex;align-items:center;gap:7px;}
+.totbox .d i{width:9px;height:9px;border-radius:2px;background:var(--danger);display:block;flex:0 0 9px;}
+.stg4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+@media(max-width:760px){.wrap{padding:22px 12px 60px}h1.doc{font-size:24px}.stg,.stg4{grid-template-columns:1fr 1fr}.splitb{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<p class="kicker">Shoots rebrand · Band B · pipeline card</p>
+<h1 class="doc">Pipeline, taller — and the total made the headline</h1>
+<p class="doc">Two ways to promote it. Both make the tiles 132px with 30px values; they differ in where the total sits. A third change in both: a proportion bar, which turns out to say something the tiles don't.</p>
+
+<!-- A -->
+<div class="lab"><span class="n">A</span><h3>Total as a headline</h3><span class="w">reads top-down: how much, then where it sits</span></div>
+<div class="stage">
+  <div class="card">
+    <div class="ch"><h3>Pipeline</h3><span class="r">View pipeline →</span></div>
+    <div class="tot"><span class="v">£635k</span><span class="l">in play</span><span class="x">across 3 opportunities <i></i> £45k declined</span></div>
+    <div class="prop">
+      <i style="width:78.7%;background:#D8D3C8" title="Identified"></i>
+      <i style="width:18.9%;background:var(--sage)"></i>
+      <i style="width:2.4%;background:var(--fg-sage)"></i>
+    </div>
+    <div class="stg">
+      <div class="st s1"><span class="k">Identified</span><span class="v">£500k</span><span class="o">1 opportunity</span></div>
+      <div class="st s2"><span class="k">Applying</span><span class="v">£120k</span><span class="o">1 opportunity</span></div>
+      <div class="st s3"><span class="k">Submitted</span><span class="v">£15k</span><span class="o">1 opportunity</span></div>
+      <div class="st s4"><span class="k">Won</span><span class="v">—</span><span class="o">None yet</span></div>
+    </div>
+  </div>
+</div>
+<p class="cap">The total is now the biggest number on the card at 40px, and the declined figure moves up beside it instead of hiding in a footer.</p>
+
+<!-- B -->
+<div class="lab"><span class="n">B</span><h3>Total as a fifth block</h3><span class="w">reads left-right: the sum, then the stages that make it</span></div>
+<div class="stage">
+  <div class="card">
+    <div class="ch"><h3>Pipeline</h3><span class="r">View pipeline →</span></div>
+    <div class="splitb">
+      <div class="totbox">
+        <span class="k">Total in play</span>
+        <span class="v">£635k</span>
+        <span class="o">3 opportunities</span>
+        <span class="d"><i></i>£45k declined · 2</span>
+      </div>
+      <div>
+        <div class="prop">
+          <i style="width:78.7%;background:#D8D3C8"></i>
+          <i style="width:18.9%;background:var(--sage)"></i>
+          <i style="width:2.4%;background:var(--fg-sage)"></i>
+        </div>
+        <div class="stg4">
+          <div class="st s1"><span class="k">Identified</span><span class="v">£500k</span><span class="o">1</span></div>
+          <div class="st s2"><span class="k">Applying</span><span class="v">£120k</span><span class="o">1</span></div>
+          <div class="st s3"><span class="k">Submitted</span><span class="v">£15k</span><span class="o">1</span></div>
+          <div class="st s4"><span class="k">Won</span><span class="v">—</span><span class="o">None</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<p class="cap">Groups the total with declined, so "what's alive" and "what died" sit together. Costs the tiles about 200px of width, which is why the counts drop to bare numerals.</p>
+
+<!-- empty -->
+<div class="lab"><span class="n">A</span><h3>Day one, same card</h3><span class="w">for comparison</span></div>
+<div class="stage">
+  <div class="card">
+    <div class="ch"><h3>Pipeline</h3></div>
+    <div class="tot"><span class="v" style="color:var(--ink-placeholder)">£0</span><span class="l" style="color:var(--ink-muted)">in play</span><span class="x">Save a match and it starts in Identified.</span></div>
+    <div class="prop"><i style="width:100%;background:#E4DFD4"></i></div>
+    <div class="stg">
+      <div class="st off"><span class="k">Identified</span><span class="v">—</span><span class="o">Nothing yet</span></div>
+      <div class="st off"><span class="k">Applying</span><span class="v">—</span><span class="o">Nothing yet</span></div>
+      <div class="st off"><span class="k">Submitted</span><span class="v">—</span><span class="o">Nothing yet</span></div>
+      <div class="st off"><span class="k">Won</span><span class="v">—</span><span class="o">Nothing yet</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="sec">
+  <h2>The proportion bar is the part I'd argue for hardest</h2>
+  <p>Four equal-width tiles give every stage the same visual weight, so £500k and £15k look like comparable quantities. They aren't: <b>£500k is 79% of your entire pipeline and it's sitting in Identified</b> — the stage that means "noticed, not acted on". The bar makes that legible in one glance, and it's the single most useful thing this card could tell a fundraiser.</p>
+  <p>It's a stacked proportion of one whole, so it takes the ladder's own tones rather than new hues — the same greys and greens, in stage order, with a 2px gap between segments. Won is absent because it's zero; when it lands it appears at the dark end and the bar visibly shifts.</p>
+  <p><b>Why not just make the tiles proportional widths?</b> Because a stage at £0 would vanish entirely, and the labels wouldn't fit at 2%. Tiles stay equal so every stage is always readable and clickable; the bar carries the magnitude.</p>
+</div>
+
+<div class="sec">
+  <h2>What else changed</h2>
+  <p><b>Tiles are 132px with the value pinned to the bottom.</b> Label at the top, value at the base, so the four numbers sit on one line regardless of label length. Values go 21px → 30px.</p>
+  <p><b>"1 opportunity" three times is noise.</b> In A it stays, because there's room. In B it drops to a bare numeral — and honestly that's the better version of the information either way; the word is doing no work when it's the same on every tile.</p>
+  <p><b>Declined comes out of the footer.</b> It's a real outcome, not a footnote, and the old placement had it below the fold of the card on a narrow window.</p>
+  <p><b>On day one the total reads £0, not a dash.</b> Zero pounds in play is a true and clear statement; a dash is an absence of information. The stage tiles keep dashes because "no value yet" is genuinely different from "£0 of value".</p>
+</div>
+
+<div class="sec">
+  <h2>Still worth flagging: that £500k</h2>
+  <p>One opportunity is 79% of the pipeline, and the proportion bar makes it impossible to miss — which is either exactly right or actively unhelpful depending on whether the figure is real. If it's an aspirational entry against a fund nobody has applied to, this card will now advertise it every time the dashboard loads. Worth checking the record before this ships, because the design's whole value here is that it tells the truth loudly.</p>
+</div>
+
+</div>
+</body>
+</html>

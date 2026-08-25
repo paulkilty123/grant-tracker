@@ -151,7 +151,7 @@ export function MatchFeedbackBlock({ grantId, userId, matchScore, compact = fals
   }
 
   const divider: React.CSSProperties = {
-    borderTop: '0.5px solid rgba(99,153,34,0.2)',
+    borderTop: '1px solid var(--border-hair)',
     marginTop: 12,
     paddingTop: 12,
   }
@@ -166,7 +166,7 @@ export function MatchFeedbackBlock({ grantId, userId, matchScore, compact = fals
       : `You marked this not for us${detail ? `. ${detail}.` : '.'}`
     return (
       <div style={{ ...divider, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
-        <div style={{ fontSize: 12.5, color: direction === 'up' ? '#3B6D11' : '#993C1D', display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-space-grotesk)', fontWeight: 500 }}>
+        <div style={{ fontSize: 12.5, color: direction === 'up' ? '#1B6B3D' : '#993C1D', display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-space-grotesk)', fontWeight: 500 }}>
           {direction === 'up' ? <ThumbUp /> : <ThumbDown />}
           {summaryText}
         </div>
@@ -181,7 +181,10 @@ export function MatchFeedbackBlock({ grantId, userId, matchScore, compact = fals
     borderRadius: 18, padding: '6px 14px 6px 11px', cursor: 'pointer',
     display: 'inline-flex', alignItems: 'center', gap: 6,
     fontFamily: 'var(--font-space-grotesk)', fontSize: 12.5, fontWeight: 500,
-    border: '0.5px solid rgba(99,153,34,0.3)', background: 'white', color: '#3B6D11',
+    // A ghost edge, not a hairline. These used to sit on the tinted score
+    // band, which gave them their outline for free; on white a 0.5px line at
+    // 30% alpha is not an edge, it is a suggestion of one.
+    border: '1px solid var(--border-ghost)', background: 'white', color: '#1D3C3E',
   }
 
   // ── Saved flash microcopy ──────────────────────────────────────────────
@@ -203,7 +206,7 @@ export function MatchFeedbackBlock({ grantId, userId, matchScore, compact = fals
     }
     return (
       <div style={{ ...divider, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
-        <div style={{ fontSize: 13, color: '#3B6D11', fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, display: 'inline-flex', alignItems: 'center' }}>
+        <div style={{ fontSize: 13, color: '#1D3C3E', fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, display: 'inline-flex', alignItems: 'center' }}>
           Does this look right for you?
           {savedBadge}
         </div>
@@ -224,20 +227,20 @@ export function MatchFeedbackBlock({ grantId, userId, matchScore, compact = fals
   return (
     <div style={divider}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
-        <div style={{ fontSize: 13, color: '#3B6D11', fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, display: 'inline-flex', alignItems: 'center' }}>
+        <div style={{ fontSize: 13, color: '#1D3C3E', fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, display: 'inline-flex', alignItems: 'center' }}>
           {prompt}
           {savedBadge}
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
           <button
             onClick={() => handleDirectionTap('up')}
-            style={{ ...btnBase, background: isUp ? '#8ECB3C' : 'white', border: isUp ? '0.5px solid #8ECB3C' : '0.5px solid rgba(99,153,34,0.3)', color: isUp ? '#173404' : '#3B6D11' }}
+            style={{ ...btnBase, background: isUp ? '#E3F0E4' : 'white', border: isUp ? '1px solid #1B6B3D' : '1px solid var(--border-ghost)', color: isUp ? '#1B6B3D' : '#1D3C3E' }}
           >
             <ThumbUp /> Good match
           </button>
           <button
             onClick={() => handleDirectionTap('down')}
-            style={{ ...btnBase, background: !isUp ? '#FAECE7' : 'white', border: !isUp ? '0.5px solid #D85A30' : '0.5px solid rgba(99,153,34,0.3)', color: !isUp ? '#993C1D' : '#3B6D11' }}
+            style={{ ...btnBase, background: !isUp ? '#FAECE7' : 'white', border: !isUp ? '1px solid #993C1D' : '1px solid var(--border-ghost)', color: !isUp ? '#993C1D' : '#1D3C3E' }}
           >
             <ThumbDown /> Not for us
           </button>
@@ -251,7 +254,7 @@ export function MatchFeedbackBlock({ grantId, userId, matchScore, compact = fals
       )}
 
       <div style={{ marginTop: 12, paddingTop: 12, borderTop: '0.5px solid rgba(99,153,34,0.2)' }}>
-        <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 12.5, color: '#3B6D11', fontWeight: 500, marginBottom: 10 }}>
+        <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 12.5, color: '#1D3C3E', fontWeight: 600, marginBottom: 10 }}>
           Tap any that apply
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
@@ -262,8 +265,8 @@ export function MatchFeedbackBlock({ grantId, userId, matchScore, compact = fals
                 key={chip.value}
                 onClick={() => handleChipToggle(chip.value)}
                 style={{
-                  background: isSelected ? '#173404' : 'white',
-                  border: `0.5px solid ${isSelected ? '#173404' : 'rgba(23,52,4,0.14)'}`,
+                  background: isSelected ? '#1D3C3E' : 'white',
+                  border: `0.5px solid ${isSelected ? '#1D3C3E' : 'rgba(23,52,4,0.14)'}`,
                   borderRadius: 18, padding: '5px 12px',
                   fontFamily: 'var(--font-space-grotesk)', fontSize: 12, fontWeight: 500,
                   color: isSelected ? 'white' : '#2C2C2A', cursor: 'pointer',
@@ -312,10 +315,10 @@ export function MatchFeedbackBlock({ grantId, userId, matchScore, compact = fals
               <button
                 onClick={handleDone}
                 style={{
-                  background: '#173404',
-                  color: '#F1F7E4',
+                  background: '#1D3C3E',
+                  color: '#F6F1E7',
                   border: 'none',
-                  borderRadius: 18,
+                  borderRadius: 999,
                   padding: '7px 18px',
                   fontFamily: 'var(--font-space-grotesk)',
                   fontSize: 12.5,

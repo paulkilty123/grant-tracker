@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shoots — dashboard, three states</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#F6F1E7; --deep:#1D3C3E; --charcoal:#2E2E2E; --ink-muted:#5F5E5A;
+  --ink-placeholder:#74736E; --warm-neutral:#F1EDE3;
+  --sage:#9BCA9D; --gold:#EBCE78; --sky:#ABCBEE; --teal:#4EAAB4; --terra:#D67558;
+  --tint-sage:#E3F0E4; --tint-gold:#F9F1D9; --tint-sky:#E7F0FA; --tint-teal:#CDE7EA; --tint-terra:#F4D8D0;
+  --fg-sage:#1B6B3D; --fg-gold:#7A5E11; --fg-sky:#2A5A85; --fg-teal:#1F5F66; --fg-terra:#8C3B28;
+  --danger:#B4472A; --danger-tint:#FBEFEA;
+  --border-hair:rgba(29,60,62,.10); --border-ghost:rgba(29,60,62,.22);
+  --t-grant:#22874C; --t-grant-bg:#E4F1EA; --t-grant-fg:#1B6B3D;
+  --t-kind:#B08A20;  --t-kind-bg:#F6EFD9;  --t-kind-fg:#7A5E11;
+  --t-inv:#3C79AC;   --t-inv-bg:#E8EFF5;   --t-inv-fg:#2A5A85;
+  --t-prog:#94402A;  --t-prog-bg:#F2E8E5;  --t-prog-fg:#7A331F;
+  --ui:"Space Grotesk",system-ui,sans-serif; --body:"Plus Jakarta Sans",system-ui,sans-serif;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:#EFE9DD;font-family:var(--body);color:var(--charcoal);-webkit-font-smoothing:antialiased;}
+.wrap{max-width:1290px;margin:0 auto;padding:40px 22px 90px;}
+.kicker{font-family:var(--ui);font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;font-weight:600;color:var(--ink-muted);margin:0 0 10px;}
+h1.doc{font-family:var(--ui);font-size:31px;font-weight:700;color:var(--deep);margin:0 0 8px;letter-spacing:-.02em;}
+p.doc{font-size:15.5px;line-height:1.65;color:var(--ink-muted);margin:0 0 26px;max-width:800px;}
+.sec{background:#fff;border:1px solid var(--border-hair);border-radius:18px;padding:23px 25px;margin-bottom:20px;box-shadow:0 1px 2px rgba(29,60,62,.03);}
+.sec h2{font-family:var(--ui);font-size:16.5px;font-weight:600;color:var(--deep);margin:0 0 7px;}
+.sec p{font-size:13.8px;line-height:1.68;color:var(--ink-muted);margin:0 0 10px;}
+.sec p:last-child{margin-bottom:0;}
+.sec b{color:var(--deep);}
+code{background:var(--cream);border-radius:5px;padding:1px 6px;font-size:12.2px;font-family:ui-monospace,Menlo,monospace;color:var(--charcoal);}
+.lab{font-family:var(--ui);display:flex;align-items:baseline;gap:11px;margin:34px 0 12px;flex-wrap:wrap;}
+.lab .n{font-size:10.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;background:var(--deep);color:var(--cream);border-radius:999px;padding:5px 11px;}
+.lab h3{font-size:19px;font-weight:600;color:var(--deep);margin:0;letter-spacing:-.01em;}
+.lab .w{font-size:12.8px;color:var(--ink-muted);}
+.frame{width:100%;overflow:hidden;position:relative;border-radius:16px;border:1px solid rgba(29,60,62,.14);box-shadow:0 2px 4px rgba(29,60,62,.05),0 18px 44px rgba(29,60,62,.10);margin-bottom:12px;}
+.canvas{width:1320px;transform-origin:top left;position:absolute;top:0;left:0;background:var(--cream);padding:28px 34px;}
+.cap{font-size:12.6px;color:var(--ink-muted);margin:0 0 6px;line-height:1.6;}
+
+.pgh{font-family:var(--ui);font-size:29px;font-weight:600;letter-spacing:-.025em;color:var(--deep);margin:0 0 16px;}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:17px;}
+.card{background:#fff;border:1px solid var(--border-hair);border-radius:18px;padding:19px 21px;box-shadow:0 1px 2px rgba(29,60,62,.03);}
+.ch{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:13px;}
+.ch h3{font-family:var(--ui);font-size:17px;font-weight:600;color:var(--deep);margin:0;letter-spacing:-.015em;}
+.ch .r{font-family:var(--ui);font-size:12.3px;font-weight:600;color:var(--deep);border-bottom:1.5px solid rgba(29,60,62,.28);padding-bottom:1px;white-space:nowrap;}
+.grow{flex:1;min-width:0;}
+.full{grid-column:1 / -1;}
+
+/* strip */
+.strip{background:#fff;border:1px solid var(--border-hair);border-radius:18px;padding:19px 21px 17px;margin-bottom:17px;}
+.hd{display:flex;align-items:center;gap:10px;margin-bottom:13px;flex-wrap:wrap;}
+.hd h2{font-family:var(--ui);font-size:17.5px;font-weight:600;color:var(--deep);margin:0;letter-spacing:-.015em;}
+.hd .sub{font-size:12.6px;color:var(--ink-muted);}
+.hd .flag{font-family:var(--ui);font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:var(--danger);color:#FDF6F3;border-radius:999px;padding:4px 10px;}
+.srow{display:grid;gap:11px;}
+.srow.c3{grid-template-columns:1fr 1fr 1fr;} .srow.c2{grid-template-columns:1fr 1fr;}
+.si{border-radius:14px;padding:14px 15px;display:flex;flex-direction:column;border:1px solid rgba(29,60,62,.08);}
+.si .ic{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;}
+.si .k{font-family:var(--ui);font-size:9.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;gap:7px;}
+.si .k .cd{font-size:9px;background:var(--danger);color:#FDF6F3;border-radius:5px;padding:2px 6px;}
+.si .t{font-family:var(--ui);font-size:14.8px;font-weight:600;color:var(--deep);line-height:1.3;margin-bottom:4px;}
+.si .m{font-size:12.2px;color:var(--ink-muted);margin-bottom:13px;line-height:1.45;}
+.si .go{margin-top:auto;font-family:var(--ui);font-size:12.5px;font-weight:600;color:var(--cream);background:var(--deep);border-radius:999px;padding:7.5px 15px;align-self:flex-start;}
+.si .go.gh{background:transparent;color:var(--deep);border:1.5px solid rgba(29,60,62,.30);padding:6px 13.5px;}
+.si.terra{background:var(--tint-terra);border-color:rgba(140,59,40,.16);} .si.terra .ic{background:var(--terra);} .si.terra .k{color:var(--fg-terra);}
+.si.sage{background:var(--tint-sage);} .si.sage .ic{background:var(--sage);} .si.sage .k{color:var(--fg-sage);}
+.si.gold{background:var(--tint-gold);} .si.gold .ic{background:var(--gold);} .si.gold .k{color:var(--fg-gold);}
+.si.sky{background:var(--tint-sky);}  .si.sky .ic{background:var(--sky);}  .si.sky .k{color:var(--fg-sky);}
+
+/* matches */
+.mrow{display:flex;align-items:baseline;gap:8px;margin-bottom:12px;}
+.mrow .big{font-family:var(--ui);font-size:28px;font-weight:700;color:var(--deep);letter-spacing:-.03em;line-height:1;}
+.mrow .lbl{font-family:var(--ui);font-size:12.5px;font-weight:600;color:var(--deep);}
+.mrow .rest{font-size:11.8px;color:var(--ink-muted);margin-left:auto;}
+.mt{border-radius:12px;padding:10px 12px;margin-bottom:7px;border-left:4px solid;}
+.mt.kind{background:var(--t-kind-bg);border-left-color:var(--t-kind);}
+.mt.prog{background:var(--t-prog-bg);border-left-color:var(--t-prog);}
+.mt.grant{background:var(--t-grant-bg);border-left-color:var(--t-grant);}
+.mt.inv{background:var(--t-inv-bg);border-left-color:var(--t-inv);}
+.mt .top{display:flex;align-items:flex-start;gap:10px;margin-bottom:5px;}
+.mt .nm{font-family:var(--ui);font-size:13.6px;font-weight:600;color:var(--deep);flex:1;line-height:1.3;}
+.mt .pc{font-family:var(--ui);font-size:11px;font-weight:700;background:rgba(255,255,255,.72);color:var(--deep);border-radius:999px;padding:3px 8px;white-space:nowrap;}
+.mt .pc.top1{background:var(--deep);color:var(--cream);}
+.mt .row2{display:flex;align-items:center;gap:8px;font-size:11.6px;color:var(--ink-muted);}
+.pill{font-family:var(--ui);font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border-radius:5px;padding:3px 6px;background:rgba(255,255,255,.7);}
+.p-kind{color:var(--t-kind-fg);} .p-prog{color:var(--t-prog-fg);} .p-grant{color:var(--t-grant-fg);} .p-inv{color:var(--t-inv-fg);}
+
+/* deadlines */
+.dl{display:flex;gap:11px;align-items:center;padding:9px 10px;border-radius:11px;margin-bottom:4px;}
+.dl.hot{background:var(--danger-tint);}
+.dl .dt{width:38px;flex:0 0 38px;text-align:center;}
+.dl .dt .m{font-family:var(--ui);font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--danger);display:block;}
+.dl .dt .d{font-family:var(--ui);font-size:17px;font-weight:700;color:var(--deep);display:block;line-height:1.1;}
+.dl.later .dt .m{color:var(--ink-muted);} .dl.later .dt .d{color:var(--charcoal);}
+.dl .nm{display:block;font-family:var(--ui);font-size:13.2px;font-weight:600;color:var(--deep);margin-bottom:3px;}
+.cd{font-family:var(--ui);font-size:9px;font-weight:700;background:var(--danger);color:#FDF6F3;border-radius:5px;padding:3px 7px;letter-spacing:.04em;}
+.cd.later{background:transparent;color:var(--ink-muted);border:1px solid var(--border-ghost);}
+.cnt{font-family:var(--ui);font-size:10.5px;font-weight:700;background:var(--warm-neutral);color:var(--ink-muted);border-radius:999px;padding:3px 8px;margin-left:7px;}
+
+/* applications */
+.grp{font-family:var(--ui);font-size:9px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-muted);margin:12px 0 5px;}
+.grp:first-child{margin-top:0;}
+.dr{display:flex;align-items:center;gap:11px;padding:8px 0;border-top:1px solid var(--border-hair);}
+.dr.first{border-top:0;}
+.mono{width:34px;height:34px;border-radius:10px;flex:0 0 34px;font-family:var(--ui);font-weight:700;font-size:11px;display:flex;align-items:center;justify-content:center;color:var(--deep);}
+.pjA{background:var(--sage);} .pjB{background:var(--gold);} .pjNone{background:var(--warm-neutral);color:var(--ink-placeholder);}
+.dr .nm{display:block;font-family:var(--ui);font-size:13.2px;font-weight:600;color:var(--deep);}
+.dr .pr{font-size:11.4px;color:var(--ink-muted);margin-bottom:5px;display:flex;align-items:center;gap:6px;}
+.dot{width:7px;height:7px;border-radius:2px;display:inline-block;flex:0 0 7px;}
+.bar{height:5px;border-radius:999px;background:var(--warm-neutral);overflow:hidden;width:155px;display:inline-block;vertical-align:middle;}
+.bar i{display:block;height:100%;background:var(--deep);border-radius:999px;}
+.pctl{font-size:11.2px;color:var(--ink-muted);margin-left:9px;font-variant-numeric:tabular-nums;}
+
+/* projects */
+.pj{display:flex;gap:11px;padding:10px 0;border-top:1px solid var(--border-hair);align-items:center;}
+.pj.first{border-top:0;}
+.pj .ic{width:34px;height:34px;border-radius:10px;flex:0 0 34px;display:flex;align-items:center;justify-content:center;}
+.pj .nm{display:block;font-family:var(--ui);font-size:13.4px;font-weight:600;color:var(--deep);margin-bottom:3px;}
+.meta{font-size:11.6px;color:var(--ink-muted);}
+.newp{font-family:var(--ui);font-size:12.5px;font-weight:600;color:var(--deep);border-bottom:1.5px solid rgba(29,60,62,.28);padding-bottom:1px;display:inline-block;margin-top:11px;}
+
+/* pipeline */
+.stg{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;}
+.st{border-radius:13px;padding:12px 13px 14px;}
+.st .k{font-family:var(--ui);font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:9px;display:block;}
+.st .v{font-family:var(--ui);font-size:21px;font-weight:700;letter-spacing:-.02em;display:block;line-height:1;}
+.st .o{font-size:10.8px;margin-top:5px;display:block;}
+.s1{background:var(--warm-neutral);} .s1 .k{color:var(--ink-muted);} .s1 .v{color:var(--deep);} .s1 .o{color:var(--ink-muted);}
+.s2{background:var(--tint-sage);} .s2 .k{color:var(--fg-sage);} .s2 .v{color:var(--deep);} .s2 .o{color:var(--ink-muted);}
+.s3{background:var(--sage);} .s3 .k{color:var(--deep);opacity:.8;} .s3 .v{color:var(--deep);} .s3 .o{color:var(--deep);opacity:.75;}
+.s4{background:var(--deep);} .s4 .k{color:rgba(246,241,231,.72);} .s4 .v{color:var(--cream);} .s4 .o{color:rgba(246,241,231,.65);}
+.st.off{background:var(--warm-neutral);opacity:.72;} .st.off .k{color:var(--ink-placeholder);} .st.off .v{color:var(--ink-placeholder);} .st.off .o{color:var(--ink-placeholder);}
+.pfoot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:11px;padding-top:10px;border-top:1px solid var(--border-hair);font-size:11.6px;color:var(--ink-muted);}
+.pfoot .decl{display:inline-flex;align-items:center;gap:8px;font-family:var(--ui);}
+.pfoot .decl i{width:10px;height:10px;border-radius:2px;background:var(--danger);display:block;flex:0 0 10px;}
+.pfoot b{color:var(--deep);font-weight:600;}
+
+/* empty states */
+.mt-empty{border:1px dashed rgba(29,60,62,.24);border-radius:13px;padding:18px 16px;text-align:center;background:#FCFAF6;}
+.mt-empty .eic{width:36px;height:36px;border-radius:10px;background:var(--warm-neutral);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;}
+.mt-empty .et{font-family:var(--ui);font-size:13.6px;font-weight:600;color:var(--deep);display:block;margin-bottom:4px;}
+.mt-empty .em{font-size:12px;color:var(--ink-muted);display:block;line-height:1.5;max-width:290px;margin:0 auto 12px;}
+.mt-empty .eb{font-family:var(--ui);font-size:12.5px;font-weight:600;color:var(--cream);background:var(--deep);border-radius:999px;padding:7px 16px;display:inline-block;}
+.mt-empty .eb.gh{background:transparent;color:var(--deep);border:1.5px solid rgba(29,60,62,.30);padding:5.5px 14.5px;}
+@media(max-width:760px){.wrap{padding:22px 12px 60px}h1.doc{font-size:24px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<p class="kicker">Shoots rebrand · Band B · dashboard states</p>
+<h1 class="doc">The full dashboard, three ways</h1>
+<p class="doc">Top border gone — the flag and the terracotta slot carry the escalation on their own, and the rule was fighting the card's radius at the corners. Below: your live data, a quiet week, and day one.</p>
+
+<!-- ============ STATE 1: URGENT ============ -->
+<div class="lab"><span class="n">1</span><h3>Urgent</h3><span class="w">your live data — two funds close in six days</span></div>
+<div class="frame" data-h="1400"><div class="canvas">
+  <div class="pgh">Good evening, Paul.</div>
+  <div class="strip">
+    <div class="hd"><h2>Needs you this week</h2><span class="flag">2 close in 6 days</span><span class="sub">Everything else can wait.</span></div>
+    <div class="srow c3">
+      <div class="si terra"><span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.4" stroke="#1D3C3E" stroke-width="2"/><path d="M12 7.6V12l2.9 2" stroke="#1D3C3E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="k">Closing <span class="cd">6d</span></span><span class="t">The Democratic Engagement Fund</span><span class="m">Not started. LNER Customer &amp; Community also closes 31 Aug.</span><span class="go">Start application</span></div>
+      <div class="si sage"><span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 4l2.3 5 5.4.6-4 3.7 1.1 5.3L12 15.9 7.2 18.6l1.1-5.3-4-3.7 5.4-.6z" stroke="#1D3C3E" stroke-width="1.9" stroke-linejoin="round"/></svg></span><span class="k">Your only strong match</span><span class="t">NCVO Learning &amp; Development</span><span class="m">83% fit · in-kind · amount on application</span><span class="go">Review match</span></div>
+      <div class="si gold"><span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 20h4L19.5 8.5a2.1 2.1 0 00-3-3L5 17v3z" stroke="#1D3C3E" stroke-width="1.9" stroke-linejoin="round"/></svg></span><span class="k">Nearly written</span><span class="t">National Lottery Awards for All</span><span class="m">4 of 9 answered · Sea Change project</span><span class="go">Continue writing</span></div>
+    </div>
+  </div>
+  <div class="grid">
+    <div class="card">
+      <div class="ch"><h3>Matches</h3><span class="r">See all 61 →</span></div>
+      <div class="mrow"><span class="big">1</span><span class="lbl">strong match</span><span class="rest">6 good · 54 worth exploring · 316 less relevant</span></div>
+      <div class="mt kind"><div class="top"><span class="nm">NCVO Learning &amp; Development Programmes</span><span class="pc top1">83%</span></div><div class="row2"><span class="pill p-kind">In-kind</span><span>NCVO · Amount on application</span></div></div>
+      <div class="mt prog"><div class="top"><span class="nm">Clore Social Leadership Programme</span><span class="pc">78%</span></div><div class="row2"><span class="pill p-prog">Programme</span><span>Clore Social Leadership</span></div></div>
+      <div class="mt prog" style="margin-bottom:0"><div class="top"><span class="nm">The Fore Grants Programme</span><span class="pc">74%</span></div><div class="row2"><span class="pill p-prog">Programme</span><span>The Fore · £45k</span></div></div>
+    </div>
+    <div class="card">
+      <div class="ch"><h3>Upcoming deadlines <span class="cnt">7</span></h3><span class="r">View all →</span></div>
+      <div class="dl hot"><span class="dt"><span class="m">Aug</span><span class="d">31</span></span><span class="grow"><span class="nm">The Democratic Engagement Fund</span><span class="cd">6d</span></span></div>
+      <div class="dl hot"><span class="dt"><span class="m">Aug</span><span class="d">31</span></span><span class="grow"><span class="nm">LNER Customer &amp; Community Investment Fund</span><span class="cd">6d</span></span></div>
+      <div class="dl hot"><span class="dt"><span class="m">Sept</span><span class="d">09</span></span><span class="grow"><span class="nm">Farmer Welfare Grant</span><span class="cd">15d</span></span></div>
+      <div class="dl later"><span class="dt"><span class="m">Oct</span><span class="d">21</span></span><span class="grow"><span class="nm">Postcode Local Trust</span><span class="cd later">57d</span></span></div>
+    </div>
+    <div class="card">
+      <div class="ch"><h3>Your applications</h3><span class="r">View all →</span></div>
+      <div class="grp">In progress</div>
+      <div class="dr first"><span class="mono pjA">NL</span><span class="grow"><span class="nm">National Lottery Awards for All England</span><span class="pr"><i class="dot" style="background:var(--sage)"></i>Sea Change: surf and wellbeing</span><span class="bar"><i style="width:44%"></i></span><span class="pctl">4 of 9</span></span></div>
+      <div class="dr"><span class="mono pjB">PH</span><span class="grow"><span class="nm">Youth Fund</span><span class="pr"><i class="dot" style="background:var(--gold)"></i>Women's empowerment and employability</span><span class="bar"><i style="width:25%"></i></span><span class="pctl">2 of 8</span></span></div>
+      <div class="grp">Not started</div>
+      <div class="dr first"><span class="mono pjA">PH</span><span class="grow"><span class="nm">Youth Fund</span><span class="pr"><i class="dot" style="background:var(--sage)"></i>Sea Change: surf and wellbeing · 8 questions</span></span></div>
+      <div class="dr"><span class="mono pjNone">PH</span><span class="grow"><span class="nm">Youth Fund</span><span class="pr"><i class="dot" style="background:#D8D3C8"></i>No project assigned · 4 questions</span></span></div>
+    </div>
+    <div class="card">
+      <div class="ch"><h3>Your projects</h3><span class="r">View all →</span></div>
+      <div class="pj first"><span class="ic" style="background:var(--sage)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M9.5 18h5M10.5 20.5h3M12 3.5a5.5 5.5 0 00-3.2 10c.3.3.5.7.5 1.1h5.4c0-.4.2-.8.5-1.1A5.5 5.5 0 0012 3.5z" stroke="#1D3C3E" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="grow"><span class="nm">Sea Change: surf and wellbeing programme</span><span class="meta">19 funders fit · £18,000 · 2 applications</span></span></div>
+      <div class="pj"><span class="ic" style="background:var(--gold)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M9.5 18h5M10.5 20.5h3M12 3.5a5.5 5.5 0 00-3.2 10c.3.3.5.7.5 1.1h5.4c0-.4.2-.8.5-1.1A5.5 5.5 0 0012 3.5z" stroke="#1D3C3E" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="grow"><span class="nm">Women's empowerment and employability programme</span><span class="meta">28 funders fit · £18,000 · 1 application</span></span></div>
+      <span class="newp">+ New project</span>
+    </div>
+    <div class="card full">
+      <div class="ch"><h3>Pipeline</h3><span class="r">View pipeline →</span></div>
+      <div class="stg">
+        <div class="st s1"><span class="k">Identified</span><span class="v">£500k</span><span class="o">1 opportunity</span></div>
+        <div class="st s2"><span class="k">Applying</span><span class="v">£120k</span><span class="o">1 opportunity</span></div>
+        <div class="st s3"><span class="k">Submitted</span><span class="v">£15k</span><span class="o">1 opportunity</span></div>
+        <div class="st s4"><span class="k">Won</span><span class="v">—</span><span class="o">None yet</span></div>
+      </div>
+      <div class="pfoot"><span class="decl"><i></i><span><b>£45k</b> declined · 2 opportunities</span></span><span>Total in pipeline: <b>£635k</b></span></div>
+    </div>
+  </div>
+</div></div>
+
+<!-- ============ STATE 2: STEADY ============ -->
+<div class="lab"><span class="n">2</span><h3>Steady</h3><span class="w">work in flight, nothing closing for three weeks</span></div>
+<div class="frame" data-h="1400"><div class="canvas">
+  <div class="pgh">Good evening, Paul.</div>
+  <div class="strip">
+    <div class="hd"><h2>Where to pick up</h2><span class="sub">Nothing closes for 3 weeks.</span></div>
+    <div class="srow c3">
+      <div class="si sage"><span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 4l2.3 5 5.4.6-4 3.7 1.1 5.3L12 15.9 7.2 18.6l1.1-5.3-4-3.7 5.4-.6z" stroke="#1D3C3E" stroke-width="1.9" stroke-linejoin="round"/></svg></span><span class="k">Your only strong match</span><span class="t">NCVO Learning &amp; Development</span><span class="m">83% fit · in-kind · no deadline listed</span><span class="go">Review match</span></div>
+      <div class="si gold"><span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 20h4L19.5 8.5a2.1 2.1 0 00-3-3L5 17v3z" stroke="#1D3C3E" stroke-width="1.9" stroke-linejoin="round"/></svg></span><span class="k">Nearly written</span><span class="t">National Lottery Awards for All</span><span class="m">4 of 9 answered · Sea Change project</span><span class="go">Continue writing</span></div>
+      <div class="si sky"><span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 3.5l1.6 4.4 4.4 1.6-4.4 1.6L12 15.5l-1.6-4.4L6 9.5l4.4-1.6zM18 15l.8 2.2 2.2.8-2.2.8L18 21l-.8-2.2-2.2-.8 2.2-.8z" stroke="#1D3C3E" stroke-width="1.6" stroke-linejoin="round"/></svg></span><span class="k">New since Monday</span><span class="t">35 new matches</span><span class="m">Added to your pool this week · 6 good or better</span><span class="go gh">Browse matches</span></div>
+    </div>
+  </div>
+  <div class="grid">
+    <div class="card">
+      <div class="ch"><h3>Matches</h3><span class="r">See all 61 →</span></div>
+      <div class="mrow"><span class="big">1</span><span class="lbl">strong match</span><span class="rest">6 good · 54 worth exploring · 316 less relevant</span></div>
+      <div class="mt kind"><div class="top"><span class="nm">NCVO Learning &amp; Development Programmes</span><span class="pc top1">83%</span></div><div class="row2"><span class="pill p-kind">In-kind</span><span>NCVO · Amount on application</span></div></div>
+      <div class="mt grant"><div class="top"><span class="nm">Postcode Local Trust</span><span class="pc">76%</span></div><div class="row2"><span class="pill p-grant">Grant</span><span>Postcode Lottery · up to £25k</span></div></div>
+      <div class="mt inv" style="margin-bottom:0"><div class="top"><span class="nm">Northern Impact Fund</span><span class="pc">71%</span></div><div class="row2"><span class="pill p-inv">Investment</span><span>£5k–£150k</span></div></div>
+    </div>
+    <div class="card">
+      <div class="ch"><h3>Upcoming deadlines <span class="cnt">4</span></h3><span class="r">View all →</span></div>
+      <div class="dl later"><span class="dt"><span class="m">Sept</span><span class="d">18</span></span><span class="grow"><span class="nm">Postcode Local Trust</span><span class="cd later">24d</span></span></div>
+      <div class="dl later"><span class="dt"><span class="m">Oct</span><span class="d">02</span></span><span class="grow"><span class="nm">The Fore Grants Programme</span><span class="cd later">38d</span></span></div>
+      <div class="dl later"><span class="dt"><span class="m">Oct</span><span class="d">21</span></span><span class="grow"><span class="nm">Farmer Welfare Grant</span><span class="cd later">57d</span></span></div>
+      <div class="dl later"><span class="dt"><span class="m">Nov</span><span class="d">14</span></span><span class="grow"><span class="nm">Clore Social Leadership</span><span class="cd later">81d</span></span></div>
+    </div>
+    <div class="card">
+      <div class="ch"><h3>Your applications</h3><span class="r">View all →</span></div>
+      <div class="grp">In progress</div>
+      <div class="dr first"><span class="mono pjA">NL</span><span class="grow"><span class="nm">National Lottery Awards for All England</span><span class="pr"><i class="dot" style="background:var(--sage)"></i>Sea Change: surf and wellbeing</span><span class="bar"><i style="width:44%"></i></span><span class="pctl">4 of 9</span></span></div>
+      <div class="dr"><span class="mono pjB">PH</span><span class="grow"><span class="nm">Youth Fund</span><span class="pr"><i class="dot" style="background:var(--gold)"></i>Women's empowerment and employability</span><span class="bar"><i style="width:25%"></i></span><span class="pctl">2 of 8</span></span></div>
+      <div class="grp">Not started</div>
+      <div class="dr first"><span class="mono pjA">PH</span><span class="grow"><span class="nm">Youth Fund</span><span class="pr"><i class="dot" style="background:var(--sage)"></i>Sea Change: surf and wellbeing · 8 questions</span></span></div>
+    </div>
+    <div class="card">
+      <div class="ch"><h3>Your projects</h3><span class="r">View all →</span></div>
+      <div class="pj first"><span class="ic" style="background:var(--sage)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M9.5 18h5M10.5 20.5h3M12 3.5a5.5 5.5 0 00-3.2 10c.3.3.5.7.5 1.1h5.4c0-.4.2-.8.5-1.1A5.5 5.5 0 0012 3.5z" stroke="#1D3C3E" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="grow"><span class="nm">Sea Change: surf and wellbeing programme</span><span class="meta">19 funders fit · £18,000 · 2 applications</span></span></div>
+      <div class="pj"><span class="ic" style="background:var(--gold)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M9.5 18h5M10.5 20.5h3M12 3.5a5.5 5.5 0 00-3.2 10c.3.3.5.7.5 1.1h5.4c0-.4.2-.8.5-1.1A5.5 5.5 0 0012 3.5z" stroke="#1D3C3E" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="grow"><span class="nm">Women's empowerment and employability programme</span><span class="meta">28 funders fit · £18,000 · 1 application</span></span></div>
+      <span class="newp">+ New project</span>
+    </div>
+    <div class="card full">
+      <div class="ch"><h3>Pipeline</h3><span class="r">View pipeline →</span></div>
+      <div class="stg">
+        <div class="st s1"><span class="k">Identified</span><span class="v">£500k</span><span class="o">1 opportunity</span></div>
+        <div class="st s2"><span class="k">Applying</span><span class="v">£120k</span><span class="o">1 opportunity</span></div>
+        <div class="st s3"><span class="k">Submitted</span><span class="v">£15k</span><span class="o">1 opportunity</span></div>
+        <div class="st s4"><span class="k">Won</span><span class="v">—</span><span class="o">None yet</span></div>
+      </div>
+      <div class="pfoot"><span class="decl"><i></i><span><b>£45k</b> declined · 2 opportunities</span></span><span>Total in pipeline: <b>£635k</b></span></div>
+    </div>
+  </div>
+</div></div>
+
+<!-- ============ STATE 3: DAY ONE ============ -->
+<div class="lab"><span class="n">3</span><h3>Day one</h3><span class="w">profile just finished — no projects, no applications, no pipeline</span></div>
+<div class="frame" data-h="1240"><div class="canvas">
+  <div class="pgh">Welcome, Paul.</div>
+  <div class="strip">
+    <div class="hd"><h2>Start here</h2><span class="sub">Your matches are ready.</span></div>
+    <div class="srow c2">
+      <div class="si sage"><span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3.5" y="3.5" width="7" height="7" rx="1.6" stroke="#1D3C3E" stroke-width="1.9"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.6" stroke="#1D3C3E" stroke-width="1.9"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.6" stroke="#1D3C3E" stroke-width="1.9"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.6" stroke="#1D3C3E" stroke-width="1.9"/></svg></span><span class="k">61 matches waiting</span><span class="t">1 strong · 6 good · 54 worth exploring</span><span class="m">Scored against your organisation's structure, location and stage.</span><span class="go">See my matches</span></div>
+      <div class="si gold"><span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9.5 18h5M10.5 20.5h3M12 3.5a5.5 5.5 0 00-3.2 10c.3.3.5.7.5 1.1h5.4c0-.4.2-.8.5-1.1A5.5 5.5 0 0012 3.5z" stroke="#1D3C3E" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="k">Sharpen your matching</span><span class="t">Describe a project</span><span class="m">Matching against a project is far more accurate than against your organisation alone.</span><span class="go gh">Describe a project</span></div>
+    </div>
+  </div>
+  <div class="grid">
+    <div class="card">
+      <div class="ch"><h3>Matches</h3><span class="r">See all 61 →</span></div>
+      <div class="mrow"><span class="big">1</span><span class="lbl">strong match</span><span class="rest">6 good · 54 worth exploring · 316 less relevant</span></div>
+      <div class="mt kind"><div class="top"><span class="nm">NCVO Learning &amp; Development Programmes</span><span class="pc top1">83%</span></div><div class="row2"><span class="pill p-kind">In-kind</span><span>NCVO · Amount on application</span></div></div>
+      <div class="mt prog"><div class="top"><span class="nm">Clore Social Leadership Programme</span><span class="pc">78%</span></div><div class="row2"><span class="pill p-prog">Programme</span><span>Clore Social Leadership</span></div></div>
+      <div class="mt prog" style="margin-bottom:0"><div class="top"><span class="nm">The Fore Grants Programme</span><span class="pc">74%</span></div><div class="row2"><span class="pill p-prog">Programme</span><span>The Fore · £45k</span></div></div>
+    </div>
+    <div class="card">
+      <div class="ch"><h3>Upcoming deadlines <span class="cnt">3</span></h3><span class="r">View all →</span></div>
+      <div class="dl hot"><span class="dt"><span class="m">Aug</span><span class="d">31</span></span><span class="grow"><span class="nm">The Democratic Engagement Fund</span><span class="cd">6d</span></span></div>
+      <div class="dl hot"><span class="dt"><span class="m">Sept</span><span class="d">09</span></span><span class="grow"><span class="nm">Farmer Welfare Grant</span><span class="cd">15d</span></span></div>
+      <div class="dl later"><span class="dt"><span class="m">Oct</span><span class="d">21</span></span><span class="grow"><span class="nm">Postcode Local Trust</span><span class="cd later">57d</span></span></div>
+      <div style="font-size:11.6px;color:var(--ink-muted);margin-top:9px;padding-top:9px;border-top:1px solid var(--border-hair);">From your matches. Deadlines you add to your pipeline appear here too.</div>
+    </div>
+    <div class="card">
+      <div class="ch"><h3>Your applications</h3></div>
+      <div class="mt-empty">
+        <span class="eic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 20h4L19.5 8.5a2.1 2.1 0 00-3-3L5 17v3z" stroke="#74736E" stroke-width="1.8" stroke-linejoin="round"/></svg></span>
+        <span class="et">No applications yet</span>
+        <span class="em">Pick a funder from your matches and we'll build the application from your own material.</span>
+        <span class="eb">Start one from a match</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ch"><h3>Your projects</h3></div>
+      <div class="mt-empty">
+        <span class="eic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9.5 18h5M10.5 20.5h3M12 3.5a5.5 5.5 0 00-3.2 10c.3.3.5.7.5 1.1h5.4c0-.4.2-.8.5-1.1A5.5 5.5 0 0012 3.5z" stroke="#74736E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <span class="et">No projects yet</span>
+        <span class="em">Describe what you need funded once. We'll match it against the 61 funders that already fit you.</span>
+        <span class="eb">Describe a project</span>
+      </div>
+    </div>
+    <div class="card full">
+      <div class="ch"><h3>Pipeline</h3></div>
+      <div class="stg">
+        <div class="st off"><span class="k">Identified</span><span class="v">—</span><span class="o">Nothing yet</span></div>
+        <div class="st off"><span class="k">Applying</span><span class="v">—</span><span class="o">Nothing yet</span></div>
+        <div class="st off"><span class="k">Submitted</span><span class="v">—</span><span class="o">Nothing yet</span></div>
+        <div class="st off"><span class="k">Won</span><span class="v">—</span><span class="o">Nothing yet</span></div>
+      </div>
+      <div class="pfoot"><span>Save a match to your pipeline and it starts here, in Identified.</span><span class="eb gh" style="font-family:var(--ui);font-size:12.5px;font-weight:600;color:var(--deep);border-bottom:1.5px solid rgba(29,60,62,.28);padding-bottom:1px;">Browse matches →</span></div>
+    </div>
+  </div>
+</div></div>
+
+<div class="sec">
+  <h2>What day one taught me that I'd have got wrong</h2>
+  <p><b>The deadlines card is not empty on day one.</b> I assumed it would be. It isn't — <code>alerts</code> is built from <b>pipeline rows plus catalogue rows</b>, so a brand-new account with nothing saved still gets deadlines drawn from its own matches. That's a genuinely good behaviour and it changes the card's job: on day one it's a discovery surface, not a tracker. I've added one line under it saying where the dates come from, because otherwise a user with an empty pipeline reasonably wonders how the app knows about deadlines at all.</p>
+  <p><b>Matches is populated too</b>, because matching runs off the organisation profile from onboarding. So of the six blocks, only applications, projects and pipeline are actually empty — the page is far less barren than "new user" suggests, and it doesn't need an artificial welcome hero to carry it.</p>
+  <p><b>The empty cards each make one offer, not three.</b> Dashed border, muted glyph, one sentence saying what the card will hold, one button. The pipeline's empty row explains the mechanism — save a match and it appears in Identified — because an empty four-stage ladder is otherwise just four dashes.</p>
+</div>
+
+<div class="sec">
+  <h2>Two details worth noticing across the three</h2>
+  <p><b>The greeting changes on day one</b> — "Welcome, Paul." rather than "Good evening, Paul." It's the same slot doing a different job, and it's the one place the old onboarding warmth still belongs.</p>
+  <p><b>Deadlines never go red on the steady page.</b> All four rows are beyond 30 days, so they're plain with outlined pills. Put states 1 and 2 side by side and the deadline card alone tells you which week you're in — the urgency treatment is doing real work rather than decorating.</p>
+</div>
+
+</div>
+<script>
+function fit(){document.querySelectorAll('.frame').forEach(f=>{const c=f.querySelector('.canvas');const h=+f.dataset.h;c.style.height=h+'px';f.style.aspectRatio='1320/'+h;c.style.transform='scale('+(f.clientWidth/1320)+')';});}
+window.addEventListener('resize',fit);document.fonts&&document.fonts.ready.then(fit);fit();
+</script>
+</body>
+</html>
