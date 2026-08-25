@@ -854,7 +854,7 @@ export default function ApplicationWorkspacePage() {
     const btn: React.CSSProperties = {
       fontFamily: UI, fontWeight: 600, fontSize: compact ? 12.5 : 13, color: T.textPrimary,
       background: T.white, border: `1px solid ${T.textPrimary}`, padding: compact ? '6px 11px' : '8px 14px',
-      borderRadius: 8, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6,
+      borderRadius: 999, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6,
     }
     const item: React.CSSProperties = {
       display: 'block', width: '100%', textAlign: 'left', fontFamily: UI, fontWeight: 500,
@@ -919,7 +919,7 @@ export default function ApplicationWorkspacePage() {
           <button onClick={markSubmitted} style={{
             fontFamily: UI, fontWeight: 600, fontSize: compact ? 12.5 : 13, color: '#F1F7E4',
             background: T.greenDeep, border: 'none', padding: compact ? '6px 12px' : '8px 14px',
-            borderRadius: 8, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6,
+            borderRadius: 999, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6,
           }}>
             <Check size={14} /> Mark as submitted
           </button>
@@ -1075,7 +1075,7 @@ export default function ApplicationWorkspacePage() {
               <button onClick={() => runGate(app.id)} style={{
                 fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.amberText,
                 background: 'transparent', border: `1px solid rgba(133,79,11,0.35)`,
-                padding: '6px 13px', borderRadius: 8, cursor: 'pointer',
+                padding: '6px 13px', borderRadius: 999, cursor: 'pointer',
               }}>
                 Try again
               </button>
@@ -1187,7 +1187,7 @@ export default function ApplicationWorkspacePage() {
                 style={{
                   fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.textPrimary,
                   background: T.white, border: `1px solid ${T.textPrimary}`, padding: '6px 13px',
-                  borderRadius: 8, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
+                  borderRadius: 999, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
                 }}
               >
                 Add their guidance
@@ -1988,7 +1988,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
                     style={{
                       fontFamily: UI, fontWeight: 600, fontSize: 11.5, color: preview ? T.sage : T.textSecondary,
                       background: preview ? T.paleGreen : 'transparent', border: `1px solid ${preview ? 'rgba(59,109,17,0.3)' : T.borderStrong}`,
-                      borderRadius: 8, padding: '4px 10px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5,
+                      borderRadius: 999, padding: '4px 10px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5,
                     }}
                   >
                     {preview ? <PenLine size={13} /> : <Eye size={13} />}

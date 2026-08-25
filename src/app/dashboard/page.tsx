@@ -1226,7 +1226,7 @@ export default async function DashboardPage() {
               then help you build a tailored application for each one you choose.
             </p>
             <div style={{ display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap' }}>
-              <a href="/dashboard/projects/new" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#1D3C3E', color: '#F6F1E7', fontFamily: 'var(--font-space-grotesk)', fontSize: 14.5, fontWeight: 600, padding: '12px 20px', borderRadius: 11, textDecoration: 'none' }}>
+              <a href="/dashboard/projects/new" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#1D3C3E', color: '#F6F1E7', fontFamily: 'var(--font-space-grotesk)', fontSize: 14.5, fontWeight: 600, padding: '12px 22px', borderRadius: 999, textDecoration: 'none' }}>
                 <Lightbulb size={16} /> Describe a project
               </a>
               <a href="/dashboard/applications/new" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 14, fontWeight: 600, color: '#1D3C3E', borderBottom: '1.5px solid rgba(29,60,62,0.24)', paddingBottom: 1, textDecoration: 'none' }}>

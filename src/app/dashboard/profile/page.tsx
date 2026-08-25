@@ -874,10 +874,10 @@ function ScanBar({ orgId, website, onSaved }: { orgId: string; website?: string 
             />
           </div>
           <div style={{ display: 'flex', gap: 6, flexShrink: 0, flexBasis: isMobile ? '100%' : 'auto', justifyContent: isMobile ? 'flex-end' : 'flex-start' }}>
-            <button onClick={cancel} style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, color: T.textSecondary, background: T.white, border: `0.5px solid ${T.borderStrong}`, padding: '7px 12px', borderRadius: 7, cursor: 'pointer' }}>
+            <button onClick={cancel} style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, color: T.textSecondary, background: T.white, border: `0.5px solid ${T.borderStrong}`, padding: '7px 12px', borderRadius: 999, cursor: 'pointer' }}>
               Cancel
             </button>
-            <button onClick={save} disabled={saving} style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, background: T.deep, color: T.creamLabel, border: 'none', padding: '7px 14px', borderRadius: 7, cursor: saving ? 'not-allowed' : 'pointer' }}>
+            <button onClick={save} disabled={saving} style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, background: T.deep, color: T.creamLabel, border: 'none', padding: '7px 14px', borderRadius: 999, cursor: saving ? 'not-allowed' : 'pointer' }}>
               {saving ? 'Saving\u2026' : 'Save'}
             </button>
           </div>
@@ -891,7 +891,7 @@ function ScanBar({ orgId, website, onSaved }: { orgId: string; website?: string 
             </div>
           </div>
           <div style={{ display: 'flex', gap: 6, flexShrink: 0, flexBasis: isMobile ? '100%' : 'auto', justifyContent: isMobile ? 'flex-end' : 'flex-start' }}>
-            <button onClick={startEdit} style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, background: 'transparent', color: T.textSecondary, border: 'none', padding: '7px 10px', borderRadius: 7, cursor: 'pointer' }}>
+            <button onClick={startEdit} style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, background: 'transparent', color: T.textSecondary, border: 'none', padding: '7px 10px', borderRadius: 999, cursor: 'pointer' }}>
               Change URL
             </button>
             <button
