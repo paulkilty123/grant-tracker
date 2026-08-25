@@ -48,14 +48,20 @@ export default async function AppLayout({
         <Sidebar org={org} userEmail={user.email ?? ''} companionSurface={companionSurface} applyAccess={applyAccess} />
         <main
           className="md:ml-60 flex-1 min-h-screen overflow-x-hidden flex flex-col"
-          // Cream, but NOT the .shoots-a token scope. This element is the
+          // EXPERIMENT (branch exp/white-ground): white instead of cream, to
+          // look at the whole app on a white ground before deciding anything.
+          // Revert this branch to undo. The --cream TOKEN is deliberately NOT
+          // touched — see the note below on why moving it would drag in
+          // surfaces this experiment is not about.
+          //
+          // NOT the .shoots-a token scope. This element is the
           // parent of 40 pages, and --cream and --sage hold different values
           // inside that scope than outside it (--sage is #639922 globally,
           // #9BCA9D inside). Two admin surfaces consume the colliding tokens
           // today, so scoping here would silently recolour tools nobody asked
           // us to touch. The scope goes on the Sidebar and the dashboard page
           // only; widening it is a 40-page audit, not a one-line change.
-          style={{ background: '#F6F1E7' }}
+          style={{ background: '#FFFFFF' }}
         >
           <div className="flex-1 px-4 pt-16 pb-8 md:pt-8 md:px-16">
             {children}

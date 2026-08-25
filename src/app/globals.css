@@ -61,7 +61,10 @@
 
     /* Borders */
     --border-light:  rgba(0, 0, 0, 0.06);
-    --border-med:    rgba(0, 0, 0, 0.08);
+    /* exp/white-ground: was rgba(0,0,0,0.08). On cream a card was defined by
+       its luminance step against the page; on white it has nothing but this
+       border, so the hairline has to do the whole job. */
+    --border-med:    rgba(29, 60, 62, 0.15);
     --border-input:  rgba(0, 0, 0, 0.14);
     --border-subtle: rgba(0, 0, 0, 0.10);
 
@@ -121,6 +124,7 @@
     border: 0.5px solid var(--border-med);
     border-radius: var(--radius-card);
     padding: 24px;
+    box-shadow: 0 1px 2px rgba(29,60,62,0.04), 0 4px 12px rgba(29,60,62,0.04);
   }
 
   .surface-cream {
@@ -295,6 +299,7 @@
     padding: 20px;
     border: 0.5px solid var(--border-med);
     border-radius: var(--radius-card);
+    box-shadow: 0 1px 2px rgba(29,60,62,0.04), 0 4px 12px rgba(29,60,62,0.04);
   }
 
   /* ─── Pipeline stage ladder ─────────────────────────────── */

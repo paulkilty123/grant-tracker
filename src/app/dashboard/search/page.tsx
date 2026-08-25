@@ -555,7 +555,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
   const overflowCount  = allSectors.length - visibleSectors.length
 
   return (
-    <div className="bg-white mb-3 overflow-hidden" style={{ borderRadius: 14, border: '0.5px solid rgba(0,0,0,0.1)', boxShadow: '0 1px 3px rgba(23,52,4,0.04), 0 4px 12px rgba(23,52,4,0.04)', transition: 'box-shadow 0.15s ease, transform 0.15s ease' }} onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 2px 5px rgba(23,52,4,0.05), 0 8px 20px rgba(23,52,4,0.06)'; e.currentTarget.style.transform = 'translateY(-1px)' }} onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 1px 3px rgba(23,52,4,0.04), 0 4px 12px rgba(23,52,4,0.04)'; e.currentTarget.style.transform = 'translateY(0)' }}>
+    <div className="bg-white mb-3 overflow-hidden" style={{ borderRadius: 14, border: '1px solid rgba(29,60,62,0.15)', boxShadow: '0 1px 3px rgba(29,60,62,0.05), 0 4px 12px rgba(29,60,62,0.05)', transition: 'box-shadow 0.15s ease, transform 0.15s ease' }} onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 2px 5px rgba(23,52,4,0.05), 0 8px 20px rgba(23,52,4,0.06)'; e.currentTarget.style.transform = 'translateY(-1px)' }} onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 1px 3px rgba(23,52,4,0.04), 0 4px 12px rgba(23,52,4,0.04)'; e.currentTarget.style.transform = 'translateY(0)' }}>
 
       {/* ── Card body ── */}
       <div style={{ padding: isMobile ? '12px 14px' : '18px 22px' }}>
@@ -2654,7 +2654,7 @@ export default function SearchPage() {
           )}
         </div>
         {/* Right: tabs always visible */}
-        <div className="flex items-center gap-0.5 bg-white shadow-sm flex-shrink-0" style={{ borderRadius: 9999, border: '1px solid rgba(29,60,62,0.10)', padding: 3 }}>
+        <div className="flex items-center gap-0.5 bg-white shadow-sm flex-shrink-0" style={{ borderRadius: 9999, border: '1px solid rgba(29,60,62,0.15)', padding: 3 }}>
           {/* Deep fill for the active view, not a lime underline. This
               switcher changes WHAT you are looking at, so it carries the
               heavier of the two selected treatments; sort, which only reorders
@@ -2691,7 +2691,7 @@ export default function SearchPage() {
             <div className="flex gap-3 items-center">
               {/* Single pill container */}
               <div className="flex-1 flex items-center bg-white rounded-full"
-                style={{ boxShadow: '0 1px 4px rgba(29,60,62,0.06)', border: '1px solid rgba(29,60,62,0.10)', padding: 6, gap: 4 }}>
+                style={{ boxShadow: '0 1px 4px rgba(29,60,62,0.06)', border: '1px solid rgba(29,60,62,0.15)', padding: 6, gap: 4 }}>
                 {/* Search icon + input */}
                 <div className="flex items-center flex-1 min-w-0 px-4">
                   <Search className="h-4 w-4 text-gray-400 flex-shrink-0 mr-2.5" />
@@ -2975,7 +2975,7 @@ export default function SearchPage() {
           breaks in-kind at 2.87. No single glyph colour works across the set,
           so the tile carries no colour and the tint does the work. */}
       {activeView === 'browse' && (
-        <div className="mb-5" style={{ background: '#fff', border: '1px solid rgba(29,60,62,0.10)', borderRadius: 20, padding: 8 }}>
+        <div className="mb-5" style={{ background: '#fff', border: '1px solid rgba(29,60,62,0.15)', borderRadius: 20, padding: 8 }}>
           <div className="flex gap-1.5 overflow-x-auto">
           {TYPE_TABS.map(tab => {
             const isActive = activeTab === tab.id
@@ -3215,7 +3215,7 @@ export default function SearchPage() {
                     Neutral active here, deep active on the Browse switcher —
                     sort reorders the same list, the switcher changes what you
                     are looking at. */}
-                <div className="flex items-center" style={{ background: '#fff', border: '1px solid rgba(29,60,62,0.10)', borderRadius: 9999, padding: 3, gap: 2 }}>
+                <div className="flex items-center" style={{ background: '#fff', border: '1px solid rgba(29,60,62,0.15)', borderRadius: 9999, padding: 3, gap: 2 }}>
                   {([
                     { id: 'match',    label: 'Best match'   },
                     { id: 'freshest', label: 'Newest'       },
@@ -3298,7 +3298,7 @@ export default function SearchPage() {
           (() => {
             // Detection priority: B (search) → C (filters) → A (category empty)
             const emptyCardStyle: React.CSSProperties = {
-              background: '#fff', borderRadius: 14, border: '0.5px solid rgba(0,0,0,0.06)', boxShadow: '0 1px 3px rgba(23,52,4,0.04), 0 4px 12px rgba(23,52,4,0.04)', transition: 'box-shadow 0.15s ease, transform 0.15s ease',
+              background: '#fff', borderRadius: 14, border: '1px solid rgba(29,60,62,0.15)', boxShadow: '0 1px 3px rgba(29,60,62,0.05), 0 4px 12px rgba(29,60,62,0.05)', transition: 'box-shadow 0.15s ease, transform 0.15s ease',
               padding: '48px 40px', textAlign: 'center' as const,
             }
             const tabEmptyCfg: Record<string, { bg: string; color: string; icon: React.ReactNode }> = {

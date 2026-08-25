@@ -1178,7 +1178,7 @@ export default async function DashboardPage() {
                   return (
                     <a key={row.id} href={row.href}
                       className="flex items-center gap-3 mb-1.5 last:mb-0 hover:bg-[#F7F5EF] transition-colors"
-                      style={{ padding: '7px 11px', borderRadius: 10, borderLeft: `5px solid ${rail}`, background: '#FCFBF8' }}>
+                      style={{ padding: '7px 11px', borderRadius: 10, borderLeft: `5px solid ${rail}`, background: '#FAF9F5' }}>
                       {dateObj ? (
                         <div className="flex-shrink-0 text-center" style={{ width: 40, borderRadius: 9, padding: '5px 0 6px', background: tileBg }}>
                           <span className="block text-[8.5px] font-bold uppercase" style={{ color: monCol, letterSpacing: '0.08em', fontFamily: 'var(--font-space-grotesk)' }}>{dateObj.month}</span>

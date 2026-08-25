@@ -847,7 +847,7 @@ export default function PipelinePage() {
 
       {/* Onboarding tip — shown when pipeline is empty */}
       {items.length === 0 && (
-        <div className="mb-5 border border-[#E8E0D1] bg-[#FAFAF7] p-5 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="mb-5 border border-[#E8E0D1] bg-[#FAF9F5] p-5 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <p className="text-sm font-semibold text-charcoal mb-1">Your pipeline tracks grants from discovery to decision</p>
             <p className="text-xs text-mid leading-relaxed">Find a grant in the search, hit <strong>+ Pipeline</strong>, then drag cards between columns as you progress through each stage. Click any card to add notes, deadlines, and track your writing progress.</p>
