@@ -337,6 +337,15 @@
   .pipeline-col-won        { background: var(--green-mid); }
   .pipeline-col-declined   { background: var(--coral-pale); }
 
+  /* The sidebar's account trigger sits on #1D3C3E, where the browser's default
+     focus ring is a bright blue — the only blue anywhere in the app, and the
+     thing that made this control look broken rather than focused. A cream ring
+     reads on the deep ground and matches the sidebar's own palette. */
+  .sb-account-trigger:focus-visible {
+    outline: 2px solid rgba(246, 241, 231, 0.85);
+    outline-offset: 2px;
+  }
+
   .pipeline-col.drag-over {
     outline: 2px dashed #1D3C3E;
     outline-offset: -4px;

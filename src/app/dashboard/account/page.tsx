@@ -9,24 +9,25 @@ import type { Organisation } from '@/types'
 import { useIsMobile } from '@/hooks/useIsMobile'
 
 /* ─── design tokens ─── */
+/** Same shape as the profile page's set, same values. Not a seventh. */
 const T = {
-  lime:          '#8ECB3C',
-  greenDeep:     '#173404',
-  greenMid:      '#639922',
-  pageBg:        '#FAFAF7',
+  deep:          '#1D3C3E',
+  creamLabel:    '#F6F1E7',
   cream:         '#F5F1E8',
+  warmNeutral:   '#F1EDE3',
+  sageTint:      '#E3F0E4',
+  sageText:      '#1B6B3D',
   white:         '#FFFFFF',
   textPrimary:   '#2C2C2A',
   textSecondary: '#5F5E5A',
-  textTertiary:  '#8A8986',
-  border:        'rgba(23, 52, 4, 0.08)',
-  borderStrong:  'rgba(23, 52, 4, 0.14)',
-  strongPanel:   '#F4F9ED',
+  textTertiary:  '#74736E',   // was #8A8986 at 3.50
+  border:        'rgba(29, 60, 62, 0.10)',
+  borderStrong:  'rgba(29, 60, 62, 0.24)',
   coralBg:       '#FAECE7',
   coralText:     '#993C1D',
-  coralStrong:   '#D85A30',
-  amberBg:       '#FAEEDA',
-  amberText:     '#854F0B',
+  coralStrong:   '#993C1D',
+  amberBg:       '#F6EFD9',
+  amberText:     '#7A5E11',
 }
 const UI   = 'var(--font-space-grotesk)'
 const BODY = 'var(--font-dm-sans)'
@@ -111,9 +112,9 @@ function InlineLink({ children, onClick, danger }: { children: React.ReactNode; 
       onMouseLeave={() => setHov(false)}
       style={{
         fontFamily: UI, fontWeight: 500, fontSize: 13,
-        border: 'none', cursor: 'pointer', padding: '6px 10px', borderRadius: 6,
-        color: danger ? T.coralStrong : hov ? T.greenDeep : T.textSecondary,
-        background: hov ? (danger ? T.coralBg : T.pageBg) : 'transparent',
+        border: 'none', cursor: 'pointer', padding: '7px 12px', borderRadius: 999,
+        color: danger ? T.coralStrong : hov ? T.deep : T.textSecondary,
+        background: hov ? (danger ? T.coralBg : T.warmNeutral) : 'transparent',
         transition: 'all 0.15s ease',
       } as React.CSSProperties}
     >
@@ -133,8 +134,8 @@ function DangerButton({ children, onClick }: { children: React.ReactNode; onClic
         fontFamily: UI, fontWeight: 500, fontSize: 13.5,
         background: hov ? T.coralBg : 'transparent',
         color: T.coralStrong,
-        border: `1px solid ${hov ? T.coralStrong : 'rgba(216,90,48,0.3)'}`,
-        padding: '8px 16px', borderRadius: 8, cursor: 'pointer', flexShrink: 0,
+        border: `1.5px solid ${hov ? T.coralStrong : 'rgba(153,60,29,0.35)'}`,
+        padding: '9px 18px', borderRadius: 999, cursor: 'pointer', flexShrink: 0,
         transition: 'all 0.15s ease',
       }}
     >
@@ -149,7 +150,7 @@ function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void 
     <div
       onClick={() => onChange(!on)}
       style={{
-        width: 40, height: 22, background: on ? T.lime : '#E0DFD9',
+        width: 40, height: 22, background: on ? T.deep : '#E0DFD9',
         borderRadius: 11, position: 'relative', cursor: 'pointer',
         transition: 'background 0.2s ease', flexShrink: 0,
       }}
@@ -208,7 +209,7 @@ function ModalActions({ children }: { children: React.ReactNode }) {
 function SaveBtn({ onClick, disabled, label = 'Save' }: { onClick: () => void; disabled?: boolean; label?: string }) {
   return (
     <button onClick={onClick} disabled={disabled}
-      style={{ fontFamily: UI, fontWeight: 500, fontSize: 14, background: T.lime, color: T.white, border: 'none', borderRadius: 8, padding: '9px 20px', cursor: disabled ? 'default' : 'pointer' }}>
+      style={{ fontFamily: UI, fontWeight: 500, fontSize: 14, background: T.deep, color: T.creamLabel, border: 'none', borderRadius: 999, padding: '10px 22px', cursor: disabled ? 'default' : 'pointer' }}>
       {label}
     </button>
   )
@@ -246,10 +247,10 @@ function NameRow({ initialName, onSave }: { initialName: string; onSave: (n: str
             onKeyDown={e => { if (e.key === 'Enter') save(); if (e.key === 'Escape') { setEditing(false); setVal(initialName) } }}
             style={{ fontFamily: BODY, fontSize: 14, color: T.textPrimary, border: `1px solid ${T.borderStrong}`, borderRadius: 8, padding: '7px 11px', outline: 'none', background: T.white, width: '100%', maxWidth: 260 }}
           />
-          <button onClick={save} disabled={saving} style={{ background: T.lime, border: 'none', borderRadius: 8, cursor: 'pointer', padding: '7px 9px', display: 'flex', alignItems: 'center' }}>
+          <button onClick={save} disabled={saving} style={{ background: T.deep, color: T.creamLabel, border: 'none', borderRadius: 999, cursor: 'pointer', padding: '8px 11px', display: 'flex', alignItems: 'center' }}>
             <Check size={14} color={T.white} strokeWidth={2.5} />
           </button>
-          <button onClick={() => { setEditing(false); setVal(initialName) }} style={{ background: 'transparent', border: `1px solid ${T.border}`, borderRadius: 8, cursor: 'pointer', padding: '7px 9px', display: 'flex', alignItems: 'center' }}>
+          <button onClick={() => { setEditing(false); setVal(initialName) }} style={{ background: 'transparent', border: `1.5px solid ${T.borderStrong}`, borderRadius: 999, cursor: 'pointer', padding: '8px 11px', display: 'flex', alignItems: 'center' }}>
             <X size={14} color={T.textSecondary} />
           </button>
         </div>
@@ -353,7 +354,7 @@ function TwoFAEnrollModal({ onClose, onEnrolled }: { onClose: () => void; onEnro
           )}
           <details style={{ marginBottom: 18 }}>
             <summary style={{ fontFamily: UI, fontWeight: 500, fontSize: 12.5, color: T.textTertiary, cursor: 'pointer', userSelect: 'none' }}>Can't scan? Enter key manually</summary>
-            <div style={{ fontFamily: 'monospace', fontSize: 13, color: T.textPrimary, background: T.pageBg, border: `1px solid ${T.border}`, borderRadius: 6, padding: '8px 12px', marginTop: 8, wordBreak: 'break-all' }}>{secret}</div>
+            <div style={{ fontFamily: 'monospace', fontSize: 13, color: T.textPrimary, background: T.warmNeutral, border: `1px solid ${T.border}`, borderRadius: 6, padding: '8px 12px', marginTop: 8, wordBreak: 'break-all' }}>{secret}</div>
           </details>
           <ModalError msg={error} />
           <ModalActions>
@@ -553,11 +554,14 @@ export default function AccountPage() {
     : null
   const orgMeta = [legalStr, location, linkedDate ? `Linked ${linkedDate}` : null].filter(Boolean).join(' · ')
 
+  /* Full width and no local ground, matching Profile and the rest of the app.
+     This page painted #FAFAF7 behind white cards — ΔE 2.36, so they had almost
+     nothing to sit on. */
   return (
-    <div style={{ padding: isMobile ? '24px 16px 60px' : '40px 48px 80px', maxWidth: 760, margin: '0 auto' }}>
+    <div style={{ padding: isMobile ? '24px 16px 60px' : '40px 48px 80px' }}>
       {/* Page header */}
       <div style={{ marginBottom: 36 }}>
-        <h1 style={{ fontFamily: UI, fontWeight: 600, fontSize: 28, letterSpacing: '-0.02em', color: T.textPrimary, marginBottom: 6 }}>Account</h1>
+        <h1 style={{ fontFamily: UI, fontWeight: 600, fontSize: 31, letterSpacing: '-0.025em', color: T.deep, marginBottom: 5 }}>Account</h1>
         <p style={{ fontFamily: BODY, fontSize: 15, color: T.textSecondary, margin: 0 }}>Your login, your organisation, and your plan.</p>
       </div>
 
@@ -589,7 +593,7 @@ export default function AccountPage() {
         <Card>
           {org ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 22px' }}>
-              <div style={{ width: 40, height: 40, background: T.cream, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: UI, fontWeight: 600, fontSize: 14, color: T.greenDeep, flexShrink: 0 }}>
+              <div style={{ width: 40, height: 40, background: T.cream, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: UI, fontWeight: 600, fontSize: 14, color: T.sageText, flexShrink: 0 }}>
                 {orgInitials(org.name ?? '')}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -603,7 +607,7 @@ export default function AccountPage() {
           ) : (
             <div style={{ padding: '16px 22px', fontFamily: BODY, fontSize: 14, color: T.textTertiary }}>
               No organisation linked.{' '}
-              <Link href="/dashboard/profile" style={{ color: T.greenMid, textDecoration: 'none', fontWeight: 500 }}>Set up your profile →</Link>
+              <Link href="/dashboard/profile" style={{ color: T.deep, textDecoration: 'none', fontWeight: 600, borderBottom: `1.5px solid ${T.borderStrong}` }}>Set up your profile →</Link>
             </div>
           )}
         </Card>
@@ -636,7 +640,7 @@ export default function AccountPage() {
       <section style={{ marginBottom: 36 }}>
         <SectionHeader title="Billing" desc="Your plan and payment details." />
         <div style={{ background: T.cream, border: '1px solid rgba(23,52,4,0.10)', borderRadius: 12, padding: '22px 26px', display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-          <div style={{ width: 40, height: 40, background: T.white, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.greenDeep, flexShrink: 0 }}>
+          <div style={{ width: 40, height: 40, background: T.white, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.sageText, flexShrink: 0 }}>
             <Star size={18} strokeWidth={2} />
           </div>
           <div style={{ flex: 1 }}>
@@ -661,7 +665,7 @@ export default function AccountPage() {
           <a
             href="/api/export"
             download
-            style={{ fontFamily: UI, fontWeight: 600, fontSize: 13, color: '#173404', background: '#fff', border: '1px solid #2C2C2A', padding: '8px 16px', borderRadius: 8, textDecoration: 'none', whiteSpace: 'nowrap' }}
+            style={{ fontFamily: UI, fontWeight: 600, fontSize: 13, color: '#1D3C3E', background: '#fff', border: '1.5px solid rgba(29,60,62,0.24)', padding: '9px 16px', borderRadius: 8, textDecoration: 'none', whiteSpace: 'nowrap' }}
           >
             Download JSON
           </a>
