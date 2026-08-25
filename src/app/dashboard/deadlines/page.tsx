@@ -936,7 +936,7 @@ function GrantPreviewModal({
             {grant.applyUrl && (
               <a href={grant.applyUrl} target="_blank" rel="noopener noreferrer"
                 style={{ fontFamily: UI_FONT, fontSize: 12.5, fontWeight: 500,
-                  background: '#1D3C3E', color: '#E3F0E4', padding: '8px 14px', borderRadius: 8,
+                  background: '#1D3C3E', color: '#F6F1E7', padding: '9px 16px', borderRadius: 999,
                   textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
                 Apply now <ExternalLink size={11} />
               </a>
@@ -944,9 +944,9 @@ function GrantPreviewModal({
             {!inPipeline && (
               <button onClick={onAddToPipeline} disabled={saving}
                 style={{ fontFamily: UI_FONT, fontSize: 12.5, fontWeight: 500,
-                  background: saving ? '#F5F1E8' : '#1D3C3E',
-                  color: saving ? '#74736E' : '#1D3C3E',
-                  padding: '8px 14px', borderRadius: 8, border: 'none',
+                  background: saving ? '#F1EDE3' : '#1D3C3E',
+                  color: saving ? '#74736E' : '#F6F1E7',
+                  padding: '9px 16px', borderRadius: 999, border: 'none',
                   cursor: saving ? 'not-allowed' : 'pointer',
                   display: 'inline-flex', alignItems: 'center', gap: 5 }}>
                 <Plus size={11} /> Add to Pipeline

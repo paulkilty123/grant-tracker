@@ -798,7 +798,7 @@ export default async function DashboardPage() {
                 <p className="text-xs font-semibold uppercase tracking-wider text-mid">Pipeline at a glance</p>
               </div>
               <div className="flex gap-1 h-10">
-                <div className="flex-1 rounded" style={{ background: '#EAF3DE' }} />
+                <div className="flex-1 rounded" style={{ background: '#E3F0E4' }} />
                 <div className="flex-1 rounded" style={{ background: '#F1F7E4' }} />
                 <div className="flex-1 rounded" style={{ background: '#E6F1FB' }} />
               </div>
@@ -1226,7 +1226,7 @@ export default async function DashboardPage() {
               then help you build a tailored application for each one you choose.
             </p>
             <div style={{ display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap' }}>
-              <a href="/dashboard/projects/new" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#8ECB3C', color: '#173404', fontFamily: 'var(--font-space-grotesk)', fontSize: 14.5, fontWeight: 600, padding: '12px 20px', borderRadius: 11, textDecoration: 'none' }}>
+              <a href="/dashboard/projects/new" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#8ECB3C', color: '#1D3C3E', fontFamily: 'var(--font-space-grotesk)', fontSize: 14.5, fontWeight: 600, padding: '12px 20px', borderRadius: 11, textDecoration: 'none' }}>
                 <Lightbulb size={16} /> Describe a project
               </a>
               <a href="/dashboard/applications/new" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 14, fontWeight: 600, color: '#3B6D11', textDecoration: 'none' }}>
@@ -1241,7 +1241,7 @@ export default async function DashboardPage() {
               { t: 'Apply to each', b: 'Build a tailored application per funder.' },
             ].map((s, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: i < 2 ? 16 : 0 }}>
-                <span style={{ width: 26, height: 26, borderRadius: 999, background: '#173404', color: '#F1F7E4', fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</span>
+                <span style={{ width: 26, height: 26, borderRadius: 999, background: '#1D3C3E', color: '#F1F7E4', fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</span>
                 <div>
                   <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: '#2C2C2A' }}>{s.t}</div>
                   <div className="text-mid" style={{ fontSize: 12 }}>{s.b}</div>

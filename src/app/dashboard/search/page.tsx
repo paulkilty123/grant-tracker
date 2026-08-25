@@ -182,7 +182,7 @@ interface DisplayGrant {
 
 // ── Score colour gradient ─────────────────────────────────────────────────────
 // Returns a hex colour that smoothly interpolates:
-//   0 → coral (#D85A30)  →  44 → gold (#BA7517)  →  70 → sage (#639922)  →  100 → forest (#173404)
+//   0 → coral (#D85A30)  →  44 → gold (#BA7517)  →  70 → sage (#639922)  →  100 → forest (#1D3C3E)
 // Used for the badge text so the dot + percentage visually signal match quality
 // without hard bucket jumps. The breakdown bars still use Tailwind classes via
 // the existing scoreColour() function (no change needed there).
@@ -617,7 +617,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', margin: showFunder ? '0 0 2px' : '0 0 10px' }}>
                     <h3 style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 20, fontWeight: 500, color: '#2C2C2A', margin: 0, lineHeight: 1.3 }}>{grant.title}</h3>
                     {isRecentlyAdded && (
-                      <div style={{ border: '2px solid #173404', color: '#173404', fontSize: 12, fontWeight: 500, padding: '5px 14px', borderRadius: 5, letterSpacing: '0.08em', textTransform: 'uppercase', transform: 'rotate(-3deg)', background: '#EAF3DE', flexShrink: 0, fontFamily: 'var(--font-space-grotesk)' }}>
+                      <div style={{ border: '2px solid #1D3C3E', color: '#1D3C3E', fontSize: 12, fontWeight: 500, padding: '5px 14px', borderRadius: 5, letterSpacing: '0.08em', textTransform: 'uppercase', transform: 'rotate(-3deg)', background: '#E3F0E4', flexShrink: 0, fontFamily: 'var(--font-space-grotesk)' }}>
                         Recently added
                       </div>
                     )}
@@ -2749,13 +2749,13 @@ export default function SearchPage() {
                 <button
                   onClick={() => setFiltersOpen(o => !o)}
                   className={`flex items-center gap-1.5 px-4 h-full text-sm font-medium transition-colors flex-shrink-0 ${
-                    filtersOpen || activeFilterCount > 0 ? 'text-[#173404] font-semibold' : 'text-gray-500 hover:text-charcoal'
+                    filtersOpen || activeFilterCount > 0 ? 'text-[#1D3C3E] font-semibold' : 'text-gray-500 hover:text-charcoal'
                   }`}
                 >
                   <SlidersHorizontal size={14} strokeWidth={2} />
                   Filters
                   {activeFilterCount > 0 && (
-                    <span className="text-xs text-white px-1.5 py-0.5 rounded-full leading-none" style={{ backgroundColor: '#173404' }}>{activeFilterCount}</span>
+                    <span className="text-xs text-white px-1.5 py-0.5 rounded-full leading-none" style={{ backgroundColor: '#1D3C3E' }}>{activeFilterCount}</span>
                   )}
                   <ChevronDown size={12} strokeWidth={2} className={`transition-transform duration-200 ${filtersOpen ? 'rotate-180' : ''}`} />
                 </button>
@@ -2821,8 +2821,8 @@ export default function SearchPage() {
                     <button key={t.id} onClick={() => setActiveType(t.id)}
                       className={`px-3 py-1.5 border text-xs font-medium transition-all rounded-md ${
                         activeType === t.id
-                          ? 'border-[#173404] bg-[#173404] text-[#EAF3DE]'
-                          : 'border-warm text-mid hover:border-[#173404] hover:text-[#173404]'
+                          ? 'border-[#1D3C3E] bg-[#1D3C3E] text-[#F6F1E7]'
+                          : 'border-warm text-mid hover:border-[#1D3C3E] hover:text-[#1D3C3E]'
                       }`}>
                       {t.label}
                     </button>
@@ -2840,8 +2840,8 @@ export default function SearchPage() {
                     onClick={() => setActiveGeoScope('all')}
                     className={`px-3 py-1.5 border text-xs font-medium transition-all rounded-md ${
                       activeGeoScope === 'all'
-                        ? 'border-[#173404] bg-[#173404] text-white'
-                        : 'border-warm text-mid hover:border-[#173404] hover:text-[#173404]'
+                        ? 'border-[#1D3C3E] bg-[#1D3C3E] text-white'
+                        : 'border-warm text-mid hover:border-[#1D3C3E] hover:text-[#1D3C3E]'
                     }`}
                   >
                     Anywhere
@@ -2852,8 +2852,8 @@ export default function SearchPage() {
                       onClick={() => setActiveGeoScope(activeGeoScope === scope.id ? 'all' : scope.id)}
                       className={`px-3 py-1.5 border text-xs font-medium transition-all rounded-md ${
                         activeGeoScope === scope.id
-                          ? 'border-[#173404] bg-[#173404] text-white'
-                          : 'border-warm text-mid hover:border-[#173404] hover:text-[#173404]'
+                          ? 'border-[#1D3C3E] bg-[#1D3C3E] text-white'
+                          : 'border-warm text-mid hover:border-[#1D3C3E] hover:text-[#1D3C3E]'
                       }`}
                     >
                       {scope.label}
@@ -2880,8 +2880,8 @@ export default function SearchPage() {
                     <button key={v} onClick={() => setDeadlineFilter(v)}
                       className={`px-3 py-1.5 border text-xs font-medium transition-all rounded-md ${
                         deadlineFilter === v
-                          ? 'border-[#173404] bg-[#173404] text-white'
-                          : 'border-warm text-mid hover:border-[#173404] hover:text-[#173404]'
+                          ? 'border-[#1D3C3E] bg-[#1D3C3E] text-white'
+                          : 'border-warm text-mid hover:border-[#1D3C3E] hover:text-[#1D3C3E]'
                       }`}>
                       {v === 'all' ? 'Any' : v === 'rolling' ? 'Rolling' : 'Has deadline'}
                     </button>
@@ -2923,8 +2923,8 @@ export default function SearchPage() {
                         })}
                         className={`px-3 py-1.5 border text-xs font-medium transition-all rounded-md ${
                           isActive
-                            ? 'border-[#173404] bg-[#173404] text-[#EAF3DE]'
-                            : 'border-warm text-mid hover:border-[#173404] hover:text-[#173404]'
+                            ? 'border-[#1D3C3E] bg-[#1D3C3E] text-[#F6F1E7]'
+                            : 'border-warm text-mid hover:border-[#1D3C3E] hover:text-[#1D3C3E]'
                         }`}>
                         {SUBTYPE_LABELS[sub]}
                         <span className={isActive ? 'ml-1.5 opacity-70' : 'ml-1.5 text-light'}>{subtypeCounts.get(sub)}</span>
@@ -2950,8 +2950,8 @@ export default function SearchPage() {
                     <button key={s.id} onClick={() => toggleSector(s.id)}
                       className={`px-3 py-1.5 border text-xs font-medium transition-all rounded-md ${
                         isActive
-                          ? 'border-[#173404] bg-[#173404] text-[#EAF3DE]'
-                          : 'border-warm text-mid hover:border-[#173404] hover:text-[#173404]'
+                          ? 'border-[#1D3C3E] bg-[#1D3C3E] text-[#F6F1E7]'
+                          : 'border-warm text-mid hover:border-[#1D3C3E] hover:text-[#1D3C3E]'
                       }`}>
                       {s.label}
                     </button>
@@ -3037,7 +3037,7 @@ export default function SearchPage() {
           <div className="flex items-center gap-3 min-w-0">
             {/* Icon badge — search magnifier, green */}
             <div className="flex-shrink-0 flex items-center justify-center w-8 h-8"
-              style={{ background: '#C0DD97', borderRadius: 9, color: '#173404' }}>
+              style={{ background: '#C0DD97', borderRadius: 9, color: '#1D3C3E' }}>
               <Search size={15} strokeWidth={2.5} />
             </div>
             {/* Two-line copy */}
@@ -3053,7 +3053,7 @@ export default function SearchPage() {
               if ((org.impact_sectors as string[] | undefined)?.length) setActiveSectors(new Set(org.impact_sectors as ImpactSector[]))
             }}
             className="text-sm font-semibold px-4 py-2 flex-shrink-0 rounded-full whitespace-nowrap"
-            style={{ background: 'transparent', color: '#173404', border: '0.5px solid rgba(23,52,4,0.2)' }}
+            style={{ background: 'transparent', color: '#1D3C3E', border: '0.5px solid rgba(23,52,4,0.2)' }}
           >
             Filter by my profile
           </button>
@@ -3166,7 +3166,7 @@ export default function SearchPage() {
                   <>
                     <strong className="text-3xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>{displayGrants.length}</strong>
                     <span className="text-base text-mid">{tabNoun}</span>
-                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: '#EAF3DE', color: '#173404' }}>✓ matched for {org?.name}</span>
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: '#E3F0E4', color: '#1D3C3E' }}>✓ matched for {org?.name}</span>
                   </>
                 )
                 if (aiResults) return (
@@ -3277,8 +3277,8 @@ export default function SearchPage() {
               <a
                 href="/dashboard/profile"
                 className="inline-flex items-center whitespace-nowrap transition-colors"
-                style={{ background: 'transparent', color: '#173404', border: '0.5px solid rgba(23,52,4,0.2)', borderRadius: 9999, padding: '9px 16px', fontSize: 13, fontWeight: 500 }}
-                onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.background = '#fff'; (e.currentTarget as HTMLAnchorElement).style.borderColor = '#173404' }}
+                style={{ background: 'transparent', color: '#1D3C3E', border: '0.5px solid rgba(23,52,4,0.2)', borderRadius: 9999, padding: '9px 16px', fontSize: 13, fontWeight: 500 }}
+                onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.background = '#fff'; (e.currentTarget as HTMLAnchorElement).style.borderColor = '#1D3C3E' }}
                 onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.background = 'transparent'; (e.currentTarget as HTMLAnchorElement).style.borderColor = 'rgba(23,52,4,0.2)' }}
               >
                 Complete profile
@@ -3720,7 +3720,7 @@ export default function SearchPage() {
               <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 12, fontWeight: 600, color: '#1B6B3D', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
                 Already applied
               </div>
-              <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 17, fontWeight: 700, color: '#173404', lineHeight: 1.3, marginBottom: 18 }}>
+              <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 17, fontWeight: 700, color: '#1D3C3E', lineHeight: 1.3, marginBottom: 18 }}>
                 {grant.title}
               </div>
 
@@ -3774,8 +3774,8 @@ export default function SearchPage() {
                           })}
                           style={{
                             padding: '6px 12px', borderRadius: 18, fontSize: 12.5, fontWeight: 500,
-                            border: `0.5px solid ${selected ? '#173404' : 'rgba(23,52,4,0.18)'}`,
-                            background: selected ? '#173404' : '#fff',
+                            border: `0.5px solid ${selected ? '#1D3C3E' : 'rgba(23,52,4,0.18)'}`,
+                            background: selected ? '#1D3C3E' : '#fff',
                             color: selected ? '#fff' : '#2C2C2A',
                             cursor: 'pointer', fontFamily: 'var(--font-space-grotesk)',
                           }}
