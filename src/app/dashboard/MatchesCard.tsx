@@ -120,7 +120,7 @@ export default function MatchesCard({ scopes, totalScored }: { scopes: MatchScop
       {/* Tabs. The count hides below 1180px — measured, the row needs 481px of
           a 426px track with them and wraps. It must never wrap and never
           scroll. */}
-      <div role="tablist" aria-label="Filter matches by funding type" className="matches-tabs" style={{ display: 'flex', gap: 4, margin: '12px 0 4px', flexWrap: 'nowrap' }}>
+      <div role="tablist" aria-label="Filter matches by funding type" className="matches-tabs" style={{ display: 'flex', gap: 4, margin: '12px 0 0', flexWrap: 'nowrap' }}>
         {TABS.map((t, i) => {
           const on = t.key === active
           const c  = TYPE[t.key]
@@ -143,6 +143,9 @@ export default function MatchesCard({ scopes, totalScored }: { scopes: MatchScop
                 transition: 'background 120ms ease, color 120ms ease',
               }}
             >
+              {/* The dot ties each tab to its segment in the bar below, so the
+                  bar reads as a legend rather than as decoration. */}
+              <span className="matches-tab-dot" style={{ width: 8, height: 8, borderRadius: 2, background: c.rail, display: 'block', flexShrink: 0 }} />
               {t.label}
               {/* A type with nothing in it stays clickable and keeps the
                   ordinary colour: a plain 0 reads as nothing without help, and
@@ -152,6 +155,46 @@ export default function MatchesCard({ scopes, totalScored }: { scopes: MatchScop
           )
         })}
       </div>
+
+      {/* The type bar: the old by-funding-type chart, compressed to 10px.
+          It earns the space three times over — it is a picture of where the
+          funding actually is, it is the legend for the coloured rows below,
+          and it is feedback: pick a type and the other three drop back so you
+          can see the slice you are looking at.
+
+          Colour goes here because funding type is CATEGORICAL. The four hues
+          were validated as a set, every pair separated well clear of the floor,
+          so they hold up at any size and in any order. Quality tiers are
+          sequential and cannot do this — the best adjacent separations across
+          four steps of one ramp came out at 2.62, 2.05 and 1.68, all under 3:1,
+          which is exactly why the old quality bar looked washed out. */}
+      {(() => {
+        const segs = TABS
+          .filter(t => t.key !== 'all')
+          .map(t => ({ key: t.key as TypeKey, n: scopes.find(s => s.key === t.key)?.actionable ?? 0 }))
+          .filter(seg => seg.n > 0)
+        // Denominator is the segments' own sum, not the All count: if the two
+        // ever disagree the bar still fills its track rather than trailing off.
+        const total = segs.reduce((a, b) => a + b.n, 0)
+        if (total === 0) return null
+        return (
+          <div style={{ display: 'flex', gap: 2, height: 10, margin: '11px 0 13px' }}>
+            {segs.map(seg => (
+              <span
+                key={seg.key}
+                title={`${seg.n} ${TYPE[seg.key].label.toLowerCase()}`}
+                style={{
+                  width: `${(seg.n / total) * 100}%`,
+                  background: TYPE[seg.key].rail,
+                  borderRadius: 2,
+                  opacity: active === 'all' || active === seg.key ? 1 : 0.22,
+                  transition: 'opacity 150ms ease',
+                }}
+              />
+            ))}
+          </div>
+        )
+      })()}
 
       {empty ? (
         /* Headline and sub-line are dropped rather than shown as a zero, and
@@ -269,7 +312,11 @@ export default function MatchesCard({ scopes, totalScored }: { scopes: MatchScop
         .matches-tabs button:focus-visible { outline: 2px solid ${DEEP}; outline-offset: 2px; }
         .matches-tabs button:hover { background: #FAF8F2; }
         .matches-tabs button[aria-selected='true']:hover { filter: brightness(0.98); }
-        @media (max-width: 1180px) { .matches-tab-count { display: none; } }
+        /* Both the dot and the count go below 1180px. Measured: with them the
+           row needs more than the 426px track at the lg breakpoint and wraps,
+           and it must never wrap and never scroll. Nothing is lost — the bar
+           immediately below still carries all four hues. */
+        @media (max-width: 1180px) { .matches-tab-count, .matches-tab-dot { display: none; } }
       ` }} />
       <span className="sr-only">{totalScored} opportunities scored in total</span>
     </div>

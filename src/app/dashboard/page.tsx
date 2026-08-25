@@ -396,13 +396,57 @@ export default async function DashboardPage() {
   }))
   const totalValue = stageValues.reduce((sum, s) => sum + s.value, 0)
 
+  /**
+   * Project hues, in a fixed order.
+   *
+   * Assigned by the project's position in the list rather than hashed from its
+   * id, so the colours stay put between visits and the first project is always
+   * sage. A hash would reshuffle every time a project was added.
+   *
+   * The glyph on each tile is --deep, which measures 6.4 / 7.7 / 7.1 / 4.4 / 5.9
+   * against these grounds — all clear of the 3:1 non-text floor.
+   *
+   * The same hue is meant to appear on every application belonging to the
+   * project. That half is dormant: project_id is null on every application
+   * because the creation flow has no picker (see
+   * docs/application-project-picker-missing-2026-08-24.md), so projectHue()
+   * returns null for all of them today and the tile stays neutral. The lookup
+   * is wired, so it lights up the day a picker ships.
+   */
+  const PROJECT_HUES = ['#9BCA9D', '#EBCE78', '#ABCBEE', '#4EAAB4', '#E0A088'] as const
+  const hueByProjectId = new Map<string, string>()
+  workProjects.forEach((pr, i) => hueByProjectId.set(pr.id, PROJECT_HUES[i % PROJECT_HUES.length]))
+  const projectHue = (id: string | null) => (id ? hueByProjectId.get(id) ?? null : null)
+  const projectName = new Map(workProjects.map(pr => [pr.id, pr.name]))
+
+  /** The same four hues the matches card uses, so a rail and a tab agree. */
+  const TYPE_RAIL: Record<TypeKey, string> = {
+    grant: '#22874C', programme: '#94402A', investment: '#3C79AC', in_kind: '#B08A20',
+  }
+
   // ── Upcoming deadlines (pipeline + catalogue) ───────────────────────
   const DEADLINE_ROWS_SHOWN = 6
-  type DlRow = { id: string; name: string; deadline: string; daysUntil: number; amountStr: string | null; href: string }
+  type DlRow = { id: string; name: string; deadline: string; daysUntil: number; amountStr: string | null; href: string; fundingType: TypeKey | null }
   function parseDaysUntil(dl: string): number {
     const parts = dl.split('-').map(Number)
     const d = new Date(parts[0], parts[1] - 1, parts[2])
     return Math.round((d.getTime() - Date.now()) / 86400000)
+  }
+
+  /**
+   * Funding type by title, for the deadline rails.
+   *
+   * A pipeline item carries `funder_type` (trust, corporate, …), which is a
+   * different axis from funding type and would colour the rail by the wrong
+   * thing. The catalogue does hold the funding type, and the rows are already
+   * matched to it by lowercased title in the dedup below, so this reuses that
+   * same join rather than inventing a second one. Unmatched rows get a neutral
+   * rail rather than a guessed colour.
+   */
+  const typeByTitle = new Map<string, TypeKey>()
+  for (const x of scoredAll) {
+    const ft = x.grant.fundingType
+    if (ft && CANONICAL_TYPES.has(ft)) typeByTitle.set(x.grant.title.toLowerCase(), ft as TypeKey)
   }
 
   const pipelineRows: DlRow[] = items
@@ -416,6 +460,7 @@ export default async function DashboardPage() {
         ? formatCurrency(i.amount_max ?? i.amount_requested ?? 0)
         : null,
       href: '/dashboard/deadlines',
+      fundingType: typeByTitle.get(i.grant_name.toLowerCase()) ?? null,
     }))
     .sort((a, b) => a.daysUntil - b.daysUntil)
 
@@ -440,6 +485,7 @@ export default async function DashboardPage() {
         daysUntil: du,
         amountStr: amt,
         href: `/dashboard/search?grant=${encodeURIComponent(g.id)}`,
+        fundingType: (g.fundingType && CANONICAL_TYPES.has(g.fundingType) ? g.fundingType : null) as TypeKey | null,
       }
     })
     .sort((a, b) => a.daysUntil - b.daysUntil)
@@ -1097,32 +1143,54 @@ export default async function DashboardPage() {
                 {alerts.slice(0, DEADLINE_ROWS_SHOWN).map(row => {
                   const dateObj = formatDeadlineDate(row.deadline)
                   const d = row.daysUntil
-                  // Urgency: ≤30d → red numerals + red pill. Beyond stays grey.
-                  const isUrgent = d <= 30
+                  /**
+                   * Two channels, two different things.
+                   *
+                   * The RAIL carries funding type — categorical, so it takes a
+                   * hue straight from the validated set.
+                   *
+                   * The DATE TILE carries urgency — sequential, which colour can
+                   * only do in a few large steps, so it gets three: solid inside
+                   * a week, tint to thirty days, warm neutral beyond.
+                   *
+                   * The row itself is NOT tinted the way a match row is. The
+                   * pale countdown pill composites to 1.00–1.04:1 over a funding
+                   * type tint, which is invisible, so the pill would have to go
+                   * solid to survive it. And these rows are nearly all grants,
+                   * so tinting them would produce six near-identical green rows:
+                   * more colour, less information.
+                   */
+                  const hot  = d <= 7
+                  const soon = d > 7 && d <= 30
+                  const rail = row.fundingType ? TYPE_RAIL[row.fundingType] : 'rgba(29,60,62,0.16)'
                   const pillLabel = d < 0 ? 'Overdue' : d === 0 ? 'Today' : d === 1 ? 'Tomorrow' : `${d}d`
-                  const pillCls = isUrgent
-                    ? 'bg-[#FAECE7] text-[#993C1D]'
-                    : 'bg-transparent text-[#5F5E5A] border border-[rgba(23,52,4,0.20)]'
-                  const dayCol   = isUrgent ? '#993C1D' : '#2C2C2A'
-                  const monthCol = isUrgent ? '#993C1D' : '#5F5E5A'
+                  const tileBg  = hot ? '#993C1D' : soon ? '#FAECE7' : '#F1EDE3'
+                  const dayCol  = hot ? '#FDF6F3' : soon ? '#993C1D' : '#2C2C2A'
+                  const monCol  = hot ? 'rgba(253,246,243,0.82)' : soon ? '#993C1D' : '#5F5E5A'
+                  const pillSty = hot
+                    ? { color: '#993C1D', border: '1px solid rgba(153,60,29,0.45)', background: 'transparent' }
+                    : soon
+                      ? { color: '#993C1D', border: '1px solid transparent', background: '#FAECE7' }
+                      : { color: '#5F5E5A', border: '1px solid rgba(29,60,62,0.20)', background: 'transparent' }
                   return (
                     <a key={row.id} href={row.href}
-                      className="flex items-center gap-3 py-2.5 border-b border-warm last:border-0 hover:bg-[#FAFAF7] -mx-2 px-2 rounded-md transition-colors">
+                      className="flex items-center gap-3 mb-1.5 last:mb-0 hover:bg-[#F7F5EF] transition-colors"
+                      style={{ padding: '7px 11px', borderRadius: 10, borderLeft: `5px solid ${rail}`, background: '#FCFBF8' }}>
                       {dateObj ? (
-                        <div className="flex flex-col items-center flex-shrink-0 w-9 text-center">
-                          <span className="text-[9px] font-bold uppercase" style={{ color: monthCol }}>{dateObj.month}</span>
-                          <span className="text-lg font-bold leading-none" style={{ color: dayCol }}>{dateObj.day}</span>
+                        <div className="flex-shrink-0 text-center" style={{ width: 40, borderRadius: 9, padding: '5px 0 6px', background: tileBg }}>
+                          <span className="block text-[8.5px] font-bold uppercase" style={{ color: monCol, letterSpacing: '0.08em', fontFamily: 'var(--font-space-grotesk)' }}>{dateObj.month}</span>
+                          <span className="block text-[17px] font-bold" style={{ color: dayCol, lineHeight: 1.05, fontFamily: 'var(--font-space-grotesk)' }}>{dateObj.day}</span>
                         </div>
                       ) : (
-                        <div className="w-9 flex-shrink-0" />
+                        <div className="flex-shrink-0" style={{ width: 40 }} />
                       )}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-charcoal truncate">{row.name}</p>
                         <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wide ${pillCls}`}>
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wide" style={pillSty}>
                             {pillLabel}
                           </span>
-                          {row.amountStr && <span className="text-[10px] text-mid">{row.amountStr}</span>}
+                          {row.amountStr && <span className="text-[11px]" style={{ color: '#74736E' }}>{row.amountStr}</span>}
                         </div>
                       </div>
                     </a>
@@ -1243,15 +1311,22 @@ export default async function DashboardPage() {
                     const when = a.answered > 0
                       ? whenLabel(a.updatedAt ?? a.createdAt, 'Edited')
                       : whenLabel(a.createdAt ?? a.updatedAt, 'Started')
-                    const second = [a.funder, when].filter(Boolean).join(' · ')
+                    const hue    = projectHue(a.projectId)
+                    const pName  = a.projectId ? projectName.get(a.projectId) ?? null : null
+                    const second = [pName, a.funder, when].filter(Boolean).join(' · ')
                     return (
                       <a key={a.id} href={`/dashboard/applications/${a.id}`} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 0', borderBottom: '1px solid rgba(29,60,62,0.08)', textDecoration: 'none' }}>
-                        {/* Neutral until a project exists to colour it. */}
-                        <span style={{ width: 40, height: 40, borderRadius: 11, background: '#F1EDE3', color: '#1D3C3E', fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{mono}</span>
+                        {/* The project's hue when it has one, neutral when it
+                            does not. Every row is neutral today — see the note
+                            on PROJECT_HUES. */}
+                        <span style={{ width: 40, height: 40, borderRadius: 11, background: hue ?? '#F1EDE3', color: '#1D3C3E', fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{mono}</span>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 15, fontWeight: 500, color: '#1D3C3E', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.title}</div>
                           {second && (
-                            <div className="text-mid" style={{ fontSize: 12.5, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{second}</div>
+                            <div className="text-mid" style={{ fontSize: 12.5, marginTop: 2, display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                              {hue && <span style={{ width: 8, height: 8, borderRadius: 2, background: hue, flexShrink: 0 }} />}
+                              <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{second}</span>
+                            </div>
                           )}
                           {a.answered > 0 ? (
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 }}>
@@ -1283,7 +1358,10 @@ export default async function DashboardPage() {
               <p className="text-mid" style={{ fontSize: 13.5, lineHeight: 1.55, marginBottom: 12 }}>Describe a project to match more funders than your organisation profile alone.</p>
             ) : workProjects.slice(0, 4).map((p, i, arr) => (
               <a key={p.id} href={`/dashboard/projects/${p.id}`} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 0', borderBottom: i < arr.length - 1 ? '1px solid rgba(23,52,4,0.06)' : 'none', textDecoration: 'none' }}>
-                <span style={{ width: 40, height: 40, borderRadius: 11, background: '#E3F0E4', color: '#1B6B3D', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Lightbulb size={19} /></span>
+                {/* The project's own hue. This is the live half of the pair:
+                    projects have ids, so the colour is real here even while the
+                    applications side waits for a picker. */}
+                <span style={{ width: 40, height: 40, borderRadius: 11, background: PROJECT_HUES[i % PROJECT_HUES.length], color: '#1D3C3E', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Lightbulb size={19} /></span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 15, fontWeight: 500, color: '#2C2C2A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 5, fontSize: 12.5 }}>
@@ -1292,6 +1370,13 @@ export default async function DashboardPage() {
                       : <span className="text-mid">Needs a few more details</span>}
                     {p.fitCount != null && p.fitCount > 0 ? <span className="text-mid">· {p.fitCount} funders fit</span> : null}
                     {p.budget ? <span className="text-mid">· £{p.budget.toLocaleString('en-GB')}</span> : null}
+                    {(() => {
+                      // Zero is not printed: with no picker every project has
+                      // zero applications, and "0 applications" on every row
+                      // states a gap the user has no way to close.
+                      const n = workApps.filter(a => a.projectId === p.id).length
+                      return n > 0 ? <span className="text-mid">· {n} application{n === 1 ? '' : 's'}</span> : null
+                    })()}
                   </div>
                 </div>
                 {/* "19 funders fit" was a number with nothing to do about it
