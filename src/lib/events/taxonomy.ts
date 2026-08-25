@@ -127,6 +127,12 @@ export interface EventPayloads {
     question_count: number
     opportunity_id: string | null
   }
+  builder_application_project_set: {
+    application_id: string
+    project_id: string | null
+    /** true when the user chose "not part of a project", clearing an earlier link. */
+    cleared: boolean
+  }
   builder_scaffold_generated: {
     application_id: string
     model: string
@@ -232,6 +238,7 @@ export const EVENT_TYPES = [
   'mix_fallback_fired',
   'profile_updated',
   'builder_questions_submitted',
+  'builder_application_project_set',
   'builder_scaffold_generated',
   'builder_gap_flagged',
   'builder_eligibility_warning',
@@ -272,6 +279,7 @@ const REQUIRED_KEYS: Record<EventType, Record<string, Kind>> = {
   mix_fallback_fired:          { categories: 'string[]', rulebook_version: 'string' },
   profile_updated:             { fields_changed: 'string[]' },
   builder_questions_submitted: { application_id: 'string', question_count: 'number', opportunity_id: 'nullable-string' },
+  builder_application_project_set: { application_id: 'string', project_id: 'nullable-string', cleared: 'boolean' },
   builder_scaffold_generated:  { application_id: 'string', model: 'string', input_tokens: 'number', output_tokens: 'number', duration_ms: 'number' },
   builder_gap_flagged:         { application_id: 'string', gap_types: 'string[]' },
   builder_eligibility_warning: { application_id: 'string', opportunity_id: 'string', warning_codes: 'string[]' },

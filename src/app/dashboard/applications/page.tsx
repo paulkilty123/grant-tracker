@@ -11,6 +11,7 @@ import { createClient } from '@/lib/supabase/client'
 import { getOrganisationByOwner } from '@/lib/organisations'
 import { T, UI, BODY } from '@/components/builder/tokens'
 import type { ApplicationRecord } from '@/lib/builder/types'
+import { hueMap, PROJECT_HUE_INK, PROJECT_HUE_NONE } from '@/lib/project-hues'
 
 // The Apply-tier ethos as a few plain principles. Leads with the funder's-eye
 // reframe (the highest-value move for first-time applicants), closes on voice.
@@ -105,6 +106,44 @@ export default function ApplicationsPage() {
   const [deadlineSoon, setDeadlineSoon] = useState(0)
   const [readyToStart, setReadyToStart] = useState<PipeItem[]>([])
   const [projectNames, setProjectNames] = useState<Record<string, string>>({})
+  /**
+   * Projects in creation order, newest first, for the assign control.
+   *
+   * The picker on the new-application form only sets project_id going forward.
+   * Without this, every application that already exists stays unattributed for
+   * ever and the colour arrives for nobody until they happen to start a new
+   * one. This is the half that changes something today.
+   */
+  const [projectList, setProjectList] = useState<{ id: string; name: string }[]>([])
+  const [assigningId, setAssigningId] = useState<string | null>(null)
+  const [assignError, setAssignError] = useState<string | null>(null)
+
+  /**
+   * Assign or clear a project. Optimistic, with a revert on failure.
+   *
+   * Goes through the route rather than a direct update: the UPDATE policy on
+   * applications only checks the application's org, so a client-side write
+   * could put a foreign project id in the column. The route checks both ends.
+   *
+   * NO BACKFILL, and none inferred. There is genuinely no project recorded on
+   * these rows, and guessing one from the funder name is what produced the
+   * wrong claim that three of them shared a project. They share a funder.
+   */
+  async function assignProject(applicationId: string, projectId: string | null) {
+    const before = apps
+    setApps(prev => prev.map(a => (a.id === applicationId ? { ...a, project_id: projectId } : a)))
+    setAssigningId(null)
+    setAssignError(null)
+    const res = await fetch('/api/builder/applications', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ application_id: applicationId, project_id: projectId }),
+    }).catch(() => null)
+    if (!res || !res.ok) {
+      setApps(before)
+      setAssignError('That did not save. Try again in a moment.')
+    }
+  }
 
   async function deleteApplication(id: string) {
     setApps(prev => prev.filter(a => a.id !== id))
@@ -112,6 +151,9 @@ export default function ApplicationsPage() {
     const supabase = createClient()
     await supabase.from('applications').delete().eq('id', id)
   }
+
+  // Same input order as every other surface, so the colours agree.
+  const hues = hueMap(projectList)
 
   useEffect(() => {
     document.title = 'Applications · Shoots'
@@ -134,10 +176,14 @@ export default function ApplicationsPage() {
         setApps(rows)
 
         // Project names for the "Part of: …" differentiator on rows.
-        const { data: projs } = await supabase.from('projects').select('id, name').eq('org_id', org.id)
+        const { data: projs } = await supabase
+          .from('projects').select('id, name').eq('org_id', org.id)
+          .order('created_at', { ascending: false })
+        const plist = (projs ?? []) as { id: string; name: string }[]
         const pmap: Record<string, string> = {}
-        for (const pr of (projs ?? []) as { id: string; name: string }[]) pmap[pr.id] = pr.name
+        for (const pr of plist) pmap[pr.id] = pr.name
         setProjectNames(pmap)
+        setProjectList(plist)
 
         // "Deadline soon" tile: deadlines live on the linked opportunity, not
         // the application, so join through opportunity_id (UUIDs only).
@@ -303,9 +349,15 @@ export default function ApplicationsPage() {
           </div>
         ))}
         {loaded && apps.length === 0 && readyToStart.length === 0 && <HowItWorks withCta />}
+        {assignError && (
+          <p style={{ fontFamily: BODY, fontSize: 13, color: T.coralText, margin: '0 0 4px' }}>{assignError}</p>
+        )}
 
         {apps.map(app => {
           const status = STATUS_STYLE[app.status] ?? STATUS_STYLE.draft
+          const pid  = app.project_id ?? null
+          const hue  = pid ? hues.get(pid) ?? null : null
+          const pName = pid ? projectNames[pid] ?? null : null
           const total = app.questions?.length ?? 0
           const answered = (app.questions ?? []).filter(q => q.user_answer?.trim()).length
           return (
@@ -320,9 +372,13 @@ export default function ApplicationsPage() {
                 display: 'flex', alignItems: 'center', gap: 14,
               }}
             >
+              {/* The project's hue, or neutral. Neutral is the honest state,
+                  not a placeholder: colour that means nothing is worse than no
+                  colour, so an unfiled row simply has none. */}
               <span style={{
                 width: 42, height: 42, borderRadius: 10, flexShrink: 0,
-                background: T.paleGreen, color: T.sage, fontFamily: UI, fontWeight: 600, fontSize: 14.5,
+                background: hue ?? PROJECT_HUE_NONE, color: PROJECT_HUE_INK,
+                fontFamily: UI, fontWeight: 600, fontSize: 14.5,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
                 {monogram(app.funder_name || app.grant_name || '?')}
@@ -343,10 +399,52 @@ export default function ApplicationsPage() {
                   {app.funder_name && app.grant_name
                     ? app.funder_name
                     : `${total} ${total === 1 ? 'question' : 'questions'}`}
-                  {(() => { const pid = (app as { project_id?: string | null }).project_id; return pid && projectNames[pid] ? ` · Part of ${projectNames[pid]}` : '' })()}
                   {(app as { created_at?: string }).created_at
                     ? ` · ${new Date((app as { created_at: string }).created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
                     : ''}
+                </span>
+                {/* Filed, or the control to file it. The affordance is
+                    self-cancelling — choose a project and the swatch takes its
+                    place — so it needs no empty state of its own, and it never
+                    nags: an unfiled row says nothing about being unfiled. */}
+                <span
+                  onClick={e => { e.preventDefault(); e.stopPropagation() }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 7, marginTop: 5 }}
+                >
+                  {pid && pName ? (
+                    <>
+                      <span style={{ width: 9, height: 9, borderRadius: 2, background: hue ?? PROJECT_HUE_NONE, flexShrink: 0 }} />
+                      <span style={{ fontFamily: BODY, fontSize: 12.5, color: T.textSecondary }}>Part of {pName}</span>
+                    </>
+                  ) : projectList.length === 0 ? null : assigningId === app.id ? (
+                    <select
+                      autoFocus
+                      defaultValue=""
+                      onChange={e => assignProject(app.id, e.target.value || null)}
+                      onBlur={() => setAssigningId(null)}
+                      style={{
+                        fontFamily: BODY, fontSize: 12.5, color: T.textPrimary, background: T.white,
+                        border: `1px solid ${T.borderStrong}`, borderRadius: 8, padding: '5px 8px',
+                        cursor: 'pointer', maxWidth: 260,
+                      }}
+                    >
+                      <option value="" disabled>Choose a project…</option>
+                      {projectList.map(pr => (
+                        <option key={pr.id} value={pr.id}>{pr.name}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <button
+                      onClick={() => { setAssignError(null); setAssigningId(app.id) }}
+                      style={{
+                        fontFamily: UI, fontWeight: 600, fontSize: 11.5, color: T.textSecondary,
+                        background: 'transparent', border: `1px dashed ${T.borderStrong}`,
+                        borderRadius: 999, padding: '4px 10px', cursor: 'pointer',
+                      }}
+                    >
+                      Assign project
+                    </button>
+                  )}
                 </span>
               </div>
               {total > 0 && (

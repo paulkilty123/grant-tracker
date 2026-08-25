@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import MatchesCard, { type MatchScope, type MatchRow, type TypeKey, type ScopeKey } from './MatchesCard'
 import { CARD_LINK } from './card-link'
+import { hueForIndex, hueMap } from '@/lib/project-hues'
 import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { getDeadlineAlerts, formatCurrency, formatNextOpen } from '@/lib/utils'
@@ -413,9 +414,7 @@ export default async function DashboardPage() {
    * returns null for all of them today and the tile stays neutral. The lookup
    * is wired, so it lights up the day a picker ships.
    */
-  const PROJECT_HUES = ['#9BCA9D', '#EBCE78', '#ABCBEE', '#4EAAB4', '#E0A088'] as const
-  const hueByProjectId = new Map<string, string>()
-  workProjects.forEach((pr, i) => hueByProjectId.set(pr.id, PROJECT_HUES[i % PROJECT_HUES.length]))
+  const hueByProjectId = hueMap(workProjects)
   const projectHue = (id: string | null) => (id ? hueByProjectId.get(id) ?? null : null)
   const projectName = new Map(workProjects.map(pr => [pr.id, pr.name]))
 
@@ -1361,7 +1360,7 @@ export default async function DashboardPage() {
                 {/* The project's own hue. This is the live half of the pair:
                     projects have ids, so the colour is real here even while the
                     applications side waits for a picker. */}
-                <span style={{ width: 40, height: 40, borderRadius: 11, background: PROJECT_HUES[i % PROJECT_HUES.length], color: '#1D3C3E', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Lightbulb size={19} /></span>
+                <span style={{ width: 40, height: 40, borderRadius: 11, background: hueForIndex(i), color: '#1D3C3E', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Lightbulb size={19} /></span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 15, fontWeight: 500, color: '#2C2C2A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 5, fontSize: 12.5 }}>

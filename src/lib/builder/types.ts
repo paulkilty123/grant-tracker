@@ -109,6 +109,9 @@ export interface ApplicationRecord {
   org_id: string
   opportunity_id: string | null
   pipeline_item_id: string | null
+  /** The project this application is filed against. Null is a legitimate value:
+   *  an application can stand on its own, and project_brief is the alternative. */
+  project_id: string | null
   funder_name: string | null
   grant_name: string | null
   status: ApplicationStatus
