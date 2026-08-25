@@ -444,7 +444,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
    * colour as its own score band.
    */
   const tierInk    = score >= 70 ? '#1B6B3D' : score >= 50 ? '#7A5E11' : '#5F5E5A'
-  const tierHue    = { ring: tierInk, title: tierInk, panelBg: '#F1EDE3', border: 'transparent',
+  const tierHue    = { ring: tierInk, title: tierInk, border: 'transparent',
                        barBg: 'rgba(29,60,62,0.20)', positive: tierInk, caveat: tierInk, caveatText: tierInk }
   const moduleTitle = score >= 80 ? 'Why this strongly matches' : score >= 70 ? 'Why this is a good match' : score >= 50 ? 'Why this partially matches' : 'Why this weakly matches'
 
@@ -641,7 +641,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
             </p>
 
             {/* Meta grid: Amount / Deadline / Eligible / Type */}
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: isMobile ? 10 : 16, paddingTop: 12, borderTop: '0.5px solid rgba(0,0,0,0.06)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: isMobile ? 10 : 16, paddingTop: 12, borderTop: '1px solid var(--border-hair)' }}>
               {/* Funding type leads, in its own foreground colour. It used to
                   be a tinted chip in the tag row above, which cannot work:
                   measured against the sector families it collides at ΔE
@@ -874,9 +874,15 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
           )
 
           return (
-            <div style={{ marginTop: 14, background: tierHue.panelBg, borderRadius: 14 }}>
+            /* No container. The band used to be a --warm-neutral #F1EDE3
+               panel, which carries b* +5.3 — measurably yellow-brown, and it
+               read as a mud patch once the page ground lightened. Rather than
+               recolour it, it stops being a box: a hairline above, matching
+               the rule above the meta row, so the score reads as the card's
+               last line. The tier colours were already doing all the work. */
+            <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--border-hair)' }}>
               {/* Header row — identical in both states */}
-              <div style={{ padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                 {/* Score + bar stack */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flexShrink: 0, minWidth: 100 }}>
                   <div style={{ display: 'inline-flex', alignItems: 'baseline', gap: 6 }}>
@@ -942,8 +948,8 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
 
               {/* Expanded: dimension bars */}
               {isExpanded && dimBars.length > 0 && (
-                <div style={{ padding: '0 14px 14px' }}>
-                  <div style={{ borderTop: `0.5px solid ${tierHue.ring}40`, paddingTop: 12 }}>
+                <div style={{ paddingBottom: 2 }}>
+                  <div style={{ borderTop: '1px solid var(--border-hair)', marginTop: 12, paddingTop: 12 }}>
                     {dimBars.map(d => (
                       <div key={d.label} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
                         <div style={{ width: 100, fontSize: 12, color: '#666', fontFamily: 'var(--font-space-grotesk)', flexShrink: 0 }}>{d.label}</div>

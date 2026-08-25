@@ -65,6 +65,12 @@
        its luminance step against the page; on white it has nothing but this
        border, so the hairline has to do the whole job. */
     --border-med:    rgba(29, 60, 62, 0.15);
+    /* Hairline: a rule INSIDE a card, separating its sections. */
+    --border-hair:   rgba(29, 60, 62, 0.10);
+    /* Ghost: the visible edge a control needs when it sits on white with no
+       fill of its own. Heavier than a hairline on purpose — a hairline
+       separates, this one has to make a button look like a button. */
+    --border-ghost:  rgba(29, 60, 62, 0.24);
     --border-input:  rgba(0, 0, 0, 0.14);
     --border-subtle: rgba(0, 0, 0, 0.10);
 
