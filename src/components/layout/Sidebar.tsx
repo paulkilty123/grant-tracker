@@ -32,6 +32,7 @@ import {
   Lightbulb,
   Library,
   Mail,
+  Plug,
 } from 'lucide-react'
 
 interface Props {
@@ -106,6 +107,10 @@ const MAIN_NAV = [
   { href: '/dashboard/pipeline',  label: 'Pipeline',     Icon: FolderKanban  },
   { href: '/dashboard/deadlines', label: 'Deadlines',    Icon: CalendarClock },
   { href: '/dashboard/profile',   label: 'Profile',      Icon: User          },
+  // Names one vendor for a connection that works in several — deliberate.
+  // Members use Claude, and vagueness costs more comprehension here than the
+  // specificity costs accuracy. Revisit if a second assistant gets real use.
+  { href: '/dashboard/connect',   label: 'Connect to Claude', Icon: Plug     },
   // Notifications slots in here (bell icon, unread badge) when the inbox ships in v1.1
 ]
 

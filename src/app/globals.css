@@ -346,6 +346,18 @@
     outline-offset: 2px;
   }
 
+  /* Connect page. Reflows to 2-up under 1100px and 1-up under 960px, where the
+     three-node flow stacks and its arrows rotate to point down. */
+  @media (max-width: 1100px) {
+    .connect-examples { grid-template-columns: repeat(2, 1fr) !important; }
+  }
+  @media (max-width: 960px) {
+    .connect-examples { grid-template-columns: 1fr !important; }
+    .connect-two      { grid-template-columns: 1fr !important; }
+    .connect-flow     { grid-template-columns: 1fr !important; }
+    .connect-arrow    { transform: rotate(90deg); justify-content: center; }
+  }
+
   .pipeline-col.drag-over {
     outline: 2px dashed #1D3C3E;
     outline-offset: -4px;
