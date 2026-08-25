@@ -21,20 +21,30 @@ import { Sparkles, Loader2, Link, ArrowRight, Calendar, AlarmClock, X as XIcon, 
 import { PipelineModal, STAGE_ICONS, getWritingStage } from '@/components/PipelineModal'
 
 /**
- * The stage ladder, deliberately monotonic: each active stage is a step darker
- * than the one before it, so the board reads as progress from left to right
- * without anything being labelled.
+ * The stage ladder.
  *
- * The old set was not. Won (#EAF3DE) came out LIGHTER than Submitted
- * (#DFEDCC), so the ladder went up and then back down at the one step the user
- * most wants to reach, and Won needed a lime rule along its top to look like an
- * arrival. It no longer needs one.
+ * THE GREEN RAMP — applying, submitted, won — is monotonic: each step is
+ * darker than the one before it, so the board reads as progress left to right
+ * without anything being labelled. The old set was not. Won (#EAF3DE) came out
+ * LIGHTER than Submitted (#DFEDCC), so the ramp climbed and then dropped at the
+ * one step the user most wants to reach, and Won needed a lime rule along its
+ * top to look like an arrival. It no longer needs one.
  *
- * Declined sits outside the ladder entirely — it is not a further step along
- * it, so it takes a warm coral rather than a position in the ramp.
+ * IDENTIFIED AND DECLINED SIT OUTSIDE THAT RAMP, and are warm rather than
+ * green. Neither is a stage of work in progress: one is the holding area, the
+ * other is the end of the road. Both separate from the cream page by about the
+ * same amount (ΔE 6.7 and 6.3), so they read as a matched pair of "not in
+ * flight" columns.
+ *
+ * Identified is NOT lighter than applying, and cannot be. The page is L* 95.3
+ * and applying is 93.7, so the gap between them holds ΔE 8 in total — there is
+ * no room to fit a step inside it that is 5 clear of both. Its first value,
+ * #F3EFE4, tried and came out ΔE 0.91 from the page: invisible, worse than the
+ * sort-control bug on Find Funding at 1.5. Being a different FAMILY is what
+ * separates it from applying now, not being a lighter step.
  */
 const STAGE_BG_HEX: Record<string, string> = {
-  identified: '#F3EFE4',
+  identified: '#ECE6CC',
   applying:   '#E7F0DC',
   submitted:  '#D3E5BC',
   won:        '#B4D496',

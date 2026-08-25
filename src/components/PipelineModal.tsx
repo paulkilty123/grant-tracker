@@ -280,7 +280,7 @@ export function PipelineModal({
                 // monotonic and its darkest step is still light enough to carry
                 // it, which the old per-stage greens were working around.
                 const tones: Record<string, { bg: string; text: string; restBorder: string; activeBorder: string }> = {
-                  identified: { bg: '#F3EFE4', text: '#1D3C3E', restBorder: 'rgba(29,60,62,0.10)', activeBorder: '#1D3C3E' },
+                  identified: { bg: '#ECE6CC', text: '#1D3C3E', restBorder: 'rgba(29,60,62,0.10)', activeBorder: '#1D3C3E' },
                   applying:   { bg: '#E7F0DC', text: '#1D3C3E', restBorder: 'rgba(29,60,62,0.10)', activeBorder: '#1D3C3E' },
                   submitted:  { bg: '#D3E5BC', text: '#1D3C3E', restBorder: 'rgba(29,60,62,0.10)', activeBorder: '#1D3C3E' },
                   won:        { bg: '#B4D496', text: '#1D3C3E', restBorder: 'rgba(29,60,62,0.10)', activeBorder: '#1D3C3E' },
