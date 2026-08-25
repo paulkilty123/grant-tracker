@@ -798,9 +798,9 @@ export default async function DashboardPage() {
                 <p className="text-xs font-semibold uppercase tracking-wider text-mid">Pipeline at a glance</p>
               </div>
               <div className="flex gap-1 h-10">
-                <div className="flex-1 rounded" style={{ background: '#E3F0E4' }} />
-                <div className="flex-1 rounded" style={{ background: '#F1F7E4' }} />
-                <div className="flex-1 rounded" style={{ background: '#E6F1FB' }} />
+                <div className="flex-1 rounded" style={{ background: '#E7F0DC' }} />
+                <div className="flex-1 rounded" style={{ background: '#D3E5BC' }} />
+                <div className="flex-1 rounded" style={{ background: '#B4D496' }} />
               </div>
             </div>
             {/* New matches */}
@@ -898,7 +898,7 @@ export default async function DashboardPage() {
     const BAR: Record<string, string> = {
       identified: '#D8D3C8',
       applying:   '#C0DD97',
-      submitted:  '#639922',
+      submitted:  '#22874C',
       won:        '#1D3C3E',
     }
 
@@ -1216,34 +1216,41 @@ export default async function DashboardPage() {
       {builderAllowed && !hasWork && (
         <div className="card rounded-xl mb-8" style={{ padding: 28, display: 'grid', gridTemplateColumns: 'minmax(0,1.4fr) minmax(0,1fr)', gap: 28, alignItems: 'center' }}>
           <div>
-            <div style={{ width: 46, height: 46, borderRadius: 13, background: '#F1F7E4', color: '#3B6D11', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+            <div style={{ width: 46, height: 46, borderRadius: 999, background: '#E3F0E4', color: '#1B6B3D', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
               <Lightbulb size={23} />
             </div>
-            <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 22, fontWeight: 600, color: '#2C2C2A', marginBottom: 8 }}>Start your first project</div>
+            <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 22, fontWeight: 600, color: '#1D3C3E', letterSpacing: '-0.02em', marginBottom: 8 }}>Start your first project</div>
             <p className="text-mid" style={{ fontSize: 14.5, lineHeight: 1.6, marginBottom: 20, maxWidth: 420 }}>
               Describe what you need funded once. We&apos;ll match it against the{' '}
               <span style={{ color: '#2C2C2A', fontWeight: 500 }}>{totalMatchCount} funders that already fit your organisation</span>,
               then help you build a tailored application for each one you choose.
             </p>
             <div style={{ display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap' }}>
-              <a href="/dashboard/projects/new" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#8ECB3C', color: '#1D3C3E', fontFamily: 'var(--font-space-grotesk)', fontSize: 14.5, fontWeight: 600, padding: '12px 20px', borderRadius: 11, textDecoration: 'none' }}>
+              <a href="/dashboard/projects/new" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#1D3C3E', color: '#F6F1E7', fontFamily: 'var(--font-space-grotesk)', fontSize: 14.5, fontWeight: 600, padding: '12px 20px', borderRadius: 11, textDecoration: 'none' }}>
                 <Lightbulb size={16} /> Describe a project
               </a>
-              <a href="/dashboard/applications/new" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 14, fontWeight: 600, color: '#3B6D11', textDecoration: 'none' }}>
+              <a href="/dashboard/applications/new" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 14, fontWeight: 600, color: '#1D3C3E', borderBottom: '1.5px solid rgba(29,60,62,0.24)', paddingBottom: 1, textDecoration: 'none' }}>
                 Know which funder to apply to? Start a direct application →
               </a>
             </div>
           </div>
-          <div style={{ background: '#FBFDF7', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 16, padding: 22 }}>
+          {/* Deep circles with a cream numeral rather than the four homepage
+              accents used on Projects and Connect. Those carry a size floor —
+              the numeral has to be 19px bold on a 44px circle to clear 3:1 on
+              terracotta — and this list is a compact aside inside a band, with
+              no room for it. Deep on cream passes at any size, so the compact
+              shape stays honest instead of shrinking a treatment that would
+              then fail. */}
+          <div style={{ background: '#FAF9F5', border: '1px solid rgba(29,60,62,0.10)', borderRadius: 16, padding: 22 }}>
             {[
               { t: 'Describe it once', b: 'A few sentences or paste an old plan.' },
               { t: 'See who fits', b: 'We rank funders against your project.' },
               { t: 'Apply to each', b: 'Build a tailored application per funder.' },
             ].map((s, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: i < 2 ? 16 : 0 }}>
-                <span style={{ width: 26, height: 26, borderRadius: 999, background: '#1D3C3E', color: '#F1F7E4', fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</span>
+                <span style={{ width: 26, height: 26, borderRadius: 999, background: '#1D3C3E', color: '#F6F1E7', fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</span>
                 <div>
-                  <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: '#2C2C2A' }}>{s.t}</div>
+                  <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: '#1D3C3E' }}>{s.t}</div>
                   <div className="text-mid" style={{ fontSize: 12 }}>{s.b}</div>
                 </div>
               </div>
@@ -1369,7 +1376,7 @@ export default async function DashboardPage() {
                   <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 15, fontWeight: 500, color: '#2C2C2A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 5, fontSize: 12.5 }}>
                     {p.ready
-                      ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#3B6D11', fontWeight: 500 }}><CircleCheck size={13} /> Ready to match</span>
+                      ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#1B6B3D', fontWeight: 600 }}><CircleCheck size={13} /> Ready to match</span>
                       : <span className="text-mid">Needs a few more details</span>}
                     {p.fitCount != null && p.fitCount > 0 ? <span className="text-mid">· {p.fitCount} funders fit</span> : null}
                     {p.budget ? <span className="text-mid">· £{p.budget.toLocaleString('en-GB')}</span> : null}
