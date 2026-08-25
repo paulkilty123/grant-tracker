@@ -411,10 +411,9 @@ function AddModal({
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-6 py-5 border-b border-warm flex justify-between items-start flex-shrink-0"
-             style={{ background: '#FAFAF7' }}>
+        <div className="px-6 py-5 border-b border-warm flex justify-between items-start flex-shrink-0">
           <div>
-            <h3 className="text-lg font-bold text-charcoal" style={{ fontFamily: "var(--font-space-grotesk)" }}>Add a fund not listed</h3>
+            <h3 className="text-lg font-bold" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#1D3C3E', letterSpacing: '-0.02em' }}>Add a fund not listed</h3>
             <p className="text-sm text-mid mt-0.5">Track a funding opportunity in your pipeline</p>
           </div>
           <button onClick={onClose} className="text-light hover:text-mid text-xl leading-none mt-0.5">✕</button>
@@ -467,7 +466,16 @@ function AddModal({
                 type="button"
                 onClick={handleAutofill}
                 disabled={autofilling || !urlInput.trim()}
-                className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold disabled:opacity-40 hover:opacity-80 transition-colors whitespace-nowrap" style={{ background: '#1D3C3E', color: '#F6F1E7', borderRadius: 999 }}
+                className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold hover:opacity-80 transition-colors whitespace-nowrap"
+                style={(() => {
+                  const off = autofilling || !urlInput.trim()
+                  return {
+                    borderRadius: 999,
+                    background: off ? '#F1EDE3' : '#1D3C3E',
+                    color:      off ? '#74736E' : '#F6F1E7',
+                    cursor:     off ? 'not-allowed' : 'pointer',
+                  }
+                })()}
               >
                 {autofilling
                   ? <><Loader2 className="w-3.5 h-3.5 animate-spin" />Filling…</>

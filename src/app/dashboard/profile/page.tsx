@@ -974,10 +974,14 @@ function CardShell({ title, badge, isEditing, onEdit, editDisabled, children, fo
             disabled={editDisabled}
             style={{
               fontFamily: UI, fontWeight: 500, fontSize: 13,
+              // No opacity on the disabled state. T.textTertiary is #74736E at
+              // 4.75:1, but halved it composites to roughly #BAB9B6 — about
+              // 2:1 — so the word "Edit" became unreadable at exactly the
+              // moment the user wants to know why they cannot click it. The
+              // tertiary colour alone says "not now" and stays legible.
               color: editDisabled ? T.textTertiary : T.textSecondary,
               background: 'transparent', border: 'none', cursor: editDisabled ? 'not-allowed' : 'pointer',
-              padding: '6px 10px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 6,
-              opacity: editDisabled ? 0.5 : 1,
+              padding: '7px 12px', borderRadius: 999, display: 'flex', alignItems: 'center', gap: 6,
             }}
           >
             <Pencil size={14} />
