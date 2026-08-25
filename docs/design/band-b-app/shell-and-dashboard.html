@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shoots — app shell &amp; dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#F6F1E7; --deep:#1D3C3E; --deep-hover:#16302F; --charcoal:#2E2E2E;
+  --ink-muted:#5F5E5A; --ink-placeholder:#74736E; --sage:#9BCA9D; --terra:#D67558;
+  --gold:#EBCE78; --danger:#B4472A; --sage-tint:#E1EFE2; --gold-tint:#F7ECCC;
+  --danger-tint:#FBEFEA; --warm-neutral:#F1EDE3;
+  --border-hair:rgba(29,60,62,.10); --border-ghost:rgba(29,60,62,.22);
+  --ui:"Space Grotesk",system-ui,sans-serif; --body:"Plus Jakarta Sans",system-ui,sans-serif;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:#EFE9DD;font-family:var(--body);color:var(--charcoal);-webkit-font-smoothing:antialiased;}
+.wrap{max-width:1240px;margin:0 auto;padding:40px 26px 90px;}
+.kicker{font-family:var(--ui);font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;font-weight:600;color:var(--ink-muted);margin:0 0 10px;}
+h1.doc{font-family:var(--ui);font-size:31px;font-weight:700;color:var(--deep);margin:0 0 8px;letter-spacing:-.02em;}
+p.doc{font-size:15.5px;line-height:1.65;color:var(--ink-muted);margin:0 0 28px;max-width:760px;}
+.sec{background:#fff;border:1px solid var(--border-hair);border-radius:18px;padding:24px 26px;margin-bottom:26px;box-shadow:0 1px 2px rgba(29,60,62,.03);}
+.sec.warn{border-left:4px solid var(--terra);}
+.sec.ok{border-left:4px solid var(--sage);}
+.sec h2{font-family:var(--ui);font-size:16.5px;font-weight:600;color:var(--deep);margin:0 0 6px;}
+.sec p{font-size:13.8px;line-height:1.65;color:var(--ink-muted);margin:0 0 9px;}
+.sec p:last-child{margin-bottom:0;}
+.sec b{color:var(--deep);}
+code{background:var(--cream);border-radius:5px;padding:1px 6px;font-size:12.3px;font-family:ui-monospace,Menlo,monospace;color:var(--charcoal);}
+.lab{font-family:var(--ui);display:flex;align-items:baseline;gap:11px;margin:32px 0 12px;flex-wrap:wrap;}
+.lab .n{font-size:10.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;background:var(--deep);color:var(--cream);border-radius:999px;padding:5px 11px;}
+.lab h3{font-size:18px;font-weight:600;color:var(--deep);margin:0;letter-spacing:-.01em;}
+.frame{width:100%;aspect-ratio:1440/900;overflow:hidden;position:relative;border-radius:16px;border:1px solid rgba(29,60,62,.14);box-shadow:0 2px 4px rgba(29,60,62,.04),0 16px 40px rgba(29,60,62,.09);margin-bottom:12px;}
+.canvas{width:1440px;height:900px;transform-origin:top left;position:absolute;top:0;left:0;display:flex;}
+.cap{font-size:12.6px;color:var(--ink-muted);text-align:center;margin:0 0 8px;line-height:1.6;}
+table{width:100%;border-collapse:collapse;font-size:13.2px;}
+th{text-align:left;font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-muted);padding:0 10px 9px 0;font-weight:600;border-bottom:1px solid var(--border-hair);}
+td{padding:9px 10px 9px 0;border-bottom:1px solid var(--border-hair);}
+td.n{font-variant-numeric:tabular-nums;font-weight:600;}
+.up{color:#2C6B3F;font-weight:600;} .dn{color:var(--danger);font-weight:600;}
+.sw{display:inline-block;width:15px;height:15px;border-radius:4px;vertical-align:-3px;margin-right:7px;border:1px solid var(--border-hair);}
+
+/* ---------- sidebar ---------- */
+.sb{width:250px;flex:0 0 250px;background:var(--deep);padding:20px 12px 12px;display:flex;flex-direction:column;}
+.sb .brand{display:flex;align-items:center;gap:8px;padding:0 10px 18px;}
+.sb .brand svg{width:24px;height:24px;}
+.sb .brand span{font-family:var(--ui);font-weight:600;font-size:21px;color:var(--cream);letter-spacing:-.01em;}
+.nv{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:10px;font-family:var(--ui);font-size:14.5px;font-weight:500;
+    color:rgba(246,241,231,.80);margin-bottom:2px;}
+.nv svg{width:17px;height:17px;stroke:rgba(246,241,231,.70);fill:none;stroke-width:1.9;}
+.nv.on{background:rgba(246,241,231,.10);color:var(--cream);font-weight:600;}
+.nv.on svg{stroke:var(--sage);}
+.nv .badge{margin-left:auto;font-size:11px;font-weight:700;background:var(--sage);color:var(--deep);border-radius:999px;padding:3px 8px;}
+.sbdiv{height:1px;background:rgba(246,241,231,.10);margin:12px 8px;}
+.sbfoot{margin-top:auto;display:flex;align-items:center;gap:10px;padding:11px 10px;border-top:1px solid rgba(246,241,231,.10);}
+.sbfoot .av{width:30px;height:30px;border-radius:9px;background:var(--sage);color:var(--deep);font-family:var(--ui);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;}
+.sbfoot .who{display:block;font-family:var(--ui);font-size:13.5px;font-weight:600;color:var(--cream);line-height:1.25;}
+.sbfoot .sub{display:block;font-size:11.5px;color:rgba(246,241,231,.62);}
+
+/* ---------- page ---------- */
+.pg{flex:1;background:var(--cream);padding:34px 40px;overflow:hidden;}
+.pgh{font-family:var(--ui);font-size:31px;font-weight:600;letter-spacing:-.025em;color:var(--deep);margin:0 0 6px;}
+.pgs{font-size:15px;color:var(--ink-muted);margin:0 0 26px;}
+.heroA{background:var(--deep);border-radius:20px;padding:32px 34px;position:relative;overflow:hidden;margin-bottom:30px;}
+.heroA svg.wm{position:absolute;right:-50px;bottom:-70px;width:280px;height:280px;opacity:.07;}
+.pill{display:inline-flex;align-items:center;gap:8px;font-family:var(--ui);font-size:11.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;
+  background:rgba(246,241,231,.13);color:var(--cream);border-radius:999px;padding:6px 13px;margin-bottom:16px;}
+.pill i{width:6px;height:6px;border-radius:50%;background:var(--sage);display:block;}
+.heroA h2{font-family:var(--ui);font-size:31px;font-weight:600;letter-spacing:-.025em;color:var(--cream);margin:0 0 10px;position:relative;}
+.heroA p{font-size:14.8px;line-height:1.6;color:rgba(246,241,231,.76);margin:0 0 22px;max-width:620px;position:relative;}
+.btnp{font-family:var(--ui);font-size:15px;font-weight:600;background:var(--cream);color:var(--deep);border-radius:999px;padding:12px 26px;display:inline-flex;align-items:center;gap:9px;position:relative;}
+.sech{font-family:var(--ui);font-size:19px;font-weight:600;color:var(--deep);letter-spacing:-.01em;margin:0 0 14px;}
+.list{background:#fff;border:1px solid var(--border-hair);border-radius:16px;overflow:hidden;}
+.row{display:flex;align-items:center;gap:14px;padding:17px 20px;border-bottom:1px solid var(--border-hair);}
+.row:last-child{border-bottom:0;}
+.row.now{background:var(--sage-tint);}
+.dot{width:34px;height:34px;border-radius:50%;flex:0 0 34px;display:flex;align-items:center;justify-content:center;font-family:var(--ui);font-weight:700;font-size:14px;}
+.dot.done{background:var(--deep);color:var(--cream);}
+.dot.now{background:#fff;border:2px solid var(--deep);color:var(--deep);}
+.dot.todo{background:#fff;border:1.5px solid var(--border-ghost);color:var(--ink-placeholder);}
+.row .t{display:block;font-family:var(--ui);font-size:15px;font-weight:600;color:var(--deep);}
+.row .d{display:block;font-size:13.2px;color:var(--ink-muted);margin-top:2px;}
+.row > span:nth-child(2){flex:1;min-width:0;}
+.row .go{margin-left:auto;font-family:var(--ui);font-size:14px;font-weight:600;background:var(--deep);color:var(--cream);border-radius:999px;padding:9px 20px;display:inline-flex;gap:7px;align-items:center;}
+@media(max-width:700px){.wrap{padding:22px 12px 60px}h1.doc{font-size:24px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<p class="kicker">Shoots rebrand · Band B · pass 1</p>
+<h1 class="doc">App shell &amp; dashboard — option A</h1>
+<p class="doc">Deep hero panel, as chosen. Every line reference and colour value below has been read out of the repo or computed, not recalled.</p>
+
+<div class="sec warn">
+  <h2>Correction to the cover note I sent earlier</h2>
+  <p>That note referenced a companion mockup under a filename that did not exist. A mockup <i>had</i> been built — as <code>shoots-app-shell.html</code> — but the note named it something else, and the repo write used a file id that did not resolve. I then reported that failure to you as a transient 503, which was a guess presented as a diagnosis. I also told you, wrongly, that the mockup had never been built at all. This file supersedes both.</p>
+  <p>The note's line numbers and contrast figures were also written from recall rather than measurement. I have since checked all of them against the working tree: <code>Sidebar.tsx</code> <code>SB</code> block at 71–82, forest painted at 234 and 433, lime badge at 356, <code>MAIN_NAV</code> at 84–90; <code>dashboard/page.tsx</code> headline 445, hero gradient 458, CTAs 487 and 497, checklist 515–560, ladder 343–347. All correct as written, and the sidebar ratios recompute to the same figures. That was luck, not method — treat this file as the checked version.</p>
+</div>
+
+<!-- FULL PAGE -->
+<div class="lab"><span class="n">A</span><h3>Dashboard, admin view</h3></div>
+<div class="frame"><div class="canvas">
+  <div class="sb">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" fill="none"><path d="M16 29V13" stroke="#F6F1E7" stroke-width="2.4" stroke-linecap="round"/><path d="M16 15C16 9 11 5 5 5c0 6 5 10 11 10z" fill="#F6F1E7"/><path d="M16.5 19c0-4.5 3.8-7.5 8.5-7.5 0 4.5-3.8 7.5-8.5 7.5z" fill="#9BCA9D"/></svg>
+      <span>shoots</span>
+    </div>
+    <div class="nv on"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Dashboard</div>
+    <div class="nv"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>Find Funding</div>
+    <div class="nv"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Deadlines</div>
+    <div class="nv"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg>Profile<span class="badge">86%</span></div>
+    <div class="nv"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>Pipeline</div>
+    <div class="sbdiv"></div>
+    <div class="nv"><svg viewBox="0 0 24 24"><path d="M3 8l9-5 9 5-9 5z"/><path d="M3 8v8l9 5 9-5V8"/></svg>Review queue</div>
+    <div class="nv"><svg viewBox="0 0 24 24"><path d="M4 20V8M9 20V4M14 20v-9M19 20V6"/></svg>Catalogue</div>
+    <div class="nv"><svg viewBox="0 0 24 24"><path d="M3 12h4l3 7 4-14 3 7h4"/></svg>Grant Health</div>
+    <div class="nv"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>Grant Manager</div>
+    <div class="nv"><svg viewBox="0 0 24 24"><path d="M4 20V9M10 20V5M16 20v-8M22 20v-5"/></svg>Tagging Quality</div>
+    <div class="nv"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.4"/><circle cx="17" cy="9" r="2.6"/><path d="M3 20c0-3.2 2.7-5 6-5s6 1.8 6 5M16 20c0-2 .6-3.4 2-4.2"/></svg>Cohort Matches</div>
+    <div class="nv"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M4 20c0-3.6 3.4-6 8-6s8 2.4 8 6"/></svg>Users</div>
+    <div class="sbfoot"><span class="av">C</span><span><span class="who">Centrepoint</span><span class="sub">Account</span></span></div>
+  </div>
+  <div class="pg">
+    <div class="pgh">Welcome to Shoots, Paul.</div>
+    <div class="pgs">Your profile's complete — time to find some funding.</div>
+    <div class="heroA">
+      <svg class="wm" viewBox="0 0 32 32" fill="none"><path d="M16 29V13" stroke="#F6F1E7" stroke-width="2.4" stroke-linecap="round"/><path d="M16 15C16 9 11 5 5 5c0 6 5 10 11 10z" fill="#F6F1E7"/><path d="M16.5 19c0-4.5 3.8-7.5 8.5-7.5 0 4.5-3.8 7.5-8.5 7.5z" fill="#F6F1E7"/></svg>
+      <div class="pill"><i></i>288 matches ready</div>
+      <h2>We've found funding that fits your profile.</h2>
+      <p>Browse your matches, save the ones worth a closer look, and move them into your pipeline when you're ready to apply. Everything you do here feeds the matching — the more you engage, the sharper it gets.</p>
+      <span class="btnp">See my matches <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 12h13M12.5 6l6 6-6 6" stroke="#1D3C3E" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    </div>
+    <div class="sech">Getting started</div>
+    <div class="list">
+      <div class="row">
+        <span class="dot done"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.6 4.5L19 7.5" stroke="#F6F1E7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <span><span class="t">Complete your profile</span><span class="d">Nice work — matches are running against your org now.</span></span>
+      </div>
+      <div class="row now">
+        <span class="dot now">2</span>
+        <span><span class="t">Browse your first matches</span><span class="d">288 opportunities scored against your profile.</span></span>
+        <span class="go">Start <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h13M12.5 6l6 6-6 6" stroke="#F6F1E7" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      </div>
+      <div class="row">
+        <span class="dot todo">3</span>
+        <span><span class="t">Save your first opportunity</span><span class="d">Bookmark anything worth a closer look.</span></span>
+      </div>
+    </div>
+  </div>
+</div></div>
+<p class="cap">Headline reads <b>Shoots</b>, not Grant Tracker — <code>dashboard/page.tsx:445</code> is one of 27 user-facing strings still carrying the old name.</p>
+
+<!-- SIDEBAR ALPHAS -->
+<div class="sec">
+  <h2>Sidebar — the alpha bump is load-bearing</h2>
+  <p>Forest <code>#173404</code> is darker than deep <code>#1D3C3E</code>, so every alpha-based colour <i>loses</i> contrast when the background lightens. Swapping only the background quietly drifts the whole sidebar down. Computed, not estimated:</p>
+  <table>
+    <thead><tr><th>Element</th><th>On forest today</th><th>On deep, alpha unchanged</th><th>On deep, proposed</th></tr></thead>
+    <tbody>
+      <tr><td>Nav label, inactive</td><td class="n">7.04:1</td><td class="n dn">6.29:1</td><td class="n up">7.40:1 @ .80</td></tr>
+      <tr><td>Nav icon, inactive</td><td class="n">4.76:1</td><td class="n dn">4.39:1</td><td class="n up">6.07:1 @ .70</td></tr>
+      <tr><td>Brand / active label</td><td class="n">12.18:1</td><td class="n">10.55:1</td><td class="n">10.55:1</td></tr>
+      <tr><td>Accent (lime → sage)</td><td class="n">7.03:1</td><td class="n">—</td><td class="n">6.41:1</td></tr>
+    </tbody>
+  </table>
+  <p style="margin-top:12px;">Nothing fails either way — icons are non-text UI at a 3:1 floor — but the drift is the wrong direction and invisible without measuring. Change the alphas in the same commit as the background, or don't change the background.</p>
+</div>
+
+<!-- LADDER -->
+<div class="sec">
+  <h2>Pipeline stage ladder — <code>dashboard/page.tsx:343–347</code></h2>
+  <p>A colour <i>system</i>, not a page style: the Pipeline page reads it too. Keeps the property that matters — it darkens monotonically toward Won, so progression survives greyscale instead of depending on hue.</p>
+  <table>
+    <thead><tr><th>Stage</th><th>Today</th><th>New background</th><th>Text</th><th>Ratio</th></tr></thead>
+    <tbody>
+      <tr><td>Identified</td><td><span class="sw" style="background:#F5F1E8"></span>#F5F1E8</td><td><span class="sw" style="background:#F1EDE3"></span>#F1EDE3</td><td><code>--ink-muted</code></td><td class="n up">5.55:1</td></tr>
+      <tr><td>Applying</td><td><span class="sw" style="background:#EAF3DE"></span>#EAF3DE</td><td><span class="sw" style="background:#E1EFE2"></span>--sage-tint</td><td><code>--deep</code></td><td class="n up">9.98:1</td></tr>
+      <tr><td>Submitted</td><td><span class="sw" style="background:#C0DD97"></span>#C0DD97</td><td><span class="sw" style="background:#9BCA9D"></span>--sage</td><td><code>--deep</code></td><td class="n up">6.41:1</td></tr>
+      <tr><td>Won</td><td><span class="sw" style="background:#639922"></span>#639922</td><td><span class="sw" style="background:#1D3C3E"></span>--deep</td><td><code>--cream</code></td><td class="n up">10.55:1</td></tr>
+      <tr><td>Declined</td><td><span class="sw" style="background:#FAECE7"></span>#FAECE7</td><td><span class="sw" style="background:#FBEFEA"></span>--danger-tint</td><td><code>--danger</code></td><td class="n up">4.81:1</td></tr>
+    </tbody>
+  </table>
+  <p style="margin-top:12px;">One new token: <code>--warm-neutral #F1EDE3</code> for the pre-action stage. <code>--sage-tint</code> and <code>--danger-tint</code> already exist from the onboarding work. If you change the ladder here, check the Pipeline page consumes the same constant rather than a copy.</p>
+</div>
+
+<div class="sec warn">
+  <h2>What this does not cover</h2>
+  <p><b>The member sidebar.</b> Thirteen items above because <code>ADMIN_EMAIL</code> at <code>Sidebar.tsx:69</code> is your address. <code>MAIN_NAV</code> is four entries plus Dashboard — <b>a real user sees five</b>, and everything below the divider vanishes. At that length the sidebar is mostly empty and the balance between nav, footer and dead space is a different problem. Don't tune spacing against this view.</p>
+  <p><b>Below the fold.</b> <code>dashboard/page.tsx</code> is 1,218 lines. The screenshots covered the hero and the top of the checklist; there is more page underneath, including a lime CTA at 736 and a lime progress fill at 785 that both need remapping.</p>
+  <p><b>Empty and edge states</b> — zero matches, incomplete profile, empty pipeline. The <code>profileComplete</code> branches at 515 and 555 already swap backgrounds and need re-checking against the new palette.</p>
+</div>
+
+</div>
+<script>
+function fit(){document.querySelectorAll('.frame').forEach(f=>{const c=f.querySelector('.canvas');c.style.transform='scale('+(f.clientWidth/1440)+')';});}
+window.addEventListener('resize',fit);document.fonts&&document.fonts.ready.then(fit);fit();
+</script>
+</body>
+</html>

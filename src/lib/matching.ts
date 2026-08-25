@@ -745,11 +745,23 @@ function normalizeStructureTokens(s: string): string[] {
  * Ceiling for a fund only individuals can apply for, scored against an
  * organisation.
  *
- * Below every ranked surface's threshold — Find Funding's "other matches" floor
- * is 60, the deadlines page filters at 55, and the size-floor cap is already 35
- * — so the fund never surfaces in a list, while still being reachable by direct
- * browse. That is the same de-rank-don't-disappear contract the hard structure
- * gate follows with its floor of 1.
+ * Below every threshold any surface applies, so the fund never surfaces in a
+ * ranked list while staying reachable by direct browse — the same
+ * de-rank-don't-disappear contract the hard structure gate follows with its
+ * floor of 1.
+ *
+ * The lines it has to sit under, checked 25 Aug 2026:
+ *
+ *   dashboard matches card   >= 50   (qualityBucket 'partial')
+ *   MATCH_FLOOR              >= 55   (deadlines, dashboard counts, projects)
+ *   Find Funding browse      no score floor — filters on structural eligibility
+ *
+ * THIS COMMENT USED TO CLAIM Find Funding had an "other matches" floor of 60.
+ * It does not, and there is no "other matches" concept on that page. The only
+ * 60 there is `score < 60 ? 2 : 1`, which decides how many warnings a card
+ * shows. The claim was cited as fact in a design spec and produced a wrong
+ * section before anyone checked it, so: do not restate a threshold from memory
+ * here. Read the surface.
  */
 const INDIVIDUAL_ONLY_SCORE_CAP = 5
 
@@ -1939,8 +1951,11 @@ export function computeMatchScore(
   }
 
   // Cap total score when grant size is materially below the org's stated
-  // minimum target. Below the 60% "Other matches" floor, so won't surface in
-  // newsletter top/other or in dashboard top matches; still browsable.
+  // minimum target. 35 sits below every threshold any surface applies — the
+  // dashboard's 50 and MATCH_FLOOR's 55 — so it will not surface in a ranked
+  // list while staying browsable. (Previously described as being below a 60%
+  // "Other matches" floor on Find Funding. No such floor exists; see the note
+  // on INDIVIDUAL_ONLY_SCORE_CAP.)
   if (sizeFloorTriggered) {
     score = Math.min(score, SIZE_FLOOR_SCORE_CAP)
   }

@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import MatchesCard, { type MatchScope, type MatchRow, type TypeKey, type ScopeKey } from './MatchesCard'
 import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { getDeadlineAlerts, formatCurrency, formatNextOpen } from '@/lib/utils'
@@ -298,6 +299,20 @@ export default async function DashboardPage() {
     if (m.score < 50) continue
     const ft = m.grant.fundingType ?? 'grant'
     typeCounts[ft] = (typeCounts[ft] ?? 0) + 1
+  }
+
+  /**
+   * Per-type tiers, from the walk that already buckets by quality.
+   *
+   * The filter needs the distribution scoped to each type, not just the total,
+   * or flipping to Grants would show a grants count above an all-types
+   * sub-line.
+   */
+  const tiersByType: Record<string, { strong: number; good: number; partial: number; weak: number }> = {}
+  for (const m of scoredAll) {
+    const ft = (m.grant.fundingType ?? 'grant') as string
+    tiersByType[ft] ??= { strong: 0, good: 0, partial: 0, weak: 0 }
+    tiersByType[ft][qualityBucket(m.score)]++
   }
 
   // Top 3 matches for the right column — three cards with full breathing room
@@ -840,212 +855,74 @@ export default async function DashboardPage() {
           { key: 'good',    label: 'Good',            count: qualityCounts.good,    colour: MATCH_TIER.good.dot },
           { key: 'partial', label: 'Worth exploring', count: qualityCounts.partial, colour: MATCH_TIER.partial.dot },
         ]
-        const TYPE_BAR: Record<string, { label: string; colour: string; pillBg: string; pillFg: string }> = {
-          grant:           { label: 'Grants',      colour: '#639922', pillBg: '#F1F7E4', pillFg: '#3B6D11' },
-          in_kind:         { label: 'In-kind',     colour: '#EF9F27', pillBg: '#FAEEDA', pillFg: '#854F0B' },
-          programme:       { label: 'Programmes',  colour: '#D85A30', pillBg: '#FAECE7', pillFg: '#993C1D' },
-          investment:      { label: 'Investment',  colour: '#85B7EB', pillBg: '#E6F1FB', pillFg: '#0C447C' },
-          accelerator:     { label: 'Accelerator', colour: '#D85A30', pillBg: '#FAECE7', pillFg: '#993C1D' },
-          blended_finance: { label: 'Blended',     colour: '#85B7EB', pillBg: '#E6F1FB', pillFg: '#0C447C' },
+        /**
+         * Five scopes, pre-scored here on the server.
+         *
+         * Everything the filter needs is handed to the client component as
+         * props, so flipping a tab is synchronous and offline — no fetch, no
+         * spinner, no loading state to design.
+         *
+         * The old TYPE_BAR lived here and is gone with the chart it fed. Its
+         * `accelerator` and `blended_finance` entries were unreachable anyway:
+         * the pool is filtered by CANONICAL_TYPES before scoring, so neither
+         * ever arrives. The validated palette now lives in MatchesCard.
+         */
+        const TYPE_KEYS = ['grant', 'programme', 'investment', 'in_kind'] as const
+
+        const shapeRow = (m: typeof scoredAll[number]): MatchRow => {
+          const amt = m.grant.amountMin || m.grant.amountMax
+            ? (m.grant.amountMin && m.grant.amountMax && m.grant.amountMin !== m.grant.amountMax
+                ? `${formatCurrency(m.grant.amountMin)}–${formatCurrency(m.grant.amountMax)}`
+                : formatCurrency(m.grant.amountMax || m.grant.amountMin || 0))
+            : 'Amount on application'
+
+          let deadlineLabel: string | null = null
+          let deadlineTone: 'urgent' | 'plain' | 'quiet' | null = null
+          if (m.grant.isRolling) {
+            deadlineLabel = 'Rolling'; deadlineTone = 'plain'
+          } else if (m.grant.deadline) {
+            const parts = m.grant.deadline.split('-').map(Number)
+            if (parts.length === 3) {
+              const due  = new Date(parts[0], parts[1] - 1, parts[2])
+              const days = Math.round((due.getTime() - Date.now()) / 86400000)
+              deadlineLabel = days < 0 ? 'Overdue' : days === 0 ? 'Today' : days === 1 ? 'Tomorrow'
+                : days <= 30 ? `${days}d left`
+                : due.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+              deadlineTone = days <= 30 ? 'urgent' : 'plain'
+            }
+          }
+          if (!deadlineLabel) {
+            // A shut fund expected back. Without this the slot rendered blank
+            // and a closed fund looked entirely live.
+            const reopens = formatNextOpen(m.grant.nextOpenDate)
+            if (reopens) { deadlineLabel = reopens; deadlineTone = 'quiet' }
+          }
+
+          return {
+            id: m.grant.id,
+            title: m.grant.title,
+            meta: `${m.grant.funder} · ${amt}`,
+            score: m.score,
+            fundingType: ((m.grant.fundingType ?? 'grant') as TypeKey),
+            deadlineLabel,
+            deadlineTone,
+            isInviteOnly: !!m.grant.isInviteOnly,
+          }
         }
-        const typeBars = Object.entries(typeCounts)
-          .map(([key, count]) => ({ key, count, ...(TYPE_BAR[key] ?? TYPE_BAR.grant) }))
-          .sort((a, b) => b.count - a.count)
-        const maxTypeCount = Math.max(1, ...typeBars.map(t => t.count))
+
+        const emptyTiers = { strong: 0, good: 0, partial: 0, weak: 0 }
+        const matchScopes: MatchScope[] = [
+          { key: 'all' as ScopeKey, actionable: actionableCount, tiers: qualityCounts, top: scoredAll.slice(0, 3).map(shapeRow) },
+          ...TYPE_KEYS.map(k => ({
+            key: k as ScopeKey,
+            actionable: typeCounts[k] ?? 0,
+            tiers: tiersByType[k] ?? emptyTiers,
+            top: scoredAll.filter(m => (m.grant.fundingType ?? 'grant') === k).slice(0, 3).map(shapeRow),
+          })),
+        ]
 
         return (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-8">
-            {/* LEFT — Worth your attention (50%) */}
-            <div className="card rounded-xl p-6">
-              {/* Stat block — label on its own line, then a baseline-aligned
-                  pair of [N matches] (large) and [of M total] (small grey).
-                  Number and unit are bound together as the headline; the
-                  "of M total" sits as the qualifier. */}
-              <div className="rounded-lg mb-5" style={{ background: '#F0EDE2', padding: 16 }}>
-                <p style={{ fontSize: 11, fontWeight: 500, letterSpacing: '0.5px', color: '#5F5E5A', textTransform: 'uppercase', fontFamily: 'var(--font-space-grotesk)', marginBottom: 6 }}>
-                  Worth your attention
-                </p>
-                <div className="flex items-baseline flex-wrap" style={{ gap: 10 }}>
-                  <span style={{ fontSize: 36, fontWeight: 500, color: '#2C2C2A', fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.02em', lineHeight: 1 }}>
-                    {actionableCount} matches
-                  </span>
-                  <span style={{ fontSize: 13, color: '#5F5E5A', fontFamily: 'var(--font-space-grotesk)' }}>
-                    of {totalMatchCount} total
-                  </span>
-                </div>
-              </div>
-
-              {/* Relevance breakdown — actionable group + capped lower-relevance
-                  segment. The lower segment's width is capped at 25% so the
-                  actionable matches always dominate the visual even when the
-                  catalogue has many low-score rows (e.g. 251 of 345 here would
-                  otherwise dominate). */}
-              {(() => {
-                const weak = qualityCounts.weak
-                const totalForBar = actionableCount + weak
-                const weakRatio = totalForBar > 0 ? weak / totalForBar : 0
-                // Cap the lower segment at 25% of the bar; below the cap, scales naturally
-                const cappedWeakRatio   = Math.min(weakRatio, 0.25)
-                const actionableRatio   = 1 - cappedWeakRatio
-                const showLower = weak > 0
-                return (
-                  <>
-                    {/* Label row — actionable group uses auto-sized columns
-                        so labels stay on one line each (Strong/Good narrow,
-                        Worth exploring wider). Equal-width grid wrapped
-                        "Worth exploring" onto two lines — auto sizing fixes. */}
-                    <div className="flex mb-3" style={{ gap: 4 }}>
-                      <div className="flex" style={{ flexGrow: actionableRatio * 100, flexBasis: 0, columnGap: 20 }}>
-                        {qualityCols.map(q => (
-                          <div key={q.key}>
-                            <p className="text-xs whitespace-nowrap" style={{ color: '#5F5E5A' }}>{q.label}</p>
-                            <p className="text-xl font-bold text-charcoal mt-0.5" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
-                              {q.count}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                      {showLower && (
-                        <div style={{ flexGrow: cappedWeakRatio * 100, flexBasis: 0, opacity: 0.6 }}>
-                          <p className="text-xs" style={{ color: '#5F5E5A', lineHeight: 1.2 }}>Less relevant</p>
-                          <p className="font-bold text-charcoal mt-0.5" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 15 }}>
-                            {weak}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                    {/* Bar — same flex ratios as label row above */}
-                    <div className="flex h-2 mb-4" style={{ gap: 4 }}>
-                      <div className="flex rounded-full overflow-hidden" style={{ flexGrow: actionableRatio * 100, flexBasis: 0, background: '#F0EDE2' }}>
-                        {qualityCols.filter(q => q.count > 0).map(q => (
-                          <div key={q.key} style={{ flexGrow: q.count, background: q.colour }} />
-                        ))}
-                      </div>
-                      {showLower && (
-                        <div className="rounded-full" style={{ flexGrow: cappedWeakRatio * 100, flexBasis: 0, background: '#D3D1C7' }} />
-                      )}
-                    </div>
-                  </>
-                )
-              })()}
-
-              {/* Browse-all link — discoverable but not styled as a primary CTA.
-                  No URL params: takes the user to the unfiltered Find Funding
-                  view so the totals on both pages match exactly. */}
-              <a href="/dashboard/search" className="text-xs underline mb-6 inline-block hover:text-charcoal transition-colors" style={{ color: '#5F5E5A', fontFamily: 'var(--font-space-grotesk)' }}>
-                Browse all {totalMatchCount} matches →
-              </a>
-
-              {/* By funding type — actionable subset (score ≥ 50) only */}
-              <p className="uppercase mb-3" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#5F5E5A', fontSize: 12, letterSpacing: '0.06em', fontWeight: 500 }}>
-                By funding type
-              </p>
-              <div className="space-y-3">
-                {typeBars.map(t => (
-                  <div key={t.key} className="flex items-center gap-3">
-                    <span className="flex-shrink-0" style={{ color: '#2C2C2A', width: 100, fontSize: 13 }}>{t.label}</span>
-                    <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: '#F0EDE2' }}>
-                      <div className="h-full rounded-full" style={{ width: `${(t.count / maxTypeCount) * 100}%`, background: t.colour }} />
-                    </div>
-                    <span className="font-semibold text-charcoal flex-shrink-0 text-right" style={{ fontFamily: 'var(--font-space-grotesk)', width: 40, fontSize: 13 }}>
-                      {t.count}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* RIGHT — Top matches for you (50%). flex-col + flex-1 on the
-                matches container so the 3 cards stretch to fill the panel
-                height (matches the left panel's height; each card gets full
-                breathing room). */}
-            <div className="card rounded-xl p-6 flex flex-col">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
-                  Top matches for you
-                </h3>
-                <a href="/dashboard/search?actionable=1" className="text-xs font-semibold hover:underline" style={{ color: '#3B6D11', fontFamily: 'var(--font-space-grotesk)' }}>
-                  See all {actionableCount} →
-                </a>
-              </div>
-              <div className="flex-1 flex flex-col gap-2">
-                {topMatches.map(m => {
-                  const ft = m.grant.fundingType ?? 'grant'
-                  const cfg = TYPE_BAR[ft] ?? TYPE_BAR.grant
-                  const pct = Math.round(m.score)
-                  const amt = m.grant.amountMin || m.grant.amountMax
-                    ? (m.grant.amountMin && m.grant.amountMax && m.grant.amountMin !== m.grant.amountMax
-                        ? `${formatCurrency(m.grant.amountMin)}–${formatCurrency(m.grant.amountMax)}`
-                        : formatCurrency(m.grant.amountMax || m.grant.amountMin || 0))
-                    : 'Amount on application'
-
-                  // Deadline string for the meta line. Rolling/null gracefully
-                  // handled. ≤30d shows in coral, beyond 30d in grey, format
-                  // collapses to "Nd" when imminent and "DD MMM" beyond.
-                  let deadlineNode: React.ReactNode = null
-                  if (m.grant.isRolling) {
-                    deadlineNode = <span style={{ color: '#5F5E5A' }}>Rolling</span>
-                  } else if (m.grant.deadline) {
-                    const parts = m.grant.deadline.split('-').map(Number)
-                    if (parts.length === 3) {
-                      const dueDate = new Date(parts[0], parts[1] - 1, parts[2])
-                      const daysLeft = Math.round((dueDate.getTime() - Date.now()) / 86400000)
-                      let txt: string
-                      if (daysLeft < 0)        txt = 'Overdue'
-                      else if (daysLeft === 0) txt = 'Today'
-                      else if (daysLeft === 1) txt = 'Tomorrow'
-                      else if (daysLeft <= 30) txt = `${daysLeft}d left`
-                      else txt = dueDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-                      const urgent = daysLeft <= 30
-                      deadlineNode = <span style={{ color: urgent ? '#993C1D' : '#5F5E5A', fontWeight: urgent ? 600 : 400 }}>{txt}</span>
-                    }
-                  }
-                  // Closed but expected back. Without this the slot rendered
-                  // blank, and a shut fund is indistinguishable from an open one
-                  // — GM Mayor's Charity sat at #2 for a Manchester homelessness
-                  // charity looking entirely live.
-                  if (!deadlineNode) {
-                    const reopens = formatNextOpen(m.grant.nextOpenDate)
-                    if (reopens) {
-                      deadlineNode = <span style={{ color: '#8A8986' }}>{reopens}</span>
-                    }
-                  }
-
-                  return (
-                    <a key={m.grant.id} href={`/dashboard/search?grant=${encodeURIComponent(m.grant.id)}`}
-                      className="relative flex flex-col justify-center gap-2 rounded-lg pl-5 pr-4 py-4 hover:bg-[#F5F1E8] hover:translate-x-0.5 transition-all overflow-hidden group flex-1"
-                      style={{ background: '#FAFAF7' }}>
-                      <div className="absolute top-2 bottom-2 left-0 w-[3px] rounded-r" style={{ background: cfg.colour }} />
-                      {/* Top row — title + percentage pill */}
-                      <div className="flex items-center gap-3 min-w-0">
-                        <p className="flex-1 text-[15px] font-semibold text-charcoal truncate" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
-                          {m.grant.title}
-                        </p>
-                        <span className="flex-shrink-0 text-xs font-bold px-2.5 py-1 rounded-full" style={{ background: cfg.pillBg, color: cfg.pillFg, fontFamily: 'var(--font-space-grotesk)' }}>
-                          {pct}%
-                        </span>
-                      </div>
-                      {/* Second row — type chip + funder · amount [· deadline] */}
-                      <div className="flex items-center gap-1.5 flex-wrap text-xs min-w-0">
-                        <span className="font-semibold uppercase px-1.5 py-0.5 rounded flex-shrink-0" style={{ background: cfg.pillBg, color: cfg.pillFg, fontSize: 10, letterSpacing: '0.04em', fontFamily: 'var(--font-space-grotesk)' }}>
-                          {cfg.label.replace(/s$/, '')}
-                        </span>
-                        {m.grant.isInviteOnly && (
-                          <span className="flex-shrink-0 inline-flex items-center gap-0.5 rounded-full" style={{ background: '#F3EDFA', color: '#6B21A8', fontSize: 10, padding: '2px 7px', fontWeight: 500, fontFamily: 'var(--font-dm-sans)' }}>
-                            ✉ Invite only
-                          </span>
-                        )}
-                        <span style={{ color: '#5F5E5A' }} className="truncate min-w-0">
-                          {m.grant.funder} · {amt}
-                          {deadlineNode && <> · {deadlineNode}</>}
-                        </span>
-                      </div>
-                    </a>
-                  )
-                })}
-              </div>
-            </div>
-          </div>
+          <MatchesCard scopes={matchScopes} totalScored={totalMatchCount} />
         )
       })()}
 

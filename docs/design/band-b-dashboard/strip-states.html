@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shoots — one strip style, three states</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#F6F1E7; --deep:#1D3C3E; --charcoal:#2E2E2E; --ink-muted:#5F5E5A;
+  --warm-neutral:#F1EDE3;
+  --sage:#9BCA9D; --gold:#EBCE78; --sky:#ABCBEE; --teal:#4EAAB4; --terra:#D67558;
+  --tint-sage:#E3F0E4; --tint-gold:#F9F1D9; --tint-sky:#E7F0FA; --tint-teal:#CDE7EA; --tint-terra:#F4D8D0;
+  --fg-sage:#1B6B3D; --fg-gold:#7A5E11; --fg-sky:#2A5A85; --fg-teal:#1F5F66; --fg-terra:#8C3B28;
+  --danger:#B4472A; --danger-tint:#FBEFEA;
+  --border-hair:rgba(29,60,62,.10); --border-ghost:rgba(29,60,62,.22);
+  --ui:"Space Grotesk",system-ui,sans-serif; --body:"Plus Jakarta Sans",system-ui,sans-serif;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:#EFE9DD;font-family:var(--body);color:var(--charcoal);-webkit-font-smoothing:antialiased;}
+.wrap{max-width:1180px;margin:0 auto;padding:40px 26px 90px;}
+.kicker{font-family:var(--ui);font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;font-weight:600;color:var(--ink-muted);margin:0 0 10px;}
+h1.doc{font-family:var(--ui);font-size:31px;font-weight:700;color:var(--deep);margin:0 0 8px;letter-spacing:-.02em;}
+p.doc{font-size:15.5px;line-height:1.65;color:var(--ink-muted);margin:0 0 26px;max-width:790px;}
+.sec{background:#fff;border:1px solid var(--border-hair);border-radius:18px;padding:24px 26px;margin-bottom:22px;box-shadow:0 1px 2px rgba(29,60,62,.03);}
+.sec.warn{border-left:4px solid var(--terra);}
+.sec h2{font-family:var(--ui);font-size:16.5px;font-weight:600;color:var(--deep);margin:0 0 7px;}
+.sec p{font-size:13.8px;line-height:1.68;color:var(--ink-muted);margin:0 0 10px;}
+.sec p:last-child{margin-bottom:0;}
+.sec b{color:var(--deep);}
+code{background:var(--cream);border-radius:5px;padding:1px 6px;font-size:12.2px;font-family:ui-monospace,Menlo,monospace;color:var(--charcoal);}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{text-align:left;font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-muted);padding:0 12px 9px 0;font-weight:600;border-bottom:1px solid var(--border-hair);}
+td{padding:9px 12px 9px 0;border-bottom:1px solid var(--border-hair);}
+td.n{font-variant-numeric:tabular-nums;font-weight:600;}
+.bad{color:var(--danger);font-weight:600;} .good{color:#2C6B3F;font-weight:600;}
+.sw{display:inline-block;width:15px;height:15px;border-radius:4px;vertical-align:-3px;margin-right:7px;border:1px solid var(--border-hair);}
+.lab{font-family:var(--ui);display:flex;align-items:baseline;gap:11px;margin:30px 0 12px;flex-wrap:wrap;}
+.lab .n{font-size:10.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;background:var(--deep);color:var(--cream);border-radius:999px;padding:5px 11px;}
+.lab .n.no{background:var(--danger);}
+.lab h3{font-size:18px;font-weight:600;color:var(--deep);margin:0;letter-spacing:-.01em;}
+.lab .w{font-size:12.6px;color:var(--ink-muted);}
+.stage{background:#EDE7DA;border:1px solid var(--border-hair);border-radius:16px;padding:24px 22px;margin-bottom:10px;}
+.cap{font-size:12.6px;color:var(--ink-muted);margin:0 0 6px;line-height:1.6;}
+
+/* the one strip */
+.strip{background:#fff;border:1px solid var(--border-hair);border-radius:18px;padding:20px 22px 18px;position:relative;overflow:hidden;}
+.strip.hot{border-top:3px solid var(--danger);}
+.hd{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.hd h2{font-family:var(--ui);font-size:18px;font-weight:600;color:var(--deep);margin:0;letter-spacing:-.015em;}
+.hd .sub{font-size:12.8px;color:var(--ink-muted);}
+.hd .flag{font-family:var(--ui);font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:var(--danger);color:#FDF6F3;border-radius:999px;padding:4px 10px;}
+.row{display:grid;gap:11px;}
+.row.c3{grid-template-columns:1fr 1fr 1fr;} .row.c2{grid-template-columns:1fr 1fr;}
+.si{border-radius:14px;padding:15px 16px;display:flex;flex-direction:column;border:1px solid rgba(29,60,62,.08);}
+.si .ic{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:11px;}
+.si .k{font-family:var(--ui);font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;gap:7px;}
+.si .k .cd{font-family:var(--ui);font-size:9.5px;font-weight:700;background:var(--danger);color:#FDF6F3;border-radius:5px;padding:2px 6px;letter-spacing:.04em;}
+.si .t{font-family:var(--ui);font-size:15.5px;font-weight:600;color:var(--deep);line-height:1.3;margin-bottom:5px;}
+.si .m{font-size:12.6px;color:var(--ink-muted);margin-bottom:14px;line-height:1.45;}
+.si .go{margin-top:auto;font-family:var(--ui);font-size:13px;font-weight:600;color:var(--cream);background:var(--deep);border-radius:999px;padding:8px 16px;align-self:flex-start;}
+.si .go.gh{background:transparent;color:var(--deep);border:1.5px solid rgba(29,60,62,.30);padding:6.5px 14.5px;}
+.si.terra{background:var(--tint-terra);border-color:rgba(140,59,40,.16);} .si.terra .ic{background:var(--terra);} .si.terra .k{color:var(--fg-terra);}
+.si.sage{background:var(--tint-sage);} .si.sage .ic{background:var(--sage);} .si.sage .k{color:var(--fg-sage);}
+.si.gold{background:var(--tint-gold);} .si.gold .ic{background:var(--gold);} .si.gold .k{color:var(--fg-gold);}
+.si.sky{background:var(--tint-sky);}  .si.sky .ic{background:var(--sky);}  .si.sky .k{color:var(--fg-sky);}
+
+/* old deep version, for comparison */
+.act{background:var(--deep);border-radius:18px;padding:20px 22px 18px;}
+.act .hd h2{color:var(--cream);} .act .hd .sub{color:rgba(246,241,231,.66);}
+.ai{border-radius:13px;padding:13px 14px;display:flex;flex-direction:column;border:1px solid;}
+.ai .ic{width:31px;height:31px;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:9px;}
+.ai .k{font-family:var(--ui);font-size:9.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;margin-bottom:6px;display:block;}
+.ai .t{font-family:var(--ui);font-size:14.6px;font-weight:600;color:var(--cream);line-height:1.3;margin-bottom:4px;}
+.ai .m{font-size:12.2px;color:rgba(246,241,231,.64);margin-bottom:12px;line-height:1.45;}
+.ai .go{margin-top:auto;font-family:var(--ui);font-size:12.5px;font-weight:600;color:var(--deep);background:var(--cream);border-radius:999px;padding:7.5px 15px;align-self:flex-start;}
+.ai.urg{background:rgba(214,117,88,.16);border-color:rgba(214,117,88,.34);} .ai.urg .k{color:#F0B9A5;} .ai.urg .ic{background:var(--terra);}
+.ai.str{background:rgba(155,202,157,.15);border-color:rgba(155,202,157,.32);} .ai.str .k{color:var(--sage);} .ai.str .ic{background:var(--sage);}
+.ai.nxt{background:rgba(235,206,120,.14);border-color:rgba(235,206,120,.30);} .ai.nxt .k{color:var(--gold);} .ai.nxt .ic{background:var(--gold);}
+
+/* clear */
+.clear{display:flex;align-items:center;gap:13px;background:var(--tint-sage);border:1px solid rgba(29,60,62,.10);border-radius:14px;padding:15px 18px;}
+.clear .ic{width:32px;height:32px;border-radius:10px;background:var(--sage);display:flex;align-items:center;justify-content:center;flex:0 0 32px;}
+.clear .t{font-family:var(--ui);font-size:14.6px;font-weight:600;color:var(--deep);display:block;}
+.clear .m{font-size:12.8px;color:var(--ink-muted);display:block;margin-top:2px;}
+.clear .go{margin-left:auto;font-family:var(--ui);font-size:13px;font-weight:600;color:var(--deep);border-bottom:1.5px solid rgba(29,60,62,.28);padding-bottom:1px;white-space:nowrap;}
+@media(max-width:760px){.wrap{padding:22px 12px 60px}h1.doc{font-size:24px}.row.c3,.row.c2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<p class="kicker">Shoots rebrand · Band B · strip style</p>
+<h1 class="doc">You're right — the light style should win everywhere</h1>
+<p class="doc">I argued the panel should go deep when something is urgent. Measuring it says otherwise: the deep version destroys the colour system it contains. One container style, urgency carried by the slot and the header instead.</p>
+
+<div class="sec warn">
+  <h2>Why the deep version was the wrong call</h2>
+  <p>On a deep panel the tinted slots don't stay tints — they composite against <code>#1D3C3E</code> and come out as near-identical dark greys:</p>
+  <table>
+    <thead><tr><th>Slot</th><th>Intended</th><th>What it actually renders as</th><th>Separation from panel</th></tr></thead>
+    <tbody>
+      <tr><td>Urgent</td><td><span class="sw" style="background:#D67558"></span>terracotta</td><td><span class="sw" style="background:#3b4542"></span>#3B4542</td><td class="n bad">1.20:1</td></tr>
+      <tr><td>Strong match</td><td><span class="sw" style="background:#9BCA9D"></span>sage</td><td><span class="sw" style="background:#30514c"></span>#30514C</td><td class="n bad">1.36:1</td></tr>
+      <tr><td>Nearly written</td><td><span class="sw" style="background:#EBCE78"></span>gold</td><td><span class="sw" style="background:#3a5046"></span>#3A5046</td><td class="n bad">1.37:1</td></tr>
+    </tbody>
+  </table>
+  <p style="margin-top:12px;">Three hues in, three muddy greys out, none of them separable from the panel or from each other. The icon tiles still carry colour, but the slots themselves stop meaning anything. <b>I'd just spent a pass adding colour and then put it on a surface that eats it.</b></p>
+  <p>On white the same three tints give <b>8.8–10.5:1</b> for deep text and stay recognisably terracotta, sage and gold.</p>
+</div>
+
+<!-- URGENT, light -->
+<div class="lab"><span class="n">1</span><h3>Urgent — same content, light style</h3><span class="w">two funds close in six days</span></div>
+<div class="stage">
+  <div class="strip hot">
+    <div class="hd"><h2>Needs you this week</h2><span class="flag">2 close in 6 days</span><span class="sub">Everything else can wait.</span></div>
+    <div class="row c3">
+      <div class="si terra"><span class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.4" stroke="#1D3C3E" stroke-width="2"/><path d="M12 7.6V12l2.9 2" stroke="#1D3C3E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="k">Closing <span class="cd">6d</span></span><span class="t">The Democratic Engagement Fund</span><span class="m">Not started. LNER Customer &amp; Community also closes 31 Aug.</span><span class="go">Start application</span></div>
+      <div class="si sage"><span class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 4l2.3 5 5.4.6-4 3.7 1.1 5.3L12 15.9 7.2 18.6l1.1-5.3-4-3.7 5.4-.6z" stroke="#1D3C3E" stroke-width="1.9" stroke-linejoin="round"/></svg></span><span class="k">Your only strong match</span><span class="t">NCVO Learning &amp; Development</span><span class="m">83% fit · in-kind · amount on application</span><span class="go">Review match</span></div>
+      <div class="si gold"><span class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M4 20h4L19.5 8.5a2.1 2.1 0 00-3-3L5 17v3z" stroke="#1D3C3E" stroke-width="1.9" stroke-linejoin="round"/></svg></span><span class="k">Nearly written</span><span class="t">National Lottery Awards for All</span><span class="m">4 of 9 answered · Sea Change project</span><span class="go">Continue writing</span></div>
+    </div>
+  </div>
+</div>
+<p class="cap">Urgency lives in three places, none of which is the whole panel: a danger rule along the top edge, a danger flag beside the heading, and the leading slot in terracotta with a solid countdown pill.</p>
+
+<!-- STEADY -->
+<div class="lab"><span class="n">2</span><h3>Steady</h3><span class="w">work to do, no clock</span></div>
+<div class="stage">
+  <div class="strip">
+    <div class="hd"><h2>Where to pick up</h2><span class="sub">Nothing closes for 3 weeks.</span></div>
+    <div class="row c3">
+      <div class="si sage"><span class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 4l2.3 5 5.4.6-4 3.7 1.1 5.3L12 15.9 7.2 18.6l1.1-5.3-4-3.7 5.4-.6z" stroke="#1D3C3E" stroke-width="1.9" stroke-linejoin="round"/></svg></span><span class="k">Your only strong match</span><span class="t">NCVO Learning &amp; Development</span><span class="m">83% fit · in-kind · no deadline listed</span><span class="go">Review match</span></div>
+      <div class="si gold"><span class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M9.5 18h5M10.5 20.5h3M12 3.5a5.5 5.5 0 00-3.2 10c.3.3.5.7.5 1.1h5.4c0-.4.2-.8.5-1.1A5.5 5.5 0 0012 3.5z" stroke="#1D3C3E" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="k">Ready, not applied to</span><span class="t">Sea Change: surf and wellbeing</span><span class="m">19 funders fit · £18,000 · 0 applications</span><span class="go">Find funders</span></div>
+      <div class="si sky"><span class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 3.5l1.6 4.4 4.4 1.6-4.4 1.6L12 15.5l-1.6-4.4L6 9.5l4.4-1.6zM18 15l.8 2.2 2.2.8-2.2.8L18 21l-.8-2.2-2.2-.8 2.2-.8z" stroke="#1D3C3E" stroke-width="1.6" stroke-linejoin="round"/></svg></span><span class="k">New since Monday</span><span class="t">35 new matches</span><span class="m">Added to your pool this week · 6 of them good or better</span><span class="go gh">Browse matches</span></div>
+    </div>
+  </div>
+</div>
+<p class="cap">Identical container. No top rule, no flag, no terracotta — the difference between this and the state above is legible in half a second without either shouting.</p>
+
+<!-- CLEAR -->
+<div class="lab"><span class="n">3</span><h3>All clear</h3><span class="w">nothing new, nothing closing</span></div>
+<div class="stage">
+  <div class="clear">
+    <span class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.6 4.5L19 7.5" stroke="#1D3C3E" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    <span><span class="t">Nothing needs you this week</span><span class="m">Next deadline is Postcode Local Trust, 21 October. 3 applications in progress.</span></span>
+    <span class="go">Browse all 377 matches →</span>
+  </div>
+</div>
+
+<!-- OLD DEEP -->
+<div class="lab"><span class="n no">✕</span><h3>The deep version, for comparison</h3><span class="w">what I proposed before — not recommended</span></div>
+<div class="stage">
+  <div class="act">
+    <div class="hd"><h2>Needs you this week</h2><span class="sub">Everything else can wait.</span></div>
+    <div class="row c3">
+      <div class="ai urg"><span class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.4" stroke="#1D3C3E" stroke-width="2"/><path d="M12 7.6V12l2.9 2" stroke="#1D3C3E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="k">Closing in 6 days</span><span class="t">The Democratic Engagement Fund</span><span class="m">Not started. LNER also closes 31 Aug.</span><span class="go">Start application</span></div>
+      <div class="ai str"><span class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 4l2.3 5 5.4.6-4 3.7 1.1 5.3L12 15.9 7.2 18.6l1.1-5.3-4-3.7 5.4-.6z" stroke="#1D3C3E" stroke-width="1.9" stroke-linejoin="round"/></svg></span><span class="k">Your only strong match</span><span class="t">NCVO Learning &amp; Development</span><span class="m">83% fit · in-kind</span><span class="go">Review match</span></div>
+      <div class="ai nxt"><span class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M4 20h4L19.5 8.5a2.1 2.1 0 00-3-3L5 17v3z" stroke="#1D3C3E" stroke-width="1.9" stroke-linejoin="round"/></svg></span><span class="k">Nearly written</span><span class="t">National Lottery Awards for All</span><span class="m">4 of 9 answered</span><span class="go">Continue writing</span></div>
+    </div>
+  </div>
+</div>
+<p class="cap">Squint at the three slot backgrounds. They're the same grey.</p>
+
+<div class="sec">
+  <h2>One more reason, unrelated to contrast</h2>
+  <p>Your sidebar is <code>--deep</code> and 250px of it runs the full height of every page. A deep strip immediately to its right makes two large dark masses meeting at a corner, and the page's centre of gravity ends up in the top-left rather than on the content. The white strip keeps the deep for what it now means everywhere else: the sidebar, primary buttons, and the "Won" pipeline tile.</p>
+  <p><b>What this costs:</b> the escalation is quieter than a full colour inversion. I think that's correct — the strip appears on every visit, and a panel that transforms whenever anything is due teaches people to stop reading it. A top rule, a flag and one terracotta slot is a step change you notice without one that you tune out.</p>
+</div>
+
+</div>
+</body>
+</html>
