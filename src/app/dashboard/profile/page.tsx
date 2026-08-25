@@ -4,44 +4,65 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { getOrganisationsByOwner, updateOrganisation, deleteOrganisation, writeActiveOrgCookie } from '@/lib/organisations'
-import { Pencil, Plus, ChevronDown, RotateCcw, Globe, Check, X, Star, Trash2, AlertTriangle } from 'lucide-react'
+import { Pencil, Plus, ChevronDown, RotateCcw, Globe, Check, X, Star, Trash2, AlertTriangle, MapPin } from 'lucide-react'
 import type { Organisation, LegalStructure, OrgStage, ImpactSector, FundingType, FunderType, BeneficiaryGroup } from '@/types'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import { trimMission, formatCurrency } from '@/lib/utils'
 import ClearProfileButton from '@/app/dashboard/admin/ClearProfileButton'
 import CoreContentSection from '@/components/builder/CoreContentSection'
+import { typeColour } from '@/lib/funding-type-colours'
 
 const ADMIN_EMAIL = 'paulkilty1@gmail.com'
 
 /* ═══════════════════════════════════════════════
    Design tokens
    ═══════════════════════════════════════════════ */
+/**
+ * This page's own token set. It is the sixth in the app — the dashboard, Find
+ * Funding, pipeline, deadlines and builder/tokens.ts all have their own. Worth
+ * consolidating one day; the rule for now is simply not to add a seventh.
+ *
+ * NOTHING HERE IS SHARED. builder/tokens.ts, which the "Your material" section
+ * reads from, is shared with the application workspace and is deliberately
+ * untouched by this pass.
+ */
 const T = {
-  lime:          '#8ECB3C',
-  greenDeep:     '#173404',
-  greenMid:      '#639922',
-  pageBg:        '#FAFAF7',
+  deep:          '#1D3C3E',
+  creamLabel:    '#F6F1E7',   // label on a deep fill
   cream:         '#F5F1E8',
+  warmNeutral:   '#F1EDE3',
   white:         '#FFFFFF',
   textPrimary:   '#2C2C2A',
   textSecondary: '#5F5E5A',
-  textTertiary:  '#8A8986',
-  border:        'rgba(23, 52, 4, 0.08)',
-  borderStrong:  'rgba(23, 52, 4, 0.14)',
-  // Completion tier palette (mirrors opportunity card match tiers)
-  strongBorder:  '#639922',
-  strongPanel:   '#F4F9ED',
-  partialBorder: '#5A9080',
-  partialPanel:  '#F0F5F3',
-  weakBorder:    '#808580',
-  weakPanel:     '#F4F6F4',
+  // Was #8A8986: 3.50 on white and 3.35 on the old page ground, both failing.
+  textTertiary:  '#74736E',   // 4.75
+  border:        'rgba(29, 60, 62, 0.10)',
+  borderStrong:  'rgba(29, 60, 62, 0.24)',
+  /** Bar tracks. Identical to the Projects bar so the two agree. */
+  track:         'rgba(29, 60, 62, 0.15)',
+  /** High-impact marker. --deep on it measures 7.71. */
+  gold:          '#EBCE78',
   // Pill families
   greenBg:       '#E8F2D8',
   greenText:     '#3F6018',
   coralBg:       '#FAECE7',
   coralText:     '#993C1D',
-  creamText:     '#3A3000',
 }
+
+/*
+ * The completion tier palette that used to live here is GONE, not re-stepped.
+ * It was a single-hue-per-tier sequential ramp keyed to the percentage, and
+ * all three tiers failed: #639922 on #F4F9ED measured 3.21, #5A9080 on #F0F5F3
+ * 3.32, #808580 on #F4F6F4 3.46, with an 11px uppercase label that is normal
+ * text in every case. There is no rescue by re-stepping — three tints that
+ * pale cannot each carry a passing foreground.
+ *
+ * The number already says how complete the profile is. Colouring the container
+ * three ways to say it again is what made it the least legible element on the
+ * page. Colour moves to the missing-field chips instead, where it is
+ * actionable and where high-vs-normal is a two-value CATEGORY rather than a
+ * ramp, which is a job colour can actually do.
+ */
 
 const UI  = 'var(--font-space-grotesk)'
 const BODY = 'var(--font-dm-sans)'
@@ -416,10 +437,10 @@ function AddLink({ label, onClick }: { label: string; onClick?: () => void }) {
       onMouseLeave={() => setHov(false)}
       style={{
         fontFamily: UI, fontWeight: 500, fontSize: 13,
-        color: hov ? T.greenDeep : T.textTertiary,
+        color: hov ? T.deep : T.textTertiary,
         cursor: 'pointer',
         display: 'inline-flex', alignItems: 'center', gap: 4,
-        borderBottom: hov ? `1px solid ${T.greenDeep}` : '1px dashed transparent',
+        borderBottom: hov ? `1px solid ${T.deep}` : '1px dashed transparent',
         paddingBottom: 1, transition: 'all 0.15s',
       }}
     >
@@ -448,7 +469,7 @@ function Toggle({ enabled, onToggle }: { enabled: boolean; onToggle: () => void 
       onClick={onToggle}
       style={{
         width: 36, height: 20, borderRadius: 10, position: 'relative', cursor: 'pointer',
-        background: enabled ? T.lime : '#E0DFD9', transition: 'background 0.2s ease', flexShrink: 0,
+        background: enabled ? T.deep : '#E0DFD9', transition: 'background 0.2s ease', flexShrink: 0,
       }}
     >
       <div style={{
@@ -471,9 +492,35 @@ function PickerChip({ label, chipState, dimmed, onClick, showMakePrimary, onMake
   const isSecondary = chipState === 'secondary'
   const isSelected  = isPrimary || isSecondary
 
-  const bg = isPrimary ? T.greenDeep : isSecondary ? T.greenBg : hov ? '#F0EFEB' : T.white
-  const color = isPrimary ? T.white : isSecondary ? T.greenText : dimmed ? T.textTertiary : T.textSecondary
-  const border = isPrimary ? T.greenDeep : isSecondary ? T.greenMid : T.borderStrong
+  /**
+   * DIMMED NO LONGER MEANS FADED, and that was the serious bug here.
+   *
+   * `opacity: 0.4` was applied to every unselected option once the four-item
+   * max was reached. On top of the tertiary grey that composited to #D0D0CF —
+   * 1.54 — and the border to 1.11. Ten of the fourteen sectors became
+   * unreadable at exactly the moment the user needed to read them: you hit the
+   * max, and the only way to change your mind is to compare what you picked
+   * against what you did not. The dimming hid the comparison.
+   *
+   * Locked options now stay fully legible — white fill, hairline, placeholder
+   * label at 4.75 — and "you cannot add another" is carried by the cursor and
+   * by the count beside the section heading. Unavailable is a fact about the
+   * click, not a reason to hide the word.
+   *
+   * The unselected chip also gets a FILL. Its border was rgba(23,52,4,.14),
+   * which measures 1.30 against white, so the grid was a field of invisible
+   * outlines.
+   */
+  const bg = isPrimary ? T.deep
+    : isSecondary ? T.greenBg
+    : dimmed ? T.white
+    : hov ? '#EAE6DA' : T.warmNeutral
+  const color = isPrimary ? T.creamLabel
+    : isSecondary ? T.greenText
+    : dimmed ? T.textTertiary : T.deep
+  const border = isPrimary ? T.deep
+    : isSecondary ? T.greenText
+    : dimmed ? T.borderStrong : 'transparent'
 
   return (
     <div style={{ position: 'relative' }}>
@@ -482,36 +529,46 @@ function PickerChip({ label, chipState, dimmed, onClick, showMakePrimary, onMake
         onMouseEnter={() => setHov(true)}
         onMouseLeave={() => setHov(false)}
         style={{
-          width: '100%', padding: '7px 10px', borderRadius: 8,
-          border: `1.5px solid ${border}`,
-          background: bg, color, cursor: 'pointer',
-          fontFamily: UI, fontSize: 12.5, fontWeight: isSelected ? 600 : 400,
+          width: '100%', padding: '8px 12px', borderRadius: 999,
+          border: `1px solid ${border}`,
+          background: bg, color, cursor: dimmed ? 'not-allowed' : 'pointer',
+          fontFamily: UI, fontSize: 12.5, fontWeight: isSelected ? 600 : 500,
           display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.12s',
-          opacity: dimmed ? 0.4 : 1,
         }}
       >
+        {/* The star is the only thing separating primary from secondary for a
+            colourblind user, since the two differ mainly in lightness. */}
         {isPrimary && (
-          <Star size={9} fill="currentColor" color="currentColor" style={{ flexShrink: 0 }} />
+          <Star size={10} fill="currentColor" color="currentColor" style={{ flexShrink: 0 }} />
         )}
         {isSecondary && (
           <span style={{ width: 5, height: 5, borderRadius: '50%', background: T.greenText, flexShrink: 0 }} />
         )}
         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
+        {/* "Set as primary" lives INSIDE the chip, at its right edge.
+            It used to be an always-rendered absolutely-positioned button at
+            top:-6 right:-6, so with three secondary chips there were three of
+            them on screen, each covering the chip in the row above, and the
+            right-hand column's was clipped by the card edge. No overlap, no
+            clipping, no z-index. The tooltip carries the meaning, the star
+            carries the affordance. */}
+        {showMakePrimary && (
+          <span
+            role="button"
+            tabIndex={0}
+            title="Set as primary"
+            onClick={e => { e.stopPropagation(); onMakePrimary?.() }}
+            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); e.preventDefault(); onMakePrimary?.() } }}
+            style={{
+              marginLeft: 'auto', width: 24, height: 24, borderRadius: 999, flexShrink: 0,
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              background: 'rgba(255,255,255,0.7)', color: T.deep, cursor: 'pointer',
+            }}
+          >
+            <Star size={11} />
+          </span>
+        )}
       </button>
-      {showMakePrimary && (
-        <button
-          onClick={e => { e.stopPropagation(); onMakePrimary?.() }}
-          style={{
-            position: 'absolute', top: -6, right: -6,
-            background: T.greenDeep, color: T.white,
-            border: 'none', borderRadius: 4, padding: '2px 6px',
-            fontSize: 10, fontFamily: UI, fontWeight: 600, cursor: 'pointer',
-            zIndex: 2, whiteSpace: 'nowrap',
-          }}
-        >
-          Set as primary
-        </button>
-      )}
     </div>
   )
 }
@@ -565,7 +622,7 @@ function OrgSwitcher({ orgs, activeOrgId, onSwitch }: {
           <div style={{
             width: 36, height: 36, background: T.cream, borderRadius: 8,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontFamily: UI, fontWeight: 600, fontSize: 14, color: T.greenDeep, flexShrink: 0,
+            fontFamily: UI, fontWeight: 600, fontSize: 14, color: T.deep, flexShrink: 0,
           }}>
             {initials(active?.name ?? 'O')}
           </div>
@@ -579,7 +636,7 @@ function OrgSwitcher({ orgs, activeOrgId, onSwitch }: {
             </div>
           </div>
           {isMulti && !isMobile && (
-            <span style={{ fontFamily: UI, fontSize: 12.5, color: T.textTertiary, padding: '3px 8px', background: T.pageBg, borderRadius: 10, marginLeft: 4, flexShrink: 0 }}>
+            <span style={{ fontFamily: UI, fontSize: 12.5, color: T.textTertiary, padding: '3px 8px', background: T.warmNeutral, borderRadius: 10, marginLeft: 4, flexShrink: 0 }}>
               {orgs.length} organisations
             </span>
           )}
@@ -602,9 +659,9 @@ function OrgSwitcher({ orgs, activeOrgId, onSwitch }: {
                 }}
               >
                 <div style={{
-                  width: 28, height: 28, background: T.pageBg, border: `1px solid ${T.border}`, borderRadius: 6,
+                  width: 28, height: 28, background: T.warmNeutral, border: `1px solid ${T.border}`, borderRadius: 6,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontFamily: UI, fontWeight: 600, fontSize: 12, color: T.greenDeep,
+                  fontFamily: UI, fontWeight: 600, fontSize: 12, color: T.deep,
                 }}>
                   {initials(o.name ?? 'O')}
                 </div>
@@ -617,7 +674,7 @@ function OrgSwitcher({ orgs, activeOrgId, onSwitch }: {
                     {o.primary_location ? ` · ${o.primary_location}` : ''}
                   </div>
                 </div>
-                {o.id === activeOrgId && <Check size={14} color={T.greenDeep} />}
+                {o.id === activeOrgId && <Check size={14} color={T.deep} />}
               </div>
             ))}
           </div>
@@ -653,50 +710,57 @@ function OrgSwitcher({ orgs, activeOrgId, onSwitch }: {
    ═══════════════════════════════════════════════ */
 function CompletionMeter({ org, onJumpToCard }: { org: Organisation; onJumpToCard: (card: CardId) => void }) {
   const { pct, missing } = computeCompleteness(org)
-  const variant = pct >= 80
-    ? { border: T.strongBorder,  bg: T.strongPanel,  label: T.strongBorder  }
-    : pct >= 60
-    ? { border: T.partialBorder, bg: T.partialPanel, label: T.partialBorder }
-    : { border: T.weakBorder,    bg: T.weakPanel,    label: T.weakBorder    }
 
   return (
+    /* A white card like every other card on the page. No tier ramp — see the
+       note under T for why the three tiers could not be rescued by
+       re-stepping. */
     <div style={{
-      background: variant.bg, border: `1px solid ${variant.border}`,
-      borderRadius: 12, padding: '16px 22px', marginBottom: 24,
+      background: T.white, border: `1px solid ${T.border}`,
+      borderRadius: 16, padding: '20px 22px', marginBottom: 24,
+      boxShadow: '0 1px 2px rgba(29,60,62,0.04)',
     }}>
-      <div style={{ fontFamily: UI, fontWeight: 500, fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: variant.label, marginBottom: 8 }}>
-        Profile completeness
+      <div style={{ fontFamily: UI, fontWeight: 700, fontSize: 9.5, letterSpacing: '0.13em', textTransform: 'uppercase' as const, color: T.textTertiary, marginBottom: 8 }}>
+        Profile complete
       </div>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 10 }}>
-        <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 24, color: T.textPrimary, letterSpacing: '-0.01em' }}>{pct}%</span>
-        <span style={{ fontFamily: BODY, fontSize: 14, color: T.textSecondary }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
+        <span style={{ fontFamily: UI, fontWeight: 700, fontSize: 34, color: T.deep, letterSpacing: '-0.03em', lineHeight: 1 }}>{pct}%</span>
+        <span style={{ fontFamily: BODY, fontSize: 13.5, color: T.textSecondary }}>
           {missing.length === 0
             ? 'Your profile is complete. Matches are fully optimised.'
             : 'Click a missing field to complete it.'}
         </span>
       </div>
-      <div style={{ height: 6, background: 'rgba(23,52,4,0.06)', borderRadius: 3, overflow: 'hidden', marginBottom: missing.length > 0 ? 14 : 0 }}>
-        <div style={{ height: '100%', width: `${pct}%`, background: variant.border, borderRadius: 3, transition: 'width 0.4s ease' }} />
+      {/* --deep on a visible track: 9.1:1, and the same pair the Projects bar
+          uses so the two agree. The old track was ΔE 2.67 from its panel, so
+          the fill read as a floating stub rather than as a proportion. */}
+      <div style={{ height: 6, background: T.track, borderRadius: 999, overflow: 'hidden', marginBottom: missing.length > 0 ? 16 : 0 }}>
+        <div style={{ height: '100%', width: `${pct}%`, background: T.deep, borderRadius: 999, transition: 'width 0.4s ease' }} />
       </div>
       {missing.length > 0 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+        /* The chips are the point of this card, not a footnote under it. High
+           impact takes a solid gold fill with a --deep label (7.71); the rest
+           are outlined neutral. High-vs-normal is a two-value category rather
+           than a ramp, which is the one job colour reliably does here. */
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
           {missing.map(m => {
             const card = FIELD_TO_CARD[m.label]
+            const high = m.impact === 'high'
             return (
               <button
                 key={m.label}
                 onClick={() => card && onJumpToCard(card)}
                 style={{
-                  fontFamily: UI, fontWeight: 500, fontSize: 12,
-                  padding: '4px 10px', borderRadius: 8, cursor: card ? 'pointer' : 'default',
-                  border: `1px solid ${m.impact === 'high' ? '#C97B1A' : T.borderStrong}`,
-                  background: m.impact === 'high' ? '#FEF3E2' : T.pageBg,
-                  color: m.impact === 'high' ? '#854F0B' : T.textSecondary,
+                  fontFamily: UI, fontWeight: 600, fontSize: 12,
+                  padding: '6px 12px', borderRadius: 999, cursor: card ? 'pointer' : 'default',
+                  border: high ? '1px solid transparent' : `1px solid ${T.borderStrong}`,
+                  background: high ? T.gold : T.white,
+                  color: high ? T.deep : T.textSecondary,
                   display: 'inline-flex', alignItems: 'center', gap: 5,
                   transition: 'all 0.12s',
                 }}
               >
-                {m.impact === 'high' && <AlertTriangle size={10} />}
+                {high && <AlertTriangle size={11} />}
                 + {m.label}
               </button>
             )
@@ -783,7 +847,7 @@ function ScanBar({ orgId, website, onSaved }: { orgId: string; website?: string 
     }}>
       <div style={{
         flexShrink: 0, width: 32, height: 32, background: T.cream, borderRadius: 8,
-        display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.greenDeep,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.deep,
       }}>
         <Globe size={16} />
       </div>
@@ -805,7 +869,7 @@ function ScanBar({ orgId, website, onSaved }: { orgId: string; website?: string 
                 fontFamily: BODY, fontSize: 14, color: T.textPrimary,
                 width: '100%', padding: '7px 10px',
                 border: `1px solid ${T.borderStrong}`, borderRadius: 7,
-                background: T.pageBg, outline: 'none',
+                background: T.warmNeutral, outline: 'none',
               }}
             />
           </div>
@@ -813,7 +877,7 @@ function ScanBar({ orgId, website, onSaved }: { orgId: string; website?: string 
             <button onClick={cancel} style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, color: T.textSecondary, background: T.white, border: `0.5px solid ${T.borderStrong}`, padding: '7px 12px', borderRadius: 7, cursor: 'pointer' }}>
               Cancel
             </button>
-            <button onClick={save} disabled={saving} style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, background: T.lime, color: T.greenDeep, border: 'none', padding: '7px 14px', borderRadius: 7, cursor: saving ? 'not-allowed' : 'pointer' }}>
+            <button onClick={save} disabled={saving} style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, background: T.deep, color: T.creamLabel, border: 'none', padding: '7px 14px', borderRadius: 7, cursor: saving ? 'not-allowed' : 'pointer' }}>
               {saving ? 'Saving\u2026' : 'Save'}
             </button>
           </div>
@@ -833,7 +897,7 @@ function ScanBar({ orgId, website, onSaved }: { orgId: string; website?: string 
             <button
               onClick={runScan}
               disabled={scanning}
-              style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, background: scanning ? T.lime : 'transparent', color: scanning ? T.greenDeep : T.textPrimary, border: `0.5px solid ${scanning ? T.greenDeep : T.borderStrong}`, padding: '7px 14px', borderRadius: 8, cursor: scanning ? 'default' : 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, transition: 'all 0.2s ease', opacity: scanning ? 0.8 : 1 }}
+              style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, background: scanning ? T.deep : 'transparent', color: scanning ? T.creamLabel : T.textPrimary, border: `0.5px solid ${scanning ? T.deep : T.borderStrong}`, padding: '7px 14px', borderRadius: 8, cursor: scanning ? 'default' : 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, transition: 'all 0.2s ease', opacity: scanning ? 0.8 : 1 }}
             >
               <RotateCcw size={13} style={scanning ? { animation: 'spin 1s linear infinite' } : undefined} />
               {scanning ? 'Scanning...' : 'Re-scan & refresh'}
@@ -846,16 +910,16 @@ function ScanBar({ orgId, website, onSaved }: { orgId: string; website?: string 
             <div style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, color: T.textSecondary, marginBottom: 2 }}>No website on file</div>
             <div style={{ fontFamily: BODY, fontSize: 13, color: T.textTertiary }}>Add your website so we can keep your profile up to date automatically</div>
           </div>
-          <button onClick={startEdit} style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, background: T.lime, color: T.greenDeep, border: 'none', padding: '7px 16px', borderRadius: 8, cursor: 'pointer', flexShrink: 0, flexBasis: isMobile ? '100%' : 'auto' }}>
+          <button onClick={startEdit} style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, background: T.deep, color: T.creamLabel, border: 'none', padding: '7px 16px', borderRadius: 8, cursor: 'pointer', flexShrink: 0, flexBasis: isMobile ? '100%' : 'auto' }}>
             Add website
           </button>
         </>
       )}
       {/* Scan feedback message */}
       {scanMsg && (
-        <div style={{ marginTop: 12, padding: '10px 14px', background: scanMsg.type === 'success' ? '#F0FAE5' : '#FEF2F2', border: `1px solid ${scanMsg.type === 'success' ? '#8ECB3C' : '#FECACA'}`, borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontFamily: BODY, fontSize: 13, color: scanMsg.type === 'success' ? T.greenDeep : '#991B1B' }}>{scanMsg.text}</span>
-          <button onClick={() => setScanMsg(null)} style={{ fontFamily: UI, fontSize: 12, color: scanMsg.type === 'success' ? T.greenDeep : '#991B1B', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, flexShrink: 0, marginLeft: 12 }}>Dismiss</button>
+        <div style={{ marginTop: 12, padding: '10px 14px', background: scanMsg.type === 'success' ? '#F0FAE5' : '#FEF2F2', border: `1px solid ${scanMsg.type === 'success' ? '#1B6B3D' : '#FECACA'}`, borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontFamily: BODY, fontSize: 13, color: scanMsg.type === 'success' ? T.deep : '#991B1B' }}>{scanMsg.text}</span>
+          <button onClick={() => setScanMsg(null)} style={{ fontFamily: UI, fontSize: 12, color: scanMsg.type === 'success' ? T.deep : '#991B1B', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, flexShrink: 0, marginLeft: 12 }}>Dismiss</button>
         </div>
       )}
     </div>
@@ -876,20 +940,32 @@ function CardShell({ title, badge, isEditing, onEdit, editDisabled, children, fo
   hasIncomplete?: boolean
   cardId?: string
 }) {
-  const borderColor = isEditing ? T.greenDeep : hasIncomplete ? '#C97B1A' : T.border
+  /* The incomplete state no longer paints the card EDGE. #C97B1A measured
+     3.32 on white and 2.95 on cream — it passed on one ground and failed on
+     the other, and it sits on cream now that the local page background is
+     gone. A bare coloured border also never said WHAT was missing. The gold
+     badge in the header does, and it matches the meter's high-impact chip so
+     the two agree. */
+  const borderColor = isEditing ? T.deep : T.border
   return (
     <section id={cardId} style={{
       background: T.white, border: `1px solid ${borderColor}`,
-      borderRadius: 12, overflow: 'hidden',
-      boxShadow: isEditing ? '0 0 0 3px rgba(23,52,4,0.05)' : hasIncomplete ? '0 0 0 3px rgba(201,123,26,0.06)' : 'none',
+      borderRadius: 16, overflow: 'hidden',
+      boxShadow: isEditing ? '0 0 0 3px rgba(29,60,62,0.06)' : '0 1px 2px rgba(29,60,62,0.04)',
       transition: 'border-color 0.15s, box-shadow 0.15s',
     }}>
       {/* Header */}
       <div style={{ padding: '18px 24px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <h2 style={{ fontFamily: UI, fontWeight: 600, fontSize: 17, color: T.textPrimary, letterSpacing: '-0.01em' }}>
+          <h2 style={{ fontFamily: UI, fontWeight: 600, fontSize: 17, color: T.deep, letterSpacing: '-0.01em' }}>
             {title}
           </h2>
+          {hasIncomplete && !isEditing && (
+            <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 11, letterSpacing: '0.02em',
+              background: T.gold, color: T.deep, padding: '3px 10px', borderRadius: 999, whiteSpace: 'nowrap' }}>
+              {title === 'Your focus' ? 'Specialisms missing' : 'Details missing'}
+            </span>
+          )}
           {badge}
         </div>
         {!isEditing && (
@@ -909,7 +985,7 @@ function CardShell({ title, badge, isEditing, onEdit, editDisabled, children, fo
           </button>
         )}
         {isEditing && (
-          <span style={{ fontFamily: UI, fontWeight: 500, fontSize: 12, color: T.greenDeep, padding: '3px 10px', background: T.cream, borderRadius: 10 }}>
+          <span style={{ fontFamily: UI, fontWeight: 500, fontSize: 12, color: T.deep, padding: '3px 10px', background: T.cream, borderRadius: 10 }}>
             Editing
           </span>
         )}
@@ -922,7 +998,7 @@ function CardShell({ title, badge, isEditing, onEdit, editDisabled, children, fo
 
       {/* Footer (edit mode) */}
       {footer && (
-        <div style={{ padding: '14px 24px', background: T.pageBg, borderTop: `1px solid ${T.border}`, display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+        <div style={{ padding: '14px 24px', background: T.warmNeutral, borderTop: `1px solid ${T.border}`, display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
           {footer}
         </div>
       )}
@@ -937,7 +1013,7 @@ function SaveBtn({ saving, onClick }: { saving: boolean; onClick: () => void }) 
       disabled={saving}
       style={{
         fontFamily: UI, fontWeight: 500, fontSize: 13.5,
-        background: saving ? '#C5E08A' : T.lime, color: T.greenDeep,
+        background: saving ? T.warmNeutral : T.deep, color: saving ? T.textTertiary : T.creamLabel,
         border: 'none', padding: '8px 18px', borderRadius: 8,
         cursor: saving ? 'not-allowed' : 'pointer',
       }}
@@ -967,7 +1043,7 @@ function inputStyle(extra?: React.CSSProperties): React.CSSProperties {
     fontFamily: BODY, fontSize: 15, color: T.textPrimary,
     width: '100%', padding: '8px 12px',
     border: `1px solid ${T.borderStrong}`, borderRadius: 8,
-    background: T.pageBg, outline: 'none',
+    background: T.warmNeutral, outline: 'none',
     ...extra,
   }
 }
@@ -1275,7 +1351,7 @@ function FocusCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
   const pillStyle = (_kind: 'sector' | 'beneficiary', isPrimary: boolean): React.CSSProperties => ({
     fontFamily: UI, fontWeight: 500, fontSize: 12.5, padding: '4px 10px', borderRadius: 20,
     display: 'inline-flex', alignItems: 'center', gap: 5,
-    background: isPrimary ? T.greenDeep : T.greenBg,
+    background: isPrimary ? T.deep : T.greenBg,
     color:      isPrimary ? '#F1F7E4'   : T.greenText,
   })
 
@@ -1323,21 +1399,26 @@ function FocusCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
           {/* Sub-tag panel — tri-state chips. Click cycles:
               neutral (off-white) → include (green) → exclude (red strikethrough) → neutral */}
           {draft.impactSectors.filter(s => NICHE_TAGS_BY_SECTOR[s]).length > 0 && (
-            <div style={{ background: '#F5F1E8', borderLeft: '3px solid #8ECB3C', borderRadius: 8, padding: '12px 14px' }}>
+            /* A plain block, no rails. This had borderLeft 3px lime with a
+               3px mid-green rail on the tip INSIDE it — a coloured rail within
+               a coloured rail, and the lime measured 1.73 against the panel it
+               sat on. */
+            <div style={{ background: T.warmNeutral, borderRadius: 14, padding: '16px 18px' }}>
+              {/* A white card inside the block, rather than a second rail. */}
               <div style={{
                 fontFamily: UI,
                 fontSize: 12.5,
                 fontWeight: 500,
                 color: T.textPrimary,
-                marginBottom: 14,
-                padding: '10px 12px',
-                background: 'rgba(255,255,255,0.75)',
-                borderLeft: '3px solid #639922',
-                borderRadius: 4,
+                marginBottom: 16,
+                padding: '11px 14px',
+                background: T.white,
+                border: `1px solid ${T.border}`,
+                borderRadius: 12,
                 lineHeight: 1.5,
               }}>
-                <strong style={{ color: '#3B6D11', fontWeight: 700, letterSpacing: '0.01em' }}>Tip</strong>
-                <span style={{ color: '#3B6D11' }}> · </span>
+                <strong style={{ color: T.greenText, fontWeight: 700, letterSpacing: '0.01em' }}>Tip</strong>
+                <span style={{ color: T.greenText }}> · </span>
                 Click once to mark as a specialism. Click again to <strong>exclude</strong> (we won&apos;t show grants targeting it). Click a third time to reset.
               </div>
               {draft.impactSectors.filter(s => NICHE_TAGS_BY_SECTOR[s]).map(sector => {
@@ -1352,25 +1433,40 @@ function FocusCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
                       {opts.map(opt => {
                         const isIncluded = draft.nicheTags.includes(opt.value)
                         const isExcluded = draft.excludedNicheTags.includes(opt.value)
-                        const borderCol = isIncluded ? '#8ECB3C' : isExcluded ? '#D85A30' : '#D9D4C7'
-                        const bgCol     = isIncluded ? '#EEF8D8' : isExcluded ? '#FAECE7' : '#FEFCF8'
-                        const txtCol    = isIncluded ? '#3A6B0E' : isExcluded ? '#993C1D' : T.textSecondary
+                        /* INVERTED, deliberately. The three borders measured
+                           1.31 neutral, 1.73 specialism and 3.43 excluded — so
+                           the only state you could actually see was the rare,
+                           destructive one, and the state you use daily was
+                           invisible. Specialism is now a 1.5px --deep outline
+                           with a check and a bold label at 11.88:1; excluded
+                           keeps its coral but becomes the quietest of the
+                           three, which is the right order.
+
+                           Deliberately NOT a filled --deep chip: that is
+                           already the primary-sector treatment in the grid
+                           above, and one fill must not mean two things inside
+                           a single card. */
+                        const borderCol = isIncluded ? T.deep : isExcluded ? 'transparent' : T.border
+                        const bgCol     = isIncluded ? T.white : isExcluded ? T.coralBg : T.white
+                        const txtCol    = isIncluded ? T.deep : isExcluded ? T.coralText : T.textSecondary
                         return (
                           <button
                             key={opt.value}
                             onClick={() => cycleNicheTag(opt.value)}
                             title={isIncluded ? 'Specialism — click to exclude' : isExcluded ? 'Excluded — click to reset' : 'Click to mark as specialism'}
                             style={{
-                              fontSize: 11, fontFamily: BODY, padding: '5px 8px', borderRadius: 6,
+                              fontSize: 11.5, fontFamily: BODY, padding: '6px 11px', borderRadius: 999,
                               border: `1.5px solid ${borderCol}`,
                               background: bgCol,
                               color: txtCol,
-                              cursor: 'pointer', fontWeight: (isIncluded || isExcluded) ? 600 : 400,
+                              cursor: 'pointer', fontWeight: isIncluded ? 700 : isExcluded ? 500 : 400,
                               textAlign: 'left' as const, lineHeight: 1.3,
                               textDecoration: isExcluded ? 'line-through' : 'none',
+                              display: 'inline-flex', alignItems: 'center', gap: 5,
                             }}
                           >
-                            {isExcluded && <span style={{ marginRight: 4 }}>✕</span>}
+                            {isIncluded && <Check size={11} strokeWidth={3} style={{ flexShrink: 0 }} />}
+                            {isExcluded && <span style={{ marginRight: 1 }}>✕</span>}
                             {opt.label}
                           </button>
                         )
@@ -1521,8 +1617,10 @@ function LocationCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEdit
   }
 
   const locationPill = (text: string) => (
-    <span style={{ fontFamily: UI, fontWeight: 500, fontSize: 12.5, padding: '4px 10px', borderRadius: 12, background: '#F0EFEB', color: T.textSecondary, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-      📍 {text}
+    /* lucide, not an emoji: emoji render differently on every platform, cannot
+       be recoloured, and do not sit on a text baseline. */
+    <span style={{ fontFamily: UI, fontWeight: 500, fontSize: 12.5, padding: '5px 12px', borderRadius: 999, background: T.warmNeutral, color: T.deep, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+      <MapPin size={11} style={{ flexShrink: 0 }} /> {text}
     </span>
   )
 
@@ -1653,8 +1751,11 @@ function FundingCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditE
   const maxFmt = fmtThousands(org.max_grant_target)
   const sizeLabel = minFmt && maxFmt ? `${minFmt} – ${maxFmt}` : minFmt || maxFmt || null
 
-  const ftLabels = ((org.funding_type_preferences as FundingType[]) ?? [])
-    .map(t => FUNDING_TYPE_OPTIONS.find(o => o.value === t)?.label).filter(Boolean)
+  // Kept as (value, label) rather than label-only so the chip can look up its
+  // colour. The value is what the shared palette is keyed on.
+  const ftChips = ((org.funding_type_preferences as FundingType[]) ?? [])
+    .map(t => ({ value: t, label: FUNDING_TYPE_OPTIONS.find(o => o.value === t)?.label }))
+    .filter(x => !!x.label)
   const funderLabels = ((org.funder_type_preferences as FunderType[]) ?? [])
     .map(t => FUNDER_TYPE_OPTIONS.find(o => o.value === t)?.label).filter(Boolean)
 
@@ -1705,9 +1806,10 @@ function FundingCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditE
                     onClick={() => toggleFundingType(opt.value)}
                     style={{
                       fontFamily: UI, fontWeight: selected ? 600 : 400, fontSize: 13,
-                      padding: '8px 12px', borderRadius: 8, cursor: 'pointer',
-                      border: `1.5px solid ${selected ? T.greenMid : T.borderStrong}`,
-                      background: selected ? T.greenBg : T.white, color: selected ? T.greenText : T.textSecondary,
+                      padding: '9px 14px', borderRadius: 999, cursor: 'pointer',
+                      border: `1.5px solid ${selected ? (typeColour(opt.value)?.fg ?? T.deep) : T.borderStrong}`,
+                      background: selected ? (typeColour(opt.value)?.tint ?? T.warmNeutral) : T.white,
+                      color: selected ? (typeColour(opt.value)?.fg ?? T.deep) : T.textSecondary,
                       textAlign: 'left' as const, transition: 'all 0.12s',
                     }}
                   >
@@ -1730,9 +1832,9 @@ function FundingCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditE
                       title={opt.description}
                       style={{
                         fontFamily: UI, fontWeight: selected ? 600 : 400, fontSize: 13,
-                        padding: '7px 11px', borderRadius: 8, cursor: 'pointer',
-                        border: `1.5px solid ${selected ? T.greenMid : T.borderStrong}`,
-                        background: selected ? T.greenBg : T.white, color: selected ? T.greenText : T.textSecondary,
+                        padding: '8px 13px', borderRadius: 999, cursor: 'pointer',
+                        border: `1.5px solid ${selected ? T.deep : T.borderStrong}`,
+                        background: selected ? T.warmNeutral : T.white, color: selected ? T.deep : T.textSecondary,
                         textAlign: 'left' as const, transition: 'all 0.12s',
                       }}
                     >
@@ -1755,13 +1857,21 @@ function FundingCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditE
             <span>{sizeLabel || <AddLink label="Add grant size range" onClick={startEdit} />}</span>
           </FieldRow>
           <FieldRow label="Funding types">
-            {ftLabels.length > 0 ? (
+            {ftChips.length > 0 ? (
+              /* The validated four-hue set — the same one the dashboard, Find
+                 Funding and Deadlines use, so a funding type is finally one
+                 colour everywhere. These four sat in a row wearing a single
+                 tan chip on a page whose whole job is showing what you chose. */
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                {ftLabels.map(label => (
-                  <span key={label} style={{ fontFamily: UI, fontWeight: 500, fontSize: 12.5, padding: '4px 10px', borderRadius: 12, background: T.cream, color: T.creamText }}>
-                    {label}
-                  </span>
-                ))}
+                {ftChips.map(({ value, label }) => {
+                  const c = typeColour(value)
+                  return (
+                    <span key={label} style={{ fontFamily: UI, fontWeight: 600, fontSize: 12.5, padding: '5px 12px', borderRadius: 999,
+                      background: c?.tint ?? T.warmNeutral, color: c?.fg ?? T.textSecondary }}>
+                      {label}
+                    </span>
+                  )
+                })}
               </div>
             ) : <AddLink label="Add funding types" onClick={startEdit} />}
           </FieldRow>
@@ -1769,7 +1879,7 @@ function FundingCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditE
             {funderLabels.length > 0 ? (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {funderLabels.map(label => (
-                  <span key={label} style={{ fontFamily: UI, fontWeight: 500, fontSize: 12.5, padding: '4px 10px', borderRadius: 12, background: T.cream, color: T.creamText }}>
+                  <span key={label} style={{ fontFamily: UI, fontWeight: 500, fontSize: 12.5, padding: '5px 12px', borderRadius: 999, background: T.warmNeutral, color: T.textSecondary }}>
                     {label}
                   </span>
                 ))}
@@ -1833,7 +1943,7 @@ function StoryCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
     </span>
   ) : null
 
-  const storyBorder = editing ? T.greenDeep : (!hasMission && hasIncomplete) ? '#C97B1A' : hasMission ? T.border : 'rgba(142,203,60,0.2)'
+  const storyBorder = editing ? T.deep : (!hasMission && hasIncomplete) ? '#C97B1A' : hasMission ? T.border : 'rgba(142,203,60,0.2)'
   return (
     <section id="card-story" style={{
       background: hasMission ? T.white : 'linear-gradient(135deg, #FDFCF7 0%, #F8F5EC 100%)',
@@ -1847,7 +1957,7 @@ function StoryCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <h2 style={{ fontFamily: UI, fontWeight: 600, fontSize: 17, color: T.textPrimary, letterSpacing: '-0.01em' }}>Your story</h2>
           {quickWinBadge}
-          {editing && <span style={{ fontFamily: UI, fontWeight: 500, fontSize: 12, color: T.greenDeep, padding: '3px 10px', background: T.cream, borderRadius: 10 }}>Editing</span>}
+          {editing && <span style={{ fontFamily: UI, fontWeight: 500, fontSize: 12, color: T.deep, padding: '3px 10px', background: T.cream, borderRadius: 10 }}>Editing</span>}
         </div>
         {!editing && (
           <button
@@ -1917,8 +2027,8 @@ function StoryCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
         ) : (
           <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start', padding: '4px 0 8px' }}>
             <div style={{
-              flexShrink: 0, width: 36, height: 36, background: T.lime, borderRadius: 10,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.greenDeep,
+              flexShrink: 0, width: 36, height: 36, background: T.warmNeutral, borderRadius: 10,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.deep,
             }}>
               <Star size={18} fill="currentColor" />
             </div>
@@ -1931,7 +2041,7 @@ function StoryCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
                 onClick={startEdit}
                 style={{
                   fontFamily: UI, fontWeight: 500, fontSize: 13.5,
-                  background: T.lime, color: T.greenDeep, border: 'none',
+                  background: T.deep, color: T.creamLabel, border: 'none',
                   padding: '8px 16px', borderRadius: 8, cursor: 'pointer',
                 }}
               >
@@ -1944,7 +2054,7 @@ function StoryCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
 
       {/* Footer */}
       {editing && (
-        <div style={{ padding: '14px 24px', background: T.pageBg, borderTop: `1px solid ${T.border}`, display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+        <div style={{ padding: '14px 24px', background: T.warmNeutral, borderTop: `1px solid ${T.border}`, display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
           <CancelBtn onClick={cancel} />
           <SaveBtn saving={saving} onClick={save} />
         </div>
@@ -2058,7 +2168,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FAFAF7' }}>
-        <p style={{ fontFamily: UI, fontSize: 14, color: '#8A8986' }}>Loading…</p>
+        <p style={{ fontFamily: UI, fontSize: 14, color: T.textTertiary }}>Loading…</p>
       </div>
     )
   }
@@ -2107,7 +2217,7 @@ export default function ProfilePage() {
             <button
               type="submit"
               disabled={creating || !newOrgName.trim()}
-              style={{ width: '100%', padding: '11px 0', background: '#8ECB3C', color: '#173404', border: 'none', borderRadius: 10, fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 14, cursor: 'pointer', opacity: (creating || !newOrgName.trim()) ? 0.6 : 1 }}
+              style={{ width: '100%', padding: '11px 0', background: '#1D3C3E', color: '#F6F1E7', border: 'none', borderRadius: 999, fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 14, cursor: 'pointer', opacity: (creating || !newOrgName.trim()) ? 0.6 : 1 }}
             >
               {creating ? 'Creating\u2026' : 'Continue \u2192'}
             </button>
@@ -2133,12 +2243,18 @@ export default function ProfilePage() {
   })
 
   return (
-    <div style={{ flex: 1, background: T.pageBg, overflowY: 'auto' }}>
-      <div style={{ padding: isMobile ? '24px 16px 60px' : '40px 48px 80px', maxWidth: 920, margin: '0 auto' }}>
+    /* No local page ground. #FAFAF7 is ΔE 2.36 from white, so the page was
+       painting white behind white cards and they had nothing to sit on. The
+       shell's cream shows through now. */
+    <div style={{ flex: 1, overflowY: 'auto' }}>
+      {/* No maxWidth. Every other page sits in the layout's own container;
+          this one was in a 920px column, which with a charcoal heading and a
+          near-white ground was most of why it read as a different product. */}
+      <div style={{ padding: isMobile ? '24px 16px 60px' : '40px 48px 80px' }}>
 
         {/* Page header */}
         <div style={{ marginBottom: 28 }}>
-          <h1 style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: isMobile ? 28 : 36, letterSpacing: '-0.02em', color: '#2C2C2A', lineHeight: 1.1, margin: '0 0 6px' }}>
+          <h1 style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, fontSize: isMobile ? 26 : 31, letterSpacing: '-0.025em', color: '#1D3C3E', lineHeight: 1.1, margin: '0 0 6px' }}>
             Your profile
           </h1>
           <div style={{ display: 'flex', alignItems: isMobile ? 'flex-start' : 'center', justifyContent: 'space-between', gap: isMobile ? 10 : 16, flexDirection: isMobile ? 'column' : 'row' }}>
