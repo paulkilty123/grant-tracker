@@ -20,12 +20,25 @@ import type { PipelineItem, PipelineStage, Organisation } from '@/types'
 import { Sparkles, Loader2, Link, ArrowRight, Calendar, AlarmClock, X as XIcon, GripVertical, StickyNote, User as UserIcon, BarChart3, Star } from 'lucide-react'
 import { PipelineModal, STAGE_ICONS, getWritingStage } from '@/components/PipelineModal'
 
+/**
+ * The stage ladder, deliberately monotonic: each active stage is a step darker
+ * than the one before it, so the board reads as progress from left to right
+ * without anything being labelled.
+ *
+ * The old set was not. Won (#EAF3DE) came out LIGHTER than Submitted
+ * (#DFEDCC), so the ladder went up and then back down at the one step the user
+ * most wants to reach, and Won needed a lime rule along its top to look like an
+ * arrival. It no longer needs one.
+ *
+ * Declined sits outside the ladder entirely — it is not a further step along
+ * it, so it takes a warm coral rather than a position in the ramp.
+ */
 const STAGE_BG_HEX: Record<string, string> = {
-  identified: '#F5F1E8',
-  applying:   '#F1F7E4',
-  submitted:  '#DFEDCC',
-  won:        '#EAF3DE',
-  declined:   '#FAECE7',
+  identified: '#F3EFE4',
+  applying:   '#E7F0DC',
+  submitted:  '#D3E5BC',
+  won:        '#B4D496',
+  declined:   '#F7E7E1',
 }
 
 const STAGE_VOCAB: Record<string, string> = {
@@ -94,7 +107,7 @@ function PipelineCard({
           </span>
         )}
         {item.application_progress === 100 && (
-          <span className="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide" style={{ background: "rgba(132,204,22,0.15)", color: "#639922" }}>Final</span>
+          <span className="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide" style={{ background: '#E3F0E4', color: '#1B6B3D' }}>Final</span>
         )}
         {item.is_urgent && (
           <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-coral-pale text-coral-saturated uppercase tracking-wide">Urgent</span>
@@ -131,7 +144,7 @@ function PipelineCard({
       {/* Amount */}
       {amountStr && (
         <p className={cn('text-base font-bold mb-1',
-          isDeclined ? 'text-coral-saturated' : 'text-[#8ECB3C]'
+          isDeclined ? 'text-coral-saturated' : 'text-[#1D3C3E]'
         )}>
           {amountStr}
         </p>
@@ -158,8 +171,8 @@ function PipelineCard({
         <div className="mt-2.5">
           <div className="h-1 bg-warm overflow-hidden rounded-full">
             <div
-              className={cn('h-full transition-all', item.application_progress >= 83 ? 'bg-[#8ECB3C]' : item.application_progress >= 50 ? 'bg-[#C0DD97]' : 'bg-[#FAC775]')}
-              style={{ width: `${item.application_progress}%` }}
+              className="h-full transition-all"
+              style={{ background: '#1D3C3E', width: `${item.application_progress}%` }}
             />
           </div>
         </div>
@@ -177,7 +190,8 @@ function PipelineCard({
         <NextLink
           href={`/dashboard/applications/${appId}`}
           onClick={e => e.stopPropagation()}
-          className="inline-block mt-1.5 text-[10px] font-semibold text-[#639922] hover:text-[#8ECB3C] transition-colors"
+          className="mt-2.5 w-full flex items-center justify-center gap-1.5 text-[12px] font-semibold transition-colors"
+          style={{ fontFamily: 'var(--font-space-grotesk)', color: '#1D3C3E', background: '#F1EDE3', borderRadius: 999, padding: '8px 12px' }}
         >
           Continue application →
         </NextLink>
@@ -186,7 +200,8 @@ function PipelineCard({
         <NextLink
           href={`/dashboard/applications/new?pipeline=${item.id}`}
           onClick={e => e.stopPropagation()}
-          className="inline-block mt-1.5 text-[10px] font-semibold text-[#639922] hover:text-[#8ECB3C] transition-colors"
+          className="mt-2.5 w-full flex items-center justify-center gap-1.5 text-[12px] font-semibold transition-colors"
+          style={{ fontFamily: 'var(--font-space-grotesk)', color: '#1D3C3E', background: '#F1EDE3', borderRadius: 999, padding: '8px 12px' }}
         >
           Start an application →
         </NextLink>
@@ -198,7 +213,8 @@ function PipelineCard({
           target="_blank"
           rel="noopener noreferrer"
           onClick={e => e.stopPropagation()}
-          className="inline-block mt-1.5 text-[10px] font-semibold text-[#639922] hover:text-[#8ECB3C] transition-colors"
+          className="mt-2.5 w-full flex items-center justify-center gap-1.5 text-[12px] font-semibold transition-colors"
+          style={{ fontFamily: 'var(--font-space-grotesk)', color: '#1D3C3E', background: '#F1EDE3', borderRadius: 999, padding: '8px 12px' }}
         >
           Start application →
         </a>
@@ -210,7 +226,8 @@ function PipelineCard({
         <NextLink
           href={`/dashboard/search?grant=${encodeURIComponent(findFundingId)}`}
           onClick={e => e.stopPropagation()}
-          className="inline-block mt-1.5 ml-3 text-[10px] font-semibold text-[#639922] hover:text-[#8ECB3C] transition-colors"
+          className="inline-block mt-2 text-[10.5px] font-semibold transition-colors"
+          style={{ fontFamily: 'var(--font-space-grotesk)', color: '#1D3C3E' }}
         >
           View in Find Funding →
         </NextLink>
@@ -218,7 +235,8 @@ function PipelineCard({
       {stage.id === 'applying' && (
         <button
           onClick={e => { e.stopPropagation(); onMove(item.id, 'submitted') }}
-          className="ml-3 mt-1.5 text-[10px] font-semibold text-[#639922] hover:text-[#8ECB3C] transition-colors"
+          className="ml-3 mt-2 text-[10.5px] font-semibold transition-colors"
+          style={{ fontFamily: 'var(--font-space-grotesk)', color: '#1D3C3E' }}
         >
           Mark submitted ✓
         </button>
@@ -227,7 +245,7 @@ function PipelineCard({
         <p className="mt-1.5 text-[10px] text-mid italic">Awaiting decision</p>
       )}
       {stage.id === 'won' && (
-        <p className="mt-1.5 text-[10px] font-semibold" style={{ color: '#639922' }}>
+        <p className="mt-1.5 text-[10px] font-semibold" style={{ color: '#1B6B3D' }}>
           {item.outcome_date
             ? `Awarded ${new Date(item.outcome_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`
             : 'Awarded'}
@@ -254,7 +272,7 @@ function PipelineCard({
         const hasProgress = item.application_progress != null && item.application_progress > 0
         const anyFilled   = hasNotes || hasContact || hasProgress
         const emptyColor  = '#8A8986'   // light text — visible but subordinate
-        const filledColor = '#3B6D11'   // forest green
+        const filledColor = '#1B6B3D'   // sage: this is a status, so it stays green
         return (
           <div
             className="mt-2.5 pt-2 flex items-center justify-between"
@@ -273,7 +291,7 @@ function PipelineCard({
             </div>
             <span
               className="text-[10px] font-medium"
-              style={{ color: anyFilled ? '#3B6D11' : '#5F5E5A', whiteSpace: 'nowrap', lineHeight: 1 }}
+              style={{ color: anyFilled ? '#1B6B3D' : '#5F5E5A', whiteSpace: 'nowrap', lineHeight: 1 }}
             >
               {anyFilled ? 'Click to edit' : 'Add details'}
             </span>
@@ -395,12 +413,12 @@ function AddModal({
         <div className="overflow-y-auto flex-1">
           {/* Tip: add from funding list */}
           <div className="mx-6 mt-5 flex items-start gap-3 px-4 py-3 rounded-lg border border-sage/30 bg-sage/5">
-            <Sparkles className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: "#8ECB3C" }} strokeWidth={2} />
+            <Sparkles className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: '#1B6B3D' }} strokeWidth={2} />
             <div className="text-sm text-[#2C2C2A] leading-relaxed">
               The fastest way to add a grant is directly from the{' '}
               <a
                 href="/dashboard/search"
-                className="underline underline-offset-2 font-semibold inline-flex items-center gap-0.5" style={{ color: "#8ECB3C" }}
+                className="underline underline-offset-2 font-semibold inline-flex items-center gap-0.5" style={{ color: '#1D3C3E' }}
               >
                 funding search <ArrowRight className="w-3 h-3" />
               </a>
@@ -424,7 +442,7 @@ function AddModal({
               Auto-fill from URL
             </label>
             <div className="flex gap-2">
-              <div className="flex-1 flex items-center gap-2 border border-[#E8E0D1] rounded px-3 bg-white focus-within:border-[#8ECB3C] transition-colors">
+              <div className="flex-1 flex items-center gap-2 border border-[#E8E0D1] rounded-lg px-3 bg-white focus-within:border-[#1D3C3E] transition-colors">
                 <Link className="w-3.5 h-3.5 text-light flex-shrink-0" />
                 <input
                   type="url"
@@ -439,7 +457,7 @@ function AddModal({
                 type="button"
                 onClick={handleAutofill}
                 disabled={autofilling || !urlInput.trim()}
-                className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-white rounded-lg disabled:opacity-40 hover:opacity-80 transition-colors whitespace-nowrap" style={{ background: "#2C2C2A" }}
+                className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold disabled:opacity-40 hover:opacity-80 transition-colors whitespace-nowrap" style={{ background: '#1D3C3E', color: '#F6F1E7', borderRadius: 999 }}
               >
                 {autofilling
                   ? <><Loader2 className="w-3.5 h-3.5 animate-spin" />Filling…</>
@@ -451,7 +469,7 @@ function AddModal({
               <p className="text-xs text-coral-saturated mt-1.5">{autofillError}</p>
             )}
             {autofillDone && (
-              <p className="text-xs mt-1.5 font-medium" style={{ color: "#639922" }}>✓ Fields filled — please review and adjust if needed</p>
+              <p className="text-xs mt-1.5 font-medium" style={{ color: '#1B6B3D' }}>✓ Fields filled, please review and adjust if needed</p>
             )}
           </div>
 
@@ -482,7 +500,7 @@ function AddModal({
             <div>
               <label className="block text-sm font-medium text-charcoal mb-1.5">Stage</label>
               <select className="form-select" value={form.stage} onChange={e => setForm({...form, stage: e.target.value as PipelineStage})}>
-                {PIPELINE_STAGES.map(s => <option key={s.id} value={s.id}>{s.emoji} {s.label}</option>)}
+                {PIPELINE_STAGES.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
               </select>
             </div>
             <div>
@@ -788,28 +806,29 @@ export default function PipelinePage() {
             const fmt = (n: number) => formatCurrency(n)
             return total > 0 ? (
               <div className="text-right">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-light">Total Pipeline</p>
-                <p className="text-2xl font-bold leading-tight" style={{ color: "#8ECB3C" }}>{fmt(total)}</p>
+                <p className="text-[9.5px] font-bold uppercase text-light" style={{ letterSpacing: '0.13em', fontFamily: 'var(--font-space-grotesk)' }}>Total pipeline</p>
+                <p className="leading-none" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 32, fontWeight: 600, color: '#1D3C3E', letterSpacing: '-0.03em' }}>{fmt(total)}</p>
               </div>
             ) : null
           })()}
           {items.some(i => i.starred) && (
             <button
               onClick={() => setShowStarredOnly(v => !v)}
-              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-[10px] border text-sm font-semibold transition-colors whitespace-nowrap"
+              className="flex items-center gap-1.5 px-5 py-2.5 border text-sm font-semibold transition-colors whitespace-nowrap"
               style={showStarredOnly
-                ? { background: '#173404', color: '#F1F7E4', borderColor: '#173404' }
-                : { background: '#fff', color: '#2C2C2A', borderColor: '#2C2C2A' }}
+                ? { background: '#1D3C3E', color: '#F6F1E7', borderColor: '#1D3C3E', borderRadius: 999 }
+                : { background: '#fff', color: '#1D3C3E', borderColor: 'rgba(29,60,62,0.24)', borderWidth: 1.5, borderRadius: 999 }}
               title={showStarredOnly ? 'Show all' : 'Show starred only'}
             >
-              <Star size={14} strokeWidth={2} fill={showStarredOnly ? '#8ECB3C' : 'none'} />
+              <Star size={14} strokeWidth={2} fill={showStarredOnly ? '#F6F1E7' : 'none'} />
               Starred ({items.filter(i => i.starred).length})
             </button>
           )}
           <button
             onClick={() => setShowAdd(true)}
             title="Add a grant or funder that isn't in our catalogue — including ones you already fund"
-            className="flex items-center gap-2 px-5 py-2.5 rounded-[10px] border border-[#2C2C2A] text-[#2C2C2A] text-sm font-semibold bg-white hover:bg-[#2C2C2A] hover:text-white transition-colors whitespace-nowrap"
+            className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-white hover:bg-[#1D3C3E] hover:text-[#F6F1E7] transition-colors whitespace-nowrap"
+            style={{ border: '1.5px solid rgba(29,60,62,0.24)', color: '#1D3C3E', borderRadius: 999 }}
           >
             + Add a fund not listed
           </button>
@@ -838,34 +857,25 @@ export default function PipelinePage() {
           // Per-column header text tones — the stage bg varies from cream
           // through saturated green to soft coral, so a single grey is
           // unreadable on the Won column. Mapped here, not in STAGE_BG.
-          const headerCol =
-            stage.id === 'declined'  ? '#993C1D' :
-            stage.id === 'identified'? '#5F5E5A' :
-                                       '#3B6D11'
-          const countCol =
-            stage.id === 'declined'  ? '#993C1D' :
-            stage.id === 'identified'? '#2C2C2A' :
-                                       '#173404'
-          const dividerCol =
-            stage.id === 'declined'  ? 'rgba(153,60,29,0.20)' :
-            stage.id === 'identified'? 'rgba(0,0,0,0.08)' :
-                                       'rgba(57,109,17,0.18)'
+          // Two tones, not three. The ladder is monotonic now and its darkest
+          // step is still light enough for --deep, so the header no longer needs
+          // a per-column colour to stay readable. Declined is the exception
+          // because it is the one column that is not a step on the ladder.
+          const headerCol = stage.id === 'declined' ? '#993C1D' : '#1D3C3E'
           return (
             <div
               key={stage.id}
               className="pipeline-col"
               style={{
                 background: STAGE_BG_HEX[stage.id],
-                ...(stage.id === 'won' ? { borderTop: '3px solid #8ECB3C', paddingTop: 13 } : {}),
               }}
               onDragOver={onColDragOver}
               onDragLeave={onColDragLeave}
               onDrop={e => onColDrop(e, stage.id as PipelineStage)}
             >
               <div
-                className="flex items-center justify-between mb-3 pb-2.5"
+                className="flex items-center gap-2 mb-2"
                 style={{
-                  borderBottom: `1px solid ${dividerCol}`,
                   position: 'sticky',
                   top: 0,
                   zIndex: 1,
@@ -880,16 +890,23 @@ export default function PipelinePage() {
                   paddingRight: 14,
                 }}
               >
-                <span className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5" style={{ color: headerCol }}>
-                  {STAGE_ICONS[stage.id]}{stage.label}
+                <span className="flex items-center" style={{ color: headerCol, opacity: 0.75 }}>{STAGE_ICONS[stage.id]}</span>
+                <span className="text-[11px] font-bold uppercase" style={{ color: headerCol, letterSpacing: '0.11em', fontFamily: 'var(--font-space-grotesk)' }}>
+                  {stage.label}
                 </span>
-                <div className="flex flex-col items-end gap-0.5">
-                  <span className="text-[10px] font-bold leading-none" style={{ color: countCol }}>{stageItems.length}</span>
-                  <span className="text-[8px] font-medium uppercase tracking-wide leading-none" style={{ color: countCol, opacity: 0.65 }}>{STAGE_VOCAB[stage.id]}</span>
-                </div>
+                {/* Count and vocabulary on one line in a pill, rather than
+                    stacked. Stacked, the 8px vocabulary line was smaller than
+                    anything else on the board and read as a rendering artefact. */}
+                <span className="ml-auto text-[11.5px] font-bold" style={{ color: headerCol, background: 'rgba(255,255,255,0.72)', borderRadius: 999, padding: '2px 9px', fontFamily: 'var(--font-space-grotesk)' }}>
+                  {stageItems.length}
+                  <span style={{ fontWeight: 600, opacity: 0.7, marginLeft: 4, letterSpacing: 0 }}>{STAGE_VOCAB[stage.id]}</span>
+                </span>
               </div>
               {stageItems.length === 0 && (
-                <p className="text-[10px] text-light text-center py-4 leading-relaxed">Drag a grant here</p>
+                <div className="flex items-center justify-center text-center" style={{
+                  minHeight: 152, borderRadius: 11, fontSize: 11.8, color: '#5F5E5A',
+                  border: `1.5px dashed ${stage.id === 'declined' ? 'rgba(153,60,29,0.24)' : 'rgba(29,60,62,0.20)'}`,
+                }}>Drag a grant here</div>
               )}
               {stageItems.map(item => (
                 <div key={item.id} data-card-id={item.id}>

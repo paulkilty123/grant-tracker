@@ -174,13 +174,13 @@ export function PipelineModal({
         <div className="p-6 space-y-5">
           {/* About this grant — summary pulled from the live catalogue by URL,
               plus a link to its Find Funding card. Shown for all stages. */}
-          <div style={{ background: '#F1F7E4', border: '0.5px solid rgba(57,109,17,0.18)', borderRadius: 10, padding: '12px 14px' }}>
+          <div style={{ background: '#E3F0E4', border: '0.5px solid rgba(27,107,61,0.16)', borderRadius: 12, padding: '12px 14px' }}>
             <div className="flex items-center justify-between gap-3" style={{ marginBottom: 8 }}>
-              <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#3B6D11', margin: 0 }}>About this grant</p>
+              <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#1B6B3D', margin: 0 }}>About this grant</p>
               {loadingSummary ? null : catalogue ? (
                 <NextLink
                   href={`/dashboard/search?grant=${encodeURIComponent(catalogue.pinId)}`}
-                  style={{ fontSize: 12, fontWeight: 600, color: '#3B6D11', textDecoration: 'none', whiteSpace: 'nowrap' }}
+                  style={{ fontSize: 12, fontWeight: 600, color: '#1D3C3E', textDecoration: 'none', borderBottom: '1.5px solid rgba(29,60,62,0.24)', whiteSpace: 'nowrap' }}
                 >
                   View in Find Funding →
                 </NextLink>
@@ -189,7 +189,7 @@ export function PipelineModal({
                   href={item.grant_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{ fontSize: 12, fontWeight: 600, color: '#3B6D11', textDecoration: 'none', whiteSpace: 'nowrap' }}
+                  style={{ fontSize: 12, fontWeight: 600, color: '#1D3C3E', textDecoration: 'none', borderBottom: '1.5px solid rgba(29,60,62,0.24)', whiteSpace: 'nowrap' }}
                 >
                   Visit funder site →
                 </a>
@@ -203,7 +203,7 @@ export function PipelineModal({
                 {catalogue.sectors.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 mt-2">
                     {catalogue.sectors.slice(0, 4).map(s => (
-                      <span key={s} style={{ fontSize: 11, background: '#fff', color: '#3B6D11', border: '0.5px solid rgba(57,109,17,0.2)', borderRadius: 999, padding: '2px 8px', textTransform: 'capitalize' }}>{s}</span>
+                      <span key={s} style={{ fontSize: 11, background: '#fff', color: '#1B6B3D', border: '0.5px solid rgba(27,107,61,0.2)', borderRadius: 999, padding: '2px 8px', textTransform: 'capitalize' }}>{s}</span>
                     ))}
                   </div>
                 )}
@@ -259,12 +259,12 @@ export function PipelineModal({
             </div>
           )}
           {!isApplyingOrLater && (amountMin || amountMax) && (
-            <p className="-mt-2" style={{ fontSize: 14, fontWeight: 500, color: '#3B6D11' }}>
+            <p className="-mt-2" style={{ fontSize: 14, fontWeight: 500, color: '#1B6B3D' }}>
               {formatRange(amountMin ? Number(amountMin) : null, amountMax ? Number(amountMax) : null)}
             </p>
           )}
           {isApplyingOrLater && amountRequested && (
-            <p className="-mt-2" style={{ fontSize: 14, fontWeight: 500, color: '#3B6D11' }}>
+            <p className="-mt-2" style={{ fontSize: 14, fontWeight: 500, color: '#1B6B3D' }}>
               £{Number(amountRequested).toLocaleString('en-GB')} requested
             </p>
           )}
@@ -275,12 +275,16 @@ export function PipelineModal({
             <div className="grid grid-cols-3 gap-2">
               {PIPELINE_STAGES.map(s => {
                 const isActive = localStage === s.id
+                // The board's own ladder, so a stage looks the same whichever
+                // surface you change it from. Deep text throughout: the ramp is
+                // monotonic and its darkest step is still light enough to carry
+                // it, which the old per-stage greens were working around.
                 const tones: Record<string, { bg: string; text: string; restBorder: string; activeBorder: string }> = {
-                  identified: { bg: '#F5F1E8', text: '#5F5E5A', restBorder: 'rgba(0,0,0,0.08)', activeBorder: '#8A8986' },
-                  applying:   { bg: '#F1F7E4', text: '#3B6D11', restBorder: 'rgba(57,109,17,0.20)', activeBorder: '#3B6D11' },
-                  submitted:  { bg: '#DFEDCC', text: '#3B6D11', restBorder: 'rgba(57,109,17,0.20)', activeBorder: '#3B6D11' },
-                  won:        { bg: '#EAF3DE', text: '#3B6D11', restBorder: 'rgba(57,109,17,0.20)', activeBorder: '#8ECB3C' },
-                  declined:   { bg: '#FAECE7', text: '#993C1D', restBorder: 'rgba(153,60,29,0.20)', activeBorder: '#993C1D' },
+                  identified: { bg: '#F3EFE4', text: '#1D3C3E', restBorder: 'rgba(29,60,62,0.10)', activeBorder: '#1D3C3E' },
+                  applying:   { bg: '#E7F0DC', text: '#1D3C3E', restBorder: 'rgba(29,60,62,0.10)', activeBorder: '#1D3C3E' },
+                  submitted:  { bg: '#D3E5BC', text: '#1D3C3E', restBorder: 'rgba(29,60,62,0.10)', activeBorder: '#1D3C3E' },
+                  won:        { bg: '#B4D496', text: '#1D3C3E', restBorder: 'rgba(29,60,62,0.10)', activeBorder: '#1D3C3E' },
+                  declined:   { bg: '#F7E7E1', text: '#993C1D', restBorder: 'rgba(153,60,29,0.20)', activeBorder: '#993C1D' },
                 }
                 const tone = tones[s.id]
                 return (
@@ -320,22 +324,22 @@ export function PipelineModal({
                     style={{
                       display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
                       padding: '8px 4px',
-                      background: isActive ? '#F1F7E4' : '#fff',
-                      border: `1px solid ${isActive ? '#639922' : 'rgba(0,0,0,0.08)'}`,
-                      borderRadius: 8, cursor: 'pointer', transition: 'all 0.12s', fontFamily: 'inherit',
+                      background: isActive ? '#E3F0E4' : '#fff',
+                      border: `1px solid ${isActive ? '#1B6B3D' : 'rgba(29,60,62,0.10)'}`,
+                      borderRadius: 10, cursor: 'pointer', transition: 'all 0.12s', fontFamily: 'inherit',
                     }}>
-                    <span style={{ color: isActive ? '#3B6D11' : '#8A8986' }}>
+                    <span style={{ color: isActive ? '#1B6B3D' : '#8A8986' }}>
                       {WRITING_STAGE_ICONS[s.value]}
                     </span>
-                    <span style={{ fontSize: 9, fontWeight: 600, color: isActive ? '#3B6D11' : '#5F5E5A', lineHeight: 1.3 }}>
+                    <span style={{ fontSize: 9, fontWeight: 600, color: isActive ? '#1B6B3D' : '#5F5E5A', lineHeight: 1.3 }}>
                       {s.label}
                     </span>
                   </button>
                 )
               })}
             </div>
-            <div style={{ height: 6, background: 'rgba(57,109,17,0.15)', borderRadius: 3, overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: `${progress}%`, background: '#639922', borderRadius: 3, transition: 'width 0.3s ease' }} />
+            <div style={{ height: 6, background: 'rgba(29,60,62,0.20)', borderRadius: 999, overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${progress}%`, background: '#1D3C3E', borderRadius: 999, transition: 'width 0.3s ease' }} />
             </div>
           </div>
 
@@ -386,8 +390,8 @@ export function PipelineModal({
             Delete
           </button>
           <div className="flex gap-2">
-            <button onClick={onClose} style={{ padding: '9px 16px', fontSize: 13, fontWeight: 500, background: '#fff', color: '#2C2C2A', border: '0.5px solid rgba(0,0,0,0.14)', borderRadius: 9999, cursor: 'pointer', fontFamily: 'inherit', lineHeight: 1 }}>Cancel</button>
-            <button onClick={handleSave} disabled={saving} style={{ padding: '9px 18px', fontSize: 13, fontWeight: 600, background: '#8ECB3C', color: '#173404', border: 'none', borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit', lineHeight: 1, opacity: saving ? 0.6 : 1 }}>
+            <button onClick={onClose} style={{ padding: '10px 18px', fontSize: 13.5, fontWeight: 600, background: '#fff', color: '#1D3C3E', border: '1.5px solid rgba(29,60,62,0.24)', borderRadius: 9999, cursor: 'pointer', fontFamily: 'inherit', lineHeight: 1 }}>Cancel</button>
+            <button onClick={handleSave} disabled={saving} style={{ padding: '10px 18px', fontSize: 13.5, fontWeight: 600, background: '#1D3C3E', color: '#F6F1E7', border: 'none', borderRadius: 999, cursor: 'pointer', fontFamily: 'inherit', lineHeight: 1, opacity: saving ? 0.6 : 1 }}>
               {saving ? 'Saving…' : 'Save changes'}
             </button>
           </div>
