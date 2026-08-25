@@ -14,7 +14,7 @@ import { normaliseScrapedGrant, type EnrichedGrant } from '@/lib/grants-normalis
 import { computeMatchScore, MATCH_FLOOR } from '@/lib/matching'
 import { eligibilityStated, ELIGIBILITY_NOT_STATED } from '@/lib/eligibility-disclosure'
 import type { DeadlineAlert, PipelineItem, PipelineStage, FundingType, Organisation } from '@/types'
-import { typeColour } from '@/lib/funding-type-colours'
+import { typeColour, FUNDING_TYPE_COLOUR, type FundingTypeKey } from '@/lib/funding-type-colours'
 
 const ACTIVE_STAGES = ['identified', 'applying'] // 'submitted' excluded — those need a decision date, not a deadline
 
@@ -52,10 +52,18 @@ function itemFundingType(_item: PipelineItem): string | null { return null }
  * nothing may depend on the edge — no borders, no two tiles touching.
  */
 const COUNTDOWN_TILE = {
-  urgent: '#D67558',   // <= 7 days
-  soon:   '#EBCE78',   // 8-42 days
-  later:  '#9BCA9D',   // beyond
-  none:   '#4EAAB4',   // no deadline set — the one state that is not a countdown
+  // The homepage accents at 35% toward white. Full strength read as too heavy
+  // beside everything else on the row; fading them also RAISES the numeral's
+  // contrast (5.7 / 9.0 / 8.1 / 6.4, all up on the solid versions), so the
+  // 19px-bold rule below has more headroom, not less.
+  //
+  // 35% is where it stops. The weakest separation from any funding-type chip
+  // is 10.1 here, against 16.7 at full strength; at 45% it falls to 7.7 and by
+  // 65% to 2.7, which is the collision this palette exists to avoid.
+  urgent: '#E4A592',   // <= 7 days
+  soon:   '#F2DFA7',   // 8-42 days
+  later:  '#BEDDBF',   // beyond
+  none:   '#8CC8CE',   // no deadline set — the one state that is not a countdown
 } as const
 
 // ── Calendar helpers ──────────────────────────────────────────────────────────
@@ -101,18 +109,12 @@ const fmtAmt = (n: number) => formatCurrency(n)
 
 // ── Add Deadline Modal ────────────────────────────────────────────────────────
 
-const TYPE_CHIPS: {
-  key: string
-  label: string
-  dot: string
-  bg: string
-  text: string
-  Icon: LucideIcon
-}[] = [
-  { key: 'grant',      label: 'Grant',      dot: '#97C459', bg: '#E3F0E4', text: '#1B6B3D', Icon: Landmark   },
-  { key: 'programme',  label: 'Programme',  dot: '#F0997B', bg: '#FAECE7', text: '#993C1D', Icon: Rocket     },
-  { key: 'investment', label: 'Investment', dot: '#85B7EB', bg: '#E6F1FB', text: '#0C447C', Icon: TrendingUp  },
-  { key: 'in_kind',    label: 'In-Kind',    dot: '#EF9F27', bg: '#FAEEDA', text: '#854F0B', Icon: Gift       },
+/** The shared four, not a sixth palette. Icons are local to this control. */
+const TYPE_CHIPS: { key: FundingTypeKey; Icon: LucideIcon }[] = [
+  { key: 'grant',      Icon: Landmark   },
+  { key: 'programme',  Icon: Rocket     },
+  { key: 'investment', Icon: TrendingUp },
+  { key: 'in_kind',    Icon: Gift       },
 ]
 
 function AddDeadlineModal({ orgId, userId, onClose, onSaved }: {
@@ -177,7 +179,7 @@ function AddDeadlineModal({ orgId, userId, onClose, onSaved }: {
           display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexShrink: 0 }}>
           <div>
             <h3 style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 17, fontWeight: 500,
-              letterSpacing: '-0.01em', margin: '0 0 4px', color: '#2C2C2A' }}>Add a deadline</h3>
+              letterSpacing: '-0.02em', margin: '0 0 4px', color: '#1D3C3E' }}>Add a deadline</h3>
             <p style={{ fontSize: 12, color: '#5F5E5A', margin: 0, lineHeight: 1.5 }}>
               Log an opportunity not already in your pipeline or saved list.
             </p>
@@ -262,22 +264,27 @@ function AddDeadlineModal({ orgId, userId, onClose, onSaved }: {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
               {TYPE_CHIPS.map(tc => {
                 const sel = fundingType === tc.key
+                const c   = FUNDING_TYPE_COLOUR[tc.key]
                 return (
                   <button key={tc.key} type="button" onClick={() => setFundingType(tc.key)}
                     style={{
-                      border: sel ? `1.5px solid ${tc.dot}` : '0.5px solid rgba(0,0,0,0.10)',
-                      background: sel ? tc.bg : '#fff',
-                      borderRadius: 10, padding: '10px 8px', textAlign: 'center',
+                      border: sel ? `1.5px solid ${c.fg}` : '1px solid rgba(29,60,62,0.12)',
+                      background: sel ? c.tint : '#fff',
+                      borderRadius: 12, padding: '11px 8px', textAlign: 'center',
                       cursor: 'pointer', fontFamily: 'inherit',
                     }}>
-                    <div style={{ width: 24, height: 24, borderRadius: 8, margin: '0 auto 6px',
+                    {/* The glyph tile is WHITE on the tint when selected, never
+                        the saturated rail: a glyph on the saturated hues
+                        measures 2.62 / 1.71 / 2.56 / 3.68, three of them under
+                        the 3:1 floor, and no single glyph colour fixes all
+                        four. Same call as the Find Funding type panel. */}
+                    <div style={{ width: 26, height: 26, borderRadius: 999, margin: '0 auto 7px',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      background: sel ? tc.dot : tc.bg }}>
-                      <tc.Icon size={12} strokeWidth={sel ? 2.5 : 2}
-                        style={{ color: sel ? '#fff' : tc.dot }} />
+                      background: sel ? '#fff' : c.tint }}>
+                      <tc.Icon size={13} strokeWidth={2} style={{ color: c.fg }} />
                     </div>
-                    <div style={{ fontSize: 11, fontWeight: sel ? 600 : 500,
-                      color: sel ? tc.text : '#5F5E5A' }}>{tc.label}</div>
+                    <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 11.5, fontWeight: 600,
+                      color: sel ? c.fg : '#5F5E5A' }}>{c.label}</div>
                   </button>
                 )
               })}
@@ -337,9 +344,19 @@ function AddDeadlineModal({ orgId, userId, onClose, onSaved }: {
               Cancel
             </button>
             <button type="button" onClick={handleSave} disabled={!grantName.trim() || !deadline || saving}
-              style={{ fontSize: 12, fontWeight: 500, background: '#1D3C3E', color: '#F6F1E7',
-                padding: '9px 18px', borderRadius: 999, cursor: 'pointer', border: 'none', fontFamily: 'inherit',
-                opacity: (!grantName.trim() || !deadline || saving) ? 0.5 : 1 }}>
+              style={(() => {
+                const off = !grantName.trim() || !deadline || saving
+                return {
+                  fontSize: 12.5, fontWeight: 600, fontFamily: 'inherit', border: 'none',
+                  padding: '9px 18px', borderRadius: 999,
+                  cursor: off ? 'not-allowed' : 'pointer',
+                  // Not opacity on the deep fill: at 50% over white that lands
+                  // on a muddy sage that reads as a colour choice rather than
+                  // as "not yet". A neutral fill with muted text says it plainly.
+                  background: off ? '#F1EDE3' : '#1D3C3E',
+                  color:      off ? '#74736E' : '#F6F1E7',
+                }
+              })()}>
               {saving ? 'Saving\u2026' : 'Save deadline'}
             </button>
           </div>
