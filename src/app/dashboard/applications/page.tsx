@@ -12,6 +12,7 @@ import { getOrganisationByOwner } from '@/lib/organisations'
 import { T, UI, BODY } from '@/components/builder/tokens'
 import type { ApplicationRecord } from '@/lib/builder/types'
 import { hueMap, PROJECT_HUE_INK, PROJECT_HUE_NONE } from '@/lib/project-hues'
+import { HowItWorksPanel, DisclosureControl } from '@/components/HowItWorksPanel'
 
 // The Apply-tier ethos as a few plain principles. Leads with the funder's-eye
 // reframe (the highest-value move for first-time applicants), closes on voice.
@@ -32,48 +33,21 @@ const HOW_IT_WORKS_STEPS = [
 
 function HowItWorks({ withCta }: { withCta?: boolean }) {
   return (
-    <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, padding: '22px 24px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18 }}>
-        <HelpCircle size={18} color={T.sage} />
-        <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 16, color: T.textPrimary }}>How it works</span>
-      </div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14 }}>
-        {HOW_IT_WORKS_STEPS.map((s, i) => (
-          <div key={i} style={{ flex: '1 1 150px', minWidth: 150 }}>
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
-              <span style={{
-                fontFamily: UI, fontWeight: 700, fontSize: 13, color: '#F1F7E4', background: T.greenDeep,
-                width: 30, height: 30, borderRadius: 999, display: 'inline-flex', alignItems: 'center',
-                justifyContent: 'center', flexShrink: 0,
-              }}>
-                {i + 1}
-              </span>
-              {i < HOW_IT_WORKS_STEPS.length - 1 && (
-                <span style={{ flex: 1, height: 2, background: 'rgba(23,52,4,0.12)', marginLeft: 10, borderRadius: 2 }} />
-              )}
-            </div>
-            <p style={{ fontFamily: UI, fontWeight: 600, fontSize: 14.5, color: T.textPrimary, margin: '0 0 4px' }}>{s.title}</p>
-            <p style={{ fontFamily: BODY, fontSize: 12.5, color: T.textSecondary, margin: 0, lineHeight: 1.5 }}>{s.body}</p>
-          </div>
-        ))}
-      </div>
-      {withCta && (
-        <Link href="/dashboard/applications/new" style={{
-          fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.greenDeep, background: T.lime,
-          padding: '9px 16px', borderRadius: 8, textDecoration: 'none', display: 'inline-flex',
-          alignItems: 'center', gap: 6, marginTop: 18,
-        }}>
-          <Plus size={14} /> New application
-        </Link>
-      )}
-    </div>
+    <HowItWorksPanel
+      steps={HOW_IT_WORKS_STEPS}
+      cta={withCta ? { href: '/dashboard/applications/new', label: 'New application' } : undefined}
+    />
   )
 }
 
 const STATUS_STYLE: Record<string, { bg: string; color: string; label: string }> = {
-  draft:       { bg: T.cream,      color: T.textSecondary, label: 'Draft' },
-  in_progress: { bg: T.paleGreen2, color: T.sage,          label: 'In progress' },
-  complete:    { bg: '#C0DD97',    color: T.greenDeep,     label: 'Complete' },
+  // "In progress" and "Complete" are states of the application, so they take
+  // the green that means "this is true". Draft is the absence of one and stays
+  // neutral — as does the "Identified" chip on a Ready-to-start row, which is a
+  // pipeline stage rather than a state of anything drafted.
+  draft:       { bg: '#F1EDE3',    color: '#5F5E5A',       label: 'Draft' },
+  in_progress: { bg: '#E3F0E4',    color: '#1B6B3D',       label: 'In progress' },
+  complete:    { bg: '#B4D496',    color: '#1D3C3E',       label: 'Complete' },
 }
 
 interface PipeItem {
@@ -251,45 +225,56 @@ export default function ApplicationsPage() {
   }
 
   return (
-    <div style={{ maxWidth: 860, marginInline: 'auto' }}>
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 6 }}>
-        <div>
-          <h1 style={{ fontFamily: UI, fontWeight: 600, fontSize: 24, color: T.textPrimary, letterSpacing: '-0.01em', margin: 0 }}>
+    /* Full width, matching Find Funding, Pipeline and Projects. The heading
+       colour is set here rather than on T.textPrimary — that token is shared
+       across every builder surface. */
+    <div>
+      {/* Header. flexWrap so the counts and the button drop below the heading
+          when space is tight, rather than compressing the button. */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24, marginBottom: 6, flexWrap: 'wrap' }}>
+        <div style={{ minWidth: 280, flex: '1 1 440px' }}>
+          <h1 style={{ fontFamily: UI, fontWeight: 600, fontSize: 31, color: '#1D3C3E', letterSpacing: '-0.025em', margin: 0 }}>
             Applications
           </h1>
-          <p style={{ fontFamily: BODY, fontSize: 14, color: T.textSecondary, margin: '6px 0 0', lineHeight: 1.55, maxWidth: 620 }}>
+          <p style={{ fontFamily: BODY, fontSize: 13.5, color: '#5F5E5A', margin: '5px 0 0', lineHeight: 1.55, maxWidth: 600 }}>
             Shoots shapes each answer from your own material, shows you what a strong response
             to this funder needs to cover, and flags the gaps before you start. You write it in your
             own words.
           </p>
         </div>
-        <Link
-          href="/dashboard/applications/new"
-          style={{
-            fontFamily: UI, fontWeight: 600, fontSize: 14, color: T.textPrimary,
-            background: T.white, border: `1px solid ${T.textPrimary}`, padding: '9px 18px',
-            borderRadius: 8, textDecoration: 'none', display: 'inline-flex', alignItems: 'center',
-            gap: 7, whiteSpace: 'nowrap', flexShrink: 0,
-          }}
-        >
-          <Plus size={15} /> New application
-        </Link>
+        <div style={{ display: 'flex', gap: 26, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+          {loaded && apps.length > 0 && (() => {
+            const counts = [
+              { n: apps.filter(a => a.status === 'in_progress' || a.status === 'draft').length, label: 'In progress' },
+              { n: apps.filter(a => a.status === 'complete').length, label: 'Complete' },
+              { n: deadlineSoon, label: 'Deadline soon' },
+            ]
+            return counts.map(c => (
+              <span key={c.label} style={{ textAlign: 'right' }}>
+                <span style={{ fontFamily: UI, fontSize: 27, fontWeight: 600, color: c.label === 'Deadline soon' && c.n > 0 ? '#993C1D' : '#1D3C3E', letterSpacing: '-0.03em', lineHeight: 1, display: 'block' }}>{c.n}</span>
+                <span style={{ fontFamily: UI, fontSize: 9.5, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#5F5E5A', display: 'block', marginTop: 5 }}>{c.label}</span>
+              </span>
+            ))
+          })()}
+          <Link
+            href="/dashboard/applications/new"
+            style={{
+              fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: '#F6F1E7',
+              background: '#1D3C3E', border: 'none', padding: '11px 20px',
+              borderRadius: 999, textDecoration: 'none', display: 'inline-flex', alignItems: 'center',
+              gap: 7, whiteSpace: 'nowrap', flexShrink: 0,
+            }}
+          >
+            <Plus size={15} /> New application
+          </Link>
+        </div>
       </div>
 
       {/* Ethos: what makes a strong application (collapsible, light) */}
       <div style={{ marginTop: 14 }}>
-        <button
-          onClick={() => setPrinciplesOpen(o => !o)}
-          aria-expanded={principlesOpen}
-          style={{
-            fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.sage, background: 'transparent',
-            border: 'none', cursor: 'pointer', padding: 0, display: 'inline-flex', alignItems: 'center', gap: 6,
-          }}
-        >
-          <Lightbulb size={14} /> What makes a strong application
-          <ChevronDown size={14} style={{ transform: principlesOpen ? 'rotate(180deg)' : 'none', transition: 'transform 150ms ease' }} />
-        </button>
+        <DisclosureControl open={principlesOpen} onClick={() => setPrinciplesOpen(o => !o)} icon={<Lightbulb size={15} />}>
+          What makes a strong application
+        </DisclosureControl>
         {principlesOpen && (
           <div style={{
             background: T.softGreen, border: `1px solid ${T.border}`, borderRadius: 12,
@@ -298,7 +283,7 @@ export default function ApplicationsPage() {
             {STRONG_APPLICATION_PRINCIPLES.map((p, i) => (
               <div key={i} style={{ display: 'flex', gap: 11 }}>
                 <span style={{
-                  fontFamily: UI, fontWeight: 700, fontSize: 11, color: T.sage, background: T.paleGreen,
+                  fontFamily: UI, fontWeight: 700, fontSize: 11, color: '#1D3C3E', background: '#F1EDE3',
                   width: 22, height: 22, borderRadius: 999, display: 'flex', alignItems: 'center',
                   justifyContent: 'center', flexShrink: 0, marginTop: 1,
                 }}>
@@ -314,26 +299,7 @@ export default function ApplicationsPage() {
         )}
       </div>
 
-      {/* Status strip — lead with state (real application states only) */}
-      {loaded && apps.length > 0 && (() => {
-        const inProgress = apps.filter(a => a.status === 'in_progress' || a.status === 'draft').length
-        const complete = apps.filter(a => a.status === 'complete').length
-        const tiles = [
-          { n: inProgress, label: 'In progress', accent: T.sage },
-          { n: complete, label: 'Complete', accent: T.greenDeep },
-          { n: deadlineSoon, label: 'Deadline soon', accent: deadlineSoon > 0 ? T.coral : T.textTertiary },
-        ]
-        return (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginTop: 18 }}>
-            {tiles.map(t => (
-              <div key={t.label} style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 10, padding: '12px 16px' }}>
-                <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 22, color: t.accent, display: 'block', lineHeight: 1.1 }}>{t.n}</span>
-                <span style={{ fontFamily: BODY, fontSize: 12.5, color: T.textSecondary }}>{t.label}</span>
-              </div>
-            ))}
-          </div>
-        )
-      })()}
+      {/* The three stat cards that sat here are now the header cluster above. */}
 
       {/* List */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 22 }}>
@@ -454,7 +420,7 @@ export default function ApplicationsPage() {
                     <span style={{ fontFamily: BODY, fontSize: 11.5, color: T.textSecondary }}>
                       {answered} of {total} written
                     </span>
-                    <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 11.5, color: T.sage }}>
+                    <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: '#1D3C3E' }}>
                       {Math.round((answered / total) * 100)}%
                     </span>
                   </div>
@@ -522,10 +488,10 @@ export default function ApplicationsPage() {
             application yet. Bridges pipeline intent -> drafting. */}
         {loaded && readyToStart.length > 0 && (
           <div style={{ marginTop: apps.length > 0 ? 14 : 0 }}>
-            <h2 style={{ fontFamily: UI, fontWeight: 600, fontSize: 16, color: T.textPrimary, margin: '0 0 3px' }}>
+            <h2 style={{ fontFamily: UI, fontWeight: 600, fontSize: 19, color: '#1D3C3E', margin: '0 0 4px', letterSpacing: '-0.015em' }}>
               Ready to start
             </h2>
-            <p style={{ fontFamily: BODY, fontSize: 12.5, color: T.textSecondary, margin: '0 0 10px', lineHeight: 1.5 }}>
+            <p style={{ fontFamily: BODY, fontSize: 13.2, color: '#5F5E5A', margin: '0 0 12px', lineHeight: 1.5 }}>
               In your pipeline, not drafted yet. Start an application when you&apos;re ready.
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -570,8 +536,8 @@ export default function ApplicationsPage() {
                     <Link
                       href={`/dashboard/applications/new?pipeline=${p.id}`}
                       style={{
-                        fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.greenDeep, background: T.lime,
-                        padding: '8px 14px', borderRadius: 8, textDecoration: 'none', whiteSpace: 'nowrap',
+                        fontFamily: UI, fontWeight: 600, fontSize: 13, color: '#F6F1E7', background: '#1D3C3E',
+                        padding: '11px 18px', borderRadius: 999, textDecoration: 'none', whiteSpace: 'nowrap',
                         flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 5,
                       }}
                     >
@@ -590,13 +556,13 @@ export default function ApplicationsPage() {
           howOpen
             ? <HowItWorks />
             : (
-              <button onClick={() => setHowOpen(true)} style={{
-                fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.sage,
-                background: 'transparent', border: 'none', cursor: 'pointer',
-                padding: '6px 0', textAlign: 'left', alignSelf: 'flex-start',
-              }}>
-                How it works
-              </button>
+              /* Matches the disclosure at the top of the page rather than
+                 being a second pattern — it was a bare green link. */
+              <span style={{ alignSelf: 'flex-start', marginTop: 6 }}>
+                <DisclosureControl open={false} onClick={() => setHowOpen(true)} icon={<HelpCircle size={15} />}>
+                  How it works
+                </DisclosureControl>
+              </span>
             )
         )}
       </div>

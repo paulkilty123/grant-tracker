@@ -13,15 +13,13 @@ import { getOrganisationByOwner } from '@/lib/organisations'
 import { T, UI, BODY } from '@/components/builder/tokens'
 import { projectCompleteness, readyToMatch, type Project } from '@/lib/builder/projects'
 import { hueMap, PROJECT_HUE_INK, PROJECT_HUE_NONE } from '@/lib/project-hues'
+import { HowItWorksPanel } from '@/components/HowItWorksPanel'
 
 const STATUS_STYLE: Record<string, { bg: string; color: string; label: string }> = {
   active:   { bg: '#E3F0E4',    color: '#1B6B3D',       label: 'Active' },
   funded:   { bg: '#B4D496',    color: '#1D3C3E',       label: 'Funded' },
   archived: { bg: T.cream,      color: T.textSecondary, label: 'Archived' },
 }
-
-/** Homepage step colours, in the homepage order. See the numeral note below. */
-const HOW_HUES = ['#D67558', '#4EAAB4', '#EBCE78', '#9BCA9D']
 
 const HOW_STEPS = [
   { title: 'Describe it once', body: 'Type a few sentences or paste from an old document. We turn it into a structured project.' },
@@ -32,53 +30,10 @@ const HOW_STEPS = [
 
 function HowItWorks({ withCta }: { withCta?: boolean }) {
   return (
-    <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, padding: '22px 24px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18 }}>
-        <HelpCircle size={18} color="#1D3C3E" />
-        <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 16, color: '#1D3C3E', letterSpacing: '-0.012em' }}>How it works</span>
-      </div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14 }}>
-        {HOW_STEPS.map((s, i) => (
-          <div key={i} style={{ flex: '1 1 150px', minWidth: 150 }}>
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
-              {/* 44px with a 19px BOLD numeral, and that is a contrast
-                  requirement rather than a styling preference. At 13px the
-                  numeral is normal text and needs 4.5:1, which none of these
-                  four hues can give: --deep tops out at 3.70 on terracotta and
-                  4.37 on teal. At 19px bold it qualifies as WCAG large text,
-                  the floor drops to 3:1, and --deep clears all four
-                  (3.70 / 4.37 / 7.71 / 6.41).
-
-                  Do NOT copy the homepage's cream numeral on terracotta and
-                  teal — that measures 2.85 and 2.41, under even the large-text
-                  floor. --deep on all four. */}
-              <span style={{
-                fontFamily: UI, fontWeight: 700, fontSize: 19, color: '#1D3C3E',
-                background: HOW_HUES[i], letterSpacing: '-0.01em',
-                width: 44, height: 44, borderRadius: 999, display: 'inline-flex', alignItems: 'center',
-                justifyContent: 'center', flexShrink: 0,
-              }}>
-                {String(i + 1).padStart(2, '0')}
-              </span>
-              {i < HOW_STEPS.length - 1 && (
-                <span style={{ flex: 1, height: 1.5, background: 'rgba(29,60,62,0.14)', marginLeft: 10, borderRadius: 2 }} />
-              )}
-            </div>
-            <p style={{ fontFamily: UI, fontWeight: 600, fontSize: 14.5, color: '#1D3C3E', margin: '0 0 6px', letterSpacing: '-0.01em' }}>{s.title}</p>
-            <p style={{ fontFamily: BODY, fontSize: 12.5, color: T.textSecondary, margin: 0, lineHeight: 1.5 }}>{s.body}</p>
-          </div>
-        ))}
-      </div>
-      {withCta && (
-        <Link href="/dashboard/projects/new" style={{
-          fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: '#F6F1E7', background: '#1D3C3E',
-          padding: '11px 20px', borderRadius: 999, textDecoration: 'none', display: 'inline-flex',
-          alignItems: 'center', gap: 6, marginTop: 18,
-        }}>
-          <Plus size={14} /> New project
-        </Link>
-      )}
-    </div>
+    <HowItWorksPanel
+      steps={HOW_STEPS}
+      cta={withCta ? { href: '/dashboard/projects/new', label: 'New project' } : undefined}
+    />
   )
 }
 

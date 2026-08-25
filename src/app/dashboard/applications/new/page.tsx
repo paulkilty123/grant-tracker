@@ -84,8 +84,8 @@ function StepDot({ n, label, active, done }: { n: number; label: string; active:
       <div style={{
         width: 24, height: 24, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontFamily: UI, fontWeight: 700, fontSize: 12,
-        background: done ? T.lime : active ? T.greenDeep : T.cream,
-        color: done ? T.greenDeep : active ? '#F1F7E4' : T.textTertiary,
+        background: done ? '#E3F0E4' : active ? '#1D3C3E' : '#F1EDE3',
+        color: done ? '#1B6B3D' : active ? '#F6F1E7' : T.textTertiary,
       }}>
         {done ? <Check size={13} /> : n}
       </div>
@@ -290,7 +290,8 @@ export default function NewApplicationPage() {
   }
 
   return (
-    <div style={{ maxWidth: 760, marginInline: 'auto' }}>
+    /* Full width, matching the rest of band C. */
+    <div>
       {/* Breadcrumb + stepper */}
       <Link href="/dashboard/applications" style={{
         fontFamily: UI, fontWeight: 500, fontSize: 13, color: T.textSecondary,
@@ -299,7 +300,7 @@ export default function NewApplicationPage() {
         <ArrowLeft size={14} /> Applications
       </Link>
 
-      <h1 style={{ fontFamily: UI, fontWeight: 600, fontSize: 24, color: T.textPrimary, letterSpacing: '-0.01em', margin: '0 0 16px' }}>
+      <h1 style={{ fontFamily: UI, fontWeight: 600, fontSize: 31, color: '#1D3C3E', letterSpacing: '-0.025em', margin: '0 0 16px' }}>
         New application
       </h1>
 
@@ -330,7 +331,7 @@ export default function NewApplicationPage() {
                 router.push('/dashboard/projects/new')
               }}
               style={{
-                fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.greenDeep, background: 'transparent',
+                fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: '#1D3C3E', background: 'transparent',
                 border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: 4,
               }}
             >
@@ -470,7 +471,7 @@ export default function NewApplicationPage() {
                       target="_blank"
                       rel="noopener noreferrer"
                       style={{
-                        fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.greenDeep,
+                        fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: '#1D3C3E',
                         background: T.white, border: `1px solid ${T.borderStrong}`,
                         padding: '6px 12px', borderRadius: 8, textDecoration: 'none',
                         display: 'inline-flex', alignItems: 'center', gap: 6,
