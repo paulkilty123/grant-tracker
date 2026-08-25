@@ -1048,7 +1048,7 @@ export default function ApplicationWorkspacePage() {
             </span>
           )}
         </div>
-        <div style={{ height: 6, background: T.cream, borderRadius: 999, overflow: 'hidden' }}>
+        <div style={{ height: 6, background: 'rgba(29,60,62,0.15)', borderRadius: 999, overflow: 'hidden' }}>
           <div style={{
             height: '100%',
             width: `${app.questions.length ? Math.round((answeredCount / app.questions.length) * 100) : 0}%`,
@@ -1352,7 +1352,7 @@ export default function ApplicationWorkspacePage() {
             </button>
           )}
           {generating && (
-            <div style={{ height: 5, background: T.cream, borderRadius: 999, overflow: 'hidden', maxWidth: 320, margin: '0 auto' }}>
+            <div style={{ height: 5, background: 'rgba(29,60,62,0.15)', borderRadius: 999, overflow: 'hidden', maxWidth: 320, margin: '0 auto' }}>
               <div style={{
                 height: '100%',
                 width: `${Math.max(8, Math.round((streamedCount / Math.max(1, app.questions.length)) * 100))}%`,

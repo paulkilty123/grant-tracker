@@ -182,7 +182,7 @@ export default async function DashboardPage() {
   // projects. Fully gated: non-builder users get the byte-identical dashboard.
   const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
   type WorkApp = { id: string; title: string; funder: string | null; updatedAt: string | null; createdAt: string | null; projectId: string | null; answered: number; total: number; pill: { label: string; coral: boolean } }
-  type WorkProject = { id: string; name: string; ready: boolean; budget: number | null; fitCount: number | null }
+  type WorkProject = { id: string; name: string; ready: boolean; budget: number | null; fitCount: number | null; createdAt: string | null }
   let builderAllowed = false
   let workApps: WorkApp[] = []
   let workProjects: WorkProject[] = []
@@ -239,10 +239,10 @@ export default async function DashboardPage() {
       })
       const { data: projs } = await supabase
         .from('projects')
-        .select('id, name, sectors, budget_amount, what_it_will_do')
+        .select('id, name, sectors, budget_amount, what_it_will_do, created_at')
         .eq('org_id', typedOrg.id)
         .order('updated_at', { ascending: false })
-      const projList = (projs ?? []) as { id: string; name: string; sectors: string[] | null; budget_amount: number | null; what_it_will_do: string | null }[]
+      const projList = (projs ?? []) as { id: string; name: string; sectors: string[] | null; budget_amount: number | null; what_it_will_do: string | null; created_at: string | null }[]
       // Normalise the already-fetched pool once; per-project "funders fit"
       // filters cheaply then scores only the survivors. Computed for the
       // displayed rows only (first 4) to keep the home page fast.
@@ -271,7 +271,7 @@ export default async function DashboardPage() {
           }
           fitCount = n
         }
-        return { id: p.id, name: p.name, ready, budget: p.budget_amount ?? null, fitCount }
+        return { id: p.id, name: p.name, ready, budget: p.budget_amount ?? null, fitCount, createdAt: p.created_at ?? null }
       })
     }
   }
@@ -415,7 +415,7 @@ export default async function DashboardPage() {
    * returns null for all of them today and the tile stays neutral. The lookup
    * is wired, so it lights up the day a picker ships.
    */
-  const hueByProjectId = hueMap(workProjects)
+  const hueByProjectId = hueMap(workProjects.map(pr => ({ id: pr.id, created_at: pr.createdAt })))
   const projectHue = (id: string | null) => (id ? hueByProjectId.get(id) ?? null : null)
   const projectName = new Map(workProjects.map(pr => [pr.id, pr.name]))
 
@@ -1333,7 +1333,7 @@ export default async function DashboardPage() {
                           )}
                           {a.answered > 0 ? (
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 }}>
-                              <span style={{ height: 6, flex: 1, maxWidth: 150, background: '#EFE9DD', borderRadius: 999, overflow: 'hidden' }}>
+                              <span style={{ height: 6, flex: 1, maxWidth: 150, background: 'rgba(29,60,62,0.15)', borderRadius: 999, overflow: 'hidden' }}>
                                 <span style={{ display: 'block', height: '100%', width: `${pct}%`, background: '#1D3C3E' }} />
                               </span>
                               <span className="text-mid" style={{ fontSize: 12 }}>{a.answered} of {a.total}</span>
@@ -1364,7 +1364,7 @@ export default async function DashboardPage() {
                 {/* The project's own hue. This is the live half of the pair:
                     projects have ids, so the colour is real here even while the
                     applications side waits for a picker. */}
-                <span style={{ width: 40, height: 40, borderRadius: 11, background: hueForIndex(i), color: '#1D3C3E', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Lightbulb size={19} /></span>
+                <span style={{ width: 40, height: 40, borderRadius: 11, background: projectHue(p.id) ?? '#F1EDE3', color: '#1D3C3E', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Lightbulb size={19} /></span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 15, fontWeight: 500, color: '#2C2C2A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 5, fontSize: 12.5 }}>

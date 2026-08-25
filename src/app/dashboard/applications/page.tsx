@@ -114,7 +114,7 @@ export default function ApplicationsPage() {
    * ever and the colour arrives for nobody until they happen to start a new
    * one. This is the half that changes something today.
    */
-  const [projectList, setProjectList] = useState<{ id: string; name: string }[]>([])
+  const [projectList, setProjectList] = useState<{ id: string; name: string; created_at?: string | null }[]>([])
   const [assigningId, setAssigningId] = useState<string | null>(null)
   const [assignError, setAssignError] = useState<string | null>(null)
 
@@ -152,7 +152,8 @@ export default function ApplicationsPage() {
     await supabase.from('applications').delete().eq('id', id)
   }
 
-  // Same input order as every other surface, so the colours agree.
+  // hueMap sorts internally, so this page's query order cannot disagree with
+  // the dashboard's. It used to: this one reads created_at, that one updated_at.
   const hues = hueMap(projectList)
 
   useEffect(() => {
@@ -177,9 +178,9 @@ export default function ApplicationsPage() {
 
         // Project names for the "Part of: …" differentiator on rows.
         const { data: projs } = await supabase
-          .from('projects').select('id, name').eq('org_id', org.id)
+          .from('projects').select('id, name, created_at').eq('org_id', org.id)
           .order('created_at', { ascending: false })
-        const plist = (projs ?? []) as { id: string; name: string }[]
+        const plist = (projs ?? []) as { id: string; name: string; created_at: string | null }[]
         const pmap: Record<string, string> = {}
         for (const pr of plist) pmap[pr.id] = pr.name
         setProjectNames(pmap)
@@ -457,10 +458,11 @@ export default function ApplicationsPage() {
                       {Math.round((answered / total) * 100)}%
                     </span>
                   </div>
-                  <div style={{ height: 6, background: T.cream, borderRadius: 999, overflow: 'hidden' }}>
+                  {/* Track was T.cream on a white card — 1.04:1, invisible, so the bar read as a floating stub. Same bug as the Find Funding sort pill. */}
+                  <div style={{ height: 6, background: 'rgba(29,60,62,0.15)', borderRadius: 999, overflow: 'hidden' }}>
                     <div style={{
                       height: '100%', width: `${Math.round((answered / total) * 100)}%`,
-                      background: T.lime, borderRadius: 999, transition: 'width 200ms ease',
+                      background: '#1D3C3E', borderRadius: 999, transition: 'width 200ms ease',
                     }} />
                   </div>
                 </div>

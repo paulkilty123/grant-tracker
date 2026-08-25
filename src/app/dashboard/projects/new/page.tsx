@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { getOrganisationByOwner } from '@/lib/organisations'
-import { T, UI, BODY, inputStyle, primaryBtn } from '@/components/builder/tokens'
+import { T, UI, BODY, inputStyle, deepBtn } from '@/components/builder/tokens'
 
 export default function NewProjectPage() {
   const router = useRouter()
@@ -61,7 +61,9 @@ export default function NewProjectPage() {
   }
 
   return (
-    <div style={{ maxWidth: 720, marginInline: 'auto' }}>
+    /* Full width, matching Find Funding, Pipeline and the projects list. The
+       inset container was part of why this flow read as a different product. */
+    <div>
       <Link href="/dashboard/projects" style={{
         fontFamily: UI, fontWeight: 500, fontSize: 13, color: T.textSecondary,
         textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 16,
@@ -74,10 +76,10 @@ export default function NewProjectPage() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{
-            width: 24, height: 24, borderRadius: 999, background: T.greenDeep, color: '#F1F7E4',
+            width: 24, height: 24, borderRadius: 999, background: '#1D3C3E', color: '#F6F1E7',
             fontFamily: UI, fontWeight: 700, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>1</span>
-          <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.textPrimary }}>Describe</span>
+          <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 13, color: '#1D3C3E' }}>Describe</span>
         </div>
         <div style={{ flex: '0 0 32px', height: 1, background: T.borderStrong }} />
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -89,10 +91,10 @@ export default function NewProjectPage() {
         </div>
       </div>
 
-      <h1 style={{ fontFamily: UI, fontWeight: 600, fontSize: 24, color: T.textPrimary, letterSpacing: '-0.01em', margin: '0 0 8px' }}>
+      <h1 style={{ fontFamily: UI, fontWeight: 600, fontSize: 31, color: '#1D3C3E', letterSpacing: '-0.025em', margin: '0 0 5px' }}>
         Describe your project
       </h1>
-      <p style={{ fontFamily: BODY, fontSize: 14, color: T.textSecondary, margin: '0 0 22px', lineHeight: 1.6, maxWidth: 560 }}>
+      <p style={{ fontFamily: BODY, fontSize: 13.5, color: '#5F5E5A', margin: '0 0 22px', lineHeight: 1.55, maxWidth: 560 }}>
         In your own words: what it will do, who it is for, and the difference it makes. Rough
         notes are fine, and you can paste straight from an old application or project plan. We
         will sort it into sections you can edit.
@@ -146,7 +148,7 @@ export default function NewProjectPage() {
         )}
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 20 }}>
-          <button onClick={handleExtract} disabled={working} style={primaryBtn(working)}>
+          <button onClick={handleExtract} disabled={working} style={deepBtn(working)}>
             {working ? 'Reading your description…' : 'Next'}
           </button>
           {working && (

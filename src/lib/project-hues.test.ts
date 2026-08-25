@@ -14,25 +14,48 @@ describe('hueForIndex', () => {
 })
 
 describe('hueMap', () => {
-  it('gives the same project the same hue on every surface', () => {
-    // The dashboard and the applications list build this from separate queries.
-    // They agree only because both order projects newest-first; if one of them
-    // ever stops doing that, the same project renders in two colours.
-    const projects = [{ id: 'a' }, { id: 'b' }, { id: 'c' }]
-    const dashboard = hueMap(projects)
-    const list      = hueMap(projects)
-    for (const p of projects) expect(dashboard.get(p.id)).toBe(list.get(p.id))
+  it('gives the same project the same hue whatever order the caller queried in', () => {
+    // The real failure this guards. The dashboard and projects list query by
+    // updated_at, the applications pages by created_at. Before hueMap sorted
+    // internally, that alone made the same project two different colours
+    // depending on which screen you were looking at.
+    const a = { id: 'a', created_at: '2026-01-01' }
+    const b = { id: 'b', created_at: '2026-02-01' }
+    const c = { id: 'c', created_at: '2026-03-01' }
+    const oldestFirst = hueMap([a, b, c])
+    const newestFirst = hueMap([c, b, a])
+    const arbitrary   = hueMap([b, c, a])
+    for (const p of [a, b, c]) {
+      expect(newestFirst.get(p.id)).toBe(oldestFirst.get(p.id))
+      expect(arbitrary.get(p.id)).toBe(oldestFirst.get(p.id))
+    }
   })
 
-  it('does not reshuffle existing projects when a newer one is added', () => {
-    // Newest-first, so a new project goes to the FRONT — which is exactly the
-    // case a position-based mapping has to survive. It does not: this documents
-    // that adding a project DOES recolour the others, and that the alternative
-    // (hashing the id) was rejected because it scatters the palette.
-    const before = hueMap([{ id: 'a' }, { id: 'b' }])
-    const after  = hueMap([{ id: 'new' }, { id: 'a' }, { id: 'b' }])
+  it('does not reshuffle existing projects when a new one is added', () => {
+    // Oldest-first is what makes this hold: an existing project's index never
+    // moves, and the new one appends. Nothing already on screen changes colour.
+    const a = { id: 'a', created_at: '2026-01-01' }
+    const b = { id: 'b', created_at: '2026-02-01' }
+    const before = hueMap([a, b])
+    const after  = hueMap([a, b, { id: 'new', created_at: '2026-06-01' }])
     expect(before.get('a')).toBe(PROJECT_HUES[0])
-    expect(after.get('a')).toBe(PROJECT_HUES[1])
+    expect(after.get('a')).toBe(PROJECT_HUES[0])
+    expect(after.get('b')).toBe(PROJECT_HUES[1])
+    expect(after.get('new')).toBe(PROJECT_HUES[2])
+  })
+
+  it('does not recolour a project just because it was edited', () => {
+    // updated_at moving must not matter. It used to: an edit pushed the project
+    // to the front of an updated_at query and shifted every colour behind it.
+    const a = { id: 'a', created_at: '2026-01-01' }
+    const b = { id: 'b', created_at: '2026-02-01' }
+    expect(hueMap([a, b]).get('a')).toBe(hueMap([b, a]).get('a'))
+  })
+
+  it('sorts rows with no created_at last rather than throwing', () => {
+    const m = hueMap([{ id: 'none' }, { id: 'dated', created_at: '2026-01-01' }])
+    expect(m.get('dated')).toBe(PROJECT_HUES[0])
+    expect(m.get('none')).toBe(PROJECT_HUES[1])
   })
 
   it('returns nothing for a project it was not given', () => {

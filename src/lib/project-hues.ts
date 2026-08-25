@@ -29,12 +29,32 @@ export function hueForIndex(i: number): string {
 }
 
 /**
- * id → hue, from a list already in the canonical order.
+ * id → hue. Sorts internally, so a caller's query order cannot change the
+ * answer.
  *
- * Callers pass projects newest-first. Anything that passes a different order
- * will produce a different colouring, which is why the order lives in one
- * comment rather than in each caller's head.
+ * IT SORTS BY created_at ASCENDING, oldest first, and that is the whole point.
+ * An earlier version took the caller's order on trust and documented
+ * "newest-first" in a comment. Three pages then read the same projects three
+ * ways — the dashboard and this list by updated_at, the applications pages by
+ * created_at — so the same project rendered in two colours depending on which
+ * screen you were on, and ANY edit to a project reshuffled the whole palette
+ * by moving it to the front.
+ *
+ * Oldest-first is the only order that holds still: a project's index never
+ * changes once it exists, and a new one appends at the end and takes the next
+ * colour. Nothing already on screen moves.
+ *
+ * Rows without created_at sort last, in the order given, rather than throwing.
  */
-export function hueMap(projects: { id: string }[]): Map<string, string> {
-  return new Map(projects.map((p, i) => [p.id, hueForIndex(i)]))
+export function hueMap(projects: { id: string; created_at?: string | null }[]): Map<string, string> {
+  const ordered = projects
+    .map((p, i) => ({ p, i }))
+    .sort((a, b) => {
+      const ax = a.p.created_at, bx = b.p.created_at
+      if (ax && bx) return ax < bx ? -1 : ax > bx ? 1 : a.i - b.i
+      if (ax) return -1
+      if (bx) return 1
+      return a.i - b.i
+    })
+  return new Map(ordered.map(({ p }, i) => [p.id, hueForIndex(i)]))
 }
