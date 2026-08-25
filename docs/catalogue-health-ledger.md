@@ -3117,3 +3117,75 @@ Paul to approve four times the spend actually needed. The estimate has to
 replicate the code path, not approximate it.
 
 Imports land `is_active: false`, so nothing reaches users without Paul.
+
+## 2026-08-25 — LNER, and the 403 that writes an empty brief
+
+Paul: "there is not much enrichment info on the grant." It was not a thin brief.
+It was an empty one.
+
+The row carried all 16 `funder_brief` keys and every one was null except
+`source: live_fetch`, `open_status: unknown` and `last_enriched: 2026-07-31`. A
+shell with the shape of a brief and none of the content — live, with a deadline
+six days away, and no `who_can_apply` and no `exclusions` on a field that is
+supposed to be complete on every surface and every tier.
+
+### Why it was empty
+
+`lner.co.uk` returns **HTTP 403** to a plain fetch. The enricher's `live_fetch`
+received 5,872 bytes of block page whose entire visible text is *"Access to this
+page has been denied"*, and wrote nulls for everything. Through the reader proxy
+the same page is 39kB and perfectly readable — which is what `READER_PROXY_URL`
+exists for, and what `check-reader-proxy` proves works against a bot-walled
+canary every single morning.
+
+**Counted across the live catalogue:** 11 rows have a brief where all five core
+fields are empty, 8 more have only one or two, and **15 live rows have no
+`who_can_apply` at all**. Five of the 11 are the same bot-walled hosts that came
+back unreadable in yesterday's link probe — Visa CatalyseHer, Theatre
+Breakthrough, Community Shares Booster, London Social and Affordable Homes,
+Chichester. Same cause, surfacing in two different audits.
+
+### The content was never on that page anyway
+
+The fund page describes the fund and links out to a *CCIF guidance document*.
+Every hard fact — the amount range, who may apply, the exclusions, the timeline —
+is in that PDF. So even a perfect fetch of the front door could not have
+certified this row. **This is the multi-page sourcing problem in miniature**, and
+it is the same open question already logged against arming c3.
+
+### What the guidance actually says
+
+| | |
+|---|---|
+| Amount | £1,000–£10,000. *"Requests above £10,000 will not be considered."* |
+| Who | Registered charities, community groups, CICs, co-operative societies, limited companies, Community Rail Partnerships, business partnerships, schools (extracurricular only) |
+| Where | Within 15 miles of the LNER route in England or Scotland |
+| Not funded | Capital projects, core costs, staff costs over 25% of the request, projects with more than two funders, applications with no cost breakdown |
+| Timeline | Window July/Aug to Aug/Sep · shortlisting Sep–Oct · public voting Nov · approvals Dec–Mar · notifications Apr/May · up to four months for an outcome |
+
+### Two fields deliberately left NULL
+
+**Income.** The guidance says LNER *"prefer to support small and medium sized
+organisations with incomes between £10,000 – £1million."* That is a preference,
+not a gate. Writing it into `min_org_income`/`max_org_income` would turn a soft
+signal into a hard filter and silently hide the fund from organisations the
+funder would happily consider — the exact failure already recorded under
+filter-vs-rank.
+
+**Location.** "Within 15 miles of the LNER route" is not expressible as a
+`location_tag`. Tagging it Scotland or England or UK would each be wrong in a
+different direction, and the wrong one hides it from half the corridor. Left
+null, with the corridor described in `geographic_focus` where a human reads it.
+
+### Trust
+
+Written at `user_verified:` (70), above `ai_enrich` (60), deliberately. A
+generator already produced an all-null brief for this row once; it should not be
+able to replace a brief read out of the funder's own guidance document.
+
+Deadline untouched — it rests on *"Closes at 23:59 on 31 August 2026"*, stamped
+18 August with the evidence agreeing. It was the one thing on the row that was
+right.
+
+No API spend: reader proxy for the page, curl and pdftotext for the guidance,
+brief written by hand.
