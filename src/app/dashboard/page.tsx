@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import MatchesCard, { type MatchScope, type MatchRow, type TypeKey, type ScopeKey } from './MatchesCard'
+import { CARD_LINK } from './card-link'
 import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { getDeadlineAlerts, formatCurrency, formatNextOpen } from '@/lib/utils'
@@ -395,7 +396,8 @@ export default async function DashboardPage() {
   }))
   const totalValue = stageValues.reduce((sum, s) => sum + s.value, 0)
 
-  // ── Upcoming deadlines (pipeline + catalogue, next 3) ───────────────
+  // ── Upcoming deadlines (pipeline + catalogue) ───────────────────────
+  const DEADLINE_ROWS_SHOWN = 6
   type DlRow = { id: string; name: string; deadline: string; daysUntil: number; amountStr: string | null; href: string }
   function parseDaysUntil(dl: string): number {
     const parts = dl.split('-').map(Number)
@@ -814,6 +816,122 @@ export default async function DashboardPage() {
     }
   }
 
+  /**
+   * Pipeline, variant A.
+   *
+   * Assembled here rather than inline because it renders in two places: in the
+   * right-hand column beside applications when there is builder work to show,
+   * and full width when there is not. Same card either way.
+   *
+   * WHAT CHANGED FROM THE FOUR-EQUAL-TILES VERSION. The total was the largest
+   * number on the card rendered as the smallest thing on it — 12px grey text in
+   * a footer. It is now the headline. Declined comes up beside it: it is an
+   * outcome, not a footnote.
+   *
+   * And the tiles alone were misleading by construction. Four equal boxes give
+   * £500k and £15k identical visual weight, so the card could not tell you the
+   * one thing it should: that most of the money is sitting in Identified, which
+   * is the stage where nothing has been done about it yet. The proportion bar
+   * is the fix — it is the same numbers, drawn to scale.
+   */
+  const pipelineCard = (() => {
+    const activeStages = stageValues.filter(s => s.id !== 'declined')
+    const declined = stageValues.find(s => s.id === 'declined')
+    const totalActiveValue = activeStages.reduce((sum, s) => sum + s.value, 0)
+    const totalActiveCount = activeStages.reduce((sum, s) => sum + s.count, 0)
+    const hasAnyActivity = activeStages.some(s => s.count > 0) || (declined?.count ?? 0) > 0
+
+    /**
+     * The ladder's own tones, monotonic in darkness so the bar reads as
+     * progress left to right. No lime (#8ECB3C) anywhere: §7 rules it off this
+     * page, and at this size it would out-shout the headline.
+     */
+    const BAR: Record<string, string> = {
+      identified: '#D8D3C8',
+      applying:   '#C0DD97',
+      submitted:  '#639922',
+      won:        '#1D3C3E',
+    }
+
+    return (
+      <div className="card rounded-xl flex flex-col">
+        <div className="flex items-center justify-between gap-3 mb-1">
+          <h3 className="text-xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Pipeline</h3>
+          <a href="/dashboard/pipeline" style={CARD_LINK}>View pipeline →</a>
+        </div>
+        {builderAllowed && <p className="text-mid mb-4" style={{ fontSize: 12.5 }}>Where each opportunity sits by stage and value, not the answer-writing.</p>}
+
+        {!hasAnyActivity ? (
+          <a href="/dashboard/search"
+            className="flex flex-col items-center justify-center text-center gap-2 rounded-xl px-6 py-10 mt-4 hover:bg-[#F5F1E8] transition-colors"
+            style={{ background: '#FAFAF7', border: '1.5px dashed rgba(29,60,62,0.28)', minHeight: 160 }}>
+            <p className="text-base font-semibold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+              Nothing in your pipeline yet
+            </p>
+            <p className="text-sm" style={{ color: '#5F5E5A' }}>
+              Save a match to start tracking applications.
+            </p>
+            <span className="mt-2 text-xs font-semibold inline-flex items-center gap-1.5" style={{ color: '#1D3C3E', fontFamily: 'var(--font-space-grotesk)' }}>
+              Find your first match <ArrowRight className="w-3.5 h-3.5" />
+            </span>
+          </a>
+        ) : (
+          <>
+            {/* The headline. Zero reads "£0", not a dash: nothing in play is a
+                fact about the pipeline, a dash is the absence of one. */}
+            <div className="flex items-baseline gap-2.5 flex-wrap mb-3">
+              <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 38, fontWeight: 600, color: '#1D3C3E', letterSpacing: '-0.03em', lineHeight: 1 }}>
+                {formatCurrency(totalActiveValue)}
+              </span>
+              <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 14, fontWeight: 600, color: '#1D3C3E' }}>in play</span>
+              <span className="ml-auto flex items-center gap-2" style={{ fontSize: 11.8, color: '#5F5E5A' }}>
+                <span>across {totalActiveCount === 1 ? '1 opportunity' : `${totalActiveCount} opportunities`}</span>
+                {declined && declined.count > 0 && (
+                  <>
+                    <span className="inline-block flex-shrink-0" style={{ width: 9, height: 9, background: '#993C1D', borderRadius: 2 }} />
+                    <span>{formatCurrency(declined.value)} declined</span>
+                  </>
+                )}
+              </span>
+            </div>
+
+            {/* Proportion bar. Hidden when every stage is £0 — a bar with no
+                width to divide would render as an empty rule and imply the
+                card had failed to load rather than that nothing has a value. */}
+            {totalActiveValue > 0 && (
+              <div className="flex gap-0.5 mb-3.5 overflow-hidden" style={{ height: 8, borderRadius: 999 }}>
+                {activeStages.filter(st => st.value > 0).map(st => (
+                  <span key={st.id} style={{ width: `${(st.value / totalActiveValue) * 100}%`, background: BAR[st.id] ?? '#D8D3C8' }} />
+                ))}
+              </div>
+            )}
+
+            {/* Tiles are secondary now, so they fit at half width. The value is
+                pinned to the bottom with mt-auto so all four numbers sit on one
+                baseline however long the label wraps. */}
+            <a href="/dashboard/pipeline" className="grid grid-cols-4 gap-2.5 hover:opacity-95 transition-opacity">
+              {activeStages.map(st => (
+                <div key={st.id} className="flex flex-col px-3 py-3 rounded-xl" style={{ background: st.bg, minHeight: 104, overflow: 'hidden' }}>
+                  <span className="text-[9px] font-bold uppercase tracking-widest truncate" style={{ color: st.labelCol, fontFamily: 'var(--font-space-grotesk)' }}>
+                    {st.label}
+                  </span>
+                  <span className="block font-display font-semibold leading-none truncate mt-auto"
+                    style={{ color: st.valCol, fontSize: 'clamp(17px, 1.9vw, 25px)', letterSpacing: '-0.02em' }}>
+                    {st.value > 0 ? formatCurrency(st.value) : '—'}
+                  </span>
+                  <span className="block text-[10.6px] mt-1.5 truncate" style={{ color: st.countCol }}>
+                    {st.count > 0 ? (st.count === 1 ? '1 opportunity' : st.count + ' opportunities') : 'None yet'}
+                  </span>
+                </div>
+              ))}
+            </a>
+          </>
+        )}
+      </div>
+    )
+  })()
+
+
   return (
     <div>
       {/* Greeting */}
@@ -928,8 +1046,20 @@ export default async function DashboardPage() {
 
         </div>
         <div>
-        {/* Upcoming deadlines (40%) — title + count + view-all in header,
-            three deadlines visible in a ~170px scrollable list. */}
+        {/* Upcoming deadlines. Height is matched to the matches card beside
+            it and the list runs to fill it.
+
+            It used to cap the list at 170px and scroll inside it, which showed
+            three rows while 400px of card sat empty below — a scrollbar in a
+            card with room to spare. It also put the whole 30-day urgency line
+            off the bottom: with three rows everything was red and the signal
+            did no work, because you could not see where urgent stopped.
+
+            NO min-height, deliberately. Six rows lands near the matches card's
+            394px on its own, and forcing it there when a user has two deadlines
+            would put a hole INSIDE a white card — the same bug that moved
+            pipeline out of row 2. The row grid is items-start, so a short card
+            leaves page background instead. */}
         <div className="card rounded-xl flex flex-col">
           <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
             <div className="flex items-center gap-2">
@@ -940,8 +1070,13 @@ export default async function DashboardPage() {
                 </span>
               )}
             </div>
-            <a href="/dashboard/deadlines"
-              className="text-xs font-semibold hover:underline" style={{ color: '#3B6D11', fontFamily: 'var(--font-space-grotesk)' }}>
+            {/* No count on this link, deliberately. `alerts` is a window, not
+                a total: catalogue rows are capped at 6 and the merged list at
+                15, so "View all 7" would state a figure that is really the cap
+                we happened to stop at. The badge counts what this card holds,
+                which is what a badge on a card means; the link makes no claim
+                about what the deadlines page will show. */}
+            <a href="/dashboard/deadlines" style={CARD_LINK}>
               View all deadlines →
             </a>
           </div>
@@ -953,10 +1088,13 @@ export default async function DashboardPage() {
             </div>
           ) : (
             <>
-              {/* Scrollable list — max-height ~170px shows three rows;
-                  the fourth peeks under to signal more on scroll. */}
-              <div className="overflow-y-auto pr-1 -mr-1" style={{ maxHeight: 170 }}>
-                {alerts.map(row => {
+              {/* Six rows, measured against the 394px card: header, six rows at
+                  ~51px and the footer come to ~406px, so the card fills without
+                  the last row being clipped. The header link carries the rest.
+                  Fewer than six is fine — the row grid is items-start, so the
+                  space below is page background rather than a hole in a card. */}
+              <div>
+                {alerts.slice(0, DEADLINE_ROWS_SHOWN).map(row => {
                   const dateObj = formatDeadlineDate(row.deadline)
                   const d = row.daysUntil
                   // Urgency: ≤30d → red numerals + red pill. Beyond stays grey.
@@ -991,6 +1129,11 @@ export default async function DashboardPage() {
                   )
                 })}
               </div>
+              {/* Says where these came from. Without it the card looks like a
+                  list of things the user entered, and they entered none of them. */}
+              <p className="mt-auto pt-3" style={{ fontSize: 11.8, color: '#74736E', borderTop: '1px solid rgba(29,60,62,0.10)' }}>
+                From your matches. Deadlines you add to your pipeline appear here too.
+              </p>
             </>
           )}
         </div>
@@ -1038,13 +1181,29 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      {builderAllowed && hasWork && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-8">
+      {/* Row 2. Pipeline sits in the right column under projects rather than in
+          a full-width row of its own.
+
+          Projects cannot fill half a row on its own — two projects against four
+          applications leaves a hole INSIDE a white card, which reads as broken
+          rather than as spacing, and no honest amount of content fixes it.
+          Stacking pipeline under it makes the two columns run to roughly the
+          same length and loses the page a row.
+
+          This reverses the pass-1 call that pipeline needed full width. That was
+          true of the four-equal-tiles version, which had four tiles plus a footer
+          carrying the total. Variant A promotes the total to a headline and pulls
+          declined up beside it, so the tiles are secondary and fit at half width.
+
+          items-start so neither column stretches to the other: leftover space
+          becomes page background, never a gap inside a card. */}
+      {builderAllowed && hasWork ? (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-8 items-start">
           {/* Your applications */}
           <div className="card rounded-xl p-6">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
               <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 20, fontWeight: 700, color: '#1D3C3E' }}>Your applications</span>
-              <a href="/dashboard/applications" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: '#1D3C3E', textDecoration: 'none' }}>
+              <a href="/dashboard/applications" style={CARD_LINK}>
                 View all{workApps.length > 4 ? ` ${workApps.length}` : ''} →
               </a>
             </div>
@@ -1113,17 +1272,18 @@ export default async function DashboardPage() {
             })()}
           </div>
 
+          <div className="flex flex-col gap-5">
           {/* Your projects */}
           <div className="card rounded-xl p-6">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
               <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 20, fontWeight: 700, color: '#2C2C2A' }}>Your projects</span>
-              <a href="/dashboard/projects" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: '#3B6D11', textDecoration: 'none' }}>View all →</a>
+              <a href="/dashboard/projects" style={CARD_LINK}>View all →</a>
             </div>
             {workProjects.length === 0 ? (
               <p className="text-mid" style={{ fontSize: 13.5, lineHeight: 1.55, marginBottom: 12 }}>Describe a project to match more funders than your organisation profile alone.</p>
             ) : workProjects.slice(0, 4).map((p, i, arr) => (
               <a key={p.id} href={`/dashboard/projects/${p.id}`} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 0', borderBottom: i < arr.length - 1 ? '1px solid rgba(23,52,4,0.06)' : 'none', textDecoration: 'none' }}>
-                <span style={{ width: 40, height: 40, borderRadius: 11, background: '#F1F7E4', color: '#3B6D11', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Lightbulb size={19} /></span>
+                <span style={{ width: 40, height: 40, borderRadius: 11, background: '#E3F0E4', color: '#1B6B3D', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Lightbulb size={19} /></span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 15, fontWeight: 500, color: '#2C2C2A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 5, fontSize: 12.5 }}>
@@ -1134,105 +1294,33 @@ export default async function DashboardPage() {
                     {p.budget ? <span className="text-mid">· £{p.budget.toLocaleString('en-GB')}</span> : null}
                   </div>
                 </div>
+                {/* "19 funders fit" was a number with nothing to do about it
+                    from here. The row has always linked to the project page,
+                    where the live matching runs; this makes that visible. */}
+                <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 11.6, fontWeight: 600, color: '#1D3C3E', border: '1.5px solid rgba(29,60,62,0.26)', borderRadius: 999, padding: '6px 12px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                  {p.ready ? 'Find funders →' : 'Finish setup →'}
+                </span>
               </a>
             ))}
-            <div style={{ paddingTop: 10 }}>
-              <a href="/dashboard/projects/new" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: '#3B6D11', textDecoration: 'none' }}>+ New project</a>
-            </div>
+            {/* A dashed row rather than a bare text link. It was the only
+                unadorned link on the page and read as an afterthought next to
+                the rows it sits under. */}
+            <a href="/dashboard/projects/new"
+              className="flex items-center gap-3 mt-3 hover:bg-[#FAFAF7] transition-colors"
+              style={{ padding: 12, border: '1.5px dashed rgba(29,60,62,0.22)', borderRadius: 12, textDecoration: 'none', fontFamily: 'var(--font-space-grotesk)', fontSize: 13, fontWeight: 600, color: '#1D3C3E' }}>
+              <span style={{ width: 26, height: 26, borderRadius: 8, background: '#F1EDE3', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, lineHeight: 1, flexShrink: 0 }}>+</span>
+              New project
+            </a>
+          </div>
+          {pipelineCard}
           </div>
         </div>
+      ) : (
+        /* No builder work to show, so pipeline keeps the full-width row it had. */
+        <div className="mb-8">{pipelineCard}</div>
       )}
 
 
-      {/* Where the money is. Full width: four stage tiles plus a footer were
-          cramped at half width, and the proportion bar needs the room. */}
-      <div className="mb-8">
-
-        {/* Pipeline Overview — 4 active stages + Declined as footer line.
-            Declined is closed state, not active state; reduced visual weight
-            so it doesn't compete with the active workflow tiles for attention.
-            Won standardised to currency (with "—" fallback when value=0)
-            so all four active tiles use the same metric format. */}
-        <div className="card rounded-xl">
-          <div className={`flex items-center justify-between ${builderAllowed ? 'mb-1' : 'mb-5'}`}>
-            <h3 className="text-xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Pipeline</h3>
-            <a href="/dashboard/pipeline" className="text-xs font-semibold hover:underline" style={{ color: '#3B6D11', fontFamily: 'var(--font-space-grotesk)' }}>View pipeline →</a>
-          </div>
-          {builderAllowed && <p className="text-mid mb-5" style={{ fontSize: 12.5 }}>Where each opportunity sits by stage and value, not the answer-writing.</p>}
-
-          {(() => {
-            const activeStages = stageValues.filter(s => s.id !== 'declined')
-            const declined = stageValues.find(s => s.id === 'declined')
-            const totalActiveValue = activeStages.reduce((sum, s) => sum + s.value, 0)
-            const hasAnyActivity = activeStages.some(s => s.count > 0) || (declined?.count ?? 0) > 0
-
-            // Empty state: zero activity across all stages → CTA back to Find
-            // Funding rather than five empty £0 tiles (which felt broken on
-            // day-one for new cohort members).
-            if (!hasAnyActivity) {
-              return (
-                <a href="/dashboard/search"
-                  className="flex flex-col items-center justify-center text-center gap-2 rounded-xl px-6 py-10 hover:bg-[#F5F1E8] transition-colors"
-                  style={{ background: '#FAFAF7', border: '1.5px dashed rgba(99,153,34,0.35)', minHeight: 160 }}>
-                  <p className="text-base font-semibold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
-                    Nothing in your pipeline yet
-                  </p>
-                  <p className="text-sm" style={{ color: '#5F5E5A' }}>
-                    Save a match to start tracking applications.
-                  </p>
-                  <span className="mt-2 text-xs font-semibold inline-flex items-center gap-1.5" style={{ color: '#3B6D11', fontFamily: 'var(--font-space-grotesk)' }}>
-                    Find your first match <ArrowRight className="w-3.5 h-3.5" />
-                  </span>
-                </a>
-              )
-            }
-
-            return (
-              <>
-                {/* Equal-width grid with gaps. Each tile is its own rounded
-                    card; the outer link covers the whole grid (clicking any
-                    tile or the gap takes the user to /dashboard/pipeline). */}
-                <a href="/dashboard/pipeline" className="grid grid-cols-4 gap-3 hover:opacity-95 transition-opacity" style={{ height: 160 }}>
-                  {activeStages.map(s => (
-                    <div key={s.id} className="flex flex-col justify-between px-4 py-3.5 rounded-xl"
-                      style={{ background: s.bg, overflow: 'hidden' }}>
-                      <span className="text-[10px] font-bold uppercase tracking-widest truncate" style={{ color: s.labelCol }}>
-                        {s.label}
-                      </span>
-                      <div>
-                        <span className="block font-display font-bold leading-none truncate"
-                          style={{ color: s.valCol, fontSize: 'clamp(18px, 2.2vw, 30px)' }}>
-                          {s.value > 0 ? formatCurrency(s.value) : '—'}
-                        </span>
-                        <span className="block text-[10px] font-semibold mt-1.5 truncate" style={{ color: s.countCol }}>
-                          {s.count > 0 ? (s.count === 1 ? '1 opportunity' : s.count + ' opportunities') : 'None yet'}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </a>
-
-                {/* Footer line — declined (with coral marker) on the left,
-                    total in pipeline on the right. Order matches mockup. */}
-                <div className="mt-3 pt-3 flex items-center justify-between flex-wrap gap-2 text-xs" style={{ borderTop: '0.5px solid rgba(0,0,0,0.08)', color: '#5F5E5A' }}>
-                  {declined && declined.count > 0 ? (
-                    <span className="inline-flex items-center gap-2" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
-                      <span className="inline-block flex-shrink-0" style={{ width: 10, height: 10, background: '#F0997B', borderRadius: 2 }} />
-                      <span>
-                        <span className="font-semibold" style={{ color: '#2C2C2A' }}>{declined.value > 0 ? formatCurrency(declined.value) : declined.count}</span> declined
-                        <span className="ml-1">· {declined.count === 1 ? '1 opportunity' : `${declined.count} opportunities`}</span>
-                      </span>
-                    </span>
-                  ) : <span />}
-                  <span style={{ fontFamily: 'var(--font-space-grotesk)' }}>
-                    Total in pipeline: <span className="font-semibold text-charcoal">{totalActiveValue > 0 ? formatCurrency(totalActiveValue) : '—'}</span>
-                  </span>
-                </div>
-              </>
-            )
-          })()}
-        </div>
-      </div>
 
 
     </div>

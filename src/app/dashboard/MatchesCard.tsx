@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import { CARD_LINK } from './card-link'
 
 /**
  * The Matches card, with the funding-type filter.
@@ -110,7 +111,7 @@ export default function MatchesCard({ scopes, totalScored }: { scopes: MatchScop
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
         <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 20, fontWeight: 700, color: DEEP }}>Matches</span>
         {!empty && (
-          <a href={seeAllHref} style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: DEEP, textDecoration: 'none' }}>
+          <a href={seeAllHref} style={CARD_LINK}>
             See all {scope.actionable} →
           </a>
         )}
