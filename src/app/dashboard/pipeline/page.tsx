@@ -891,6 +891,12 @@ export default function PipelinePage() {
                   zIndex: 1,
                   background: STAGE_BG_HEX[stage.id],
                   padding: '6px 7px 9px',
+                  // Fixed height so the five headers line up whatever their
+                  // text does. "0 in progress" is the longest label and it was
+                  // wrapping to two lines, which made the Applying column's
+                  // header taller and pushed its card down out of line with
+                  // the rest of the board.
+                  minHeight: 43,
                   // No negative margins. They used to bleed the header ±14px to
                   // reach the column's padding edge, which did nothing: the
                   // header's background IS the column's background, so there
@@ -900,13 +906,13 @@ export default function PipelinePage() {
                 }}
               >
                 <span className="flex items-center" style={{ color: headerCol, opacity: 0.75 }}>{STAGE_ICONS[stage.id]}</span>
-                <span className="text-[11px] font-bold uppercase" style={{ color: headerCol, letterSpacing: '0.11em', fontFamily: 'var(--font-space-grotesk)' }}>
+                <span className="text-[11px] font-bold uppercase truncate" style={{ color: headerCol, letterSpacing: '0.11em', fontFamily: 'var(--font-space-grotesk)', minWidth: 0 }}>
                   {stage.label}
                 </span>
                 {/* Count and vocabulary on one line in a pill, rather than
                     stacked. Stacked, the 8px vocabulary line was smaller than
                     anything else on the board and read as a rendering artefact. */}
-                <span className="ml-auto text-[11.5px] font-bold" style={{ color: headerCol, background: 'rgba(255,255,255,0.72)', borderRadius: 999, padding: '2px 9px', fontFamily: 'var(--font-space-grotesk)' }}>
+                <span className="ml-auto text-[11.5px] font-bold" style={{ color: headerCol, background: 'rgba(255,255,255,0.72)', borderRadius: 999, padding: '2px 9px', fontFamily: 'var(--font-space-grotesk)', whiteSpace: 'nowrap', flexShrink: 0 }}>
                   {stageItems.length}
                   <span style={{ fontWeight: 600, opacity: 0.7, marginLeft: 4, letterSpacing: 0 }}>{STAGE_VOCAB[stage.id]}</span>
                 </span>
