@@ -303,36 +303,53 @@ export async function POST(req: NextRequest) {
     sections.push(`Primary source (pasted):\n---\n${pastedContent.trim().slice(0, 10000)}\n---`)
     primaryFetchDebug = 'used pasted content'
   } else if (grant.apply_url) {
-    try {
-      const fetched = await fetchPageText(grant.apply_url)
-      if (fetched.length >= 200) {
-        sections.push(`Primary source (${grant.apply_url}):\n---\n${fetched}\n---`)
-        fetchedFromUrl = true
-        primaryFetchDebug = `ok (${fetched.length} chars after strip)`
-      } else {
-        primaryFetchDebug = `fetch returned only ${fetched.length} chars after stripping (< 200 threshold)`
-        console.warn('[enrich-grant] short fetch', grant.apply_url, primaryFetchDebug)
-      }
-    } catch (err) {
-      const direct = err instanceof Error ? err.message : String(err)
-      // Retry through the reader proxy, if one is configured. This is the only
-      // route into the ~16 hosts whose WAF 403s every non-browser client; without
-      // it the brief silently gets written from memory instead of the page.
+    const primaryUrl = grant.apply_url
+    /**
+     * Second attempt at the page, through the reader proxy.
+     *
+     * Shared by BOTH ways a direct read fails to produce text, which is the
+     * whole of this change. The proxy retry used to live only in the catch, so
+     * it fired for a host that 403s and never for a host that answers 200 with
+     * an empty JavaScript shell — and the shell is the more common case of the
+     * two. TechSoup's catalogue strips to 0 characters direct and returns 8,193
+     * through the proxy; on 2026-08-27 it was re-read, took the short-fetch
+     * branch, never tried the proxy, and wrote its brief from memory again with
+     * "fetch returned only 0 chars" as the only trace.
+     *
+     * A brief written from memory is exactly what the publish gate blocks as
+     * `page_unreadable`, so the failure returns as review work rather than
+     * showing up as an error.
+     */
+    const tryReaderProxy = async (whyDirectFailed: string) => {
       try {
-        const viaProxy = await fetchViaReaderProxy(grant.apply_url)
+        const viaProxy = await fetchViaReaderProxy(primaryUrl)
         if (viaProxy.length >= 200) {
-          sections.push(`Primary source (${grant.apply_url}):\n---\n${viaProxy}\n---`)
+          sections.push(`Primary source (${primaryUrl}):\n---\n${viaProxy}\n---`)
           fetchedFromUrl = true
-          primaryFetchDebug = `direct fetch failed (${direct}); recovered via reader proxy (${viaProxy.length} chars)`
+          primaryFetchDebug = `${whyDirectFailed}; recovered via reader proxy (${viaProxy.length} chars)`
         } else {
-          primaryFetchDebug = `direct fetch failed (${direct}); reader proxy returned only ${viaProxy.length} chars`
+          primaryFetchDebug = `${whyDirectFailed}; reader proxy returned only ${viaProxy.length} chars`
         }
       } catch (proxyErr) {
         const why = proxyErr instanceof Error ? proxyErr.message : String(proxyErr)
-        primaryFetchDebug = `fetch failed: ${direct}` + (why === 'reader proxy not configured' ? '' : `; reader proxy also failed: ${why}`)
+        primaryFetchDebug = whyDirectFailed + (why === 'reader proxy not configured' ? '' : `; reader proxy also failed: ${why}`)
       }
-      if (!fetchedFromUrl) console.warn('[enrich-grant] fetch error', grant.apply_url, primaryFetchDebug)
     }
+
+    try {
+      const fetched = await fetchPageText(primaryUrl)
+      if (fetched.length >= 200) {
+        sections.push(`Primary source (${primaryUrl}):\n---\n${fetched}\n---`)
+        fetchedFromUrl = true
+        primaryFetchDebug = `ok (${fetched.length} chars after strip)`
+      } else {
+        await tryReaderProxy(`direct fetch returned only ${fetched.length} chars after stripping (< 200 threshold)`)
+      }
+    } catch (err) {
+      const direct = err instanceof Error ? err.message : String(err)
+      await tryReaderProxy(`direct fetch failed (${direct})`)
+    }
+    if (!fetchedFromUrl) console.warn('[enrich-grant] no primary text', primaryUrl, primaryFetchDebug)
   } else {
     primaryFetchDebug = 'no apply_url on grant'
   }
