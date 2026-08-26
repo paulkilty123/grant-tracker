@@ -82,6 +82,39 @@ async function main() {
     )
   }
 
+  // ── What the fresh reads then said about money ───────────────────────────
+  // Run after the reads, with --amounts, because it depends on what they found.
+  //
+  // TechSoup's catalogue is a price list of ADMIN FEES: the £1,710 the amount
+  // extractor picked up is the most expensive Cisco appliance, which is what an
+  // organisation PAYS, not what it receives. On a card that renders as "up to
+  // £1,710" of funding, which is worse than showing nothing.
+  //
+  // Fredericks' own page now describes bespoke revenue-share finance and states
+  // no per-organisation figure at all, so the seeded £1,000 to £25,000 is a
+  // range nothing supports.
+  //
+  // Microsoft is deliberately NOT here. Its £3,500 is pinned by Paul from
+  // 1 June, and the page today offers "$2,000 USD annual service credits" for
+  // the Azure Grant. Only he can say whether the £3,500 was a different offer
+  // or a currency slip, so the row keeps his figure and he gets told.
+  if (APPLY && process.argv.includes('--amounts')) {
+    const corrections: [string, string, string][] = [
+      [TECHSOUP,  'TechSoup UK',            'Admin fees vary significantly by product, ranging from £0.00 to £1,710.00. These are fees an organisation pays, not funding it receives.'],
+      [FREDERICK, 'Fredericks Foundation',  'The funder does not publish per-grant amounts; they offer bespoke, flexible funding tailored to each organisation under a revenue share model.'],
+    ]
+    for (const [id, name, why] of corrections) {
+      const r = await mergeGrantUpdate({
+        id, db,
+        fields: { amount_min: null, amount_max: null },
+        source: 'system:live-and-wrong-2026-08-27',
+        citations: { amount_max: { snippet: why, confidence: 'high' }, amount_min: { snippet: why, confidence: 'high' } },
+      })
+      console.log(`${name} amounts cleared: applied [${r.applied.join(', ') || 'nothing'}]`
+        + `${r.rejected.length ? ` REJECTED ${JSON.stringify(r.rejected)}` : ''}`)
+    }
+  }
+
   if (usage.length) {
     const usd = usage.reduce((n, u) => n + (u.input_tokens / 1e6) * 1 + (u.output_tokens / 1e6) * 5, 0)
     const inTok  = usage.reduce((n, u) => n + u.input_tokens, 0)
