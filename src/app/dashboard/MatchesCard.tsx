@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { CARD_LINK } from './card-link'
 import { FUNDING_TYPE_COLOUR, TYPE_NEUTRAL } from '@/lib/funding-type-colours'
 
@@ -82,6 +82,54 @@ export default function MatchesCard({ scopes, totalScored }: { scopes: MatchScop
   const [active, setActive] = useState<ScopeKey>('all')
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({})
 
+  /**
+   * The counts drop out when the five tabs will not fit, which is measured
+   * rather than assumed.
+   *
+   * The original code carried a comment saying the count "hides below 1180px"
+   * and gave the row three class hooks to do it with. No rule was ever written
+   * for any of them, in this file or any stylesheet, so nothing hid and In-kind
+   * ran off the right of the card. Measured 2026-08-27 at a 1400px viewport:
+   * the row needs 510px of a 457px track.
+   *
+   * A viewport breakpoint would have been a proxy anyway. This card's width
+   * comes from the dashboard grid, not from the window, so the question that
+   * actually matters is "do the tabs fit in THIS track", and that is what is
+   * asked here. Losing the counts costs little: the bar below is the same
+   * distribution, and the active scope's count is the headline number.
+   *
+   * The natural width is captured while the counts are showing and compared
+   * against the track from then on. Comparing scrollWidth once compact would
+   * flip it straight back and oscillate for ever.
+   */
+  const tabsRef  = useRef<HTMLDivElement | null>(null)
+  const fullWide = useRef<number>(0)
+  const [compact, setCompact] = useState(false)
+
+  useEffect(() => {
+    const el = tabsRef.current
+    if (!el) return
+
+    const measure = () => {
+      const track = el.clientWidth
+      if (track === 0) return
+      setCompact(prev => {
+        if (!prev) {
+          fullWide.current = el.scrollWidth
+          return el.scrollWidth > track
+        }
+        // Re-expand only once the width we measured with counts fits again,
+        // with a couple of pixels of slack so a sub-pixel track cannot chatter.
+        return fullWide.current > track + 2
+      })
+    }
+
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
   const scope = scopes.find(s => s.key === active) ?? scopes[0]
   const hue   = TYPE[active]
   const empty = scope.actionable === 0
@@ -122,10 +170,9 @@ export default function MatchesCard({ scopes, totalScored }: { scopes: MatchScop
         )}
       </div>
 
-      {/* Tabs. The count hides below 1180px — measured, the row needs 481px of
-          a 426px track with them and wraps. It must never wrap and never
-          scroll. */}
-      <div role="tablist" aria-label="Filter matches by funding type" className="matches-tabs" style={{ display: 'flex', gap: 4, margin: '12px 0 0', flexWrap: 'nowrap' }}>
+      {/* Tabs. Never wraps and never scrolls: the counts come out instead,
+          when they do not fit. See the `compact` measurement above. */}
+      <div ref={tabsRef} role="tablist" aria-label="Filter matches by funding type" className="matches-tabs" style={{ display: 'flex', gap: 4, margin: '12px 0 0', flexWrap: 'nowrap', overflow: 'hidden' }}>
         {TABS.map((t, i) => {
           const on = t.key === active
           const c  = TYPE[t.key]
@@ -155,7 +202,9 @@ export default function MatchesCard({ scopes, totalScored }: { scopes: MatchScop
               {/* A type with nothing in it stays clickable and keeps the
                   ordinary colour: a plain 0 reads as nothing without help, and
                   dimming it further only breaks contrast. */}
-              <span className="matches-tab-count" style={{ color: on ? c.fg : INK_PLACE, opacity: on ? 0.66 : 1, fontWeight: 600 }}>{n}</span>
+              {!compact && (
+                <span className="matches-tab-count" style={{ color: on ? c.fg : INK_PLACE, opacity: on ? 0.66 : 1, fontWeight: 600 }}>{n}</span>
+              )}
             </button>
           )
         })}
