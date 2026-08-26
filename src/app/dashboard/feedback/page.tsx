@@ -324,7 +324,7 @@ export default function FeedbackPage() {
                     style={{
                       fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 14,
                       background: '#1D3C3E', color: '#F6F1E7', border: 'none',
-                      padding: '10px 20px', borderRadius: 999,
+                      padding: '10px 20px', borderRadius: 999, whiteSpace: 'nowrap',
                       cursor: (status === 'sending' || !isValid()) ? 'not-allowed' : 'pointer',
                       display: 'inline-flex', alignItems: 'center', gap: 8, transition: 'filter 0.15s',
                     }}
