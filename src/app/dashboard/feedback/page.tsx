@@ -199,7 +199,7 @@ export default function FeedbackPage() {
           <div style={{
             display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 4,
             padding: 4, background: '#FFFFFF',
-            border: '1px solid rgba(23,52,4,0.08)', borderRadius: 10, marginBottom: 20,
+            border: '1px solid rgba(23,52,4,0.08)', borderRadius: isMobile ? 12 : 999, marginBottom: 20,
           }}>
             {TABS.map(tab => {
               const Icon = tab.icon
@@ -247,7 +247,7 @@ export default function FeedbackPage() {
 
                   {/* Intro */}
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, paddingBottom: 18, borderBottom: '1px solid rgba(23,52,4,0.08)' }}>
-                    <div style={{ width: 36, height: 36, background: '#F5F1E8', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <div style={{ width: 36, height: 36, background: '#F5F1E8', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <meta.icon size={18} color="#1D3C3E" />
                     </div>
                     <div style={{ paddingTop: 2 }}>
@@ -324,7 +324,7 @@ export default function FeedbackPage() {
                     style={{
                       fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 14,
                       background: '#1D3C3E', color: '#F6F1E7', border: 'none',
-                      padding: '10px 20px', borderRadius: 8,
+                      padding: '10px 20px', borderRadius: 999,
                       cursor: (status === 'sending' || !isValid()) ? 'not-allowed' : 'pointer',
                       display: 'inline-flex', alignItems: 'center', gap: 8, transition: 'filter 0.15s',
                     }}
@@ -338,7 +338,7 @@ export default function FeedbackPage() {
           </div>
 
           {/* Email fallback */}
-          <div style={{ marginTop: 24, padding: '16px 20px', background: '#FFFFFF', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 12, fontFamily: 'var(--font-dm-sans)', fontSize: 13.5, color: '#5F5E5A' }}>
+          <div style={{ marginTop: 24, padding: '16px 20px', background: '#FFFFFF', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 12, display: 'flex', alignItems: 'center', gap: 12, fontFamily: 'var(--font-dm-sans)', fontSize: 13.5, color: '#5F5E5A' }}>
             <Mail size={16} color="#74736E" style={{ flexShrink: 0 }} />
             <span>
               Need a faster response, or prefer email? Write to{' '}
@@ -379,7 +379,7 @@ export default function FeedbackPage() {
                       <Icon size={11} style={{ opacity: 0.7 }} />
                       {TAB_TYPE_LABELS[sub.type]}
                     </span>
-                    <span style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 11, padding: '2px 8px', borderRadius: 10, background: sc.bg, color: sc.color, letterSpacing: '0.01em' }}>
+                    <span style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 11, padding: '2px 8px', borderRadius: 999, background: sc.bg, color: sc.color, letterSpacing: '0.01em' }}>
                       {sc.label}
                     </span>
                   </div>
