@@ -913,12 +913,11 @@ export default async function DashboardPage() {
 
         {!hasAnyActivity ? (
           <a href="/dashboard/search"
-            /* Hover in JS: an inline background beats a hover: class, so this
-               hover never fired at all. */
-            className="flex flex-col items-center justify-center text-center gap-2 rounded-xl px-6 py-10 mt-4 transition-colors"
-            style={{ background: '#FAF9F5', border: '1.5px dashed rgba(29,60,62,0.28)', minHeight: 160 }}
-            onMouseEnter={e => { e.currentTarget.style.background = '#F1EDE3' }}
-            onMouseLeave={e => { e.currentTarget.style.background = '#FAF9F5' }}>
+            /* Background in a class, not inline: an inline background beats a
+               hover: class, and this is a server component, so the hover cannot
+               be a JS handler either. */
+            className="flex flex-col items-center justify-center text-center gap-2 rounded-xl px-6 py-10 mt-4 transition-colors bg-[#FAF9F5] hover:bg-[#F1EDE3]"
+            style={{ border: '1.5px dashed rgba(29,60,62,0.28)', minHeight: 160 }}>
             <p className="text-base font-semibold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
               Nothing in your pipeline yet
             </p>
@@ -1182,10 +1181,8 @@ export default async function DashboardPage() {
                       : { color: '#5F5E5A', border: '1px solid rgba(29,60,62,0.20)', background: 'transparent' }
                   return (
                     <a key={row.id} href={row.href}
-                      className="flex items-center gap-3 mb-1.5 last:mb-0 transition-colors"
-                      style={{ padding: '7px 11px', borderRadius: 10, borderLeft: `5px solid ${rail}`, background: '#FAF9F5' }}
-                      onMouseEnter={e => { e.currentTarget.style.background = '#F1EDE3' }}
-                      onMouseLeave={e => { e.currentTarget.style.background = '#FAF9F5' }}>
+                      className="flex items-center gap-3 mb-1.5 last:mb-0 transition-colors bg-[#FAF9F5] hover:bg-[#F1EDE3]"
+                      style={{ padding: '7px 11px', borderRadius: 10, borderLeft: `5px solid ${rail}` }}>
                       {dateObj ? (
                         <div className="flex-shrink-0 text-center" style={{ width: 40, borderRadius: 9, padding: '5px 0 6px', background: tileBg }}>
                           <span className="block text-[8.5px] font-bold uppercase" style={{ color: monCol, letterSpacing: '0.08em', fontFamily: 'var(--font-space-grotesk)' }}>{dateObj.month}</span>
