@@ -187,7 +187,7 @@ export default function FeedbackInboxPage() {
                 <input
                   value={draft.label}
                   onChange={e => setDrafts(d => ({ ...d, [row.id]: { ...draft, label: e.target.value } }))}
-                  placeholder="Kicker, optional — e.g. Added to the catalogue"
+                  placeholder="Kicker, optional. e.g. Added to the catalogue"
                   style={{
                     fontFamily: UI, fontSize: 13, color: '#1D3C3E', background: '#FCFBF8',
                     border: '1px solid rgba(29,60,62,0.22)', borderRadius: 11, padding: '9px 12px', outline: 'none',
@@ -227,7 +227,7 @@ export default function FeedbackInboxPage() {
                   )}
                   {!row.user_id && (
                     <span style={{ fontSize: 12.5, color: '#74736E' }}>
-                      Not signed in — they will not see a reply in the app
+                      Not signed in, so they will not see a reply in the app
                     </span>
                   )}
                 </div>
