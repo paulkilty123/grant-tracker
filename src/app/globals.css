@@ -588,3 +588,21 @@
 /* Builder link-style actions: hover affordance (spec §7.1) */
 .gt-link { cursor: pointer; }
 .gt-link:hover { text-decoration: underline; }
+
+/* Matches card: the funding-type tabs give up their counts before they overflow.
+ *
+ * The five tabs need about 510px with their counts, and the card is one column
+ * of the dashboard grid, so the width that decides this is the CARD's, not the
+ * window's. Hence a container query rather than a media query: measured on
+ * 2026-08-27, the row needed 510px of a 457px track at a 1400px VIEWPORT, so a
+ * viewport breakpoint would have had to guess at the grid to get it right.
+ *
+ * 540 rather than 510 leaves room for counts that reach three digits.
+ *
+ * The container is declared inline on the wrapper in MatchesCard.tsx. If that
+ * wrapper loses `container-type`, this rule silently stops applying and In-kind
+ * runs off the edge again, which is exactly how the previous attempt failed:
+ * the class hooks shipped and the rule never did. */
+@container matches-tabs (max-width: 540px) {
+  .matches-tab-count { display: none; }
+}
