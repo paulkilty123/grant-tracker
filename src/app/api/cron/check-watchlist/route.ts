@@ -122,10 +122,24 @@ async function readListing(url: string, preferProxy = false): Promise<{ text: st
     direct = err instanceof Error ? err.message : String(err)
   }
 
-  // Direct failed and the proxy gave us something, even if thin. Thin beats
-  // nothing, and the count it produces is what makes it obvious in the run
-  // summary.
-  if (thinProxy) return thinProxy
+  // THIN DOES NOT BEAT NOTHING, and the comment here said it did until the
+  // re-baseline run on 2026-08-28 proved otherwise.
+  //
+  // Five entries came back at zero items and four more at one to four: Family
+  // Action, Hilden, Box.org, Ashoka, Bromley, NIHR, Lewes, Skills for Londoners,
+  // Glasgow. The compare-both rule could not rescue them because from
+  // PRODUCTION the direct fetch is refused, so the fragment is the only reading
+  // there is, and a fragment stored as a baseline is the failure this whole
+  // sequence of fixes is about.
+  //
+  // My own audit missed this by comparing the two readers from Paul's laptop,
+  // where those hosts answer fine. They block Vercel's egress specifically —
+  // the same trap the parallel session hit on covenantfund.org.uk and warned me
+  // about an hour earlier.
+  //
+  // So a reading we cannot trust is reported as a failure to read. The entry
+  // keeps its rotation slot and says why.
+  if (thinProxy) throw new Error(`${direct}; reader proxy returned only ${thinProxy.text.length} chars`)
 
   if (proxyFirstFailure) throw new Error(`${proxyFirstFailure}; then direct: ${direct}`)
   if (!process.env.READER_PROXY_URL) throw new Error(direct)
