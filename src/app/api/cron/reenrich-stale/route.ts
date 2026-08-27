@@ -125,8 +125,11 @@ function adminClient() {
 function siteBase(): string {
   const raw = process.env.NEXT_PUBLIC_SITE_URL
     || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '')
-    || 'https://www.granttracker.co.uk'
-  if (/granttracker\.co\.uk|vercel\.app/.test(raw)) return 'https://www.granttracker.co.uk'
+    || 'https://www.shootsfunding.co.uk'
+  // granttracker is matched too: it is the legacy alias, it still serves the
+  // admin API without redirecting, and an env var left pointing at it should
+  // land on the canonical host rather than quietly using the old brand.
+  if (/granttracker\.co\.uk|shootsfunding\.co\.uk|vercel\.app/.test(raw)) return 'https://www.shootsfunding.co.uk'
   return raw
 }
 

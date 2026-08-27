@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
     }
     try {
       const res = await fetch(parsed.toString(), {
-        headers: { 'User-Agent': 'GrantTrackerBuilder/1.0 (+https://granttracker.co.uk)' },
+        headers: { 'User-Agent': 'ShootsBuilder/1.0 (+https://www.shootsfunding.co.uk)' },
         redirect: 'follow',
         signal: AbortSignal.timeout(20_000),
       })
