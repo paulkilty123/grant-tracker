@@ -24,6 +24,10 @@ export const maxDuration = 270
 // between-rounds funder could reopen and close again before we looked. The last
 // two runs finished in 126s and 146s against a 240s budget, so the wall clock —
 // which is the real limit, not this number — has the room.
+/** Below this, a reading is treated as possibly partial and compared against the
+ *  other reader rather than trusted. Real listing pages here run 3,000 to 80,000
+ *  characters; the failures measured on 2026-08-28 were 198 to 833. */
+const THIN_READ      = 1200
 const BATCH_LIMIT    = 150
 const TIME_BUDGET_MS = 240_000
 
@@ -61,9 +65,24 @@ async function readListing(url: string, preferProxy = false): Promise<{ text: st
   // falls back to a direct read if the proxy fails — which also lets a funder
   // who lifts their block return to direct reads on their own.
   let proxyFirstFailure = ''
+  let thinProxy: { text: string; via: ReadVia } | null = null
   if (preferProxy) {
     try {
-      return await readViaProxy(url)
+      const got = await readViaProxy(url)
+      // A SUCCESSFUL READ CAN STILL BE THE WRONG PAGE.
+      //
+      // Measured 2026-08-28 against the entries baselined the night before: the
+      // proxy returns 553 characters for Skills for Londoners where a direct
+      // read returns 83,991, 198 against 7,102 for Family Action, 319 against
+      // 4,440 for Hilden. On other hosts it renders a fragment rather than the
+      // page — the parallel session found it returning an awards table while
+      // dropping the programme's own terms entirely.
+      //
+      // A fingerprint of a fragment is worse than a failed read: it is stable,
+      // it looks healthy, and it is blind to every change in the part that was
+      // dropped. So a thin reading is not accepted on its own, it is compared.
+      if (got.text.length >= THIN_READ) return got
+      thinProxy = got
     } catch (err) {
       // Fall through to the direct attempt, but keep what the proxy said. This
       // job's whole failure mode was errors that named one attempt and hid the
@@ -93,10 +112,20 @@ async function readListing(url: string, preferProxy = false): Promise<{ text: st
       },
     })
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    return { text: await res.text(), via: 'direct' }
+    const text = await res.text()
+    // Whichever reader saw more of the page wins. Both are lossy in different
+    // directions: the proxy renders JavaScript and sometimes renders only part,
+    // a direct fetch gets the whole document or nothing at all.
+    if (thinProxy && thinProxy.text.length > text.length) return thinProxy
+    return { text, via: 'direct' }
   } catch (err) {
     direct = err instanceof Error ? err.message : String(err)
   }
+
+  // Direct failed and the proxy gave us something, even if thin. Thin beats
+  // nothing, and the count it produces is what makes it obvious in the run
+  // summary.
+  if (thinProxy) return thinProxy
 
   if (proxyFirstFailure) throw new Error(`${proxyFirstFailure}; then direct: ${direct}`)
   if (!process.env.READER_PROXY_URL) throw new Error(direct)
