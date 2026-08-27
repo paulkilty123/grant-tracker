@@ -3,7 +3,9 @@
 ## Project
 Next.js 14 App Router + Supabase + Tailwind CSS, deployed on Vercel via GitHub auto-deploy.
 
-- **Live site:** https://granttracker.co.uk/
+- **Live site:** https://www.shootsfunding.co.uk/ (the brand and the domain from 2026-08-27;
+  granttracker.co.uk still resolves and 308s here, but it is the legacy alias. Use
+  shootsfunding for verification, admin calls and anything user-facing.)
 - **Repo:** https://github.com/paulkilty123/grant-tracker
 - **Supabase project ID:** yrndczlqjqtfgissleev
 - **Pricing:** Match £12/month, Apply £18/month. Monthly and annual billing only.

@@ -20,7 +20,7 @@ import { getAdminDb } from '../src/lib/admin/admin-db'
 import { mergeGrantUpdate } from '../src/lib/grant-merge'
 
 const APPLY = process.argv.includes('--apply')
-const HOST  = 'https://www.granttracker.co.uk'   // www directly: a redirect strips the bearer
+const HOST  = 'https://www.shootsfunding.co.uk'   // www directly: a redirect strips the bearer
 
 const MICROSOFT = '3c2c6766-220f-4d54-ad18-4bade01df7a5'
 const TECHSOUP  = 'b98c7493-ff5c-42f4-ab1d-b205940e550c'
