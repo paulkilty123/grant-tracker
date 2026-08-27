@@ -52,7 +52,26 @@ function getAdminClient() {
  * `last_error` exactly as before. The message names both attempts, because "HTTP
  * 403" alone stopped being the whole story the moment there was a second route.
  */
-async function readListing(url: string): Promise<{ text: string; via: ReadVia }> {
+async function readListing(url: string, preferProxy = false): Promise<{ text: string; via: ReadVia }> {
+  // A host that blocked us last time will block us again, and the direct attempt
+  // costs 12 seconds of a 240 second budget to learn nothing. With 39 entries in
+  // that state, trying direct first every run would spend half the budget on
+  // known-dead attempts and shorten the rotation for everyone else. So an entry
+  // whose baseline came from the proxy goes straight back to the proxy, and only
+  // falls back to a direct read if the proxy fails — which also lets a funder
+  // who lifts their block return to direct reads on their own.
+  let proxyFirstFailure = ''
+  if (preferProxy) {
+    try {
+      return await readViaProxy(url)
+    } catch (err) {
+      // Fall through to the direct attempt, but keep what the proxy said. This
+      // job's whole failure mode was errors that named one attempt and hid the
+      // other.
+      proxyFirstFailure = err instanceof Error ? err.message : String(err)
+    }
+  }
+
   let direct: string
   try {
     const res = await fetch(url, {
@@ -79,10 +98,21 @@ async function readListing(url: string): Promise<{ text: string; via: ReadVia }>
     direct = err instanceof Error ? err.message : String(err)
   }
 
-  const base = process.env.READER_PROXY_URL
-  if (!base) throw new Error(direct)
+  if (proxyFirstFailure) throw new Error(`${proxyFirstFailure}; then direct: ${direct}`)
+  if (!process.env.READER_PROXY_URL) throw new Error(direct)
 
   try {
+    return await readViaProxy(url)
+  } catch (err) {
+    const why = err instanceof Error ? err.message : String(err)
+    throw new Error(`${direct}; ${why}`)
+  }
+}
+
+async function readViaProxy(url: string): Promise<{ text: string; via: ReadVia }> {
+  const base = process.env.READER_PROXY_URL
+  if (!base) throw new Error('reader proxy not configured')
+  {
     const res = await fetch(`${base.replace(/\/$/, '')}/${url}`, {
       signal: AbortSignal.timeout(30000),
       headers: {
@@ -99,18 +129,24 @@ async function readListing(url: string): Promise<{ text: string; via: ReadVia }>
     if (text.length < 200 || /robot challenge|checking the site connection|verifying you are (not )?a (human|bot)/i.test(text)) {
       throw new Error(`reader proxy returned a challenge or ${text.length} chars`)
     }
-    // A not-found page arrives with HTTP 200 and real content, and fingerprinting
-    // it would store "404 page not found" as the baseline and then report the
-    // entry healthy for ever. Camden's watchlist URL is in exactly this state.
+    // A not-found page arrives from the proxy with HTTP 200 and real content:
+    // the direct fetch's 404 becomes a rendered "404 page not found" document.
+    // Fingerprinting that would store the error page as the baseline and report
+    // the entry healthy for ever, which is worse than the failure it replaces.
+    //
+    // Corrected 2026-08-27: the commit that added this named Camden as an
+    // instance and Camden is NOT one. That came from testing a URL I had
+    // shortened by hand rather than the one on the row; the stored URL reads
+    // fine and returns 38,000 characters. The guard is still right, and 4 of the
+    // 39 unbaselined entries do carry an HTTP 404 (Art Fund, Dulverton, Heritage
+    // Crafts, and one more), but the example was wrong.
+    //
     // The proxy puts the page title on the first line, so that is where to look.
     const title = text.slice(0, 200).split('\n').find(l => /^title:/i.test(l)) ?? ''
     if (/\b404\b|page not found|page cannot be found|page unavailable/i.test(title)) {
       throw new Error(`page is missing: "${title.replace(/^title:\s*/i, '').trim().slice(0, 60)}"`)
     }
-    return { text, via: 'proxy' }
-  } catch (err) {
-    const why = err instanceof Error ? err.message : String(err)
-    throw new Error(`${direct}; ${why}`)
+    return { text, via: 'proxy' as const }
   }
 }
 
@@ -188,7 +224,7 @@ export async function GET(req: NextRequest) {
         break
       }
       try {
-        const { text, via }          = await readListing(entry.listing_url)
+        const { text, via }          = await readListing(entry.listing_url, entry.last_read_via === 'proxy')
         const { fingerprint, count } = extractFingerprint(text, via)
 
         // A fingerprint is only ever compared against one taken the same way:
