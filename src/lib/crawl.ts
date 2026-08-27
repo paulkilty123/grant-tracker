@@ -1639,6 +1639,56 @@ function parseAmountRange(str: string): { min: number | null; max: number | null
   return { min: n, max: n }
 }
 
+/**
+ * The grant size a page STATES, as opposed to the first two £ figures on it.
+ *
+ * parseAmountRange takes the first two amounts in whatever string it is handed.
+ * That is right for a card blurb, which is one sentence about one fund, and
+ * wrong for a whole programme page, which is prose. The Service Pupil Support
+ * page carries "We've awarded just over £2.5 million to 34 projects" ABOVE its
+ * grant range, so a whole-page parse returns the boast and stores it as the
+ * amount an applicant can ask for.
+ *
+ * The same page also renders the label away from the figure —
+ *     <h3>Grants of</h3> … <p>between £5,000 and £150,000</p>
+ * — so the text has to be whitespace-collapsed before anything matches at all.
+ *
+ * Only a phrase that actually states an award size counts: the noun has to be
+ * followed directly by of / from / up to / between / worth. "Grants of between
+ * £5,000 and £150,000" qualifies; "We've awarded just over £2.5 million" and
+ * "total grants awarded of £2.5 million" do not.
+ *
+ * Every qualifying phrase is read and the ENVELOPE across them returned. A page
+ * split into strands states a range per strand ("between £20,000 and £40,000"
+ * for one, "between £150,000 and £300,000" for the other) and the row wants the
+ * outer bounds of both, not whichever strand is printed first.
+ *
+ * Returns nulls when the page states no size, so a caller can fall back to what
+ * it already had instead of recording a guess.
+ */
+const GRANT_SIZE_PHRASE_RE = new RegExp(
+  '\\b(?:grants?|awards?|funding|investments?)\\s+(?:of|from|up to|between|worth)\\s+' +
+  '(?:between\\s+|up to\\s+)?' +
+  '£\\s?[\\d,.]+(?:\\s*(?:million|mn|m|thousand|k)(?![a-z]))?' +
+  '(?:\\s*(?:to|and|-|–|—)\\s*£\\s?[\\d,.]+(?:\\s*(?:million|mn|m|thousand|k)(?![a-z]))?)?',
+  'gi',
+)
+
+export function extractGrantSize(pageText: string): { min: number | null; max: number | null } {
+  const text = (pageText ?? '').replace(/\s+/g, ' ')
+  let min: number | null = null
+  let max: number | null = null
+  // Array.from, not a bare for-of: the tsconfig target here cannot iterate a
+  // RegExpStringIterator directly (TS2802), which is why parseAmountRange above
+  // materialises its matches the same way.
+  for (const m of Array.from(text.matchAll(GRANT_SIZE_PHRASE_RE))) {
+    const r = parseAmountRange(m[0])
+    if (r.min != null) min = min == null ? r.min : Math.min(min, r.min)
+    if (r.max != null) max = max == null ? r.max : Math.max(max, r.max)
+  }
+  return { min, max }
+}
+
 // ── Date parsers ──────────────────────────────────────────────────────────────
 // Compare date strings (YYYY-MM-DD) not datetimes — avoids incorrectly
 // discarding today's deadline when the cron runs early in the morning.
@@ -2909,7 +2959,16 @@ async function crawlArmedForcesCovenant(): Promise<CrawlResult> {
   try {
     const html  = await fetchHtml(`${BASE}/programmes/`)
     const root  = parseHTML(html)
-    const grants: ScrapedGrant[] = []
+
+    // The listing card gives a title, a closing date and a link. It does NOT
+    // reliably give an amount, and until 2026-08-27 the amount was taken from
+    // the card blurb and nothing else — the programme page, one click away, was
+    // captured as apply_url and never opened. Across the three live rows that
+    // produced one complete pair, one maximum with no minimum, and one row with
+    // no amount at all, which rendered "Amount on application" on a card while
+    // its own page read "Grants of between £5,000 and £150,000".
+    type Card = { title: string; deadline: string | null; href: string; url: string; desc: string }
+    const cards: Card[] = []
     for (const card of root.querySelectorAll('article, .programme, .grant, .card')) {
       // The page renders each programme as a PAIR of headings, closing date
       // first:
@@ -2942,9 +3001,31 @@ async function crawlArmedForcesCovenant(): Promise<CrawlResult> {
                 ?? card.querySelector('a')?.getAttribute('href') ?? ''
       const url  = href.startsWith('http') ? href : `${BASE}${href}`
       const desc = card.querySelector('p')?.text?.trim() ?? ''
-      const { min, max } = parseAmountRange(desc + ' ' + title)
-      grants.push({ external_id: `armed_forces_covenant_${slugify(href || title)}`, source: SOURCE, title, funder: 'Armed Forces Covenant Fund Trust', funder_type: 'government', description: desc || 'Grant from Armed Forces Covenant Fund Trust.', amount_min: min, amount_max: max, deadline, is_rolling: false, is_local: false, sectors: ['armed forces', 'veterans', 'social welfare', 'community'], eligibility_criteria: ['Organisations supporting the Armed Forces community'], apply_url: url || null, raw_data: { title, href } as Record<string, unknown> })
+      cards.push({ title, deadline, href, url, desc })
     }
+
+    // Open each programme page for the figure it states. Parallel and settled,
+    // the same shape as crawlHenrySmithFoundation: a page that 403s, times out
+    // or has moved leaves that row on its listing figures rather than dropping
+    // it. The listing is enough to publish a row; the amount is the improvement.
+    const sizes = new Map<string, { min: number | null; max: number | null }>()
+    const detail = await Promise.allSettled(cards.map(async c => ({
+      href: c.href,
+      size: extractGrantSize(parseHTML(await fetchHtml(c.url)).text),
+    })))
+    for (const r of detail) if (r.status === 'fulfilled') sizes.set(r.value.href, r.value.size)
+
+    const grants: ScrapedGrant[] = cards.map(c => {
+      // All-or-nothing per source, never a figure from each. Taking a minimum
+      // off the page and a maximum off the card would build a range no page
+      // states, which is harder to spot than either being wrong on its own.
+      const stated = sizes.get(c.href)
+      const { min, max } = stated && (stated.min != null || stated.max != null)
+        ? stated
+        : parseAmountRange(c.desc + ' ' + c.title)
+      return { external_id: `armed_forces_covenant_${slugify(c.href || c.title)}`, source: SOURCE, title: c.title, funder: 'Armed Forces Covenant Fund Trust', funder_type: 'government', description: c.desc || 'Grant from Armed Forces Covenant Fund Trust.', amount_min: min, amount_max: max, deadline: c.deadline, is_rolling: false, is_local: false, sectors: ['armed forces', 'veterans', 'social welfare', 'community'], eligibility_criteria: ['Organisations supporting the Armed Forces community'], apply_url: c.url || null, raw_data: { title: c.title, href: c.href } as Record<string, unknown> }
+    })
+
     if (grants.length > 0) return await upsertGrants(SOURCE, grants)
     return await upsertGrants(SOURCE, [
       { external_id: `${SOURCE}_local_grants`, source: SOURCE, title: 'Armed Forces Covenant Fund Trust — Local Grants', funder: 'Armed Forces Covenant Fund Trust', funder_type: 'government', description: 'Funds projects that make a positive difference to Armed Forces personnel, veterans and their families across the UK. Local grants of up to £20,000 for community projects supporting the Armed Forces community.', amount_min: 500, amount_max: 20000, deadline: null, is_rolling: false, is_local: false, sectors: ['armed forces', 'veterans', 'social welfare', 'mental health', 'community'], eligibility_criteria: ['UK registered charity or voluntary organisation', 'Project must benefit serving personnel, veterans or their families', 'Cannot fund statutory services'], apply_url: `${BASE}/programmes/`, raw_data: { note: 'Hardcoded fallback' } as Record<string, unknown> },
