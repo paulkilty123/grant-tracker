@@ -3,6 +3,12 @@ import type { EvidenceInput } from '../field-evidence'
 import { AMOUNT_UNSUPPORTED_NOTE, DEADLINE_UNSUPPORTED_NOTE } from '../field-evidence'
 import { isOpeningEntry, type CycleEntry } from '../deadline-cycle'
 import { asStructures, asExclusions, compareStructures, newExclusions, namesJurisdiction, quoteNamesAForm } from './eligibility'
+// PAGE_CAP, RELEVANCE and excerpt moved to ../page-excerpt on 2026-08-28 so
+// enrich-grant reads a page the same way this engine does — it had been taking
+// a naive 12,000-character prefix. `excerpt` stays exported from here because
+// it was already part of this module's surface.
+import { PAGE_CAP, excerpt } from '../page-excerpt'
+export { excerpt } from '../page-excerpt'
 
 /**
  * One visit per row: fetch the funder's page, decide whether it is usable, and
@@ -173,8 +179,6 @@ export type VerifyResult = {
 }
 
 // ── Fetch (mirrors enrich-grant, including the reader-proxy fallback) ────────
-
-const PAGE_CAP = 12000
 
 /** Link text or href that suggests the funding detail lives one level down. */
 const FUNDING_LINK = /\b(grants?|funding|apply|applying|application|eligib|criteria|programmes?|how-we-fund|how-to-apply|open-funds?|our-funds?|what-we-fund|guidelines)\b/i
@@ -484,57 +488,6 @@ function stripHtml(html: string): string {
     .replace(/&lt;/g, '<').replace(/&gt;/g, '>')
     .replace(/\s{2,}/g, ' ')
     .trim())
-}
-
-/** Words that mark the part of a funder page we actually need. */
-const RELEVANCE = /income|turnover|deadline|closing date|closes|apply by|eligib|unsolicited|invitation|invited|rolling|year round|not accept|criteria|who can apply|£\s?[\d,]+/gi
-
-/**
- * Keep the parts of a long page that matter, not merely the first 12,000
- * characters.
- *
- * Measured on Bentley's fund page: 53,919 characters, and the sentence
- * "annual income of under £500,000" sits at character 30,596. Every one of the
- * nine relevant keyword hits fell beyond a naive prefix cap, so the model was
- * shown marketing copy and truthfully reported that the page stated no
- * eligibility detail. The engine was not wrong; it was starved.
- *
- * The opening is always kept, because the gate needs it to tell which fund the
- * page is about. The rest of the budget goes to the highest-scoring windows, in
- * document order, with a marker where text was dropped so a quote is never
- * silently stitched across a gap.
- */
-export function excerpt(text: string, cap = PAGE_CAP): string {
-  if (text.length <= cap) return text
-
-  const HEAD = 3000                       // enough to identify the fund
-  const WINDOW = 1500
-  const head = text.slice(0, HEAD)
-  const rest = text.slice(HEAD)
-
-  const windows: { start: number; score: number }[] = []
-  for (let i = 0; i < rest.length; i += WINDOW) {
-    const chunk = rest.slice(i, i + WINDOW)
-    windows.push({ start: i, score: (chunk.match(RELEVANCE) ?? []).length })
-  }
-
-  const budget = cap - HEAD
-  const chosen = windows
-    .filter(w => w.score > 0)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, Math.max(1, Math.floor(budget / WINDOW)))
-    .sort((a, b) => a.start - b.start)
-
-  if (chosen.length === 0) return text.slice(0, cap)
-
-  let out = head
-  let prevEnd = 0
-  for (const w of chosen) {
-    if (w.start > prevEnd) out += ' […] '
-    out += rest.slice(w.start, w.start + WINDOW)
-    prevEnd = w.start + WINDOW
-  }
-  return out.slice(0, cap)
 }
 
 export type Fetched =

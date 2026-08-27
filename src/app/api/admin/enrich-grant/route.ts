@@ -9,6 +9,7 @@ import { extractInvestmentTerms } from '@/lib/extract-investment-terms'
 import { buildAwardText, extractGrantAmounts } from '@/lib/grant-amounts'
 import { detectUncapturedMultiRound } from '@/lib/grant-deadlines'
 import { recordGrantFlags, type GrantFlagCode } from '@/lib/grant-flags'
+import { excerptWithMeta, excerptNotice, type Excerpted } from '@/lib/page-excerpt'
 
 type Citation = NonNullable<ProvenanceEntry['citation']>
 
@@ -199,7 +200,7 @@ function detectUngroundedAmounts(value: string, groundingText: string): number[]
  * Only ever called AFTER a direct fetch has already failed, so it costs nothing
  * on the ~95% of hosts that work normally.
  */
-async function fetchViaReaderProxy(url: string): Promise<string> {
+async function fetchViaReaderProxy(url: string): Promise<Excerpted> {
   const base = process.env.READER_PROXY_URL
   if (!base) throw new Error('reader proxy not configured')
   const controller = new AbortController()
@@ -213,15 +214,15 @@ async function fetchViaReaderProxy(url: string): Promise<string> {
       },
     })
     if (!res.ok) throw new Error(`reader proxy HTTP ${res.status}`)
-    // Already text/markdown, so no tag stripping — just the same length cap the
+    // Already text/markdown, so no tag stripping — just the same excerpting the
     // direct path uses, to keep the prompt the same size either way.
-    return (await res.text()).replace(/\s{2,}/g, ' ').trim().slice(0, 12000)
+    return excerptWithMeta((await res.text()).replace(/\s{2,}/g, ' ').trim())
   } finally {
     clearTimeout(timeout)
   }
 }
 
-async function fetchPageText(url: string): Promise<string> {
+async function fetchPageText(url: string): Promise<Excerpted> {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 10000)
   try {
@@ -248,7 +249,7 @@ async function fetchPageText(url: string): Promise<string> {
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     const html = await res.text()
     // Strip scripts, styles, and HTML tags; normalise whitespace
-    return html
+    const stripped = html
       .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
       .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
       .replace(/<[^>]+>/g, ' ')
@@ -258,7 +259,10 @@ async function fetchPageText(url: string): Promise<string> {
       .replace(/&gt;/g, '>')
       .replace(/\s{2,}/g, ' ')
       .trim()
-      .slice(0, 12000) // cap at ~3k tokens
+    // ~3k tokens, but chosen around funding wording rather than taken off the
+    // top. AF3's first 12,000 characters are the theme's inline CSS; its amount,
+    // closing date and eligibility all sit past 15,000. See page-excerpt.ts.
+    return excerptWithMeta(stripped)
   } finally {
     clearTimeout(timeout)
   }
@@ -298,6 +302,9 @@ export async function POST(req: NextRequest) {
   // can see in Vercel logs and the response body why a brief came back as
   // knowledge_fallback. Silent catches were hiding things like 403/timeout.
   let primaryFetchDebug: string | null = null
+  // What the model was actually shown of the primary page, so the response can
+  // say "12,000 of 72,220" instead of implying the whole page was read.
+  let primaryExcerpt: Excerpted | null = null
 
   if (pastedContent && pastedContent.trim().length > 100) {
     sections.push(`Primary source (pasted):\n---\n${pastedContent.trim().slice(0, 10000)}\n---`)
@@ -323,12 +330,14 @@ export async function POST(req: NextRequest) {
     const tryReaderProxy = async (whyDirectFailed: string) => {
       try {
         const viaProxy = await fetchViaReaderProxy(primaryUrl)
-        if (viaProxy.length >= 200) {
-          sections.push(`Primary source (${primaryUrl}):\n---\n${viaProxy}\n---`)
+        if (viaProxy.text.length >= 200) {
+          primaryExcerpt = viaProxy
+          sections.push(`Primary source (${primaryUrl}):\n---\n${excerptNotice(viaProxy)}${viaProxy.text}\n---`)
           fetchedFromUrl = true
-          primaryFetchDebug = `${whyDirectFailed}; recovered via reader proxy (${viaProxy.length} chars)`
+          primaryFetchDebug = `${whyDirectFailed}; recovered via reader proxy (${viaProxy.text.length} chars`
+            + (viaProxy.capped ? ` excerpted from ${viaProxy.originalLength}` : '') + ')'
         } else {
-          primaryFetchDebug = `${whyDirectFailed}; reader proxy returned only ${viaProxy.length} chars`
+          primaryFetchDebug = `${whyDirectFailed}; reader proxy returned only ${viaProxy.text.length} chars`
         }
       } catch (proxyErr) {
         const why = proxyErr instanceof Error ? proxyErr.message : String(proxyErr)
@@ -338,12 +347,14 @@ export async function POST(req: NextRequest) {
 
     try {
       const fetched = await fetchPageText(primaryUrl)
-      if (fetched.length >= 200) {
-        sections.push(`Primary source (${primaryUrl}):\n---\n${fetched}\n---`)
+      if (fetched.text.length >= 200) {
+        primaryExcerpt = fetched
+        sections.push(`Primary source (${primaryUrl}):\n---\n${excerptNotice(fetched)}${fetched.text}\n---`)
         fetchedFromUrl = true
-        primaryFetchDebug = `ok (${fetched.length} chars after strip)`
+        primaryFetchDebug = `ok (${fetched.text.length} chars after strip`
+          + (fetched.capped ? `, excerpted from ${fetched.originalLength}` : '') + ')'
       } else {
-        await tryReaderProxy(`direct fetch returned only ${fetched.length} chars after stripping (< 200 threshold)`)
+        await tryReaderProxy(`direct fetch returned only ${fetched.text.length} chars after stripping (< 200 threshold)`)
       }
     } catch (err) {
       const direct = err instanceof Error ? err.message : String(err)
@@ -361,8 +372,8 @@ export async function POST(req: NextRequest) {
       if (src.url?.trim() && (!src.text || src.text.trim().length < 50)) {
         try {
           const fetched = await fetchPageText(src.url.trim())
-          if (fetched.length >= 100) {
-            sections.push(`${heading} (${src.url}):\n---\n${fetched}\n---`)
+          if (fetched.text.length >= 100) {
+            sections.push(`${heading} (${src.url}):\n---\n${excerptNotice(fetched)}${fetched.text}\n---`)
             fetchedFromUrl = true
           }
         } catch {
@@ -1024,6 +1035,11 @@ NOTE: _deadline_cycle and its _citations entry are ONLY present when a recurring
       _debug:   {
         primaryFetch:     primaryFetchDebug,
         fetchedFromUrl,
+        // Whether the model saw the page or a slice of it. A cap that says
+        // nothing is how AF3's brief came back describing the awards table.
+        pageExcerpt: primaryExcerpt
+          ? { capped: primaryExcerpt.capped, sent: primaryExcerpt.text.length, pageLength: primaryExcerpt.originalLength }
+          : null,
         citationsApplied: Object.keys(citationsForMerger),
         cycleExtracted:   cycleFromBrief !== null,
         incomeGate: {
