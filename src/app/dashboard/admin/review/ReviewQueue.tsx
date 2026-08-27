@@ -179,7 +179,8 @@ type NavId = SectionId | 'liveandwrong' | 'liveok' | 'new' | 'unenriched' | 'aut
 
 const NAV_META: Record<NavId, { label: string; detail: string }> = {
   liveandwrong: { label: 'Live and wrong',
-    detail: 'People can see these now. Everything else on this screen is invisible, so its cost is delay rather than harm.' },
+    detail: 'People can see these now. Everything else on this screen is invisible, so its cost is delay rather than harm. '
+          + 'Scanned across every live row rather than the queue alone, so a row that went wrong after it was published shows up here too.' },
   ready:      { label: 'Ready to publish',      detail: 'Nothing blocking. Publishing one changes what users can find today.' },
   link:       { label: 'Link needs fixing',     detail: 'A link that goes nowhere, or a page describing a different fund. A homepage is not a problem and is not here.' },
   reading:    { label: 'Needs reading',         detail: 'Nothing has read the funder’s page, so no judgement is possible yet.' },
@@ -1121,8 +1122,18 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
     for (const r of liveAndWrong) placed.add(r.id)
     for (const r of liveOk) placed.add(r.id)
     for (const sec of SECTIONS) for (const r of sectioned.get(sec.id) ?? []) placed.add(r.id)
-    return byViewTyped.concat(pending.filter(i => i.isActive)).filter(i => !placed.has(i.id))
-  }, [liveAndWrong, liveOk, sectioned, byViewTyped, pending])
+    // Compared against the SAME population the tabs are built from. The three
+    // placed sets all have the type filter applied and the sections have the
+    // reason filter too, so measuring them against the unfiltered pool reports
+    // every row a filter excluded as a rendering bug — the opposite of what this
+    // banner is for. Harmless while the live pool was twenty rows; the live scan
+    // makes it a hundred and twenty, and a red banner that cries wolf on every
+    // filter click is worse than no banner at all.
+    const liveShown = typeFilter
+      ? pending.filter(i => i.isActive && i.values.fundingType === typeFilter)
+      : pending.filter(i => i.isActive)
+    return shown.concat(liveShown).filter(i => !placed.has(i.id))
+  }, [liveAndWrong, liveOk, sectioned, shown, pending, typeFilter])
 
   /** Where a row lives NOW, so a held row can name its destination rather than
    *  just saying it moved. `null` means it has left the queue altogether. */

@@ -58,6 +58,60 @@ const COLS = [
   'first_seen_at', 'source',
 ].join(', ')
 
+/**
+ * Every row a user can see right now, paged.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * WHY THIS QUERY EXISTS
+ *
+ * The two queries in the page cover rows AWAITING review, and published rows
+ * whose brief is a stub. A published row with a FULL brief is in neither, so a
+ * row that goes wrong after it is published is invisible to this screen.
+ *
+ * Co-op Foundation — Belong is the case that made it visible. The verifier
+ * recorded `fixable_link: wrong_fund` against its link on 17 August; the row
+ * stayed live, offering £5,000 to £20,000 that appears nowhere on the funder's
+ * page, until Paul read the card on 27 August. Nothing in between was looking.
+ *
+ * Measured the same day: 612 live rows, 103 of them carrying a blocking reason
+ * and shown under no tab.
+ *
+ * PAGED, NOT `.limit()`. PostgREST caps a response at 1,000 rows and the
+ * catalogue is heading for 1,500, so a limit that is comfortable today becomes
+ * a silent truncation exactly as the catalogue grows — and a truncated scan
+ * reads as "nothing wrong" rather than as a missing page. A short page ends the
+ * walk; HARD_CAP is a runaway guard and says so out loud if it is ever reached.
+ *
+ * NOT `.eq('pipeline_state', 'published')`, because `is_active` is what decides
+ * whether a user sees a row and the two can disagree — that disagreement is
+ * itself one of the defects this screen exists to surface (migration 063).
+ */
+async function fetchLiveRows(db: ReturnType<typeof getAdminDb>) {
+  const PAGE = 500
+  const HARD_CAP = 5000
+  const out: unknown[] = []
+  for (let from = 0; from < HARD_CAP; from += PAGE) {
+    const { data, error } = await db
+      .from('scraped_grants')
+      .select(COLS)
+      .eq('is_active', true)
+      .not('pipeline_state', 'in', '("rejected","archived")')
+      .order('id')
+      .range(from, from + PAGE - 1)
+    if (error) {
+      // A failed page must not read as a clean scan. Everything gathered so far
+      // is still worth showing, so this returns rather than throws, and says
+      // which page stopped it.
+      console.error('[review] live scan failed at row', from, error.message)
+      return out
+    }
+    out.push(...(data ?? []))
+    if ((data ?? []).length < PAGE) return out
+  }
+  console.warn(`[review] live scan hit the ${HARD_CAP} row cap — rows beyond it were not scanned`)
+  return out
+}
+
 export default async function ReviewPage() {
   const db = getAdminDb()
 
@@ -227,6 +281,15 @@ export default async function ReviewPage() {
     }
   }
 
+  // What a user can see right now, minus what is already above.
+  //
+  // Only the rows carrying a BLOCKING reason are carried forward, and deriving
+  // that here rather than in the client is what makes the scan affordable: it
+  // reads about 7MB of briefs, evidence and flags, and roughly a sixth of that
+  // reaches the browser. The rest never leaves the server.
+  const liveBlocking = (await fetchLiveRows(db) as unknown as typeof rows)
+    .filter(r => gateDecision(r).outcome === 'attention')
+
   // Merge, de-duplicating by id in case a state ever overlaps.
   //
   // Gate-published rows come LAST on purpose. If a row the gate published has
@@ -237,6 +300,7 @@ export default async function ReviewPage() {
   const allRows = [
     ...rows,
     ...((stubData ?? []) as unknown as typeof rows),
+    ...liveBlocking,
     ...((gateGrants ?? []) as unknown as typeof rows),
   ].filter(r => { if (seenIds.has(r.id)) return false; seenIds.add(r.id); return true })
 
@@ -294,7 +358,12 @@ export default async function ReviewPage() {
       // is the discriminator. The state test is what demotes a gate-published
       // row that has since come BACK into the queue: it is work again, not a
       // receipt, and it should appear in the working views rather than here.
-      autoPublishedAt: QUEUE_STATES.includes(r.pipeline_state)
+      // `attention` joins the state test for the same reason the state test is
+      // there: a receipt is for a row that needs nothing. A row the gate
+      // published last week and which has since picked up a blocking reason
+      // needs a decision, and filing it as a receipt would hide it from the one
+      // tab that exists to show it.
+      autoPublishedAt: QUEUE_STATES.includes(r.pipeline_state) || gate.outcome === 'attention'
         ? null
         : gatePublishedAt.get(r.id)?.at ?? null,
       /** Was it invisible before the gate published it? Distinguishes a genuine
