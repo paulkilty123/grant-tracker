@@ -256,6 +256,26 @@ export async function GET(req: NextRequest) {
         const { text, via }          = await readListing(entry.listing_url, entry.last_read_via === 'proxy')
         const { fingerprint, count } = extractFingerprint(text, via)
 
+        // AN EMPTY FINGERPRINT IS NOT A BASELINE.
+        //
+        // Bromley Trust re-read at zero items on 2026-08-28: the direct fetch
+        // was refused, the proxy returned 313 characters, and 313 characters of
+        // chrome yield no headings at all. Storing that gives the entry a
+        // fingerprint that matches nothing and changes on the first real read,
+        // which is an alert about our own reading rather than about the funder.
+        //
+        // Recorded as an error instead, which is what it is: we did not manage
+        // to read the page.
+        if (count === 0) {
+          const why = `read via ${via} produced no headings (${text.length} chars)`
+          await supabase.from('funder_watchlist').update({
+            last_checked: ranAt,
+            last_error:   why,
+          }).eq('id', entry.id)
+          results.push({ name: entry.name, status: 'error', detail: why })
+          continue
+        }
+
         // A fingerprint is only ever compared against one taken the same way:
         // the proxy reads markdown and a direct fetch reads HTML, so the same
         // unchanged page fingerprints differently through each. Without this, one
