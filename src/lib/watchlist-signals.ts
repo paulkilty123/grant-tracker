@@ -93,3 +93,85 @@ export async function flagRowsForUrl(
   }
   return (data ?? []).length
 }
+
+/** Which reader produced a page's text. The two grammars differ, see below. */
+export type ReadVia = 'direct' | 'proxy'
+
+// ── Fingerprint extraction ────────────────────────────────────────────────────
+// Pulls text from h1–h4, <strong>, and prominent <li> tags.
+// Normalises to lowercase, deduplicates, and sorts so that cosmetic
+// re-orderings don't trigger false positives.
+//
+// TWO READERS, TWO GRAMMARS. A direct fetch returns HTML; the reader proxy
+// returns markdown, where the same headings are `## Grants` and the same bold is
+// `**Now open**`. Running the HTML patterns over markdown finds nothing at all,
+// which is not an empty page — it is the wrong parser, and it would read as a
+// listing that had collapsed to zero items.
+/**
+ * Chrome the reader proxy renders as content, and a direct fetch does not.
+ *
+ * Measured against three real pages on 2026-08-27. Power to Change came back
+ * with 45 "items", most of them a cookie-consent table rendered as bold text:
+ * ": 1 day", ": http cookie", ": indexeddb". Those values change between reads,
+ * so every run would have reported the listing as changed and flagged every
+ * catalogue row on that URL into the verification queue.
+ *
+ * APPLIED TO THE PROXY GRAMMAR ONLY, deliberately. Filtering the HTML grammar
+ * too would change the fingerprint of all ~350 entries that already have one,
+ * and the next run would read every single one as a changed listing. The noise
+ * arrives with the proxy; the filter stays with it.
+ */
+const PROXY_NOISE = new RegExp([
+  'cookie', 'consent', 'privacy', 'local storage', 'indexeddb', 'session',
+  'navigation menu', 'skip to', 'follow us', 'social media', 'search',
+  'sign in', 'log in', 'newsletter', 'accessibility', 'terms of use',
+  '^:', '^\\d+ (day|days|month|months|year|years)$', '^#', 'gif$',
+].join('|'), 'i')
+
+export function extractFingerprint(html: string, via: ReadVia = 'direct'): { fingerprint: string; count: number } {
+  const items: string[] = []
+
+  const patterns = via === 'proxy'
+    ? [
+        // Markdown headings, to the end of the line.
+        /^#{1,4}\s+(.+)$/gim,
+        // Bold, which is what the proxy renders <strong> as.
+        /\*\*([^*\n]{5,199})\*\*/g,
+      ]
+    : [
+        /<h[1-4][^>]*>([\s\S]*?)<\/h[1-4]>/gi,
+        /<strong[^>]*>([\s\S]*?)<\/strong>/gi,
+      ]
+
+  for (const re of patterns) {
+    let m: RegExpExecArray | null
+    while ((m = re.exec(html)) !== null) {
+      const text = m[1]
+        .replace(/<[^>]+>/g, '')   // strip inner tags
+        // `[Apply now](https://…)` -> `Apply now`. Markdown only; a no-op on HTML.
+        .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+        .replace(/[*_`]+/g, '')
+        .replace(/&amp;/g,  '&')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&#\d+;/g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLowerCase()
+      if (text.length > 4 && text.length < 200) {
+        if (via === 'proxy' && PROXY_NOISE.test(text)) continue
+        items.push(text)
+      }
+    }
+  }
+
+  const unique = Array.from(new Set(items)).sort()
+  return {
+    fingerprint: unique.join(' || '),
+    count: unique.length,
+  }
+}
+
+// Moved here from the route on 2026-08-27, for the reason stated at the top of
+// this file: a route may only export its handlers, so while this lived there it
+// could not be tested. It gained a second grammar the same day, which is exactly
+// the kind of change that wants a test.

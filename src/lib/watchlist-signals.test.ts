@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { hasCollapsed, flagRowsForUrl } from './watchlist-signals'
+import { hasCollapsed, flagRowsForUrl, extractFingerprint } from './watchlist-signals'
 
 describe('hasCollapsed', () => {
   it('catches the Five Lamps case: a page that stopped rendering its content', () => {
@@ -78,5 +78,66 @@ describe('flagRowsForUrl', () => {
     const { db, calls } = fakeDb({ data: [{ id: 'a' }] })
     expect(await flagRowsForUrl(db, '', 'watchlist_change')).toBe(0)
     expect(calls).toHaveLength(0)
+  })
+})
+
+// ── extractFingerprint, both grammars ────────────────────────────────────────
+//
+// The markdown branch exists because the reader proxy returns markdown while a
+// direct fetch returns HTML. Running the HTML patterns over markdown finds
+// nothing, and "nothing" is indistinguishable from a listing that has collapsed
+// to zero items — which is an alert, on a page that never moved.
+describe('extractFingerprint', () => {
+  const HTML = `
+    <html><body>
+      <h1>Grants and funding</h1>
+      <h2>Community Grant Programme</h2>
+      <p>Something not picked up.</p>
+      <strong>Applications open 1 September</strong>
+      <h3>Small Grants Fund</h3>
+    </body></html>`
+
+  const MARKDOWN = `
+# Grants and funding
+
+## Community Grant Programme
+
+Something not picked up.
+
+**Applications open 1 September**
+
+### Small Grants Fund
+`
+
+  it('reads headings and bold out of HTML', () => {
+    const { fingerprint, count } = extractFingerprint(HTML, 'direct')
+    expect(count).toBe(4)
+    expect(fingerprint).toContain('community grant programme')
+    expect(fingerprint).toContain('applications open 1 september')
+  })
+
+  it('reads the same page out of markdown', () => {
+    const { fingerprint, count } = extractFingerprint(MARKDOWN, 'proxy')
+    expect(count).toBe(4)
+    expect(fingerprint).toContain('community grant programme')
+    expect(fingerprint).toContain('applications open 1 september')
+  })
+
+  // The whole reason migration 067 stores which reader was used.
+  it('finds nothing when markdown is read with the HTML grammar', () => {
+    expect(extractFingerprint(MARKDOWN, 'direct').count).toBe(0)
+  })
+
+  it('strips markdown link syntax so a URL change is not a content change', () => {
+    const a = extractFingerprint('## [Apply now](https://x.test/a)', 'proxy')
+    const b = extractFingerprint('## [Apply now](https://x.test/b?utm=2)', 'proxy')
+    expect(a.fingerprint).toBe('apply now')
+    expect(a.fingerprint).toBe(b.fingerprint)
+  })
+
+  it('sorts and deduplicates so a reordered menu is not a change', () => {
+    const a = extractFingerprint('<h2>Beta fund</h2><h2>Alpha fund</h2>', 'direct')
+    const b = extractFingerprint('<h2>Alpha fund</h2><h2>Beta fund</h2><h2>Beta fund</h2>', 'direct')
+    expect(a.fingerprint).toBe(b.fingerprint)
   })
 })

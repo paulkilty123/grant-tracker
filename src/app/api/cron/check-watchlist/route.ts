@@ -5,7 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { recordRun } from '@/lib/admin/cron-runs'
-import { hasCollapsed, flagRowsForUrl } from '@/lib/watchlist-signals'
+import { hasCollapsed, flagRowsForUrl, extractFingerprint, type ReadVia } from '@/lib/watchlist-signals'
 
 export const dynamic     = 'force-dynamic'
 // Was 60s, which with a 12s per-site timeout and a sequential loop meant the
@@ -34,39 +34,83 @@ function getAdminClient() {
   )
 }
 
-// ── Fingerprint extraction ────────────────────────────────────────────────────
-// Pulls text from h1–h4, <strong>, and prominent <li> tags.
-// Normalises to lowercase, deduplicates, and sorts so that cosmetic
-// re-orderings don't trigger false positives.
-function extractFingerprint(html: string): { fingerprint: string; count: number } {
-  const items: string[] = []
-
-  const patterns = [
-    /<h[1-4][^>]*>([\s\S]*?)<\/h[1-4]>/gi,
-    /<strong[^>]*>([\s\S]*?)<\/strong>/gi,
-  ]
-
-  for (const re of patterns) {
-    let m: RegExpExecArray | null
-    while ((m = re.exec(html)) !== null) {
-      const text = m[1]
-        .replace(/<[^>]+>/g, '')   // strip inner tags
-        .replace(/&amp;/g,  '&')
-        .replace(/&nbsp;/g, ' ')
-        .replace(/&#\d+;/g, '')
-        .replace(/\s+/g, ' ')
-        .trim()
-        .toLowerCase()
-      if (text.length > 4 && text.length < 200) {
-        items.push(text)
-      }
-    }
+/**
+ * Read a listing page, the same way every other job in this codebase reads one.
+ *
+ * Direct fetch first, reader proxy second. On 26 August this job reported 16
+ * errors in 150 pages and 13 were a flat HTTP 403: Camden, Kensington & Chelsea,
+ * Power to Change, Wolfson, Inspiring Scotland, Ashoka. Those hosts 403 every
+ * non-browser client, so they had never been checked once, had no baseline, and
+ * could never raise a listing_changed alert. The proxy is the sanctioned route
+ * into them and enrichment and verification have both used it for weeks; this
+ * was the only job still reading direct-only.
+ *
+ * The proxy is only ever reached AFTER a direct read fails, so it costs nothing
+ * on the ~90% of hosts that answer normally.
+ *
+ * Throws when neither reader can deliver, so the caller's existing catch records
+ * `last_error` exactly as before. The message names both attempts, because "HTTP
+ * 403" alone stopped being the whole story the moment there was a second route.
+ */
+async function readListing(url: string): Promise<{ text: string; via: ReadVia }> {
+  let direct: string
+  try {
+    const res = await fetch(url, {
+      signal: AbortSignal.timeout(12000),
+      // Chrome-style headers — bare 'GrantTracker/1.0' was tripping
+      // Cloudflare/WAFs on Berkshire CF, Kent CF, Somerset CF etc. and
+      // returning 404/403, marking healthy listing pages as page_down.
+      // 'br' deliberately excluded from Accept-Encoding (Node fetch
+      // doesn't auto-decompress Brotli).
+      headers: {
+        'User-Agent':       'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept':           'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language':  'en-GB,en;q=0.9',
+        'Accept-Encoding':  'gzip, deflate',
+        'Sec-Fetch-Dest':   'document',
+        'Sec-Fetch-Mode':   'navigate',
+        'Sec-Fetch-Site':   'none',
+        'Upgrade-Insecure-Requests': '1',
+      },
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    return { text: await res.text(), via: 'direct' }
+  } catch (err) {
+    direct = err instanceof Error ? err.message : String(err)
   }
 
-  const unique = Array.from(new Set(items)).sort()
-  return {
-    fingerprint: unique.join(' || '),
-    count: unique.length,
+  const base = process.env.READER_PROXY_URL
+  if (!base) throw new Error(direct)
+
+  try {
+    const res = await fetch(`${base.replace(/\/$/, '')}/${url}`, {
+      signal: AbortSignal.timeout(30000),
+      headers: {
+        Accept: 'text/plain',
+        ...(process.env.READER_PROXY_KEY ? { Authorization: `Bearer ${process.env.READER_PROXY_KEY}` } : {}),
+      },
+    })
+    if (!res.ok) throw new Error(`reader proxy HTTP ${res.status}`)
+    const text = await res.text()
+    // A bot challenge comes back through the proxy as a short "checking your
+    // browser" page with HTTP 200. Fingerprinting that would store a baseline
+    // for a page nobody has read, which is worse than recording the failure:
+    // the next real read would then look like a change.
+    if (text.length < 200 || /robot challenge|checking the site connection|verifying you are (not )?a (human|bot)/i.test(text)) {
+      throw new Error(`reader proxy returned a challenge or ${text.length} chars`)
+    }
+    // A not-found page arrives with HTTP 200 and real content, and fingerprinting
+    // it would store "404 page not found" as the baseline and then report the
+    // entry healthy for ever. Camden's watchlist URL is in exactly this state.
+    // The proxy puts the page title on the first line, so that is where to look.
+    const title = text.slice(0, 200).split('\n').find(l => /^title:/i.test(l)) ?? ''
+    if (/\b404\b|page not found|page cannot be found|page unavailable/i.test(title)) {
+      throw new Error(`page is missing: "${title.replace(/^title:\s*/i, '').trim().slice(0, 60)}"`)
+    }
+    return { text, via: 'proxy' }
+  } catch (err) {
+    const why = err instanceof Error ? err.message : String(err)
+    throw new Error(`${direct}; ${why}`)
   }
 }
 
@@ -76,6 +120,8 @@ type WatchlistEntry = {
   listing_url: string
   last_fingerprint: string | null
   last_count: number | null
+  /** Which reader produced last_fingerprint. NULL predates migration 067 and is direct. */
+  last_read_via: ReadVia | null
 }
 
 type CheckResult = {
@@ -121,7 +167,7 @@ export async function GET(req: NextRequest) {
     // weeks instead of never.
     const { data: entries, error } = await supabase
       .from('funder_watchlist')
-      .select('id, name, listing_url, last_fingerprint, last_count')
+      .select('id, name, listing_url, last_fingerprint, last_count, last_read_via')
       .eq('status', 'active')
       .order('last_checked', { ascending: true, nullsFirst: true })
       .limit(BATCH_LIMIT)
@@ -142,51 +188,35 @@ export async function GET(req: NextRequest) {
         break
       }
       try {
-        const res = await fetch(entry.listing_url, {
-          signal: AbortSignal.timeout(12000),
-          // Chrome-style headers — bare 'GrantTracker/1.0' was tripping
-          // Cloudflare/WAFs on Berkshire CF, Kent CF, Somerset CF etc. and
-          // returning 404/403, marking healthy listing pages as page_down.
-          // 'br' deliberately excluded from Accept-Encoding (Node fetch
-          // doesn't auto-decompress Brotli).
-          headers: {
-            'User-Agent':       'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-            'Accept':           'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            'Accept-Language':  'en-GB,en;q=0.9',
-            'Accept-Encoding':  'gzip, deflate',
-            'Sec-Fetch-Dest':   'document',
-            'Sec-Fetch-Mode':   'navigate',
-            'Sec-Fetch-Site':   'none',
-            'Upgrade-Insecure-Requests': '1',
-          },
-        })
+        const { text, via }          = await readListing(entry.listing_url)
+        const { fingerprint, count } = extractFingerprint(text, via)
 
-        if (!res.ok) {
-          await supabase.from('watchlist_alerts').insert({
-            watchlist_id:   entry.id,
-            alert_type:     'page_down',
-            snapshot_after: `HTTP ${res.status} from ${entry.listing_url}`,
-          })
-          await supabase.from('funder_watchlist').update({
-            last_checked: ranAt,
-            last_error:   `HTTP ${res.status}`,
-          }).eq('id', entry.id)
-          results.push({ name: entry.name, status: 'error', detail: `HTTP ${res.status}` })
-          continue
-        }
+        // A fingerprint is only ever compared against one taken the same way:
+        // the proxy reads markdown and a direct fetch reads HTML, so the same
+        // unchanged page fingerprints differently through each. Without this, one
+        // direct-fetch blip would raise "listing changed", flag every catalogue
+        // row on that URL into the verification queue, and raise it again on the
+        // next successful direct read. Re-baseline instead, and say so.
+        const readerChanged = entry.last_fingerprint !== null
+          && (entry.last_read_via ?? 'direct') !== via
 
-        const html                   = await res.text()
-        const { fingerprint, count } = extractFingerprint(html)
-
-        if (!entry.last_fingerprint) {
-          // First run — store the baseline, no alert needed
+        if (!entry.last_fingerprint || readerChanged) {
+          // First run, or the first read through a different reader — store the
+          // baseline, no alert either way.
           await supabase.from('funder_watchlist').update({
             last_checked:     ranAt,
             last_fingerprint: fingerprint,
             last_count:       count,
+            last_read_via:    via,
             last_error:       null,
           }).eq('id', entry.id)
-          results.push({ name: entry.name, status: 'baseline', detail: `${count} items indexed` })
+          results.push({
+            name:   entry.name,
+            status: 'baseline',
+            detail: readerChanged
+              ? `${count} items indexed, re-baselined via ${via}`
+              : `${count} items indexed${via === 'proxy' ? ' via the reader proxy' : ''}`,
+          })
           continue
         }
 
@@ -209,6 +239,7 @@ export async function GET(req: NextRequest) {
             last_checked:     ranAt,
             last_fingerprint: fingerprint,
             last_count:       count,
+            last_read_via:    via,
             last_error:       null,
           }).eq('id', entry.id)
 
@@ -223,14 +254,25 @@ export async function GET(req: NextRequest) {
           })
         } else {
           await supabase.from('funder_watchlist').update({
-            last_checked: ranAt,
-            last_count:   count,
-            last_error:   null,
+            last_checked:  ranAt,
+            last_count:    count,
+            last_read_via: via,
+            last_error:    null,
           }).eq('id', entry.id)
           results.push({ name: entry.name, status: 'ok' })
         }
       } catch (err) {
+        // Neither reader could deliver. The page_down alert used to be raised
+        // only for an HTTP status and not for a timeout or a DNS failure, which
+        // split one event across two behaviours; now that both arrive here, both
+        // raise it. `msg` names each attempt, so the feed says whether the proxy
+        // was tried and what it said.
         const msg = err instanceof Error ? err.message : String(err)
+        await supabase.from('watchlist_alerts').insert({
+          watchlist_id:   entry.id,
+          alert_type:     'page_down',
+          snapshot_after: `${msg} from ${entry.listing_url}`,
+        })
         await supabase.from('funder_watchlist').update({
           last_checked: ranAt,
           last_error:   msg.slice(0, 300),
