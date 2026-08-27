@@ -217,12 +217,49 @@ describe('gate failures reach the publish gate', () => {
     expect(cs).not.toContain('page_describes_different_fund')
   })
 
-  it('does NOT block a row that points at the funder index we banked for it', () => {
+  it('does NOT block a FUNDER-LEVEL row that points at the funder index we banked for it', () => {
     const cs = codes({
       ...row(evidence('fixable_link: wrong_fund')),
+      title: 'Test Funder Grants',   // says nothing the funder name does not
       funding_type: 'grant',
       apply_url: 'https://funder.example/funding/',
       funding_index_url: 'https://funder.example/funding',   // trailing slash differs on purpose
+    })
+    expect(cs).not.toContain('page_describes_different_fund')
+  })
+
+  /**
+   * Narrowed 2026-08-27. "Change We Seek grants" (Tudor Trust) had both URLs set
+   * to the same page, so the index guard suppressed a verdict the engine had
+   * recorded on 17 August, and a framework Tudor introduces in a film stayed
+   * live as a fund at £5k to £150k against their stated £100k to £1m.
+   *
+   * Pointing at the index is the right shape for a front door and the wrong
+   * shape for a row naming a specific fund. The title is what tells them apart.
+   */
+  it('BLOCKS a row that names a fund, even when it points at the banked index', () => {
+    const cs = codes({
+      ...row(evidence('fixable_link: wrong_fund')),
+      title: 'Change We Seek grants',
+      funder: 'Tudor Trust',
+      funding_type: 'grant',
+      apply_url: 'https://tudortrust.example/our-funding',
+      funding_index_url: 'https://tudortrust.example/our-funding',
+    })
+    expect(cs).toContain('page_describes_different_fund')
+  })
+
+  it('reads the funder name by TOKEN, so a different dash is not a different funder', () => {
+    // "Access – The Foundation for Social Investment" against
+    // "Access — The Foundation for Social Investment": one character apart, and
+    // a substring test would call them unrelated and flag a front door.
+    const cs = codes({
+      ...row(evidence('fixable_link: wrong_fund')),
+      title:  'Access — The Foundation for Social Investment',
+      funder: 'Access – The Foundation for Social Investment',
+      funding_type: 'grant',
+      apply_url: 'https://access.example/funding',
+      funding_index_url: 'https://access.example/funding',
     })
     expect(cs).not.toContain('page_describes_different_fund')
   })
