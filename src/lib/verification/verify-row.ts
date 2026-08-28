@@ -8,6 +8,7 @@ import { asStructures, asExclusions, compareStructures, newExclusions, namesJuri
 // a naive 12,000-character prefix. `excerpt` stays exported from here because
 // it was already part of this module's surface.
 import { PAGE_CAP, excerpt } from '../page-excerpt'
+import { htmlToText } from '../page-text'
 export { excerpt } from '../page-excerpt'
 
 /**
@@ -480,14 +481,11 @@ async function fetchViaReaderProxy(url: string): Promise<string> {
 }
 
 function stripHtml(html: string): string {
-  return excerpt(html
-    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<').replace(/&gt;/g, '>')
-    .replace(/\s{2,}/g, ' ')
-    .trim())
+  // htmlToText, not a bare tag strip: a page that hydrates from a JSON blob on
+  // the element reads as its own footer otherwise, and the gate then certifies
+  // a row against 496 characters of postal address while every signal it has
+  // says the fetch succeeded. See src/lib/page-text.ts.
+  return excerpt(htmlToText(html))
 }
 
 export type Fetched =
