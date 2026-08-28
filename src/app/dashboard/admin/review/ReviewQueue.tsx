@@ -360,9 +360,28 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
    * Keyed by the tab it was displayed in, not the tab it belongs to now — that
    * is the whole point.
    */
-  const [justActed, setJustActed] = useState<Map<string, { tab: NavId; note: string }>>(new Map())
+  const [justActed, setJustActed] = useState<Map<string, { tab: NavId; note: string; snapshot?: QueueItem }>>(new Map())
+
+  /**
+   * The row is SNAPSHOT as well as noted, and that is what makes the hold hold.
+   *
+   * `held` used to look the row back up in `items`, which works only while the
+   * server keeps sending it. Since the Inbox began scanning every live row
+   * (2026-08-27) the server sends a published row ONLY while it carries a
+   * blocking reason, so fixing the last thing wrong with a row removed it from
+   * the payload, the lookup found nothing, and the row vanished from under the
+   * person who had just fixed it. Paul hit exactly this on Historic England:
+   * corrected the link, and the row he was working on disappeared.
+   *
+   * Keeping a copy means the hold survives the row leaving the queue, which is
+   * the case that matters most — the row is gone BECAUSE you fixed it, and that
+   * is the moment you most want to be told so.
+   */
+  const itemsRef = useRef<QueueItem[]>(items)
+  itemsRef.current = items
   const noteAction = useCallback((id: string, note: string) => {
-    setJustActed(prev => new Map(prev).set(id, { tab: navRef.current, note }))
+    const snapshot = itemsRef.current.find(i => i.id === id)
+    setJustActed(prev => new Map(prev).set(id, { tab: navRef.current, note, snapshot }))
   }, [])
 
   /** Navigating clears the held rows and the selection: acting on rows you can
@@ -1151,17 +1170,50 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
    */
   const held = useMemo(() => {
     const shown = new Set(rows.map(r => r.id))
-    const out: { item: QueueItem; note: string; movedTo: NavId | null }[] = []
+    const out: { item: QueueItem; note: string; movedTo: NavId | null; cleared: boolean }[] = []
     justActed.forEach((v, id) => {
       if (v.tab !== nav || shown.has(id)) return
-      const item = items.find(i => i.id === id)
-      if (item) out.push({ item, note: v.note, movedTo: homeOf(item) })
+      const live = items.find(i => i.id === id)
+      const item = live ?? v.snapshot
+      if (!item) return
+      // Gone from the payload entirely. For a live row that means the server no
+      // longer considers it wrong, which is the outcome, not a disappearance.
+      const cleared = !live && item.isActive
+      out.push({ item, note: v.note, movedTo: cleared ? null : homeOf(item), cleared })
     })
     return out
   }, [justActed, nav, rows, items, homeOf])
 
+  /**
+   * THE LIST DOES NOT RESHUFFLE WHILE YOU ARE WORKING IN IT.
+   *
+   * Every tab is sorted by evidence strength or readiness, and both change the
+   * moment you act on a row: fix a link and the row re-reads, its evidence
+   * improves, and it jumps somewhere else in a list of eighty. Paul lost
+   * Historic England to exactly this — he corrected the link and the row he was
+   * looking at was no longer where he was looking.
+   *
+   * So the order is fixed when you arrive at a tab, and rows keep those places
+   * until you navigate, change the sort, or change a filter — the three things
+   * that mean "re-order for me". Rows that appear while you are here go on the
+   * end rather than pushing anything down.
+   *
+   * Position only. Which rows belong in the tab is still live, and a row that
+   * leaves is caught by `held` above rather than silently dropped.
+   */
+  const orderKey = `${nav}|${sortBy}|${typeFilter ?? ''}|${filter ?? ''}`
+  const orderRef = useRef<{ key: string; ids: string[] }>({ key: orderKey, ids: [] })
+  const stableRows = useMemo(() => {
+    if (orderRef.current.key !== orderKey) orderRef.current = { key: orderKey, ids: [] }
+    const seen = new Map(orderRef.current.ids.map((id, i) => [id, i]))
+    const ordered = [...rows].sort((a, b) =>
+      (seen.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (seen.get(b.id) ?? Number.MAX_SAFE_INTEGER))
+    orderRef.current = { key: orderKey, ids: ordered.map(r => r.id) }
+    return ordered
+  }, [rows, orderKey])
+
   const navMeta = NAV_META[nav]
-  const ids = rows.map(r => r.id)
+  const ids = stableRows.map(r => r.id)
   const allPicked = ids.length > 0 && ids.every(id => selected.has(id))
   const picked = ids.filter(id => selected.has(id))
 
@@ -1309,7 +1361,7 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
 
           {held.length > 0 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginBottom: 14 }}>
-              {held.map(({ item, note, movedTo }) => (
+              {held.map(({ item, note, movedTo, cleared }) => (
                 <div key={`held-${item.id}`} style={{
                   border: '0.5px solid var(--border-subtle)', borderRadius: 'var(--radius-card)',
                   padding: '11px 15px', background: 'var(--color-surface-sunken, #FAFAF8)',
@@ -1318,11 +1370,13 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
                   <strong style={{ ...display, fontSize: 13.5 }}>{item.title}</strong>
                   <span style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>{note}.</span>
                   <span style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
-                    {movedTo === null
-                      ? 'No longer in the queue.'
-                      : movedTo === nav
-                        ? 'Still here.'
-                        : <>Now under <b style={{ ...display }}>{NAV_META[movedTo].label}</b>.</>}
+                    {cleared
+                      ? 'Nothing is blocking it now, and it stays live.'
+                      : movedTo === null
+                        ? 'No longer in the queue.'
+                        : movedTo === nav
+                          ? 'Still here.'
+                          : <>Now under <b style={{ ...display }}>{NAV_META[movedTo].label}</b>.</>}
                   </span>
                   {movedTo !== null && movedTo !== nav && (
                     <button onClick={() => go(movedTo)} style={{ ...ghostBtn, marginLeft: 'auto', padding: '4px 10px' }}>
@@ -1334,13 +1388,13 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
             </div>
           )}
 
-          {rows.length === 0 && held.length === 0 ? (
+          {stableRows.length === 0 && held.length === 0 ? (
             <p style={{ color: 'var(--color-text-secondary)', fontSize: 14 }}>
               {q.trim() !== '' ? `Nothing here matches “${q.trim()}”.` : 'Nothing here.'}
             </p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-              {rows.map(item => (
+              {stableRows.map(item => (
                 <Row key={item.id} item={item} open={openId === item.id} busy={busyId === item.id}
                      selected={selected.has(item.id)}
                      onSelect={(next) => setSelected(prev => {
