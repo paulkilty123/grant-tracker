@@ -10,6 +10,7 @@ import { createClient as createServerClient } from '@/lib/supabase/server'
 import type {
   ExtractedApplication, DraftQuestion,
 } from '@/app/dashboard/admin/application-review/types'
+import { htmlToText } from '@/lib/page-text'
 
 export const dynamic     = 'force-dynamic'
 export const maxDuration = 120
@@ -45,14 +46,7 @@ async function fetchPageText(url: string): Promise<string> {
     })
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     const html = await res.text()
-    return html
-      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-      .replace(/<[^>]+>/g, ' ')
-      .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&')
-      .replace(/&lt;/g, '<').replace(/&gt;/g, '>')
-      .replace(/\s{2,}/g, ' ')
-      .trim()
+    return htmlToText(html)
       .slice(0, 16000)
   } finally {
     clearTimeout(timeout)

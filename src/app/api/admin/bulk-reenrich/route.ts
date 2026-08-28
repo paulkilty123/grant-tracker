@@ -14,6 +14,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { syncLocationFields } from '@/lib/funder-brief'
 import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
 import { mergeGrantUpdate } from '@/lib/grant-merge'
+import { htmlToText } from '@/lib/page-text'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
@@ -57,16 +58,7 @@ async function fetchPageText(url: string): Promise<string> {
     })
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     const html = await res.text()
-    return html
-      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-      .replace(/<[^>]+>/g, ' ')
-      .replace(/&nbsp;/g, ' ')
-      .replace(/&amp;/g, '&')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/\s{2,}/g, ' ')
-      .trim()
+    return htmlToText(html)
       .slice(0, 12000)
   } finally { clearTimeout(timeout) }
 }

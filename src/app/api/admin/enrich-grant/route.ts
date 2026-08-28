@@ -10,6 +10,7 @@ import { buildAwardText, extractGrantAmounts } from '@/lib/grant-amounts'
 import { detectUncapturedMultiRound } from '@/lib/grant-deadlines'
 import { recordGrantFlags, type GrantFlagCode } from '@/lib/grant-flags'
 import { excerptWithMeta, excerptNotice, type Excerpted } from '@/lib/page-excerpt'
+import { htmlToText } from '@/lib/page-text'
 
 type Citation = NonNullable<ProvenanceEntry['citation']>
 
@@ -248,17 +249,10 @@ async function fetchPageText(url: string): Promise<Excerpted> {
     })
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     const html = await res.text()
-    // Strip scripts, styles, and HTML tags; normalise whitespace
-    const stripped = html
-      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-      .replace(/<[^>]+>/g, ' ')
-      .replace(/&nbsp;/g, ' ')
-      .replace(/&amp;/g, '&')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/\s{2,}/g, ' ')
-      .trim()
+    // Visible text PLUS copy the markup holds in attributes or script JSON —
+    // a plain tag strip reads bernardsunley.org/how-to-apply/ as 496 characters
+    // of footer. See src/lib/page-text.ts.
+    const stripped = htmlToText(html)
     // ~3k tokens, but chosen around funding wording rather than taken off the
     // top. AF3's first 12,000 characters are the theme's inline CSS; its amount,
     // closing date and eligibility all sit past 15,000. See page-excerpt.ts.
