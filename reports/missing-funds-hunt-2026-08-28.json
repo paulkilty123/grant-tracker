@@ -1,0 +1,234 @@
+{
+  "ranAt": "2026-08-28T10:10:03.723Z",
+  "results": [
+    {
+      "id": "1047b7fd-5237-475b-8e01-1e041c946005",
+      "title": "Arts Council of Wales — Project Investment",
+      "funder": "Arts Council of Wales",
+      "url": "https://arts.wales/funding",
+      "tried": [
+        "https://arts.wales/get-started",
+        "https://arts.wales/funding/individuals",
+        "https://arts.wales/funding/individuals/create-and-engage"
+      ],
+      "found": {
+        "url": "https://arts.wales/funding/individuals/create-and-engage",
+        "quote": "Create and Engage funds the development, creation and delivery of high-quality arts experiences that help creative individuals and organisations engage with and connect to the public. There are two levels of award: small, up to £10,000 and large, up to £60,000.",
+        "why": "The page directly describes the 'Create and Engage' fund from Arts Council of Wales with clear information about eligibility, application amounts (up to £60,000), how to apply, and contact details (development@arts.wales). While the funding catalogue lists it as 'Project Investment', this page uses the official fund name 'Create and Engage' and provides sufficient detail for a charity to recognize it as the same fund and understand application procedures."
+      }
+    },
+    {
+      "id": "12cf1992-23da-497c-9703-5d5e42b31c06",
+      "title": "One Croydon Alliance Community Funding",
+      "funder": "One Croydon Alliance",
+      "url": "https://www.croydon.gov.uk/community-and-safety/advice-and-funding-community-groups/funding-opportunities",
+      "tried": [
+        "https://www.croydon.gov.uk/community-and-safety/advice-and-funding-community-groups",
+        "https://www.croydon.gov.uk/community-and-safety/advice-and-funding-community-groups/funding-opportunities/london-hearts-defibrillator-grants",
+        "https://www.croydon.gov.uk/community-and-safety/advice-and-funding-community-groups/funding-opportunities/funding-resources",
+        "https://www.croydon.gov.uk/community-and-safety/advice-and-funding-community-groups/funding-opportunities/croydon-common-ground-resilience-fund"
+      ],
+      "found": null
+    },
+    {
+      "id": "1ef69197-b551-4da9-860c-645c97acfb09",
+      "title": "Severn Trent Community Fund — Children's Football Clubs",
+      "funder": "Severn Trent Community Fund",
+      "url": "https://www.stwater.co.uk/about-us/severn-trent-community-fund/",
+      "tried": [],
+      "found": null
+    },
+    {
+      "id": "201613fa-1907-41cf-b7d6-d555f1f9ca56",
+      "title": "Bernard Sunley Foundation — Capital Grants",
+      "funder": "Bernard Sunley Foundation",
+      "url": "https://www.bernardsunley.org/",
+      "tried": [],
+      "found": null
+    },
+    {
+      "id": "10d73cbf-7227-4cec-b532-60b72beaa427",
+      "title": "UK Sport — National Lottery Awards",
+      "funder": "UK Sport",
+      "url": "https://www.uksport.gov.uk/our-work/investing-in-sport",
+      "tried": [
+        "https://www.uksport.gov.uk/about-us/our-funders",
+        "https://www.uksport.gov.uk/news/2025/12/03/high-performance-community-celebrated-at-the-2025-plx-awards",
+        "https://www.uksport.gov.uk/our-work/investing-in-sport/how-uk-sport-funding-works",
+        "https://www.uksport.gov.uk/resources/welsh-language-scheme"
+      ],
+      "found": null
+    },
+    {
+      "id": "20e4070f-4679-4c4e-b22d-f3fc3787a37b",
+      "title": "Film London — Production Finance & Talent",
+      "funder": "Film London",
+      "url": "https://filmlondon.org.uk/funding",
+      "tried": [
+        "https://filmlondon.org.uk/flamin/the-jarman-award"
+      ],
+      "found": null
+    },
+    {
+      "id": "4e036244-6f5c-4c1b-b475-129eaf4e55de",
+      "title": "Social Business Trust — Strategic Growth Support",
+      "funder": "Social Business Trust",
+      "url": "https://socialbusinesstrust.org/",
+      "tried": [],
+      "found": null
+    },
+    {
+      "id": "54983933-3832-4b42-9bed-8fe4016f4419",
+      "title": "Access Growth Fund",
+      "funder": "Access – The Foundation for Social Investment",
+      "url": "https://access-socialinvestment.org.uk/",
+      "tried": [
+        "https://access-socialinvestment.org.uk/what-we-do/enterprise-grants"
+      ],
+      "found": {
+        "url": "https://access-socialinvestment.org.uk/what-we-do/enterprise-grants",
+        "quote": "Enterprise grants help charities and social enterprises strengthen their financial resilience by developing or expanding income-generating activities. These grants support organisations where repayable social investment isn't yet the right fit, giving them the opportunity to grow and become more self-sufficient.",
+        "why": "The page has a dedicated section titled 'Enterprise grants' that explains the fund's purpose, eligibility, and approach. It clearly describes how the fund works and who it's for, allowing a charity to identify this as the 'Access Growth Fund' listed in the catalogue and understand the application process. The page references specific programmes and directs applicants to Good Finance for further information."
+      }
+    },
+    {
+      "id": "1e6c3908-dde9-4254-9a64-1ddba2f5d4a4",
+      "title": "Visa CatalyseHer Programme",
+      "funder": "Visa Foundation & INCO",
+      "url": "https://inco.co.uk/catalyseher",
+      "tried": [],
+      "found": null
+    },
+    {
+      "id": "6aa5d536-2a0f-4e65-b45b-892b8acdc352",
+      "title": "Chichester District Council — Community Grants Programme",
+      "funder": "Chichester District Council",
+      "url": "https://www.chichester.gov.uk/grantprogramme",
+      "tried": [],
+      "found": null
+    },
+    {
+      "id": "44207468-39fc-471a-8079-4d17f18da060",
+      "title": "Sportscotland — Community Sport",
+      "funder": "sportscotland",
+      "url": "https://sportscotland.org.uk/funding/",
+      "tried": [
+        "https://sportscotland.org.uk/funding/additional-government-investment-2026",
+        "https://sportscotland.org.uk/funding/coach-education-subsidy-funding",
+        "https://sportscotland.org.uk/funding/sport-facilities-fund",
+        "https://sportscotland.org.uk/funding/awards-for-all"
+      ],
+      "found": null
+    },
+    {
+      "id": "7aeaa6a0-d7d7-42c6-9ed0-1d68c94ceb4c",
+      "title": "ChangemakerXchange Fellowship",
+      "funder": "ChangemakerXchange / Ashoka",
+      "url": "https://changemakerxchange.org/",
+      "tried": [],
+      "found": null
+    },
+    {
+      "id": "8825cb0f-f53f-45d4-93ab-dc6fd8036f21",
+      "title": "Lloyds Bank Foundation — Specialist Programme",
+      "funder": "Lloyds Bank Foundation for England and Wales",
+      "url": "https://www.lloydsbankfoundation.org.uk/funding",
+      "tried": [
+        "https://www.lloydsbankfoundation.org.uk/funding/good-place-to-live-new-beginnings/"
+      ],
+      "found": {
+        "url": "https://www.lloydsbankfoundation.org.uk/funding/good-place-to-live-new-beginnings/",
+        "quote": "Good Place to Live: New Beginnings Fund The evidence is clear. When some major life changes take place, people are at a bigger risk of becoming homeless than at any other time. That's why Lloyds Bank Foundation are launching the Good Place to Live: New Beginnings Fund, backing local organisations that are working to prevent homelessness in their communities before crisis hits.",
+        "why": "The page clearly describes the 'Good Place to Live: New Beginnings Fund' from Lloyds Bank Foundation. While the funding catalogue lists it as 'Specialist Programme', this page uses the full proper name of the fund and provides comprehensive details about eligibility, application process, grant amounts (£100,000-£200,000), target organisations, contact information (enquiries@lloydsbankfoundation.org.uk, 0370 411 1223), and deadlines. A charity could easily identify this as the fund they're looking for and understand how to apply."
+      }
+    },
+    {
+      "id": "8c8418fe-9b52-4ba8-bac7-0bc4732c96e4",
+      "title": "Arts Council National Lottery Project Grants",
+      "funder": "Arts Council England",
+      "url": "https://www.artscouncil.org.uk/ProjectGrants",
+      "tried": [],
+      "found": null
+    },
+    {
+      "id": "69275979-6c40-45f6-afe6-6c76b22c5468",
+      "title": "Grocers' Charity Memorial Grant",
+      "funder": "The Grocers' Charity",
+      "url": "https://grocershall.co.uk/the-charity/memorial-grants/",
+      "tried": [
+        "https://grocershall.co.uk/the-charity/memorial-grants/the-charity/apply-for-a-grant",
+        "https://grocershall.co.uk/the-charity/memorial-grants/the-charity/apply-for-a-grant/what-we-have-funded",
+        "https://grocershall.co.uk/the-charity/apply-for-a-grant/our-grant-process"
+      ],
+      "found": {
+        "url": "https://grocershall.co.uk/the-charity/apply-for-a-grant/our-grant-process",
+        "quote": "The Grocers' Charity awards about £1 million pounds each year to U.K. registered charities. The major causes we support are Relief of Hardship, the Elderly, Disability, Arts & Heritage, Health, Military, Environment, and Children and Young People.",
+        "why": "This page describes The Grocers' Charity's grant process and funding areas in detail, including eligibility, application deadlines, and contact information. A charity looking for the 'Grocers' Charity Memorial Grant' would recognize this as the same funder and understand how to apply. The page provides sufficient information to identify it as the same fund, even though it uses the broader term 'Open Grant' rather than the specific name 'Memorial Grant'."
+      }
+    },
+    {
+      "id": "ab84f123-5b0a-4f11-a277-f9715ebaf7a6",
+      "title": "WCIT AI/ML Learning Exchange for Charities",
+      "funder": "Worshipful Company of Information Technologists",
+      "url": "https://ai4c.org.uk/",
+      "tried": [],
+      "found": null
+    },
+    {
+      "id": "6f8de7ae-4ef7-4ae6-9d5b-c06e9cae8fec",
+      "title": "London Social and Affordable Homes Programme 2026 to 2036",
+      "funder": "Greater London Authority",
+      "url": "https://www.london.gov.uk/programmes-strategies/housing-and-land/housing-and-land-funding-programmes/london-social-and-affordable-homes-programme-2026-36",
+      "tried": [
+        "https://www.london.gov.uk/programmes-strategies",
+        "https://www.london.gov.uk/programmes-strategies/arts-and-culture",
+        "https://www.london.gov.uk/programmes-strategies/arts-and-culture/creative-health-and-wellbeing",
+        "https://www.london.gov.uk/programmes-strategies/arts-and-culture/current-culture-projects"
+      ],
+      "found": null
+    },
+    {
+      "id": "aa1e8f3f-e938-4852-9bda-3294ab4c1380",
+      "title": "Crowdfunder — Match Funding",
+      "funder": "Crowdfunder UK",
+      "url": "https://www.crowdfunder.co.uk/funds",
+      "tried": [],
+      "found": null
+    },
+    {
+      "id": "dcaa5778-a036-4ae0-b380-42a78cb580a4",
+      "title": "The Cadogan Charity — General Grants",
+      "funder": "The Cadogan Charity",
+      "url": "https://www.cadogan.co.uk/the-cadogan-charity/",
+      "tried": [],
+      "found": null
+    },
+    {
+      "id": "db1bf0ef-7ba5-406a-95f3-d45da71384fd",
+      "title": "Nesta Innovation Challenges — Prize Competitions",
+      "funder": "Nesta",
+      "url": "https://challengeworks.org/about-challenge-prizes/our-challenge-prizes/",
+      "tried": [
+        "https://challengeworks.org/about-challenge-prizes/broader-programmes/"
+      ],
+      "found": null
+    },
+    {
+      "id": "f82fa6ae-3589-4076-9bfa-7ba891f40cbf",
+      "title": "Renew Community Fund",
+      "funder": "Greater Manchester Environment Trust",
+      "url": "https://gmet.org.uk/apply-funding/other-funding-opportunities",
+      "tried": [
+        "https://gmet.org.uk/green-spaces-fund",
+        "https://gmet.org.uk/apply-funding/Community%20Ownership%20Fund",
+        "https://gmet.org.uk/projects/green-spaces-fund-projects",
+        "https://gmet.org.uk/projects/renew-community-fund-projects"
+      ],
+      "found": {
+        "url": "https://gmet.org.uk/projects/renew-community-fund-projects",
+        "quote": "The Renew Community Fund (formerly the R4GM Community Fund) is a joint Recycle 4 Greater Manchester and Suez initiative, administered by the Greater Manchester Environment Trust, to support Greater Manchester community and voluntary sector groups. Since 2021, the fund has awarded a total of £1.2m to 110 local projects.",
+        "why": "The page clearly identifies and describes the Renew Community Fund, explains its purpose (funding creative solutions to reduce household waste), provides its history and impact, and directs interested parties to the R4GM website for current updates and application information as of April 1st 2026."
+      }
+    }
+  ]
+}
