@@ -12,6 +12,7 @@ import {
   Building2, Search, TrendingUp, ShieldCheck,
 } from 'lucide-react'
 import { MCP_BRAND_NAME, MCP_APP_ORIGIN } from '@/lib/mcp-brand'
+import { TRIAL_AND_SETUP_LINE } from '@/lib/trial'
 
 // ── Public bridge page ───────────────────────────────────────────────────────
 // Reached from an MCP link inside someone's AI assistant, or from search. So
@@ -575,17 +576,24 @@ export default async function PublicGrantPage({
                 </li>
               ))}
             </ul>
-            <Link
-              href={signupHref}
-              style={{
-                fontFamily: UI, fontSize: 15, fontWeight: 600, color: T.deep, background: T.cream,
-                padding: '13px 24px', borderRadius: 999, textDecoration: 'none',
-                display: 'inline-flex', alignItems: 'center', gap: 9,
-              }}
-            >
-              Check this against your organisation
-              <ArrowRight style={{ width: 15, height: 15 }} />
-            </Link>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+              <Link
+                href={signupHref}
+                style={{
+                  fontFamily: UI, fontSize: 15, fontWeight: 600, color: T.deep, background: T.cream,
+                  padding: '13px 24px', borderRadius: 999, textDecoration: 'none',
+                  display: 'inline-flex', alignItems: 'center', gap: 9,
+                }}
+              >
+                Check this against your organisation
+                <ArrowRight style={{ width: 15, height: 15 }} />
+              </Link>
+              {/* Both halves from lib/trial.ts. The trial length is a
+                  commercial promise on an acquisition page, so it is never a
+                  literal here: when it changes it changes once. And never a
+                  bare "free", which would claim the product costs nothing. */}
+              <span style={{ fontSize: 13.5, color: 'rgba(246,241,231,0.7)' }}>{TRIAL_AND_SETUP_LINE}</span>
+            </span>
           </div>
 
           {/* The funder link stays, and stays one click. Hiding it to force a
