@@ -872,8 +872,20 @@ export function deriveReviewReasons(row: ReviewRow, todayISO?: string): ReviewRe
   // A stored deadline already in the past is not caught here: `deadline_passed`
   // above already blocks it, and raising both would double-count one fault.
   if (asArray(brief?._stale_dates).length > 0) {
+    // A RECORDED NEXT OPENING IS TIMING, and this test used to ignore it.
+    //
+    // The critical branch below says "nothing on the card is true about when to
+    // apply". That is exactly wrong for a row carrying next_open_date
+    // "Applications open in September 2026": the card says when to come back,
+    // which is the most useful thing a closed fund can say. Three live rows were
+    // flagged critical on 2026-08-28 while holding precisely that — Cash4Clubs,
+    // Haringey Healthy Neighbourhoods and Ufi VocTech Activate.
+    //
+    // A stale sentence in the prose is still worth tidying, so they keep the
+    // informational `stale_dates`, the same as a row with a future deadline.
     const hasCurrentDeadline = !!row.deadline && row.deadline >= today
-    if (hasCurrentDeadline) {
+    const hasNextOpening     = !!String(row.next_open_date ?? '').trim()
+    if (hasCurrentDeadline || hasNextOpening) {
       reasons.push({
         code: 'stale_dates', severity: 'check',
         label: 'Date already past',
