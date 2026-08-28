@@ -1155,5 +1155,19 @@
     });
   })();
 </script>
+<!-- Umami, first-party via the /o/* rewrites in next.config.mjs, so ad
+     blockers don't eat it. Same script and website ID as every other page.
+
+     The ID is a LITERAL here and an env var everywhere else
+     (NEXT_PUBLIC_UMAMI_WEBSITE_ID, read by src/app/layout.tsx). That is not a
+     choice: this file is static HTML served straight out of public/, with no
+     build step to substitute anything into. So if the website ID ever changes,
+     THIS FILE IS THE SECOND PLACE and nothing will tell you. The ID is not a
+     secret; it ships in the HTML of every page already.
+
+     Added 2026-08-29. Until then the landing page was the only untracked page
+     on the site, which is to say the only one a stranger actually lands on. -->
+<script defer src="/o/script.js" data-website-id="2f14aea1-81fe-484c-b435-3d2f24895a5f"></script>
+
 </body>
 </html>
