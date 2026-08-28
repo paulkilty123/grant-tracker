@@ -81,7 +81,7 @@ const AMOUNT_RE = /[£$][\d,]+(?:\.?\d+)?(?:\s*[km](?:illion)?)?/gi
 // named fund. That last one is the Stronger Futures case: "£4m Stronger Futures
 // Programme 3.0" was becoming amount_max even though typical_award correctly
 // said £80k–£200k per grant.
-const POOL_CUES_LEFT = /\b(?:awarded?\s+(?:a\s+)?total|totalling|totalled|total\s+(?:of|awarded|distributed|grants?|funding|funds|fund)\b|total\s*$|in\s+(?:the\s+)?(?:past|previous|last)\s+(?:year|years|few\s+years)|annual(?:ly\s+(?:awards?|distribut(?:es?|ed|ing)|gives?|gave|given|spen(?:ds?|t|ding))|\s+(?:budget|fund|spending|expenditure))|per\s+(?:year|annum)|each\s+year|distribut(?:es?|ed|ing)|donat(?:es?|ed|ing)|spen(?:ds?|t|ding)|gives?\s+(?:away|out)|gave\s+(?:away|out)|given\s+(?:away|out)|endowment|combined\s+(?:total|funding|budget)|invest(?:ing|ed|ment)?\s+(?:of\s+)?(?:a\s+)?(?:total|minimum|at\s+least)\b|a\s+share\s+of\b|(?:launch(?:ing|ed)?|announc(?:ing|ed))\s+(?:our\s+|the\s+|a\s+|new\s+|with\s+)|annual\s+(?:income|turnover|expenditure|spending|spend|revenue|budget)\s*(?:[<>≤≥]|of\b)|(?:income|turnover|expenditure|spending|spend|revenue|reserves|budget)\s*(?:[<>≤≥]|\b(?:of|cap|limit|under|below|over|above|up\s+to|less\s+than|more\s+than|exceeding|must\s+be|should\s+be|needs?\s+to\s+be|is|are|between)\b))/i
+const POOL_CUES_LEFT = /\b(?:awarded?\s+(?:a\s+)?total|totalling|totalled|total\s+(?:of|awarded|distributed|grants?|funding|funds|fund)\b|total\s*$|in\s+(?:the\s+)?(?:past|previous|last)\s+(?:year|years|few\s+years)|annual(?:ly\s+(?:awards?|distribut(?:es?|ed|ing)|gives?|gave|given|spen(?:ds?|t|ding))|\s+(?:budget|fund|spending|expenditure))|per\s+(?:year|annum)|each\s+year|distribut(?:es?|ed|ing)|donat(?:es?|ed|ing)|spen(?:ds?|t|ding)|gives?\s+(?:away|out)|gave\s+(?:away|out)|given\s+(?:away|out)|endowment|combined\s+(?:total|funding|budget)|invest(?:ing|ed|ment)?\s+(?:of\s+)?(?:a\s+)?(?:total|minimum|at\s+least)\b|a\s+share\s+of\b|(?:launch(?:ing|ed)?|announc(?:ing|ed))\s+(?:our\s+|the\s+|a\s+|new\s+|with\s+)|annual\s+(?:income|turnover|expenditure|spending|spend|revenue|budget)\s*(?:[<>≤≥]|of\b)|(?:income|turnover|expenditure|spending|spend|revenue|reserves|budget)\s*(?:[<>≤≥]|\b(?:of|cap|limit|under|below|over|above|up\s+to|less\s+than|more\s+than|exceeding|must\s+be|should\s+be|needs?\s+to\s+be|is|are|between)\b)|(?:project|scheme)\s+(?:costs?|value|budget)\s*(?:[<>≤≥]|\b(?:of|between|up\s+to|under|below|over|above|must\s+be|should\s+be|needs?\s+to\s+be|is|are|from|exceed(?:ing)?|less\s+than|more\s+than)\b))/i
 // Three additions on 2026-07-25, each from a real catalogue row found when this
 // logic was first run over live data (see the git history of this file):
 //
@@ -94,6 +94,15 @@ const POOL_CUES_LEFT = /\b(?:awarded?\s+(?:a\s+)?total|totalling|totalled|total\
 //     of £15 million across all projects", and "investment of at least £15m over
 //     three years in projects" (Heritage in Need). Both are fund-level commitments.
 //
+//
+//   `project cost(s)/value/budget <comparator>`  — added 2026-08-28. Bernard
+//     Sunley states "Project costs between £10,000 and £5 million" and asks
+//     "Are your project costs below £10,000?". Both describe what the APPLICANT
+//     must be spending, not what the funder gives; the extractor was writing
+//     £10,000-£5,000,000 into amount_min/amount_max on a published row whose
+//     actual bands are £5,000 and under, up to £20,000, and £25,000 and above.
+//     The comparator is required, so "grants of up to £5,000 towards project
+//     costs" is untouched — there the figure really is the grant.
 //   `a share of`  — "organisations can apply for a share of up to £25 million"
 //     (Consumer Led Flexibility). This one matters because the "up to" would
 //     otherwise mark it per-grant: POOL_CUES_LEFT is tested BEFORE the per-grant

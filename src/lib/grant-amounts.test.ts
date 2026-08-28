@@ -135,3 +135,27 @@ describe('input it must not throw on', () => {
     expect(a.amount_min === null || a.amount_min < (a.amount_max ?? 0)).toBe(true)
   })
 })
+
+describe('applicant project cost is not a grant amount', () => {
+  // Bernard Sunley, 2026-08-28. These figures bound the project the applicant
+  // brings, not the cheque. The row went live reading £10,000 to £5,000,000
+  // when the bands are £5,000 and under, up to £20,000, and £25,000 and above.
+  it('ignores a project-cost range', () => {
+    expect(amounts('Project costs must be between £10,000 and £5 million.'))
+      .toMatchObject({ amount_min: null, amount_max: null })
+  })
+
+  it('ignores a bare project-cost range in a bullet', () => {
+    expect(amounts('Project costs between £10,000 and £5 million.'))
+      .toMatchObject({ amount_min: null, amount_max: null })
+  })
+
+  it('ignores a project-cost floor and ceiling asked as questions', () => {
+    expect(max('Are your project costs below £10,000?')).toBeNull()
+    expect(max('Are your project costs over £5 million?')).toBeNull()
+  })
+
+  it('still reads a grant that happens to mention project costs', () => {
+    expect(max('Grants of up to £5,000 towards project costs.')).toBe(5000)
+  })
+})
