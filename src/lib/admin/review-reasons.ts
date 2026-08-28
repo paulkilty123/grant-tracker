@@ -659,7 +659,23 @@ export function deriveReviewReasons(row: ReviewRow, todayISO?: string): ReviewRe
   // ── The chain gave up on this row ────────────────────────────────────────
   // Terminal today: process-pipeline-queue excludes these forever and no admin
   // tab surfaces them, so they are invisible until something like this renders.
-  if (row.needs_intervention_reason) {
+  //
+  // NARROWED 2026-08-28. This fired on ANY text in the column, and 18 live rows
+  // were carrying notes rather than failures: "Gap audit 2026-07-01 (Claude):
+  // verified vs funder site. Open/rolling. Review & activate." A previous
+  // session left its working notes in the field the pipeline uses as a
+  // tombstone, and every one of those rows has been reported as "the chain gave
+  // up" ever since, at readiness 3, unpublishable.
+  //
+  // Worse than the label: `process-pipeline-queue` and `reenrich-stale` both
+  // skip rows where this column is not null, so a note also froze the row out of
+  // enrichment and re-reading for two months.
+  //
+  // The machine writes two shapes, `<step>_failed: <error>` and `reenrich: ...`.
+  // Anything else is a human leaving a note, which is not a quarantine.
+  const quarantineText = String(row.needs_intervention_reason ?? '')
+  const isMachineQuarantine = /_failed:/.test(quarantineText) || /^reenrich:/.test(quarantineText)
+  if (row.needs_intervention_reason && isMachineQuarantine) {
     reasons.push({
       code: 'quarantined', severity: 'critical',
       label: 'Processing failed',
