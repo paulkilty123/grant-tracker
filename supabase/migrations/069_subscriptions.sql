@@ -24,12 +24,12 @@
 -- state."
 --
 -- ─────────────────────────────────────────────────────────────────────────────
--- THE PART THAT COULD HAVE CUT OFF THIRTY-TWO LIVE ACCOUNTS
+-- THE PART THAT WOULD HAVE CUT OFF THIRTY-TWO LIVE ACCOUNTS
 --
 -- Thirty-two of the forty-one organisations on the system have apply_access
--- true today, granted by hand: the founding cohort, plus accounts fixed one at
--- a time as the entitlement bug surfaced. NONE of them has a Stripe customer
--- and none of them ever will for the first six free months.
+-- today and NOT ONE of them has ever paid. They are the founding cohort, and
+-- Paul's arrangement with them is six free months, then a permanent founding
+-- rate below the public price.
 --
 -- A derivation of the obvious shape — "apply_access = does this owner hold a
 -- paying subscription" — revokes all thirty-two the moment it is installed. The
@@ -39,14 +39,38 @@
 --
 -- So entitlement has two sources and the derived value is their OR:
 --
---   apply_access = manual_entitlement OR the subscription grants it
+--   apply_access = an unexpired granted period OR the subscription grants it
 --
--- `manual_entitlement` is backfilled true for every org that has apply_access
--- today, which makes this migration a no-op for existing users by construction
--- rather than by hope. It is also the column the admin route should set from
--- now on, and the honest home for the cohort's six free months, a comp, or an
--- account fixed by hand — none of which are subscriptions and none of which
--- should have to pretend to be one.
+-- ─────────────────────────────────────────────────────────────────────────────
+-- WHY THE GRANT IS A DATE AND NOT A BOOLEAN
+--
+-- Six months is a promise with an end in it, and a boolean cannot hold one. A
+-- `granted_access = true` on thirty-two accounts is indistinguishable on
+-- 10 March 2027 from free access for ever, and nothing in the system would ever
+-- raise its hand about it. The cohort is the largest block of users on the
+-- platform; free-for-ever there is not a rounding error.
+--
+-- `granted_access_until` therefore carries the date:
+--
+--   null        no hand grant. The subscription is the only source.
+--   a timestamp access until then. The cohort: 2027-03-10.
+--   'infinity'  a permanent comp. Internal and review accounts.
+--
+-- One column rather than a flag plus a date, so the two can never disagree, and
+-- so granting access by hand FORCES the granter to say until when. That is the
+-- discipline that stops "just for now" becoming permanent.
+--
+-- THE DATE. Launch is 10 September 2026 and the free period runs six months
+-- from launch, not from each signup — Paul's call, 28 August. The thirty-two
+-- joined across seven months (25 February to 12 August), so counting from
+-- signup would have billed the earliest and most loyal tester in launch week
+-- and staggered the rest across seven separate dates. One shared date is also
+-- one sentence in an email. If launch moves, this is one UPDATE, not a
+-- migration.
+--
+-- A date-bounded grant cannot be maintained by triggers alone: no trigger fires
+-- because a clock passed a number. `expire_lapsed_access_grants()` at the end
+-- is the sweeper, and it needs a nightly caller — see the note there.
 
 -- ── 1. Plan and status ───────────────────────────────────────────────────────
 -- `status` mirrors Stripe's subscription statuses verbatim rather than
@@ -105,17 +129,22 @@ comment on table public.subscriptions is
 -- ── 3. The second source of entitlement ──────────────────────────────────────
 
 alter table public.organisations
-  add column if not exists manual_entitlement boolean not null default false;
+  add column if not exists granted_access_until timestamptz;
 
-comment on column public.organisations.manual_entitlement is
-  'Apply-tier access granted by a human rather than bought: the founding cohort''s six free months, a comp, an account fixed by hand. ORed with subscription state to produce apply_access. This is the column the admin route sets; apply_access follows.';
+comment on column public.organisations.granted_access_until is
+  'Apply-tier access given rather than bought, and the moment it stops. null = none, a timestamp = access until then, ''infinity'' = a permanent comp. ORed with subscription state to produce apply_access. This is the column the admin route sets; apply_access follows. Cohort founding members: 2027-03-10, six months from the 10 September 2026 launch.';
+
+create index if not exists organisations_granted_access_until_idx
+  on public.organisations (granted_access_until)
+  where granted_access_until is not null;
 
 -- Backfill BEFORE the derivation trigger exists, so no live account is ever
--- momentarily unentitled. Thirty-two rows expected on production.
+-- momentarily unentitled. Thirty-two rows expected on production, every one of
+-- them a cohort member on the six free months.
 update public.organisations
-   set manual_entitlement = true
+   set granted_access_until = timestamptz '2027-03-10 00:00:00+00'
  where apply_access is true
-   and manual_entitlement is false;
+   and granted_access_until is null;
 
 -- ── 4. The rule ──────────────────────────────────────────────────────────────
 
@@ -155,9 +184,15 @@ begin
   v_granted := coalesce(v_granted, false);
 
   update public.organisations o
-     set apply_access = (o.manual_entitlement or v_granted)
+     set apply_access = (
+           v_granted
+           or (o.granted_access_until is not null and o.granted_access_until > now())
+         )
    where o.owner_id = p_owner
-     and o.apply_access is distinct from (o.manual_entitlement or v_granted);
+     and o.apply_access is distinct from (
+           v_granted
+           or (o.granted_access_until is not null and o.granted_access_until > now())
+         );
 end;
 $$;
 
@@ -214,10 +249,54 @@ $$;
 -- DEFINER context is what makes it legitimate.
 drop trigger if exists trg_organisation_derives_entitlement on public.organisations;
 create trigger trg_organisation_derives_entitlement
-  after insert or update of owner_id, manual_entitlement on public.organisations
+  after insert or update of owner_id, granted_access_until on public.organisations
   for each row execute function public.tg_organisation_derives_entitlement();
 
--- ── 6. updated_at ────────────────────────────────────────────────────────────
+-- ── 6. The sweeper ───────────────────────────────────────────────────────────
+-- Nothing fires when a clock passes a date, so the triggers above cannot expire
+-- a grant on their own. Without a caller, every one of the thirty-two keeps
+-- access past 10 March 2027 and the system never mentions it.
+--
+-- Returns the number of organisations whose access actually changed, so the
+-- nightly run reports a number rather than a silence. NOT YET WIRED TO A CRON:
+-- that belongs with the rest of the billing jobs (dunning email, trial ending)
+-- rather than as a lone entry added here.
+
+create or replace function public.expire_lapsed_access_grants()
+returns integer
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_changed integer := 0;
+begin
+  with lapsed as (
+    select distinct o.owner_id
+      from public.organisations o
+     where o.apply_access is true
+       and o.granted_access_until is not null
+       and o.granted_access_until <= now()
+  )
+  select count(*) into v_changed from lapsed;
+
+  perform public.derive_apply_access(owner_id)
+     from (
+       select distinct o.owner_id
+         from public.organisations o
+        where o.apply_access is true
+          and o.granted_access_until is not null
+          and o.granted_access_until <= now()
+     ) s;
+
+  return v_changed;
+end;
+$$;
+
+comment on function public.expire_lapsed_access_grants() is
+  'Re-derives entitlement for owners whose granted_access_until has passed. Needs a nightly caller; without one, granted access never ends. Returns the number of owners re-derived.';
+
+-- ── 7. updated_at ────────────────────────────────────────────────────────────
 
 create or replace function public.tg_subscriptions_touch()
 returns trigger
@@ -235,7 +314,7 @@ create trigger trg_subscriptions_touch
   before update on public.subscriptions
   for each row execute function public.tg_subscriptions_touch();
 
--- ── 7. Access ────────────────────────────────────────────────────────────────
+-- ── 8. Access ────────────────────────────────────────────────────────────────
 -- A person may READ their own subscription, because the billing screen has to
 -- render "Apply, £18 a month, renews 14 October" without a round trip through
 -- the service role. Nobody may write it from the client under any circumstance:
