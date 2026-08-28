@@ -13,14 +13,27 @@
 // marketing copy and truthfully reported that the page stated no eligibility
 // detail. The engine was not wrong; it was starved.
 //
-// Measured again on AF3: Supporting Partners (2026-08-28), which is what
-// brought the enrich route here. That page is 72,220 characters. Its first
-// 12,000 are WordPress inline CSS; "£10,000" sits at 15,468, "Closing date" at
-// 15,897 and "Who can apply" at 20,077. The brief that came back described
-// organisations the funder had already given money to, put the typical award at
-// £29,000 to £75,000 off the awards table, and recorded "no source found" for
-// how to apply — of a page carrying an Apply now button. Nothing in it was
-// invented. It was all true of the slice that was sent.
+// AF3: Supporting Partners (2026-08-28) is what brought the enrich route here.
+// The brief that came back described organisations the funder had already given
+// money to, put the typical award at £29,000 to £75,000 off the awards table,
+// and recorded "no source found" for how to apply — of a page carrying an Apply
+// now button. Nothing in it was invented. It was all true of the slice sent.
+//
+// CORRECTED 2026-08-28, after the fix shipped: an earlier version of this note
+// said AF3's first 12,000 characters were WordPress inline CSS. That was true of
+// a crude `sed 's/<[^>]*>//'` used while measuring, and NOT of this route, which
+// strips <style> before excerpting. Stripped properly the page is 33,682
+// characters with "£10,000" at 362 — a prefix would have been fine.
+//
+// AF3's actual failure was one layer up: covenantfund.org.uk 401s the production
+// egress, so the route fell back to the reader proxy, which returned a 23,947
+// character rendering that did not contain the fund's terms AT ALL — no amount,
+// no closing date, no "Who can apply", but the whole awards table. Excerpting
+// cannot recover text that was never fetched, and the third attempt only
+// succeeded because the page was supplied directly.
+//
+// Kept here because the correction is the point: this module fixes a real bug
+// that Bentley demonstrates, and it did not fix the row it was written for.
 //
 // A cap that says nothing is what makes this plausible rather than obvious, so
 // excerptWithMeta reports the cut and callers put it in front of the model.
