@@ -29,6 +29,29 @@
 /** Length of the free trial, in days. */
 export const TRIAL_DAYS = 14
 
+/**
+ * The trial is on ONE plan, not on the product.
+ *
+ * This matters for where the phrase may appear: a CTA that leads to ordinary
+ * signup lands people on Match, which does not trial. Putting "Free for 14
+ * days" beside such a button promises a trial the click cannot deliver.
+ */
+export const TRIAL_PLAN = 'Apply'
+
+/**
+ * Whether the trial is actually purchasable yet.
+ *
+ * Deliberately a switch and not a date comparison against TRIAL_LIVE_FROM. A
+ * date that flips itself on will publish the offer on the 10th whether or not
+ * the billing behind it shipped, and the first person to find out would be a
+ * stranger on the highest-traffic acquisition page. Flip this by hand when the
+ * trial can genuinely be taken.
+ */
+export const TRIAL_IS_LIVE = false
+
+/** Intended live date, for the record. Decided 2026-08-28. */
+export const TRIAL_LIVE_FROM = '2026-09-10'
+
 /** Roughly how long onboarding takes. Confirmed 2026-08-28. */
 export const SETUP_MINUTES = 5
 
@@ -42,7 +65,13 @@ export const TRIAL_PHRASE = `Free for ${TRIAL_DAYS} days`
 export const SETUP_PHRASE = `Takes about ${SETUP_MINUTES} minutes to set up.`
 
 /**
- * Both, as they sit beside a signup CTA:
- * "Free for 14 days. Takes about 5 minutes to set up."
+ * What actually goes beside a signup CTA today.
+ *
+ * Once the trial is live and the CTA leads somewhere that can honour it, this
+ * is "Free for 14 days. Takes about 5 minutes to set up." Until then it is the
+ * setup time alone, which is true now. The offer does not get announced early
+ * on the strength of a date in a comment.
  */
-export const TRIAL_AND_SETUP_LINE = `${TRIAL_PHRASE}. ${SETUP_PHRASE}`
+export function ctaSupportLine(): string {
+  return TRIAL_IS_LIVE ? `${TRIAL_PHRASE}. ${SETUP_PHRASE}` : SETUP_PHRASE
+}

@@ -12,7 +12,7 @@ import {
   Building2, Search, TrendingUp, ShieldCheck,
 } from 'lucide-react'
 import { MCP_BRAND_NAME, MCP_APP_ORIGIN } from '@/lib/mcp-brand'
-import { TRIAL_AND_SETUP_LINE } from '@/lib/trial'
+import { ctaSupportLine } from '@/lib/trial'
 
 // ── Public bridge page ───────────────────────────────────────────────────────
 // Reached from an MCP link inside someone's AI assistant, or from search. So
@@ -588,11 +588,13 @@ export default async function PublicGrantPage({
                 Check this against your organisation
                 <ArrowRight style={{ width: 15, height: 15 }} />
               </Link>
-              {/* Both halves from lib/trial.ts. The trial length is a
-                  commercial promise on an acquisition page, so it is never a
-                  literal here: when it changes it changes once. And never a
-                  bare "free", which would claim the product costs nothing. */}
-              <span style={{ fontSize: 13.5, color: 'rgba(246,241,231,0.7)' }}>{TRIAL_AND_SETUP_LINE}</span>
+              {/* From lib/trial.ts, never a literal: the trial length is a
+                  commercial promise and this is the page a stranger reads
+                  before signing up. Today that is the setup time alone. The
+                  trial is Apply-only and not purchasable until 10 September,
+                  and this CTA goes to ordinary signup, which lands on Match,
+                  so the offer would be undeliverable from here twice over. */}
+              <span style={{ fontSize: 13.5, color: 'rgba(246,241,231,0.7)' }}>{ctaSupportLine()}</span>
             </span>
           </div>
 
