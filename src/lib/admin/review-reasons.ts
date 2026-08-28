@@ -806,7 +806,17 @@ export function deriveReviewReasons(row: ReviewRow, todayISO?: string): ReviewRe
   const amountStamps = (['amount_min', 'amount_max'] as const).map(f => readStamp(row.field_evidence, f))
   const amountConfirmed = amountStamps.some(st => st?.agrees === true)
   const amountUnsupported = amountStamps.some(st => st?.note === AMOUNT_UNSUPPORTED_NOTE)
-  if (amountUnsupported && !amountConfirmed) {
+  // AND WE MUST STILL BE SHOWING A FIGURE.
+  //
+  // The note means "we state a figure this page does not", so a row holding no
+  // figure cannot be guilty of it. Sixteen rows had their unsourced amounts
+  // cleared on 2026-08-28 — the honest outcome, absence rendering as absence —
+  // and every one stayed flagged, because the condition tested the stamp and
+  // never the card. A queue that does not clear when you fix the thing is a
+  // queue nobody finishes.
+  const showsAnAmount = row.amount_min !== null && row.amount_min !== undefined
+    || row.amount_max !== null && row.amount_max !== undefined
+  if (amountUnsupported && !amountConfirmed && showsAnAmount) {
     const shown = [row.amount_min ?? null, row.amount_max ?? null]
       .filter((n): n is number => n !== null)
       .map(n => `£${n.toLocaleString('en-GB')}`)
