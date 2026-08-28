@@ -63,9 +63,14 @@ import { recordRun } from '@/lib/admin/cron-runs'
 import { verifyRow, type VerifyRow, type VerifyResult } from '@/lib/verification/verify-row'
 import { buildEvidencePatch, recordFieldEvidence, PAGE_READ_KEY } from '@/lib/field-evidence'
 import { computeCadence, previousSilentStreak } from '@/lib/verification/verify-cadence'
+import { withRowBudget } from '@/lib/verification/row-budget'
 
 export const dynamic = 'force-dynamic'
-export const maxDuration = 300
+// 600, not 300. The 2026-08-28 01:01 run was killed by the platform without
+// reporting anything: no summary, no error, just a watchdog row. The margin
+// below was computed against a TYPICAL row and the batch that night was made of
+// atypical ones — see ROW_BUDGET_MS.
+export const maxDuration = 600
 
 /**
  * Bump when the extraction changes in a way that should invalidate old stamps.
@@ -85,9 +90,43 @@ const MODEL    = 'claude-haiku-4-5-20251001'
 const CONCURRENCY = 5
 const BATCH       = 60
 
-/** Absolute, from startedAt. 300s is the function cap; this leaves 55s of margin
- *  for the final writes and the run record itself. */
-const DEADLINE_MS = 245_000
+/**
+ * A ceiling on ONE row, enforced here rather than inferred from the parts.
+ *
+ * WHY THIS EXISTS. `overtime()` stops the pool STARTING rows; it has never had
+ * any hold over a row already in flight. So the function's real worst case was
+ * DEADLINE_MS plus however long the slowest row in the batch chose to take, and
+ * nothing bounded that second term. Priced properly it was: 12s for the direct
+ * fetch, then 30s for the reader-proxy fallback when the direct fetch 403s or
+ * 401s, then a model call the SDK would retry twice on a 429 or a 529, each
+ * attempt free to run to the SDK's own generous default. Comfortably past 300s
+ * on its own.
+ *
+ * That is exactly the shape of the batch that died. The 97 rows requeued on
+ * 27 August were the rows whose page-read verdict had just been thrown away —
+ * disproportionately the bot-walled hosts and the dead domains, i.e. the ones
+ * that take the proxy path. A normal night's batch never went near the cap; the
+ * one night the queue filled with slow rows, the whole run was killed before it
+ * could write a single stamp, and reported as "never reported back".
+ *
+ * The number: 12s + 30s of fetch, plus a model call now bounded to 20s with one
+ * retry, is ~83s of honest worst case. 90s covers it with room, and DEADLINE_MS
+ * is set so that a row starting at the last possible moment still lands inside
+ * maxDuration with the final writes done.
+ */
+const ROW_BUDGET_MS = 90_000
+
+/** Bounds on the model call, so a lane cannot outlive the function waiting on a
+ *  529. The SDK's defaults are two retries and a timeout measured in minutes;
+ *  both are the right defaults for a request a user is waiting on and the wrong
+ *  ones inside a batch with a wall clock. */
+const MODEL_TIMEOUT_MS = 20_000
+const MODEL_RETRIES    = 1
+
+/** Absolute, from startedAt, and it governs when a row may START. The function
+ *  cap is 600s: this leaves ROW_BUDGET_MS for a row that starts on the buzzer
+ *  plus 30s for the final writes and the run record itself. */
+const DEADLINE_MS = 480_000
 
 /** Stored verbatim in cron_runs.summary, so the lists are capped — but the
  *  totals are reported beside them, because a truncated list that does not say
@@ -295,7 +334,11 @@ export async function GET(req: NextRequest) {
     if (rowErr) throw new Error(`fetch rows: ${rowErr.message}`)
     const rows = (rowData ?? []) as (VerifyRow & CadenceCols)[]
 
-    const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
+    const anthropic = new Anthropic({
+      apiKey:     process.env.ANTHROPIC_API_KEY!,
+      timeout:    MODEL_TIMEOUT_MS,
+      maxRetries: MODEL_RETRIES,
+    })
 
     const outcomes:   Record<string, number> = {}
     /** How many rows each cadence shape claimed this run. Reported so the shape
@@ -312,7 +355,7 @@ export async function GET(req: NextRequest) {
     const { consumed } = await pool(rows, CONCURRENCY, overtime, async row => {
       let result: VerifyResult
       try {
-        result = await verifyRow(row, anthropic)
+        result = await withRowBudget(row.id, ROW_BUDGET_MS, verifyRow(row, anthropic))
       } catch (e) {
         failures.push({ id: row.id, title: row.title, error: e instanceof Error ? e.message : String(e) })
         return
