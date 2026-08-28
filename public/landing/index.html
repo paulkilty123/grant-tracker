@@ -340,6 +340,10 @@
   .foot-cols p a{color:#C7D3CE;text-decoration:none;transition:color .18s ease;}
   .foot-cols p a:hover{color:var(--cream);text-decoration:underline;text-underline-offset:3px;}
   .foot-bottom{text-align:center;font-size:14px;color:#6b7d76;margin-top:44px;border-top:0.5px solid rgba(245,241,232,0.1);padding-top:28px;}
+  .foot-legal{display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+  .foot-legal a{color:#C7D3CE;text-decoration:none;transition:color .18s ease;}
+  .foot-legal a:hover{color:var(--cream);text-decoration:underline;text-underline-offset:3px;}
+  .foot-legal span{color:#6b7d76;}
 
   @media (max-width:900px){
     .ft-tabs{grid-template-columns:repeat(2,1fr);}
@@ -884,7 +888,10 @@
           <div><h4>Company</h4><p><a href="#about">About</a></p><p><a href="#faq">FAQ</a></p><p><a href="#contact">Contact</a></p><p><a href="/auth/login">Sign in</a></p></div>
         </div>
       </div>
-      <p class="foot-bottom">Built for the UK social impact sector. © 2026 Shoots Funding.</p>
+      <div class="foot-bottom">
+        <p class="foot-legal"><a href="/privacy">Privacy policy</a><span>&middot;</span><a href="/terms">Terms</a></p>
+        <p>Built for the UK social impact sector. &copy; 2026 Shoots Funding.</p>
+      </div>
     </div>
   </footer>
 
