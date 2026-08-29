@@ -84,26 +84,47 @@ describe('the prices Paul set on 2026-08-29', () => {
     expect(amountFor('team',  'founding', 'monthly')).toBe(3600)
   })
 
-  it('has no founding annual price, because Paul has not set one', () => {
-    // Not an oversight. A Stripe price cannot be edited once created and
-    // somebody may hold it permanently, so the guess is not worth making.
+  it('carries the founding annual prices', () => {
+    // Confirmed 2026-08-29, after being left unset rather than inferred: a
+    // Stripe price cannot be edited once created and somebody may hold a
+    // founding price permanently.
+    expect(amountFor('match', 'founding', 'annual')).toBe(12000)
+    expect(amountFor('apply', 'founding', 'annual')).toBe(20000)
+    expect(amountFor('team',  'founding', 'annual')).toBe(36000)
+  })
+
+  it('discounts founding by the same proportion in both intervals', () => {
+    // The founding rate is a standing promise, so a cohort member should not
+    // be quietly better off monthly than annually or the reverse.
     for (const plan of PLAN_ORDER) {
-      expect(amountFor(plan, 'founding', 'annual')).toBeNull()
+      const monthlyRatio = amountFor(plan, 'founding', 'monthly') / amountFor(plan, 'standard', 'monthly')
+      const annualRatio  = amountFor(plan, 'founding', 'annual')  / amountFor(plan, 'standard', 'annual')
+      expect(annualRatio).toBeCloseTo(monthlyRatio, 10)
     }
   })
 
-  it('never prices founding above standard', () => {
+  it('prices a year at ten months in every plan and both kinds', () => {
+    // Two months free is the offer. Asserted because it is the shape Paul
+    // confirmed, and a typo in one annual figure is otherwise invisible.
+    for (const plan of PLAN_ORDER) {
+      for (const kind of PRICE_KINDS) {
+        expect(amountFor(plan, kind, 'annual')).toBe(amountFor(plan, kind, 'monthly') * 10)
+      }
+    }
+  })
+
+  it('never prices founding above standard, in either interval', () => {
     // A founding rate that costs more than the public price is not a discount,
     // it is a bug that charges loyal customers extra.
     for (const plan of PLAN_ORDER) {
-      const founding = amountFor(plan, 'founding', 'monthly')!
-      const standard = amountFor(plan, 'standard', 'monthly')!
-      expect(founding).toBeLessThan(standard)
+      for (const period of BILLING_PERIODS) {
+        expect(amountFor(plan, 'founding', period)).toBeLessThan(amountFor(plan, 'standard', period))
+      }
     }
   })
 
   it('prices the plans in the order it presents them', () => {
-    const monthly = PLAN_ORDER.map(p => amountFor(p, 'standard', 'monthly')!)
+    const monthly = PLAN_ORDER.map(p => amountFor(p, 'standard', 'monthly'))
     expect([...monthly].sort((a, b) => a - b)).toEqual(monthly)
   })
 
@@ -141,13 +162,13 @@ describe('lookup keys — the repo owns the name, Stripe owns the id', () => {
 })
 
 describe('definedPrices — what the sync script will create', () => {
-  it('lists the nine prices that exist and omits the three that do not', () => {
-    // 3 plans x 2 periods standard = 6, plus 3 founding monthly = 9.
-    // The 3 founding annual prices are unset and must not be created.
+  it('lists all twelve prices', () => {
+    // 3 plans x 2 kinds x 2 periods. Was nine until the founding annual prices
+    // were confirmed on 29 August.
     const prices = definedPrices()
-    expect(prices).toHaveLength(9)
-    expect(prices.filter(p => p.kind === 'founding')).toHaveLength(3)
-    expect(prices.some(p => p.kind === 'founding' && p.period === 'annual')).toBe(false)
+    expect(prices).toHaveLength(12)
+    expect(prices.filter(p => p.kind === 'founding')).toHaveLength(6)
+    expect(prices.some(p => p.kind === 'founding' && p.period === 'annual')).toBe(true)
   })
 
   it('gives every entry a positive amount and its lookup key', () => {

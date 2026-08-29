@@ -97,16 +97,17 @@ export interface PlanCapabilities {
  * Amounts in PENCE, because that is the unit Stripe takes and every conversion
  * is a chance to be out by a factor of a hundred.
  *
- * `founding.annual` is null: Paul gave three founding figures and they are
- * monthly. The public annual prices are exactly ten times the monthly, so the
- * obvious guess is £120/£200/£360 — but guessing here writes a permanent price
- * that somebody may subscribe to for good, and a Stripe price cannot be edited
- * after the fact. It stays null until he says, and the sync script creates only
- * what is set.
+ * Founding exists in BOTH intervals. Paul's first message gave three founding
+ * figures and they were monthly; the annual ones were left unset rather than
+ * inferred, because a Stripe price cannot be edited after creation and somebody
+ * may hold a founding price permanently. He confirmed £120/£200/£360 on
+ * 2026-08-29 — ten times monthly, the same shape as the public prices — and the
+ * reasoning with them: annual is the retention lever, and the founding cohort
+ * is exactly who is worth having on it.
  */
 export interface PlanPrices {
   standard: Record<BillingPeriod, number>
-  founding: { monthly: number; annual: number | null }
+  founding: Record<BillingPeriod, number>
 }
 
 export interface Plan {
@@ -151,7 +152,7 @@ export const PLANS: Readonly<Record<PlanId, Plan>> = {
     },
     prices: {
       standard: { monthly: 1500, annual: 15000 },
-      founding: { monthly: 1200, annual: null },
+      founding: { monthly: 1200, annual: 12000 },
     },
     trialDays: null,
   },
@@ -166,7 +167,7 @@ export const PLANS: Readonly<Record<PlanId, Plan>> = {
     },
     prices: {
       standard: { monthly: 2500, annual: 25000 },
-      founding: { monthly: 2000, annual: null },
+      founding: { monthly: 2000, annual: 20000 },
     },
     trialDays: TRIAL_DAYS,
   },
@@ -181,7 +182,7 @@ export const PLANS: Readonly<Record<PlanId, Plan>> = {
     },
     prices: {
       standard: { monthly: 4500, annual: 45000 },
-      founding: { monthly: 3600, annual: null },
+      founding: { monthly: 3600, annual: 36000 },
     },
     trialDays: null,
   },
@@ -229,11 +230,9 @@ export function planForLookupKey(
   return null
 }
 
-/** The amount in pence, or null where no such price exists (founding annual). */
-export function amountFor(plan: PlanId, kind: PriceKind, period: BillingPeriod): number | null {
-  const prices = PLANS[plan].prices
-  if (kind === 'standard') return prices.standard[period]
-  return period === 'monthly' ? prices.founding.monthly : prices.founding.annual
+/** The amount in pence. Every plan carries all four prices. */
+export function amountFor(plan: PlanId, kind: PriceKind, period: BillingPeriod): number {
+  return PLANS[plan].prices[kind][period]
 }
 
 /** Every price this repo intends to exist in Stripe. The sync script's input. */
@@ -244,9 +243,11 @@ export function definedPrices(): {
   for (const plan of PLAN_ORDER) {
     for (const kind of PRICE_KINDS) {
       for (const period of BILLING_PERIODS) {
-        const amount = amountFor(plan, kind, period)
-        if (amount === null) continue
-        out.push({ plan, kind, period, amount, lookupKey: lookupKeyFor(plan, kind, period) })
+        out.push({
+          plan, kind, period,
+          amount: amountFor(plan, kind, period),
+          lookupKey: lookupKeyFor(plan, kind, period),
+        })
       }
     }
   }
