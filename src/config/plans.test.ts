@@ -1,23 +1,16 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import {
-  PLANS, PLAN_ORDER, isPlanId, priceIdFor, planForPriceId, planAllows, sellablePlans,
+  PLANS, PLAN_ORDER, PRICE_KINDS, BILLING_PERIODS, isPlanId, planAllows,
+  lookupKeyFor, planForLookupKey, amountFor, definedPrices, formatAmount,
+  sellablePlans, FOUNDING_OFFER_CLOSES,
 } from './plans'
+import { TRIAL_DAYS, TRIAL_PLAN } from '@/lib/trial'
 
-const PRICE_ENVS = PLAN_ORDER.flatMap(id => Object.values(PLANS[id].priceEnv))
-
-function clearPrices() {
-  for (const key of PRICE_ENVS) delete process.env[key]
-}
-
-let saved: Record<string, string | undefined>
-beforeEach(() => {
-  saved = Object.fromEntries(PRICE_ENVS.map(k => [k, process.env[k]]))
-  clearPrices()
-})
-afterEach(() => {
-  clearPrices()
-  for (const [k, v] of Object.entries(saved)) if (v !== undefined) process.env[k] = v
-})
+// The predecessor of this suite had a test asserting that no amount appeared
+// anywhere in PLANS. It is deliberately gone, not accidentally lost: Paul's
+// 29 August decision is that products and prices are created FROM this config
+// and the Stripe dashboard stays empty, which cannot be true if the repo does
+// not know the amounts. Restoring that test would re-open the question.
 
 describe('the plan shapes Paul set on 2026-08-19', () => {
   it('Match has no pipeline and no application workspace', () => {
@@ -48,79 +41,164 @@ describe('the plan shapes Paul set on 2026-08-19', () => {
       expect(planAllows(id, 'alerts')).toBe(true)
     }
   })
+})
 
-  it('trials Apply and Team for seven days, and never Match', () => {
+describe('the trial, which must agree with src/lib/trial.ts', () => {
+  // This file once said 7 while the app said 14. A trial length is a
+  // commercial promise; two different ones in one codebase is the failure
+  // this suite exists to prevent, so the assertion is against the other
+  // module rather than against a literal.
+  it('trials Apply for exactly the length trial.ts publishes', () => {
+    expect(PLANS.apply.trialDays).toBe(TRIAL_DAYS)
+  })
+
+  it('trials the plan trial.ts names, and only that one', () => {
+    const trialling = PLAN_ORDER.filter(id => PLANS[id].trialDays !== null)
+    expect(trialling).toEqual(['apply'])
+    expect(PLANS.apply.name).toBe(TRIAL_PLAN)
+  })
+
+  it('does not trial Match, which has nothing to trial into', () => {
     expect(PLANS.match.trialDays).toBeNull()
-    expect(PLANS.apply.trialDays).toBe(7)
-    expect(PLANS.team.trialDays).toBe(7)
   })
 })
 
-describe('prices are configuration, not constants', () => {
-  it('holds no amount anywhere in the plan definitions', () => {
-    // The whole point: prices move, and a number written here would be a second
-    // copy that drifts from Stripe. Catches a "just for now" hardcoded price.
-    const serialised = JSON.stringify(PLANS)
-    expect(serialised).not.toMatch(/\d{3,}/)
-    expect(serialised).not.toContain('£')
+describe('the prices Paul set on 2026-08-29', () => {
+  // Written out longhand and checked one by one. These are the figures that
+  // get charged; a clever derivation here would hide a typo behind a formula.
+  it('carries the public monthly prices', () => {
+    expect(amountFor('match', 'standard', 'monthly')).toBe(1500)
+    expect(amountFor('apply', 'standard', 'monthly')).toBe(2500)
+    expect(amountFor('team',  'standard', 'monthly')).toBe(4500)
   })
 
-  it('names the missing variable when a price is not configured', () => {
-    // A checkout session built with an undefined price fails inside Stripe with
-    // an error that does not say which plan was missing.
-    expect(() => priceIdFor('apply', 'monthly')).toThrow(/STRIPE_PRICE_APPLY_MONTHLY/)
-    expect(() => priceIdFor('team', 'annual')).toThrow(/STRIPE_PRICE_TEAM_ANNUAL/)
+  it('carries the public annual prices', () => {
+    expect(amountFor('match', 'standard', 'annual')).toBe(15000)
+    expect(amountFor('apply', 'standard', 'annual')).toBe(25000)
+    expect(amountFor('team',  'standard', 'annual')).toBe(45000)
   })
 
-  it('treats a blank price variable as missing', () => {
-    process.env.STRIPE_PRICE_APPLY_MONTHLY = '   '
-    expect(() => priceIdFor('apply', 'monthly')).toThrow(/STRIPE_PRICE_APPLY_MONTHLY/)
+  it('carries the founding monthly prices', () => {
+    expect(amountFor('match', 'founding', 'monthly')).toBe(1200)
+    expect(amountFor('apply', 'founding', 'monthly')).toBe(2000)
+    expect(amountFor('team',  'founding', 'monthly')).toBe(3600)
   })
 
-  it('returns the configured price when it is set', () => {
-    process.env.STRIPE_PRICE_APPLY_ANNUAL = 'price_live_apply_annual'
-    expect(priceIdFor('apply', 'annual')).toBe('price_live_apply_annual')
+  it('has no founding annual price, because Paul has not set one', () => {
+    // Not an oversight. A Stripe price cannot be edited once created and
+    // somebody may hold it permanently, so the guess is not worth making.
+    for (const plan of PLAN_ORDER) {
+      expect(amountFor(plan, 'founding', 'annual')).toBeNull()
+    }
+  })
+
+  it('never prices founding above standard', () => {
+    // A founding rate that costs more than the public price is not a discount,
+    // it is a bug that charges loyal customers extra.
+    for (const plan of PLAN_ORDER) {
+      const founding = amountFor(plan, 'founding', 'monthly')!
+      const standard = amountFor(plan, 'standard', 'monthly')!
+      expect(founding).toBeLessThan(standard)
+    }
+  })
+
+  it('prices the plans in the order it presents them', () => {
+    const monthly = PLAN_ORDER.map(p => amountFor(p, 'standard', 'monthly')!)
+    expect([...monthly].sort((a, b) => a - b)).toEqual(monthly)
+  })
+
+  it('closes the founding offer at the end of October 2026', () => {
+    expect(new Date(FOUNDING_OFFER_CLOSES).getUTCMonth()).toBe(9)
+    expect(new Date(FOUNDING_OFFER_CLOSES).getUTCFullYear()).toBe(2026)
   })
 })
 
-describe('planForPriceId — what the webhook uses to decide what was bought', () => {
-  it('resolves a configured price back to its plan and period', () => {
-    process.env.STRIPE_PRICE_TEAM_MONTHLY = 'price_abc'
-    expect(planForPriceId('price_abc')).toEqual({ plan: 'team', period: 'monthly' })
+describe('lookup keys — the repo owns the name, Stripe owns the id', () => {
+  it('round-trips every price it defines', () => {
+    for (const plan of PLAN_ORDER) {
+      for (const kind of PRICE_KINDS) {
+        for (const period of BILLING_PERIODS) {
+          const key = lookupKeyFor(plan, kind, period)
+          expect(planForLookupKey(key)).toEqual({ plan, kind, period })
+        }
+      }
+    }
   })
 
-  it('returns null for a price it does not recognise', () => {
-    // An unknown price must not be guessed into a plan. Guessing here would
-    // grant entitlement for something the customer did not buy.
-    process.env.STRIPE_PRICE_MATCH_MONTHLY = 'price_known'
-    expect(planForPriceId('price_something_else')).toBeNull()
+  it('returns null for a key it does not recognise', () => {
+    // An unknown price must not be guessed into a plan. Guessing grants
+    // entitlement for something the customer did not buy.
+    expect(planForLookupKey('shoots_match_standard_weekly')).toBeNull()
+    expect(planForLookupKey('price_1234')).toBeNull()
+    expect(planForLookupKey('')).toBeNull()
   })
 
-  it('does not match on an unset variable', () => {
-    // Both sides undefined must not compare equal and resolve to a plan.
-    expect(planForPriceId('')).toBeNull()
-    expect(planForPriceId('undefined')).toBeNull()
+  it('produces distinct keys for every price', () => {
+    const keys = PLAN_ORDER.flatMap(p =>
+      PRICE_KINDS.flatMap(k => BILLING_PERIODS.map(b => lookupKeyFor(p, k, b))))
+    expect(new Set(keys).size).toBe(keys.length)
+  })
+})
+
+describe('definedPrices — what the sync script will create', () => {
+  it('lists the nine prices that exist and omits the three that do not', () => {
+    // 3 plans x 2 periods standard = 6, plus 3 founding monthly = 9.
+    // The 3 founding annual prices are unset and must not be created.
+    const prices = definedPrices()
+    expect(prices).toHaveLength(9)
+    expect(prices.filter(p => p.kind === 'founding')).toHaveLength(3)
+    expect(prices.some(p => p.kind === 'founding' && p.period === 'annual')).toBe(false)
+  })
+
+  it('gives every entry a positive amount and its lookup key', () => {
+    for (const p of definedPrices()) {
+      expect(p.amount).toBeGreaterThan(0)
+      expect(p.lookupKey).toBe(lookupKeyFor(p.plan, p.kind, p.period))
+    }
+  })
+})
+
+describe('formatAmount', () => {
+  it('drops the decimals on whole pounds', () => {
+    expect(formatAmount(1500)).toBe('£15')
+    expect(formatAmount(45000)).toBe('£450')
+  })
+
+  it('keeps them when there are pence, rather than rounding', () => {
+    // Rounding down would understate what somebody is about to be charged.
+    expect(formatAmount(1250)).toBe('£12.50')
+    expect(formatAmount(999)).toBe('£9.99')
   })
 })
 
 describe('sellablePlans — can we actually take money', () => {
-  it('is empty when nothing is configured', () => {
-    expect(sellablePlans()).toEqual([])
+  const keys = (...k: string[]) => new Set(k)
+
+  it('is empty when Stripe holds nothing', () => {
+    expect(sellablePlans(keys())).toEqual([])
   })
 
-  it('leaves out a plan with only one of its two periods set', () => {
-    // Half-configured is worse than absent: the page would render a button for
-    // a period that throws when clicked.
-    process.env.STRIPE_PRICE_APPLY_MONTHLY = 'price_m'
-    expect(sellablePlans()).toEqual([])
+  it('leaves out a plan with only one of its two periods', () => {
+    // Half-configured is worse than absent: the page renders a button for a
+    // period that fails when clicked.
+    expect(sellablePlans(keys(lookupKeyFor('apply', 'standard', 'monthly')))).toEqual([])
   })
 
-  it('includes a plan once both periods are set, in cheapest-first order', () => {
-    process.env.STRIPE_PRICE_APPLY_MONTHLY = 'price_am'
-    process.env.STRIPE_PRICE_APPLY_ANNUAL  = 'price_aa'
-    process.env.STRIPE_PRICE_MATCH_MONTHLY = 'price_mm'
-    process.env.STRIPE_PRICE_MATCH_ANNUAL  = 'price_ma'
-    expect(sellablePlans()).toEqual(['match', 'apply'])
+  it('includes a plan once both periods exist, in cheapest-first order', () => {
+    expect(sellablePlans(keys(
+      lookupKeyFor('apply', 'standard', 'monthly'),
+      lookupKeyFor('apply', 'standard', 'annual'),
+      lookupKeyFor('match', 'standard', 'monthly'),
+      lookupKeyFor('match', 'standard', 'annual'),
+    ))).toEqual(['match', 'apply'])
+  })
+
+  it('does not require the founding price to sell a plan', () => {
+    // The founding rate is an offer, not the product, and it closes in October.
+    expect(sellablePlans(keys(
+      lookupKeyFor('team', 'standard', 'monthly'),
+      lookupKeyFor('team', 'standard', 'annual'),
+    ))).toEqual(['team'])
   })
 })
 
