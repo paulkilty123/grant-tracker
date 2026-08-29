@@ -8,9 +8,21 @@ Next.js 14 App Router + Supabase + Tailwind CSS, deployed on Vercel via GitHub a
   shootsfunding for verification, admin calls and anything user-facing.)
 - **Repo:** https://github.com/paulkilty123/grant-tracker
 - **Supabase project ID:** yrndczlqjqtfgissleev
-- **Pricing:** Match £12/month, Apply £18/month. Monthly and annual billing only.
-  (The old "£65/6 months, £115/year" was stale — there is no 6-month term. Phase 5
-  MCP upgrade copy should quote these figures.)
+- **Pricing (final, set by Paul 2026-08-29):** three tiers, monthly or annual only.
+
+  | Tier | Monthly | Annual | Founding rate |
+  |------|--------:|-------:|--------------:|
+  | Match | £15 | £150 | £12 |
+  | Apply | £25 | £250 | £20 |
+  | Team  | £45 | £450 | £36 |
+
+  The founding rate is **permanent** for those who take it, applied as its own
+  Stripe price rather than a coupon, and **closes at the end of October**.
+  Products and prices are created from config, never in the dashboard — the
+  repo is the single source of truth and the Stripe dashboard stays empty.
+
+  Supersedes "Match £12, Apply £18", which superseded "£65/6 months, £115/year".
+  Anything quoting either of those, MCP upgrade copy included, is stale.
 - **Vercel plan: Pro** (team `paulkilty1-3944s-projects`). Verified against the
   Vercel API 2026-08-04. Sub-daily cron schedules (`*/N`) are now permitted.
   Note the API reports the PERSONAL account as `hobby` and the TEAM as `pro`;
