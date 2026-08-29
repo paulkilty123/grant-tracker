@@ -1,12 +1,11 @@
 -- 069_subscriptions.sql
 --
 -- ┌───────────────────────────────────────────────────────────────────────────┐
--- │ NOT YET APPLIED TO PRODUCTION. This file is on `main` to claim the number │
--- │ 069 before another session takes it, which inverts the usual convention   │
--- │ here of applying by hand first and committing after. Do not run it        │
--- │ casually: the backfill in section 3 touches 32 live organisations that    │
--- │ hold paid access, and Paul is checking that list against the cohort       │
--- │ before it goes. Claimed 2026-08-29.                                       │
+-- │ APPLIED TO PRODUCTION 2026-08-29, on Paul's go after he read the backfill │
+-- │ list. Result: 32 organisations still entitled (unchanged), 11 permanent,  │
+-- │ 21 dated 2027-03-10, 0 left unbacked, and the derivation agrees with      │
+-- │ apply_access on every row. The guard in section 3b would have rolled the  │
+-- │ whole thing back had the counts moved.                                    │
 -- └───────────────────────────────────────────────────────────────────────────┘
 --
 -- The first half of the money path: somewhere to record what an account is
@@ -148,12 +147,68 @@ create index if not exists organisations_granted_access_until_idx
   where granted_access_until is not null;
 
 -- Backfill BEFORE the derivation trigger exists, so no live account is ever
--- momentarily unentitled. Thirty-two rows expected on production, every one of
--- them a cohort member on the six free months.
+-- momentarily unentitled.
+--
+-- TWO GROUPS, NOT ONE. The first draft dated all thirty-two to 2027-03-10 on the
+-- understanding that they were all cohort. Paul read the list on 29 August and
+-- eleven of them are not: seven of his own organisations, the reviewer demo, the
+-- MCP tier fixture, the directory reviewer, and a family test account. A uniform
+-- date would have expired his own logins, the reviewer demo and an automated
+-- test fixture on 10 March 2027 — and the fixture failing is the sort of thing
+-- that gets debugged for an hour before anyone thinks of a date in a migration.
+--
+-- Internal first, so the cohort update below cannot claim them.
+
+update public.organisations o
+   set granted_access_until = 'infinity'
+  from auth.users u
+ where u.id = o.owner_id
+   and o.apply_access is true
+   and o.granted_access_until is null
+   and u.email in (
+     'paulkilty1@gmail.com',                         -- Paul, seven organisations
+     'rohan.kilty@me.com',                           -- family test account (Oxfam GB)
+     'reviewer@granttracker.co.uk',                  -- reviewer demo org
+     'mcp-tier-fixture-apply@mcp-fixtures.invalid',  -- MCP tier fixture
+     'directory-reviewer@shoots-review.invalid'      -- directory reviewer
+   );
+
+-- Everyone still holding access is a founding cohort member: six free months
+-- from the 10 September launch, one shared date.
 update public.organisations
    set granted_access_until = timestamptz '2027-03-10 00:00:00+00'
  where apply_access is true
    and granted_access_until is null;
+
+-- ── 3b. Refuse to proceed if the population is not the one that was reviewed ──
+-- Paul checked a list of 32: eleven internal, twenty-one cohort. If anybody has
+-- been granted or revoked access since, these numbers move and the right answer
+-- is to stop and have the list looked at again, not to date a stranger's
+-- organisation on an assumption. Runs inside the migration's own transaction, so
+-- raising here rolls the whole thing back.
+do $$
+declare
+  v_internal int;
+  v_cohort   int;
+  v_missed   int;
+begin
+  select count(*) into v_internal
+    from public.organisations where granted_access_until = 'infinity';
+  select count(*) into v_cohort
+    from public.organisations where granted_access_until = timestamptz '2027-03-10 00:00:00+00';
+  select count(*) into v_missed
+    from public.organisations where apply_access is true and granted_access_until is null;
+
+  if v_missed <> 0 then
+    raise exception
+      'Backfill missed % organisations holding access. They would lose it the moment the derivation runs.', v_missed;
+  end if;
+  if v_internal <> 11 or v_cohort <> 21 then
+    raise exception
+      'Expected 11 internal and 21 cohort, found % and %. The population changed since Paul reviewed it on 2026-08-29; re-check the list before applying.',
+      v_internal, v_cohort;
+  end if;
+end $$;
 
 -- ── 4. The rule ──────────────────────────────────────────────────────────────
 
