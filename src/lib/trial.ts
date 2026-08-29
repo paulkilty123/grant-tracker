@@ -39,13 +39,37 @@ export const TRIAL_DAYS = 14
 export const TRIAL_PLAN = 'Apply'
 
 /**
- * Whether the trial is actually purchasable yet.
+ * Whether a surface may ADVERTISE the trial.
  *
  * Deliberately a switch and not a date comparison against TRIAL_LIVE_FROM. A
  * date that flips itself on will publish the offer on the 10th whether or not
  * the billing behind it shipped, and the first person to find out would be a
- * stranger on the highest-traffic acquisition page. Flip this by hand when the
- * trial can genuinely be taken.
+ * stranger on the highest-traffic acquisition page.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * DO NOT FLIP THIS WHEN STRIPE GOES LIVE. There are TWO conditions and Stripe
+ * is only the first.
+ *
+ *   1. The trial can be bought at all. That is Stripe, and 10 September.
+ *   2. The surface doing the advertising can HONOUR it. That is not Stripe,
+ *      and it is not a date.
+ *
+ * Condition 2 is the one that outlives the launch. The trial is Apply-only
+ * (see TRIAL_PLAN). The public opportunity page's CTA goes to ordinary signup,
+ * which lands people on MATCH, which does not trial. So on 11 September, with
+ * checkout working perfectly, that page still cannot deliver what the words
+ * beside its button would promise. The line has to move, or be qualified, or
+ * the CTA has to lead somewhere that starts an Apply trial — and only then does
+ * this become true for that surface.
+ *
+ * This is a live mistake, not a hypothetical: "Free for 14 days" shipped onto
+ * that page on 29 August and was pulled back off the same afternoon for
+ * condition 2, while condition 1 was equally unmet.
+ *
+ * If billing later needs "the trial is purchasable" as a separate fact from
+ * "this surface may say so", split them then. One flag is honest while the
+ * answer to both is no.
+ * ─────────────────────────────────────────────────────────────────────────────
  */
 export const TRIAL_IS_LIVE = false
 
