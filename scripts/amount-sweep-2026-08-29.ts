@@ -95,14 +95,25 @@ async function fetchText(url: string): Promise<string> {
 async function main() {
   const res = await fetch(
     `${SUPABASE_URL}/rest/v1/scraped_grants`
-    + `?select=id,funder,title,apply_url,amount_min,amount_max,grant_sources`
+    + `?select=id,funder,title,apply_url,amount_min,amount_max,grant_sources,field_provenance`
     + `&is_active=eq.true&pipeline_state=eq.published&amount_max=not.is.null&limit=1000`,
     { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } })
   if (!res.ok) throw new Error(`rows ${res.status}: ${await res.text()}`)
-  const all = await res.json() as (Row & { id: string })[]
+  const all = await res.json() as (Row & { field_provenance?: Record<string, { source?: string }> })[]
+
+  // The population: amount_max set by a scraper, a seed, a directory listing or
+  // nothing — never by a read of the funder's page and never by a human.
+  // Applied here rather than passed in, so the sweep is reproducible from the
+  // script alone.
+  const UNVERIFIED = new Set(['scraper', 'seed', 'discovery', 'system', 'none'])
+  const target = all.filter(r => {
+    const src = r.field_provenance?.['amount_max']?.source ?? 'none'
+    return UNVERIFIED.has(src.split(':')[0])
+  })
 
   const ids: string[] = JSON.parse(process.env.IDS ?? '[]')
-  const rows = ids.length ? all.filter(r => ids.includes(r.id)) : all
+  const rows = ids.length ? all.filter(r => ids.includes(r.id)) : target
+  console.log(`${all.length} published rows carry an amount; ${target.length} of them were never checked against the funder's page`)
   console.log(`sweeping ${rows.length} rows\n`)
 
   const supported: Row[] = []
