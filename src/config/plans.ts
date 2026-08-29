@@ -60,12 +60,17 @@ export type PriceKind = 'standard' | 'founding'
 export const CURRENCY = 'gbp'
 
 /**
- * When the founding offer stops being purchasable.
+ * When the PUBLIC founding offer stops being self-serve.
  *
- * End of October 2026, set by Paul on 29 August. It bounds NEW subscriptions
- * only — anybody already on a founding price keeps it for good. Nothing
- * enforces this yet; whatever builds the checkout must refuse a founding price
- * after this instant, and that is the single place it should be enforced.
+ * End of October 2026, set by Paul on 29 August. Read this with
+ * `src/lib/billing/founding.ts` and not on its own: it bounds somebody choosing
+ * the founding rate for themselves, and it does NOT bound the rate being
+ * granted. The cohort's six free months run to 10 March 2027 and they convert
+ * onto the founding rate then, four months after this date. Treating this as
+ * the only gate would quote them the public price and break a promise.
+ *
+ * Anybody already on a founding price keeps it for good; that needs no
+ * machinery, because they simply stay on the price they subscribed to.
  */
 export const FOUNDING_OFFER_CLOSES = '2026-10-31T23:59:59Z'
 
