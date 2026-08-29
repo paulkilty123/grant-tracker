@@ -140,3 +140,35 @@ describe('htmlToText — recovery budget', () => {
     expect(recovered).toBeLessThan(visible.length * 0.35)
   })
 })
+
+describe('htmlToText — currency entities', () => {
+  // South Lanarkshire, 2026-08-29. The page splits two schemes at
+  // &pound;20,000. Every reader in this repo decoded nbsp, amp, lt and gt and
+  // nothing else, so the figure reached the amount extractor with no £ in it
+  // and a search over the page text for £ returned nothing at all.
+  it('decodes &pound; in visible text', () => {
+    const t = htmlToText('<p>For projects requiring more than &pound;20,000.</p>')
+    expect(t).toContain('£20,000')
+  })
+
+  it('decodes numeric and hex forms too', () => {
+    expect(htmlToText('<p>Grants of &#163;5,000 and &#xA3;10,000.</p>'))
+      .toContain('£5,000')
+    expect(htmlToText('<p>Grants of &#163;5,000 and &#xA3;10,000.</p>'))
+      .toContain('£10,000')
+  })
+
+  it('leaves an unknown entity alone rather than eating it', () => {
+    expect(htmlToText('<p>Tea &fakeentity; biscuits for everyone here.</p>'))
+      .toContain('&fakeentity;')
+  })
+
+  it('finds a money figure written as an entity inside a payload', () => {
+    // Over 120 characters, or the attribute is never harvested and this passes
+    // without testing anything — the same trap as the de-duplication case.
+    const body = 'Grants of up to &pound;25,000 are available to registered charities '
+      + 'working in the district, awarded at three trustee meetings each year.'
+    expect(body.length).toBeGreaterThan(120)
+    expect(htmlToText(`<div data-card='{"body":"${body}"}'></div>`)).toContain('£25,000')
+  })
+})

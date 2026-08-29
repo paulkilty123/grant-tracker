@@ -34,11 +34,35 @@
 // that is not in the HTML at all. Recovering hidden text and correcting a bad
 // URL are different jobs and this module only does the first.
 
-/** Decode the entity forms that actually appear in attribute-held JSON. */
+/**
+ * Named entities worth decoding.
+ *
+ * `&pound;` is the one that matters and the reason this map exists. Every
+ * reader in this repo decoded exactly four entities — nbsp, amp, lt, gt — so a
+ * page writing its figures as `&pound;20,000` reached the amount extractor, the
+ * MONEY test in this file, and the model itself with no £ in it at all. Found
+ * 2026-08-29 on South Lanarkshire's renewable energy fund, whose two schemes
+ * are split at &pound;20,000; a £ search over the page text returned nothing.
+ */
+const NAMED_ENTITIES: Record<string, string> = {
+  pound: '£', euro: '€', cent: '¢', yen: '¥', dollar: '$',
+  mdash: '—', ndash: '–', hellip: '…', middot: '·', bull: '•',
+  lsquo: '\u2018', rsquo: '\u2019', ldquo: '\u201c', rdquo: '\u201d',
+  deg: '°', times: '×', frac12: '½', frac14: '¼', reg: '®', copy: '©',
+}
+
+/** Decode the entity forms that actually appear in funder markup. */
 function decodeEntities(s: string): string {
   return s
     .replace(/&#x([0-9a-fA-F]+);/g, (_, h) => safeChar(parseInt(h, 16)))
     .replace(/&#(\d+);/g, (_, d) => safeChar(parseInt(d, 10)))
+    .replace(/&([a-zA-Z][a-zA-Z0-9]{1,10});/g, (whole, name: string) => {
+      const named = NAMED_ENTITIES[name.toLowerCase()]
+      if (named) return named
+      // Leave anything unrecognised alone rather than eating it; the four
+      // below are handled after this pass so double-encoding still resolves.
+      return whole
+    })
     .replace(/&quot;/g, '"')
     .replace(/&apos;/g, "'")
     .replace(/&nbsp;/g, ' ')
@@ -237,17 +261,13 @@ function harvestScripts(html: string): string[] {
 
 /** The visible-text strip every reader here used to do on its own. */
 function stripToText(html: string): string {
-  return html
-    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, ' ')
-    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, ' ')
-    .replace(/<noscript[^>]*>[\s\S]*?<\/noscript>/gi, ' ')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/\s{2,}/g, ' ')
-    .trim()
+  return decodeEntities(
+    html
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, ' ')
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, ' ')
+      .replace(/<noscript[^>]*>[\s\S]*?<\/noscript>/gi, ' ')
+      .replace(/<[^>]+>/g, ' ')
+  ).replace(/\s{2,}/g, ' ').trim()
 }
 
 /**
