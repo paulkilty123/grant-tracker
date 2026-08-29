@@ -1,5 +1,14 @@
 -- 069_subscriptions.sql
 --
+-- ┌───────────────────────────────────────────────────────────────────────────┐
+-- │ NOT YET APPLIED TO PRODUCTION. This file is on `main` to claim the number │
+-- │ 069 before another session takes it, which inverts the usual convention   │
+-- │ here of applying by hand first and committing after. Do not run it        │
+-- │ casually: the backfill in section 3 touches 32 live organisations that    │
+-- │ hold paid access, and Paul is checking that list against the cohort       │
+-- │ before it goes. Claimed 2026-08-29.                                       │
+-- └───────────────────────────────────────────────────────────────────────────┘
+--
 -- The first half of the money path: somewhere to record what an account is
 -- paying for, and a rule in SQL that turns that into the entitlement the app
 -- already enforces.
