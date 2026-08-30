@@ -1,0 +1,865 @@
+{
+ "ranAt": "2026-08-30T11:52:26.000Z",
+ "source": "user_verified:amount-null-sweep-2026-08-30",
+ "applied": 19,
+ "note": "Before-state for every row considered. amount_max has no dedicated source column, so this file is the only record of the figure that was removed.",
+ "ledger": [
+  {
+   "id": "ca11a595-5a4b-4e00-a926-fadcf4b8c218",
+   "title": "Child Focused Court IDVA- Cheshire & Merseyside",
+   "funder": "Office of the Police and Crime Commissioner for Merseyside",
+   "klass": "no_figure",
+   "quote": "No £ figure anywhere in 3774 characters read from https://www.find-government-grants.service.gov.uk/grants/child-focused-courts-idva--cheshire--merseyside-1",
+   "sourceUrl": "https://www.find-government-grants.service.gov.uk/grants/child-focused-courts-idva--cheshire--merseyside-1",
+   "readUrls": [
+    "https://www.find-government-grants.service.gov.uk/grants/child-focused-courts-idva--cheshire--merseyside-1"
+   ],
+   "unread": [],
+   "before": {
+    "amount_min": null,
+    "amount_max": 609957,
+    "amount_source": "scraper:gov_uk"
+   },
+   "after": {
+    "amount_max": null
+   },
+   "pageFigure": null,
+   "applied": [
+    "amount_max"
+   ]
+  },
+  {
+   "id": "d90693a5-fdfa-42ca-a049-f7adaea2aff4",
+   "title": "Historic England — Heritage at Risk Grants",
+   "funder": "Historic England",
+   "klass": "needs_a_human",
+   "quote": "£15 million — ink should be added to the Heritage at Risk Register. Heritage at Risk Capital Fund Projects 37 local heritage sites ben",
+   "sourceUrl": "https://historicengland.org.uk/advice/heritage-at-risk/",
+   "readUrls": [
+    "https://historicengland.org.uk/advice/heritage-at-risk/"
+   ],
+   "unread": [],
+   "before": {
+    "amount_min": 10000,
+    "amount_max": 500000,
+    "amount_source": "scraper:historic_england"
+   },
+   "after": null,
+   "pageFigure": null,
+   "applied": []
+  },
+  {
+   "id": "62a1da4a-2c8c-4a2e-be7d-da543578d3d1",
+   "title": "Architectural Heritage Fund — Development Grants",
+   "funder": "Architectural Heritage Fund",
+   "klass": "needs_a_human",
+   "quote": "£400,000 — oluntary, community, or social enterprise organisations with a minimum of two years’ operating activity and a minimum tu || £200,000 — e organisations with a minimum of two years’ operating activity and a minimum turnover of £400,000 in the last financial || £100,000 — voluntary, community, or social enterprise organisations with a minimum of two years’ operating activity and a minimum ",
+   "sourceUrl": "https://ahfund.org.uk/grants/",
+   "readUrls": [
+    "https://ahfund.org.uk/grants/"
+   ],
+   "unread": [],
+   "before": {
+    "amount_min": 25000,
+    "amount_max": 250000,
+    "amount_source": "scraper:architectural_heritage_fund"
+   },
+   "after": null,
+   "pageFigure": null,
+   "applied": []
+  },
+  {
+   "id": "732a41ad-8df9-405f-a74f-cd25be2b64c2",
+   "title": "Esmée Fairbairn Foundation — Arts, Culture & Heritage",
+   "funder": "Esmée Fairbairn Foundation",
+   "klass": "no_figure",
+   "quote": "No £ figure anywhere in 13165 characters read from https://esmeefairbairn.org.uk/apply-for-a-grant/creative-confident-communities-guidance/",
+   "sourceUrl": "https://esmeefairbairn.org.uk/apply-for-a-grant/creative-confident-communities-guidance/",
+   "readUrls": [
+    "https://esmeefairbairn.org.uk/apply-for-a-grant/creative-confident-communities-guidance/"
+   ],
+   "unread": [],
+   "before": {
+    "amount_min": 20000,
+    "amount_max": 200000,
+    "amount_source": "seed:legacy"
+   },
+   "after": {
+    "amount_max": null
+   },
+   "pageFigure": null,
+   "applied": [
+    "amount_max"
+   ]
+  },
+  {
+   "id": "6bee86de-f50a-4c01-b409-d72a6f4ed686",
+   "title": "Esmée Fairbairn Foundation — Natural World",
+   "funder": "Esmée Fairbairn Foundation",
+   "klass": "no_figure",
+   "quote": "No £ figure anywhere in 6470 characters read from https://esmeefairbairn.org.uk/apply-for-a-grant/our-natural-world-guidance/",
+   "sourceUrl": "https://esmeefairbairn.org.uk/apply-for-a-grant/our-natural-world-guidance/",
+   "readUrls": [
+    "https://esmeefairbairn.org.uk/apply-for-a-grant/our-natural-world-guidance/"
+   ],
+   "unread": [],
+   "before": {
+    "amount_min": 30000,
+    "amount_max": 200000,
+    "amount_source": "seed:legacy"
+   },
+   "after": {
+    "amount_max": null
+   },
+   "pageFigure": null,
+   "applied": [
+    "amount_max"
+   ]
+  },
+  {
+   "id": "af98107b-eda0-4294-9fcb-0e125e2733ff",
+   "title": "Esmée Fairbairn Foundation — A Fairer Future",
+   "funder": "Esmée Fairbairn Foundation",
+   "klass": "no_figure",
+   "quote": "No £ figure anywhere in 21202 characters read from https://esmeefairbairn.org.uk/apply-for-a-grant/a-fairer-future-guidance/",
+   "sourceUrl": "https://esmeefairbairn.org.uk/apply-for-a-grant/a-fairer-future-guidance/",
+   "readUrls": [
+    "https://esmeefairbairn.org.uk/apply-for-a-grant/a-fairer-future-guidance/"
+   ],
+   "unread": [],
+   "before": {
+    "amount_min": 25000,
+    "amount_max": 200000,
+    "amount_source": "seed:legacy"
+   },
+   "after": {
+    "amount_max": null
+   },
+   "pageFigure": null,
+   "applied": [
+    "amount_max"
+   ]
+  },
+  {
+   "id": "5a368644-3211-4a40-9447-d5594938a519",
+   "title": "Lambeth Community Connections Fund",
+   "funder": "Lambeth Council",
+   "klass": "no_figure",
+   "quote": "No £ figure anywhere in 2000 characters read from https://www.lambeth.gov.uk/community-connections-fund",
+   "sourceUrl": "https://www.lambeth.gov.uk/community-connections-fund",
+   "readUrls": [
+    "https://www.lambeth.gov.uk/community-connections-fund"
+   ],
+   "unread": [],
+   "before": {
+    "amount_min": 1000,
+    "amount_max": 200000,
+    "amount_source": "seed:legacy"
+   },
+   "after": {
+    "amount_max": null
+   },
+   "pageFigure": null,
+   "applied": [
+    "amount_max"
+   ]
+  },
+  {
+   "id": "8f8bc717-1cbb-44de-abc1-fe04e0efcce2",
+   "title": "JRCT — Rights & Justice Programme",
+   "funder": "Joseph Rowntree Charitable Trust",
+   "klass": "needs_a_human",
+   "quote": "£20,000 — in the immigration detention and deportation space. Of these, we are expecting to fund two to five new groups with grant",
+   "sourceUrl": "https://www.jrct.org.uk/rights-and-justice",
+   "readUrls": [
+    "https://www.jrct.org.uk/rights-and-justice"
+   ],
+   "unread": [],
+   "before": {
+    "amount_min": 10000,
+    "amount_max": 200000,
+    "amount_source": "scraper:jrct"
+   },
+   "after": null,
+   "pageFigure": null,
+   "applied": []
+  },
+  {
+   "id": "4db45a85-2ff4-4cac-bca6-51a44bd56fe1",
+   "title": "Church and Communities Programme",
+   "funder": "The Mercers' Company",
+   "klass": "means_other:pool",
+   "quote": "d wellness of staff and volunteers, amid the sector’s growing pressures. 80% of grantees in 2024-2025 had a turnover of less than £1 million, ensuring that grants awarded are significant for grant holders and the communities they serve. Rationale Increasingly we understand the li",
+   "sourceUrl": "https://www.mercers.co.uk/philanthropy/church-and-communities",
+   "readUrls": [
+    "https://www.mercers.co.uk/philanthropy/church-and-communities"
+   ],
+   "unread": [],
+   "before": {
+    "amount_min": 10000,
+    "amount_max": 120000,
+    "amount_source": null
+   },
+   "after": null,
+   "pageFigure": null,
+   "applied": []
+  },
+  {
+   "id": "916f02b0-714f-4489-8528-5784c4a38cf9",
+   "title": "Active Travel England — Communities and Engagement Fund",
+   "funder": "Active Travel England",
+   "klass": "needs_a_human",
+   "quote": "£13.9 million — nisations to provide funding and support to 11 local authorities to pilot active travel social prescribing activities. A",
+   "sourceUrl": "https://www.activetravelengland.gov.uk/funding",
+   "readUrls": [
+    "https://www.activetravelengland.gov.uk/funding"
+   ],
+   "unread": [],
+   "before": {
+    "amount_min": 5000,
+    "amount_max": 100000,
+    "amount_source": "seed:legacy"
+   },
+   "after": null,
+   "pageFigure": null,
+   "applied": []
+  },
+  {
+   "id": "21f84400-4330-4267-9a62-4540617a573d",
+   "title": "Eranda Rothschild Foundation",
+   "funder": "Eranda Rothschild Foundation",
+   "klass": "no_figure",
+   "quote": "No £ figure anywhere in 1473 characters read from https://erandarothschild.org/",
+   "sourceUrl": "https://erandarothschild.org/",
+   "readUrls": [
+    "https://erandarothschild.org/"
+   ],
+   "unread": [],
+   "before": {
+    "amount_min": 10000,
+    "amount_max": 100000,
+    "amount_source": "scraper:young_camden_foundation"
+   },
+   "after": {
+    "amount_max": null
+   },
+   "pageFigure": null,
+   "applied": [
+    "amount_max"
+   ]
+  },
+  {
+   "id": "d4c4eceb-c3f6-482c-af93-8023bd0d05ff",
+   "title": "Historic England — Listed Places of Worship Grant Scheme",
+   "funder": "Historic England",
+   "klass": "needs_a_human",
+   "quote": "£92 million — c environment, including surveys, toolkits, guidance and publications. Places of Worship Renewal Fund Find out about thi",
+   "sourceUrl": "https://historicengland.org.uk/advice/grants/what-we-fund/",
+   "readUrls": [
+    "https://historicengland.org.uk/advice/grants/what-we-fund/"
+   ],
+   "unread": [],
+   "before": {
+    "amount_min": 500,
+    "amount_max": 100000,
+    "amount_source": "scraper:historic_england"
+   },
+   "after": null,
+   "pageFigure": null,
+   "applied": []
+  },
+  {
+   "id": "fc84cf7f-1b48-4f28-86dd-71de69cd3354",
+   "title": "NHS Charities Together — Community Grants",
+   "funder": "NHS Charities Together",
+   "klass": "means_other:pool",
+   "quote": "ies to prevent and/or respond to crises and emergencies, and in doing so reduce pressures facing NHS services. In 2024 we awarded £426,000 to projects led by ambulance charities with a focus on community responses to out-of-hospital cardiac arrest, with a further £1.4 million exp",
+   "sourceUrl": "https://nhscharitiestogether.co.uk/about-us/our-programmes/",
+   "readUrls": [
+    "https://nhscharitiestogether.co.uk/about-us/our-programmes/"
+   ],
+   "unread": [],
+   "before": {
+    "amount_min": 5000,
+    "amount_max": 100000,
+    "amount_source": "seed:legacy"
+   },
+   "after": null,
+   "pageFigure": null,
+   "applied": []
+  },
+  {
+   "id": "5ad0c465-4513-478f-a1d1-1272504104a4",
+   "title": "Open Call Funding",
+   "funder": "Esmée Fairbairn Foundation",
+   "klass": "means_other:income",
+   "quote": "relevant networks, and grassroots groups We don't fund... These types of organisations Organisations with a turnover of less than £100,000 (as reflected in the latest set of accounts) Organisations that are not constituted Organisations who do not have measures in place to guard",
+   "sourceUrl": "https://esmeefairbairn.org.uk/applications/",
+   "readUrls": [
+    "https://esmeefairbairn.org.uk/applications/"
+   ],
+   "unread": [],
+   "before": {
+    "amount_min": 30000,
+    "amount_max": 65000,
+    "amount_source": "discovery:gemini"
+   },
+   "after": null,
+   "pageFigure": null,
+   "applied": []
+  },
+  {
+   "id": "0ce8470d-9557-40a3-a8d2-ef01daba3f09",
+   "title": "Tech for Good Programme",
+   "funder": "Bethnal Green Ventures",
+   "klass": "needs_a_human",
+   "quote": "£4.5M — ending aeroponic technology enables food to be grown with no soil, zero pesticides and 95% less water. The team have sin",
+   "sourceUrl": "https://bethnalgreenventures.com/",
+   "readUrls": [
+    "https://bethnalgreenventures.com/"
+   ],
+   "unread": [],
+   "before": {
+    "amount_min": 60000,
+    "amount_max": 60000,
+    "amount_source": "seed:legacy"
+   },
+   "after": null,
+   "pageFigure": null,
+   "applied": []
+  },
+  {
+   "id": "f0dd61fe-c828-4ff4-9c25-d738e33032db",
+   "title": "Youth Endowment Fund",
+   "funder": "Youth Endowment Fund",
+   "klass": "needs_a_human",
+   "quote": "£3m — can help prevent children from becoming involved in violence, improving… Read News News: YEF backs CBT programme in scho || £3 — provide earlier support for children at risk of exclusion and involvement in violence, the Youth Endowment Fund (YEF) ha || £200m — ve this field empty if you're human: The Youth Endowment Fund was established in March 2019 by children’s charity Impetu",
+   "sourceUrl": "https://www.youthendowmentfund.org.uk/",
+   "readUrls": [
+    "https://www.youthendowmentfund.org.uk/"
+   ],
+   "unread": [],
+   "before": {
+    "amount_min": 5000,
+    "amount_max": 50000,
+    "amount_source": "scraper:young_camden_foundation"
+   },
+   "after": null,
+   "pageFigure": null,
+   "applied": []
+  },
+  {
+   "id": "8687dd37-8bc0-4c35-9830-aa31f9b6eeb3",
+   "title": "Rayne Foundation",
+   "funder": "Rayne Foundation",
+   "klass": "no_figure",
+   "quote": "No £ figure anywhere in 4818 characters read from https://www.raynefoundation.org.uk/",
+   "sourceUrl": "https://www.raynefoundation.org.uk/",
+   "readUrls": [
+    "https://www.raynefoundation.org.uk/"
+   ],
+   "unread": [],
+   "before": {
+    "amount_min": 1000,
+    "amount_max": 50000,
+    "amount_source": "scraper:young_camden_foundation"
+   },
+   "after": {
+    "amount_max": null
+   },
+   "pageFigure": null,
+   "applied": [
+    "amount_max"
+   ]
+  },
+  {
+   "id": "59b7e30c-4018-4d22-9e7a-074a5f19ae24",
+   "title": "Steel Charitable Trust",
+   "funder": "Steel Charitable Trust",
+   "klass": "no_figure",
+   "quote": "No £ figure anywhere in 1945 characters read from https://steelcharitabletrust.org.uk/",
+   "sourceUrl": "https://steelcharitabletrust.org.uk/",
+   "readUrls": [
+    "https://steelcharitabletrust.org.uk/"
+   ],
+   "unread": [],
+   "before": {
+    "amount_min": 10000,
+    "amount_max": 25000,
+    "amount_source": "scraper:young_camden_foundation"
+   },
+   "after": {
+    "amount_max": null
+   },
+   "pageFigure": null,
+   "applied": [
+    "amount_max"
+   ]
+  },
+  {
+   "id": "31feb54d-ca5e-4291-b1c6-e08b59dee810",
+   "title": "Cadent Foundation — Community Grants",
+   "funder": "Cadent Foundation",
+   "klass": "needs_a_human",
+   "quote": "£3 million — ce support and practical measures. This is made possible each year by Cadent who help to fund the Cadent Foundation by c || £1M — y of post-tax profits. Read our latest Impact Report , to find out the difference our grants made to people in the last  || £1m — its. Read our latest Impact Report , to find out the difference our grants made to people in the last year. OUR £1M WARM",
+   "sourceUrl": "https://cadentgas.com/foundation",
+   "readUrls": [
+    "https://cadentgas.com/foundation"
+   ],
+   "unread": [],
+   "before": {
+    "amount_min": 1000,
+    "amount_max": 25000,
+    "amount_source": "scraper:cadent_foundation"
+   },
+   "after": null,
+   "pageFigure": null,
+   "applied": []
+  },
+  {
+   "id": "88a1a617-b9b6-4ccd-9f4b-08a30e622cee",
+   "title": "The Health Lottery Foundation",
+   "funder": "The Health Lottery Foundation",
+   "klass": "no_figure",
+   "quote": "No £ figure anywhere in 2067 characters read from https://thehealthlotteryfoundation.org.uk/grants/grant-information/",
+   "sourceUrl": "https://thehealthlotteryfoundation.org.uk/grants/grant-information/",
+   "readUrls": [
+    "https://thehealthlotteryfoundation.org.uk/grants/grant-information/"
+   ],
+   "unread": [],
+   "before": {
+    "amount_min": null,
+    "amount_max": 25000,
+    "amount_source": "scraper:community_works_2026-05-06"
+   },
+   "after": {
+    "amount_max": null
+   },
+   "pageFigure": null,
+   "applied": [
+    "amount_max"
+   ]
+  },
+  {
+   "id": "043634a3-19fa-4636-9a0f-d5449163948c",
+   "title": "DCR Allen Charitable Trust",
+   "funder": "DCR Allen Charitable Trust",
+   "klass": "needs_a_human",
+   "quote": "£153,422 — ney Donations to other Charitable Organisations Income and expenditure Data for financial year ending 05 April 2025 Tota || £163,658 — table Organisations Income and expenditure Data for financial year ending 05 April 2025 Total income: £153,422 Total exp || £60,000 — ar ending 05 April 2025 Total income: £153,422 Total expenditure: £163,658 People 3 Trustee(s) Employees with total bene",
+   "sourceUrl": "https://register-of-charities.charitycommission.gov.uk/en/charity-search/-/charity-details/277293/charity-overview",
+   "readUrls": [
+    "https://register-of-charities.charitycommission.gov.uk/en/charity-search/-/charity-details/277293/charity-overview"
+   ],
+   "unread": [],
+   "before": {
+    "amount_min": 1000,
+    "amount_max": 20000,
+    "amount_source": "scraper:community_works_2026-05-06"
+   },
+   "after": null,
+   "pageFigure": null,
+   "applied": []
+  },
+  {
+   "id": "c282c317-515b-4aad-85b2-11cd8c7b2aea",
+   "title": "North London Community Fund",
+   "funder": "North London Waste Authority",
+   "klass": "means_other:pool",
+   "quote": "tant role in delivering our Joint Waste Strategy (JWS) by enabling local communities to take action on waste reduction. In total, £250,000 is set aside each year in grants for community-based (non-profit-making) organisations. The funding on offer is split into micro, small, medi",
+   "sourceUrl": "https://www.nlwa.gov.uk/article/north-london-community-fund",
+   "readUrls": [
+    "https://www.nlwa.gov.uk/article/north-london-community-fund"
+   ],
+   "unread": [],
+   "before": {
+    "amount_min": 1500,
+    "amount_max": 20000,
+    "amount_source": "scraper:hcvs_funding_2026-04-30"
+   },
+   "after": null,
+   "pageFigure": null,
+   "applied": []
+  },
+  {
+   "id": "e271481d-bb05-49b0-850b-e0cc6853a4ca",
+   "title": "Performing and Visual Arts Grants (Wales)",
+   "funder": "Colwinston Charitable Trust",
+   "klass": "means_other:pool",
+   "quote": "Other areas may also be supported on occasion, at the discretion of the trustees. The majority of grants will be in the range of £5,000 to £30,000. Larger grants are generally only awarded to organisations where a funding relationship with the Trust has been developed over sever",
+   "sourceUrl": "https://colwinston.org.uk/how-to-apply/",
+   "readUrls": [
+    "https://colwinston.org.uk/how-to-apply/"
+   ],
+   "unread": [],
+   "before": {
+    "amount_min": 5000,
+    "amount_max": 20000,
+    "amount_source": null
+   },
+   "after": null,
+   "pageFigure": null,
+   "applied": []
+  },
+  {
+   "id": "13f8f5e6-6a52-4f65-a026-e5f369b3f383",
+   "title": "Sustainable Steps Wales - Egin Grants",
+   "funder": "National Lottery Community Fund",
+   "klass": "needs_a_human",
+   "quote": "£100 — vigation Overview Who can apply What we want to fund What you can spend the money on How to apply Project location: Wale || £35,000 — Overview Who can apply What we want to fund What you can spend the money on How to apply Project location: Wales Amount:",
+   "sourceUrl": "https://www.tnlcommunityfund.org.uk/funding/funding-programmes/sustainable-steps-wales-egin-grants",
+   "readUrls": [
+    "https://www.tnlcommunityfund.org.uk/funding/funding-programmes/sustainable-steps-wales-egin-grants"
+   ],
+   "unread": [],
+   "before": {
+    "amount_min": 100,
+    "amount_max": 15000,
+    "amount_source": "scraper:tnlcf"
+   },
+   "after": null,
+   "pageFigure": null,
+   "applied": []
+  },
+  {
+   "id": "6d512c2b-f3b9-43d2-9b9d-83399dc49d0c",
+   "title": "SSE Match Trading Grant",
+   "funder": "School for Social Entrepreneurs",
+   "klass": "no_figure",
+   "quote": "No £ figure anywhere in 5741 characters read from https://www.matchtrading.com/",
+   "sourceUrl": "https://www.matchtrading.com/",
+   "readUrls": [
+    "https://www.matchtrading.com/"
+   ],
+   "unread": [],
+   "before": {
+    "amount_min": 1000,
+    "amount_max": 15000,
+    "amount_source": "discovery:legacy"
+   },
+   "after": {
+    "amount_max": null
+   },
+   "pageFigure": null,
+   "applied": [
+    "amount_max"
+   ]
+  },
+  {
+   "id": "523da313-e449-46a1-8647-c5a51e58b304",
+   "title": "Cornwall Community Foundation — Community Grants",
+   "funder": "Cornwall Community Foundation",
+   "klass": "means_other:pool",
+   "quote": "apply? Ready to apply? --> You’re in good company – we awarded more than 714 grants to community groups during 2025 amounting to £2.6 million. On this page you’ll find all of the grants we have available to charities, CICs and volunteer-led programmes. Each grant has its own pri",
+   "sourceUrl": "https://cornwallcommunityfoundation.com/cornwall-charity-grants/grants/",
+   "readUrls": [
+    "https://cornwallcommunityfoundation.com/cornwall-charity-grants/grants/"
+   ],
+   "unread": [],
+   "before": {
+    "amount_min": 500,
+    "amount_max": 10000,
+    "amount_source": null
+   },
+   "after": null,
+   "pageFigure": null,
+   "applied": []
+  },
+  {
+   "id": "e0dddc2b-3275-41cd-9daf-982aed9798b8",
+   "title": "Hampstead Wells and Camden Trust",
+   "funder": "Hampstead Wells and Campden Trust",
+   "klass": "no_figure",
+   "quote": "No £ figure anywhere in 1839 characters read from https://hwct.org.uk/grants-for-organisations/",
+   "sourceUrl": "https://hwct.org.uk/grants-for-organisations/",
+   "readUrls": [
+    "https://hwct.org.uk/grants-for-organisations/"
+   ],
+   "unread": [],
+   "before": {
+    "amount_min": 3000,
+    "amount_max": 10000,
+    "amount_source": "scraper:young_camden_foundation"
+   },
+   "after": {
+    "amount_max": null
+   },
+   "pageFigure": null,
+   "applied": [
+    "amount_max"
+   ]
+  },
+  {
+   "id": "ddc93bb0-b74d-42e7-86a7-172f9a39913c",
+   "title": "SSE Start Up Programme",
+   "funder": "School for Social Entrepreneurs (SSE)",
+   "klass": "no_figure",
+   "quote": "No £ figure anywhere in 8193 characters read from https://www.the-sse.org/programmes/",
+   "sourceUrl": "https://www.the-sse.org/programmes/",
+   "readUrls": [
+    "https://www.the-sse.org/programmes/"
+   ],
+   "unread": [],
+   "before": {
+    "amount_min": 1000,
+    "amount_max": 10000,
+    "amount_source": "discovery:gemini"
+   },
+   "after": {
+    "amount_max": null
+   },
+   "pageFigure": null,
+   "applied": [
+    "amount_max"
+   ]
+  },
+  {
+   "id": "24a624c6-27a3-413f-baa7-742d1cb02c60",
+   "title": "Sussex Crisis Fund — Sussex Community Foundation",
+   "funder": "Sussex Community Foundation",
+   "klass": "no_figure",
+   "quote": "No £ figure anywhere in 3971 characters read from https://sussexcommunityfoundation.org/grants/",
+   "sourceUrl": "https://sussexcommunityfoundation.org/grants/",
+   "readUrls": [
+    "https://sussexcommunityfoundation.org/grants/"
+   ],
+   "unread": [],
+   "before": {
+    "amount_min": 500,
+    "amount_max": 10000,
+    "amount_source": "seed:legacy"
+   },
+   "after": {
+    "amount_max": null
+   },
+   "pageFigure": null,
+   "applied": [
+    "amount_max"
+   ]
+  },
+  {
+   "id": "9192771f-4c81-4761-8a59-9a39231b973c",
+   "title": "Tower Hamlets — Community Grant Programme",
+   "funder": "London Borough of Tower Hamlets",
+   "klass": "needs_a_human",
+   "quote": "£800,000 — his vision, the council launched the Mayor’s Small Grants Programme (MSGP) on Monday 11 December 2023. The programme wil || £150,000 — ide £800,000 of annual grant funding between November 2023 and March 2027 for small organisations with a maximum annual  || £100,000 — ims to support events that bring communities together and celebrate our diversity, as well as national and regional cel",
+   "sourceUrl": "https://www.towerhamlets.gov.uk/lgnl/community_and_living/voluntary-and-community-sector/Council-funding-for-VCS/small-grants/Mayors-Small-Grants-Programme.aspx",
+   "readUrls": [
+    "https://www.towerhamlets.gov.uk/lgnl/community_and_living/voluntary-and-community-sector/Council-funding-for-VCS/small-grants/Mayors-Small-Grants-Programme.aspx"
+   ],
+   "unread": [],
+   "before": {
+    "amount_min": 500,
+    "amount_max": 10000,
+    "amount_source": "seed:legacy"
+   },
+   "after": null,
+   "pageFigure": null,
+   "applied": []
+  },
+  {
+   "id": "94b05b92-fde2-48fd-931c-a5b969279a44",
+   "title": "Didymus Fund",
+   "funder": "Didymus CIO",
+   "klass": "means_other:income",
+   "quote": "which are not registered charities, or that are overdue in reporting to the Charity Commission Organisations with income of over £1 million within the past 3 years Organisations who have less than 3 years of returns with the Charity Commission Organisations with significant or r",
+   "sourceUrl": "https://didymus-charity.org.uk/how-to-apply/",
+   "readUrls": [
+    "https://didymus-charity.org.uk/how-to-apply/"
+   ],
+   "unread": [],
+   "before": {
+    "amount_min": null,
+    "amount_max": 10000,
+    "amount_source": "scraper:young_camden_foundation"
+   },
+   "after": null,
+   "pageFigure": null,
+   "applied": []
+  },
+  {
+   "id": "be4d0b34-6e72-4e52-9301-cffdf0d1098f",
+   "title": "BlueSpark Foundation",
+   "funder": "BlueSpark Foundation",
+   "klass": "no_figure",
+   "quote": "No £ figure anywhere in 7134 characters read from https://www.bluesparkfoundation.org.uk/",
+   "sourceUrl": "https://www.bluesparkfoundation.org.uk/",
+   "readUrls": [
+    "https://www.bluesparkfoundation.org.uk/"
+   ],
+   "unread": [],
+   "before": {
+    "amount_min": null,
+    "amount_max": 5000,
+    "amount_source": "scraper:young_camden_foundation"
+   },
+   "after": {
+    "amount_max": null
+   },
+   "pageFigure": null,
+   "applied": [
+    "amount_max"
+   ]
+  },
+  {
+   "id": "91737208-0bd3-45c4-8866-ec6256e85a58",
+   "title": "Cash for Kids - Cost of Living Grants",
+   "funder": "Bauer Media / Cash for Kids",
+   "klass": "no_figure",
+   "quote": "No £ figure anywhere in 644 characters read from https://cashforkids.org.uk/grants/cost-of-living/",
+   "sourceUrl": "https://cashforkids.org.uk/grants/cost-of-living/",
+   "readUrls": [
+    "https://cashforkids.org.uk/grants/cost-of-living/"
+   ],
+   "unread": [],
+   "before": {
+    "amount_min": 2000,
+    "amount_max": 5000,
+    "amount_source": "scraper:young_camden_foundation"
+   },
+   "after": {
+    "amount_max": null
+   },
+   "pageFigure": null,
+   "applied": [
+    "amount_max"
+   ]
+  },
+  {
+   "id": "ff8d9d64-f661-44bf-b07f-42b4bb66deab",
+   "title": "Chalk Cliff Trust — Grants for East Sussex",
+   "funder": "Chalk Cliff Trust",
+   "klass": "no_figure",
+   "quote": "No £ figure anywhere in 1570 characters read from https://www.chalkclifftrust.org/home",
+   "sourceUrl": "https://www.chalkclifftrust.org/home",
+   "readUrls": [
+    "https://www.chalkclifftrust.org/home"
+   ],
+   "unread": [],
+   "before": {
+    "amount_min": 3000,
+    "amount_max": 5000,
+    "amount_source": "seed:legacy"
+   },
+   "after": {
+    "amount_max": null
+   },
+   "pageFigure": null,
+   "applied": [
+    "amount_max"
+   ]
+  },
+  {
+   "id": "856cbdaf-7e60-4c78-8ad2-e7c0b6fddbd8",
+   "title": "Camden Climate Fund",
+   "funder": "Camden Council / Camden Giving",
+   "klass": "no_figure",
+   "quote": "No £ figure anywhere in 1256 characters read from https://www.camden.gov.uk/camden-climate-fund",
+   "sourceUrl": "https://www.camden.gov.uk/camden-climate-fund",
+   "readUrls": [
+    "https://www.camden.gov.uk/camden-climate-fund"
+   ],
+   "unread": [],
+   "before": {
+    "amount_min": 2000,
+    "amount_max": 5000,
+    "amount_source": "seed:legacy"
+   },
+   "after": {
+    "amount_max": null
+   },
+   "pageFigure": null,
+   "applied": [
+    "amount_max"
+   ]
+  },
+  {
+   "id": "d7358629-ddba-41f5-b8db-669e5b1dc23e",
+   "title": "Variety Club - Equipment Grants",
+   "funder": "Variety, the Children's Charity",
+   "klass": "no_figure",
+   "quote": "No £ figure anywhere in 6588 characters read from https://www.variety.org.uk/how-can-we-help/equipment-grants-for-children/",
+   "sourceUrl": "https://www.variety.org.uk/how-can-we-help/equipment-grants-for-children/",
+   "readUrls": [
+    "https://www.variety.org.uk/how-can-we-help/equipment-grants-for-children/"
+   ],
+   "unread": [],
+   "before": {
+    "amount_min": null,
+    "amount_max": 5000,
+    "amount_source": "scraper:young_camden_foundation"
+   },
+   "after": {
+    "amount_max": null
+   },
+   "pageFigure": null,
+   "applied": [
+    "amount_max"
+   ]
+  },
+  {
+   "id": "5b7a141a-5ee2-4f80-80d6-fa6937cff37b",
+   "title": "Arnold Clark Community Fund",
+   "funder": "Arnold Clark",
+   "klass": "no_figure",
+   "quote": "No £ figure anywhere in 5315 characters read from https://www.arnoldclark.com/community-fund",
+   "sourceUrl": "https://www.arnoldclark.com/community-fund",
+   "readUrls": [
+    "https://www.arnoldclark.com/community-fund"
+   ],
+   "unread": [],
+   "before": {
+    "amount_min": 1000,
+    "amount_max": 2500,
+    "amount_source": "scraper:hcvs_funding_2026-04-30"
+   },
+   "after": {
+    "amount_max": null
+   },
+   "pageFigure": null,
+   "applied": [
+    "amount_max"
+   ]
+  },
+  {
+   "id": "6f5fad07-d56e-496c-a9f7-b68967bd7fe0",
+   "title": "Wigan — Supporting Communities Fund",
+   "funder": "Wigan Council",
+   "klass": "needs_a_human:page_states_a_figure",
+   "quote": "e. We will use this email address to contact you. From which investment pot are you applying for funding? Small Investment (Up To £2,000) Begin Application A-Z A B C D E F G H I J K L M N O P Q R S T U V W X Y Z Explore wigan.gov.uk The Deal Contact us Cookies Disclaimer Emergenc",
+   "sourceUrl": "https://supportingcommunitiesfund.wigan.gov.uk/Checklist",
+   "readUrls": [
+    "https://supportingcommunitiesfund.wigan.gov.uk/Checklist",
+    "https://supportingcommunitiesfund.wigan.gov.uk/Checklist"
+   ],
+   "unread": [],
+   "before": {
+    "amount_min": null,
+    "amount_max": 1000,
+    "amount_source": "system:research-manchester-homelessness-2026-07-28"
+   },
+   "after": null,
+   "pageFigure": 2000,
+   "applied": []
+  },
+  {
+   "id": "b3086bff-58af-4ffa-836c-855cf136a499",
+   "title": "Vicar's Relief Fund — St Martin-in-the-Fields Charity",
+   "funder": "St Martin-in-the-Fields Charity",
+   "klass": "needs_a_human:page_states_a_figure",
+   "quote": "we require evidence for. They are issued quickly and efficiently via experienced support workers. We can provide grants of up to £650 to help people access accommodation, for example rent deposits, rent in advance, ID fees or temporary accommodation costs. Apply for a grant Appl",
+   "sourceUrl": "https://smitfc.org/the-vicars-relief-fund/",
+   "readUrls": [
+    "https://smitfc.org/the-vicars-relief-fund/"
+   ],
+   "unread": [],
+   "before": {
+    "amount_min": 350,
+    "amount_max": 500,
+    "amount_source": "seed:legacy"
+   },
+   "after": null,
+   "pageFigure": 650,
+   "applied": []
+  }
+ ]
+}

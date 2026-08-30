@@ -270,7 +270,8 @@ function buildBaseQuery(sb: SupabaseClient, params: MCPSearchParams) {
 // Each applicable signal contributes a fractional value 0.0–1.0 (not binary).
 //   S1 sector_match     — coverage × specificity blend on impact_sectors overlap
 //   S2 geographic_match — 1.0 exact-label / 0.9 within-region / 0.8 parent-country / 0.5 uk_wide
-//   S3 amount_in_range  — 1.0 fits / 0.8 contains user range / 0.6 partial / 0.5 null info / 0.0 no overlap
+//   S3 amount_in_range  — 1.0 fits / 0.8 contains user range / 0.7 row has NO amount,
+//                         hedged for ranking only / 0.6 partial / 0.0 no overlap
 //   S4 structure_eligible — 1.0 explicit / 0.7 unrestricted (empty array) / 0.0 excluded
 //   S5 funder_alignment — binary 1.0 / 0.0 (closed taxonomy, no gradation needed)
 //   S6 beneficiary_match — same blend as S1 on combined target_beneficiaries + beneficiary_tags
@@ -325,11 +326,29 @@ function geoSignalValue(rowTag: string | null, userRegion: MCPRegion): number {
 // (perfect fit), 0.8 when the row range envelops the user range (covers it
 // and more), 0.6 for partial overlap, 0.5 when both row bounds are null
 // (no info), 0.0 otherwise.
+/**
+ * How well the row's award range fits what was asked for.
+ *
+ * Returns `null` when the row publishes no amount at all, which the caller
+ * scores as an unknown hedge rather than as a poor fit.
+ *
+ * It used to return 0.5. On an amount-only search that put an honest row at 45
+ * against 90 for a row carrying a figure, which sorted it below result 200 and
+ * off the first pages of the searches it belonged in. Measured on production
+ * 2026-08-30: 142 published rows have no amount, and the catalogue is about to
+ * null the ceiling wherever the funder does not publish one
+ * (docs/amount-review-2026-08-29.md), taking that past 180. Halving the score of
+ * every row we are honest about would have made the honesty invisible.
+ *
+ * Dropping it from the average entirely was the first attempt and it is worse:
+ * on a search whose ONLY filter is the amount there is then nothing applicable,
+ * the thin-query branch takes over, and the row scores 0 instead of 45.
+ */
 function amountFitScore(
   rowMinRaw: number | null, rowMaxRaw: number | null,
   reqMinRaw: number | undefined, reqMaxRaw: number | undefined,
-): number {
-  if (rowMinRaw === null && rowMaxRaw === null) return 0.5
+): number | null {
+  if (rowMinRaw === null && rowMaxRaw === null) return null
   const rowMin = rowMinRaw ?? 0
   const rowMax = rowMaxRaw ?? Number.MAX_SAFE_INTEGER
   const reqMin = reqMinRaw ?? 0
@@ -386,9 +405,22 @@ export function computeMatchQuality(row: ScrapedGrantRow, params: MCPSearchParam
 
   if (params.amount_min !== undefined || params.amount_max !== undefined) {
     applicable++
-    const s = amountFitScore(row.amount_min ?? null, row.amount_max ?? null, params.amount_min, params.amount_max)
+    const fit = amountFitScore(row.amount_min ?? null, row.amount_max ?? null, params.amount_min, params.amount_max)
+    /**
+     * Same shape as the structure signal below, and for the same reason.
+     *
+     * A row with no published amount is UNKNOWN, not a bad fit, so it is hedged
+     * for ranking at 0.7 — under a range that contains the request (0.8), over
+     * a partial overlap (0.6), well clear of the 0.5 that buried it.
+     *
+     * The SIGNAL is withheld either way. `amount_in_range` is returned to an
+     * external model as a reason this row matched, and asserting it off a row
+     * with no amount tells that model we compared a figure to the user's range
+     * when there was no figure to compare. Score the hedge, do not assert it.
+     */
+    const s = fit ?? 0.7
     signalSum += s
-    if (s > 0) signals.push('amount_in_range')
+    if (fit !== null && fit > 0) signals.push('amount_in_range')
   }
 
   if (params.structure?.length) {

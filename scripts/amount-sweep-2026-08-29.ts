@@ -55,8 +55,22 @@ function variants(n: number): string[] {
   return Array.from(out)
 }
 
+/**
+ * Whitespace inside a figure is the funder's, not a finding.
+ *
+ * Rewilding Britain writes "up to £ 100 , 000 per year" and appeared in the
+ * first sweep's list purely because of it — the figure is right and its stored
+ * evidence already quotes that sentence. Collapse spaces that sit between
+ * digits, and between a digit and its thousands comma, before matching.
+ */
+function compactFigures(s: string): string {
+  return s
+    .replace(/(\d)\s+(?=[\d,])/g, '$1')
+    .replace(/,\s+(?=\d)/g, ',')
+}
+
 function pageStates(text: string, n: number): string | null {
-  const hay = text.replace(/\s+/g, ' ')
+  const hay = compactFigures(text.replace(/\s+/g, ' '))
   for (const v of variants(n)) {
     const i = hay.toLowerCase().indexOf(v.toLowerCase())
     if (i < 0) continue
@@ -107,6 +121,11 @@ async function main() {
   // script alone.
   const UNVERIFIED = new Set(['scraper', 'seed', 'discovery', 'system', 'none'])
   const target = all.filter(r => {
+    // In-kind and free-support rows carry amount_max 0 deliberately — 13 live
+    // rows on 2026-08-30. Zero is the funder's answer, not a missing figure,
+    // and the first sweep flagged six of them for want of this line. Excluded
+    // by rule rather than by naming the six, so new ones cannot creep back in.
+    if (r.amount_max === 0) return false
     const src = r.field_provenance?.['amount_max']?.source ?? 'none'
     return UNVERIFIED.has(src.split(':')[0])
   })
