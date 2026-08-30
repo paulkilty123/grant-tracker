@@ -195,3 +195,72 @@ The candidate-hunting premise — that a funder's index links onward to each fun
 own page — held for none of the four sites opened. Two had no onward fund links
 at all, one had only site chrome, and one had a retired fund name. Before running
 the remaining 83, that premise is worth doubting rather than assuming.
+
+---
+
+# Closed: index pages, renames, and page-heading titles
+
+## The premise was tested and is wrong
+
+The index-page work assumed a funder's index links onward to a page per fund, so
+a deeper URL could be found and proposed. **It does not.** Zero proposals from
+the first ten, four opened by hand:
+
+- **Groundwork** — the page returns no links at all.
+- **Cash for Kids** — 24 links, every one site chrome: Donate, Fundraising,
+  News, Privacy Policy.
+- **Arnold Clark** — 99 links, almost all car marques. It is a dealership site
+  and the community fund page is the fund page.
+- **Esmée Fairbairn** — 41 links, but the fund no longer exists under that name.
+
+Three more of the ten are titled after the funder, so there is no separate fund
+page to look for. **Funder sites do not generally publish a page per fund**, and
+the remaining 83 were not run.
+
+The zero is believable only because of one thing: the batch first returned zero
+for the wrong reason. The readiness probe polled for HTTP 200 on a route that
+already existed, so it could not detect the new `links` capability and the
+script ran against a build without it. **Probe the capability, not the route** —
+an already-true probe proves nothing.
+
+## Renames: three, and only one was a rename
+
+Counted before starting, on Paul's crude method — 22 live rows whose URL slug
+shares no word with the title, of which about three are a funder renaming a
+fund. A floor rather than a count, since it only catches renames the URL gives
+away. Nothing like 93.
+
+| Row | What was actually wrong |
+|---|---|
+| Esmée Fairbairn — Arts, Culture & Heritage | **Title.** The link was already right. The aim is now Creative, Confident Communities. |
+| Baring Foundation — Strengthening Civil Society | **Link.** It pointed at a news story, "New funding available: using legal tools to hold corporations to account". |
+| Music Venue Trust | **Title.** The fund is the Liveline Fund; the row called it "Grassroots Music Venue Support". |
+
+## Page-heading titles: eight candidates, two real
+
+Counted two ways. Wording rules (second person, or an opening verb) flag 11 live
+rows; provenance-based counting flags 8 of 582. **Most are legitimate product
+names** — Start Up Loans, Make a Difference Locally, We Make Camden Kit,
+Salesforce Power of Us — so there is no reliable automatic signature for this
+class, which is itself the finding. It is small and it is found by eye.
+
+Of the four raised:
+
+- **South Yorkshire — "Get going with your Fund"** is the real thing, and worse
+  than a bad title. The heading introduces a pitch to DONORS: "if you are
+  interested in having your own Fund to give back to communities across South
+  Yorkshire, then have a chat with our Head of Philanthropy". A donor pitch was
+  scraped as a grant. Retitled; the link is SYCF's grants index and is correct.
+- **Devon — "Supporting the Supporters"** is a REAL fund name, present on
+  devoncf.com/current-funds/. Its link was the wrong thing: a "Getting to Know
+  You" registration form. The reverse of the Esmée case.
+- **Robertson — "Small and Large Grants"** is the funder's own naming, confirmed
+  on its Types of Funding page. Only the link was wrong, still the FAQ page left
+  by the 17 August hop. Corrected.
+- **Tyne & Wear — "The Pargiter Trust Fund"** needs nothing. The title is a real
+  fund name and the Community Foundation has no page for it: the name appears on
+  its grants page past character 4,000 with no link of its own, so the theme page
+  the row points at is where the fund actually lives.
+
+Three of the four turned out to be a wrong link on a correctly named row, not a
+bad title. Both classes are now closed.
