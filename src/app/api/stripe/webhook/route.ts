@@ -43,6 +43,7 @@ import type Stripe from 'stripe'
 import { getStripe } from '@/lib/billing/stripe-client'
 import { getAdminDb } from '@/lib/admin/admin-db'
 import { mapSubscription, type StripeSubscriptionLike } from '@/lib/billing/webhook-map'
+import { recordBillingIncident } from '@/lib/billing/incidents'
 
 export const dynamic = 'force-dynamic'
 
@@ -94,6 +95,10 @@ export async function POST(req: NextRequest) {
   const subscriptionId = (event.data.object as { id?: string }).id
   if (!subscriptionId) {
     console.error(`[stripe-webhook] ${event.type} carried no subscription id`)
+    await recordBillingIncident({
+      kind: 'no_subscription_id',
+      detail: `${event.type} (${event.id}) carried no subscription id`,
+    })
     return NextResponse.json({ ok: true, refused: 'no_subscription_id' })
   }
 
@@ -109,8 +114,17 @@ export async function POST(req: NextRequest) {
   const mapped = mapSubscription(fresh as unknown as StripeSubscriptionLike)
   if (!mapped.ok) {
     // Permanent: an unrecognised price or a missing owner_id will not become
-    // mappable on a retry. Loud in the log, 200 to Stripe, and it needs a human.
+    // mappable on a retry. 200 to Stripe so the endpoint survives, and an
+    // incident row so it is not merely a log line nobody reads — this is the
+    // case that otherwise looks identical to success right up until a customer
+    // emails to say they have paid and cannot get in.
     console.error(`[stripe-webhook] REFUSED ${mapped.reason}: ${mapped.detail}`)
+    await recordBillingIncident({
+      kind: mapped.reason,
+      detail: mapped.detail,
+      stripe_subscription_id: fresh.id,
+      stripe_customer_id: typeof fresh.customer === 'string' ? fresh.customer : null,
+    })
     return NextResponse.json({ ok: true, refused: mapped.reason, detail: mapped.detail })
   }
 
@@ -129,6 +143,15 @@ export async function POST(req: NextRequest) {
     // from granting access. Anything else is treated as transient.
     const permanent = error.code === '22P02'
     console.error(`[stripe-webhook] write failed (${error.code}) for ${mapped.row.owner_id}:`, error.message)
+    if (permanent) {
+      await recordBillingIncident({
+        kind: 'unwritable',
+        detail: `${error.code}: ${error.message}`,
+        stripe_subscription_id: mapped.row.stripe_subscription_id,
+        stripe_customer_id: mapped.row.stripe_customer_id,
+        owner_id: mapped.row.owner_id,
+      })
+    }
     return permanent
       ? NextResponse.json({ ok: true, refused: 'unwritable', detail: error.message })
       : NextResponse.json({ error: 'Write failed' }, { status: 500 })

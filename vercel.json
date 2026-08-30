@@ -159,6 +159,10 @@
     {
       "path": "/api/admin/process-discovery-queue?run=true",
       "schedule": "30 9 * * *"
+    },
+    {
+      "path": "/api/cron/reconcile-billing",
+      "schedule": "0 6 * * *"
     }
   ]
 }
