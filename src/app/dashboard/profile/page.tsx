@@ -576,7 +576,8 @@ function PickerChip({ label, chipState, dimmed, onClick, showMakePrimary, onMake
 /* ═══════════════════════════════════════════════
    Org Switcher
    ═══════════════════════════════════════════════ */
-function OrgSwitcher({ orgs, activeOrgId, onSwitch }: {
+function OrgSwitcher({ orgs, activeOrgId, onSwitch, canAddOrganisation }: {
+  canAddOrganisation: boolean
   orgs: Organisation[]
   activeOrgId: string
   onSwitch: (id: string) => void
@@ -681,7 +682,12 @@ function OrgSwitcher({ orgs, activeOrgId, onSwitch }: {
         )}
       </div>
 
-      {/* Add organisation button — full-width on mobile, inline on desktop */}
+      {/* Add organisation — admin only from 2026-08-30. Creating an
+          organisation is gated in the database by trg_enforce_single_organisation
+          (migration 070); this only stops offering a button that would fail.
+          Rendered as nothing rather than as a disabled control, because a
+          disabled button invites the question and there is no answer to give. */}
+      {canAddOrganisation && (
       <a
         href="/onboarding/wizard?new=1"
         style={{
@@ -701,6 +707,7 @@ function OrgSwitcher({ orgs, activeOrgId, onSwitch }: {
           <span style={{ fontSize: 12, color: T.textTertiary, marginLeft: 4 }}>· {orgs.length} active</span>
         )}
       </a>
+      )}
     </div>
   )
 }
@@ -2073,8 +2080,21 @@ function StoryCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
 export default function ProfilePage() {
   const isMobile = useIsMobile()
   const [orgs, setOrgs] = useState<Organisation[]>([])
+  // Admin-only from 2026-08-30. Defaults FALSE so a failed or slow request
+  // hides the button rather than offering one the database will refuse: the
+  // honest failure here is a missing affordance, not a rejected action.
+  const [canAddOrganisation, setCanAddOrganisation] = useState(false)
   const [userEmail, setUserEmail] = useState<string | null>(null)
   const [activeOrgId, setActiveOrgId] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/me/capabilities')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (!cancelled && d) setCanAddOrganisation(!!d.canAddOrganisation) })
+      .catch(() => { /* stays false, which is the safe direction */ })
+    return () => { cancelled = true }
+  }, [])
   const [loading, setLoading] = useState(true)
   const [editingCard, setEditingCard] = useState<CardId | null>(null)
   const [jumpTarget, setJumpTarget] = useState<CardId | null>(null)
@@ -2269,13 +2289,16 @@ export default function ProfilePage() {
         </div>
 
         {/* Org switcher + Add organisation — always shown (OrgSwitcher renders
-            cleanly for a single org and carries the "Add organisation" button,
-            so single-org users can still add another). */}
+            cleanly for a single org). The "Add organisation" button inside it
+            is admin-only from 2026-08-30; everyone else gets one organisation
+            and additional ones are arranged with Paul. Enforced in the database
+            by migration 070, not by this prop. */}
         {activeOrg && (
           <OrgSwitcher
             orgs={orgs}
             activeOrgId={activeOrg.id}
             onSwitch={switchOrg}
+            canAddOrganisation={canAddOrganisation}
           />
         )}
 
