@@ -97,3 +97,30 @@ All four are almost certainly bot walls. The counting script fetches directly an
 does **not** use `READER_PROXY_URL`, which the verification engine does and which
 is known to clear roughly sixteen such hosts. Re-running these four through the
 proxy would settle them; it is four page reads, not a project.
+
+---
+
+## Added 30 August: Manchester Airports Group — two funds we do not hold
+
+Found while checking a false positive, so it is recorded rather than chased.
+
+We hold one MAG row, Manchester Airport Community Trust Fund, capped at £3,000,
+and that figure is correct. The group's funding site also runs:
+
+- **Stansted Community Grants**, up to £5,000
+- **A Flagship Award**, up to £50,000 for larger capital projects — London
+  Stansted's, not Manchester's
+
+Both clear the £5,000 floor this document uses and neither is in the catalogue.
+
+The reason this is worth writing down is what it nearly caused. An
+understated-ceiling scan proposed raising the Manchester row to £50,000 on the
+strength of the Flagship Award appearing on the same site. That would have sent
+a Manchester charity to a fund it cannot apply for. The right answer is not a
+bigger number on the row we have; it is the two rows we do not.
+
+**A fifth false-positive class, and the one most likely to recur:** a
+fund-specific row measured against a multi-fund funder page. It will fire on any
+funder where we hold one row and the site describes several — which is the entire
+population this document is about. Named alongside the other four in
+`docs/link-flags-2026-08-30.md`.

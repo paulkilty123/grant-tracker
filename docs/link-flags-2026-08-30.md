@@ -106,8 +106,31 @@ all found by reading the rows it produced:
    ceilings; the disqualifiers only covered "distributed" and
    "turnover of under".
 
-Of the 30 the last run produced, reading each one leaves **about two** that look
-genuinely understated:
+### The class is empty
+
+Both survivors were checked against production and neither is understated.
+
+- **Clothworkers' Foundation.** The live row is titled "Small Capital Grants (up
+  to £15,000)" and holds £15,000, correct for that fund. The larger programme is
+  already its own row, "Large Capital Grants (over £15,000)".
+- **Manchester Airports Group.** The £50,000 Flagship Award is London Stansted's.
+  Manchester Airport's Community Trust Fund is capped at £3,000, exactly as we
+  show. A Manchester charity sent to the Flagship Award wastes an afternoon.
+
+**A fifth false-positive class, and the one most likely to recur: a
+fund-specific row measured against a multi-fund funder page.** The other four
+are parsing and attribution bugs; this one is a category error, and it will fire
+on any funder where we hold one row and the site describes several. Both
+survivors were this.
+
+The scan is not being re-run. It was worth asking — the question was invisible
+from every count we hold — and the answer is zero. It earned its keep on the
+reader defects it exposed instead, one of which (`£25,000 Multi` parsing as £25
+billion) was in the shared reader and therefore in every caller. Checked against
+production: nothing above £50m exists and the single row at exactly £50m is an
+inactive UKRI row, so that bug never reached live data.
+
+What the scan originally reported, before the checks:
 
 - **Manchester Airports Group** — we show £3,000; the page offers a "Flagship
   Award which offers grants of up to £50,000 for larger, capital projects".
@@ -118,3 +141,15 @@ So the early read is closer to "one of two" than "one of forty". That is worth
 knowing and it is not a finished answer: the filters that removed the false
 positives will also be hiding true ones, and false negatives are not measurable
 from this side. The re-run against the fixed reader is the next step.
+
+## The excerpt defect had no other callers
+
+Checked before it was forgotten. `/api/admin/read-page` is called by exactly two
+scripts, both written on 30 August and both fixed. No production code path asked
+a 4,000-character window a question about a whole page.
+
+The nearest similar shape is `containsGrantClosedIndicators` in
+`src/lib/url-validator.ts`, which tests the first 30KB for closure wording. It is
+safe by direction: it only makes a POSITIVE claim, so a phrase past the window is
+a missed flag rather than a false assertion about the page — and the window is
+stated in the code. Left alone.
