@@ -8,7 +8,10 @@ const sub = (over: Partial<StripeSubscriptionLike> = {}): StripeSubscriptionLike
   current_period_end: 1793318400,           // 2026-10-30T00:00:00Z
   trial_end: null,
   metadata: { owner_id: '11111111-1111-1111-1111-111111111111' },
-  items: { data: [{ price: { id: 'price_1', lookup_key: lookupKeyFor('apply', 'standard', 'monthly') } }] },
+  items: { data: [{
+    current_period_end: 1793318400,        // 2026-10-30, where API v2349 puts it
+    price: { id: 'price_1', lookup_key: lookupKeyFor('apply', 'standard', 'monthly') },
+  }] },
   ...over,
 })
 
@@ -115,6 +118,39 @@ describe('what it refuses, rather than guesses', () => {
     const r = mapSubscription(sub({ items: { data: [{ price: { id: 'p', lookup_key: 'nope' } }] } }))
     expect(r.ok).toBe(false)
     if (!r.ok) expect(r.detail).toContain('nope')
+  })
+})
+
+describe('where the renewal date actually lives', () => {
+  // stripe 22.5.0 targets API v2349, which moved current_period_end onto the
+  // subscription ITEM. Reading only the subscription — what every tutorial
+  // still shows — returns undefined and stores null for every customer, with
+  // no error anywhere: the webhook succeeds and the billing screen just says
+  // "renews —" for everybody.
+  it('reads it from the item', () => {
+    const r = mapSubscription(sub({ current_period_end: undefined }))
+    expect(r.ok && r.row.current_period_end).toBe('2026-10-30T00:00:00.000Z')
+  })
+
+  it('falls back to the subscription for older API versions', () => {
+    const r = mapSubscription(sub({
+      current_period_end: 1788998400,      // 2026-09-10
+      items: { data: [{ price: { id: 'p', lookup_key: lookupKeyFor('match', 'standard', 'monthly') } }] },
+    }))
+    expect(r.ok && r.row.current_period_end).toBe('2026-09-10T00:00:00.000Z')
+  })
+
+  it('prefers the item when both are present and they disagree', () => {
+    const r = mapSubscription(sub({ current_period_end: 1788998400 }))
+    expect(r.ok && r.row.current_period_end).toBe('2026-10-30T00:00:00.000Z')
+  })
+
+  it('stores null rather than inventing a date when neither is present', () => {
+    const r = mapSubscription(sub({
+      current_period_end: undefined,
+      items: { data: [{ price: { id: 'p', lookup_key: lookupKeyFor('match', 'standard', 'monthly') } }] },
+    }))
+    expect(r.ok && r.row.current_period_end).toBeNull()
   })
 })
 

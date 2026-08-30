@@ -30,17 +30,32 @@
 
 import { planForLookupKey, type PlanId, type BillingPeriod, type PriceKind } from '@/config/plans'
 
-/** The shape this needs from a Stripe subscription. Kept narrow deliberately. */
+/**
+ * The shape this needs from a Stripe subscription. Kept narrow deliberately.
+ *
+ * `current_period_end` appears in BOTH places on purpose. In the API version
+ * this SDK targets (v2349, stripe 22.5.0) it lives on the subscription ITEM —
+ * `SubscriptionItems.d.ts` declares it and `Subscriptions.d.ts` does not, except
+ * in doc comments. Older API versions had it on the subscription.
+ *
+ * Reading only the top level, which is what every tutorial still shows, yields
+ * `undefined` here and stores null for every renewal date. Nothing would fail:
+ * the webhook succeeds, entitlement is granted, and the billing screen quietly
+ * says "renews —" for every customer. Both are optional and the item wins.
+ */
 export interface StripeSubscriptionLike {
   id: string
   status: string
   customer: string
   cancel_at_period_end: boolean
-  current_period_end: number | null
+  /** Legacy position, kept as a fallback for older API versions. */
+  current_period_end?: number | null
   trial_end: number | null
   metadata?: Record<string, string> | null
   items: {
     data: Array<{
+      /** Current position, API v2349 and later. */
+      current_period_end?: number | null
       price: { id: string; lookup_key?: string | null }
     }>
   }
@@ -91,7 +106,8 @@ export function mapSubscription(sub: StripeSubscriptionLike): MapResult {
     return { ok: false, reason: 'multiple_items', detail: `subscription ${sub.id} has ${items.length} items; expected one` }
   }
 
-  const price = items[0].price
+  const item  = items[0]
+  const price = item.price
   const lookupKey = price.lookup_key?.trim()
   if (!lookupKey) {
     return { ok: false, reason: 'no_lookup_key', detail: `price ${price.id} has no lookup_key` }
@@ -116,7 +132,8 @@ export function mapSubscription(sub: StripeSubscriptionLike): MapResult {
       stripe_customer_id: sub.customer,
       stripe_subscription_id: sub.id,
       stripe_price_id: price.id,
-      current_period_end: secondsToIso(sub.current_period_end),
+      // Item first: that is where the current API puts it.
+      current_period_end: secondsToIso(item.current_period_end ?? sub.current_period_end ?? null),
       cancel_at_period_end: !!sub.cancel_at_period_end,
       trial_end: secondsToIso(sub.trial_end),
     },
