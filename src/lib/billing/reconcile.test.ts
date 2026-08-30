@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { findMismatches, isEntitling, type SubRow, type OrgRow } from './reconcile'
+import { findMismatches, isEntitling, grantIsLive, type SubRow, type OrgRow } from './reconcile'
 
 const OWNER = 'own-1'
 const sub = (o: Partial<SubRow> = {}): SubRow =>
@@ -80,9 +80,32 @@ describe('access with nothing behind it', () => {
     expect(m[0].kind).toBe('access_without_basis')
   })
 
-  it('accepts a permanent grant', () => {
+  it('accepts a permanent grant expressed as a far-future date', () => {
     const m = findMismatches([], [org({ granted_access_until: '9999-12-31T00:00:00Z' })], now)
     expect(m).toEqual([])
+  })
+
+  it("accepts Postgres 'infinity', which is how permanent grants are stored", () => {
+    // The first production run reported all ELEVEN permanent grants as
+    // mismatches. new Date('infinity') is an Invalid Date and every comparison
+    // with one is false, so a permanent comp read as "no grant" — silently, no
+    // NaN anywhere. Eleven false alarms a day is a job nobody reads.
+    const m = findMismatches([], [org({ granted_access_until: 'infinity' })], now)
+    expect(m).toEqual([])
+  })
+
+  it("treats '-infinity' as expired rather than permanent", () => {
+    const m = findMismatches([], [org({ granted_access_until: '-infinity' })], now)
+    expect(m).toHaveLength(1)
+  })
+
+  it('names an unreadable date instead of assuming there is no grant', () => {
+    // Silently reading unparseable as "no grant" is the same bug wearing a
+    // different hat, and it would be just as invisible.
+    const m = findMismatches([], [org({ granted_access_until: 'not-a-date' })], now)
+    expect(m).toHaveLength(1)
+    expect(m[0].detail).toContain('unreadable')
+    expect(m[0].detail).toContain('not-a-date')
   })
 
   it('does not report an org entitled by a Match subscription', () => {
@@ -91,5 +114,19 @@ describe('access with nothing behind it', () => {
     const m = findMismatches([sub({ plan: 'match' })], [org()], now)
     expect(m).toHaveLength(1)
     expect(m[0].kind).toBe('access_without_basis')
+  })
+})
+
+describe('grantIsLive', () => {
+  const now = new Date('2026-09-01T00:00:00Z')
+  it('reads the values Postgres actually stores', () => {
+    expect(grantIsLive(null, now)).toEqual({ live: false, unparseable: false })
+    expect(grantIsLive('infinity', now)).toEqual({ live: true, unparseable: false })
+    expect(grantIsLive('-infinity', now)).toEqual({ live: false, unparseable: false })
+    expect(grantIsLive('2027-03-10T00:00:00Z', now)).toEqual({ live: true, unparseable: false })
+    expect(grantIsLive('2026-08-01T00:00:00Z', now)).toEqual({ live: false, unparseable: false })
+  })
+  it('flags an unparseable value rather than calling it expired', () => {
+    expect(grantIsLive('whenever', now)).toEqual({ live: false, unparseable: true })
   })
 })

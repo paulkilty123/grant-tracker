@@ -47,8 +47,9 @@ export async function GET(req: NextRequest) {
 
     const mismatches = findMismatches((subs ?? []) as SubRow[], (orgs ?? []) as OrgRow[])
 
+    let unrecorded = 0
     for (const m of mismatches) {
-      await recordBillingIncident({
+      const written = await recordBillingIncident({
         kind: m.kind,
         detail: m.detail,
         owner_id: m.owner_id,
@@ -57,6 +58,7 @@ export async function GET(req: NextRequest) {
         // the same account the moment they resubscribe.
         stripe_subscription_id: `owner:${m.owner_id}`,
       })
+      if (!written) unrecorded++
     }
 
     const { count: openIncidents } = await db
@@ -68,6 +70,10 @@ export async function GET(req: NextRequest) {
       subscriptions: subs?.length ?? 0,
       organisations: orgs?.length ?? 0,
       mismatches: mismatches.length,
+      // Non-zero means the incident table did not receive what this run found,
+      // which is how the first version failed silently. It belongs in the run
+      // record, not only in a log line.
+      unrecorded,
       byKind: mismatches.reduce<Record<string, number>>((acc, m) => {
         acc[m.kind] = (acc[m.kind] ?? 0) + 1
         return acc

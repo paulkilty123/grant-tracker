@@ -49,14 +49,57 @@ create table if not exists public.billing_incidents (
   resolution_note        text
 );
 
--- The dedup key. `coalesce` because a refusal can arrive with no subscription
--- id at all, and two of those are still the same problem.
-create unique index if not exists billing_incidents_unique_open
-  on public.billing_incidents (kind, coalesce(stripe_subscription_id, ''));
+-- The dedup key.
+--
+-- This was first written as a unique index on
+-- `(kind, coalesce(stripe_subscription_id, ''))`, which is valid SQL and
+-- completely useless here: PostgREST's ON CONFLICT names COLUMNS, and an
+-- expression index cannot satisfy it. Every upsert failed with "there is no
+-- unique or exclusion constraint matching the ON CONFLICT specification", the
+-- writer swallowed the error by design, and eleven incidents recorded nothing.
+--
+-- That is the exact failure this table exists to prevent, reproduced inside the
+-- fix for it, and it was found by looking at the table rather than by trusting
+-- the run that said it had written to it.
+--
+-- NULLS NOT DISTINCT because a refusal can arrive with no subscription id at
+-- all, and two of those are the same problem — where Postgres would otherwise
+-- treat every NULL as unique and let them pile up.
+alter table public.billing_incidents
+  drop constraint if exists billing_incidents_kind_subscription_key;
+alter table public.billing_incidents
+  add constraint billing_incidents_kind_subscription_key
+  unique nulls not distinct (kind, stripe_subscription_id);
 
 create index if not exists billing_incidents_open_idx
   on public.billing_incidents (last_seen desc)
   where resolved_at is null;
+
+-- seen_count has to be incremented by a trigger, not by the writer. A
+-- PostgREST upsert REPLACES the row with the payload it is given, and the
+-- payload cannot say "whatever is there plus one" — so the first version left
+-- it at 1 for ever while documenting it as evidence of how long something had
+-- been broken. A dead column that claims to mean something is worse than no
+-- column.
+--
+-- It also pins first_seen, which the same replace would otherwise reset.
+-- Known wrinkle: resolving an incident by hand is an UPDATE too, so it bumps
+-- the count and last_seen by one. Not worth a guard; first_seen still means
+-- what it says.
+create or replace function public.tg_billing_incident_seen()
+returns trigger language plpgsql set search_path = '' as $$
+begin
+  new.seen_count := old.seen_count + 1;
+  new.first_seen := old.first_seen;
+  new.last_seen  := now();
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_billing_incident_seen on public.billing_incidents;
+create trigger trg_billing_incident_seen
+  before update on public.billing_incidents
+  for each row execute function public.tg_billing_incident_seen();
 
 comment on table public.billing_incidents is
   'Billing failures that are permanent rather than transient: a webhook refusal, or an entitlement mismatch found by reconciliation. Written by the Stripe webhook and by /api/cron/reconcile-billing. One row per (kind, subscription); a repeat bumps seen_count. resolved_at is set by a human.';

@@ -28,6 +28,36 @@ export function isEntitling(plan: string, status: string): boolean {
   return ENTITLING_PLANS.has(plan) && ENTITLING_STATUSES.has(status)
 }
 
+/**
+ * Is a granted period still running?
+ *
+ * Postgres `timestamptz` has two values JavaScript cannot parse: 'infinity' and
+ * '-infinity'. `new Date('infinity')` is an Invalid Date, and EVERY comparison
+ * with an Invalid Date is false — so a permanent comp silently reads as "no
+ * grant", with no error and no NaN visible anywhere.
+ *
+ * That is not hypothetical. The first run of this check against production
+ * reported eleven mismatches, and they were exactly the eleven permanent
+ * grants: Paul's own organisations, the reviewer demo and the MCP fixtures. A
+ * daily job crying wolf eleven times is a daily job nobody reads by Thursday.
+ *
+ * It is also precisely the drift this module's own header predicted, in the
+ * direction I did not expect: the SQL rule handles infinity correctly and the
+ * TypeScript restatement did not. The check caught its own author.
+ */
+export function grantIsLive(until: string | null, now: Date): { live: boolean; unparseable: boolean } {
+  if (until === null) return { live: false, unparseable: false }
+  if (until === 'infinity')  return { live: true,  unparseable: false }
+  if (until === '-infinity') return { live: false, unparseable: false }
+  const d = new Date(until)
+  if (Number.isNaN(d.getTime())) {
+    // Do NOT quietly treat this as "no grant" — that is the bug above wearing a
+    // different hat. Surface it and name the value.
+    return { live: false, unparseable: true }
+  }
+  return { live: d > now, unparseable: false }
+}
+
 export interface SubRow { owner_id: string; plan: string; status: string; stripe_subscription_id: string | null }
 export interface OrgRow { id: string; owner_id: string; name: string | null; apply_access: boolean; granted_access_until: string | null }
 
@@ -88,8 +118,8 @@ export function findMismatches(
 
   for (const org of orgs) {
     if (!org.apply_access) continue
-    const granted = org.granted_access_until !== null && new Date(org.granted_access_until) > now
-    if (granted) continue
+    const grant = grantIsLive(org.granted_access_until, now)
+    if (grant.live) continue
     const sub = subByOwner.get(org.owner_id)
     if (sub && isEntitling(sub.plan, sub.status)) continue
 
@@ -97,7 +127,9 @@ export function findMismatches(
       kind: 'access_without_basis',
       owner_id: org.owner_id,
       org_id: org.id,
-      detail: `${org.name ?? org.id} has apply_access with no unexpired grant and no entitling subscription`,
+      detail: grant.unparseable
+        ? `${org.name ?? org.id} has apply_access and an unreadable granted_access_until (${org.granted_access_until})`
+        : `${org.name ?? org.id} has apply_access with no unexpired grant and no entitling subscription`,
     })
   }
 

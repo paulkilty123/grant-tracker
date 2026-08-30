@@ -20,14 +20,20 @@ export interface BillingIncident {
 }
 
 /**
- * Never throws.
+ * Never throws, but DOES report whether it worked.
  *
- * This is called from the failure path of the webhook, and a webhook that
- *500s because it could not write a note about a problem turns a recorded
- * problem into a retry storm and, eventually, an endpoint Stripe disables.
- * If recording fails, the console line is what is left and it says so.
+ * It cannot throw: it is called from the failure path of the webhook, and a
+ * webhook that 500s because it could not write a note about a problem turns a
+ * recorded problem into a retry storm and then an endpoint Stripe disables.
+ *
+ * It must not be silent either, and the first version was. The unique
+ * constraint did not match the ON CONFLICT target, every write failed, the
+ * error was swallowed here, and a reconciliation run that found eleven problems
+ * reported success while recording none of them — the precise failure this
+ * whole mechanism exists to catch, one level up. Callers that can carry a count
+ * should report it; the cron does.
  */
-export async function recordBillingIncident(incident: BillingIncident): Promise<void> {
+export async function recordBillingIncident(incident: BillingIncident): Promise<boolean> {
   try {
     const { error } = await getAdminDb()
       .from('billing_incidents')
@@ -45,9 +51,12 @@ export async function recordBillingIncident(incident: BillingIncident): Promise<
         { onConflict: 'kind,stripe_subscription_id', ignoreDuplicates: false },
       )
     if (error) {
-      console.error('[billing-incident] could not record; the log line below is the only record:', error.message)
+      console.error(`[billing-incident] NOT RECORDED (${incident.kind}): ${error.message} — this line is the only record`)
+      return false
     }
+    return true
   } catch (e) {
-    console.error('[billing-incident] could not record; the log line below is the only record:', e)
+    console.error(`[billing-incident] NOT RECORDED (${incident.kind}):`, e)
+    return false
   }
 }
