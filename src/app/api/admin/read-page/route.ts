@@ -18,6 +18,11 @@
 //
 // Deliberately returns text and figures rather than a verdict. The caller is a
 // person or a script deciding what a row should say; this only fetches.
+//
+// `excerpt` is capped and SAYS it is capped (`excerptChars`, `truncated`). Pass
+// `contains: [...]` to test membership against the whole page instead of
+// against the window — asking the excerpt a question about the page is how
+// ekct.org.uk was reported as not belonging to the Ernest Kleinwort Trust.
 
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
@@ -83,7 +88,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
-  const { url, urls } = await req.json() as { url?: string; urls?: string[] }
+  const { url, urls, contains } = await req.json() as
+    { url?: string; urls?: string[]; contains?: string[] }
   const targets = (urls?.length ? urls : url ? [url] : []).filter(Boolean)
   if (targets.length === 0) return NextResponse.json({ error: 'url or urls required' }, { status: 400 })
   if (targets.length > 20)  return NextResponse.json({ error: 'at most 20 urls' }, { status: 400 })
@@ -106,16 +112,47 @@ export async function POST(req: NextRequest) {
       }
     }
     const flat = compact(text)
-    const figures = Array.from(new Set(flat.match(/£\s?[\d][\d,]*(?:\s?(?:million|m|k))?/gi) ?? []))
+    /**
+     * `(?![a-z])` is load-bearing: without it the unit alternation swallows the
+     * first letter of the NEXT word. "£25,000 Multi year awards" parsed as
+     * £25 billion, "£2,000 may be supported" as £2 billion, and a "£200 Maximum
+     * Grant" line as £200 million. Found 2026-08-30 when a scan built on this
+     * route reported four impossible ceilings; the bug was here, in the reader,
+     * so every caller had it.
+     */
+    const figures = Array.from(new Set(flat.match(/£\s?[\d][\d,]*(?:\s?(?:million|m|k))?(?![a-z])/gi) ?? []))
       .map(f => {
         const at = flat.indexOf(f)
         return { figure: f.trim(), context: flat.slice(Math.max(0, at - 120), at + 160).trim() }
       })
+    /**
+     * `excerpt` is a WINDOW and callers have to be told so.
+     *
+     * A measurement on 2026-08-30 asked "does this page name the funder" of the
+     * excerpt and reported ekct.org.uk/grants/ as not the Ernest Kleinwort
+     * Trust's page. The page is 7,029 characters, the excerpt was the first
+     * 4,000, and the name sits outside it. That is a bug in the reader's
+     * contract, not a quirk of one caller: a field named `excerpt` that arrives
+     * looking like the page will be used as the page.
+     *
+     * So the cut is now named — `excerptChars` and `truncated` — and `contains`
+     * answers membership against the WHOLE text, which is the question callers
+     * were using the excerpt to answer badly.
+     */
+    const EXCERPT_CHARS = 4000
+    const found: Record<string, boolean> = {}
+    for (const needle of contains ?? []) {
+      if (typeof needle !== 'string' || !needle) continue
+      found[needle] = flat.toLowerCase().includes(needle.toLowerCase())
+    }
     return {
       url: target, ok: true, via, directError,
       chars: flat.length,
       figures,
-      excerpt: flat.slice(0, 4000),
+      excerpt: flat.slice(0, EXCERPT_CHARS),
+      excerptChars: Math.min(flat.length, EXCERPT_CHARS),
+      truncated: flat.length > EXCERPT_CHARS,
+      ...(contains?.length ? { found } : {}),
     }
   }))
 

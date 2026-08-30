@@ -7,7 +7,9 @@
  *
  * FOUR BUCKETS, per the 30 August brief:
  *
- *   no_figure      The page states no amount at all. Null the maximum.
+ *   no_figure      The page states no amount at all. Null the maximum AND the
+ *                  minimum — see the note at the apply loop; splitting the two
+ *                  produced the same defect twice.
  *   means_other    The page states a figure that is not a per-grant maximum —
  *                  a threshold to a different scheme, a pool across many
  *                  grants, an income limit. Null, and record what the figure
@@ -234,6 +236,25 @@ async function main() {
     }
     console.log(`applying ${toNull.length} nulls of ${candidates.length} candidates`)
     for (const l of toNull) {
+      /**
+       * THE FLOOR IS DECIDED IN THIS PASS OR NOT AT ALL.
+       *
+       * The first run of this script nulled only `amount_max` and left
+       * `amount_min` on 16 of 20 rows. On a page that states no figure the floor
+       * is the same unsupported claim, and alone it reads WORSE than it did in a
+       * range: "£30,000 to £200,000" is a rough band, "from £30,000" is a
+       * threshold the applicant has to clear. It also suppressed
+       * amount_undisclosed, which the trigger correctly withholds while either
+       * figure is present, so 15 rows lost a flag the same day's migration built.
+       *
+       * That was fixed as a follow-up pass, and the defect then REPEATED on the
+       * next 14 rows, for the same reason: the rule lived in a person's head and
+       * not in this loop. It lives here now. There is no code path that removes a
+       * ceiling on no-figure evidence and leaves a floor standing on the same
+       * evidence.
+       */
+      const before = (l.before as { amount_min: number | null })
+      const alsoFloor = before.amount_min !== null
       const prov = {
         pinned: false, set_at: NOW, source: SOURCE,
         citation: { confidence: 'high', snippet: String(l.quote) },
@@ -244,11 +265,17 @@ async function main() {
                    'Content-Type': 'application/json', Prefer: 'return=minimal' },
         body: JSON.stringify({
           amount_max: null,
-          field_provenance: { ...(( (l.before as Record<string, unknown>) ?? {}) as object), amount_max: prov },
+          ...(alsoFloor ? { amount_min: null } : {}),
+          field_provenance: {
+            ...(((l.before as Record<string, unknown>) ?? {}) as object),
+            amount_max: prov,
+            ...(alsoFloor ? { amount_min: prov } : {}),
+          },
         }),
       })
       if (!res.ok) { console.log(`  FAILED ${l.funder}: ${res.status} ${await res.text()}`); continue }
       ;(l.applied as string[]).push('amount_max')
+      if (alsoFloor) (l.applied as string[]).push('amount_min')
     }
   } else {
     console.log('\nDRY RUN — nothing written. Set APPLY=1 to null the no_figure bucket.')
