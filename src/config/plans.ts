@@ -124,6 +124,21 @@ export interface Plan {
   capabilities: PlanCapabilities
   prices: PlanPrices
   /**
+   * Can somebody buy this for themselves, or does it need granting?
+   *
+   * Team is false for launch, Paul's call on 30 August, and the reason is that
+   * the ONE thing separating Team from Apply is `orgLimit`, and nothing enforces
+   * it. The only policy on `organisations` is `owner_id = auth.uid()` for all
+   * commands: no trigger, no count check, no app guard. Three owners already
+   * hold more than one organisation.
+   *
+   * Selling a £45 plan whose entire value is a limit we do not apply would be
+   * charging for something Apply already gives away, so Team is granted by hand
+   * until the cap exists. Its prices are still created in Stripe, because a
+   * granted Team subscription uses the same price as a bought one would.
+   */
+  selfServe: boolean
+  /**
    * Free-trial length in days, or null for no trial.
    *
    * Read from `src/lib/trial.ts` rather than written here. That file is the one
@@ -159,6 +174,7 @@ export const PLANS: Readonly<Record<PlanId, Plan>> = {
       standard: { monthly: 1500, annual: 15000 },
       founding: { monthly: 1200, annual: 12000 },
     },
+    selfServe: true,
     trialDays: null,
   },
   apply: {
@@ -174,6 +190,7 @@ export const PLANS: Readonly<Record<PlanId, Plan>> = {
       standard: { monthly: 2500, annual: 25000 },
       founding: { monthly: 2000, annual: 20000 },
     },
+    selfServe: true,
     trialDays: TRIAL_DAYS,
   },
   team: {
@@ -189,6 +206,7 @@ export const PLANS: Readonly<Record<PlanId, Plan>> = {
       standard: { monthly: 4500, annual: 45000 },
       founding: { monthly: 3600, annual: 36000 },
     },
+    selfServe: false,
     trialDays: null,
   },
 } as const
@@ -285,17 +303,41 @@ export function planAllows<K extends keyof PlanCapabilities>(
 }
 
 /**
- * Which plans can actually be sold right now?
+ * Which plans can somebody buy for themselves right now?
  *
- * Takes the set of lookup keys Stripe is known to hold, rather than reading the
- * environment, so the caller decides how fresh that knowledge is and this stays
- * a pure function. A plan needs BOTH standard periods: half-configured is worse
- * than absent, because the page renders a button for a period that fails when
- * clicked. The founding prices are not required — they are an offer, not the
- * product, and they disappear at the end of October.
+ * Two conditions, and both have bitten something already:
+ *
+ *   1. Stripe holds both standard prices. Half-configured is worse than absent,
+ *      because the page renders a button for a period that fails when clicked.
+ *      Takes the set of known lookup keys rather than reading the environment,
+ *      so this stays a pure function and the caller owns the freshness.
+ *   2. The plan is self-serve at all. Team is not, for launch.
+ *
+ * The founding prices are deliberately NOT required — they are an offer, not
+ * the product, and they stop being self-serve at the end of October while the
+ * plan carries on.
  */
 export function sellablePlans(availableLookupKeys: ReadonlySet<string>): PlanId[] {
   return PLAN_ORDER.filter(plan =>
+    PLANS[plan].selfServe &&
     BILLING_PERIODS.every(period => availableLookupKeys.has(lookupKeyFor(plan, 'standard', period))),
   )
+}
+
+/**
+ * Plans that exist but must be arranged with a person.
+ *
+ * The pricing page renders these with a contact route instead of a buy button:
+ * "from £45, get in touch". Kept as its own function rather than
+ * "everything sellablePlans left out", because a plan missing from Stripe
+ * entirely is a fault to fix and a plan that is deliberately not self-serve is
+ * a decision — and rendering the first as "get in touch" would hide it.
+ */
+export function contactOnlyPlans(): PlanId[] {
+  return PLAN_ORDER.filter(plan => !PLANS[plan].selfServe)
+}
+
+/** "from £45" — the entry price for a plan you have to ask about. */
+export function fromPriceLabel(plan: PlanId): string {
+  return `from ${formatAmount(amountFor(plan, 'standard', 'monthly'))}`
 }

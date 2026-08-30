@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   PLANS, PLAN_ORDER, PRICE_KINDS, BILLING_PERIODS, isPlanId, planAllows,
   lookupKeyFor, planForLookupKey, amountFor, definedPrices, formatAmount,
-  sellablePlans, FOUNDING_OFFER_CLOSES,
+  sellablePlans, contactOnlyPlans, fromPriceLabel, FOUNDING_OFFER_CLOSES,
 } from './plans'
 import { TRIAL_DAYS, TRIAL_PLAN } from '@/lib/trial'
 
@@ -214,12 +214,41 @@ describe('sellablePlans — can we actually take money', () => {
     ))).toEqual(['match', 'apply'])
   })
 
-  it('does not require the founding price to sell a plan', () => {
-    // The founding rate is an offer, not the product, and it closes in October.
+  it('never offers Team, even with both its prices in Stripe', () => {
+    // The assertion this section exists for. Team's whole value over Apply is
+    // orgLimit, and nothing enforces orgLimit — so selling it would charge £45
+    // for something Apply already gives away. Paul's call, 30 August.
     expect(sellablePlans(keys(
       lookupKeyFor('team', 'standard', 'monthly'),
       lookupKeyFor('team', 'standard', 'annual'),
-    ))).toEqual(['team'])
+    ))).toEqual([])
+  })
+
+  it('does not require the founding price to sell a plan', () => {
+    // The founding rate is an offer, not the product, and it closes in October.
+    expect(sellablePlans(keys(
+      lookupKeyFor('apply', 'standard', 'monthly'),
+      lookupKeyFor('apply', 'standard', 'annual'),
+    ))).toEqual(['apply'])
+  })
+})
+
+describe('plans you have to ask about', () => {
+  it('lists Team, and only Team', () => {
+    expect(contactOnlyPlans()).toEqual(['team'])
+  })
+
+  it('never lists a plan that is also sellable', () => {
+    // The two lists must not overlap, or the pricing page renders a buy button
+    // and a "get in touch" for the same plan.
+    const sellable = new Set(sellablePlans(new Set(
+      PLAN_ORDER.flatMap(p => BILLING_PERIODS.map(b => lookupKeyFor(p, 'standard', b))),
+    )))
+    for (const plan of contactOnlyPlans()) expect(sellable.has(plan)).toBe(false)
+  })
+
+  it('quotes the monthly entry price', () => {
+    expect(fromPriceLabel('team')).toBe('from £45')
   })
 })
 
