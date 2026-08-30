@@ -16,7 +16,7 @@ Dropping the signal from the average entirely was tried first and is worse: on a
 search whose only filter is the amount, nothing is then applicable and the row
 scores 0 rather than 45. Kept as a test.
 
-**`amount_undisclosed`.** Now derived by a trigger (migration 070). It was set by
+**`amount_undisclosed`.** Now derived by a trigger (migration 072, renumbered from 070). It was set by
 hand and had stopped meaning anything: 142 published rows had no amount and only
 14 were flagged, while 3 rows were flagged *while carrying an amount*.
 Contradictions went to 0.

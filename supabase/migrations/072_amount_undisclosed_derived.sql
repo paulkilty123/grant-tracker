@@ -1,4 +1,8 @@
--- 070: amount_undisclosed becomes a derived value, not a hand-set one.
+-- 072: amount_undisclosed becomes a derived value, not a hand-set one.
+--
+-- Renumbered from 070 on 2026-08-30: another session took 070 for
+-- one_organisation_per_account after allocating it here. Both were already
+-- applied to production; this is bookkeeping so the sequence reads unambiguously.
 --
 -- APPLIED to production 2026-08-30.
 --

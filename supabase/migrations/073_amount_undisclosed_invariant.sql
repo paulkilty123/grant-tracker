@@ -1,4 +1,6 @@
--- 071: a row cannot both hold an amount and claim the funder publishes none.
+-- 073: a row cannot both hold an amount and claim the funder publishes none.
+--
+-- Renumbered from 071 alongside 072, see that file.
 --
 -- APPLIED to production 2026-08-30.
 --
@@ -8,7 +10,7 @@
 -- Lanarkshire Renewable at £75-£20,000 — because the flag was hand-set and
 -- nothing stopped it contradicting the data next to it.
 --
--- 070 made the flag derived, which fixes the cause. This is the check that the
+-- 072 made the flag derived, which fixes the cause. This is the check that the
 -- derivation is still in place: a constraint fires even if the trigger is
 -- dropped, disabled, or bypassed by a writer that sets the column directly.
 -- The trigger runs BEFORE the row is written and the constraint validates after,
@@ -35,4 +37,4 @@ alter table scraped_grants
 comment on constraint scraped_grants_undisclosed_has_no_amount on scraped_grants is
   'amount_undisclosed asserts the funder publishes no per-grant figure, so it '
   'cannot be true on a row holding one. Derived by trg_derive_amount_undisclosed '
-  '(migration 070); this refuses anything that derivation did not correct.';
+  '(migration 072); this refuses anything that derivation did not correct.';
