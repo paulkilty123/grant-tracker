@@ -76,3 +76,45 @@ Not a link-fixing sweep. Two smaller things:
 - **The 93 index pages are a deeper-URL job**, the same shape as the thin-page
   triage on 2026-08-29: find the fund's own page where one exists, leave the row
   alone where it does not. Worth doing, not worth doing first.
+
+---
+
+# The understated class: asked, not yet answered
+
+Egin was showing £15,000 against a published £100 to £35,000. Every sweep so far
+has hunted figures we cannot support; nobody had looked for figures BELOW what
+the page states, and that class is invisible from any count we hold because an
+understated row looks exactly like a correct one.
+
+`scripts/understated-ceilings-2026-08-30.ts` asks the question over all 387
+readable published rows with a ceiling. **It is not yet trustworthy and its
+number should not be quoted.** Three rounds of output, three classes of defect,
+all found by reading the rows it produced:
+
+1. **The reader was inventing billions.** `£25,000 Multi year awards` parsed as
+   £25 billion because the unit alternation swallowed the M of "Multi";
+   `£2,000 may` became £2 billion, `£200 Maximum` became £200 million. All four
+   of the largest "findings" were this. The bug was in
+   `/api/admin/read-page` itself, so every caller had it. Fixed with
+   `(?![a-z])`.
+2. **Directory pages attributed other funders' grants.** Paul Hamlyn's £150,000
+   was proposed as the Dixie Rose Findlay Trust's ceiling, because that row's
+   apply_url is a Young Camden Foundation listing. Six or more per-grant
+   ceilings on one page is now treated as a directory and skipped — 9 rows.
+3. **Pool and turnover figures in the other word order.** "We aim to distribute
+   around £42,500 per year" and "under £250,000 turnover" both read as
+   ceilings; the disqualifiers only covered "distributed" and
+   "turnover of under".
+
+Of the 30 the last run produced, reading each one leaves **about two** that look
+genuinely understated:
+
+- **Manchester Airports Group** — we show £3,000; the page offers a "Flagship
+  Award which offers grants of up to £50,000 for larger, capital projects".
+- **Clothworkers' Foundation** — we show £15,000, which the page describes as
+  the boundary of its SMALL grants: "137 Large Grants (over £15,000)".
+
+So the early read is closer to "one of two" than "one of forty". That is worth
+knowing and it is not a finished answer: the filters that removed the false
+positives will also be hiding true ones, and false negatives are not measurable
+from this side. The re-run against the fixed reader is the next step.
