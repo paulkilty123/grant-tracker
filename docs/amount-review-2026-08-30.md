@@ -239,3 +239,68 @@ the gaps on them are two missing amounts and two missing dates.
 
 One of the five is not a bot wall at all: The Paley Trust's `apply_url` is
 `mailto:PaleyTrust@outlook.com`, which is not a page and never could be fetched.
+
+
+## Closed out, 30 August
+
+All 39 ceiling rows are resolved. Nothing in the amounts work is open except the
+two rows held back by decision.
+
+| Outcome | Rows |
+|---|---:|
+| ceiling nulled, page states no per-applicant figure | 33 |
+| corrected to the funder's published range | 2 |
+| checked and already correct | 1 |
+| left alone by decision (Wigan, St Martin's) | 2 |
+| floors also removed where the page states nothing | 25 |
+
+The three held-back rows were finished through `/api/admin/read-page`, which
+reads from production's network instead of this machine's. Rayne Foundation
+2,716 characters via the proxy after a direct 403, SSE Match Trading 10,922
+direct, Camden Climate 1,255 via the proxy after a direct 403. None states a
+figure. A page read is a property of the network it is made from, so the answer
+was to read from the network that works, not to retry from the one that does not.
+
+**The floor defect repeated itself and was caught this time.** Nulling only the
+ceiling on the 14 rows above left Bethnal Green Ventures reading "from £60,000"
+on a page whose only figure describes a portfolio company's later fundraising.
+Twelve more floors removed on the same evidence. Esmée Fairbairn's Open Call
+keeps its £30,000 because the page states it: "the minimum amount we offer is
+£30,000 and we have no maximum amount".
+
+### Corrected rather than removed
+
+- **National Lottery Community Fund, Egin Grants.** Page: "Amount: £100 to
+  £35,000". We showed £15,000. The ceiling was **understating** the fund by
+  £20,000 and hiding it from anyone filtering above £15,000 — the opposite of
+  what this sweep was looking for.
+- **Colwinston Charitable Trust.** Page: "The majority of grants will be in the
+  range of £5,000 to £30,000". We showed £20,000.
+
+### Checked and correct
+
+**North London Waste Authority.** The £20,000 is the funder's own — "Medium
+grants Up to £20,000". It flagged only because the page also says "in total,
+£250,000 is set aside each year", and the pool cue fired on the wrong figure.
+Stamped so it is not re-flagged.
+
+### Left alone, and one thing found while looking
+
+Wigan and St Martin's stay as they are. Worth recording though: on a second read
+St Martin's page does state "We can provide grants of up to £650 to help people
+access accommodation", which reads as a genuine per-grant ceiling against the
+£500 we show. The £15 that discredited the automatic proposal came from a case
+study; the £650 did not. Paul's call.
+
+## The invariant is enforced
+
+Migration 073 adds a CHECK constraint: a row cannot hold an amount and claim the
+funder publishes none. 0 violations across all 1,947 rows before adding, and the
+constraint was proved to fire by disabling the trigger and attempting the
+contradiction inside a transaction that was rolled back.
+
+## `mailto:` apply_urls are not a class
+
+One row of 1,947, and it is correct. The Paley Trust has no website and takes
+applications by email; its `how_to_apply` says so and the row is otherwise
+complete. The verifier will keep logging it as `fetch_failed`, which is cosmetic.
