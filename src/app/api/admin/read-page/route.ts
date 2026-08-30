@@ -38,7 +38,32 @@ async function isAuthorised(req: NextRequest): Promise<boolean> {
   return (await requireAdmin()).ok
 }
 
-async function readDirect(url: string): Promise<string> {
+/** Same-site links with their anchor text, for callers hunting a deeper page. */
+function sameSiteLinks(html: string, base: string): { url: string; label: string }[] {
+  let baseUrl: URL
+  try { baseUrl = new URL(base) } catch { return [] }
+  const strip = (h: string) => h.replace(/^www\./, '')
+  const out = new Map<string, string>()
+  const re = /<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]{0,300}?)<\/a>/gi
+  for (const m of Array.from(html.matchAll(re))) {
+    let abs: URL
+    try { abs = new URL(m[1], baseUrl) } catch { continue }
+    if (strip(abs.hostname) !== strip(baseUrl.hostname)) continue
+    if (/\.(pdf|docx?|xlsx?|zip|jpe?g|png|gif|svg)$/i.test(abs.pathname)) continue
+    const label = m[2].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+    if (!label) continue
+    const href = abs.toString().replace(/#.*$/, '')
+    if (href.replace(/\/$/, '') === base.replace(/\/$/, '')) continue
+    if (!out.has(href)) out.set(href, label.slice(0, 120))
+  }
+  return Array.from(out.entries()).map(([url, label]) => ({ url, label })).slice(0, 150)
+}
+
+// Returns the HTML alongside the text. The first version stashed it in a
+// module-level variable, which every target in a `urls` batch would have raced
+// on — Promise.all runs these concurrently, so one page's links could be
+// reported against another page's URL.
+async function readDirect(url: string): Promise<{ text: string; html: string }> {
   const res = await fetch(url, {
     headers: {
       'User-Agent': UA,
@@ -54,7 +79,8 @@ async function readDirect(url: string): Promise<string> {
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   const ct = res.headers.get('content-type') ?? ''
   if (!/html/i.test(ct)) throw new Error(`non-html (${ct.split(';')[0]})`)
-  return htmlToText(await res.text())
+  const html = await res.text()
+  return { text: htmlToText(html), html }
 }
 
 async function readViaProxy(url: string): Promise<string> {
@@ -88,8 +114,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
-  const { url, urls, contains } = await req.json() as
-    { url?: string; urls?: string[]; contains?: string[] }
+  const { url, urls, contains, links } = await req.json() as
+    { url?: string; urls?: string[]; contains?: string[]; links?: boolean }
   const targets = (urls?.length ? urls : url ? [url] : []).filter(Boolean)
   if (targets.length === 0) return NextResponse.json({ error: 'url or urls required' }, { status: 400 })
   if (targets.length > 20)  return NextResponse.json({ error: 'at most 20 urls' }, { status: 400 })
@@ -101,8 +127,10 @@ export async function POST(req: NextRequest) {
     let text: string
     let via: 'direct' | 'proxy'
     let directError: string | null = null
+    let html = ''
     try {
-      text = await readDirect(target); via = 'direct'
+      const direct = await readDirect(target)
+      text = direct.text; html = direct.html; via = 'direct'
     } catch (e) {
       directError = e instanceof Error ? e.message : String(e)
       try { text = await readViaProxy(target); via = 'proxy' }
@@ -153,6 +181,8 @@ export async function POST(req: NextRequest) {
       excerptChars: Math.min(flat.length, EXCERPT_CHARS),
       truncated: flat.length > EXCERPT_CHARS,
       ...(contains?.length ? { found } : {}),
+      // Only available on a direct read — the proxy returns markdown, not HTML.
+      ...(links ? { links: html ? sameSiteLinks(html, target) : [] } : {}),
     }
   }))
 
