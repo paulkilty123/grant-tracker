@@ -90,7 +90,20 @@
    "pageFigure": null,
    "applied": [
     "amount_max"
-   ]
+   ],
+   "floor": {
+    "before": {
+     "amount_min": 20000,
+     "amount_source": null
+    },
+    "after": {
+     "amount_min": null
+    },
+    "quote": "No £ figure anywhere in 13165 characters read from https://esmeefairbairn.org.uk/apply-for-a-grant/creative-confident-communities-guidance/. The floor came from a source that left no provenance and is the same class of unsupported figure as the ceiling removed earlier the same day.",
+    "applied": [
+     "amount_min"
+    ]
+   }
   },
   {
    "id": "6bee86de-f50a-4c01-b409-d72a6f4ed686",
@@ -114,7 +127,20 @@
    "pageFigure": null,
    "applied": [
     "amount_max"
-   ]
+   ],
+   "floor": {
+    "before": {
+     "amount_min": 30000,
+     "amount_source": null
+    },
+    "after": {
+     "amount_min": null
+    },
+    "quote": "No £ figure anywhere in 6470 characters read from https://esmeefairbairn.org.uk/apply-for-a-grant/our-natural-world-guidance/. The floor came from a source that left no provenance and is the same class of unsupported figure as the ceiling removed earlier the same day.",
+    "applied": [
+     "amount_min"
+    ]
+   }
   },
   {
    "id": "af98107b-eda0-4294-9fcb-0e125e2733ff",
@@ -138,7 +164,20 @@
    "pageFigure": null,
    "applied": [
     "amount_max"
-   ]
+   ],
+   "floor": {
+    "before": {
+     "amount_min": 25000,
+     "amount_source": null
+    },
+    "after": {
+     "amount_min": null
+    },
+    "quote": "No £ figure anywhere in 21202 characters read from https://esmeefairbairn.org.uk/apply-for-a-grant/a-fairer-future-guidance/. The floor came from a source that left no provenance and is the same class of unsupported figure as the ceiling removed earlier the same day.",
+    "applied": [
+     "amount_min"
+    ]
+   }
   },
   {
    "id": "5a368644-3211-4a40-9447-d5594938a519",
@@ -162,7 +201,20 @@
    "pageFigure": null,
    "applied": [
     "amount_max"
-   ]
+   ],
+   "floor": {
+    "before": {
+     "amount_min": 1000,
+     "amount_source": null
+    },
+    "after": {
+     "amount_min": null
+    },
+    "quote": "No £ figure anywhere in 2000 characters read from https://www.lambeth.gov.uk/community-connections-fund. The floor came from a source that left no provenance and is the same class of unsupported figure as the ceiling removed earlier the same day.",
+    "applied": [
+     "amount_min"
+    ]
+   }
   },
   {
    "id": "8f8bc717-1cbb-44de-abc1-fe04e0efcce2",
@@ -182,7 +234,20 @@
    },
    "after": null,
    "pageFigure": null,
-   "applied": []
+   "applied": [],
+   "floor": {
+    "before": {
+     "amount_min": 10000,
+     "amount_source": "scraper:jrct"
+    },
+    "after": {
+     "amount_min": null
+    },
+    "quote": "jrct.org.uk/rights-and-justice read 2026-08-30. The page publishes no floor for this programme. Its only figures, \"grants between £20,000-80,000 for 1-3 years\", belong to the immigration detention and deportation round, not Rights & Justice. The £10,000 floor came from scraper:jrct and is not on the page.",
+    "applied": [
+     "amount_min"
+    ]
+   }
   },
   {
    "id": "4db45a85-2ff4-4cac-bca6-51a44bd56fe1",
@@ -246,7 +311,20 @@
    "pageFigure": null,
    "applied": [
     "amount_max"
-   ]
+   ],
+   "floor": {
+    "before": {
+     "amount_min": 10000,
+     "amount_source": null
+    },
+    "after": {
+     "amount_min": null
+    },
+    "quote": "No £ figure anywhere in 1473 characters read from https://erandarothschild.org/. The floor came from a source that left no provenance and is the same class of unsupported figure as the ceiling removed earlier the same day.",
+    "applied": [
+     "amount_min"
+    ]
+   }
   },
   {
    "id": "d4c4eceb-c3f6-482c-af93-8023bd0d05ff",
@@ -370,7 +448,11 @@
    "pageFigure": null,
    "applied": [
     "amount_max"
-   ]
+   ],
+   "floor": {
+    "skipped": true,
+    "reason": "second read found 0 figure(s) in 0 chars"
+   }
   },
   {
    "id": "59b7e30c-4018-4d22-9e7a-074a5f19ae24",
@@ -394,7 +476,20 @@
    "pageFigure": null,
    "applied": [
     "amount_max"
-   ]
+   ],
+   "floor": {
+    "before": {
+     "amount_min": 10000,
+     "amount_source": null
+    },
+    "after": {
+     "amount_min": null
+    },
+    "quote": "No £ figure anywhere in 1945 characters read from https://steelcharitabletrust.org.uk/. The floor came from a source that left no provenance and is the same class of unsupported figure as the ceiling removed earlier the same day.",
+    "applied": [
+     "amount_min"
+    ]
+   }
   },
   {
    "id": "31feb54d-ca5e-4291-b1c6-e08b59dee810",
@@ -542,7 +637,11 @@
    "pageFigure": null,
    "applied": [
     "amount_max"
-   ]
+   ],
+   "floor": {
+    "skipped": true,
+    "reason": "second read found 0 figure(s) in 0 chars"
+   }
   },
   {
    "id": "523da313-e449-46a1-8647-c5a51e58b304",
@@ -586,7 +685,20 @@
    "pageFigure": null,
    "applied": [
     "amount_max"
-   ]
+   ],
+   "floor": {
+    "before": {
+     "amount_min": 3000,
+     "amount_source": null
+    },
+    "after": {
+     "amount_min": null
+    },
+    "quote": "No £ figure anywhere in 1839 characters read from https://hwct.org.uk/grants-for-organisations/. The floor came from a source that left no provenance and is the same class of unsupported figure as the ceiling removed earlier the same day.",
+    "applied": [
+     "amount_min"
+    ]
+   }
   },
   {
    "id": "ddc93bb0-b74d-42e7-86a7-172f9a39913c",
@@ -610,7 +722,20 @@
    "pageFigure": null,
    "applied": [
     "amount_max"
-   ]
+   ],
+   "floor": {
+    "before": {
+     "amount_min": 1000,
+     "amount_source": null
+    },
+    "after": {
+     "amount_min": null
+    },
+    "quote": "No £ figure anywhere in 8193 characters read from https://www.the-sse.org/programmes/. The floor came from a source that left no provenance and is the same class of unsupported figure as the ceiling removed earlier the same day.",
+    "applied": [
+     "amount_min"
+    ]
+   }
   },
   {
    "id": "24a624c6-27a3-413f-baa7-742d1cb02c60",
@@ -634,7 +759,20 @@
    "pageFigure": null,
    "applied": [
     "amount_max"
-   ]
+   ],
+   "floor": {
+    "before": {
+     "amount_min": 500,
+     "amount_source": null
+    },
+    "after": {
+     "amount_min": null
+    },
+    "quote": "No £ figure anywhere in 3971 characters read from https://sussexcommunityfoundation.org/grants/. The floor came from a source that left no provenance and is the same class of unsupported figure as the ceiling removed earlier the same day.",
+    "applied": [
+     "amount_min"
+    ]
+   }
   },
   {
    "id": "9192771f-4c81-4761-8a59-9a39231b973c",
@@ -722,7 +860,20 @@
    "pageFigure": null,
    "applied": [
     "amount_max"
-   ]
+   ],
+   "floor": {
+    "before": {
+     "amount_min": 2000,
+     "amount_source": null
+    },
+    "after": {
+     "amount_min": null
+    },
+    "quote": "No £ figure anywhere in 644 characters read from https://cashforkids.org.uk/grants/cost-of-living/. The floor came from a source that left no provenance and is the same class of unsupported figure as the ceiling removed earlier the same day.",
+    "applied": [
+     "amount_min"
+    ]
+   }
   },
   {
    "id": "ff8d9d64-f661-44bf-b07f-42b4bb66deab",
@@ -746,7 +897,20 @@
    "pageFigure": null,
    "applied": [
     "amount_max"
-   ]
+   ],
+   "floor": {
+    "before": {
+     "amount_min": 3000,
+     "amount_source": null
+    },
+    "after": {
+     "amount_min": null
+    },
+    "quote": "No £ figure anywhere in 1570 characters read from https://www.chalkclifftrust.org/home. The floor came from a source that left no provenance and is the same class of unsupported figure as the ceiling removed earlier the same day.",
+    "applied": [
+     "amount_min"
+    ]
+   }
   },
   {
    "id": "856cbdaf-7e60-4c78-8ad2-e7c0b6fddbd8",
@@ -770,7 +934,11 @@
    "pageFigure": null,
    "applied": [
     "amount_max"
-   ]
+   ],
+   "floor": {
+    "skipped": true,
+    "reason": "second read found 0 figure(s) in 0 chars"
+   }
   },
   {
    "id": "d7358629-ddba-41f5-b8db-669e5b1dc23e",
@@ -818,7 +986,20 @@
    "pageFigure": null,
    "applied": [
     "amount_max"
-   ]
+   ],
+   "floor": {
+    "before": {
+     "amount_min": 1000,
+     "amount_source": null
+    },
+    "after": {
+     "amount_min": null
+    },
+    "quote": "No £ figure anywhere in 5315 characters read from https://www.arnoldclark.com/community-fund. The floor came from a source that left no provenance and is the same class of unsupported figure as the ceiling removed earlier the same day.",
+    "applied": [
+     "amount_min"
+    ]
+   }
   },
   {
    "id": "6f5fad07-d56e-496c-a9f7-b68967bd7fe0",
@@ -861,5 +1042,8 @@
    "pageFigure": 650,
    "applied": []
   }
- ]
+ ],
+ "floorPassRanAt": "2026-08-30T12:23:59.939Z",
+ "floorPassApplied": 13,
+ "floorPassNote": "The ceiling pass left the floor on 16 of 20 rows. A floor on a page that states no figure is the same unsupported claim, reads as a threshold the applicant must clear, and suppressed amount_undisclosed on 15 rows because the trigger correctly refuses the flag while either figure is present."
 }

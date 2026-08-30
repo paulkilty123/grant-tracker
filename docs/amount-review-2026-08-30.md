@@ -18,8 +18,20 @@ scores 0 rather than 45. Kept as a test.
 
 **`amount_undisclosed`.** Now derived by a trigger (migration 070). It was set by
 hand and had stopped meaning anything: 142 published rows had no amount and only
-14 were flagged, while 3 rows were flagged *while carrying an amount*. Flagged
-rows went 17 to 56 and contradictions to 0.
+14 were flagged, while 3 rows were flagged *while carrying an amount*.
+Contradictions went to 0.
+
+The flag count, with the population named, because an unlabelled one was
+reported first and did not reconcile:
+
+| Population | Before | After 070 | After the floor pass |
+|---|---:|---:|---:|
+| active and published | 14 | 56 | 60 |
+| active | — | — | 65 |
+| all rows | — | — | 87 |
+
+"56" was the active-and-published slice at that moment and the report did not
+say so.
 
 **Re-sweep.** The `&pound;` decoder was already in when the first sweep ran
 (fixed 23:55, swept 23:58), so 42 was not inflated by it. Normalising whitespace
@@ -144,3 +156,86 @@ source column, so that file is the only record of the figure removed.
 
 The 12 rows missing only a floor are out of scope per the brief.
 
+
+
+## The floor pass, and the defect it fixes
+
+The ceiling pass left `amount_min` on 16 of the 20 rows, which was wrong twice
+over.
+
+It is the same unsupported figure. Of the 16, fifteen had no provenance for the
+floor at all and the sixteenth was a scraper's. None came from a read of the
+page. And it reads worse alone than it did in a range: Esmée Fairbairn's Natural
+World guidance states no figure, and the row went from "£30,000 to £200,000",
+which reads as a rough band, to "from £30,000", which reads as a threshold the
+applicant has to clear.
+
+It also suppressed the flag built the same day. `derive_amount_undisclosed`
+returns false the moment either figure is present — correctly, since a row
+publishing a floor is not a funder publishing nothing — so only 4 of the 19
+carried it.
+
+13 floors removed, same stamp and same ledger. **17 of the 20 rows are now fully
+null and flagged undisclosed.**
+
+Three are not, and are waiting on a readable fetch rather than a decision: Rayne
+Foundation, School for Social Entrepreneurs and Camden Giving all returned zero
+characters on three consecutive attempts, having served their pages earlier the
+same day. That is this machine being rate-limited after a day of sweeps, not the
+rows. They keep their floors until a read confirms.
+
+JRCT is the one row allowed past the no-figures guard, named explicitly rather
+than by widening the rule: its page does carry "grants between £20,000-80,000
+for 1-3 years" and that belongs to the immigration detention and deportation
+round, not the Rights & Justice programme the row describes.
+
+## JRCT's deadline
+
+Removed. The page says "Our next grant round will close in September 2026" — a
+month, no date. The stored 2 September 2026 came from `system:spot_check_2026-08-17`
+with a null quote in `field_evidence`, so nothing supported the precision. With
+the amounts gone it was the only claim left on the card and it sat three days
+out. The month is known and is not stored, because `deadline` is a date column
+and 30 September would invent the same precision again.
+
+## Correction: the reader proxy does not return 200
+
+Yesterday's commit said the proxy "answers HTTP 200 with its own error text" and
+that this was manufacturing silence. **That is wrong.** Measured today, the block
+response is:
+
+    HTTP 401, 146 bytes
+    AuthenticationRequiredError: You have been blocked from performing anonymous
+    queries due to bad network reputation (AS9009). Please authenticate.
+
+Both consumers — `enrich-grant` and `verify-row` — do `if (!res.ok) throw`, so a
+block is an error, not a page. It cannot manufacture a silence. The guard added
+yesterday is harmless and still worth having for other degenerate bodies, but its
+stated reason was not real.
+
+Searched for the block text across all 1,947 rows in `field_evidence`,
+`funder_brief`, `raw_data` and `description`: **0 occurrences.**
+
+Production's proxy works. Observed today on Allan & Nesta Ferguson: "direct fetch
+failed (HTTP 401); recovered via reader proxy (3209 chars)". The 401 above is
+this machine's network reputation, not Vercel's.
+
+## How much of page-reading is actually a bot wall
+
+Of live published rows, by what the verifier last recorded:
+
+| What happened | Live rows |
+|---|---:|
+| verified | 400 |
+| link goes to the wrong fund | 74 |
+| page lists several funds | 59 |
+| page carried no funding detail | 41 |
+| page returned nothing | 4 |
+| fetch failed | 1 |
+
+**Five.** The ceiling is not a bot wall. None of the five has a silent
+`who_can_apply` or `exclusions` — those came from earlier successful reads — and
+the gaps on them are two missing amounts and two missing dates.
+
+One of the five is not a bot wall at all: The Paley Trust's `apply_url` is
+`mailto:PaleyTrust@outlook.com`, which is not a page and never could be fetched.
