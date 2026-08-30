@@ -55,9 +55,13 @@ const T = {
 const UI   = 'var(--font-space-grotesk), Space Grotesk, sans-serif'
 const BODY = 'var(--font-plus-jakarta, Plus Jakarta Sans, sans-serif)'
 
-/** Catalogue size, as a band. An exact count dates the moment it grows, and it
- *  invites a stranger to check the arithmetic. 603 active on 2026-08-28. */
-const CATALOGUE_SIZE = '600+'
+/**
+ * No number. The count was "600+" until 2026-08-30, when it came off every
+ * public surface: a catalogue that grows is a figure somebody has to maintain
+ * in several places, and a stale one on an acquisition page is worse than none.
+ * "Live" and "verified" are the claims that actually matter to a reader, and
+ * they do not go stale. 603 active at the time it was removed, for the record.
+ */
 
 const FUNDER_LABELS: Record<string, string> = {
   trust_foundation:    'Trust & Foundation',
@@ -558,14 +562,14 @@ export default async function PublicGrantPage({
             </h3>
             <p style={{ fontSize: 15.5, lineHeight: 1.6, color: 'rgba(246,241,231,0.85)', margin: '0 0 20px', maxWidth: '56ch' }}>
               {deadlinePassed
-                ? `There are ${CATALOGUE_SIZE} more in the catalogue. Shoots checks them against your organisation and tells you which ones are open to you now.`
+                ? 'There are more in the catalogue. Shoots checks them against your organisation and tells you which ones are open to you now.'
                 : 'Structure is only the first hurdle. Shoots checks this opportunity against your organisation and tells you where you actually stand.'}
             </p>
             <ul style={{ margin: '0 0 22px', padding: 0, listStyle: 'none', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16 }}>
               {[
                 { bg: T.terra, Icon: CheckCircle, t: 'Whether you qualify', d: 'Every rule this funder sets, checked against your profile, including the ones that rule you out.' },
                 { bg: T.teal,  Icon: TrendingUp,  t: 'How well you match',  d: 'A score against what they fund, who they fund and where, so you know if it is worth the week.' },
-                { bg: T.sage,  Icon: Search,      t: 'What else is open',   d: `All ${CATALOGUE_SIZE} opportunities in the catalogue, filtered to the ones your organisation can actually apply for.` },
+                { bg: T.sage,  Icon: Search,      t: 'What else is open',   d: 'Every opportunity in the catalogue, filtered to the ones your organisation can actually apply for.' },
               ].map(({ bg, Icon, t, d }) => (
                 <li key={t} style={{ fontSize: 14, lineHeight: 1.55, color: 'rgba(246,241,231,0.85)' }}>
                   <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 9, marginBottom: 10, background: bg, color: T.deep }}>
@@ -646,7 +650,7 @@ export default async function PublicGrantPage({
             </span>
           )}
           <p style={{ fontSize: 13, lineHeight: 1.6, color: T.inkPlace, margin: 0 }}>
-            {MCP_BRAND_NAME} keeps a curated catalogue of {CATALOGUE_SIZE} UK funding opportunities, every entry traced back to the
+            {MCP_BRAND_NAME} keeps a curated catalogue of live, verified UK funding opportunities, every entry traced back to the
             funder&rsquo;s own published page.{' '}
             <Link href="/mcp" style={{ color: T.deep, fontWeight: 600, textDecoration: 'underline', textUnderlineOffset: 3, textDecorationColor: T.ghost }}>
               How we build it

@@ -82,16 +82,30 @@ describe('landing FAQ structured data', () => {
     })
   })
 
-  it('leaves the staged launch-day answers out of both', () => {
-    // They quote prices that are not announced. They live in a comment, so they
-    // are on neither the page nor in the markup, and this fails if either
-    // changes.
-    const visible = visibleFaqs().map(v => v.a).join(' ')
-    const marked  = jsonLd().mainEntity.map(e => e.acceptedAnswer.text).join(' ')
-    for (const leak of ['£15', '£25', '£45', 'seven-day free trial']) {
-      expect(visible).not.toContain(leak)
-      expect(marked).not.toContain(leak)
+  it('carries no unannounced pricing anywhere in the shipped file', () => {
+    // Not "not visible" — NOT PRESENT. An HTML comment is served to the browser
+    // like everything else, so staging the launch-day answers in one would have
+    // put unannounced prices in page source, readable by anyone who looked.
+    // This asserts against the whole file for that reason.
+    // Matched as PRICES, not as bare numbers: the hero card legitimately shows
+    // grant amounts like "£5k–£25k", and a substring check on "£25" flagged
+    // that as a leak. A check that fires on correct content gets switched off.
+    for (const leak of [
+      '£15 a month', '£25 a month', '£45 a month',
+      '£12, £20 and £36',
+      '14-day free trial', 'seven-day free trial',
+      'two months free on annual',
+    ]) {
+      expect(HTML).not.toContain(leak)
     }
+  })
+
+  it('quotes no catalogue count', () => {
+    // Removed 2026-08-30: a figure that grows is one somebody has to maintain in
+    // several places, and a stale one on the page a stranger lands on is worse
+    // than none. "Live" and "verified" carry the claim and do not go stale.
+    expect(HTML).not.toContain('600+')
+    expect(jsonLd().mainEntity.map(e => e.acceptedAnswer.text).join(' ')).not.toMatch(/\b600\b/)
   })
 
   it('does not carry the copy this change replaced', () => {
