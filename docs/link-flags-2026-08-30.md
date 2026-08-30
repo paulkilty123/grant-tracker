@@ -1,0 +1,78 @@
+# The 174 link-flagged rows are not 174 broken links
+
+Measured 2026-08-30, every page read from production through
+`/api/admin/read-page`. No Anthropic call.
+
+## The headline, and what is under it
+
+The verifier's live counts are 74 `wrong_fund`, 59 `multiple_funds`, 41
+`no_funding_detail` against 400 verified. Read as "174 rows whose first click is
+useless". Opened, they are:
+
+| What the page actually is | Rows |
+|---|---:|
+| A fundraiser landing here could work out whether to apply, and how | 78 |
+| The funder's own site, but a grants index rather than this fund's page | 93 |
+| Funder name too plain to judge by matching | 1 |
+| Genuinely not this funder's page | **2** |
+
+And both of the two survive only as artefacts:
+
+- **Community Shares — Booster Fund.** The page is Cloudflare's bot check:
+  "Performing security verification ... Ray ID: a334e2387c67c5e9". A bot wall,
+  not a wrong link.
+- **Ernest Kleinwort Charitable Trust.** `ekct.org.uk/grants/` reads 7,029
+  characters and opens "Applicants must be organisations registered with one
+  year of filed accounts with the Charity Commission in England & Wales or
+  Office of the Scottish Charity Register". That is the funder's own grants
+  page. It failed only because "Ernest Kleinwort" is not in the first 4,000
+  characters and is not derivable from the host `ekct`.
+
+**So the number of rows where the link goes to the wrong fund is, as far as this
+can measure, zero.**
+
+## This is the third time this pile has been opened and behaved this way
+
+On 2026-08-21, 51 `wrong_fund` rows: the flag was simply wrong on 10, 26 were a
+funder's grants index that Paul had already ruled acceptable ("a link landing on
+a funder's homepage is fine and shouldn't appear as a problem"), 11 could not be
+read, 4 were certainly wrong. Four of fifty-one.
+
+Today, 174 rows: two candidates, both artefacts.
+
+The pile is not shrinking because rows get fixed. It is not a defect pile.
+
+## What the flags are actually detecting
+
+Not "this link is broken" but "this page describes more than one fund, or
+describes the funder rather than the fund". That is true of 93 of these rows and
+it is a real product weakness — a fundraiser clicking through to a grants index
+has to find their fund again — but it is a different problem with a different
+fix, and it is not urgent in the way a broken link is.
+
+## Three mistakes this measurement made, all caught by opening rows
+
+1. **A 4,000-character excerpt is not the page.** Judging "does this name the
+   funder" on the excerpt reported `charleshaywardfoundation.org.uk` as not
+   Charles Hayward's page. The nav filled the excerpt.
+2. **The hostname is evidence and was being ignored.** Adding it removed two of
+   the five.
+3. **A funder can have no distinctive tokens.** "A B Charitable Trust" loses
+   *charitable* and *trust* to the stop list and *a* and *b* to the length
+   filter, leaving an empty array — and `[].some()` is false, so a plain name
+   read as evidence of the wrong funder. It cannot be. That row now reports
+   "too plain to judge" instead of a verdict.
+
+Each of the three inflated the "genuinely wrong" count. None was visible from the
+totals.
+
+## What is worth doing instead
+
+Not a link-fixing sweep. Two smaller things:
+
+- **Stop the flags reading as defects.** 171 of 174 are either fine or
+  acceptable-by-policy. Whatever surfaces these counts is describing a crisis
+  that is not there, and it has now cost three separate investigations.
+- **The 93 index pages are a deeper-URL job**, the same shape as the thin-page
+  triage on 2026-08-29: find the fund's own page where one exists, leave the row
+  alone where it does not. Worth doing, not worth doing first.
