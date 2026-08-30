@@ -153,3 +153,45 @@ The nearest similar shape is `containsGrantClosedIndicators` in
 safe by direction: it only makes a POSITIVE claim, so a phrase past the window is
 a missed flag rather than a false assertion about the page — and the window is
 stated in the code. Left alone.
+
+---
+
+# Index-page proposals: the first ten
+
+`scripts/propose-fund-pages-2026-08-30.ts`. Proposes only, never applies — the
+17 August hop corrected 14 URLs automatically, at least 4 were wrong or
+worthless, and it was reverted.
+
+**Zero proposals from the first ten, and that is the answer rather than a broken
+script.** Four were opened by hand to check:
+
+| Row | What the page links to |
+|---|---|
+| Esmée Fairbairn — Arts, Culture & Heritage | 41 links. The fund does not exist under that name any more. |
+| Groundwork — Just About Managing Fund | 0 links. Nothing to hop to. |
+| Cash for Kids — Cost of Living | 24 links, every one site nav: Donate, Fundraising, News, Privacy Policy. |
+| Arnold Clark Community Fund | 99 links, almost all car marques — Abarth, Alfa Romeo, BYD. It is a dealership site and the community fund page is the fund page. |
+
+Three of the ten (DCR Allen, James Ahern, Eranda Rothschild) are rows whose title
+IS the funder: there is no separate fund page to find, because the row is the
+funder's general grantmaking.
+
+## The one real finding, and it is not a URL
+
+**Esmée Fairbairn — Arts, Culture & Heritage** already points at
+`/apply-for-a-grant/creative-confident-communities-guidance/`, which is the
+correct current page. Esmée's three aims are now Our Natural World, A Fairer
+Future, and Creative, Confident Communities. "Arts, Culture & Heritage" is the
+old name.
+
+So the row's TITLE is stale, not its link. A fundraiser searching for arts
+funding finds a name the funder retired; a fundraiser who clicks lands correctly.
+Renaming rows is a different job from re-pointing them and it is not in this
+script's remit.
+
+## What the first ten say about the other 83
+
+The candidate-hunting premise — that a funder's index links onward to each fund's
+own page — held for none of the four sites opened. Two had no onward fund links
+at all, one had only site chrome, and one had a retired fund name. Before running
+the remaining 83, that premise is worth doubting rather than assuming.
