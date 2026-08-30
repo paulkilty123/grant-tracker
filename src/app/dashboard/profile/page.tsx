@@ -940,7 +940,9 @@ function CardShell({ title, badge, isEditing, onEdit, editDisabled, children, fo
   title: string
   badge?: React.ReactNode
   isEditing: boolean
-  onEdit: () => void
+  /* Optional. A card whose controls save on the spot has nothing to "edit",
+     and rendering a dead Edit button on it is worse than rendering none. */
+  onEdit?: () => void
   editDisabled?: boolean
   children: React.ReactNode
   footer?: React.ReactNode
@@ -975,7 +977,7 @@ function CardShell({ title, badge, isEditing, onEdit, editDisabled, children, fo
           )}
           {badge}
         </div>
-        {!isEditing && (
+        {!isEditing && onEdit && (
           <button
             onClick={onEdit}
             disabled={editDisabled}
@@ -2075,6 +2077,127 @@ function StoryCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
 }
 
 /* ═══════════════════════════════════════════════
+   Alerts card
+   ───────────────────────────────────────────────
+   The off-switch. Until 2026-08-30 there was no alerts control anywhere in the
+   product: the column existed, the onboarding wizard wrote TRUE to it for every
+   new organisation, and the alert email's "Manage alert settings" link pointed
+   at this page, which had nothing on it to manage. 34 of 41 organisations had
+   alerts on and not one of them had been asked.
+
+   Saves on the spot rather than behind an Edit/Save cycle. Every other card
+   here describes the organisation, where a draft you can abandon is right. This
+   one is consent, and a person switching it off is done at the moment they
+   switch it off — not after they also find and press Save.
+   ═══════════════════════════════════════════════ */
+function AlertsCard({ org, orgId, onSaved }: {
+  org: Organisation
+  orgId: string
+  onSaved: () => void
+}) {
+  const enabled = org.alerts_enabled ?? false
+  const minScore = org.alert_min_score ?? 70
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function set(updates: { alerts_enabled?: boolean; alert_min_score?: number }) {
+    setSaving(true); setError(null)
+    try {
+      await updateOrganisation(orgId, updates)
+      onSaved()
+    } catch (e) {
+      // Surfaced, never swallowed. A toggle that silently fails to turn off is
+      // the same as one that does not exist.
+      setError(e instanceof Error ? e.message : 'Could not save that. Please try again.')
+    } finally { setSaving(false) }
+  }
+
+  return (
+    <CardShell title="Email alerts" cardId="card-alerts" isEditing={false}>
+      <div style={{ padding: '4px 24px 20px' }}>
+
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 20 }}>
+          <div style={{ flex: 1 }}>
+            <p style={{ margin: '0 0 4px', fontFamily: UI, fontWeight: 600, fontSize: 14, color: T.textPrimary }}>
+              New opportunity alerts
+            </p>
+            <p style={{ margin: 0, fontFamily: BODY, fontSize: 13.5, lineHeight: 1.55, color: T.textSecondary }}>
+              An email when funding opens that matches {org.name}. Nothing else, and never more than once a week.
+            </p>
+          </div>
+
+          <button
+            role="switch"
+            aria-checked={enabled}
+            aria-label="New opportunity alerts"
+            disabled={saving}
+            onClick={() => set({ alerts_enabled: !enabled })}
+            style={{
+              flexShrink: 0, width: 46, height: 27, borderRadius: 999,
+              background: enabled ? T.deep : T.track,
+              border: 'none', cursor: saving ? 'wait' : 'pointer',
+              padding: 3, display: 'flex', alignItems: 'center',
+              justifyContent: enabled ? 'flex-end' : 'flex-start',
+              transition: 'background 0.15s',
+            }}
+          >
+            <span style={{
+              display: 'block', width: 21, height: 21, borderRadius: 999,
+              background: T.white, boxShadow: '0 1px 2px rgba(0,0,0,0.2)',
+            }} />
+          </button>
+        </div>
+
+        {enabled && (
+          <div style={{ marginTop: 18, paddingTop: 16, borderTop: `1px solid ${T.border}` }}>
+            <p style={{ margin: '0 0 10px', fontFamily: UI, fontWeight: 500, fontSize: 13, color: T.textPrimary }}>
+              Only tell me about strong matches
+            </p>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {[
+                { v: 60, label: 'Anything relevant' },
+                { v: 70, label: 'Good matches' },
+                { v: 80, label: 'Strong matches only' },
+              ].map(o => {
+                const on = minScore === o.v
+                return (
+                  <button
+                    key={o.v}
+                    disabled={saving}
+                    onClick={() => set({ alert_min_score: o.v })}
+                    style={{
+                      fontFamily: UI, fontWeight: 500, fontSize: 12.5,
+                      padding: '7px 14px', borderRadius: 999, cursor: saving ? 'wait' : 'pointer',
+                      background: on ? T.greenBg : T.white,
+                      color: on ? T.greenText : T.textSecondary,
+                      border: `1px solid ${on ? T.greenText : T.borderStrong}`,
+                    }}
+                  >
+                    {o.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {!enabled && (
+          <p style={{ margin: '14px 0 0', fontFamily: BODY, fontSize: 13, color: T.textTertiary }}>
+            Alerts are off. You can still find everything on Find Funding.
+          </p>
+        )}
+
+        {error && (
+          <p style={{ margin: '12px 0 0', fontFamily: BODY, fontSize: 13, color: '#991B1B' }}>
+            {error}
+          </p>
+        )}
+      </div>
+    </CardShell>
+  )
+}
+
+/* ═══════════════════════════════════════════════
    Main component
    ═══════════════════════════════════════════════ */
 export default function ProfilePage() {
@@ -2318,6 +2441,15 @@ export default function ProfilePage() {
           <FundingCard  {...cardProps('funding')} />
           <StoryCard    {...cardProps('story')} />
           {builderAllowed && <CoreContentSection orgId={activeOrg.id} />}
+          {/* Last, and deliberately not part of the completion meter: alerts
+              are a preference, not a gap in the profile. Nothing should nag
+              anyone toward switching email on. The id on this card is what
+              the alert email's footer link targets. */}
+          <AlertsCard
+            org={activeOrg}
+            orgId={activeOrg.id}
+            onSaved={() => loadOrgs(activeOrg.id)}
+          />
         </div>
 
         {/* Delete org danger zone */}

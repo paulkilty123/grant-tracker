@@ -257,6 +257,24 @@ export interface Organisation {
   owner_id: string
   geographic_reach: string | null
   website_url: string | null
+  // ── New-opportunity alerts ────────────────────────────────────────────────
+  /**
+   * Whether this org receives the new-matching-grants email.
+   *
+   * The column default is FALSE, but the onboarding wizard has always written
+   * TRUE explicitly, which is why 34 of 41 orgs had alerts on before anyone
+   * had ever been asked. Read the column, never assume the default.
+   *
+   * Typed here as of 2026-08-30. It existed in the database and in three call
+   * sites for months without ever reaching this interface, so every consumer
+   * reached it through an `as Organisation & { ... }` cast — which is exactly
+   * how a field ends up with no UI.
+   */
+  alerts_enabled?: boolean | null
+  /** Minimum match score an opportunity must reach to be worth emailing. */
+  alert_min_score?: number | null
+  /** Cadence label. Only 'weekly' is honoured by the cron today. */
+  alert_frequency?: string | null
   // ── Entitlements ──────────────────────────────────────────────────────────
   /**
    * Apply-tier entitlement: pipeline + builder. Enforced in RLS on

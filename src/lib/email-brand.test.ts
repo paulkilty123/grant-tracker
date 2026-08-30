@@ -2,12 +2,17 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync, readdirSync, statSync } from 'fs'
 import path from 'path'
 
-// The six routes that send mail. Listed rather than discovered, so adding a
-// seventh sender is a deliberate act that shows up in review.
+// The five routes that send mail. Listed rather than discovered, so adding a
+// sixth sender is a deliberate act that shows up in review.
+//
+// Was six until 2026-08-30. src/app/api/send-alerts was a duplicate of the
+// cron route with a different auth header and no recordRun, unreachable from
+// any scheduler, and it had already been marked for deletion in the July
+// ingestion scope. Two routes that both look like the alert sender is how the
+// wrong one gets called; the cron route below is the only one.
 const EMAIL_ROUTES = [
   'src/app/api/contact/route.ts',
   'src/app/api/feedback/route.ts',
-  'src/app/api/send-alerts/route.ts',
   'src/app/api/cron/send-alerts/route.ts',
   'src/app/api/cron/deadline-reminders/route.ts',
   'src/app/api/cron/pipeline-summary/route.ts',
