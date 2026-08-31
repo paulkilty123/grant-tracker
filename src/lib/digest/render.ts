@@ -44,6 +44,25 @@ function sectionLabel(text: string): string {
   return `<p style="margin:0 0 6px;font-family:${UI};font-size:11px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:${C.muted};">${esc(text)}</p>`
 }
 
+/**
+ * A row title that is also a link.
+ *
+ * Every named opportunity in this email goes to its page on Shoots. The first
+ * version rendered titles as plain text with only a "See all your matches"
+ * link at the foot of the section, so the reader could see ten funds and click
+ * none of them — an email about specific opportunities where the opportunities
+ * were not reachable.
+ *
+ * Styling is deliberately identical to the plain title: the fix is that it is
+ * clickable, not that it announces itself.
+ */
+function titleLink(href: string | null, text: string, size: number): string {
+  const style = `font-family:${UI};font-size:${size}px;font-weight:600;letter-spacing:-.2px;color:${C.deep};text-decoration:none;`
+  return href
+    ? `<a href="${esc(href)}" style="${style}">${esc(text)}</a>`
+    : `<span style="${style}">${esc(text)}</span>`
+}
+
 function textLink(href: string, label: string): string {
   return `<a href="${esc(href)}" style="font-family:${UI};font-size:14px;font-weight:600;color:${C.deep};text-decoration:underline;">${esc(label)} &rarr;</a>`
 }
@@ -87,7 +106,7 @@ function closingRow(r: DigestModel['closing'][number], origin: string): string {
           </table>
         </td>
         <td valign="top" style="padding:16px 16px 16px 14px;">
-          <p style="margin:0 0 3px;font-family:${UI};font-size:16px;font-weight:600;letter-spacing:-.2px;color:${C.deep};">${esc(r.name)}</p>
+          <p style="margin:0 0 3px;">${titleLink(href, r.name, 16)}</p>
           ${r.funder ? `<p style="margin:0 0 6px;font-family:${BODY};font-size:13.5px;line-height:1.5;color:${C.body};">${esc(r.funder)}</p>` : ''}
           <p style="margin:0 0 12px;font-family:${BODY};font-size:13.5px;line-height:1.55;color:${C.body};">${esc(r.status)}</p>
           ${button(href, r.kind === 'saved' ? 'Decide on this' : 'Open in Shoots')}
@@ -97,16 +116,16 @@ function closingRow(r: DigestModel['closing'][number], origin: string): string {
   </td></tr>`
 }
 
-function progressRow(r: DigestModel['inProgress'][number]): string {
+function progressRow(r: DigestModel['inProgress'][number], origin: string): string {
   return `<tr><td style="padding:0 0 14px;">
-    <p style="margin:0 0 3px;font-family:${UI};font-size:15.5px;font-weight:600;letter-spacing:-.2px;color:${C.deep};">${esc(r.name)}</p>
+    <p style="margin:0 0 3px;">${titleLink(r.url ?? `${origin}/dashboard/pipeline`, r.name, 15.5)}</p>
     <p style="margin:0;font-family:${BODY};font-size:13.5px;line-height:1.55;color:${r.stalled ? C.danger : C.body};">${esc(r.status)}</p>
   </td></tr>`
 }
 
 function matchRow(r: DigestModel['matches'][number], last: boolean): string {
   return `<tr><td style="padding:0 0 16px;${last ? '' : `border-bottom:1px solid ${C.hair};`}">
-    <p style="margin:0 0 3px;font-family:${UI};font-size:15.5px;font-weight:600;letter-spacing:-.2px;color:${C.deep};">${esc(r.title)}</p>
+    <p style="margin:0 0 3px;">${titleLink(r.url, r.title, 15.5)}</p>
     ${r.meta ? `<p style="margin:0 0 6px;font-family:${BODY};font-size:13.5px;line-height:1.5;color:${C.body};">${esc(r.meta)}</p>` : ''}
     <p style="margin:0;font-family:${BODY};font-size:13.5px;line-height:1.55;color:${C.body};">${esc(r.blurb)}</p>
   </td></tr>`
@@ -115,7 +134,7 @@ function matchRow(r: DigestModel['matches'][number], last: boolean): string {
 /** Three parts, always in this order: verdict, the funder's rule, what would change it. */
 function nearMissRow(r: DigestModel['nearMisses'][number]): string {
   return `<tr><td style="padding:0 0 14px;">
-    <p style="margin:0 0 3px;font-family:${UI};font-size:15.5px;font-weight:600;letter-spacing:-.2px;color:${C.deep};">${esc(r.title)}</p>
+    <p style="margin:0 0 3px;">${titleLink(r.url, r.title, 15.5)}</p>
     <p style="margin:0 0 4px;font-family:${BODY};font-size:13.5px;line-height:1.55;color:${C.body};"><b style="color:${C.deep};">${esc(r.verdict)}</b> ${esc(r.rule)}</p>
     <p style="margin:0;font-family:${BODY};font-size:13.5px;line-height:1.55;color:${C.body};">${esc(r.condition)}</p>
   </td></tr>`
@@ -171,7 +190,7 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
     rows.push(`<tr><td style="background:${C.card};padding:26px 30px 0;">
       ${sectionLabel('Also in progress')}
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-        ${m.inProgress.map(progressRow).join('')}
+        ${m.inProgress.map(r => progressRow(r, origin)).join('')}
         ${m.inProgressOverflow > 0 ? `<tr><td>${textLink(`${origin}/dashboard/pipeline`, `and ${plural(m.inProgressOverflow, 'more')} in progress`)}</td></tr>` : ''}
       </table>
     </td></tr>`)

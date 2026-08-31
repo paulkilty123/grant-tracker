@@ -45,6 +45,7 @@ export interface ProgressRow {
   funder: string | null
   stage: string
   status: string
+  url: string | null
   /** True when the row is drifting — rendered in the danger colour. */
   stalled: boolean
   key: string
@@ -239,9 +240,28 @@ export async function buildDigest(
 
   const grants = (catalogueRows ?? []) as Record<string, unknown>[]
   const byId = new Map<string, Record<string, unknown>>()
+  const byTitle = new Map<string, Record<string, unknown>>()
   for (const g of grants) {
     byId.set(String(g.id), g)
     if (g.external_id) byId.set(String(g.external_id), g)
+    const t = String(g.title ?? '').trim().toLowerCase()
+    if (t && !byTitle.has(t)) byTitle.set(t, g)
+  }
+
+  /**
+   * Where a pipeline row should point.
+   *
+   * pipeline_items.grant_url holds the FUNDER's own page, so linking it sent
+   * the reader straight out of the product — from an email whose whole job is
+   * to get somebody into Shoots on a Tuesday. Resolve the item back to its
+   * catalogue row by title and link there instead; the funder's page is one
+   * click further on, where it belongs. Falls back to the funder URL, then to
+   * the dashboard, so a row that is not in the catalogue is still reachable.
+   */
+  const pipelineHref = (p: Record<string, unknown>, fallback: string): string => {
+    const hit = byTitle.get(String(p.grant_name ?? '').trim().toLowerCase())
+    if (hit) return grantUrl(origin, hit)
+    return p.grant_url ? String(p.grant_url) : fallback
   }
 
   /* ── 1. Closing soon: pipeline and saved, interleaved by days remaining ── */
@@ -262,7 +282,7 @@ export async function buildDigest(
       status: since
         ? `In ${stage.charAt(0).toUpperCase() + stage.slice(1)} since ${since}.`
         : `In ${stage}.`,
-      url: p.grant_url ? String(p.grant_url) : null,
+      url: pipelineHref(p, `${origin}/dashboard/deadlines`),
       key: String(p.id),
     })
   }
@@ -310,6 +330,7 @@ export async function buildDigest(
     inProgressAll.push({
       name: String(p.grant_name ?? 'Untitled'),
       funder: p.funder_name ? String(p.funder_name) : null,
+      url: pipelineHref(p, `${origin}/dashboard/pipeline`),
       stage: stage.charAt(0).toUpperCase() + stage.slice(1),
       // Only said when true. A digest that notices you have stalled is a tool;
       // one that says it every week is noise.
