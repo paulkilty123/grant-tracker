@@ -3,6 +3,7 @@ import { computeMatchScore } from '@/lib/matching'
 import { pickProfilePrompt, promptTitleWithCount, type ProfilePrompt, type ProfileFieldLabel } from '@/lib/profile-completeness'
 import { daysUntil, humanDate, plural, spell, spellCap, verb } from './text'
 import { findNearMiss, nearMissMeta } from './near-miss'
+import { FUNDING_TYPE_COLOUR, type FundingTypeKey } from '@/lib/funding-type-colours'
 import type { Organisation, GrantOpportunity, FunderType, ImpactSector, BeneficiaryGroup, LegalStructure, FundingType } from '@/types'
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -283,9 +284,33 @@ export function plainRule(rule: string): string {
   return `They fund ${list}. Our record has you as ${you}.`
 }
 
+/**
+ * What KIND of opportunity this is, first in the meta line.
+ *
+ * A loan, a volunteer placement and a £10k grant were sitting in one
+ * undifferentiated list, and the only thing distinguishing them was whether
+ * the blurb happened to mention it — Charterpath's had to say "This is not a
+ * grant programme, it is a volunteer placement service" to do the type's job.
+ *
+ * Shown on EVERY row including grants, even though grants are 476 of the 581
+ * published. Labelling only the exceptions would make absence carry the
+ * meaning, and a reader cannot know that no label means grant unless somebody
+ * tells them. Four characters on the common case is a fair price for never
+ * being ambiguous on the other 105.
+ *
+ * A word rather than a coloured pill: the countdown tiles are meant to be the
+ * only saturated colour in the email, and four more accents would compete with
+ * the one thing that is supposed to signal urgency.
+ */
+function typeLabel(g: Record<string, unknown>): string {
+  const key = String(g.funding_type ?? 'grant') as FundingTypeKey
+  return FUNDING_TYPE_COLOUR[key]?.label ?? 'Grant'
+}
+
 /** One shape for every opportunity row, so the two sections cannot drift. */
 function toMatchRow(g: Record<string, unknown>, origin: string, now: Date, blurb: string): MatchRow {
   const parts = [
+    typeLabel(g),
     String(g.funder ?? ''),
     g.deadline ? `closes ${shortDate(String(g.deadline), now)}` : g.is_rolling ? 'rolling' : null,
   ].filter(Boolean) as string[]
@@ -559,7 +584,7 @@ export async function buildDigest(
           row: {
             title: String(g.title ?? ''),
             funder: String(g.funder ?? ''),
-            meta: nearMissMeta(normalised, g.location_tag ? String(g.location_tag) : null),
+            meta: nearMissMeta(normalised, g.location_tag ? String(g.location_tag) : null, typeLabel(g)),
             verdict: near.verdict,
             rule: near.rule,
             condition: near.condition,
