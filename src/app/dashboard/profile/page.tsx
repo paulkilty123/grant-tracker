@@ -11,6 +11,7 @@ import { trimMission, formatCurrency } from '@/lib/utils'
 import ClearProfileButton from '@/app/dashboard/admin/ClearProfileButton'
 import CoreContentSection from '@/components/builder/CoreContentSection'
 import { typeColour } from '@/lib/funding-type-colours'
+import { computeCompleteness, FIELD_TO_CARD, type ProfileCardId } from '@/lib/profile-completeness'
 
 const ADMIN_EMAIL = 'paulkilty1@gmail.com'
 
@@ -69,19 +70,13 @@ const BODY = 'var(--font-dm-sans)'
 
 /* ═══════════════════════════════════════════════
    Field → card mapping for jump-to-edit
+   ───────────────────────────────────────────────
+   Both the mapping and computeCompleteness() now live in
+   src/lib/profile-completeness.ts. They moved out on 2026-08-31 because the
+   weekly digest needs the same ranking, and a page file cannot export one — so
+   the choice was a shared module or a second ranking that would drift.
    ═══════════════════════════════════════════════ */
-type CardId = 'about' | 'focus' | 'location' | 'funding' | 'story'
-
-const FIELD_TO_CARD: Record<string, CardId> = {
-  'Impact sector':     'focus',
-  'Who you serve':     'focus',
-  'Specialisms':       'focus',   // niche tags live in the focus/sectors editor
-  'Location':          'location',
-  'Legal structure':   'about',
-  'Annual income':     'about',
-  'Grant size range':  'funding',
-  'Mission statement': 'story',
-}
+type CardId = ProfileCardId
 
 /* ═══════════════════════════════════════════════
    Option data
@@ -390,30 +385,8 @@ function deriveEligibilityFlagsFromStructure(s: LegalStructure | ''): {
   }
 }
 
-/* ═══════════════════════════════════════════════
-   Completeness logic
-   ═══════════════════════════════════════════════ */
-interface CompletenessResult {
-  pct: number
-  missing: { label: string; impact: 'high' | 'medium' }[]
-}
-
-function computeCompleteness(org: Organisation): CompletenessResult {
-  const fields: { label: string; filled: boolean; impact: 'high' | 'medium' }[] = [
-    { label: 'Impact sector',    filled: (org.impact_sectors?.length ?? 0) > 0,              impact: 'high'   },
-    { label: 'Who you serve',    filled: (org.beneficiary_groups?.length ?? 0) > 0,           impact: 'high'   },
-    { label: 'Location',         filled: !!org.primary_location,                              impact: 'high'   },
-    { label: 'Legal structure',  filled: !!org.legal_structure,                               impact: 'high'   },
-    { label: 'Specialisms',      filled: (org.niche_tags?.length ?? 0) > 0,                   impact: 'medium' },
-    { label: 'Annual income',    filled: !!org.annual_income_band,                            impact: 'medium' },
-    { label: 'Grant size range', filled: !!(org.min_grant_target || org.max_grant_target),    impact: 'medium' },
-    { label: 'Mission statement',filled: !!org.mission,                                       impact: 'medium' },
-  ]
-  const filledCount = fields.filter(f => f.filled).length
-  const pct = Math.round((filledCount / fields.length) * 100)
-  const missing = fields.filter(f => !f.filled)
-  return { pct, missing }
-}
+/* Completeness logic now lives in src/lib/profile-completeness.ts — imported
+   at the top of this file. See the note beside CardId above. */
 
 function fmtThousands(v: string | number | null | undefined): string {
   if (!v && v !== 0) return ''
