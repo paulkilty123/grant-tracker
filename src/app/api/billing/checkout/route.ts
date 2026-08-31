@@ -70,6 +70,15 @@ export async function POST(req: NextRequest) {
     .eq('owner_id', user.id)
     .maybeSingle()
 
+  // self_serve is correct here and MUST NOT be widened: this is the public
+  // pricing page, and the date bound on the founding offer is the whole point.
+  //
+  // But it means the founding rate is currently UNREACHABLE for the cohort, who
+  // convert in March 2027, months after the window shuts, having been promised
+  // it permanently. `foundingPriceAvailable('granted', …)` is right and has a
+  // test for that exact case; nothing in the app can invoke it. A conversion
+  // link or an admin action needs to, gated on entitlement rather than on a
+  // date. See docs/cohort-cliff-2027-03-10.md.
   const decision = decideCheckout(
     { plan, period: period as BillingPeriod, kind: kind as PriceKind, channel: 'self_serve' },
     {
