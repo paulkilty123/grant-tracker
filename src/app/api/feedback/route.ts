@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { createClient } from '@/lib/supabase/server'
-import { EMAIL_FROM, EMAIL_NOTIFY_TO, EMAIL_ACCENT, EMAIL_BRAND_HOST } from '@/lib/mcp-brand'
+import { EMAIL_FROM_HEADER, EMAIL_NOTIFY_TO, EMAIL_ACCENT, EMAIL_BRAND_HOST } from '@/lib/mcp-brand'
 
-const FROM_EMAIL = EMAIL_FROM
+const FROM_EMAIL = EMAIL_FROM_HEADER
 const NOTIFY_TO  = EMAIL_NOTIFY_TO
 
 

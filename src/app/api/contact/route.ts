@@ -3,9 +3,9 @@ import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 import { enforceInferenceRateLimit } from '@/lib/mcp-rate-limit'
 import { MCP_CONTACT_EMAIL } from '@/lib/mcp-brand'
-import { EMAIL_FROM, EMAIL_NOTIFY_TO, EMAIL_ACCENT, EMAIL_BRAND_HOST } from '@/lib/mcp-brand'
+import { EMAIL_FROM_HEADER, EMAIL_NOTIFY_TO, EMAIL_ACCENT, EMAIL_BRAND_HOST } from '@/lib/mcp-brand'
 
-const FROM_EMAIL = EMAIL_FROM
+const FROM_EMAIL = EMAIL_FROM_HEADER
 const NOTIFY_TO  = EMAIL_NOTIFY_TO
 
 

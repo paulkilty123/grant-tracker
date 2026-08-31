@@ -5,9 +5,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 import { recordRun } from '@/lib/admin/cron-runs'
-import { EMAIL_FROM, EMAIL_APP_URL, MCP_BRAND_NAME } from '@/lib/mcp-brand'
+import { EMAIL_FROM_HEADER, EMAIL_APP_URL, MCP_BRAND_NAME } from '@/lib/mcp-brand'
 
-const FROM_EMAIL = EMAIL_FROM
+const FROM_EMAIL = EMAIL_FROM_HEADER
 const APP_URL    = EMAIL_APP_URL
 
 export const dynamic = 'force-dynamic'

@@ -229,6 +229,21 @@ export const EMAIL_BRAND_HOST = MCP_APP_HOST.replace(/^www\./, '')
  *  the mail provider, or the receiving domain's DMARC policy will act on it. */
 export const EMAIL_FROM = readString('ALERT_FROM_EMAIL', `alerts@${EMAIL_BRAND_HOST}`)
 
+/**
+ * The From header, with a display name.
+ *
+ * A bare address makes every client show the LOCAL PART as the sender, so the
+ * weekly digest was arriving from "alerts" — a word that appears nowhere in the
+ * product and tells a reader nothing about who is writing. The sender name is
+ * where "who is this" belongs; the subject is for what is urgent.
+ *
+ * Driven by MCP_BRAND_NAME so it cannot drift from the wordmark in the email's
+ * own header. If the env var already carries a display name, it is left alone.
+ */
+export const EMAIL_FROM_HEADER = EMAIL_FROM.includes('<')
+  ? EMAIL_FROM
+  : `${MCP_BRAND_NAME} <${EMAIL_FROM}>`
+
 /** Where internal notifications land: the contact form and in-app feedback. */
 export const EMAIL_NOTIFY_TO = readString('FEEDBACK_NOTIFY_EMAIL', MCP_CONTACT_EMAIL)
 

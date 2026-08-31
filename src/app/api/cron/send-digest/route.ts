@@ -4,7 +4,7 @@ import { getOrgsWithAlertsEnabled } from '@/lib/alerts'
 import { digestAllowlist, isDigestRecipient, digestIsDryRun, testSubjectPrefix } from '@/lib/digest/send-guards'
 import { recordRun } from '@/lib/admin/cron-runs'
 import { getAdminDb } from '@/lib/admin/admin-db'
-import { EMAIL_FROM, EMAIL_APP_URL } from '@/lib/mcp-brand'
+import { EMAIL_FROM_HEADER, EMAIL_APP_URL } from '@/lib/mcp-brand'
 import { unsubscribeUrl } from '@/lib/alerts-unsubscribe'
 import { buildDigest, CAPS, CLOSING_WINDOW_DAYS } from '@/lib/digest/build'
 import { renderDigest } from '@/lib/digest/render'
@@ -140,7 +140,7 @@ export async function GET(req: NextRequest) {
         }
 
         const { error } = await resend.emails.send({
-          from:    EMAIL_FROM,
+          from:    EMAIL_FROM_HEADER,
           to:      org.owner_email,
           subject: `${testSubjectPrefix()}${model.subject}`,
           html:    body,
