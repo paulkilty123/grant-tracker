@@ -160,6 +160,48 @@ was hiding them.
 
 ---
 
+## An alarm is not proved until it has fired
+
+Three times in the week of 2026-08-31 the thing being guarded was right and the
+**alarm on it was quietly wrong**. Every one reported nothing, nothing was the
+answer everybody wanted, and nobody looked twice.
+
+| The watcher | What it reported | What was actually true |
+|---|---|---|
+| `billing_incidents`, on webhook refusals | run succeeded | every write failed on an ON CONFLICT the index could not satisfy, and the error was swallowed by design |
+| reconciliation, on expired grants | 11 mismatches | all 11 were permanent grants; `new Date('infinity')` is an Invalid Date and every comparison with one is false |
+| reconciliation, on a paying subscription | 0 mismatches | it asked whether the owner had ANY entitled org, not whether the one the subscription NAMED was; seven unrelated grants answered yes |
+
+The middle one fired wrongly and was found in a day because false alarms are
+loud. The other two reported zero, which is indistinguishable from working, and
+both were found only because somebody asked for a demonstration.
+
+**The rule: an alarm has to be proved by making the thing it watches for
+actually happen. Reporting zero is not evidence until it has reported one.**
+Paul, 2026-08-31.
+
+In practice, for anything that monitors, reconciles, or reports a count:
+
+1. **Create the bad state and watch it complain.** Not a unit test with fixtures
+   — the real path, against real data. Two of the three above had passing unit
+   tests.
+2. **Reaching that state usually means disabling something.** If a trigger
+   repairs the fault on sight, the only way to test the sweeper or the
+   reconciliation is `alter table ... disable trigger`, do the damage, re-enable.
+   That difficulty is the point: the states worth watching for are exactly the
+   ones the system cannot produce on its own.
+3. **Assert the precondition first**, in the same run. "still entitled = 1, must
+   be >0 or this test is void" — otherwise a suite passes just as loudly against
+   a watcher that does nothing at all.
+4. **Then check it goes quiet again** once the fault is fixed. An alarm that
+   cannot stop is as useless as one that cannot start.
+
+Related, and the same family one level down: *A passing check is not the same as
+the thing being right*, and the readiness-probe rule that a fingerprint which is
+already true proves nothing.
+
+---
+
 ## Design System
 
 ### Fonts
