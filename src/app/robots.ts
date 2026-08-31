@@ -9,18 +9,20 @@ import { MCP_APP_ORIGIN } from '@/lib/mcp-brand'
 //    404. The middleware has whitelisted the path as a metadata route since the
 //    OG-image work, so the route was anticipated and simply never built.
 //
-// 2. ONE robots.txt serves BOTH live domains. granttracker.co.uk does not
-//    redirect: it serves this same deployment byte-for-byte, so anything here
-//    is served under both hosts and cannot be varied per host from a static
-//    metadata route.
+// 2. This file is served by shootsfunding ONLY, and that is recent.
 //
-//    That rules out the tempting fix of `Disallow: /` for the old domain, and
-//    it would be the wrong fix anyway: blocking a duplicate stops the crawler
-//    reading the canonical tag that consolidates it, so the URL can stay in the
-//    index with no snippet instead of folding into the canonical. The correct
-//    fix is the 308 at the domain level. Until that lands, the sitemap and host
-//    lines below both name the canonical origin, which is the strongest signal
-//    a shared file can carry.
+//    Until 2026-08-31 granttracker.co.uk did not redirect — it served this same
+//    deployment byte-for-byte, so one robots.txt answered for two live domains
+//    and could not be varied per host from a static metadata route. Both
+//    granttracker hosts now 308 to www.shootsfunding.co.uk with the path
+//    preserved, /robots.txt and /sitemap.xml included, verified end to end
+//    including the http->https hop.
+//
+//    No `Disallow: /` was ever added for the old domain, and none should be if
+//    a duplicate host reappears. Blocking a duplicate stops the crawler reading
+//    the canonical tag that consolidates it, so the URL can sit in the index
+//    with no snippet instead of folding into the canonical. A redirect is the
+//    fix; robots.txt is not.
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
