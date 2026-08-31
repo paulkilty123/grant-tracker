@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
 
   const payload = await recordRun('reconcile-billing', async () => {
     const [{ data: subs, error: subErr }, { data: orgs, error: orgErr }] = await Promise.all([
-      db.from('subscriptions').select('owner_id, plan, status, stripe_subscription_id'),
+      db.from('subscriptions').select('owner_id, plan, status, stripe_subscription_id, org_id'),
       db.from('organisations').select('id, owner_id, name, apply_access, granted_access_until'),
     ])
     if (subErr) throw new Error(`subscriptions: ${subErr.message}`)

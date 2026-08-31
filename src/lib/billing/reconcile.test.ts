@@ -3,7 +3,7 @@ import { findMismatches, isEntitling, grantIsLive, type SubRow, type OrgRow } fr
 
 const OWNER = 'own-1'
 const sub = (o: Partial<SubRow> = {}): SubRow =>
-  ({ owner_id: OWNER, plan: 'apply', status: 'active', stripe_subscription_id: 'sub_1', ...o })
+  ({ owner_id: OWNER, plan: 'apply', status: 'active', stripe_subscription_id: 'sub_1', org_id: null, ...o })
 const org = (o: Partial<OrgRow> = {}): OrgRow =>
   ({ id: 'org-1', owner_id: OWNER, name: 'Test Org', apply_access: true, granted_access_until: null, ...o })
 
@@ -56,12 +56,49 @@ describe('paid and locked out — the expensive case', () => {
     expect(m[0].org_id).toBeNull()
   })
 
-  it('is satisfied when ANY of several organisations is entitled', () => {
-    const m = findMismatches([sub()], [
+  it('is satisfied when the organisation it NAMES is entitled', () => {
+    const m = findMismatches([sub({ org_id: 'b' })], [
       org({ id: 'a', apply_access: false }),
       org({ id: 'b', apply_access: true }),
     ], now)
     expect(m).toEqual([])
+  })
+
+  it('reports when the named organisation is the unentitled one', () => {
+    // The version this replaces asked whether ANY organisation was entitled and
+    // would have passed here, because 'b' is fine. The subscription paid for
+    // 'a', which is not.
+    const m = findMismatches([sub({ org_id: 'a' })], [
+      org({ id: 'a', apply_access: false }),
+      org({ id: 'b', apply_access: true }),
+    ], now)
+    expect(m).toHaveLength(1)
+    expect(m[0].kind).toBe('paid_without_access')
+    expect(m[0].org_id).toBe('a')
+  })
+
+  it('reports a subscription naming an organisation the owner does not hold', () => {
+    const m = findMismatches([sub({ org_id: 'gone' })], [org({ id: 'a' })], now)
+    expect(m).toHaveLength(1)
+    expect(m[0].kind).toBe('paid_without_access')
+  })
+
+  it('reports a subscription that names none while the owner holds several', () => {
+    // Caught live on an account with nine organisations, seven entitled by
+    // permanent grants and a subscription naming none. Every organisation was
+    // fine, the subscription had bought nothing, and the old check reported
+    // zero because it found entitled organisations and stopped looking.
+    const m = findMismatches([sub({ org_id: null })], [
+      org({ id: 'a', granted_access_until: 'infinity' }),
+      org({ id: 'b', granted_access_until: 'infinity' }),
+    ], now)
+    expect(m).toHaveLength(1)
+    expect(m[0].kind).toBe('subscription_names_no_organisation')
+  })
+
+  it('stays quiet when it names none but the owner holds exactly one', () => {
+    // Unambiguous, and the shape of every subscription created before 076.
+    expect(findMismatches([sub({ org_id: null })], [org()], now)).toEqual([])
   })
 })
 

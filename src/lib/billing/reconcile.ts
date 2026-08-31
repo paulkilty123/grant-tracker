@@ -58,12 +58,26 @@ export function grantIsLive(until: string | null, now: Date): { live: boolean; u
   return { live: d > now, unparseable: false }
 }
 
-export interface SubRow { owner_id: string; plan: string; status: string; stripe_subscription_id: string | null }
+export interface SubRow {
+  owner_id: string
+  plan: string
+  status: string
+  stripe_subscription_id: string | null
+  /** Which organisation it pays for. Null for anything created before 076. */
+  org_id: string | null
+}
 export interface OrgRow { id: string; owner_id: string; name: string | null; apply_access: boolean; granted_access_until: string | null }
 
 export type MismatchKind =
-  /** They are paying and nothing of theirs is entitled. The expensive one. */
+  /** They are paying and the organisation they pay for is not entitled. */
   | 'paid_without_access'
+  /**
+   * Paying, several organisations, and the subscription names none — so the
+   * SQL rule entitles nothing rather than guessing. Its own kind because the
+   * fix is different: somebody has to say which organisation, and nothing is
+   * broken except the missing answer.
+   */
+  | 'subscription_names_no_organisation'
   /** Entitled with neither a grant nor a paying subscription behind it. */
   | 'access_without_basis'
   /** A subscription whose owner holds no organisation at all. */
@@ -106,12 +120,44 @@ export function findMismatches(
       continue
     }
 
-    if (!owned.some(o => o.apply_access)) {
+    // WHICH organisation this subscription is supposed to have entitled.
+    //
+    // The first version of this asked whether the owner had ANY entitled
+    // organisation, which is a different question and quietly the wrong one.
+    // Caught live: an account holding nine organisations, seven of them
+    // entitled by permanent grants, with a subscription naming none and
+    // therefore entitling none. Every organisation was fine, the subscription
+    // had bought nothing, and this check reported zero mismatches because it
+    // found entitled organisations and stopped looking. The grants masked it.
+    const target = sub.org_id
+      ? owned.find(o => o.id === sub.org_id) ?? null
+      : owned.length === 1 ? owned[0] : null
+
+    if (!target) {
+      if (sub.org_id) {
+        out.push({
+          kind: 'paid_without_access',
+          owner_id: sub.owner_id,
+          org_id: sub.org_id,
+          detail: `${sub.plan}/${sub.status} subscription names organisation ${sub.org_id}, which this owner does not hold`,
+        })
+      } else {
+        out.push({
+          kind: 'subscription_names_no_organisation',
+          owner_id: sub.owner_id,
+          org_id: null,
+          detail: `${sub.plan}/${sub.status} subscription names no organisation and the owner holds ${owned.length}, so it entitles none of them`,
+        })
+      }
+      continue
+    }
+
+    if (!target.apply_access) {
       out.push({
         kind: 'paid_without_access',
         owner_id: sub.owner_id,
-        org_id: owned[0].id,
-        detail: `${sub.plan}/${sub.status} subscription but none of ${owned.length} organisation(s) has apply_access`,
+        org_id: target.id,
+        detail: `${sub.plan}/${sub.status} subscription but ${target.name ?? target.id} does not have apply_access`,
       })
     }
   }
