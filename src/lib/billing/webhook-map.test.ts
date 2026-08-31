@@ -7,7 +7,7 @@ const sub = (over: Partial<StripeSubscriptionLike> = {}): StripeSubscriptionLike
   cancel_at_period_end: false,
   current_period_end: 1793318400,           // 2026-10-30T00:00:00Z
   trial_end: null,
-  metadata: { owner_id: '11111111-1111-1111-1111-111111111111' },
+  metadata: { owner_id: '11111111-1111-1111-1111-111111111111', org_id: '22222222-2222-2222-2222-222222222222' },
   items: { data: [{
     current_period_end: 1793318400,        // 2026-10-30, where API v2349 puts it
     price: { id: 'price_1', lookup_key: lookupKeyFor('apply', 'standard', 'monthly') },
@@ -22,6 +22,7 @@ describe('a subscription we recognise', () => {
     if (!r.ok) return
     expect(r.row).toEqual({
       owner_id: '11111111-1111-1111-1111-111111111111',
+      org_id: '22222222-2222-2222-2222-222222222222',
       plan: 'apply',
       status: 'active',
       stripe_customer_id: 'cus_1',
@@ -151,6 +152,41 @@ describe('where the renewal date actually lives', () => {
       items: { data: [{ price: { id: 'p', lookup_key: lookupKeyFor('match', 'standard', 'monthly') } }] },
     }))
     expect(r.ok && r.row.current_period_end).toBeNull()
+  })
+})
+
+describe('which organisation the subscription pays for', () => {
+  // Before migration 076 a subscription named no organisation and
+  // derive_apply_access entitled EVERY org the owner held. Measured on a real
+  // account: one Apply subscription, plan limit one organisation, nine
+  // entitled. The mapper carrying org_id is half the fix; the SQL rule is the
+  // other half.
+  it('carries the organisation checkout named', () => {
+    const r = mapSubscription(sub())
+    expect(r.ok && r.row.org_id).toBe('22222222-2222-2222-2222-222222222222')
+  })
+
+  it('is null when checkout did not say, rather than inventing one', () => {
+    // Every subscription created before 076 looks like this. Null is safe: the
+    // SQL rule uses the owner's only org if they have exactly one and entitles
+    // nothing if they have several, so it becomes an alarm rather than a
+    // silent over-grant.
+    const r = mapSubscription(sub({ metadata: { owner_id: '11111111-1111-1111-1111-111111111111' } }))
+    expect(r.ok).toBe(true)
+    expect(r.ok && r.row.org_id).toBeNull()
+  })
+
+  it('treats a blank org_id as absent', () => {
+    const r = mapSubscription(sub({
+      metadata: { owner_id: '11111111-1111-1111-1111-111111111111', org_id: '   ' },
+    }))
+    expect(r.ok && r.row.org_id).toBeNull()
+  })
+
+  it('still refuses a subscription with no owner, even when an org is named', () => {
+    const r = mapSubscription(sub({ metadata: { org_id: '22222222-2222-2222-2222-222222222222' } }))
+    expect(r.ok).toBe(false)
+    if (!r.ok) expect(r.reason).toBe('no_owner_metadata')
   })
 })
 

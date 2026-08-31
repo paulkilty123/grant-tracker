@@ -63,6 +63,15 @@ export interface StripeSubscriptionLike {
 
 export interface SubscriptionRow {
   owner_id: string
+  /**
+   * Which organisation this pays for. Null when checkout did not say, which is
+   * every subscription created before migration 076. Null is SAFE rather than
+   * permissive: the SQL rule entitles the owner's only organisation if they
+   * have exactly one, and entitles nothing if they have several, so an unnamed
+   * subscription for a multi-org owner surfaces as a reconciliation alarm
+   * instead of granting access to all of them.
+   */
+  org_id: string | null
   plan: PlanId
   status: string
   stripe_customer_id: string
@@ -124,6 +133,7 @@ export function mapSubscription(sub: StripeSubscriptionLike): MapResult {
     kind: resolved.kind,
     row: {
       owner_id: ownerId,
+      org_id: sub.metadata?.org_id?.trim() || null,
       plan: resolved.plan,
       // Stored verbatim. The database enum mirrors Stripe's vocabulary, so an
       // unfamiliar status fails loudly on write rather than being mapped onto

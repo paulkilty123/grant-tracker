@@ -15,9 +15,18 @@
 // Lose it and checkout still succeeds, the customer is still charged, and
 // nothing grants them access — a paying customer locked out, with the money
 // taken. It is set here and asserted by the webhook rather than assumed.
+//
+// `org_id` rides alongside it and matters for the same reason, one step on.
+// Access is granted per ORGANISATION and the subscription used to name none, so
+// derive_apply_access entitled every organisation the owner held. Measured on
+// Paul's account before it was fixed: one Apply subscription, whose plan allows
+// one organisation, entitled all nine. Migration 076 made the subscription name
+// its organisation; this is where the name comes from.
 
 import { NextRequest, NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 import { createClient as createServerClient } from '@/lib/supabase/server'
+import { ACTIVE_ORG_COOKIE } from '@/lib/builder/access'
 import { getAdminDb } from '@/lib/admin/admin-db'
 import { getStripe } from '@/lib/billing/stripe-client'
 import { decideCheckout } from '@/lib/billing/checkout'
@@ -54,6 +63,43 @@ export async function POST(req: NextRequest) {
   }
   if (typeof kind !== 'string' || !KINDS.includes(kind as PriceKind)) {
     return NextResponse.json({ error: 'kind must be standard or founding' }, { status: 400 })
+  }
+
+  // WHICH organisation is being paid for. One is unambiguous; several needs an
+  // answer rather than a guess, and the guess is the bug this replaces.
+  const { data: owned } = await supabase
+    .from('organisations')
+    .select('id')
+    .eq('owner_id', user.id)
+    .order('created_at', { ascending: true })
+
+  const ownedIds = (owned ?? []).map(o => o.id as string)
+  if (ownedIds.length === 0) {
+    return NextResponse.json(
+      { error: 'Set up your organisation before subscribing.', code: 'no_organisation' },
+      { status: 409 },
+    )
+  }
+
+  let orgId: string
+  if (ownedIds.length === 1) {
+    orgId = ownedIds[0]
+  } else {
+    // Deliberately the switcher's choice, NOT the oldest. Taking the oldest is
+    // the bug already found on Deadlines and on the data export, and it would
+    // be worse here: it would charge for one organisation and entitle a
+    // different one, with nothing on the row to show which was meant.
+    const active = (await cookies()).get(ACTIVE_ORG_COOKIE)?.value
+    if (!active || !ownedIds.includes(active)) {
+      return NextResponse.json(
+        {
+          error: 'You hold several organisations. Choose the one to subscribe for, then try again.',
+          code: 'ambiguous_organisation',
+        },
+        { status: 409 },
+      )
+    }
+    orgId = active
   }
 
   const stripe = getStripe()
@@ -102,8 +148,8 @@ export async function POST(req: NextRequest) {
       // checkout resumes rather than starting a second one.
       client_reference_id: user.id,
       subscription_data: {
-        // See the note at the top. Everything downstream depends on this.
-        metadata: { owner_id: user.id },
+        // See the note at the top. Everything downstream depends on both.
+        metadata: { owner_id: user.id, org_id: orgId },
         ...(decision.trialDays
           ? {
               trial_period_days: decision.trialDays,
