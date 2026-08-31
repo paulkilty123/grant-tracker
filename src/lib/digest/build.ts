@@ -560,19 +560,14 @@ export async function buildDigest(
 
   const hasHistory = (pipeline?.length ?? 0) > 0 || (interactions?.length ?? 0) > 0
 
-  // "New" means new TO THIS READER — not shown to them in a digest before —
-  // rather than recently added to the catalogue.
-  //
-  // The first version used first_seen_at within 30 days and produced an empty
-  // section for a well-matched org, because the catalogue published 20 rows in
-  // 30 days and none in the last 7. A reader with a good profile would have
-  // gone weeks with nothing under a heading that implies we looked.
-  // digest_sent_items is exactly the record that makes the better definition
-  // possible, and it is what the no-repeat rules already rely on.
-  // Newest first, then score. Built BEFORE the match pool so these rows can be
+  // Newest first, then score. Built BEFORE the ranked list so these rows can be
   // excluded from it — the same fund appearing under "New this week" and again
   // under "Matches worth a look" in one email is the kind of thing that makes a
   // digest look automated.
+  //
+  // This section IS filtered by send history, unlike the ranked list below. The
+  // claim it makes is "this arrived since we last wrote", so showing the same
+  // row twice would make the heading untrue.
   const newThisWeek: MatchRow[] = newThisWeekAll
     .sort((a, b) => {
       const da = a.row.first_seen_at ? new Date(String(a.row.first_seen_at)).getTime() : 0
@@ -584,10 +579,28 @@ export async function buildDigest(
   newThisWeek.forEach(r => shown.push({ section: 'new_match', key: r.key }))
   const newThisWeekKeys = new Set(newThisWeek.map(r => r.key))
 
-  const unshown = withBlurb.filter(s =>
-    !seen.has(`new_match:${String(s.row.id)}`) && !newThisWeekKeys.has(String(s.row.id)))
-  // Genuinely recent first, then by score. The sort carries the freshness that
-  // the filter used to enforce.
+  // The ranked list is NOT filtered by what we have already shown, and that is
+  // a deliberate reversal.
+  //
+  // It used to exclude anything recorded in digest_sent_items, which walked the
+  // reader down their own ranking a page at a time. ACC has exactly ten matches
+  // above the floor: the first send showed all ten, the next week's section was
+  // empty and disappeared, and the whole list returned a month later when the
+  // suppression window expired. Feast, a month of nothing, feast.
+  //
+  // The no-repeat rule in the spec is about the OPTIONAL sections — near
+  // misses, the profile prompt, rounds opening. Matches are rung 3 and are not
+  // optional. For a profile that has not changed, the right behaviour is that
+  // this section does not change either: these are still their best matches,
+  // and rotating down to the eleventh-to-twentieth best to manufacture novelty
+  // makes the email worse every week.
+  //
+  // "New this week" carries the novelty now, and it is honest about it because
+  // it filters on recency rather than on whatever we happened to show somebody.
+  //
+  // Still deduped against that section, so one fund cannot appear twice in one
+  // email under two headings.
+  const unshown = withBlurb.filter(s => !newThisWeekKeys.has(String(s.row.id)))
   unshown.sort((a, b) => Number(b.fresh) - Number(a.fresh) || b.score - a.score)
 
   // Week one names its sort out loud — "here are the three closing soonest" —
