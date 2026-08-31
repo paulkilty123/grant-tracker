@@ -18,7 +18,10 @@ const UI   = "'Space Grotesk',Helvetica,Arial,sans-serif"
 const BODY = "'Plus Jakarta Sans',Helvetica,Arial,sans-serif"
 
 const C = {
-  page:    '#EFE9DD',
+  // The app's own page ground (dashboard/layout.tsx). The email used a darker
+  // cream that existed nowhere in the product, so opening a link changed the
+  // background under you.
+  page:    '#FBF8F2',
   card:    '#FFFFFF',
   tile:    '#F1EDE3',
   deep:    '#1D3C3E',
@@ -26,6 +29,11 @@ const C = {
   body:    '#5F5E5A',
   muted:   '#74736E',
   hair:    'rgba(29,60,62,.10)',
+  // The card edge. On the old darker ground a white card separated itself; on
+  // the app's #FBF8F2 it does not, and the app draws a hairline for exactly
+  // this reason. Outlook squares the corners and keeps the border, which is
+  // the right way round to degrade.
+  edge:    'rgba(29,60,62,.09)',
   urgent:  '#D67558',
   gold:    '#EBCE78',
   danger:  '#B94040',
@@ -81,7 +89,7 @@ function header(origin: string, now: Date): string {
       <td align="left">
         <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
           <td valign="middle" style="padding-right:9px;line-height:0;">
-            <img src="${origin}/email/shoots-mark@2x.png" width="24" height="24" alt="Shoots" style="display:block;border:0;">
+            <img src="${origin}/email/shoots-mark@2x.png" width="32" height="32" alt="Shoots" style="display:block;border:0;">
           </td>
           <td valign="middle" style="font-family:${UI};font-size:21px;font-weight:700;letter-spacing:-.5px;color:${C.deep};">shoots</td>
         </tr></table>
@@ -96,7 +104,7 @@ function closingRow(r: DigestModel['closing'][number], origin: string): string {
   const { n, unit } = countdown(r.days)
   const tileBg = r.days <= 7 ? C.urgent : C.gold
   const href = r.url ?? `${origin}/dashboard/deadlines`
-  return `<tr><td style="background:${C.card};padding:0 30px 12px;">
+  return `<tr><td style="background:${C.card};border-left:1px solid ${C.edge};border-right:1px solid ${C.edge};padding:0 30px 12px;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.tile};border-radius:14px;">
       <tr>
         <td width="66" valign="top" style="padding:16px 0 16px 16px;">
@@ -141,8 +149,8 @@ function nearMissRow(r: DigestModel['nearMisses'][number]): string {
 }
 
 function cardOpen(rounded: 'top' | 'none'): string {
-  const radius = rounded === 'top' ? 'border-radius:16px 16px 0 0;' : ''
-  return `<tr><td style="background:${C.card};${radius}padding:30px 30px 0;">`
+  const radius = rounded === 'top' ? `border-radius:16px 16px 0 0;border-top:1px solid ${C.edge};` : ''
+  return `<tr><td style="background:${C.card};border-left:1px solid ${C.edge};border-right:1px solid ${C.edge};${radius}padding:30px 30px 0;">`
 }
 
 export interface RenderOptions {
@@ -171,7 +179,7 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
   if (m.closing.length) {
     m.closing.forEach(r => rows.push(closingRow(r, origin)))
     if (m.closingOverflow > 0) {
-      rows.push(`<tr><td style="background:${C.card};padding:0 30px 8px;">
+      rows.push(`<tr><td style="background:${C.card};border-left:1px solid ${C.edge};border-right:1px solid ${C.edge};padding:0 30px 8px;">
         ${textLink(`${origin}/dashboard/deadlines`, `and ${plural(m.closingOverflow, 'more')} closing this month`)}
       </td></tr>`)
     }
@@ -180,14 +188,14 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
   /* ── The reassurance line. Not filler: an exception report is only
         trustworthy if it says what it checked. ─────────────────────────── */
   if (m.reassurance && m.mode !== 'week_one') {
-    rows.push(`<tr><td style="background:${C.card};padding:${m.closing.length ? '4px' : '0'} 30px 0;">
+    rows.push(`<tr><td style="background:${C.card};border-left:1px solid ${C.edge};border-right:1px solid ${C.edge};padding:${m.closing.length ? '4px' : '0'} 30px 0;">
       <p style="margin:0;font-family:${BODY};font-size:13.5px;line-height:1.6;color:${C.muted};">${esc(m.reassurance)}</p>
     </td></tr>`)
   }
 
   /* ── 2. Also in progress ─────────────────────────────────────────────── */
   if (m.inProgress.length) {
-    rows.push(`<tr><td style="background:${C.card};padding:26px 30px 0;">
+    rows.push(`<tr><td style="background:${C.card};border-left:1px solid ${C.edge};border-right:1px solid ${C.edge};padding:26px 30px 0;">
       ${sectionLabel('Also in progress')}
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
         ${m.inProgress.map(r => progressRow(r, origin)).join('')}
@@ -210,7 +218,7 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
     const seeAll = m.mode === 'week_one'
       ? `See all ${plural(m.matchTotal, 'match', 'matches')}`
       : 'See all your matches'
-    rows.push(`<tr><td style="background:${C.card};padding:${m.mode === 'week_one' ? '0' : '26px'} 30px 0;">
+    rows.push(`<tr><td style="background:${C.card};border-left:1px solid ${C.edge};border-right:1px solid ${C.edge};padding:${m.mode === 'week_one' ? '0' : '26px'} 30px 0;">
       ${label ? sectionLabel(label) : ''}
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
         ${m.matches.map((r, i) => matchRow(r, i === m.matches.length - 1)).join('')}
@@ -224,7 +232,7 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
 
   /* ── Week one: say what changes, and give it a button. ────────────────── */
   if (m.mode === 'week_one') {
-    rows.push(`<tr><td style="background:${C.card};padding:24px 30px 0;">
+    rows.push(`<tr><td style="background:${C.card};border-left:1px solid ${C.edge};border-right:1px solid ${C.edge};padding:24px 30px 0;">
       <p style="margin:0 0 12px;font-family:${BODY};font-size:13.5px;line-height:1.6;color:${C.body};">
         Add one of these to your pipeline. Next Tuesday this email leads with your deadlines instead of your matches. That is the version worth having.
       </p>
@@ -234,7 +242,7 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
 
   /* ── 6. Near misses ──────────────────────────────────────────────────── */
   if (m.nearMisses.length) {
-    rows.push(`<tr><td style="background:${C.card};padding:26px 30px 0;">
+    rows.push(`<tr><td style="background:${C.card};border-left:1px solid ${C.edge};border-right:1px solid ${C.edge};padding:26px 30px 0;">
       ${sectionLabel('Just outside your profile')}
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
         ${m.nearMisses.map(nearMissRow).join('')}
@@ -244,7 +252,7 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
 
   /* ── 7. Profile prompt. One per email, never a list. ──────────────────── */
   if (m.prompt) {
-    rows.push(`<tr><td style="background:${C.card};padding:26px 30px 0;">
+    rows.push(`<tr><td style="background:${C.card};border-left:1px solid ${C.edge};border-right:1px solid ${C.edge};padding:26px 30px 0;">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.tile};border-radius:14px;">
         <tr><td style="padding:18px;">
           <p style="margin:0 0 5px;font-family:${UI};font-size:15.5px;font-weight:600;letter-spacing:-.2px;color:${C.deep};">${esc(m.prompt.title)}</p>
@@ -255,7 +263,7 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
     </td></tr>`)
   }
 
-  rows.push(`<tr><td style="background:${C.card};border-radius:0 0 16px 16px;padding:30px;"></td></tr>`)
+  rows.push(`<tr><td style="background:${C.card};border-left:1px solid ${C.edge};border-right:1px solid ${C.edge};border-radius:0 0 16px 16px;border-bottom:1px solid ${C.edge};padding:30px;"></td></tr>`)
 
   /* ── Footer. Catalogue growth is reassurance, not news, so it never leads.
         No product-news slot: the moment the digest has one, every week needs

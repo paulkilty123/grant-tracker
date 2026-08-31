@@ -158,8 +158,21 @@ function verdictFor(rule: string): string {
   return 'Ruled out on eligibility.'
 }
 
+/**
+ * Where a grant link goes: the card INSIDE the app, not the public bridge page.
+ *
+ * /grants/<id> is the acquisition page — it wears a "Sign in" header and is
+ * built for a stranger arriving from search or an AI assistant. A member who
+ * already pays for Shoots should land on the real card, with Add to pipeline
+ * and the flag control on it.
+ *
+ * A logged-out reader still gets there: middleware now redirects to
+ * /auth/login?next=<this path>, so they sign in and arrive at the grant rather
+ * than being dumped on the dashboard. Most people open email on a phone, which
+ * is exactly where a live session is least likely.
+ */
 function grantUrl(origin: string, row: Record<string, unknown>): string {
-  return `${origin}/grants/${encodeURIComponent(String(row.external_id ?? row.id))}`
+  return `${origin}/dashboard/grants/${encodeURIComponent(String(row.external_id ?? row.id))}`
 }
 
 /**
