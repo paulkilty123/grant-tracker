@@ -88,10 +88,14 @@ function header(origin: string, now: Date): string {
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
       <td align="left">
         <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
-          <td valign="middle" style="padding-right:9px;line-height:0;">
-            <img src="${origin}/email/shoots-mark@2x.png" width="32" height="32" alt="Shoots" style="display:block;border:0;">
+          <td valign="middle" style="padding-right:6px;line-height:0;">
+            <img src="${origin}/email/shoots-mark@2x.png" width="28" height="28" alt="Shoots" style="display:block;border:0;">
           </td>
-          <td valign="middle" style="font-family:${UI};font-size:21px;font-weight:700;letter-spacing:-.5px;color:${C.deep};">shoots</td>
+          <!-- The lockup is components/Logo.tsx at size="md": a 28px mark
+               against a 22px wordmark at font-weight 500, 6px apart. The
+               wordmark was 700 here, which is what kept reading as the wrong
+               logo — the mark was right all along and the weight was not. -->
+          <td valign="middle" style="font-family:${UI};font-size:22px;font-weight:500;letter-spacing:-.02em;color:${C.deep};">shoots</td>
         </tr></table>
       </td>
       <td align="right" style="font-family:${UI};font-size:12.5px;font-weight:500;color:${C.muted};">${esc(humanDayDate(now))}</td>

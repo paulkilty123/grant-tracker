@@ -159,20 +159,20 @@ function verdictFor(rule: string): string {
 }
 
 /**
- * Where a grant link goes: the card INSIDE the app, not the public bridge page.
+ * Where a grant link goes: the card in FIND FUNDING.
  *
- * /grants/<id> is the acquisition page — it wears a "Sign in" header and is
- * built for a stranger arriving from search or an AI assistant. A member who
- * already pays for Shoots should land on the real card, with Add to pipeline
- * and the flag control on it.
+ * Third destination and the right one. /grants/<id> is the public bridge page
+ * for strangers arriving from search; /dashboard/grants/<id> is an older
+ * standalone page. The card a member actually works from lives in Find
+ * Funding, which pins a single opportunity from ?grant= and resolves either a
+ * uuid or an external_id, so the same slug used everywhere else works here.
  *
- * A logged-out reader still gets there: middleware now redirects to
- * /auth/login?next=<this path>, so they sign in and arrive at the grant rather
- * than being dumped on the dashboard. Most people open email on a phone, which
- * is exactly where a live session is least likely.
+ * A logged-out reader still arrives: middleware redirects to
+ * /auth/login?next=<this path>, so they sign in and land on the card rather
+ * than being dumped on the dashboard.
  */
 function grantUrl(origin: string, row: Record<string, unknown>): string {
-  return `${origin}/dashboard/grants/${encodeURIComponent(String(row.external_id ?? row.id))}`
+  return `${origin}/dashboard/search?grant=${encodeURIComponent(String(row.external_id ?? row.id))}`
 }
 
 /**

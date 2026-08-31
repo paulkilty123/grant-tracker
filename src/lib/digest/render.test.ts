@@ -14,20 +14,20 @@ const model: DigestModel = {
   closing: [
     { kind: 'pipeline', name: 'Projects for Young People Grants', funder: 'Heathrow Community Trust',
       deadline: '2026-09-10', days: 10, status: 'In Identified since 25 August.',
-      url: 'https://www.shootsfunding.co.uk/dashboard/grants/pfyp', key: 'p1' },
+      url: 'https://www.shootsfunding.co.uk/dashboard/search?grant=pfyp', key: 'p1' },
     { kind: 'saved', name: 'A Saved Fund', funder: 'Someone & Co',
       deadline: '2026-09-17', days: 17, status: 'Saved 3 August, never added to your pipeline.',
-      url: 'https://www.shootsfunding.co.uk/dashboard/grants/saved-1', key: 's1' },
+      url: 'https://www.shootsfunding.co.uk/dashboard/search?grant=saved-1', key: 's1' },
   ],
   closingOverflow: 0,
   inProgress: [
     { name: 'Church and Communities Programme', funder: null, stage: 'Submitted',
-      status: 'In Submitted.', stalled: false, url: 'https://www.shootsfunding.co.uk/dashboard/grants/ccp', key: 'ip1' },
+      status: 'In Submitted.', stalled: false, url: 'https://www.shootsfunding.co.uk/dashboard/search?grant=ccp', key: 'ip1' },
   ],
   inProgressOverflow: 0,
   matches: [
     { title: 'NCVO Learning & Development', funder: 'NCVO', blurb: 'Training programmes.',
-      meta: 'NCVO · rolling', url: 'https://www.shootsfunding.co.uk/dashboard/grants/ncvo', key: 'm1' },
+      meta: 'NCVO · rolling', url: 'https://www.shootsfunding.co.uk/dashboard/search?grant=ncvo', key: 'm1' },
   ],
   matchesOverflow: 0,
   matchTotal: 1,
@@ -36,7 +36,7 @@ const model: DigestModel = {
     { title: 'Community Grants Fund', funder: 'X', verdict: 'Ruled out on area.',
       rule: 'Restricted to Scotland — your org is in England.',
       condition: 'We read that from their page on 12 June.',
-      url: 'https://www.shootsfunding.co.uk/dashboard/grants/cgf', key: 'nm1' },
+      url: 'https://www.shootsfunding.co.uk/dashboard/search?grant=cgf', key: 'nm1' },
   ],
   prompt: { title: 'Get more specific', body: 'Because.', cta: 'Add your specialisms',
             href: 'https://www.shootsfunding.co.uk/dashboard/profile#card-focus' },
@@ -51,21 +51,21 @@ const html = renderDigest(model, {
   now: new Date('2026-09-01T09:00:00Z'),
 })
 
-describe('every named opportunity is reachable, and lands INSIDE the app', () => {
+describe('every named opportunity is reachable, and lands on its card in Find Funding', () => {
   // The first version rendered titles as plain text with a single "See all your
   // matches" link at the foot. A reader could see ten funds and click none.
   it.each([
-    ['closing pipeline row', 'https://www.shootsfunding.co.uk/dashboard/grants/pfyp'],
-    ['closing saved row',    'https://www.shootsfunding.co.uk/dashboard/grants/saved-1'],
-    ['in-progress row',      'https://www.shootsfunding.co.uk/dashboard/grants/ccp'],
-    ['match row',            'https://www.shootsfunding.co.uk/dashboard/grants/ncvo'],
-    ['near-miss row',        'https://www.shootsfunding.co.uk/dashboard/grants/cgf'],
+    ['closing pipeline row', 'https://www.shootsfunding.co.uk/dashboard/search?grant=pfyp'],
+    ['closing saved row',    'https://www.shootsfunding.co.uk/dashboard/search?grant=saved-1'],
+    ['in-progress row',      'https://www.shootsfunding.co.uk/dashboard/search?grant=ccp'],
+    ['match row',            'https://www.shootsfunding.co.uk/dashboard/search?grant=ncvo'],
+    ['near-miss row',        'https://www.shootsfunding.co.uk/dashboard/search?grant=cgf'],
   ])('%s links to its page', (_label, href) => {
     expect(html).toContain(`href="${href}"`)
   })
 
   it('wraps the title text itself in the anchor, not just a button below it', () => {
-    expect(html).toMatch(/<a href="[^"]*\/dashboard\/grants\/ncvo"[^>]*>NCVO Learning &amp; Development<\/a>/)
+    expect(html).toMatch(/<a href="[^"]*\/dashboard\/search\?grant=ncvo"[^>]*>NCVO Learning &amp; Development<\/a>/)
   })
 })
 
