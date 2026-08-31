@@ -46,8 +46,16 @@ export interface NearMiss {
  * nothing to check and nothing to hand back.
  */
 const ADJACENT: Partial<Record<LegalStructure, LegalStructure[]>> = {
-  cic_guarantee:      ['ltd_guarantee', 'cic_shares'],
-  cic_shares:         ['ltd_shares', 'cic_guarantee'],
+  // cic_guarantee → ltd_guarantee is NOT here any more, and its absence is the
+  // point: a CIC limited by guarantee IS a company limited by guarantee, so
+  // eligibility.ts now matches it outright. It was appearing as a near miss
+  // for funds that simply accept it.
+  //
+  // The reverse stays, because containment runs one way. A plain company
+  // limited by guarantee is genuinely one step from a CIC-only fund — the step
+  // being CIC registration.
+  cic_guarantee:      ['cic_shares'],
+  cic_shares:         ['cic_guarantee'],
   ltd_guarantee:      ['cic_guarantee'],
   ltd_shares:         ['cic_shares'],
   unincorporated:     ['cio'],
@@ -73,12 +81,6 @@ const PLURAL: Partial<Record<LegalStructure, string>> = {
   cooperative:        'co-operatives',
   unincorporated:     'unincorporated groups',
 }
-/** Used only in the "they fund X, but not Y" contrast, where brevity carries it. */
-const SHORT_PLURAL: Partial<Record<LegalStructure, string>> = {
-  cic_guarantee: 'CICs',
-  cic_shares:    'CICs',
-}
-
 const SINGULAR: Partial<Record<LegalStructure, string>> = {
   cic_guarantee:      'a CIC limited by guarantee',
   cic_shares:         'a CIC limited by shares',
@@ -147,24 +149,12 @@ export function findNearMiss({ grant, org, readOn, otherwiseFits }: NearMissInpu
     const near = allowed.filter(a => isAdjacent(mine, a))
     if (near.length) {
       const theyFund = list(near.map(a => PLURAL[a] ?? a))
-      // Short form in the contrast clause. "They fund companies limited by
-      // guarantee, but not CICs limited by guarantee" is a mouthful that buries
-      // the distinction it is making; the sentence that follows spells the
-      // reader's form out in full anyway.
-      const notYou = SHORT_PLURAL[mine] ?? PLURAL[mine] ?? mine
       const youAre = SINGULAR[mine] ?? mine
-      const sameCompanyForm =
-        (mine === 'cic_guarantee' && near.includes('ltd_guarantee')) ||
-        (mine === 'cic_shares' && near.includes('ltd_shares'))
       return {
         dimension: 'structure',
         verdict: 'Ruled out on legal structure.',
-        rule: sameCompanyForm
-          ? `They fund ${theyFund}, but not ${notYou}. You are both — ${youAre}.`
-          : `They fund ${theyFund}. You are ${youAre}, which is one step away.`,
-        condition: sameCompanyForm
-          ? `${provenance} Funders who write the rule this way have often not considered CICs at all, so it is worth asking.`
-          : `${provenance} If they would count a form this close, it is worth asking.`,
+        rule: `They fund ${theyFund}. You are ${youAre}, which is one step away.`,
+        condition: `${provenance} If they would count a form this close, it is worth asking.`,
       }
     }
   }

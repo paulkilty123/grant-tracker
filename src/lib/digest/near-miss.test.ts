@@ -23,23 +23,22 @@ const run = (g: GrantOpportunity, otherwiseFits = true) =>
   findNearMiss({ grant: g, org: acc, readOn: '25 June', otherwiseFits })
 
 describe('structure adjacency', () => {
-  it('is near when the funder takes the same company form without CIC status', () => {
-    // Network for Social Change, verified in production.
-    const n = run(grant({ eligibleStructures: ['registered_charity', 'cio', 'ltd_guarantee', 'unincorporated'] }))
-    expect(n?.dimension).toBe('structure')
-    expect(n?.verdict).toBe('Ruled out on legal structure.')
-    expect(n?.rule).toContain('companies limited by guarantee')
-    expect(n?.rule).toContain('You are both')
-    expect(n?.condition).toContain('have often not considered CICs')
+  it('is NOT a near miss when the funder takes companies limited by guarantee', () => {
+    // A CIC limited by guarantee IS one, so eligibility.ts matches it outright
+    // and there is nothing near about it. Network for Social Change was
+    // generating this row for a funder whose own text welcomes CICs.
+    expect(run(grant({ eligibleStructures: ['registered_charity', 'cio', 'ltd_guarantee', 'unincorporated'] }))).toBeNull()
+    expect(run(grant({ eligibleStructures: ['ltd_guarantee'] }))).toBeNull()
   })
 
-  it('never renders the two guarantee forms with the same words', () => {
-    // The label bug: a CIC limited by guarantee reading "Limited by guarantee"
-    // in the allowed list sees its own structure and the row self-contradicts.
-    const n = run(grant({ eligibleStructures: ['ltd_guarantee'] }))
-    expect(n!.rule).toBe(
-      'They fund companies limited by guarantee, but not CICs. You are both — a CIC limited by guarantee.',
-    )
+  it('is near in the other direction, because containment runs one way', () => {
+    const ltd = { ...acc, legal_structure: 'ltd_guarantee' } as typeof acc
+    const n = findNearMiss({
+      grant: grant({ eligibleStructures: ['cic_guarantee'] }),
+      org: ltd, readOn: '25 June', otherwiseFits: true,
+    })
+    expect(n?.dimension).toBe('structure')
+    expect(n?.rule).toBe('They fund CICs limited by guarantee. You are a company limited by guarantee, which is one step away.')
   })
 
   it('is NOT near when no allowed structure is adjacent', () => {

@@ -147,8 +147,11 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
   rows.push(`<tr><td style="padding:8px 6px 18px;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
       <td align="left" style="line-height:0;">
+        <!-- height:auto derives the height from the width, so no client can
+             stretch it by honouring one attribute and not the other. The
+             height attribute stays for Outlook, which ignores the style. -->
         <img src="${origin}/email/shoots-logo@2x.png" width="146" height="43" alt="Shoots"
-             style="display:block;border:0;outline:none;text-decoration:none;">
+             style="display:block;width:146px;height:auto;max-width:100%;border:0;outline:none;text-decoration:none;">
       </td>
       <td align="right" style="font-family:${UI};font-size:12.5px;font-weight:500;color:${C.muted};">${esc(humanDayDate(now))}</td>
     </tr></table>
@@ -282,13 +285,23 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
       </table>`))
   }
 
-  /* ── 6. Feedback. Asks for two specific things, and says what changes. ── */
-  rows.push(`<tr><td class="gutter" style="background:${C.page};border-radius:0 0 16px 16px;padding:24px 30px 30px;">
-    <p style="margin:0;font-family:${BODY};font-size:13.5px;line-height:1.6;color:${C.body};">
-      Seen a funder we are missing, or a match that made no sense?
-      <a href="${origin}/dashboard/feedback" style="color:${C.deep};font-weight:600;text-decoration:underline;">Tell us</a>
-      &mdash; funder suggestions go into the catalogue for everyone, and bad matches change how yours are picked.
-    </p>
+  /* ── 6. Feedback.
+        On its own tinted ground, because as plain grey text at the foot it read
+        as the boilerplate every email ends with and got skipped. It is an ask,
+        and the two things it asks for — a missing funder, a bad match — are the
+        two cheapest sources of catalogue and scorer improvement there are. The
+        mint card is the same one the profile prompt uses, so it reads as
+        something addressed to the reader rather than a legal footer. ── */
+  rows.push(`<tr><td class="gutter" style="background:${C.page};border-radius:0 0 16px 16px;padding:26px 30px 30px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.card};border-radius:14px;">
+      <tr><td style="padding:18px 20px;">
+        <p style="margin:0 0 6px;font-family:${UI};font-size:15px;font-weight:600;letter-spacing:-.2px;color:${C.deep};">Seen a funder we are missing, or a match that made no sense?</p>
+        <p style="margin:0 0 14px;font-family:${BODY};font-size:13.5px;line-height:1.6;color:${C.body};">
+          Funder suggestions go into the catalogue for everyone, and bad matches change how yours are picked.
+        </p>
+        ${ghostButton(`${origin}/dashboard/feedback`, 'Tell us')}
+      </td></tr>
+    </table>
   </td></tr>`)
 
   /* ── Footer. Catalogue growth is reassurance, not news, so it never leads. */
