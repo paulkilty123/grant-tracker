@@ -291,7 +291,7 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
   if (m.mode === 'week_one') {
     rows.push(ruledSection(`
       <p style="margin:0 0 16px;font-family:${BODY};font-size:14px;line-height:1.6;color:${C.deep};">
-        Add one of these to your pipeline. Next Monday this email leads with your deadlines instead of your matches &mdash; that is the version worth having.
+        Add one of these to your pipeline. Next Tuesday this email leads with your deadlines instead of your matches &mdash; that is the version worth having.
       </p>
       ${button(`${origin}/dashboard/search`, 'Add your first grant')}`))
   }

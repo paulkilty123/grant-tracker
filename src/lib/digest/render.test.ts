@@ -229,3 +229,18 @@ describe('funding type is a pill, in the app’s own colours', () => {
     expect(titles).toBeGreaterThanOrEqual(pills)
   })
 })
+
+describe('the promised send day matches the schedule', () => {
+  it('week one says Tuesday, because that is when the catalogue is freshest', () => {
+    // The Monday crawl publishes at 09:00 UTC. A Monday send reports Thursday's
+    // intake; a Tuesday send carries Monday's. The copy has to name the day the
+    // schedule actually uses, or the first email breaks its own promise.
+    const weekOne = renderDigest({ ...model, mode: 'week_one' }, {
+      origin: 'https://www.shootsfunding.co.uk',
+      unsubscribeUrl: 'https://www.shootsfunding.co.uk/api/alerts/unsubscribe?t=tok',
+      now: new Date('2026-09-01T09:00:00Z'),
+    })
+    expect(weekOne).toContain('Next Tuesday this email leads with your deadlines')
+    expect(weekOne).not.toContain('Next Monday')
+  })
+})
