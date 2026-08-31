@@ -144,6 +144,19 @@ function normalise(row: Record<string, unknown>): GrantOpportunity {
   }
 }
 
+/**
+ * The verdict names the DIMENSION, because that is what tells a reader whether
+ * to argue with it. "Ruled out on area" invites someone whose work reaches the
+ * next borough to get in touch; "ruled out on eligibility" invites nothing.
+ */
+function verdictFor(rule: string): string {
+  const r = rule.toLowerCase()
+  if (/restricted to|your org is in|area|region|borough|county|postcode/.test(r)) return 'Ruled out on area.'
+  if (/structure|cic|charity|charitable|incorporat|unincorporat|company/.test(r))  return 'Ruled out on legal structure.'
+  if (/income|turnover|budget|size|threshold/.test(r))                             return 'Ruled out on size.'
+  return 'Ruled out on eligibility.'
+}
+
 function grantUrl(origin: string, row: Record<string, unknown>): string {
   return `${origin}/grants/${encodeURIComponent(String(row.external_id ?? row.id))}`
 }
@@ -333,16 +346,35 @@ export async function buildDigest(
       continue
     }
 
-    // Near miss. Only where OUR RECORD is the thing in doubt — an org cannot
-    // become an individual, so an individual-only fund is never offered back.
-    // Everything else is a judgement the reader is better placed to make.
-    if (result.eligibilityReason && result.score > 5 && result.score >= 35) {
+    // Near miss — the section most capable of doing damage, so the gate is the
+    // narrow one the spec asks for.
+    //
+    // The first version keyed off `eligibilityReason` being non-null plus a
+    // score band, and shipped rows reading "Ruled out on fit. Your structure
+    // (CIC) is listed as eligible." — a verdict followed by its own refutation.
+    // eligibilityReason is populated for the ELIGIBLE case too, so the filter
+    // was catching rows that are perfectly eligible and merely scored low on
+    // fit. Nothing ruled them out, and saying otherwise is worse than silence.
+    //
+    // Only a real blocker qualifies now. Definitional impossibility is never
+    // surfaced: an organisation cannot become an individual, so there is
+    // nothing to hand back and nothing to check.
+    const blocker = result.eligibilityIssues?.find(i => i.severity === 'blocker')
+    const trulyRuledOut = result.eligibilityStatus === 'ineligible' && !!result.eligibilityReason
+    const definitionallyImpossible = result.score <= 5
+
+    if (trulyRuledOut && !definitionallyImpossible) {
+      // Where OUR RECORD is the thing in doubt, name when we read it. Same move
+      // as the verification chip on the public pages: let it degrade honestly.
+      const readOn = g.last_seen_at ? humanDate(String(g.last_seen_at).split('T')[0]) : null
       nearMissCandidates.push({
         title: String(g.title ?? ''),
         funder: String(g.funder ?? ''),
-        verdict: `Ruled out on ${result.eligibilityStatus === 'ineligible' ? 'eligibility' : 'fit'}.`,
-        rule: result.eligibilityReason,
-        condition: 'If that has changed, or our reading of their page is out of date, it is worth asking.',
+        verdict: verdictFor(blocker?.message ?? result.eligibilityReason!),
+        rule: blocker?.message ?? result.eligibilityReason!,
+        condition: readOn
+          ? `We read that from their page on ${readOn}. If it is out of date, or your circumstances have changed, it is worth asking.`
+          : 'If our reading of their page is out of date, or your circumstances have changed, it is worth asking.',
         url: grantUrl(origin, g),
         key: String(g.id),
       })

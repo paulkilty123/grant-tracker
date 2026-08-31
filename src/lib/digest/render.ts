@@ -195,7 +195,9 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
       ${label ? sectionLabel(label) : ''}
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
         ${m.matches.map((r, i) => matchRow(r, i === m.matches.length - 1)).join('')}
-        ${m.matchesOverflow > 0 ? `<tr><td style="padding:0 0 12px;">${textLink(`${origin}/dashboard/search`, `and ${plural(m.matchesOverflow, 'more new match', 'more new matches')}`)}</td></tr>` : ''}
+        ${m.matchesOverflow > 0 ? `<tr><td style="padding:0 0 12px;">${textLink(`${origin}/dashboard/search`, m.matchLabel === 'new'
+          ? `and ${plural(m.matchesOverflow, 'more new match', 'more new matches')}`
+          : `and ${plural(m.matchesOverflow, 'more match', 'more matches')}`)}</td></tr>` : ''}
         <tr><td style="padding:6px 0 0;">${textLink(`${origin}/dashboard/search`, seeAll)}</td></tr>
       </table>
     </td></tr>`)
