@@ -70,19 +70,3 @@ describe('the year appears once it stops being obvious', () => {
   })
 })
 
-describe('every opportunity row says what kind it is', () => {
-  it('labels grants too, so absence never carries the meaning', () => {
-    // 476 of the 581 published rows are grants, so it is tempting to label only
-    // the other 105. But a reader cannot know that no label means grant unless
-    // somebody tells them, and the non-grant breadth is the differentiator.
-    expect(nearMissMeta(
-      { funder: 'A funder', amountMin: 1000, amountMax: 4000 } as never, null, 'Grant',
-    )).toBe('Grant · A funder · £1k – £4k')
-  })
-
-  it('puts the type first, before the funder', () => {
-    expect(nearMissMeta(
-      { funder: 'Big Issue Invest', amountMin: 0, amountMax: 0 } as never, null, 'Investment',
-    )).toBe('Investment · Big Issue Invest')
-  })
-})

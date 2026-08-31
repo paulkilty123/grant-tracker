@@ -1,5 +1,6 @@
 import type { DigestModel } from './build'
 import { esc, humanDayDate, plural, spell } from './text'
+import { FUNDING_TYPE_COLOUR, type FundingTypeKey } from '@/lib/funding-type-colours'
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Email HTML — "ground D".
@@ -133,6 +134,33 @@ function tileCard(days: number, inner: string, first: boolean): string {
   </td></tr>`
 }
 
+/**
+ * The funding type, as a pill.
+ *
+ * Half of ACC's match list is in-kind — pro bono consultancy, volunteer
+ * placements, materials donations — and before this it looked identical to a
+ * £10k grant. A word in the meta line said so; a pill says it at a glance,
+ * which is the point of putting it there at all.
+ *
+ * Colours are the app's own FUNDING_TYPE_COLOUR tokens, so the email and Find
+ * Funding teach the same thing. TINT background with the FG on it, never the
+ * saturated rail: those are for the countdown tiles, which are the one signal
+ * that has to shout, and four rails competing with them would flatten the
+ * urgency the tiles exist to carry.
+ *
+ * Outlook renders the Word engine, which drops inline-block and its padding.
+ * The pill degrades there to coloured text on a tinted ground — still the
+ * right colour, still legible, just square and tight.
+ */
+function typePill(type: FundingTypeKey): string {
+  const c = FUNDING_TYPE_COLOUR[type] ?? FUNDING_TYPE_COLOUR.grant
+  return `<span style="display:inline-block;padding:3px 9px;border-radius:999px;background:${c.tint};color:${c.fg};font-family:${UI};font-size:11px;font-weight:700;letter-spacing:.3px;white-space:nowrap;">${esc(c.label)}</span>`
+}
+
+/** The type pill followed by the rest of the meta line. */
+const typedMeta = (type: FundingTypeKey, t: string) =>
+  `<p style="margin:0 0 6px;font-family:${BODY};font-size:13px;line-height:1.9;color:${C.body};">${typePill(type)}${t ? `&nbsp;&nbsp;${esc(t)}` : ''}</p>`
+
 const metaLine = (t: string) =>
   t ? `<p style="margin:0 0 6px;font-family:${BODY};font-size:13px;line-height:1.5;color:${C.body};">${esc(t)}</p>` : ''
 
@@ -224,7 +252,7 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
   if (m.newThisWeek.length) {
     const body = m.newThisWeek.map(r => `
       <p style="margin:0 0 3px;">${nameLink(r.url, r.title, 16)}</p>
-      ${metaLine(r.meta)}
+      ${typedMeta(r.type, r.meta)}
       <p style="margin:0 0 16px;font-family:${BODY};font-size:13.5px;line-height:1.55;color:${C.body};">${esc(r.blurb)}</p>`).join('')
     rows.push(ruledSection(`${sectionLabel('New this week')}
       <p style="margin:0 0 16px;font-family:${BODY};font-size:14px;line-height:1.55;color:${C.body};">Added to the catalogue in the last seven days, and open to you.</p>
@@ -242,7 +270,7 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
       m.matches.forEach((r, i) => {
         rows.push(tileCard(r.days ?? 999, `
           <p style="margin:0 0 4px;">${nameLink(r.url, r.title, 16.5)}</p>
-          ${metaLine(r.meta)}
+          ${typedMeta(r.type, r.meta)}
           <p style="margin:0;font-family:${BODY};font-size:13.5px;line-height:1.55;color:${C.body};">${esc(r.blurb)}</p>
         `, i === 0))
       })
@@ -253,7 +281,7 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
       const label = m.matchLabel === 'new' ? 'New matches' : 'Matches worth a look'
       const body = m.matches.map(r => `
         <p style="margin:0 0 3px;">${nameLink(r.url, r.title, 16)}</p>
-        ${metaLine(r.meta)}
+        ${typedMeta(r.type, r.meta)}
         <p style="margin:0 0 16px;font-family:${BODY};font-size:13.5px;line-height:1.55;color:${C.body};">${esc(r.blurb)}</p>`).join('')
       rows.push(ruledSection(`${sectionLabel(label)}${body}${textLink(`${origin}/dashboard/search`, seeAll)}`))
     }
@@ -277,7 +305,7 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
     const intro = `${word} that fell just outside, and why. ${n === 1 ? 'This is' : 'These are'} close enough that you may know something we do not.`
     const body = m.nearMisses.map((r, i) => `
         <p style="margin:0 0 5px;">${nameLink(r.url, r.title, 15.5)}</p>
-        ${metaLine(r.meta)}
+        ${typedMeta(r.type, r.meta)}
         <p style="margin:0 0 5px;font-family:${BODY};font-size:13.5px;line-height:1.55;color:${C.body};"><b style="color:${C.deep};">${esc(r.verdict)}</b> ${esc(r.rule)}</p>
         <p style="margin:0 0 ${i === n - 1 ? '0' : '16px'};font-family:${BODY};font-size:13px;line-height:1.55;color:${C.body};">${esc(r.condition)}</p>`).join('')
     rows.push(ruledSection(`

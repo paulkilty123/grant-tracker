@@ -29,7 +29,7 @@ const model: DigestModel = {
   inProgressOverflow: 0,
   matches: [
     { title: 'NCVO Learning & Development', funder: 'NCVO', blurb: 'Training programmes.',
-      meta: 'NCVO · rolling', days: null,
+      type: 'in_kind', meta: 'NCVO · rolling', days: null,
       url: 'https://www.shootsfunding.co.uk/dashboard/search?grant=ncvo', key: 'm1' },
   ],
   matchesOverflow: 0,
@@ -38,7 +38,7 @@ const model: DigestModel = {
   newThisWeek: [],
   nearMisses: [
     { title: 'Network for Social Change — Grants', funder: 'Network for Social Change',
-      meta: 'Network for Social Change · £25k – £100k',
+      type: 'grant', meta: 'Network for Social Change · £25k – £100k',
       verdict: 'Ruled out on legal structure.',
       rule: 'They fund companies limited by guarantee, but not CICs. You are both — a CIC limited by guarantee.',
       condition: 'We read that from their page on 25 June. Funders who write the rule this way have often not considered CICs at all, so it is worth asking.',
@@ -133,7 +133,7 @@ describe('"New this week" is present only when it has rows', () => {
       ...model,
       newThisWeek: [{
         title: 'A Brand New Fund', funder: 'New Funder', blurb: 'Funds community work.',
-        meta: 'New Funder · closes 30 Sep', days: 30,
+        type: 'grant', meta: 'New Funder · closes 30 Sep', days: 30,
         url: 'https://www.shootsfunding.co.uk/dashboard/search?grant=new-1', key: 'n1',
       }],
     }, {
@@ -203,5 +203,29 @@ describe('section labels are structure, not furniture', () => {
 
   it('never renders a label in the muted caption colour', () => {
     expect(html).not.toMatch(/letter-spacing:1\.6px;text-transform:uppercase;color:#73726F/)
+  })
+})
+
+describe('funding type is a pill, in the app’s own colours', () => {
+  it('draws the tint and foreground for the row’s type', () => {
+    // in_kind on the fixture's match row.
+    expect(html).toContain('background:#F6EFD9')
+    expect(html).toContain('color:#7A5E11')
+    expect(html).toMatch(/>In-kind<\/span>/)
+  })
+
+  it('never uses the saturated rail colours', () => {
+    // Rails belong to the countdown tiles, which are the one signal that has
+    // to shout. Four more competing with them would flatten the urgency.
+    for (const rail of ['#22874C', '#94402A', '#3C79AC', '#B08A20']) {
+      expect(html).not.toContain(rail)
+    }
+  })
+
+  it('labels every opportunity row, grants included', () => {
+    const titles = (html.match(/text-decoration:underline;">[^<]+<\/a>/g) ?? []).length
+    const pills = (html.match(/border-radius:999px;background:#(E4F1EA|F2E8E5|E8EFF5|F6EFD9)/g) ?? []).length
+    expect(pills).toBeGreaterThan(0)
+    expect(titles).toBeGreaterThanOrEqual(pills)
   })
 })

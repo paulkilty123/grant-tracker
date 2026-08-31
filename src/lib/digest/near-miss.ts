@@ -105,8 +105,8 @@ const money = (n: number): string =>
  * The meta line: "Network for Social Change · £25k – £100k" or
  * "Trading for Good · £1k – £4k · England".
  */
-export function nearMissMeta(grant: GrantOpportunity, locationTag: string | null, type?: string): string {
-  const parts: string[] = type ? [type, grant.funder] : [grant.funder]
+export function nearMissMeta(grant: GrantOpportunity, locationTag: string | null): string {
+  const parts: string[] = [grant.funder]
   const min = grant.amountMin || null
   const max = grant.amountMax || null
   if (min && max) parts.push(`${money(min)} – ${money(max)}`)

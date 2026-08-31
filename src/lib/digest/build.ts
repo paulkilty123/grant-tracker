@@ -75,6 +75,8 @@ export interface MatchRow {
   title: string
   funder: string
   blurb: string
+  /** 'grant' | 'programme' | 'investment' | 'in_kind' — drawn as a pill. */
+  type: FundingTypeKey
   meta: string
   /** Days to the deadline, for the week-one countdown tile. Null if undated. */
   days: number | null
@@ -85,6 +87,7 @@ export interface MatchRow {
 export interface NearMissRow {
   title: string
   funder: string
+  type: FundingTypeKey
   /** "Network for Social Change · £25k – £100k" */
   meta: string
   /** "Ruled out on legal structure." — the verdict, plainly. */
@@ -302,15 +305,14 @@ export function plainRule(rule: string): string {
  * only saturated colour in the email, and four more accents would compete with
  * the one thing that is supposed to signal urgency.
  */
-function typeLabel(g: Record<string, unknown>): string {
-  const key = String(g.funding_type ?? 'grant') as FundingTypeKey
-  return FUNDING_TYPE_COLOUR[key]?.label ?? 'Grant'
+function typeKey(g: Record<string, unknown>): FundingTypeKey {
+  const k = String(g.funding_type ?? 'grant') as FundingTypeKey
+  return FUNDING_TYPE_COLOUR[k] ? k : 'grant'
 }
 
 /** One shape for every opportunity row, so the two sections cannot drift. */
 function toMatchRow(g: Record<string, unknown>, origin: string, now: Date, blurb: string): MatchRow {
   const parts = [
-    typeLabel(g),
     String(g.funder ?? ''),
     g.deadline ? `closes ${shortDate(String(g.deadline), now)}` : g.is_rolling ? 'rolling' : null,
   ].filter(Boolean) as string[]
@@ -318,6 +320,7 @@ function toMatchRow(g: Record<string, unknown>, origin: string, now: Date, blurb
     title: String(g.title ?? ''),
     funder: String(g.funder ?? ''),
     blurb,
+    type: typeKey(g),
     meta: parts.join(' · '),
     days: g.deadline ? daysUntil(String(g.deadline), now) : null,
     url: grantUrl(origin, g),
@@ -584,7 +587,8 @@ export async function buildDigest(
           row: {
             title: String(g.title ?? ''),
             funder: String(g.funder ?? ''),
-            meta: nearMissMeta(normalised, g.location_tag ? String(g.location_tag) : null, typeLabel(g)),
+              type: typeKey(g),
+            meta: nearMissMeta(normalised, g.location_tag ? String(g.location_tag) : null),
             verdict: near.verdict,
             rule: near.rule,
             condition: near.condition,
