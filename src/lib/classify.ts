@@ -250,10 +250,27 @@ international  international development, global south, fair trade, migration, r
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 FUNDING TYPE TAXONOMY — choose exactly one:
 
-grant       Non-repayable cash: grants, awards, bursaries, prizes, diversity funds, challenge prizes
-programme   Structured support that may include cash: accelerators, fellowships, incubators, support programmes, cohort programmes, capacity building, CPD, mentoring
-investment  Repayable finance: loans, patient capital, social investment, blended finance (part-grant part-loan), community shares
-in_kind     Non-cash support only: software credits, ad grants, free workspace, pro bono services, tax relief
+Decide by what the applicant PRIMARILY RECEIVES, not by what the fund is
+called. Many grants are named "... Programme" or "... Fund", and many
+programmes hand out some cash. The name is not the answer.
+
+The test: would a successful applicant say "we got £X", or "we got onto X"?
+Money first is a grant. A place first is a programme.
+
+grant       Non-repayable cash is the main thing on offer: grants, awards,
+            bursaries, prizes, diversity funds, challenge prizes. Advice,
+            mentoring or networking bundled alongside the money does NOT make
+            it a programme — unrestricted funding with optional support is a
+            grant.
+programme   The STRUCTURED SUPPORT is the offer: accelerators, fellowships,
+            incubators, cohort programmes, capacity building, CPD, mentoring.
+            Cash may come with a place, but the place is the point. If there is
+            no cohort, curriculum, term or selection into something to take
+            part in, it is not a programme.
+investment  Repayable finance: loans, patient capital, social investment,
+            blended finance (part-grant part-loan), community shares
+in_kind     Non-cash support only: software credits, ad grants, free workspace,
+            pro bono services, tax relief
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ELIGIBLE STRUCTURES — legal structures the source EXPLICITLY lists as eligible.
