@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { plainRule, shortDate } from './build'
+import { daysUntil } from './text'
 
 describe('near-miss rule, in the funder’s terms', () => {
   it('rewrites the engine’s structure message funder-first', () => {
@@ -40,5 +41,30 @@ describe('short dates', () => {
     }
     expect(shortDate('2026-09-10')).toBe('10 Sep')
     expect(shortDate('2026-11-19')).toBe('19 Nov')
+  })
+})
+
+describe('closed opportunities never reach a match row', () => {
+  it('is the bug the thin-week render exposed', () => {
+    // "Champions for Children · closes 30 Jun" rendered on 31 August. The
+    // catalogue still carries active, published rows whose deadline has passed;
+    // the closing section filtered them and the match list did not.
+    const from = new Date('2026-08-31T12:00:00Z')
+    expect(daysUntil('2026-06-30', from)).toBeLessThan(0)
+    expect(daysUntil('2026-09-11', from)).toBeGreaterThan(0)
+  })
+})
+
+describe('the year appears once it stops being obvious', () => {
+  const now = new Date('2026-08-31T12:00:00Z')
+  it('omits the year inside the current year', () => {
+    expect(shortDate('2026-09-10', now)).toBe('10 Sep')
+    expect(shortDate('2026-11-19', now)).toBe('19 Nov')
+  })
+  it('shows it across a year boundary', () => {
+    // Champions for Children closes 2027-06-30, 303 days out, and rendered as
+    // "closes 30 Jun" next to deadlines ten days away.
+    expect(shortDate('2027-06-30', now)).toBe('30 Jun 2027')
+    expect(shortDate('2025-06-30', now)).toBe('30 Jun 2025')
   })
 })

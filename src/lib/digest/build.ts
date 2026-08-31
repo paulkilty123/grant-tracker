@@ -242,9 +242,19 @@ function verdictFor(rule: string): string {
  * is three, and the ragged column shows.
  */
 export const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-export function shortDate(iso: string): string {
+
+/**
+ * "10 Sep", or "30 Jun 2027" once the year stops being obvious.
+ *
+ * The year is not decoration. Champions for Children closes on 2027-06-30 —
+ * 303 days out — and rendered as "closes 30 Jun" beside deadlines ten days
+ * away, which reads as either imminent or already gone. Omitting the year is
+ * right within the current year and actively misleading across a boundary.
+ */
+export function shortDate(iso: string, now: Date = new Date()): string {
   const d = new Date(iso)
-  return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`
+  const year = d.getUTCFullYear() === now.getUTCFullYear() ? '' : ` ${d.getUTCFullYear()}`
+  return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}${year}`
 }
 
 /**
@@ -277,7 +287,7 @@ export function plainRule(rule: string): string {
 function toMatchRow(g: Record<string, unknown>, origin: string, now: Date, blurb: string): MatchRow {
   const parts = [
     String(g.funder ?? ''),
-    g.deadline ? `closes ${shortDate(String(g.deadline))}` : g.is_rolling ? 'rolling' : null,
+    g.deadline ? `closes ${shortDate(String(g.deadline), now)}` : g.is_rolling ? 'rolling' : null,
   ].filter(Boolean) as string[]
   return {
     title: String(g.title ?? ''),
@@ -410,7 +420,7 @@ export async function buildDigest(
       name: String(p.grant_name ?? 'Untitled'),
       funder: p.funder_name ? String(p.funder_name) : null,
       deadline: String(p.deadline),
-      deadlineLabel: shortDate(String(p.deadline)),
+      deadlineLabel: shortDate(String(p.deadline), now),
       days,
       statusPrefix: added ? `Added ${added} · ` : '',
       statusStrong: stage.charAt(0).toUpperCase() + stage.slice(1),
@@ -434,7 +444,7 @@ export async function buildDigest(
       name: String(g.title ?? 'Untitled'),
       funder: g.funder ? String(g.funder) : null,
       deadline: String(g.deadline),
-      deadlineLabel: shortDate(String(g.deadline)),
+      deadlineLabel: shortDate(String(g.deadline), now),
       days,
       statusPrefix: savedOn
         ? `Saved ${savedOn}, never added to your pipeline. Worth a yes or a no.`
@@ -493,6 +503,13 @@ export async function buildDigest(
   for (const g of grants) {
     if (savedIds.has(String(g.id)) || savedIds.has(String(g.external_id ?? ''))) continue
     if (pipelineNames.has(String(g.title ?? '').toLowerCase())) continue
+
+    // A closed opportunity is not a match. The catalogue still carries rows
+    // that are active and published with a deadline months in the past — the
+    // thin-week render offered "Champions for Children · closes 30 Jun" on
+    // 31 August — and the closing section filters those out while the match
+    // list did not. Rolling funds have no deadline to pass.
+    if (g.deadline && !g.is_rolling && daysUntil(String(g.deadline), now) < 0) continue
 
     const normalised = normalise(g)
     const result = computeMatchScore(normalised, org)
@@ -691,7 +708,14 @@ export async function buildDigest(
   const nextIso = laterDeadlines.length
     ? new Date(now.getTime() + laterDeadlines[0] * 86_400_000).toISOString().slice(0, 10)
     : null
-  const reassurance = hasHistory
+  // In a thin week the LEAD already says nothing is closing, so a reassurance
+  // line underneath repeats it word for word. The render put "A clear month.
+  // Nothing in your pipeline or saved list is closing." directly above
+  // "Nothing else in your pipeline or saved list has a deadline coming up."
+  //
+  // The line stays load-bearing where it belongs: under a list of things that
+  // ARE closing, where it says what else was checked and found clear.
+  const reassurance = hasHistory && closingShown.length > 0
     ? nextIso
       ? `Nothing else in your pipeline or saved list closes before ${humanDate(nextIso)}.`
       : 'Nothing else in your pipeline or saved list has a deadline coming up.'
@@ -760,8 +784,14 @@ export async function buildDigest(
     addedRecently: grants.filter(g => g.first_seen_at && new Date(String(g.first_seen_at)) >= fortnightAgo).length,
   }
 
+  // Subjects are composed from user data, and pipeline items carry whatever
+  // name somebody typed. Reprezent's produced "youth music has not moved in
+  // three weeks" — a sentence starting mid-word. Capitalising the first letter
+  // is the smallest honest fix; renaming their pipeline item is not ours to do.
+  const finalSubject = subject.charAt(0).toUpperCase() + subject.slice(1)
+
   return {
-    org, mode, subject, preheader, lead,
+    org, mode, subject: finalSubject, preheader, lead,
     closing: closingShown, closingOverflow,
     inProgress, inProgressOverflow,
     matches, matchesOverflow, matchTotal, matchLabel, newThisWeek,
