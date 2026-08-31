@@ -147,7 +147,7 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
   rows.push(`<tr><td style="padding:8px 6px 18px;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
       <td align="left" style="line-height:0;">
-        <img src="${origin}/email/shoots-logo@2x.png" width="134" height="31" alt="Shoots"
+        <img src="${origin}/email/shoots-logo@2x.png" width="146" height="43" alt="Shoots"
              style="display:block;border:0;outline:none;text-decoration:none;">
       </td>
       <td align="right" style="font-family:${UI};font-size:12.5px;font-weight:500;color:${C.muted};">${esc(humanDayDate(now))}</td>

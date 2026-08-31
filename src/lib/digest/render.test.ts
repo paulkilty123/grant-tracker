@@ -96,7 +96,7 @@ describe('email client constraints', () => {
     expect(html).toMatch(/<img[^>]*shoots-logo@2x\.png[^>]*alt="Shoots"/)
   })
   it('gives the logo explicit width and height', () => {
-    expect(html).toMatch(/<img[^>]*shoots-logo@2x\.png[^>]*width="134"[^>]*height="31"/)
+    expect(html).toMatch(/<img[^>]*shoots-logo@2x\.png[^>]*width="146"[^>]*height="43"/)
   })
   it('escapes an ampersand in a funder name', () => {
     expect(html).toContain('Someone &amp; Co')
