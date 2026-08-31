@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { getOrgsWithAlertsEnabled } from '@/lib/alerts'
 import { digestAllowlist, isDigestRecipient, digestIsDryRun, testSubjectPrefix } from '@/lib/digest/send-guards'
+import { oneOrgPerRecipient, type Suppressed } from '@/lib/digest/one-per-recipient'
 import { recordRun } from '@/lib/admin/cron-runs'
 import { getAdminDb } from '@/lib/admin/admin-db'
 import { EMAIL_FROM_HEADER, EMAIL_APP_URL } from '@/lib/mcp-brand'
@@ -64,10 +65,38 @@ export async function GET(req: NextRequest) {
 
     try {
       const allOrgs = await getOrgsWithAlertsEnabled()
-      const orgs = onlyOrgId ? allOrgs.filter(o => o.id === onlyOrgId) : allOrgs
-      if (onlyOrgId && orgs.length === 0) {
-        httpStatus = 404
-        return { error: `No org ${onlyOrgId} with alerts_enabled.` }
+
+      // ONE EMAIL PER PERSON. 34 organisations with alerts on belong to 23
+      // people; without this a broadcast puts seven in one inbox at once.
+      //
+      // Skipped when ?org= names a single organisation: an explicit aim is a
+      // deliberate act and must not be second-guessed by a heuristic.
+      let suppressed: Suppressed[] = []
+      let orgs = allOrgs
+      if (onlyOrgId) {
+        orgs = allOrgs.filter(o => o.id === onlyOrgId)
+        if (orgs.length === 0) {
+          httpStatus = 404
+          return { error: `No org ${onlyOrgId} with alerts_enabled.` }
+        }
+      } else {
+        // Engagement decides which record wins. Counted in two aggregates
+        // rather than by building every digest and discarding the losers —
+        // that would have been 34 full match runs to send 23 emails.
+        const [{ data: pipeCounts }, { data: savedCounts }] = await Promise.all([
+          db.from('pipeline_items').select('org_id'),
+          db.from('grant_interactions').select('org_id').eq('action', 'saved'),
+        ])
+        const engagement = new Map<string, number>()
+        for (const r of [...(pipeCounts ?? []), ...(savedCounts ?? [])] as { org_id: string }[]) {
+          engagement.set(r.org_id, (engagement.get(r.org_id) ?? 0) + 1)
+        }
+        const picked = oneOrgPerRecipient(
+          allOrgs.map(o => ({ ...o, created_at: String((o as { created_at?: string }).created_at ?? '') })),
+          engagement,
+        )
+        orgs = picked.chosen
+        suppressed = picked.suppressed
       }
 
       const sentTo:  { org: string; to: string; mode: string; sections: string[] }[] = []
@@ -171,6 +200,8 @@ export async function GET(req: NextRequest) {
         },
         orgsEligible: allOrgs.length,
         orgsConsidered: orgs.length,
+        recipients: new Set(orgs.map(o => o.owner_email)).size,
+        suppressedDuplicates: suppressed,
         sentCount: sentTo.length,
         sentTo, blocked, skipped, failed,
         ...(dryRun ? { previews } : {}),
