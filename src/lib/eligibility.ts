@@ -435,15 +435,27 @@ function structureMatches(orgStructure: LegalStructure, allowed: LegalStructure[
   return allowed.some(s => structureTokens(s).some(t => orgTokens.has(t)))
 }
 
+/**
+ * Structure labels, written so two of them cannot be mistaken for each other.
+ *
+ * `ltd_guarantee` used to render as "Limited by guarantee". A CIC limited by
+ * guarantee reading "they fund Registered charity, CIO, Limited by guarantee"
+ * sees its own structure in the allowed list and the sentence becomes a
+ * contradiction — the matcher is right, the label is what is wrong, and the
+ * whole near-miss section loses its credibility over one word.
+ *
+ * The two forms are now named in full and distinctly: a COMPANY limited by
+ * guarantee, versus a CIC limited by guarantee.
+ */
 function labelStructure(s: LegalStructure): string {
   const labels: Record<LegalStructure, string> = {
-    cic_guarantee:      'CIC (limited by guarantee)',
-    cic_shares:         'CIC (limited by shares)',
+    cic_guarantee:      'CIC limited by guarantee',
+    cic_shares:         'CIC limited by shares',
     cio:                'Charitable Incorporated Organisation',
     scio:               'Scottish Charitable Incorporated Organisation (SCIO)',
     registered_charity: 'Registered charity',
-    ltd_guarantee:      'Limited by guarantee',
-    ltd_shares:         'Limited by shares',
+    ltd_guarantee:      'company limited by guarantee',
+    ltd_shares:         'company limited by shares',
     llp:                'LLP',
     cooperative:        'Co-operative',
     unincorporated:     'Unincorporated',

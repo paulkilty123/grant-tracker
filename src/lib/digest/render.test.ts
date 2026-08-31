@@ -36,9 +36,11 @@ const model: DigestModel = {
   matchTotal: 1,
   matchLabel: 'worth_a_look',
   nearMisses: [
-    { title: 'Community Grants Fund', funder: 'X', verdict: 'Ruled out on area.',
-      rule: 'Restricted to Scotland — your org is in England.',
-      condition: 'We read that from their page on 12 June.',
+    { title: 'Network for Social Change — Grants', funder: 'Network for Social Change',
+      meta: 'Network for Social Change · £25k – £100k',
+      verdict: 'Ruled out on legal structure.',
+      rule: 'They fund companies limited by guarantee, but not CICs. You are both — a CIC limited by guarantee.',
+      condition: 'We read that from their page on 25 June. Funders who write the rule this way have often not considered CICs at all, so it is worth asking.',
       url: 'https://www.shootsfunding.co.uk/dashboard/search?grant=cgf', key: 'nm1' },
   ],
   prompt: { title: 'Get more specific', body: 'Because.', cta: 'Add your specialisms',
@@ -46,6 +48,7 @@ const model: DigestModel = {
   reassurance: 'Nothing else closes before 14 October.',
   catalogue: { live: 581, addedRecently: 20 },
   shown: [],
+  debug: { nearMissCandidates: [], nearMissCandidateCount: 0 },
 }
 
 const html = renderDigest(model, {

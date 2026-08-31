@@ -2255,7 +2255,7 @@ function StepLocation({ state, update, toggleFundingType, toggleSpendNeed, savin
         </Field>
       </div>
 
-      {/* Email alerts, stated rather than assumed.
+      {/* The Weekly Funding Update, stated rather than assumed.
           Ticked by default, which is the same behaviour as before. The point
           of putting it here is that it is now a line somebody read on their
           way past, so nobody arrives at their first alert email wondering how
@@ -2274,8 +2274,9 @@ function StepLocation({ state, update, toggleFundingType, toggleSpendNeed, savin
           style={{ marginTop: 2, width: 16, height: 16, accentColor: T.greenDeep, cursor: 'pointer', flexShrink: 0 }}
         />
         <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 13.5, lineHeight: 1.55, color: T.textSecondary }}>
-          Email me when new funding opens that matches us. At most once a week,
-          and you can turn it off any time from your profile.
+          Send me the Weekly Funding Update: what is closing, what is moving,
+          and new funding that matches us. One email a week, and you can turn it
+          off any time from your profile.
         </span>
       </label>
 

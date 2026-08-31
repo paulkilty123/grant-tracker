@@ -242,9 +242,12 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
   if (m.nearMisses.length) {
     const n = m.nearMisses.length
     const word = spell(n).replace(/^./, c => c.toUpperCase())
-    const intro = `${word} we ruled out, and why. You know your own work better than we do, so ${n === 1 ? 'it is' : 'these are'} worth a look if the reason does not hold.`
+    // "We ruled it out and here is why" is a weaker claim than "this is nearly
+    // relevant", and the section only carries rows that clear the second one.
+    const intro = `${word} that fell just outside, and why. ${n === 1 ? 'This is' : 'These are'} close enough that you may know something we do not.`
     const body = m.nearMisses.map((r, i) => `
         <p style="margin:0 0 5px;">${nameLink(r.url, r.title, 15.5)}</p>
+        ${metaLine(r.meta)}
         <p style="margin:0 0 5px;font-family:${BODY};font-size:13.5px;line-height:1.55;color:${C.body};"><b style="color:${C.deep};">${esc(r.verdict)}</b> ${esc(r.rule)}</p>
         <p style="margin:0 0 ${i === n - 1 ? '0' : '16px'};font-family:${BODY};font-size:13px;line-height:1.55;color:${C.body};">${esc(r.condition)}</p>`).join('')
     rows.push(ruledSection(`

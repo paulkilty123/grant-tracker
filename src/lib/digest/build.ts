@@ -2,6 +2,7 @@ import { getAdminDb } from '@/lib/admin/admin-db'
 import { computeMatchScore } from '@/lib/matching'
 import { pickProfilePrompt, promptTitleWithCount, type ProfilePrompt, type ProfileFieldLabel } from '@/lib/profile-completeness'
 import { daysUntil, humanDate, plural, spell, spellCap, verb } from './text'
+import { findNearMiss, nearMissMeta } from './near-miss'
 import type { Organisation, GrantOpportunity, FunderType, ImpactSector, BeneficiaryGroup, LegalStructure, FundingType } from '@/types'
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -78,7 +79,9 @@ export interface MatchRow {
 export interface NearMissRow {
   title: string
   funder: string
-  /** "Ruled out on area." — the verdict, plainly. */
+  /** "Network for Social Change · £25k – £100k" */
+  meta: string
+  /** "Ruled out on legal structure." — the verdict, plainly. */
   verdict: string
   /** The funder's actual rule. */
   rule: string
@@ -119,6 +122,28 @@ export interface DigestModel {
   catalogue: { live: number; addedRecently: number }
   /** Everything shown, for digest_sent_items. */
   shown: { section: string; key: string }[]
+  /**
+   * Dry-run diagnostics. Never rendered — it exists so "why did THAT row win
+   * the near-miss slot?" is answerable without adding a console.log and
+   * redeploying, which is how that question got answered twice already.
+   */
+  debug: {
+    nearMissCandidates: { title: string; score: number; soleBlocker: boolean; dimension: string }[]
+    nearMissCandidateCount: number
+  }
+}
+
+/** Spec §4c orders the dimensions; a structure row is the most compelling. */
+const DIMENSION_RANK: Record<string, number> = { structure: 0, amount: 1, income: 2 }
+
+/** One comparator, used by both the shown list and the diagnostic. */
+function byNearness(
+  a: { score: number; soleBlocker: boolean; dimension: string },
+  b: { score: number; soleBlocker: boolean; dimension: string },
+): number {
+  return Number(b.soleBlocker) - Number(a.soleBlocker)
+    || (DIMENSION_RANK[a.dimension] ?? 9) - (DIMENSION_RANK[b.dimension] ?? 9)
+    || b.score - a.score
 }
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -152,6 +177,10 @@ function normalise(row: Record<string, unknown>): GrantOpportunity {
     beneficiaryGroups:   Array.isArray(row.target_beneficiaries) ? (row.target_beneficiaries as BeneficiaryGroup[]) : undefined,
     applyUrl:            row.apply_url ? String(row.apply_url) : null,
     isInviteOnly:        Boolean(row.is_invite_only),
+    // Needed by the income near-miss test, and previously dropped here, which
+    // meant the digest's copy of a grant disagreed with the matcher's.
+    minOrgIncome:        typeof row.min_org_income === 'number' ? row.min_org_income : null,
+    maxOrgIncome:        typeof row.max_org_income === 'number' ? row.max_org_income : null,
     nextOpenDate:        row.next_open_date ? String(row.next_open_date) : null,
     fundingType:         (row.funding_type ? String(row.funding_type) : 'grant') as FundingType,
     source:              'scraped',
@@ -420,13 +449,16 @@ export async function buildDigest(
   const savedIds = new Set(((interactions ?? []) as Record<string, unknown>[]).map(i => String(i.grant_id)))
 
   const scored: { row: Record<string, unknown>; score: number; blurb: string | null; fresh: boolean }[] = []
-  const nearMissCandidates: NearMissRow[] = []
+  // Scored, because "the first two the catalogue happened to yield" is not the
+  // same as "the two nearest". Ranked below.
+  const nearMissCandidates: { row: NearMissRow; score: number; soleBlocker: boolean; dimension: string }[] = []
 
   for (const g of grants) {
     if (savedIds.has(String(g.id)) || savedIds.has(String(g.external_id ?? ''))) continue
     if (pipelineNames.has(String(g.title ?? '').toLowerCase())) continue
 
-    const result = computeMatchScore(normalise(g), org)
+    const normalised = normalise(g)
+    const result = computeMatchScore(normalised, org)
     const firstSeen = g.first_seen_at ? new Date(String(g.first_seen_at)) : null
     const fresh = !!firstSeen && (now.getTime() - firstSeen.getTime()) / 86_400_000 <= NEW_MATCH_LOOKBACK_DAYS
 
@@ -435,38 +467,38 @@ export async function buildDigest(
       continue
     }
 
-    // Near miss — the section most capable of doing damage, so the gate is the
-    // narrow one the spec asks for.
-    //
-    // The first version keyed off `eligibilityReason` being non-null plus a
-    // score band, and shipped rows reading "Ruled out on fit. Your structure
-    // (CIC) is listed as eligible." — a verdict followed by its own refutation.
-    // eligibilityReason is populated for the ELIGIBLE case too, so the filter
-    // was catching rows that are perfectly eligible and merely scored low on
-    // fit. Nothing ruled them out, and saying otherwise is worse than silence.
-    //
-    // Only a real blocker qualifies now. Definitional impossibility is never
-    // surfaced: an organisation cannot become an individual, so there is
-    // nothing to hand back and nothing to check.
-    const blocker = result.eligibilityIssues?.find(i => i.severity === 'blocker')
-    const trulyRuledOut = result.eligibilityStatus === 'ineligible' && !!result.eligibilityReason
-    const definitionallyImpossible = result.score <= 5
-
-    if (trulyRuledOut && !definitionallyImpossible) {
-      // Where OUR RECORD is the thing in doubt, name when we read it. Same move
-      // as the verification chip on the public pages: let it degrade honestly.
-      const readOn = g.last_seen_at ? humanDate(String(g.last_seen_at).split('T')[0]) : null
-      nearMissCandidates.push({
-        title: String(g.title ?? ''),
-        funder: String(g.funder ?? ''),
-        verdict: verdictFor(blocker?.message ?? result.eligibilityReason!),
-        rule: plainRule(blocker?.message ?? result.eligibilityReason!),
-        condition: readOn
-          ? `We read that from their page on ${readOn}. If it is out of date, or your circumstances have changed, it is worth asking.`
-          : 'If our reading of their page is out of date, or your circumstances have changed, it is worth asking.',
-        url: grantUrl(origin, g),
-        key: String(g.id),
+    // Near miss. Two tests, not one: proximity AND actionability. A reason on
+    // its own is not enough — every rejected row has a reason, and only a few
+    // are near. findNearMiss() returns null unless the row is genuinely close
+    // on a dimension the reader can do something about, and it never returns
+    // area at all.
+    const blockers = (result.eligibilityIssues ?? []).filter(i => i.severity === 'blocker')
+    if (result.score < MATCH_FLOOR && result.score > 5) {
+      const near = findNearMiss({
+        grant: normalised,
+        org,
+        readOn: g.last_seen_at ? humanDate(String(g.last_seen_at).split('T')[0]) : null,
+        // "Everything else fits" is a claim, not a flourish. Only say it when
+        // this really is the single thing standing in the way.
+        otherwiseFits: blockers.length <= 1,
       })
+      if (near) {
+        nearMissCandidates.push({
+          score: result.score,
+          soleBlocker: blockers.length <= 1,
+          dimension: near.dimension,
+          row: {
+            title: String(g.title ?? ''),
+            funder: String(g.funder ?? ''),
+            meta: nearMissMeta(normalised, g.location_tag ? String(g.location_tag) : null),
+            verdict: near.verdict,
+            rule: near.rule,
+            condition: near.condition,
+            url: grantUrl(origin, g),
+            key: String(g.id),
+          },
+        })
+      }
     }
   }
 
@@ -534,9 +566,25 @@ export async function buildDigest(
     : 'worth_a_look'
 
   /* ── 6. Near misses — rotate, cap at two, never repeat an item ────────── */
+  // Nearest first, and "near" is not the same as "scored highest".
+  //
+  // Three keys, in order:
+  //   1. Sole blocker. A row where this dimension is the only thing in the way
+  //      is genuinely one step from qualifying; one with three blockers is near
+  //      on one axis and far on the rest, and wastes a slot the reader only
+  //      gets two of.
+  //   2. Dimension, in the spec's own order. A structure near miss is the most
+  //      compelling row in the email — "they fund companies limited by
+  //      guarantee, but not CICs, and you are both" is something the reader can
+  //      raise with the funder tomorrow. An amount near miss is weaker, and
+  //      ranking purely on score buried every structure row under a pile of
+  //      funds that happen to give slightly too little.
+  //   3. Score, to break ties inside a dimension.
   const nearMisses = nearMissCandidates
-    .filter(n => !seen.has(`near_miss:${n.key}`))
+    .filter(n => !seen.has(`near_miss:${n.row.key}`))
+    .sort(byNearness)
     .slice(0, CAPS.nearMisses)
+    .map(n => n.row)
   nearMisses.forEach(n => shown.push({ section: 'near_miss', key: n.key }))
 
   /* ── 7. Profile prompt ───────────────────────────────────────────────── */
@@ -621,7 +669,7 @@ export async function buildDigest(
      does not contain. */
   let preheader: string
   if (mode === 'week_one') {
-    preheader = `The ${spell(matches.length)} closing soonest${nearMisses.length ? `, and ${spell(nearMisses.length)} we ruled out with the reason why` : ''}.`
+    preheader = `The ${spell(matches.length)} closing soonest${nearMisses.length ? `, and ${spell(nearMisses.length)} that fell just outside with the reason why` : ''}.`
   } else {
     const bits: string[] = []
     if (inProgress.length) bits.push(`${spell(inProgress.length)} ${inProgress.length === 1 ? 'application' : 'applications'} in flight`)
@@ -652,5 +700,15 @@ export async function buildDigest(
     inProgress, inProgressOverflow,
     matches, matchesOverflow, matchTotal, matchLabel,
     nearMisses, prompt, reassurance, catalogue, shown,
+    debug: {
+      // The SAME comparator the shown list uses. It briefly had its own, which
+      // made the diagnostic disagree with the email it was meant to explain —
+      // the one thing a diagnostic must never do.
+      nearMissCandidates: [...nearMissCandidates]
+        .sort(byNearness)
+        .slice(0, 8)
+        .map(n => ({ title: n.row.title, score: n.score, soleBlocker: n.soleBlocker, dimension: n.dimension })),
+      nearMissCandidateCount: nearMissCandidates.length,
+    },
   }
 }

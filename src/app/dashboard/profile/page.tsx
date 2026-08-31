@@ -2054,7 +2054,7 @@ function StoryCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
    ───────────────────────────────────────────────
    The off-switch. Until 2026-08-30 there was no alerts control anywhere in the
    product: the column existed, the onboarding wizard wrote TRUE to it for every
-   new organisation, and the alert email's "Manage alert settings" link pointed
+   new organisation, and the email's "Email preferences" link pointed
    at this page, which had nothing on it to manage. 34 of 41 organisations had
    alerts on and not one of them had been asked.
 
@@ -2086,23 +2086,23 @@ function AlertsCard({ org, orgId, onSaved }: {
   }
 
   return (
-    <CardShell title="Email alerts" cardId="card-alerts" isEditing={false}>
+    <CardShell title="Weekly Funding Update" cardId="card-alerts" isEditing={false}>
       <div style={{ padding: '4px 24px 20px' }}>
 
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 20 }}>
           <div style={{ flex: 1 }}>
             <p style={{ margin: '0 0 4px', fontFamily: UI, fontWeight: 600, fontSize: 14, color: T.textPrimary }}>
-              New opportunity alerts
+              Weekly Funding Update
             </p>
             <p style={{ margin: 0, fontFamily: BODY, fontSize: 13.5, lineHeight: 1.55, color: T.textSecondary }}>
-              An email when funding opens that matches {org.name}. Nothing else, and never more than once a week.
+              One email a week: what is closing, what is moving, and new funding that matches {org.name}. Nothing else.
             </p>
           </div>
 
           <button
             role="switch"
             aria-checked={enabled}
-            aria-label="New opportunity alerts"
+            aria-label="Weekly Funding Update"
             disabled={saving}
             onClick={() => set({ alerts_enabled: !enabled })}
             style={{
@@ -2156,7 +2156,7 @@ function AlertsCard({ org, orgId, onSaved }: {
 
         {!enabled && (
           <p style={{ margin: '14px 0 0', fontFamily: BODY, fontSize: 13, color: T.textTertiary }}>
-            Alerts are off. You can still find everything on Find Funding.
+            The Weekly Funding Update is off. You can still find everything on Find Funding.
           </p>
         )}
 

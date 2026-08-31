@@ -56,7 +56,7 @@ function page(title: string, body: string, showBack: boolean): string {
       ${showBack ? `<a href="${MCP_APP_ORIGIN}/dashboard/profile#card-alerts"
          style="display:inline-block;background:#173404;color:#F1F7E4;text-decoration:none;
                 padding:11px 20px;border-radius:10px;font-size:14px;font-weight:600;">
-        Turn alerts back on
+        Turn it back on
       </a>` : ''}
     </div>
   </div>
@@ -70,7 +70,7 @@ export async function GET(req: NextRequest) {
     return new NextResponse(
       page(
         'That link did not work',
-        'The unsubscribe link looks incomplete or has been altered. You can switch alerts off yourself on your profile page.',
+        'The unsubscribe link looks incomplete or has been altered. You can turn the Weekly Funding Update off yourself on your profile page.',
         true,
       ),
       { status: 400, headers: { 'content-type': 'text/html; charset=utf-8' } },
@@ -81,7 +81,7 @@ export async function GET(req: NextRequest) {
     return new NextResponse(
       page(
         'Something went wrong',
-        'We could not switch your alerts off just now. Please try again, or turn them off on your profile page.',
+        'We could not turn the Weekly Funding Update off just now. Please try again, or turn it off on your profile page.',
         true,
       ),
       { status: 500, headers: { 'content-type': 'text/html; charset=utf-8' } },
@@ -90,8 +90,8 @@ export async function GET(req: NextRequest) {
 
   return new NextResponse(
     page(
-      'Alerts are off',
-      'You will not get any more new-opportunity emails from us. Nothing else about your account has changed.',
+      'You are unsubscribed',
+      'You will not get the Weekly Funding Update any more. Nothing else about your account has changed.',
       true,
     ),
     { status: 200, headers: { 'content-type': 'text/html; charset=utf-8' } },

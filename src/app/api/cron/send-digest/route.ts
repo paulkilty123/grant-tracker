@@ -120,6 +120,7 @@ export async function GET(req: NextRequest) {
             nearMisses: model.nearMisses.map(r => r.title),
             prompt: model.prompt?.title ?? null,
             reassurance: model.reassurance,
+            debug: model.debug,
             bytes: body.length,
           })
           continue
