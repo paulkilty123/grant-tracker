@@ -230,6 +230,22 @@ export const EMAIL_BRAND_HOST = MCP_APP_HOST.replace(/^www\./, '')
 export const EMAIL_FROM = readString('ALERT_FROM_EMAIL', `alerts@${EMAIL_BRAND_HOST}`)
 
 /**
+ * The name a recipient sees in their inbox.
+ *
+ * DELIBERATELY not MCP_BRAND_NAME. The wordmark is "Shoots" and stays "Shoots"
+ * everywhere it appears beside the mark, where the logo carries the context.
+ * A sender name has no logo next to it — it sits in a list of forty other
+ * senders, frequently in the Promotions tab, next to a truncated subject. There
+ * "Shoots" says nothing about what the email is; "Shoots Funding" says it in
+ * one extra word and matches the domain it arrives from.
+ *
+ * A constant rather than `${MCP_BRAND_NAME} Funding`, because deriving it would
+ * silently produce "Shoots Funding Funding" if the brand name ever absorbed the
+ * second word.
+ */
+export const EMAIL_FROM_NAME = readString('EMAIL_FROM_NAME', 'Shoots Funding')
+
+/**
  * The From header, with a display name.
  *
  * A bare address makes every client show the LOCAL PART as the sender, so the
@@ -237,12 +253,11 @@ export const EMAIL_FROM = readString('ALERT_FROM_EMAIL', `alerts@${EMAIL_BRAND_H
  * product and tells a reader nothing about who is writing. The sender name is
  * where "who is this" belongs; the subject is for what is urgent.
  *
- * Driven by MCP_BRAND_NAME so it cannot drift from the wordmark in the email's
- * own header. If the env var already carries a display name, it is left alone.
+ * If the env var already carries a display name, it is left alone.
  */
 export const EMAIL_FROM_HEADER = EMAIL_FROM.includes('<')
   ? EMAIL_FROM
-  : `${MCP_BRAND_NAME} <${EMAIL_FROM}>`
+  : `${EMAIL_FROM_NAME} <${EMAIL_FROM}>`
 
 /** Where internal notifications land: the contact form and in-app feedback. */
 export const EMAIL_NOTIFY_TO = readString('FEEDBACK_NOTIFY_EMAIL', MCP_CONTACT_EMAIL)

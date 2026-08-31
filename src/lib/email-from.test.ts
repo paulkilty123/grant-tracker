@@ -32,7 +32,9 @@ describe('the From header', () => {
   it('wraps a bare address in the brand name', async () => {
     vi.resetModules()
     const { EMAIL_FROM_HEADER, EMAIL_FROM } = await import('./mcp-brand')
-    expect(EMAIL_FROM_HEADER).toMatch(/^Shoots <.+@.+>$/)
+    // "Shoots Funding", not the bare wordmark: a sender name has no logo
+    // beside it and sits in a list of forty others.
+    expect(EMAIL_FROM_HEADER).toMatch(/^Shoots Funding <.+@.+>$/)
     expect(EMAIL_FROM_HEADER).toContain(EMAIL_FROM)
   })
 
