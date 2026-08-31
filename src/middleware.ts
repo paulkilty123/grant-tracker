@@ -131,10 +131,26 @@ export async function middleware(request: NextRequest) {
     pathname === '/robots.txt' ||
     pathname === '/sitemap.xml'
 
-  // Redirect unauthenticated users to login
+  // Redirect unauthenticated users to login, REMEMBERING where they were going.
+  //
+  // This used to clone the URL and swap the pathname for /auth/login, which
+  // dropped the destination entirely: every deep link followed by a logged-out
+  // person landed them on the dashboard instead of the thing they clicked.
+  // That is fine for someone opening the app and invisible in normal use, and
+  // it is exactly wrong for a link in an email — the weekly digest sends people
+  // to a specific grant, and most readers open email on a phone where they are
+  // least likely to have a live session.
+  //
+  // /auth/login already honours ?next= (safeNext there rejects anything not a
+  // plain relative path), so this only has to supply it.
   if (!user && !isAuthPage && !isPublicPage && !isApiRoute && !isMetadataRoute && !isOAuthPublic && !isAnalyticsProxy) {
+    const intended = `${pathname}${request.nextUrl.search}`
     const url = request.nextUrl.clone()
     url.pathname = '/auth/login'
+    // Clear the original query first, or the destination's params would be
+    // duplicated onto the login URL alongside `next`.
+    url.search = ''
+    url.searchParams.set('next', intended)
     return NextResponse.redirect(url)
   }
 

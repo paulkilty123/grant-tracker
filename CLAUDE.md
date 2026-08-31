@@ -3,9 +3,18 @@
 ## Project
 Next.js 14 App Router + Supabase + Tailwind CSS, deployed on Vercel via GitHub auto-deploy.
 
-- **Live site:** https://www.shootsfunding.co.uk/ (the brand and the domain from 2026-08-27;
-  granttracker.co.uk still resolves and 308s here, but it is the legacy alias. Use
-  shootsfunding for verification, admin calls and anything user-facing.)
+- **Live site:** https://www.shootsfunding.co.uk/ (the brand and the domain from 2026-08-27).
+  Use shootsfunding for verification, admin calls and anything user-facing.
+
+  > **granttracker.co.uk does NOT redirect.** This line used to say it "308s here".
+  > It does not: as of 2026-08-30 it returns **200** and serves byte-identical
+  > content (checksums compared), so the same site is live on two domains. The
+  > canonical tag on both points at shootsfunding, which is a hint to a crawler
+  > and not a redirect. The fix is a 308 at the domain level in Vercel's project
+  > settings, not in code — flagged to Paul 2026-08-30. It matters more than a
+  > tidy-up because the launch push on 10 September is aimed partly at search and
+  > AI crawlers, and .org already outranks .co.uk. See
+  > `project_domain_confusion_grant_tracker_org`.
 - **Repo:** https://github.com/paulkilty123/grant-tracker
 - **Supabase project ID:** yrndczlqjqtfgissleev
 - **Pricing (final, set by Paul 2026-08-29):** three tiers, monthly or annual only.

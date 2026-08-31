@@ -1,0 +1,536 @@
+{
+ "offset": 0,
+ "limit": 10,
+ "proposals": [],
+ "noCandidate": [
+  {
+   "id": "732a41ad-8df9-405f-a74f-cd25be2b64c2",
+   "funder": "Esmée Fairbairn Foundation",
+   "title": "Esmée Fairbairn Foundation — Arts, Culture & Heritage",
+   "apply_url": "https://esmeefairbairn.org.uk/apply-for-a-grant/creative-confident-communities-guidance/",
+   "field_evidence": {
+    "deadline": {
+     "by": "verify:v2+urlhop",
+     "quote": null,
+     "agrees": null,
+     "checked_at": "2026-08-17T14:31:06.557Z",
+     "source_url": "https://esmeefairbairn.org.uk/apply-for-a-grant/"
+    },
+    "is_grant": {
+     "by": "verify:v2+urlhop",
+     "quote": null,
+     "agrees": null,
+     "checked_at": "2026-08-17T14:31:06.557Z",
+     "source_url": "https://esmeefairbairn.org.uk/apply-for-a-grant/"
+    },
+    "_page_read": {
+     "by": "verify:v2",
+     "note": "fixable_link: wrong_fund",
+     "quote": null,
+     "agrees": null,
+     "checked_at": "2026-08-29T01:03:02.078Z",
+     "source_url": "https://esmeefairbairn.org.uk/apply-for-a-grant/creative-confident-communities-guidance/",
+     "silent_streak": 1
+    },
+    "exclusions": {
+     "by": "verify:v2+urlhop",
+     "quote": null,
+     "agrees": null,
+     "checked_at": "2026-08-17T14:31:06.557Z",
+     "source_url": "https://esmeefairbairn.org.uk/apply-for-a-grant/"
+    },
+    "is_rolling": {
+     "by": "verify:v2+urlhop",
+     "note": "rolling not confirmable from this page",
+     "quote": null,
+     "agrees": null,
+     "checked_at": "2026-08-17T14:31:06.557Z",
+     "source_url": "https://esmeefairbairn.org.uk/apply-for-a-grant/"
+    },
+    "still_listed": {
+     "by": "verify:v2+urlhop",
+     "quote": null,
+     "agrees": null,
+     "checked_at": "2026-08-17T14:31:06.557Z",
+     "source_url": "https://esmeefairbairn.org.uk/apply-for-a-grant/"
+    },
+    "is_invite_only": {
+     "by": "verify:v2+urlhop",
+     "quote": null,
+     "agrees": null,
+     "checked_at": "2026-08-17T14:31:06.557Z",
+     "source_url": "https://esmeefairbairn.org.uk/apply-for-a-grant/"
+    },
+    "max_org_income": {
+     "by": "verify:v2+urlhop",
+     "quote": null,
+     "agrees": null,
+     "checked_at": "2026-08-17T14:31:06.557Z",
+     "source_url": "https://esmeefairbairn.org.uk/apply-for-a-grant/"
+    },
+    "min_org_income": {
+     "by": "verify:v2+urlhop",
+     "quote": "Organisations with a turnover of less than £100,000 (as reflected in the latest set of accounts)",
+     "agrees": false,
+     "proposed": 100000,
+     "checked_at": "2026-08-17T14:31:06.557Z",
+     "source_url": "https://esmeefairbairn.org.uk/apply-for-a-grant/"
+    },
+    "eligible_structures": {
+     "by": "verify:v2+urlhop",
+     "note": "the page widens and narrows what we hold",
+     "quote": "we support constituted organisations, including charities and non-charities doing charitable work.",
+     "agrees": false,
+     "proposed": [
+      "cic_guarantee",
+      "cic_shares",
+      "cio",
+      "cooperative",
+      "ltd_guarantee",
+      "not_registered",
+      "registered_charity",
+      "scio"
+     ],
+     "checked_at": "2026-08-17T14:31:06.557Z",
+     "source_url": "https://esmeefairbairn.org.uk/apply-for-a-grant/"
+    }
+   },
+   "note": "fixable_link: wrong_fund",
+   "verdict": "funder_page_thin",
+   "signals": [],
+   "namesFund": false,
+   "namesFunder": true,
+   "chars": 13164,
+   "why": "no link on the page names this fund"
+  },
+  {
+   "id": "043634a3-19fa-4636-9a0f-d5449163948c",
+   "funder": "DCR Allen Charitable Trust",
+   "title": "DCR Allen Charitable Trust",
+   "apply_url": "https://register-of-charities.charitycommission.gov.uk/en/charity-search/-/charity-details/277293/charity-overview",
+   "field_evidence": {
+    "_page_read": {
+     "by": "verify:v2",
+     "note": "fixable_link: wrong_fund",
+     "quote": null,
+     "agrees": null,
+     "checked_at": "2026-08-23T01:02:43.934Z",
+     "source_url": "https://register-of-charities.charitycommission.gov.uk/en/charity-search/-/charity-details/277293/charity-overview",
+     "silent_streak": 1
+    }
+   },
+   "note": "fixable_link: wrong_fund",
+   "verdict": "funder_page_thin",
+   "signals": [
+    "amount"
+   ],
+   "namesFund": true,
+   "namesFunder": true,
+   "chars": 1317,
+   "why": "no link on the page names this fund"
+  },
+  {
+   "id": "ed3f6ba2-c76c-4b44-9bf4-5846f4ad4bed",
+   "funder": "James Ahern Foundation",
+   "title": "James Ahern Foundation",
+   "apply_url": "https://www.jamesahernfoundation.org/",
+   "field_evidence": {
+    "deadline": {
+     "by": "verify:v2",
+     "quote": null,
+     "agrees": null,
+     "checked_at": "2026-08-17T07:02:36.110Z",
+     "source_url": "https://www.jamesahernfoundation.org/"
+    },
+    "is_grant": {
+     "by": "verify:v2",
+     "quote": "Grants: we award small grants to young people, to help them pursue their passion in life.",
+     "agrees": true,
+     "checked_at": "2026-08-17T07:02:36.110Z",
+     "source_url": "https://www.jamesahernfoundation.org/"
+    },
+    "_page_read": {
+     "by": "verify:v2",
+     "note": "multiple_funds",
+     "quote": null,
+     "agrees": null,
+     "checked_at": "2026-08-23T01:02:19.970Z",
+     "source_url": "https://www.jamesahernfoundation.org/",
+     "silent_streak": 2
+    },
+    "exclusions": {
+     "by": "verify:v2",
+     "quote": null,
+     "agrees": null,
+     "checked_at": "2026-08-17T07:02:36.110Z",
+     "source_url": "https://www.jamesahernfoundation.org/"
+    },
+    "is_rolling": {
+     "by": "verify:v2",
+     "quote": null,
+     "agrees": null,
+     "checked_at": "2026-08-17T07:02:36.110Z",
+     "source_url": "https://www.jamesahernfoundation.org/"
+    },
+    "still_listed": {
+     "by": "verify:v2",
+     "quote": null,
+     "agrees": null,
+     "checked_at": "2026-08-17T07:02:36.110Z",
+     "source_url": "https://www.jamesahernfoundation.org/"
+    },
+    "is_invite_only": {
+     "by": "verify:v2",
+     "quote": null,
+     "agrees": null,
+     "checked_at": "2026-08-17T07:02:36.110Z",
+     "source_url": "https://www.jamesahernfoundation.org/"
+    },
+    "max_org_income": {
+     "by": "verify:v2",
+     "quote": null,
+     "agrees": null,
+     "checked_at": "2026-08-17T07:02:36.110Z",
+     "source_url": "https://www.jamesahernfoundation.org/"
+    },
+    "min_org_income": {
+     "by": "verify:v2",
+     "quote": null,
+     "agrees": null,
+     "checked_at": "2026-08-17T07:02:36.110Z",
+     "source_url": "https://www.jamesahernfoundation.org/"
+    },
+    "eligible_structures": {
+     "by": "verify:v2",
+     "quote": null,
+     "agrees": null,
+     "checked_at": "2026-08-17T07:02:36.110Z",
+     "source_url": "https://www.jamesahernfoundation.org/"
+    }
+   },
+   "note": "multiple_funds",
+   "verdict": "funder_page_thin",
+   "signals": [],
+   "namesFund": true,
+   "namesFunder": true,
+   "chars": 2907,
+   "why": "no link on the page names this fund"
+  },
+  {
+   "id": "916f02b0-714f-4489-8528-5784c4a38cf9",
+   "funder": "Active Travel England",
+   "title": "Active Travel England — Communities and Engagement Fund",
+   "apply_url": "https://www.activetravelengland.gov.uk/funding",
+   "field_evidence": {
+    "_page_read": {
+     "by": "verify:v2+urlhop",
+     "note": "fixable_link: wrong_fund",
+     "quote": null,
+     "agrees": null,
+     "checked_at": "2026-08-17T14:41:38.814Z",
+     "source_url": "https://www.activetravelengland.gov.uk/funding"
+    }
+   },
+   "note": "fixable_link: wrong_fund",
+   "verdict": "funder_page_thin",
+   "signals": [],
+   "namesFund": true,
+   "namesFunder": true,
+   "chars": 3752,
+   "why": "no link on the page names this fund"
+  },
+  {
+   "id": "4075bfa0-5ca1-4732-bac4-2b050c542015",
+   "funder": "Digital Candle",
+   "title": "Digital Candle — Free Digital Advice",
+   "apply_url": "https://digitalcandle.org.uk/",
+   "field_evidence": {
+    "_page_read": {
+     "by": "verify:v2+urlhop",
+     "note": "fixable_link: no_funding_detail",
+     "quote": null,
+     "agrees": null,
+     "checked_at": "2026-08-17T14:13:53.629Z",
+     "source_url": "https://digitalcandle.org.uk/"
+    }
+   },
+   "note": "fixable_link: no_funding_detail",
+   "verdict": "funder_page_thin",
+   "signals": [],
+   "namesFund": true,
+   "namesFunder": true,
+   "chars": 1520,
+   "why": "no link on the page names this fund"
+  },
+  {
+   "id": "f3c80850-b852-4de7-8708-91e3f1fc8255",
+   "funder": "Groundwork UK",
+   "title": "Groundwork — Just About Managing Fund",
+   "apply_url": "https://www.groundwork.org.uk/funding/",
+   "field_evidence": {
+    "_page_read": {
+     "by": "verify:v2",
+     "note": "fixable_link: wrong_fund",
+     "quote": null,
+     "agrees": null,
+     "checked_at": "2026-08-25T01:01:40.712Z",
+     "source_url": "https://www.groundwork.org.uk/funding/",
+     "silent_streak": 1
+    }
+   },
+   "note": "fixable_link: wrong_fund",
+   "verdict": "funder_page_thin",
+   "signals": [
+    "eligibility"
+   ],
+   "namesFund": true,
+   "namesFunder": true,
+   "chars": 1060,
+   "why": "no link on the page names this fund"
+  },
+  {
+   "id": "ae7cef18-d1cb-495d-ac93-4e177007997a",
+   "funder": "Essex Community Foundation",
+   "title": "Essex Community Foundation — Grants Hub",
+   "apply_url": "https://www.essexcommunityfoundation.org.uk/grant-eligibility/",
+   "field_evidence": {
+    "deadline": {
+     "by": "verify:v2+urlhop",
+     "quote": null,
+     "agrees": null,
+     "checked_at": "2026-08-17T14:50:57.765Z",
+     "source_url": "https://www.essexcommunityfoundation.org.uk/grant-eligibility/"
+    },
+    "is_grant": {
+     "by": "verify:v2+urlhop",
+     "quote": null,
+     "agrees": null,
+     "checked_at": "2026-08-17T14:50:57.765Z",
+     "source_url": "https://www.essexcommunityfoundation.org.uk/grant-eligibility/"
+    },
+    "_page_read": {
+     "by": "verify:v2",
+     "note": "fixable_link: wrong_fund",
+     "quote": null,
+     "agrees": null,
+     "checked_at": "2026-08-24T01:01:56.079Z",
+     "source_url": "https://www.essexcommunityfoundation.org.uk/grant-eligibility/",
+     "silent_streak": 1
+    },
+    "exclusions": {
+     "by": "verify:v2+urlhop",
+     "note": "2 exclusions on the page we do not carry",
+     "quote": "Unfortunately, we cannot support groups that are limited by shares or for profit.",
+     "agrees": false,
+     "proposed": [
+      "groups limited by shares",
+      "for profit organisations"
+     ],
+     "checked_at": "2026-08-17T14:50:57.765Z",
+     "source_url": "https://www.essexcommunityfoundation.org.uk/grant-eligibility/"
+    },
+    "is_rolling": {
+     "by": "verify:v2+urlhop",
+     "quote": null,
+     "agrees": null,
+     "checked_at": "2026-08-17T14:50:57.765Z",
+     "source_url": "https://www.essexcommunityfoundation.org.uk/grant-eligibility/"
+    },
+    "still_listed": {
+     "by": "verify:v2+urlhop",
+     "quote": "17 August 2026",
+     "agrees": true,
+     "checked_at": "2026-08-17T14:50:57.765Z",
+     "source_url": "https://www.essexcommunityfoundation.org.uk/grant-eligibility/"
+    },
+    "is_invite_only": {
+     "by": "verify:v2+urlhop",
+     "quote": null,
+     "agrees": null,
+     "checked_at": "2026-08-17T14:50:57.765Z",
+     "source_url": "https://www.essexcommunityfoundation.org.uk/grant-eligibility/"
+    },
+    "max_org_income": {
+     "by": "verify:v2+urlhop",
+     "quote": null,
+     "agrees": null,
+     "checked_at": "2026-08-17T14:50:57.765Z",
+     "source_url": "https://www.essexcommunityfoundation.org.uk/grant-eligibility/"
+    },
+    "min_org_income": {
+     "by": "verify:v2+urlhop",
+     "quote": null,
+     "agrees": null,
+     "checked_at": "2026-08-17T14:50:57.765Z",
+     "source_url": "https://www.essexcommunityfoundation.org.uk/grant-eligibility/"
+    },
+    "eligible_structures": {
+     "by": "verify:v2+urlhop",
+     "note": "the page widens what we hold",
+     "quote": "Are you a not-for-profit organisation or limited by guarantee? Yes No Unfortunately, we cannot support groups that are limited by shares or for profit.",
+     "agrees": false,
+     "proposed": [
+      "cic_guarantee",
+      "cio",
+      "cooperative",
+      "individual",
+      "ltd_guarantee",
+      "not_registered",
+      "registered_charity",
+      "unincorporated"
+     ],
+     "checked_at": "2026-08-17T14:50:57.765Z",
+     "source_url": "https://www.essexcommunityfoundation.org.uk/grant-eligibility/"
+    }
+   },
+   "note": "fixable_link: wrong_fund",
+   "verdict": "funder_page_thin",
+   "signals": [
+    "eligibility"
+   ],
+   "namesFund": true,
+   "namesFunder": true,
+   "chars": 4215,
+   "why": "no link on the page names this fund"
+  },
+  {
+   "id": "21f84400-4330-4267-9a62-4540617a573d",
+   "funder": "Eranda Rothschild Foundation",
+   "title": "Eranda Rothschild Foundation",
+   "apply_url": "https://erandarothschild.org/",
+   "field_evidence": {
+    "deadline": {
+     "by": "verify:v2+urlhop",
+     "quote": null,
+     "agrees": null,
+     "checked_at": "2026-08-17T14:06:34.431Z",
+     "source_url": "https://erandarothschild.org/"
+    },
+    "is_grant": {
+     "by": "verify:v2+urlhop",
+     "quote": "The Eranda Rothschild Foundation is a UK registered charitable trust and makes donations to registered charities working in the fields of medical research, education and the arts.",
+     "agrees": true,
+     "checked_at": "2026-08-17T14:06:34.431Z",
+     "source_url": "https://erandarothschild.org/"
+    },
+    "_page_read": {
+     "by": "verify:v2+urlhop",
+     "note": "fixable_link: wrong_fund",
+     "quote": null,
+     "agrees": null,
+     "checked_at": "2026-08-17T14:06:34.431Z",
+     "source_url": "https://erandarothschild.org/"
+    },
+    "exclusions": {
+     "by": "verify:v2+urlhop",
+     "quote": null,
+     "agrees": null,
+     "checked_at": "2026-08-17T14:06:34.431Z",
+     "source_url": "https://erandarothschild.org/"
+    },
+    "is_rolling": {
+     "by": "verify:v2+urlhop",
+     "quote": null,
+     "agrees": null,
+     "checked_at": "2026-08-17T14:06:34.431Z",
+     "source_url": "https://erandarothschild.org/"
+    },
+    "still_listed": {
+     "by": "verify:v2+urlhop",
+     "quote": null,
+     "agrees": null,
+     "checked_at": "2026-08-17T14:06:34.431Z",
+     "source_url": "https://erandarothschild.org/"
+    },
+    "is_invite_only": {
+     "by": "verify:v2+urlhop",
+     "quote": null,
+     "agrees": null,
+     "checked_at": "2026-08-17T14:06:34.431Z",
+     "source_url": "https://erandarothschild.org/"
+    },
+    "max_org_income": {
+     "by": "verify:v2+urlhop",
+     "quote": null,
+     "agrees": null,
+     "checked_at": "2026-08-17T14:06:34.431Z",
+     "source_url": "https://erandarothschild.org/"
+    },
+    "min_org_income": {
+     "by": "verify:v2+urlhop",
+     "quote": null,
+     "agrees": null,
+     "checked_at": "2026-08-17T14:06:34.431Z",
+     "source_url": "https://erandarothschild.org/"
+    },
+    "eligible_structures": {
+     "by": "verify:v2+urlhop",
+     "quote": "We support registered charities, including Charitable Incorporated Organisations (CIOs) and those correctly registered as charities in their own countries.",
+     "agrees": true,
+     "checked_at": "2026-08-17T14:06:34.431Z",
+     "source_url": "https://erandarothschild.org/"
+    }
+   },
+   "note": "fixable_link: wrong_fund",
+   "verdict": "funder_page_thin",
+   "signals": [
+    "eligibility"
+   ],
+   "namesFund": true,
+   "namesFunder": true,
+   "chars": 1472,
+   "why": "no link on the page names this fund"
+  },
+  {
+   "id": "91737208-0bd3-45c4-8866-ec6256e85a58",
+   "funder": "Bauer Media / Cash for Kids",
+   "title": "Cash for Kids - Cost of Living Grants",
+   "apply_url": "https://cashforkids.org.uk/grants/cost-of-living/",
+   "field_evidence": {
+    "_page_read": {
+     "by": "verify:v2+urlhop",
+     "note": "fixable_link: no_funding_detail",
+     "quote": null,
+     "agrees": null,
+     "checked_at": "2026-08-17T14:42:01.597Z",
+     "source_url": "https://cashforkids.org.uk/grants/cost-of-living/"
+    }
+   },
+   "note": "fixable_link: no_funding_detail",
+   "verdict": "funder_page_thin",
+   "signals": [
+    "eligibility"
+   ],
+   "namesFund": true,
+   "namesFunder": true,
+   "chars": 643,
+   "why": "no link on the page names this fund"
+  },
+  {
+   "id": "5b7a141a-5ee2-4f80-80d6-fa6937cff37b",
+   "funder": "Arnold Clark",
+   "title": "Arnold Clark Community Fund",
+   "apply_url": "https://www.arnoldclark.com/community-fund",
+   "field_evidence": {
+    "_page_read": {
+     "by": "verify:v2",
+     "note": "multiple_funds",
+     "quote": null,
+     "agrees": null,
+     "checked_at": "2026-08-22T01:01:04.081Z",
+     "source_url": "https://www.arnoldclark.com/community-fund",
+     "silent_streak": 2
+    }
+   },
+   "note": "multiple_funds",
+   "verdict": "funder_page_thin",
+   "signals": [
+    "eligibility"
+   ],
+   "namesFund": true,
+   "namesFunder": true,
+   "chars": 5314,
+   "why": "no link on the page names this fund"
+  }
+ ]
+}

@@ -17,6 +17,49 @@ export interface AlertGrant {
   reason: string
 }
 
+/**
+ * How many opportunities may appear in one alert email.
+ *
+ * sent_grant_alerts is empty, so "everything matching that has not been sent"
+ * currently means every match since the catalogue began. Without a cap the
+ * first email anybody receives is the entire backlog, which reads as a data
+ * dump rather than an alert and teaches people to filter us.
+ */
+export const ALERT_MAX_GRANTS_PER_EMAIL =
+  Number(process.env.ALERT_MAX_GRANTS_PER_EMAIL) || 5
+
+/**
+ * How far back an opportunity may have been first seen and still count as
+ * "new". The other half of the backlog problem: the cap alone would send five
+ * grants from March and call them new.
+ */
+export const ALERT_LOOKBACK_DAYS =
+  Number(process.env.ALERT_LOOKBACK_DAYS) || 30
+
+/**
+ * Who may receive an alert. EMPTY BY DEFAULT, which means nobody.
+ *
+ * The safe state is the default rather than a flag someone remembers to pass.
+ * 34 organisations across 23 people have alerts_enabled, nearly all of them
+ * cohort members, and none of them asked for it — so the cost of an unscoped
+ * run is not a stray email, it is the goodwill the launch depends on.
+ *
+ * Widening this is a deliberate edit to an environment variable, which is
+ * exactly the friction it should have. Set ALERT_RECIPIENT_ALLOWLIST to a
+ * comma-separated list of addresses.
+ */
+export function alertAllowlist(): string[] {
+  return (process.env.ALERT_RECIPIENT_ALLOWLIST ?? '')
+    .split(',')
+    .map(s => s.trim().toLowerCase())
+    .filter(Boolean)
+}
+
+/** True only if this address is explicitly listed. No wildcards, by design. */
+export function isAllowedRecipient(email: string): boolean {
+  return alertAllowlist().includes(email.trim().toLowerCase())
+}
+
 const VALID_FUNDER_TYPES: FunderType[] = [
   'trust_foundation', 'community_foundation', 'corporate_foundation',
   'capacity_builder',
@@ -71,13 +114,29 @@ export async function getUnsentAlerts(
 
   const sentIds = new Set((sent ?? []).map((r: { grant_id: string }) => r.grant_id))
 
-  // Fetch active scraped grants from DB (newest first, max 500)
+  // is_active AND published. is_active alone was letting rows that are still
+  // in review into an email — 24 of them at the time of writing. A row reaches
+  // a user's inbox before a human has approved it, which is the one thing the
+  // Needs Review gate exists to prevent.
+  //
+  // Newest first is deliberate and not just a tiebreak: this is a "new
+  // opportunity" alert, so recency is the point. The limit is above the size of
+  // the whole published set (582 on 2026-08-30) so it is a safety ceiling
+  // rather than a silent window that quietly drops the older half.
+  // The lookback floor, applied in SQL rather than after the fetch. Doing it
+  // here means the row limit below is a ceiling on genuinely-recent rows, not
+  // a window that silently drops half of them.
+  const cutoff = new Date(Date.now() - ALERT_LOOKBACK_DAYS * 86_400_000)
+    .toISOString()
+
   const { data: scraped } = await supabase
     .from('scraped_grants')
     .select('*')
     .eq('is_active', true)
+    .eq('pipeline_state', 'published')
+    .gte('first_seen_at', cutoff)
     .order('first_seen_at', { ascending: false })
-    .limit(500)
+    .limit(1000)
 
   const scrapedGrants: GrantOpportunity[] = (scraped ?? [])
     .map(row => normaliseScraped(row as Record<string, unknown>))
@@ -94,8 +153,10 @@ export async function getUnsentAlerts(
     }
   }
 
-  // Sort by score descending, return top 10
-  return candidates.sort((a, b) => b.score - a.score).slice(0, 10)
+  // Best first, capped. Was a flat top-10 with no lookback floor behind it.
+  return candidates
+    .sort((a, b) => b.score - a.score)
+    .slice(0, ALERT_MAX_GRANTS_PER_EMAIL)
 }
 
 /** Record which grants were sent so we don't resend them */

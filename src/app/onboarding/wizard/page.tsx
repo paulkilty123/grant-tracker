@@ -276,6 +276,16 @@ interface WizardState {
   spendRestrictions: SpendNeed[]
   nicheTags:        string[]
   excludedNicheTags: string[]
+  /**
+   * New-opportunity email alerts. Defaults ON, and is now SHOWN on the last
+   * step instead of being written silently.
+   *
+   * It was hardcoded `alerts_enabled: true` in the submit payload with nothing
+   * on screen about it, which is how 34 of 41 organisations ended up subscribed
+   * to an email none of them had agreed to. The default is unchanged; what
+   * changes is that somebody saw it.
+   */
+  alertsEnabled:    boolean
 }
 
 const EMPTY_STATE: WizardState = {
@@ -288,6 +298,7 @@ const EMPTY_STATE: WizardState = {
   spendRestrictions: [],
   nicheTags: [],
   excludedNicheTags: [],
+  alertsEnabled: true,
 }
 
 /** Derive the three boolean eligibility flags from the legal structure.
@@ -784,6 +795,9 @@ export default function OnboardingWizardPage() {
             const valid = validNicheTagsFor(sectors)
             return ((org.excluded_niche_tags as string[]) ?? []).filter(t => valid.has(t))
           })(),
+          // Read back rather than defaulted, so a second pass through the
+          // wizard cannot silently re-subscribe somebody who turned alerts off.
+          alertsEnabled:    org.alerts_enabled ?? true,
         })
       }
       setLoading(false)
@@ -1071,7 +1085,10 @@ export default function OnboardingWizardPage() {
         spend_restriction_preferences: state.spendRestrictions,
         has_asset_lock:               eligibilityFlags.has_asset_lock,
         owner_id:                     userId,
-        alerts_enabled:               true,
+        // Was hardcoded `true`. Now carries whatever the person left the
+        // checkbox on the last step set to — which is still true unless they
+        // untick it, so the default has not moved.
+        alerts_enabled:               state.alertsEnabled,
         alert_frequency:              'weekly',
         alert_min_score:              70,
         website_url:                  url.trim() ? (url.trim().startsWith('http') ? url.trim() : 'https://' + url.trim()) : null,
@@ -2237,6 +2254,30 @@ function StepLocation({ state, update, toggleFundingType, toggleSpendNeed, savin
           </div>
         </Field>
       </div>
+
+      {/* Email alerts, stated rather than assumed.
+          Ticked by default, which is the same behaviour as before. The point
+          of putting it here is that it is now a line somebody read on their
+          way past, so nobody arrives at their first alert email wondering how
+          they were signed up. */}
+      <label
+        style={{
+          display: 'flex', alignItems: 'flex-start', gap: 11, marginTop: 22,
+          padding: '14px 16px', background: T.cream1, borderRadius: 12,
+          cursor: 'pointer',
+        }}
+      >
+        <input
+          type="checkbox"
+          checked={state.alertsEnabled}
+          onChange={e => update('alertsEnabled', e.target.checked)}
+          style={{ marginTop: 2, width: 16, height: 16, accentColor: T.greenDeep, cursor: 'pointer', flexShrink: 0 }}
+        />
+        <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 13.5, lineHeight: 1.55, color: T.textSecondary }}>
+          Email me when new funding opens that matches us. At most once a week,
+          and you can turn it off any time from your profile.
+        </span>
+      </label>
 
       {saveError && (
         <div style={{ background: T.coralBg, color: T.coralText, padding: '10px 14px', borderRadius: 10, fontSize: 13, marginTop: 8, marginBottom: 4, fontFamily: 'var(--font-dm-sans)' }}>
