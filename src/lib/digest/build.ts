@@ -33,9 +33,19 @@ export interface ClosingRow {
   name: string
   funder: string | null
   deadline: string
+  /** "10 Sep" — for the meta line, which reads "Funder · closes 10 Sep". */
+  deadlineLabel: string
   days: number
-  /** The status line. Says what this row asks the reader for. */
-  status: string
+  /**
+   * The status line, split so the renderer can escape both halves and embolden
+   * only the second. Composing HTML here instead would mean an unescaped
+   * funder or stage name reaching the email.
+   *
+   * Pipeline: "Added 25 Aug · " + "Identified"
+   * Saved:    "Saved 11 May, never added to your pipeline. Worth a yes or a no." + null
+   */
+  statusPrefix: string
+  statusStrong: string | null
   url: string | null
   key: string
 }
@@ -43,10 +53,13 @@ export interface ClosingRow {
 export interface ProgressRow {
   name: string
   funder: string | null
-  stage: string
-  status: string
+  /**
+   * What sits right-aligned opposite the name. Normally the stage
+   * ("Submitted"), but a drifting row says so instead and is rendered in the
+   * danger colour — the one honest discomfort the spec asks to keep.
+   */
+  stageLabel: string
   url: string | null
-  /** True when the row is drifting — rendered in the danger colour. */
   stalled: boolean
   key: string
 }
@@ -56,6 +69,8 @@ export interface MatchRow {
   funder: string
   blurb: string
   meta: string
+  /** Days to the deadline, for the week-one countdown tile. Null if undated. */
+  days: number | null
   url: string | null
   key: string
 }
@@ -171,6 +186,45 @@ function verdictFor(rule: string): string {
  * /auth/login?next=<this path>, so they sign in and land on the card rather
  * than being dumped on the dashboard.
  */
+/**
+ * "10 Sep" — the meta line's date format, distinct from the prose "14 October".
+ *
+ * The month list is explicit rather than from toLocaleString: en-GB's 'short'
+ * month renders September as "Sept", four characters where every other month
+ * is three, and the ragged column shows.
+ */
+export const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+export function shortDate(iso: string): string {
+  const d = new Date(iso)
+  return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`
+}
+
+/**
+ * The near-miss rule, in the funder's terms rather than ours.
+ *
+ * The eligibility engine phrases a structure block as "CIC (limited by
+ * guarantee) is not in the eligible structures list (Registered charity, ...)".
+ * That is accurate and it is our vocabulary: nobody says "eligible structures
+ * list" aloud, and the sentence leads with the reader's failure rather than
+ * with what the funder actually does.
+ *
+ * Rewritten to "They fund A, B and C. Our record has you as X." — same facts,
+ * funder first, and it names our record as ours so the reader knows which half
+ * to argue with. Anything that does not match the pattern is passed through
+ * untouched rather than mangled.
+ */
+export function plainRule(rule: string): string {
+  const m = rule.match(/^(.+?) is not in the eligible structures list \((.+)\)\.?$/i)
+  if (!m) return rule
+  const you = m[1].trim()
+  const allowed = m[2].split(',').map(x => x.trim()).filter(Boolean)
+  if (!allowed.length) return rule
+  const list = allowed.length === 1
+    ? allowed[0]
+    : `${allowed.slice(0, -1).join(', ')} and ${allowed[allowed.length - 1]}`
+  return `They fund ${list}. Our record has you as ${you}.`
+}
+
 function grantUrl(origin: string, row: Record<string, unknown>): string {
   return `${origin}/dashboard/search?grant=${encodeURIComponent(String(row.external_id ?? row.id))}`
 }
@@ -285,16 +339,16 @@ export async function buildDigest(
     const days = daysUntil(String(p.deadline), now)
     if (days < 0 || days > CLOSING_WINDOW_DAYS) continue
     const stage = String(p.stage ?? 'identified')
-    const since = p.updated_at ? humanDate(String(p.updated_at).split('T')[0]) : null
+    const added = p.created_at ? shortDate(String(p.created_at).split('T')[0]) : null
     closing.push({
       kind: 'pipeline',
       name: String(p.grant_name ?? 'Untitled'),
       funder: p.funder_name ? String(p.funder_name) : null,
       deadline: String(p.deadline),
+      deadlineLabel: shortDate(String(p.deadline)),
       days,
-      status: since
-        ? `In ${stage.charAt(0).toUpperCase() + stage.slice(1)} since ${since}.`
-        : `In ${stage}.`,
+      statusPrefix: added ? `Added ${added} · ` : '',
+      statusStrong: stage.charAt(0).toUpperCase() + stage.slice(1),
       url: pipelineHref(p, `${origin}/dashboard/deadlines`),
       key: String(p.id),
     })
@@ -315,10 +369,12 @@ export async function buildDigest(
       name: String(g.title ?? 'Untitled'),
       funder: g.funder ? String(g.funder) : null,
       deadline: String(g.deadline),
+      deadlineLabel: shortDate(String(g.deadline)),
       days,
-      status: savedOn
+      statusPrefix: savedOn
         ? `Saved ${savedOn}, never added to your pipeline. Worth a yes or a no.`
         : 'Saved, never added to your pipeline. Worth a yes or a no.',
+      statusStrong: null,
       url: grantUrl(origin, g),
       key: String(g.id),
     })
@@ -344,12 +400,11 @@ export async function buildDigest(
       name: String(p.grant_name ?? 'Untitled'),
       funder: p.funder_name ? String(p.funder_name) : null,
       url: pipelineHref(p, `${origin}/dashboard/pipeline`),
-      stage: stage.charAt(0).toUpperCase() + stage.slice(1),
       // Only said when true. A digest that notices you have stalled is a tool;
       // one that says it every week is noise.
-      status: stalled
-        ? `Still in ${stage.charAt(0).toUpperCase() + stage.slice(1)} — no movement in ${plural(weeks, 'week')}.`
-        : `In ${stage.charAt(0).toUpperCase() + stage.slice(1)}.`,
+      stageLabel: stalled
+        ? `No movement in ${plural(weeks, 'week')}`
+        : stage.charAt(0).toUpperCase() + stage.slice(1),
       stalled,
       key: String(p.id),
     })
@@ -405,7 +460,7 @@ export async function buildDigest(
         title: String(g.title ?? ''),
         funder: String(g.funder ?? ''),
         verdict: verdictFor(blocker?.message ?? result.eligibilityReason!),
-        rule: blocker?.message ?? result.eligibilityReason!,
+        rule: plainRule(blocker?.message ?? result.eligibilityReason!),
         condition: readOn
           ? `We read that from their page on ${readOn}. If it is out of date, or your circumstances have changed, it is worth asking.`
           : 'If our reading of their page is out of date, or your circumstances have changed, it is worth asking.',
@@ -458,13 +513,14 @@ export async function buildDigest(
     const g = s.row
     const parts = [
       String(g.funder ?? ''),
-      g.deadline ? `closes ${humanDate(String(g.deadline))}` : g.is_rolling ? 'rolling' : null,
+      g.deadline ? `closes ${shortDate(String(g.deadline))}` : g.is_rolling ? 'rolling' : null,
     ].filter(Boolean) as string[]
     return {
       title: String(g.title ?? ''),
       funder: String(g.funder ?? ''),
       blurb: s.blurb!,
       meta: parts.join(' · '),
+      days: g.deadline ? daysUntil(String(g.deadline), now) : null,
       url: grantUrl(origin, g),
       key: String(g.id),
     }
@@ -540,8 +596,8 @@ export async function buildDigest(
   let lead: string
   let subject: string
   if (mode === 'week_one') {
-    lead = `${matchTotal} ${matchTotal === 1 ? 'opportunity is' : 'opportunities are'} open to you right now. Here ${matches.length === 1 ? 'is the one' : `are the ${spell(matches.length)}`} closing soonest.`
-    subject = `${plural(matchTotal, 'opportunity', 'opportunities')} open to ${org.name}`
+    lead = `${spellCap(matchTotal)} ${matchTotal === 1 ? 'opportunity is' : 'opportunities are'} open to you right now. Here ${matches.length === 1 ? 'is the one' : `are the ${spell(matches.length)}`} closing soonest.`
+    subject = `${plural(matchTotal, 'funding opportunity is', 'funding opportunities are')} open to ${org.name}`
   } else if (mode === 'thin') {
     lead = nextIso
       ? `A clear month. Nothing closes before ${humanDate(nextIso)}.`
@@ -556,28 +612,38 @@ export async function buildDigest(
     const n = closingShown.length
     const nearest = closingShown[0]
     const savedOne = closingShown.find(r => r.kind === 'saved')
-    lead = `${spellCap(n)} ${verb(n, 'closes', 'close')} in the next ${CLOSING_WINDOW_DAYS / 7} weeks. The nearest is ${plural(nearest.days, 'day')} away${savedOne ? ', and one is a grant you saved and never decided on' : ''}.`
+    lead = `${spellCap(n)} ${verb(n, 'closes', 'close')} in the next ${spell(CLOSING_WINDOW_DAYS / 7)} weeks. The nearest is ${nearest.days === 0 ? 'today' : `${spell(nearest.days)} ${nearest.days === 1 ? 'day' : 'days'} away`}${savedOne ? ', and one is a grant you saved and never decided on' : ''}.`
     subject = `${nearest.name} closes in ${plural(nearest.days, 'day')}`
   }
 
-  const preheaderBits: string[] = []
-  if (mode !== 'week_one' && matches.length) {
-    // Must agree with the heading the reader will see. Saying "10 new matches"
-    // above a section headed "Matches worth a look" is the subject promising
-    // something the body does not contain.
-    preheaderBits.push(matchLabel === 'new'
-      ? `${plural(matches.length, 'new match', 'new matches')} for ${org.name}`
-      : `${plural(matches.length, 'match', 'matches')} worth a look`)
+  /* The preheader carries what the subject could not, composed from the SAME
+     data the body renders — otherwise the inbox promises something the email
+     does not contain. */
+  let preheader: string
+  if (mode === 'week_one') {
+    preheader = `The ${spell(matches.length)} closing soonest${nearMisses.length ? `, and ${spell(nearMisses.length)} we ruled out with the reason why` : ''}.`
+  } else {
+    const bits: string[] = []
+    if (inProgress.length) bits.push(`${spell(inProgress.length)} ${inProgress.length === 1 ? 'application' : 'applications'} in flight`)
+    if (matches.length) {
+      // Must agree with the heading the reader will see. "10 new matches" above
+      // a section headed "Matches worth a look" is the same broken promise.
+      bits.push(matchLabel === 'new'
+        ? `${spell(matches.length)} new ${matches.length === 1 ? 'match' : 'matches'}`
+        : `${spell(matches.length)} ${matches.length === 1 ? 'match' : 'matches'} worth a look`)
+    }
+    preheader = bits.length
+      ? `Plus ${bits.join(' and ')} for ${org.name}.`
+      : reassurance ?? ''
   }
-  if (inProgress.some(r => r.stalled)) preheaderBits.push('and one application has not moved in three weeks')
-  if (mode === 'week_one') preheaderBits.push('your first matches, closing soonest first')
-  const preheader = preheaderBits.length ? `${preheaderBits.join(', ')}.` : reassurance ?? ''
 
   /* ── Catalogue growth, footer only, never leading ─────────────────────── */
-  const thirtyAgo = new Date(now.getTime() - 30 * 86_400_000)
+  // The footer line reads "added in the last two weeks", so the window is two
+  // weeks. It said thirty days while the copy said a fortnight.
+  const fortnightAgo = new Date(now.getTime() - 14 * 86_400_000)
   const catalogue = {
     live: grants.length,
-    addedRecently: grants.filter(g => g.first_seen_at && new Date(String(g.first_seen_at)) >= thirtyAgo).length,
+    addedRecently: grants.filter(g => g.first_seen_at && new Date(String(g.first_seen_at)) >= fortnightAgo).length,
   }
 
   return {

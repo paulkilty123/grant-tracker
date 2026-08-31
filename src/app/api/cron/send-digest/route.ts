@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
-import { getOrgsWithAlertsEnabled, alertAllowlist, isAllowedRecipient } from '@/lib/alerts'
+import { getOrgsWithAlertsEnabled } from '@/lib/alerts'
+import { digestAllowlist, isDigestRecipient, digestIsDryRun, testSubjectPrefix } from '@/lib/digest/send-guards'
 import { recordRun } from '@/lib/admin/cron-runs'
 import { getAdminDb } from '@/lib/admin/admin-db'
 import { EMAIL_FROM, EMAIL_APP_URL } from '@/lib/mcp-brand'
@@ -17,11 +18,15 @@ export const dynamic = 'force-dynamic'
  * card, the same unsubscribe token. Two independent opt-outs for two emails
  * from one product is how somebody unsubscribes and keeps hearing from us.
  *
- * The guards are the alert job's, deliberately reused rather than reimplemented:
- *   - ALERT_RECIPIENT_ALLOWLIST gates every recipient, EMPTY BY DEFAULT.
- *   - ?org=<uuid> aims a single send.
- *   - ?dry=1 builds and renders, sends nothing.
- *   - the response reports who it actually sent to, not who it attempted.
+ * Send safety (spec §6b). Rendering ONE org's digest is not the same as
+ * sending to one org, and email is the surface with no undo:
+ *   - DIGEST_ALLOWED_RECIPIENTS gates every recipient and is EMPTY BY DEFAULT,
+ *     which means nobody. Not a constant someone comments out — it is read in
+ *     the send path, because the send path is what a cron eventually calls.
+ *   - DRY RUN IS THE DEFAULT. A real send requires DIGEST_DRY_RUN=false.
+ *   - ?org=<uuid> aims a single send; ?dry=1 forces dry regardless of env.
+ *   - Non-production sends carry a [TEST] subject prefix.
+ *   - The response reports who it actually sent to, not who it attempted.
  */
 export async function GET(req: NextRequest) {
   const auth = req.headers.get('authorization')
@@ -31,17 +36,20 @@ export async function GET(req: NextRequest) {
   }
 
   const onlyOrgId = req.nextUrl.searchParams.get('org')
-  const dryRun    = req.nextUrl.searchParams.get('dry') === '1'
+  // Dry run unless the environment has explicitly opted out. ?dry=1 can force
+  // it on but nothing can force it off, so the unsafe direction always needs a
+  // deliberate change to configuration rather than a query string.
+  const dryRun    = req.nextUrl.searchParams.get('dry') === '1' || digestIsDryRun()
   /** Returns the rendered HTML for one org instead of sending. Dry run only. */
   const wantHtml  = req.nextUrl.searchParams.get('html') === '1'
 
   let httpStatus = 200
   const payload = await recordRun('send-digest', async () => {
-    const allowlist = alertAllowlist()
+    const allowlist = digestAllowlist()
     if (!dryRun && allowlist.length === 0) {
       httpStatus = 409
       return {
-        error: 'ALERT_RECIPIENT_ALLOWLIST is empty, so there is nobody this job ' +
+        error: 'DIGEST_ALLOWED_RECIPIENTS is empty, so there is nobody this job ' +
                'is permitted to email. Nothing was sent.',
       }
     }
@@ -74,7 +82,7 @@ export async function GET(req: NextRequest) {
       const since = new Date(Date.now() - 31 * 86_400_000).toISOString()
 
       for (const org of orgs) {
-        if (!dryRun && !isAllowedRecipient(org.owner_email)) {
+        if (!dryRun && !isDigestRecipient(org.owner_email)) {
           blocked.push({ org: org.name, to: org.owner_email })
           continue
         }
@@ -106,8 +114,8 @@ export async function GET(req: NextRequest) {
           previews.push({
             org: org.name, to: org.owner_email, mode: model.mode,
             subject: model.subject, preheader: model.preheader, lead: model.lead,
-            closing: model.closing.map(r => `${r.days}d ${r.kind}: ${r.name}`),
-            inProgress: model.inProgress.map(r => `${r.name} — ${r.status}`),
+            closing: model.closing.map(r => `${r.days}d ${r.kind}: ${r.name} (${r.statusPrefix}${r.statusStrong ?? ''})`),
+            inProgress: model.inProgress.map(r => `${r.name} — ${r.stageLabel}`),
             matches: model.matches.map(r => `${r.title}: ${r.blurb}`),
             nearMisses: model.nearMisses.map(r => r.title),
             prompt: model.prompt?.title ?? null,
@@ -117,10 +125,23 @@ export async function GET(req: NextRequest) {
           continue
         }
 
+        // BEFORE the provider call, not after — and this reverses what this
+        // file did first. Writing after is tidier: a send that fails records
+        // nothing, so nothing is suppressed for no reason. But if the job dies
+        // part-way through 41 orgs, an after-write log cannot say who already
+        // received one, and the retry sends again. A duplicate email cannot be
+        // recalled; a suppressed match reappears next week. The asymmetry
+        // decides it.
+        if (model.shown.length) {
+          await db.from('digest_sent_items').insert(
+            model.shown.map(s => ({ org_id: org.id, section: s.section, item_key: s.key })),
+          )
+        }
+
         const { error } = await resend.emails.send({
           from:    EMAIL_FROM,
           to:      org.owner_email,
-          subject: model.subject,
+          subject: `${testSubjectPrefix()}${model.subject}`,
           html:    body,
           headers: {
             'List-Unsubscribe':      `<${unsub}>`,
@@ -131,14 +152,6 @@ export async function GET(req: NextRequest) {
           failed.push({ org: org.name, to: org.owner_email, error: error.message })
           continue
         }
-
-        // Only after Resend accepts. Recording a send that did not happen would
-        // suppress the same item next week for no reason.
-        if (model.shown.length) {
-          await db.from('digest_sent_items').insert(
-            model.shown.map(s => ({ org_id: org.id, section: s.section, item_key: s.key })),
-          )
-        }
         sentTo.push({
           org: org.name, to: org.owner_email, mode: model.mode,
           sections: Array.from(new Set(model.shown.map(s => s.section))),
@@ -148,7 +161,13 @@ export async function GET(req: NextRequest) {
       return {
         success: true,
         mode: dryRun ? 'dry-run' : onlyOrgId ? 'single-org' : 'broadcast',
-        limits: { ...CAPS, closingWindowDays: CLOSING_WINDOW_DAYS, allowlistSize: allowlist.length },
+        limits: {
+          ...CAPS,
+          closingWindowDays: CLOSING_WINDOW_DAYS,
+          allowlistSize: allowlist.length,
+          dryRunDefault: digestIsDryRun(),
+          testPrefix: testSubjectPrefix() || null,
+        },
         orgsEligible: allOrgs.length,
         orgsConsidered: orgs.length,
         sentCount: sentTo.length,

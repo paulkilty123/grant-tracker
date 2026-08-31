@@ -18,13 +18,19 @@ export function verb(n: number, singular: string, pluralForm: string): string {
 }
 
 /**
- * "One thing closes" / "Two things close" / "Seven things close".
- * Words up to ten, numerals above — the house style for prose, while counts in
- * labels ("3 new matches") stay numeric.
+ * "One thing closes" / "Two things close" / "Nineteen opportunities are open".
+ * Words up to twenty, numerals above — the house style for prose, while counts
+ * in labels ("3 new matches") stay numeric. Twenty rather than ten because the
+ * week-one lead spells its match total, and a well-filled profile lands in the
+ * teens.
  */
-const WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten']
+const WORDS = [
+  'zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten',
+  'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen',
+  'eighteen', 'nineteen', 'twenty',
+]
 export function spell(n: number): string {
-  return n >= 0 && n <= 10 ? WORDS[n] : String(n)
+  return Number.isInteger(n) && n >= 0 && n <= 20 ? WORDS[n] : String(n)
 }
 export function spellCap(n: number): string {
   const w = spell(n)

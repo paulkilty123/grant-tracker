@@ -1,45 +1,69 @@
 import type { DigestModel } from './build'
-import { countdown, esc, humanDayDate, plural } from './text'
+import { esc, humanDayDate, plural, spell } from './text'
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   Email HTML. Tables and inline styles throughout.
+   Email HTML — "ground D".
 
-   No flexbox, no grid, no SVG — Outlook renders with Word's engine. The
-   countdown tile is a table cell rather than a div for the same reason, and
-   because a "6 days" that exists only as an image is invisible to the reader
-   who most needs it.
+   Tables and inline styles throughout. No flexbox, no grid, no SVG: Outlook
+   renders with Word's engine. The countdown tile is a table cell, because a
+   "10 days" that exists only as an image is invisible to the reader who most
+   needs it.
 
-   Rounded corners square off in Outlook and buttons lose their pill. That is
-   accepted: a rectangular button that works beats a rounded image that gets
-   blocked.
+   GROUND AND CARD (spec §1b). The email is not beige. Page and panel are both
+   #FFFFFF with no visible panel edge — the cards carry the structure — and the
+   card fill is pale mint #EDF6F1.
+
+   A FILL, NOT A BORDER, and that is why the hairline this file used to draw is
+   gone: a background colour is the most reliable thing in HTML email and a 1px
+   border is among the least, because Outlook thins and drops them. If a border
+   ever returns it returns in ADDITION to the fill, never instead of it.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 const UI   = "'Space Grotesk',Helvetica,Arial,sans-serif"
 const BODY = "'Plus Jakarta Sans',Helvetica,Arial,sans-serif"
 
 const C = {
-  // The app's own page ground (dashboard/layout.tsx). The email used a darker
-  // cream that existed nowhere in the product, so opening a link changed the
-  // background under you.
-  page:    '#FBF8F2',
-  card:    '#FFFFFF',
-  tile:    '#F1EDE3',
-  deep:    '#1D3C3E',
-  onDeep:  '#F6F1E7',
-  body:    '#5F5E5A',
-  muted:   '#74736E',
-  hair:    'rgba(29,60,62,.10)',
-  // The card edge. On the old darker ground a white card separated itself; on
-  // the app's #FBF8F2 it does not, and the app draws a hairline for exactly
-  // this reason. Outlook squares the corners and keeps the border, which is
-  // the right way round to degrade.
-  edge:    'rgba(29,60,62,.09)',
-  urgent:  '#D67558',
-  gold:    '#EBCE78',
-  danger:  '#B94040',
+  page:   '#FFFFFF',
+  card:   '#EDF6F1',
+  deep:   '#1D3C3E',
+  onDeep: '#F6F1E7',
+  body:   '#5F5E5A',
+  muted:  '#73726F',
+  rule:   'rgba(29,60,62,.10)',
+  danger: '#B94040',
 }
 
-/** Bulletproof button: a table cell carrying the background, not a styled <a>. */
+/**
+ * Countdown tile tiers (spec §1b).
+ *
+ * The numeral is 22px bold, which is WCAG large text, so the 3:1 floor applies
+ * and terracotta clears it at 3.70. DO NOT shrink the numeral below 19px bold:
+ * terracotta fails at normal-text sizes, and it fails on exactly the rows that
+ * matter most.
+ */
+function tile(days: number): { bg: string; today: boolean } {
+  if (days <= 0)  return { bg: '#D67558', today: true }
+  if (days <= 14) return { bg: '#D67558', today: false }
+  if (days <= 28) return { bg: '#EBCE78', today: false }
+  return { bg: '#9BCA9D', today: false }
+}
+
+function tileCell(days: number): string {
+  const t = tile(days)
+  if (t.today) {
+    // Anything closing today is called out, never shown as an equal to one 80
+    // days away. The word replaces the numeral rather than sitting under a "0".
+    return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:${t.bg};border-radius:10px;">
+      <tr><td align="center" style="padding:11px;font-family:${UI};font-size:13.5px;font-weight:700;letter-spacing:.6px;color:${C.deep};line-height:1;">TODAY</td></tr>
+    </table>`
+  }
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:${t.bg};border-radius:10px;">
+    <tr><td align="center" style="padding:10px 13px 2px;font-family:${UI};font-size:22px;font-weight:700;color:${C.deep};line-height:1;">${days}</td></tr>
+    <tr><td align="center" style="padding:0 13px 10px;font-family:${UI};font-size:9.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:${C.deep};">${days === 1 ? 'day' : 'days'}</td></tr>
+  </table>`
+}
+
+/** Bulletproof primary button: a table cell carrying the background. */
 function button(href: string, label: string): string {
   return `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
     <td style="background:${C.deep};border-radius:999px;">
@@ -48,122 +72,61 @@ function button(href: string, label: string): string {
   </tr></table>`
 }
 
-function sectionLabel(text: string): string {
-  return `<p style="margin:0 0 6px;font-family:${UI};font-size:11px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:${C.muted};">${esc(text)}</p>`
+/** Outline button. The profile prompt is quieter than a deadline. */
+function ghostButton(href: string, label: string): string {
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+    <td style="border:1.5px solid ${C.deep};border-radius:999px;">
+      <a href="${esc(href)}" style="display:inline-block;padding:8px 16px;font-family:${UI};font-size:13px;font-weight:600;color:${C.deep};text-decoration:none;">${esc(label)}</a>
+    </td>
+  </tr></table>`
 }
 
 /**
- * A row title that is also a link.
+ * Every item name is a link, and every one is UNDERLINED.
  *
- * Every named opportunity in this email goes to its page on Shoots. The first
- * version rendered titles as plain text with only a "See all your matches"
- * link at the foot of the section, so the reader could see ten funds and click
- * none of them — an email about specific opportunities where the opportunities
- * were not reachable.
- *
- * Styling is deliberately identical to the plain title: the fix is that it is
- * clickable, not that it announces itself.
+ * The link colour equals the heading colour deliberately, which makes the
+ * underline the affordance rather than the colour. That is the accessible
+ * version, and it is also the one that survives a client stripping colour.
  */
-function titleLink(href: string | null, text: string, size: number): string {
-  const style = `font-family:${UI};font-size:${size}px;font-weight:600;letter-spacing:-.2px;color:${C.deep};text-decoration:none;`
+function nameLink(href: string | null, text: string, size: number): string {
+  const font = `font-family:${UI};font-size:${size}px;font-weight:600;letter-spacing:-.2px;line-height:1.3;`
   return href
-    ? `<a href="${esc(href)}" style="${style}">${esc(text)}</a>`
-    : `<span style="${style}">${esc(text)}</span>`
+    ? `<a href="${esc(href)}" style="${font}color:${C.deep};text-decoration:underline;">${esc(text)}</a>`
+    : `<span style="${font}color:${C.deep};">${esc(text)}</span>`
 }
 
-function textLink(href: string, label: string): string {
-  return `<a href="${esc(href)}" style="font-family:${UI};font-size:14px;font-weight:600;color:${C.deep};text-decoration:underline;">${esc(label)} &rarr;</a>`
+function sectionLabel(text: string): string {
+  return `<p style="margin:0 0 12px;font-family:${UI};font-size:11px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:${C.muted};">${esc(text)}</p>`
 }
 
-/**
- * The header.
- *
- * ONE image for the whole lockup — mark and wordmark together — and this is a
- * deliberate reversal of the spec, which asked for the mark as an image with
- * "shoots" as live text beside it.
- *
- * The reason the spec gave for live text was that images are blocked for a
- * large minority, and the brand should still read. The reason it cannot work
- * here is in the same document one paragraph earlier: Space Grotesk does not
- * load in Outlook desktop and often not in the Gmail app. So "live text" does
- * not render the wordmark — it renders Helvetica, which is not the logo. Four
- * rounds of "the logo is still wrong" were exactly that: the mark was correct
- * from the second attempt and the wordmark was falling back every time.
- *
- * A logo is the one element where a typeface IS the content, so it is the one
- * element that should be an image. alt="Shoots" covers the images-off case:
- * the brand still reads, unstyled, which is the same guarantee live text was
- * offering and is all it was ever actually delivering.
- *
- * Rendered from the canonical paths plus Space Grotesk 500 at the landing
- * page's own proportion (84px mark against a 54px wordmark), cropped to
- * measured ink bounds rather than a guessed window, and served at 2x.
- */
-function header(origin: string, now: Date): string {
-  return `<tr><td style="padding:8px 6px 18px;">
+/** A section opens with one hairline rule above its label. One value, always. */
+function ruledSection(inner: string): string {
+  return `<tr><td style="background:${C.page};padding:26px 30px 0;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-      <td align="left" style="line-height:0;">
-        <img src="${origin}/email/shoots-logo@2x.png" width="134" height="31" alt="Shoots"
-             style="display:block;border:0;outline:none;text-decoration:none;">
-      </td>
-      <td align="right" style="font-family:${UI};font-size:12.5px;font-weight:500;color:${C.muted};">${esc(humanDayDate(now))}</td>
+      <td style="border-top:1px solid ${C.rule};padding-top:24px;">${inner}</td>
     </tr></table>
   </td></tr>`
 }
 
-/** A closing row: countdown tile on the left, the ask on the right. */
-function closingRow(r: DigestModel['closing'][number], origin: string): string {
-  const { n, unit } = countdown(r.days)
-  const tileBg = r.days <= 7 ? C.urgent : C.gold
-  const href = r.url ?? `${origin}/dashboard/deadlines`
-  return `<tr><td style="background:${C.card};border-left:1px solid ${C.edge};border-right:1px solid ${C.edge};padding:0 30px 12px;">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.tile};border-radius:14px;">
+/** The mint card, used by closing rows and — in week one — by match rows. */
+function tileCard(days: number, inner: string, first: boolean): string {
+  return `<tr><td style="background:${C.page};padding:${first ? '0' : '10px'} 30px 0;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.card};border-radius:14px;">
       <tr>
-        <td width="66" valign="top" style="padding:16px 0 16px 16px;">
-          <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:${tileBg};border-radius:10px;">
-            <tr><td align="center" style="padding:9px 12px;font-family:${UI};font-size:19px;font-weight:700;color:${C.deep};line-height:1;">${esc(n)}</td></tr>
-            <tr><td align="center" style="padding:0 12px 9px;font-family:${UI};font-size:9.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:${C.deep};">${esc(unit)}</td></tr>
-          </table>
-        </td>
-        <td valign="top" style="padding:16px 16px 16px 14px;">
-          <p style="margin:0 0 3px;">${titleLink(href, r.name, 16)}</p>
-          ${r.funder ? `<p style="margin:0 0 6px;font-family:${BODY};font-size:13.5px;line-height:1.5;color:${C.body};">${esc(r.funder)}</p>` : ''}
-          <p style="margin:0 0 12px;font-family:${BODY};font-size:13.5px;line-height:1.55;color:${C.body};">${esc(r.status)}</p>
-          ${button(href, r.kind === 'saved' ? 'Decide on this' : 'Open in Shoots')}
-        </td>
+        <td width="70" valign="top" style="padding:16px 0 16px 16px;">${tileCell(days)}</td>
+        <td valign="top" style="padding:16px 16px 16px 14px;">${inner}</td>
       </tr>
     </table>
   </td></tr>`
 }
 
-function progressRow(r: DigestModel['inProgress'][number], origin: string): string {
-  return `<tr><td style="padding:0 0 14px;">
-    <p style="margin:0 0 3px;">${titleLink(r.url ?? `${origin}/dashboard/pipeline`, r.name, 15.5)}</p>
-    <p style="margin:0;font-family:${BODY};font-size:13.5px;line-height:1.55;color:${r.stalled ? C.danger : C.body};">${esc(r.status)}</p>
-  </td></tr>`
-}
+const metaLine = (t: string) =>
+  t ? `<p style="margin:0 0 6px;font-family:${BODY};font-size:13px;line-height:1.5;color:${C.body};">${esc(t)}</p>` : ''
 
-function matchRow(r: DigestModel['matches'][number], last: boolean): string {
-  return `<tr><td style="padding:0 0 16px;${last ? '' : `border-bottom:1px solid ${C.hair};`}">
-    <p style="margin:0 0 3px;">${titleLink(r.url, r.title, 15.5)}</p>
-    ${r.meta ? `<p style="margin:0 0 6px;font-family:${BODY};font-size:13.5px;line-height:1.5;color:${C.body};">${esc(r.meta)}</p>` : ''}
-    <p style="margin:0;font-family:${BODY};font-size:13.5px;line-height:1.55;color:${C.body};">${esc(r.blurb)}</p>
-  </td></tr>`
-}
-
-/** Three parts, always in this order: verdict, the funder's rule, what would change it. */
-function nearMissRow(r: DigestModel['nearMisses'][number]): string {
-  return `<tr><td style="padding:0 0 14px;">
-    <p style="margin:0 0 3px;">${titleLink(r.url, r.title, 15.5)}</p>
-    <p style="margin:0 0 4px;font-family:${BODY};font-size:13.5px;line-height:1.55;color:${C.body};"><b style="color:${C.deep};">${esc(r.verdict)}</b> ${esc(r.rule)}</p>
-    <p style="margin:0;font-family:${BODY};font-size:13.5px;line-height:1.55;color:${C.body};">${esc(r.condition)}</p>
-  </td></tr>`
-}
-
-function cardOpen(rounded: 'top' | 'none'): string {
-  const radius = rounded === 'top' ? `border-radius:16px 16px 0 0;border-top:1px solid ${C.edge};` : ''
-  return `<tr><td style="background:${C.card};border-left:1px solid ${C.edge};border-right:1px solid ${C.edge};${radius}padding:30px 30px 0;">`
-}
+const textLink = (href: string, label: string) =>
+  `<p style="margin:0;font-family:${UI};font-size:13.5px;font-weight:600;">
+     <a href="${esc(href)}" style="color:${C.deep};text-decoration:underline;">${esc(label)} &rarr;</a>
+   </p>`
 
 export interface RenderOptions {
   origin: string
@@ -176,120 +139,145 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
   const now = opts.now ?? new Date()
   const rows: string[] = []
 
-  rows.push(header(origin, now))
+  /* ── Header. ONE image for the whole lockup, with alt text.
+        Space Grotesk does not load in Outlook or the Gmail app, so a live-text
+        wordmark renders Helvetica — which is not the logo. A logo is the one
+        element where the typeface IS the content, so it is the one element
+        that should be an image. ── */
+  rows.push(`<tr><td style="padding:8px 6px 18px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+      <td align="left" style="line-height:0;">
+        <img src="${origin}/email/shoots-logo@2x.png" width="134" height="31" alt="Shoots"
+             style="display:block;border:0;outline:none;text-decoration:none;">
+      </td>
+      <td align="right" style="font-family:${UI};font-size:12.5px;font-weight:500;color:${C.muted};">${esc(humanDayDate(now))}</td>
+    </tr></table>
+  </td></tr>`)
 
-  /* ── Lead section. The label is the identity, in the same place every week.
-        No hero headline: the subject already named the consequential item, and
-        a variable hero means the email has to be re-learned each Tuesday. ── */
-  const leadLabel = m.mode === 'week_one' ? 'Your first matches' : 'Upcoming deadlines'
-  rows.push(`${cardOpen('top')}
-    ${sectionLabel(leadLabel)}
+  /* ── Lead. The label is the identity, same place every week. No hero
+        headline — the subject already named the consequential item, and a
+        variable hero means the email is re-learned every send. ── */
+  rows.push(`<tr><td style="background:${C.page};border-radius:16px 16px 0 0;padding:30px 30px 0;">
+    <p style="margin:0 0 6px;font-family:${UI};font-size:11px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:${C.muted};">${esc(m.mode === 'week_one' ? 'Your first matches' : 'Upcoming deadlines')}</p>
     <p style="margin:0 0 16px;font-family:${BODY};font-size:16px;line-height:1.55;color:${C.deep};">${esc(m.lead)}</p>
   </td></tr>`)
 
   /* ── 1. Closing soon ─────────────────────────────────────────────────── */
-  if (m.closing.length) {
-    m.closing.forEach(r => rows.push(closingRow(r, origin)))
-    if (m.closingOverflow > 0) {
-      rows.push(`<tr><td style="background:${C.card};border-left:1px solid ${C.edge};border-right:1px solid ${C.edge};padding:0 30px 8px;">
-        ${textLink(`${origin}/dashboard/deadlines`, `and ${plural(m.closingOverflow, 'more')} closing this month`)}
-      </td></tr>`)
-    }
+  m.closing.forEach((r, i) => {
+    const href = r.url ?? `${origin}/dashboard/deadlines`
+    rows.push(tileCard(r.days, `
+      <p style="margin:0 0 4px;">${nameLink(href, r.name, 17)}</p>
+      ${metaLine([r.funder, `closes ${r.deadlineLabel}`].filter(Boolean).join(' · '))}
+      <p style="margin:0 0 12px;font-family:${BODY};font-size:13.5px;line-height:1.5;color:${C.body};">${esc(r.statusPrefix)}${r.statusStrong ? `<b style="color:${C.deep};">${esc(r.statusStrong)}</b>` : ''}</p>
+      ${button(href, r.kind === 'saved' ? 'Decide on this' : 'Open in Shoots')}
+    `, i === 0))
+  })
+
+  if (m.closingOverflow > 0) {
+    rows.push(`<tr><td style="background:${C.page};padding:12px 30px 0;">
+      ${textLink(`${origin}/dashboard/deadlines`, `and ${plural(m.closingOverflow, 'more')} closing this month`)}
+    </td></tr>`)
   }
 
   /* ── The reassurance line. Not filler: an exception report is only
         trustworthy if it says what it checked. ─────────────────────────── */
   if (m.reassurance && m.mode !== 'week_one') {
-    rows.push(`<tr><td style="background:${C.card};border-left:1px solid ${C.edge};border-right:1px solid ${C.edge};padding:${m.closing.length ? '4px' : '0'} 30px 0;">
-      <p style="margin:0;font-family:${BODY};font-size:13.5px;line-height:1.6;color:${C.muted};">${esc(m.reassurance)}</p>
+    rows.push(`<tr><td style="background:${C.page};padding:14px 30px 0;">
+      <p style="margin:0;font-family:${BODY};font-size:13px;line-height:1.55;color:${C.body};">${esc(m.reassurance)}</p>
     </td></tr>`)
   }
 
-  /* ── 2. Also in progress ─────────────────────────────────────────────── */
+  /* ── 2. Also in progress. One line each: name left, stage right. ─────── */
   if (m.inProgress.length) {
-    rows.push(`<tr><td style="background:${C.card};border-left:1px solid ${C.edge};border-right:1px solid ${C.edge};padding:26px 30px 0;">
-      ${sectionLabel('Also in progress')}
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-        ${m.inProgress.map(r => progressRow(r, origin)).join('')}
-        ${m.inProgressOverflow > 0 ? `<tr><td>${textLink(`${origin}/dashboard/pipeline`, `and ${plural(m.inProgressOverflow, 'more')} in progress`)}</td></tr>` : ''}
-      </table>
-    </td></tr>`)
+    const lines = m.inProgress.map((r, i) => {
+      const gap = i === m.inProgress.length - 1 ? '0' : '7px'
+      return `<tr>
+        <td valign="top" style="padding:0 10px ${gap} 0;">${nameLink(r.url, r.name, 15)}</td>
+        <td align="right" valign="top" width="110" style="padding:0 0 ${gap};font-family:${BODY};font-size:13px;line-height:1.6;color:${r.stalled ? C.danger : C.body};white-space:nowrap;">${esc(r.stageLabel)}</td>
+      </tr>`
+    }).join('')
+    rows.push(ruledSection(`${sectionLabel('Also in progress')}
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${lines}</table>
+      ${m.inProgressOverflow > 0 ? `<div style="margin-top:12px;">${textLink(`${origin}/dashboard/pipeline`, `and ${plural(m.inProgressOverflow, 'more')} in progress`)}</div>` : ''}`))
   }
 
-  /* ── 3. Matches. Last, because it is the weakest retention hook — except
-        in week one, where it is the only thing there is. ───────────────── */
+  /* ── 3. Matches ──────────────────────────────────────────────────────── */
   if (m.matches.length) {
-    // The label follows the data. Week one is "your first matches" because the
-    // whole list arrives at once and calling that "new" would be a lie; the
-    // same honesty applies when the rows are simply ones we have not shown
-    // this reader before, which is not the same as recently added.
-    const label =
-      m.matchLabel === 'first'        ? null
-      : m.matchLabel === 'new'        ? 'New matches'
-      :                                 'Matches worth a look'
-    const seeAll = m.mode === 'week_one'
-      ? `See all ${plural(m.matchTotal, 'match', 'matches')}`
-      : 'See all your matches'
-    rows.push(`<tr><td style="background:${C.card};border-left:1px solid ${C.edge};border-right:1px solid ${C.edge};padding:${m.mode === 'week_one' ? '0' : '26px'} 30px 0;">
-      ${label ? sectionLabel(label) : ''}
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-        ${m.matches.map((r, i) => matchRow(r, i === m.matches.length - 1)).join('')}
-        ${m.matchesOverflow > 0 ? `<tr><td style="padding:0 0 12px;">${textLink(`${origin}/dashboard/search`, m.matchLabel === 'new'
-          ? `and ${plural(m.matchesOverflow, 'more new match', 'more new matches')}`
-          : `and ${plural(m.matchesOverflow, 'more match', 'more matches')}`)}</td></tr>` : ''}
-        <tr><td style="padding:6px 0 0;">${textLink(`${origin}/dashboard/search`, seeAll)}</td></tr>
-      </table>
-    </td></tr>`)
+    const seeAll = `See all ${m.matchTotal <= 10 ? spell(m.matchTotal) : m.matchTotal} ${m.matchTotal === 1 ? 'match' : 'matches'}`
+
+    if (m.mode === 'week_one') {
+      // Week one is deadline-sorted, so its rows carry countdown tiles like the
+      // closing section does. It is the only state where matches lead, and
+      // showing them without the dates would hide the reason for the order.
+      m.matches.forEach((r, i) => {
+        rows.push(tileCard(r.days ?? 999, `
+          <p style="margin:0 0 4px;">${nameLink(r.url, r.title, 16.5)}</p>
+          ${metaLine(r.meta)}
+          <p style="margin:0;font-family:${BODY};font-size:13.5px;line-height:1.55;color:${C.body};">${esc(r.blurb)}</p>
+        `, i === 0))
+      })
+      rows.push(`<tr><td style="background:${C.page};padding:16px 30px 0;">
+        ${textLink(`${origin}/dashboard/search`, seeAll)}
+      </td></tr>`)
+    } else {
+      const label = m.matchLabel === 'new' ? 'New matches' : 'Matches worth a look'
+      const body = m.matches.map(r => `
+        <p style="margin:0 0 3px;">${nameLink(r.url, r.title, 16)}</p>
+        ${metaLine(r.meta)}
+        <p style="margin:0 0 16px;font-family:${BODY};font-size:13.5px;line-height:1.55;color:${C.body};">${esc(r.blurb)}</p>`).join('')
+      rows.push(ruledSection(`${sectionLabel(label)}${body}${textLink(`${origin}/dashboard/search`, seeAll)}`))
+    }
   }
 
   /* ── Week one: say what changes, and give it a button. ────────────────── */
   if (m.mode === 'week_one') {
-    rows.push(`<tr><td style="background:${C.card};border-left:1px solid ${C.edge};border-right:1px solid ${C.edge};padding:24px 30px 0;">
-      <p style="margin:0 0 12px;font-family:${BODY};font-size:13.5px;line-height:1.6;color:${C.body};">
-        Add one of these to your pipeline. Next Tuesday this email leads with your deadlines instead of your matches. That is the version worth having.
+    rows.push(ruledSection(`
+      <p style="margin:0 0 16px;font-family:${BODY};font-size:14px;line-height:1.6;color:${C.deep};">
+        Add one of these to your pipeline. Next Monday this email leads with your deadlines instead of your matches &mdash; that is the version worth having.
       </p>
-      ${button(`${origin}/dashboard/search`, 'Add your first grant')}
-    </td></tr>`)
+      ${button(`${origin}/dashboard/search`, 'Add your first grant')}`))
   }
 
-  /* ── 6. Near misses ──────────────────────────────────────────────────── */
+  /* ── 4. Just outside your profile ────────────────────────────────────── */
   if (m.nearMisses.length) {
-    rows.push(`<tr><td style="background:${C.card};border-left:1px solid ${C.edge};border-right:1px solid ${C.edge};padding:26px 30px 0;">
-      ${sectionLabel('Just outside your profile')}
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-        ${m.nearMisses.map(nearMissRow).join('')}
-      </table>
-    </td></tr>`)
+    const n = m.nearMisses.length
+    const word = spell(n).replace(/^./, c => c.toUpperCase())
+    const intro = `${word} we ruled out, and why. You know your own work better than we do, so ${n === 1 ? 'it is' : 'these are'} worth a look if the reason does not hold.`
+    const body = m.nearMisses.map((r, i) => `
+        <p style="margin:0 0 5px;">${nameLink(r.url, r.title, 15.5)}</p>
+        <p style="margin:0 0 5px;font-family:${BODY};font-size:13.5px;line-height:1.55;color:${C.body};"><b style="color:${C.deep};">${esc(r.verdict)}</b> ${esc(r.rule)}</p>
+        <p style="margin:0 0 ${i === n - 1 ? '0' : '16px'};font-family:${BODY};font-size:13px;line-height:1.55;color:${C.body};">${esc(r.condition)}</p>`).join('')
+    rows.push(ruledSection(`
+      <p style="margin:0 0 6px;font-family:${UI};font-size:11px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:${C.muted};">Just outside your profile</p>
+      <p style="margin:0 0 16px;font-family:${BODY};font-size:14px;line-height:1.55;color:${C.body};">${esc(intro)}</p>
+      ${body}`))
   }
 
-  /* ── 7. Profile prompt. One per email, never a list. ──────────────────── */
+  /* ── 5. Profile prompt. Mint card, outline button — quieter than a deadline. */
   if (m.prompt) {
-    rows.push(`<tr><td style="background:${C.card};border-left:1px solid ${C.edge};border-right:1px solid ${C.edge};padding:26px 30px 0;">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.tile};border-radius:14px;">
-        <tr><td style="padding:18px;">
-          <p style="margin:0 0 5px;font-family:${UI};font-size:15.5px;font-weight:600;letter-spacing:-.2px;color:${C.deep};">${esc(m.prompt.title)}</p>
-          <p style="margin:0 0 13px;font-family:${BODY};font-size:13.5px;line-height:1.55;color:${C.body};">${esc(m.prompt.body)}</p>
-          ${button(m.prompt.href, m.prompt.cta)}
+    rows.push(ruledSection(`
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.card};border-radius:14px;">
+        <tr><td style="padding:18px 20px;">
+          <p style="margin:0 0 6px;font-family:${UI};font-size:15.5px;font-weight:600;letter-spacing:-.2px;color:${C.deep};">${esc(m.prompt.title)}</p>
+          <p style="margin:0 0 14px;font-family:${BODY};font-size:13.5px;line-height:1.6;color:${C.body};">${esc(m.prompt.body)}</p>
+          ${ghostButton(m.prompt.href, m.prompt.cta)}
         </td></tr>
-      </table>
-    </td></tr>`)
+      </table>`))
   }
 
-  rows.push(`<tr><td style="background:${C.card};border-left:1px solid ${C.edge};border-right:1px solid ${C.edge};border-radius:0 0 16px 16px;border-bottom:1px solid ${C.edge};padding:30px;"></td></tr>`)
+  /* ── 6. Feedback. Asks for two specific things, and says what changes. ── */
+  rows.push(`<tr><td style="background:${C.page};border-radius:0 0 16px 16px;padding:24px 30px 30px;">
+    <p style="margin:0;font-family:${BODY};font-size:13.5px;line-height:1.6;color:${C.body};">
+      Seen a funder we are missing, or a match that made no sense?
+      <a href="${origin}/dashboard/feedback" style="color:${C.deep};font-weight:600;text-decoration:underline;">Tell us</a>
+      &mdash; funder suggestions go into the catalogue for everyone, and bad matches change how yours are picked.
+    </p>
+  </td></tr>`)
 
-  /* ── Footer. Catalogue growth is reassurance, not news, so it never leads.
-        No product-news slot: the moment the digest has one, every week needs
-        news, and the deadline that costs money gets scrolled past. ─────── */
+  /* ── Footer. Catalogue growth is reassurance, not news, so it never leads. */
   rows.push(`<tr><td style="padding:22px 30px 0;">
-    <p style="margin:0 0 12px;font-family:${BODY};font-size:13.5px;line-height:1.6;color:${C.body};">
-      <b style="color:${C.deep};">Anything missing, or wrong?</b> Tell us about a funder we do not list, or a match that made no sense.
-      <a href="${origin}/dashboard/feedback" style="color:${C.deep};font-weight:600;">Both take a minute</a>, and both change what you get next week.
-    </p>
     <p style="margin:0 0 10px;font-family:${BODY};font-size:12.5px;line-height:1.6;color:${C.muted};">
-      <b style="color:${C.deep};">${m.catalogue.live.toLocaleString()} opportunities live</b> &mdash; ${m.catalogue.addedRecently} added in the last month.
-    </p>
-    <p style="margin:0 0 10px;font-family:${BODY};font-size:12.5px;line-height:1.6;color:${C.muted};">
-      You get this every Tuesday because you have a Shoots account. We only send it when there is something in it.
+      <b style="color:${C.deep};">${m.catalogue.live.toLocaleString()} opportunities live</b> &mdash; ${m.catalogue.addedRecently} added in the last two weeks.
     </p>
     <p style="margin:0;font-family:${BODY};font-size:12.5px;line-height:1.6;color:${C.muted};">
       <a href="${origin}/dashboard/profile#card-alerts" style="color:${C.deep};font-weight:600;text-decoration:underline;">Email preferences</a> &nbsp;&middot;&nbsp;
