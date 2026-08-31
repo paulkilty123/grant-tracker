@@ -78,25 +78,33 @@ function textLink(href: string, label: string): string {
 /**
  * The header.
  *
- * The mark is an image and "shoots" is LIVE TEXT beside it, so the brand still
- * reads when images are blocked — which is a large minority of readers. The
- * logo must be a hosted PNG at 2x with explicit width and height: Outlook does
- * not render SVG and data URIs are blocked in most clients.
+ * ONE image for the whole lockup — mark and wordmark together — and this is a
+ * deliberate reversal of the spec, which asked for the mark as an image with
+ * "shoots" as live text beside it.
+ *
+ * The reason the spec gave for live text was that images are blocked for a
+ * large minority, and the brand should still read. The reason it cannot work
+ * here is in the same document one paragraph earlier: Space Grotesk does not
+ * load in Outlook desktop and often not in the Gmail app. So "live text" does
+ * not render the wordmark — it renders Helvetica, which is not the logo. Four
+ * rounds of "the logo is still wrong" were exactly that: the mark was correct
+ * from the second attempt and the wordmark was falling back every time.
+ *
+ * A logo is the one element where a typeface IS the content, so it is the one
+ * element that should be an image. alt="Shoots" covers the images-off case:
+ * the brand still reads, unstyled, which is the same guarantee live text was
+ * offering and is all it was ever actually delivering.
+ *
+ * Rendered from the canonical paths plus Space Grotesk 500 at the landing
+ * page's own proportion (84px mark against a 54px wordmark), cropped to
+ * measured ink bounds rather than a guessed window, and served at 2x.
  */
 function header(origin: string, now: Date): string {
   return `<tr><td style="padding:8px 6px 18px;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-      <td align="left">
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
-          <td valign="middle" style="padding-right:6px;line-height:0;">
-            <img src="${origin}/email/shoots-mark@2x.png" width="28" height="28" alt="Shoots" style="display:block;border:0;">
-          </td>
-          <!-- The lockup is components/Logo.tsx at size="md": a 28px mark
-               against a 22px wordmark at font-weight 500, 6px apart. The
-               wordmark was 700 here, which is what kept reading as the wrong
-               logo — the mark was right all along and the weight was not. -->
-          <td valign="middle" style="font-family:${UI};font-size:22px;font-weight:500;letter-spacing:-.02em;color:${C.deep};">shoots</td>
-        </tr></table>
+      <td align="left" style="line-height:0;">
+        <img src="${origin}/email/shoots-logo@2x.png" width="134" height="31" alt="Shoots"
+             style="display:block;border:0;outline:none;text-decoration:none;">
       </td>
       <td align="right" style="font-family:${UI};font-size:12.5px;font-weight:500;color:${C.muted};">${esc(humanDayDate(now))}</td>
     </tr></table>

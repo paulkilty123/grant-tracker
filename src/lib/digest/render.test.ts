@@ -79,11 +79,17 @@ describe('email client constraints', () => {
     expect(html).toContain('if mso')
   })
   it('references the logo as a hosted png, never a data uri', () => {
-    expect(html).toContain('/email/shoots-mark@2x.png')
+    expect(html).toContain('/email/shoots-logo@2x.png')
     expect(html).not.toContain('data:image')
   })
-  it('keeps "shoots" as live text so the brand survives images being blocked', () => {
-    expect(html).toMatch(/>shoots</)
+  it('carries alt text so the brand still reads with images blocked', () => {
+    // The wordmark is part of the image because Space Grotesk cannot load in
+    // Outlook or the Gmail app, so "live text" rendered Helvetica rather than
+    // the logo. alt is what carries the brand when images are off.
+    expect(html).toMatch(/<img[^>]*shoots-logo@2x\.png[^>]*alt="Shoots"/)
+  })
+  it('gives the logo explicit width and height', () => {
+    expect(html).toMatch(/<img[^>]*shoots-logo@2x\.png[^>]*width="134"[^>]*height="31"/)
   })
   it('escapes an ampersand in a funder name', () => {
     expect(html).toContain('Someone &amp; Co')
