@@ -191,3 +191,17 @@ describe('the feedback ask is not footer boilerplate', () => {
     expect(block).toContain('>Tell us</a>')
   })
 })
+
+describe('section labels are structure, not furniture', () => {
+  it('uses one definition for every label', () => {
+    // Three copies of the same declaration is how three labels drift apart.
+    const decls = html.match(/letter-spacing:1\.6px/g) ?? []
+    const deep = html.match(/letter-spacing:1\.6px;text-transform:uppercase;color:#1D3C3E/g) ?? []
+    expect(decls.length).toBeGreaterThan(0)
+    expect(deep.length).toBe(decls.length)
+  })
+
+  it('never renders a label in the muted caption colour', () => {
+    expect(html).not.toMatch(/letter-spacing:1\.6px;text-transform:uppercase;color:#73726F/)
+  })
+})

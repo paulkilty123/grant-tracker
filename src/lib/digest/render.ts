@@ -95,8 +95,21 @@ function nameLink(href: string | null, text: string, size: number): string {
     : `<span style="${font}color:${C.deep};">${esc(text)}</span>`
 }
 
-function sectionLabel(text: string): string {
-  return `<p style="margin:0 0 12px;font-family:${UI};font-size:11px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:${C.muted};">${esc(text)}</p>`
+/**
+ * A section label.
+ *
+ * Deep rather than muted grey, and that is a deliberate change from the
+ * artboards. At 11px in #73726F on white these were caption-coloured and read
+ * as furniture — they are the only thing telling a reader which part of the
+ * email they are in, and they were the quietest text on the page. Deep at 11.5
+ * takes the contrast from about 4.9:1 to 11.9:1.
+ *
+ * They do not compete with the row titles despite sharing a colour: those are
+ * 15 to 17px, sentence case and underlined. Uppercase at 11.5 with 1.6px
+ * tracking stays subordinate on shape alone.
+ */
+function sectionLabel(text: string, gap = 12): string {
+  return `<p style="margin:0 0 ${gap}px;font-family:${UI};font-size:11.5px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:${C.deep};">${esc(text)}</p>`
 }
 
 /** A section opens with one hairline rule above its label. One value, always. */
@@ -161,7 +174,7 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
         headline — the subject already named the consequential item, and a
         variable hero means the email is re-learned every send. ── */
   rows.push(`<tr><td class="gutter" style="background:${C.page};border-radius:16px 16px 0 0;padding:30px 30px 0;">
-    <p style="margin:0 0 6px;font-family:${UI};font-size:11px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:${C.muted};">${esc(m.mode === 'week_one' ? 'Your first matches' : 'Upcoming deadlines')}</p>
+    ${sectionLabel(m.mode === 'week_one' ? 'Your first matches' : 'Upcoming deadlines', 6)}
     <p style="margin:0 0 16px;font-family:${BODY};font-size:16px;line-height:1.55;color:${C.deep};">${esc(m.lead)}</p>
   </td></tr>`)
 
@@ -268,7 +281,7 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
         <p style="margin:0 0 5px;font-family:${BODY};font-size:13.5px;line-height:1.55;color:${C.body};"><b style="color:${C.deep};">${esc(r.verdict)}</b> ${esc(r.rule)}</p>
         <p style="margin:0 0 ${i === n - 1 ? '0' : '16px'};font-family:${BODY};font-size:13px;line-height:1.55;color:${C.body};">${esc(r.condition)}</p>`).join('')
     rows.push(ruledSection(`
-      <p style="margin:0 0 6px;font-family:${UI};font-size:11px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:${C.muted};">Just outside your profile</p>
+      ${sectionLabel('Just outside your profile', 6)}
       <p style="margin:0 0 16px;font-family:${BODY};font-size:14px;line-height:1.55;color:${C.body};">${esc(intro)}</p>
       ${body}`))
   }
