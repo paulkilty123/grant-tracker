@@ -154,3 +154,26 @@ describe('the catalogue count is a way in', () => {
     expect(html).toContain('581 opportunities live')
   })
 })
+
+describe('mobile', () => {
+  it('is fluid, not a fixed 600px canvas', () => {
+    // A hard width="600" makes a 375px phone zoom out to fit, which shrinks
+    // every size in the email by a third. This is the whole bug.
+    expect(html).not.toContain('width="600"')
+    // Deliberately a lookbehind: max-width:600px is exactly what we DO want,
+    // and it contains "width:600px" as a substring, so toContain would fail on
+    // the correct markup.
+    expect(html).not.toMatch(/(?<!max-)width:600px/)
+    expect(html).toContain('max-width:600px')
+  })
+
+  it('ships mobile rules that can actually override the inline styles', () => {
+    expect(html).toContain('@media only screen and (max-width: 600px)')
+    // Inline styles beat a stylesheet unless the rule is !important.
+    expect(html).toMatch(/\.gutter\s*\{[^}]*!important/)
+  })
+
+  it('carries the viewport meta', () => {
+    expect(html).toContain('name="viewport"')
+  })
+})

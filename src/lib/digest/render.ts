@@ -101,7 +101,7 @@ function sectionLabel(text: string): string {
 
 /** A section opens with one hairline rule above its label. One value, always. */
 function ruledSection(inner: string): string {
-  return `<tr><td style="background:${C.page};padding:26px 30px 0;">
+  return `<tr><td class="gutter" style="background:${C.page};padding:26px 30px 0;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
       <td style="border-top:1px solid ${C.rule};padding-top:24px;">${inner}</td>
     </tr></table>
@@ -110,10 +110,10 @@ function ruledSection(inner: string): string {
 
 /** The mint card, used by closing rows and — in week one — by match rows. */
 function tileCard(days: number, inner: string, first: boolean): string {
-  return `<tr><td style="background:${C.page};padding:${first ? '0' : '10px'} 30px 0;">
+  return `<tr><td class="gutter" style="background:${C.page};padding:${first ? '0' : '10px'} 30px 0;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.card};border-radius:14px;">
       <tr>
-        <td width="70" valign="top" style="padding:16px 0 16px 16px;">${tileCell(days)}</td>
+        <td class="tile" width="70" valign="top" style="padding:16px 0 16px 16px;">${tileCell(days)}</td>
         <td valign="top" style="padding:16px 16px 16px 14px;">${inner}</td>
       </tr>
     </table>
@@ -157,7 +157,7 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
   /* ── Lead. The label is the identity, same place every week. No hero
         headline — the subject already named the consequential item, and a
         variable hero means the email is re-learned every send. ── */
-  rows.push(`<tr><td style="background:${C.page};border-radius:16px 16px 0 0;padding:30px 30px 0;">
+  rows.push(`<tr><td class="gutter" style="background:${C.page};border-radius:16px 16px 0 0;padding:30px 30px 0;">
     <p style="margin:0 0 6px;font-family:${UI};font-size:11px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:${C.muted};">${esc(m.mode === 'week_one' ? 'Your first matches' : 'Upcoming deadlines')}</p>
     <p style="margin:0 0 16px;font-family:${BODY};font-size:16px;line-height:1.55;color:${C.deep};">${esc(m.lead)}</p>
   </td></tr>`)
@@ -174,7 +174,7 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
   })
 
   if (m.closingOverflow > 0) {
-    rows.push(`<tr><td style="background:${C.page};padding:12px 30px 0;">
+    rows.push(`<tr><td class="gutter" style="background:${C.page};padding:12px 30px 0;">
       ${textLink(`${origin}/dashboard/deadlines`, `and ${plural(m.closingOverflow, 'more')} closing this month`)}
     </td></tr>`)
   }
@@ -182,7 +182,7 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
   /* ── The reassurance line. Not filler: an exception report is only
         trustworthy if it says what it checked. ─────────────────────────── */
   if (m.reassurance && m.mode !== 'week_one') {
-    rows.push(`<tr><td style="background:${C.page};padding:14px 30px 0;">
+    rows.push(`<tr><td class="gutter" style="background:${C.page};padding:14px 30px 0;">
       <p style="margin:0;font-family:${BODY};font-size:13px;line-height:1.55;color:${C.body};">${esc(m.reassurance)}</p>
     </td></tr>`)
   }
@@ -193,7 +193,7 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
       const gap = i === m.inProgress.length - 1 ? '0' : '7px'
       return `<tr>
         <td valign="top" style="padding:0 10px ${gap} 0;">${nameLink(r.url, r.name, 15)}</td>
-        <td align="right" valign="top" width="110" style="padding:0 0 ${gap};font-family:${BODY};font-size:13px;line-height:1.6;color:${r.stalled ? C.danger : C.body};white-space:nowrap;">${esc(r.stageLabel)}</td>
+        <td align="right" valign="top" style="padding:0 0 ${gap};font-family:${BODY};font-size:13px;line-height:1.6;color:${r.stalled ? C.danger : C.body};white-space:nowrap;">${esc(r.stageLabel)}</td>
       </tr>`
     }).join('')
     rows.push(ruledSection(`${sectionLabel('Also in progress')}
@@ -230,7 +230,7 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
           <p style="margin:0;font-family:${BODY};font-size:13.5px;line-height:1.55;color:${C.body};">${esc(r.blurb)}</p>
         `, i === 0))
       })
-      rows.push(`<tr><td style="background:${C.page};padding:16px 30px 0;">
+      rows.push(`<tr><td class="gutter" style="background:${C.page};padding:16px 30px 0;">
         ${textLink(`${origin}/dashboard/search`, seeAll)}
       </td></tr>`)
     } else {
@@ -283,7 +283,7 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
   }
 
   /* ── 6. Feedback. Asks for two specific things, and says what changes. ── */
-  rows.push(`<tr><td style="background:${C.page};border-radius:0 0 16px 16px;padding:24px 30px 30px;">
+  rows.push(`<tr><td class="gutter" style="background:${C.page};border-radius:0 0 16px 16px;padding:24px 30px 30px;">
     <p style="margin:0;font-family:${BODY};font-size:13.5px;line-height:1.6;color:${C.body};">
       Seen a funder we are missing, or a match that made no sense?
       <a href="${origin}/dashboard/feedback" style="color:${C.deep};font-weight:600;text-decoration:underline;">Tell us</a>
@@ -292,7 +292,7 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
   </td></tr>`)
 
   /* ── Footer. Catalogue growth is reassurance, not news, so it never leads. */
-  rows.push(`<tr><td style="padding:22px 30px 0;">
+  rows.push(`<tr><td class="gutter" style="padding:22px 30px 0;">
     <!-- The count is a link. The line already asserts the catalogue is alive;
          this is what lets somebody go and look, which is the only reason the
          assertion is interesting. ?entry=live opens Latest Grants — everything
@@ -315,12 +315,21 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
 <meta name="x-apple-disable-message-reformatting">
 <title>${esc(m.subject)}</title>
 <!--[if mso]><style>* { font-family: Arial, sans-serif !important; }</style><![endif]-->
+<style>
+  /* The email was rendering at a fixed 600px, so a 375px phone zoomed out to
+     fit and every size in it shrank by a third. The table is fluid now; this
+     buys back the gutters, which were taking 60px of a 375px screen. */
+  @media only screen and (max-width: 600px) {
+    .gutter { padding-left: 18px !important; padding-right: 18px !important; }
+    .tile   { width: 58px !important; }
+  }
+</style>
 </head>
 <body style="margin:0;padding:0;background:${C.page};">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;">${esc(m.preheader)}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.page};">
 <tr><td align="center" style="padding:20px 12px 40px;">
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;">
 ${rows.join('\n')}
 </table>
 </td></tr>
