@@ -201,6 +201,20 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
       ${m.inProgressOverflow > 0 ? `<div style="margin-top:12px;">${textLink(`${origin}/dashboard/pipeline`, `and ${plural(m.inProgressOverflow, 'more')} in progress`)}</div>` : ''}`))
   }
 
+  /* ── New this week. Present ONLY when it has rows: an empty section that
+        announces there is nothing new teaches the reader to skip it, and the
+        catalogue publishes nothing at all in a normal week more often than
+        not. Nothing here says "no new funding" — it simply is not there. ── */
+  if (m.newThisWeek.length) {
+    const body = m.newThisWeek.map(r => `
+      <p style="margin:0 0 3px;">${nameLink(r.url, r.title, 16)}</p>
+      ${metaLine(r.meta)}
+      <p style="margin:0 0 16px;font-family:${BODY};font-size:13.5px;line-height:1.55;color:${C.body};">${esc(r.blurb)}</p>`).join('')
+    rows.push(ruledSection(`${sectionLabel('New this week')}
+      <p style="margin:0 0 16px;font-family:${BODY};font-size:14px;line-height:1.55;color:${C.body};">Added to the catalogue in the last seven days, and open to you.</p>
+      ${body}`))
+  }
+
   /* ── 3. Matches ──────────────────────────────────────────────────────── */
   if (m.matches.length) {
     const seeAll = `See all ${m.matchTotal <= 10 ? spell(m.matchTotal) : m.matchTotal} ${m.matchTotal === 1 ? 'match' : 'matches'}`
@@ -279,8 +293,13 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
 
   /* ── Footer. Catalogue growth is reassurance, not news, so it never leads. */
   rows.push(`<tr><td style="padding:22px 30px 0;">
+    <!-- The count is a link. The line already asserts the catalogue is alive;
+         this is what lets somebody go and look, which is the only reason the
+         assertion is interesting. ?entry=live opens Latest Grants — everything
+         added in the last 60 days, newest first. -->
     <p style="margin:0 0 10px;font-family:${BODY};font-size:12.5px;line-height:1.6;color:${C.muted};">
-      <b style="color:${C.deep};">${m.catalogue.live.toLocaleString()} opportunities live</b> &mdash; ${m.catalogue.addedRecently} added in the last two weeks.
+      <a href="${origin}/dashboard/search?entry=live" style="color:${C.deep};font-weight:600;text-decoration:underline;">${m.catalogue.live.toLocaleString()} opportunities live</a>
+      &mdash; ${m.catalogue.addedRecently} added in the last two weeks.
     </p>
     <p style="margin:0;font-family:${BODY};font-size:12.5px;line-height:1.6;color:${C.muted};">
       <a href="${origin}/dashboard/profile#card-alerts" style="color:${C.deep};font-weight:600;text-decoration:underline;">Email preferences</a> &nbsp;&middot;&nbsp;

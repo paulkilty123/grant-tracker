@@ -1365,6 +1365,13 @@ export default function SearchPage() {
   // no param — full unfiltered view. Keeps dashboard count and Find Funding
   // count exactly equal in both modes.
   const actionableOnly  = searchParams.get('actionable') === '1'
+  // The weekly email's footer links here with ?entry=live to open the Latest
+  // Grants view — everything added in the last 60 days, newest first. The
+  // catalogue-growth line in that email asserts the catalogue is alive; this is
+  // what lets somebody go and look, which is the whole reason the line is
+  // interesting. ?fresh=7d|14d|30d narrows it further.
+  const initEntryType   = searchParams.get('entry')
+  const initFreshness   = searchParams.get('fresh')
   const [welcomeDismissed, setWelcomeDismissed] = useState(false)
 
   const [query, setQuery]               = useState('')       // committed AI-search query (subtitle, session restore)
@@ -1391,7 +1398,9 @@ export default function SearchPage() {
   const [previewStructure, setPreviewStructure] = useState<LegalStructure | null>(null)
   const [userId, setUserId]             = useState('')
   const [sortBy, setSortBy]             = useState<'match' | 'amount' | 'freshest' | 'deadline'>('match')
-  const [freshnessFilter, setFreshnessFilter] = useState<'all' | '7d' | '14d' | '30d'>('all')
+  const [freshnessFilter, setFreshnessFilter] = useState<'all' | '7d' | '14d' | '30d'>(
+    initFreshness === '7d' || initFreshness === '14d' || initFreshness === '30d' ? initFreshness : 'all',
+  )
   const [bannerDismissed, setBannerDismissed] = useState(false)
   const [interactions, setInteractions] = useState<Map<string, Set<InteractionAction>>>(new Map())
   const [matchFeedbackMap, setMatchFeedbackMap] = useState<Map<string, StoredFeedback>>(new Map())
@@ -1424,7 +1433,9 @@ export default function SearchPage() {
   const [activeSubtypes, setActiveSubtypes]       = useState<Set<FundingSubtype>>(new Set())
   const [categoryFilter, setCategoryFilter]       = useState<'all' | 'grants' | 'programmes'>('all')
   const [filtersOpen, setFiltersOpen]             = useState(false)
-  const [entryTypeFilter, setEntryTypeFilter]     = useState<'all' | 'live' | 'funders'>('all')
+  const [entryTypeFilter, setEntryTypeFilter]     = useState<'all' | 'live' | 'funders'>(
+    initEntryType === 'live' || initEntryType === 'funders' ? initEntryType : 'all',
+  )
   const [showInviteOnly, setShowInviteOnly]       = useState(true)
   const [expandedGroups, setExpandedGroups]       = useState<Set<string>>(new Set())
   const [activeFunderCategory, setActiveFunderCategory] = useState<string>('all')

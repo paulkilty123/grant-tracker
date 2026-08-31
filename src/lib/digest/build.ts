@@ -21,9 +21,14 @@ export const STALLED_DAYS = 21
 export const NEW_MATCH_LOOKBACK_DAYS = 30
 /** Score at or above which a match is worth an email row. */
 export const MATCH_FLOOR = 65
+/**
+ * "New this week" reaches back seven days, because the email is weekly and the
+ * claim is literally "since the last one".
+ */
+export const NEW_THIS_WEEK_DAYS = 7
 
 /** Caps are a safety valve for a pathological week, not an editing device. */
-export const CAPS = { closing: 5, inProgress: 3, newMatches: 10, nearMisses: 2 } as const
+export const CAPS = { closing: 5, inProgress: 3, newMatches: 10, nearMisses: 2, newThisWeek: 5 } as const
 /** Week one is the exception: three, closing soonest, with the real total named. */
 export const WEEK_ONE_MATCHES = 3
 
@@ -115,6 +120,20 @@ export interface DigestModel {
    * same correction applied to the other two cases.
    */
   matchLabel: 'first' | 'new' | 'worth_a_look'
+  /**
+   * Added to the catalogue in the last seven days AND open to this
+   * organisation — regardless of score.
+   *
+   * Deliberately not "latest regardless of everything". A row the reader
+   * cannot apply for is filler, and the digest is an exception report rather
+   * than inventory. Eligibility is the line that keeps this a report: these
+   * are new AND theirs, they are simply not ranked.
+   *
+   * Empty most weeks, and that is expected rather than a fault — the catalogue
+   * published nothing at all in the seven days before this was built. The
+   * section is absent when empty; it never announces that there is nothing.
+   */
+  newThisWeek: MatchRow[]
   nearMisses: NearMissRow[]
   prompt: { title: string; body: string; cta: string; href: string } | null
   /** "Nothing else in your pipeline or saved list closes before 14 October." */
@@ -252,6 +271,23 @@ export function plainRule(rule: string): string {
     ? allowed[0]
     : `${allowed.slice(0, -1).join(', ')} and ${allowed[allowed.length - 1]}`
   return `They fund ${list}. Our record has you as ${you}.`
+}
+
+/** One shape for every opportunity row, so the two sections cannot drift. */
+function toMatchRow(g: Record<string, unknown>, origin: string, now: Date, blurb: string): MatchRow {
+  const parts = [
+    String(g.funder ?? ''),
+    g.deadline ? `closes ${shortDate(String(g.deadline))}` : g.is_rolling ? 'rolling' : null,
+  ].filter(Boolean) as string[]
+  return {
+    title: String(g.title ?? ''),
+    funder: String(g.funder ?? ''),
+    blurb,
+    meta: parts.join(' · '),
+    days: g.deadline ? daysUntil(String(g.deadline), now) : null,
+    url: grantUrl(origin, g),
+    key: String(g.id),
+  }
 }
 
 function grantUrl(origin: string, row: Record<string, unknown>): string {
@@ -449,6 +485,7 @@ export async function buildDigest(
   const savedIds = new Set(((interactions ?? []) as Record<string, unknown>[]).map(i => String(i.grant_id)))
 
   const scored: { row: Record<string, unknown>; score: number; blurb: string | null; fresh: boolean }[] = []
+  const newThisWeekAll: { row: Record<string, unknown>; score: number }[] = []
   // Scored, because "the first two the catalogue happened to yield" is not the
   // same as "the two nearest". Ranked below.
   const nearMissCandidates: { row: NearMissRow; score: number; soleBlocker: boolean; dimension: string }[] = []
@@ -462,8 +499,23 @@ export async function buildDigest(
     const firstSeen = g.first_seen_at ? new Date(String(g.first_seen_at)) : null
     const fresh = !!firstSeen && (now.getTime() - firstSeen.getTime()) / 86_400_000 <= NEW_MATCH_LOOKBACK_DAYS
 
+    const blurb = buildBlurb(g.funder_brief)
+
+    // New this week and open to them. Score is deliberately ignored: the claim
+    // is "this arrived and you can apply for it", not "this is a good match".
+    // Eligibility is what stops it becoming a feed of things they cannot use.
+    if (
+      blurb &&
+      firstSeen &&
+      (now.getTime() - firstSeen.getTime()) / 86_400_000 <= NEW_THIS_WEEK_DAYS &&
+      result.eligibilityStatus !== 'ineligible' &&
+      !seen.has(`new_match:${String(g.id)}`)
+    ) {
+      newThisWeekAll.push({ row: g, score: result.score })
+    }
+
     if (result.score >= MATCH_FLOOR) {
-      scored.push({ row: g, score: result.score, blurb: buildBlurb(g.funder_brief), fresh })
+      scored.push({ row: g, score: result.score, blurb, fresh })
       continue
     }
 
@@ -517,7 +569,23 @@ export async function buildDigest(
   // gone weeks with nothing under a heading that implies we looked.
   // digest_sent_items is exactly the record that makes the better definition
   // possible, and it is what the no-repeat rules already rely on.
-  const unshown = withBlurb.filter(s => !seen.has(`new_match:${String(s.row.id)}`))
+  // Newest first, then score. Built BEFORE the match pool so these rows can be
+  // excluded from it — the same fund appearing under "New this week" and again
+  // under "Matches worth a look" in one email is the kind of thing that makes a
+  // digest look automated.
+  const newThisWeek: MatchRow[] = newThisWeekAll
+    .sort((a, b) => {
+      const da = a.row.first_seen_at ? new Date(String(a.row.first_seen_at)).getTime() : 0
+      const db = b.row.first_seen_at ? new Date(String(b.row.first_seen_at)).getTime() : 0
+      return db - da || b.score - a.score
+    })
+    .slice(0, CAPS.newThisWeek)
+    .map(({ row: g }) => toMatchRow(g, origin, now, buildBlurb(g.funder_brief) ?? ''))
+  newThisWeek.forEach(r => shown.push({ section: 'new_match', key: r.key }))
+  const newThisWeekKeys = new Set(newThisWeek.map(r => r.key))
+
+  const unshown = withBlurb.filter(s =>
+    !seen.has(`new_match:${String(s.row.id)}`) && !newThisWeekKeys.has(String(s.row.id)))
   // Genuinely recent first, then by score. The sort carries the freshness that
   // the filter used to enforce.
   unshown.sort((a, b) => Number(b.fresh) - Number(a.fresh) || b.score - a.score)
@@ -541,22 +609,7 @@ export async function buildDigest(
   const matchCap = hasHistory ? CAPS.newMatches : WEEK_ONE_MATCHES
   const matchesOverflow = Math.max(0, matchTotal - matchCap)
 
-  const matches: MatchRow[] = matchPool.slice(0, matchCap).map(s => {
-    const g = s.row
-    const parts = [
-      String(g.funder ?? ''),
-      g.deadline ? `closes ${shortDate(String(g.deadline))}` : g.is_rolling ? 'rolling' : null,
-    ].filter(Boolean) as string[]
-    return {
-      title: String(g.title ?? ''),
-      funder: String(g.funder ?? ''),
-      blurb: s.blurb!,
-      meta: parts.join(' · '),
-      days: g.deadline ? daysUntil(String(g.deadline), now) : null,
-      url: grantUrl(origin, g),
-      key: String(g.id),
-    }
-  })
+  const matches: MatchRow[] = matchPool.slice(0, matchCap).map(s => toMatchRow(s.row, origin, now, s.blurb!))
   matches.forEach(m => shown.push({ section: 'new_match', key: m.key }))
 
   const shownPool = matchPool.slice(0, matchCap)
@@ -637,7 +690,7 @@ export async function buildDigest(
   // The content floor. Nothing to say means no send — a digest that says
   // "nothing this week" teaches someone the email is ignorable before it has
   // ever been useful.
-  if (!closingShown.length && !inProgress.length && !matches.length && !nearMisses.length && !prompt) {
+  if (!closingShown.length && !inProgress.length && !matches.length && !newThisWeek.length && !nearMisses.length && !prompt) {
     return null
   }
 
@@ -698,7 +751,7 @@ export async function buildDigest(
     org, mode, subject, preheader, lead,
     closing: closingShown, closingOverflow,
     inProgress, inProgressOverflow,
-    matches, matchesOverflow, matchTotal, matchLabel,
+    matches, matchesOverflow, matchTotal, matchLabel, newThisWeek,
     nearMisses, prompt, reassurance, catalogue, shown,
     debug: {
       // The SAME comparator the shown list uses. It briefly had its own, which

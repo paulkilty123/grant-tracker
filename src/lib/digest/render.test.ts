@@ -35,6 +35,7 @@ const model: DigestModel = {
   matchesOverflow: 0,
   matchTotal: 1,
   matchLabel: 'worth_a_look',
+  newThisWeek: [],
   nearMisses: [
     { title: 'Network for Social Change — Grants', funder: 'Network for Social Change',
       meta: 'Network for Social Change · £25k – £100k',
@@ -115,5 +116,41 @@ describe('honesty rules', () => {
   })
   it('ships the reassurance line', () => {
     expect(html).toContain('Nothing else closes before 14 October.')
+  })
+})
+
+describe('"New this week" is present only when it has rows', () => {
+  it('is absent entirely when empty — it never says there is nothing new', () => {
+    // The catalogue publishes nothing at all in a normal week more often than
+    // not (0 rows in the 7 days before this was built). A section that says
+    // "no new funding this week" every week teaches the reader to skip it.
+    expect(html).not.toContain('New this week')
+    expect(html).not.toMatch(/no new (funding|opportunities)/i)
+  })
+
+  it('renders with its qualifying line when it has rows', () => {
+    const withNew = renderDigest({
+      ...model,
+      newThisWeek: [{
+        title: 'A Brand New Fund', funder: 'New Funder', blurb: 'Funds community work.',
+        meta: 'New Funder · closes 30 Sep', days: 30,
+        url: 'https://www.shootsfunding.co.uk/dashboard/search?grant=new-1', key: 'n1',
+      }],
+    }, {
+      origin: 'https://www.shootsfunding.co.uk',
+      unsubscribeUrl: 'https://www.shootsfunding.co.uk/api/alerts/unsubscribe?t=tok',
+      now: new Date('2026-09-01T09:00:00Z'),
+    })
+    expect(withNew).toContain('New this week')
+    // The qualifying half matters: these are new AND theirs, not new full stop.
+    expect(withNew).toContain('Added to the catalogue in the last seven days, and open to you.')
+    expect(withNew).toContain('href="https://www.shootsfunding.co.uk/dashboard/search?grant=new-1"')
+  })
+})
+
+describe('the catalogue count is a way in', () => {
+  it('links the live count to the Latest Grants view', () => {
+    expect(html).toContain('href="https://www.shootsfunding.co.uk/dashboard/search?entry=live"')
+    expect(html).toContain('581 opportunities live')
   })
 })
