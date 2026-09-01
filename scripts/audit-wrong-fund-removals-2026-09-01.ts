@@ -18,7 +18,7 @@
 
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync } from 'node:fs'
-import { looksLikeAWall } from '../src/lib/verification/bot-wall'
+import { looksLikeAWall } from '../src/lib/verification/page-readable'
 
 for (const l of readFileSync('.env.local', 'utf8').split('\n')) {
   const m = l.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)$/)

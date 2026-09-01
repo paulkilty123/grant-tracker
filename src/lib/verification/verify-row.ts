@@ -9,7 +9,7 @@ import { asStructures, asExclusions, compareStructures, newExclusions, namesJuri
 // it was already part of this module's surface.
 import { PAGE_CAP, excerpt } from '../page-excerpt'
 import { htmlToText } from '../page-text'
-import { looksLikeAWall } from './bot-wall'
+import { classifyPage, type UnreadableReason } from './page-readable'
 export { excerpt } from '../page-excerpt'
 
 /**
@@ -914,8 +914,21 @@ export async function verifyRow(
   row: VerifyRow,
   anthropic: Anthropic,
   /** `hopOn` defaults to production behaviour. The wider scope is under
-   *  measurement and is passed only by scripts/measure-hop.ts. */
-  opts: { hopOn?: HopScope } = {},
+   *  measurement and is passed only by scripts/measure-hop.ts.
+   *
+   *  `hostGuard` is how a caller stops eleven Arts Council rows each discovering
+   *  the same Cloudflare wall in the same run. It is consulted BEFORE the fetch
+   *  and told the outcome after, so the caller can hold whatever state it likes
+   *  — this module stays stateless. */
+  opts: {
+    hopOn?: HopScope
+    hostGuard?: {
+      /** Non-null means skip: the host is inside its backoff window. */
+      skip: (url: string) => { reason: string; hoursLeft: number } | null
+      /** Told after every read, so the caller can grow or clear the streak. */
+      record: (url: string, reason: UnreadableReason | null) => void
+    }
+  } = {},
 ): Promise<VerifyResult> {
   const base = {
     id: row.id, title: row.title, funder: row.funder, url: row.apply_url,
@@ -925,6 +938,25 @@ export async function verifyRow(
 
   if (!row.apply_url) {
     return { ...base, outcome: 'fixable_link', gate: { pass: false, failure: 'fetch_failed', detail: 'no apply_url on the row' } }
+  }
+
+  // A HOST INSIDE ITS BACKOFF IS NOT READ AT ALL.
+  //
+  // Without this, classifying a wall as `no_content` — which is retryable, so
+  // the proxy gets its turn — turns a walled host into a loop: the row never
+  // resolves, stays due, and spends two fetches on every visit for ever. 16 of
+  // the 33 walled rows measured on 2026-09-01 read fine hours later, so the
+  // wall is intermittent and the row genuinely never settles.
+  //
+  // The skip is reported as its own gate detail rather than as a generic
+  // failure, because a skip nobody can see is indistinguishable from a host
+  // being read and always passing.
+  const guarded = opts.hostGuard?.skip(row.apply_url)
+  if (guarded) {
+    return { ...base, outcome: 'fixable_link',
+             gate: { pass: false, failure: 'fetch_failed',
+                     detail: `host backed off after ${guarded.reason}, ${guarded.hoursLeft}h left` },
+             notes: [`skipped: this host is inside its read backoff`] }
   }
 
   let usage = { input: 0, output: 0 }
@@ -953,25 +985,32 @@ export async function verifyRow(
       if (forceProxy) break
       continue
     }
-    // A BOT WALL MUST NEVER REACH THE MODEL.
+    // NOTHING BUT A PAGE WE ACTUALLY READ MAY REACH THE MODEL.
     //
     // This used to be `fetched.text.length < 200`, and a length test cannot do
-    // this job: Cloudflare's interstitial is 268 characters through the proxy
-    // and 491 direct, Imperva's is 678. All three cleared the floor, were sent
-    // to the model as though they were the funder's page, and came back — quite
-    // correctly — as "this page does not describe that fund". The row was then
-    // stamped `fixable_link: wrong_fund`, which is a claim about the FUNDER made
-    // on the strength of a page nobody read.
+    // this job. Cloudflare's interstitial is 268 characters through the proxy
+    // and 491 direct, Imperva's is 678, a soft 404 is 323, a bare directory
+    // index is 133. All of them cleared the floor, went to the model as though
+    // they were the funder's page, and came back — quite correctly — as "this
+    // page does not describe that fund". That was stamped onto the row as
+    // `fixable_link: wrong_fund`, which is a claim about the FUNDER made from a
+    // page nobody read. 21 of the 87 rows carrying it were exactly this.
     //
-    // 21 of the 87 rows carrying that verdict on 2026-09-01 were bot walls.
-    //
-    // `no_content` rather than `wrong_fund` is what makes this self-correcting:
-    // it is in the retryable set below, so the proxy gets its turn, and when
-    // that is walled too the row ends as a read failure instead of as an
-    // accusation. It also stops the model call, so a walled host costs nothing.
-    const wall = looksLikeAWall(fetched.text)
-    if (wall.walled) {
-      keep({ ...base, usage, outcome: 'fixable_link', gate: { pass: false, failure: 'no_content', detail: wall.why } })
+    // `classifyPage` returns a DISCRIMINATED UNION, and that is the safeguard
+    // rather than this comment: `read.text` does not exist on the failure
+    // branch, so the compiler will not let a future edit hand an interception
+    // notice to `runModel`. The old shape was a boolean beside a string, and a
+    // boolean is something you can forget to check.
+    const read = classifyPage(fetched.text)
+    opts.hostGuard?.record(row.apply_url, read.ok ? null : read.reason)
+    if (!read.ok) {
+      // `no_content` rather than `wrong_fund` is what makes this
+      // self-correcting: it is in the retryable set below, so the proxy gets
+      // its turn, and when that is blocked too the row ends as a read failure
+      // instead of as an accusation. It also skips the model call, so a walled
+      // host now costs nothing.
+      keep({ ...base, usage, outcome: 'fixable_link',
+             gate: { pass: false, failure: 'no_content', detail: `${read.reason}: ${read.detail}` } })
       if (forceProxy) break
       continue
     }
@@ -981,7 +1020,7 @@ export async function verifyRow(
     // The reader proxy is a transport, not a source: the fact still came from
     // the funder's own page, so that is the URL the evidence cites.
     modelCalls++
-    const result = await runModel(row, fetched.text, anthropic, base, row.apply_url)
+    const result = await runModel(row, read.text, anthropic, base, row.apply_url)
     usage = { input: usage.input + (result.usage?.input ?? 0), output: usage.output + (result.usage?.output ?? 0) }
     result.usage = usage
     if (fetched.via === 'proxy') result.notes = [...result.notes, 'read through the reader proxy']

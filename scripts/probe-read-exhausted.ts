@@ -15,7 +15,7 @@
 //   npx tsx --env-file=.env.local scripts/probe-read-exhausted.ts --live-and-wrong [--dry]
 import { createClient } from '@supabase/supabase-js'
 import { fetchPage } from '../src/lib/verification/verify-row'
-import { looksLikeAWall } from '../src/lib/verification/bot-wall'
+import { looksLikeAWall } from '../src/lib/verification/page-readable'
 
 const DRY = process.argv.includes('--dry')
 const idsArg = process.argv.find(a => a.startsWith('--ids='))

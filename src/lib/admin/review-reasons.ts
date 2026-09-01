@@ -23,7 +23,7 @@
 import { readGrantFlags, type GrantFlag } from '@/lib/grant-flags'
 import { readStamp, PAGE_READ_KEY, AMOUNT_UNSUPPORTED_NOTE, DEADLINE_UNSUPPORTED_NOTE, type FieldEvidence } from '@/lib/field-evidence'
 import { abstainReason } from '@/lib/verification/abstain'
-import { readBlockedByAWall } from '@/lib/verification/bot-wall'
+import { readBlockedByAWall } from '@/lib/verification/page-readable'
 import { FEEDBACK_QUEUE_SOURCE } from '@/lib/feedback/triage'
 
 /** Matches cron/reenrich-stale's STALE_AFTER_DAYS. Keep in step. */
