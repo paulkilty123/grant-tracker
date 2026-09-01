@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { formatRange, locationLabel } from '@/lib/utils'
 import { notFound } from 'next/navigation'
+import { isPubliclyVisible } from '@/lib/public-visibility'
 import LogoMark from '@/components/icons/LogoMark'
 import { eligibilityStated, ELIGIBILITY_NOT_STATED } from '@/lib/eligibility-disclosure'
 import { FUNDING_TYPE_COLOUR, TYPE_NEUTRAL, type FundingTypeKey } from '@/lib/funding-type-colours'
@@ -167,7 +168,7 @@ async function loadGrant(rawId: string) {
     .select('*')
     .eq('external_id', id)
     .maybeSingle()
-  if (byExternal) return { row: byExternal, externalId: id }
+  if (byExternal) return isPubliclyVisible(byExternal) ? { row: byExternal, externalId: id } : null
 
   const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
   if (UUID_RE.test(id)) {
@@ -176,7 +177,7 @@ async function loadGrant(rawId: string) {
       .select('*')
       .eq('id', id)
       .maybeSingle()
-    if (byUuid) return { row: byUuid, externalId: id }
+    if (byUuid) return isPubliclyVisible(byUuid) ? { row: byUuid, externalId: id } : null
   }
   return null
 }
