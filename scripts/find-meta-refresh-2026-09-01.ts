@@ -114,7 +114,11 @@ async function main() {
     await Promise.all(Array.from({ length: LIMIT }, () => worker()))
   }
 
-  console.log(`\nchecked ${checked}, unreachable from this machine ${unreachable}`)
+  // The label matters: "unreachable from this machine" is false when the read
+  // went through production, and the whole point of this sweep was that the two
+  // numbers differ enormously — 88 refusals from the laptop against 5 from
+  // Vercel's egress, over the same 946 URLs.
+  console.log(`\nchecked ${checked}, unreachable from ${LOCAL ? 'this machine' : "production's egress"} ${unreachable}`)
   console.log(`\nROWS POINTING AT A META-REFRESH STUB: ${found.length}\n`)
   for (const f of found) {
     const base = new URL(String(f.row.apply_url))
