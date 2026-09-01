@@ -24,6 +24,7 @@ import { readGrantFlags, type GrantFlag } from '@/lib/grant-flags'
 import { readStamp, PAGE_READ_KEY, AMOUNT_UNSUPPORTED_NOTE, DEADLINE_UNSUPPORTED_NOTE, type FieldEvidence } from '@/lib/field-evidence'
 import { abstainReason } from '@/lib/verification/abstain'
 import { readBlockedByAWall } from '@/lib/verification/page-readable'
+import { badApplyRoute } from './apply-route-hosts'
 import { FEEDBACK_QUEUE_SOURCE } from '@/lib/feedback/triage'
 
 /** Matches cron/reenrich-stale's STALE_AFTER_DAYS. Keep in step. */
@@ -108,6 +109,7 @@ export type ReviewReasonCode =
   | 'amount_pot_suspected'
   | 'amount_under_stated'
   | 'amount_ungrounded'
+  | 'amount_ungrounded_in_prose'
   | 'amount_unsupported'
   | 'deadline_unsupported'
   | 'amount_inverted'
@@ -133,6 +135,7 @@ export type ReviewReasonCode =
   | 'page_says_round_closed'
   | 'page_describes_different_fund'
   | 'no_funder'
+  | 'apply_route_not_applyable'
   | 'never_verified'
   // Both fetch paths have failed twice running, or the link is not a web page.
   // Deliberately NON-BLOCKING: these rows are already blocked by whatever could
@@ -519,6 +522,39 @@ function describesADiscreteFund(row: ReviewRow): boolean {
   return true
 }
 
+/**
+ * Does this figure appear anywhere in the evidence we hold for the row?
+ *
+ * The point of the question is to separate "we assert a number nobody supports"
+ * from "our write-up is untidy about a number the page states". Only the first
+ * misleads anybody, and only the first should block publication.
+ *
+ * Matches the forms a funder actually writes: £25,000, £25000, 25,000, £25k and
+ * £2.5m. Deliberately generous — a false MATCH demotes a finding to info and
+ * leaves it in the queue, while a false MISS blocks a correct row indefinitely,
+ * and the second is the more expensive error.
+ */
+export function figureAppearsInEvidence(figure: number, evidence: unknown): boolean {
+  if (!evidence || typeof evidence !== 'object') return false
+  const quotes: string[] = []
+  for (const stamp of Object.values(evidence as Record<string, unknown>)) {
+    const q = (stamp as { quote?: unknown } | null)?.quote
+    if (typeof q === 'string' && q) quotes.push(q)
+  }
+  if (quotes.length === 0) return false
+  const hay = quotes.join('  ').toLowerCase().replace(/\s+/g, '')
+
+  const forms = new Set<string>([
+    String(figure),
+    figure.toLocaleString('en-GB'),
+  ])
+  if (figure >= 1000 && figure % 1000 === 0) forms.add(`${figure / 1000}k`)
+  if (figure >= 1_000_000 && figure % 100_000 === 0) forms.add(`${figure / 1_000_000}m`)
+  for (const f of Array.from(forms)) forms.add(`£${f}`)
+
+  return Array.from(forms).some(f => hay.includes(f.toLowerCase().replace(/\s+/g, '')))
+}
+
 export function deriveReviewReasons(row: ReviewRow, todayISO?: string): ReviewReason[] {
   const today   = todayISO ?? new Date().toISOString().slice(0, 10)
   const reasons: ReviewReason[] = []
@@ -601,7 +637,24 @@ export function deriveReviewReasons(row: ReviewRow, todayISO?: string): ReviewRe
   // would have filed a working funder as hopeless and then stopped re-probing it.
   const exhausted = (row.field_evidence as Record<string, unknown> | null | undefined)?.['_read_exhausted'] as
     { reason?: string; consecutive?: number; detail?: string } | undefined
-  if (exhausted && (exhausted.reason === 'not_a_web_url' || Number(exhausted.consecutive ?? 0) >= 2)) {
+  // A DELIBERATE EMAIL-ONLY APPLICATION ROUTE IS NOT AN UNREADABLE PAGE.
+  //
+  // The Paley Trust has no website and takes applications by email. Settled by
+  // Paul on 2026-08-31 as CORRECT, and it kept surfacing anyway: `not_a_web_url`
+  // fires on any `mailto:` apply_url, so a ruling made in conversation was
+  // re-litigated by the queue every day afterwards.
+  //
+  // The ruling is recorded where the code can see it — `raw_data.checks` carries
+  // an `apply_route_accepted` flag — so this is not a special case for one trust
+  // but the general shape: a reviewer decides a non-web route is the real route,
+  // and the queue stops asking. Clearing the flag brings the row back.
+  //
+  // It suppresses only `read_exhausted`. Everything else about the row is still
+  // checked, and a `mailto:` on a row NOBODY has ruled on still surfaces.
+  const routeAccepted = flags.some(f => f.code === 'apply_route_accepted')
+  if (exhausted && exhausted.reason === 'not_a_web_url' && routeAccepted) {
+    // Ruled on. Nothing to say.
+  } else if (exhausted && (exhausted.reason === 'not_a_web_url' || Number(exhausted.consecutive ?? 0) >= 2)) {
     reasons.push({
       code: 'read_exhausted', severity: 'check',
       label: 'Nothing more we can do',
@@ -792,6 +845,30 @@ export function deriveReviewReasons(row: ReviewRow, todayISO?: string): ReviewRe
     })
   }
 
+  // ── Can a fundraiser apply from this link at all? ────────────────────────
+  //
+  // Four LIVE rows pointed at Charity Commission register entries. Every check
+  // the catalogue had said they were fine: the URL was healthy, the page loaded,
+  // the funder was named. A register entry is a public record OF a charity and
+  // never the route TO it, so a fundraiser landing there could do nothing.
+  //
+  // Harford Charitable Trust was not in the review queue at all — no blocking
+  // reason, invisible to this screen — and was found only by sweeping all 961
+  // rows by hand on 2026-09-01. That is the argument for a check rather than a
+  // one-off correction: a defect nothing can detect regrows silently.
+  //
+  // The `mailto:` case is `non_web` and is deliberately NOT raised here. It is
+  // already covered by `read_exhausted`, and the Paley ruling above settles when
+  // it is a real route.
+  const badRoute = badApplyRoute(row.apply_url as string | null)
+  if (badRoute && badRoute.kind !== 'non_web') {
+    reasons.push({
+      code: 'apply_route_not_applyable', severity: 'critical',
+      label: 'Nowhere to apply from this link',
+      detail: badRoute.why,
+    })
+  }
+
   // ── Amounts ──────────────────────────────────────────────────────────────
   //
   // AN IN-KIND OFFER HAS NO AMOUNT, AND ASKING FOR ONE IS A CATEGORY ERROR.
@@ -912,18 +989,41 @@ export function deriveReviewReasons(row: ReviewRow, todayISO?: string): ReviewRe
   }
 
   // Brief-level guards that enrich-grant computes and nothing has ever rendered.
-  if (asArray(brief?._ungrounded_amounts).length > 0) {
-    const n = asArray(brief?._ungrounded_amounts).length
-    reasons.push({
-      code: 'amount_ungrounded', severity: 'check',
-      label: 'Amount not in what we quoted',
-      // "no matching wording on the page" sent a reviewer to the funder's site
-      // to check a figure that was there. The guard never looks at the page: it
-      // compares the write-up against the citation snippet and the stored
-      // description. So the finding is about OUR text, not the funder's, and
-      // saying otherwise costs a site visit per row.
-      detail: `${n} ${plural(n, 'figure', 'figures')} in the write-up ${plural(n, 'is', 'are')} not supported by the quote or description we hold — often a figure the model worked out rather than read`,
-    })
+  //
+  // NARROWED 2026-09-01, and kept BLOCKING. Paul's rule: an unsourced figure is
+  // an unquoted fact, which is the standard the whole catalogue is held to. But
+  // the detector never looks at the funder's page — it compares the write-up
+  // against the citation snippet and the stored description only — so it was
+  // firing on figures that ARE in our evidence, just not in the two strings it
+  // happened to read. Checked against the queue on 2026-09-01: of the rows
+  // blocked on it, the page states the figure on seven.
+  //
+  // So the code now splits on the question that decides whether anybody is
+  // misled. Does the figure appear ANYWHERE in the evidence we hold?
+  //
+  //   nowhere        the write-up asserts a number nothing supports. Blocks.
+  //   somewhere      the write-up is untidy and the number is real. Info.
+  //
+  // The split is on the CODE, not the severity, because the gate reads POLICY by
+  // code and severity has no vote there — a severity branch would let the table
+  // and the gate disagree silently, which publish-gate.ts documents as a bug it
+  // has already had once.
+  const ungroundedFigures = asArray(brief?._ungrounded_amounts)
+    .filter((x): x is number => typeof x === 'number' && Number.isFinite(x))
+  if (ungroundedFigures.length > 0) {
+    const unsupported = ungroundedFigures.filter(n => !figureAppearsInEvidence(n, row.field_evidence))
+    const n = unsupported.length > 0 ? unsupported.length : ungroundedFigures.length
+    reasons.push(unsupported.length > 0
+      ? {
+          code: 'amount_ungrounded', severity: 'critical',
+          label: 'Amount appears nowhere in our evidence',
+          detail: `${n} ${plural(n, 'figure', 'figures')} in the write-up ${plural(n, 'is', 'are')} not in the quote, the description, or anything the page told us — a figure the model worked out rather than read`,
+        }
+      : {
+          code: 'amount_ungrounded_in_prose', severity: 'check',
+          label: 'Amount is real but not in what we quoted',
+          detail: `${n} ${plural(n, 'figure', 'figures')} in the write-up ${plural(n, 'is', 'are')} not supported by the quote we stored, but ${plural(n, 'does', 'do')} appear in what the funder's page told us. The write-up needs tidying, not the figure`,
+        })
   }
   // A past date in the write-up means one of two very different things, and
   // treating them alike is what let the queue say "Nothing looks wrong" beside a

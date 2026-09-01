@@ -83,6 +83,9 @@ const CODE_SECTION: Partial<Record<ReviewReasonCode, SectionId>> = {
   // ── The link is dead or wrong ──
   link_dead:                     'link',
   page_describes_different_fund: 'link',
+  // A register entry is a link problem even though the link works: what needs
+  // to change is the URL, which is exactly what this section is for.
+  apply_route_not_applyable:     'link',
 
   // ── Nothing has read the page ──
   never_verified:  'reading',
@@ -102,6 +105,7 @@ const CODE_SECTION: Partial<Record<ReviewReasonCode, SectionId>> = {
   deadline_passed:        'judgement',
   deadline_implausible:   'judgement',
   amount_ungrounded:      'judgement',
+  amount_ungrounded_in_prose: 'judgement',
   amount_unsupported:     'judgement',
   deadline_unsupported:   'judgement',
   amount_pot_suspected:   'judgement',

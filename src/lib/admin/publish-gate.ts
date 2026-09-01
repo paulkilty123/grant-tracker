@@ -101,7 +101,12 @@ const POLICY: Record<ReviewReasonCode, 'block' | 'info'> = {
   deadline_passed:      'block',  // sends someone at a round that has closed
   amount_inverted:      'block',  // minimum above maximum — self-evidently wrong
   amount_pot_suspected: 'block',  // whole-fund figure presented as per-applicant
-  amount_ungrounded:    'block',  // £ figure with no matching wording on the page
+  amount_ungrounded:    'block',  // £ figure supported by nothing we hold
+  // The narrowed twin, added 2026-09-01. The figure IS in our evidence and only
+  // the write-up is untidy about it, so nobody is misled by the card and there
+  // is nothing to block. Kept as its own CODE rather than a severity branch on
+  // the one above, because the gate reads this table by code.
+  amount_ungrounded_in_prose: 'info',
   // A fundraiser checked this row against the funder's actual policy and
   // rejected it. Blocking for two reasons: a human reporting a problem is
   // stronger evidence than anything derived from the row, and the feedback
@@ -150,6 +155,14 @@ const POLICY: Record<ReviewReasonCode, 'block' | 'info'> = {
   // Nothing says who is giving the money. Three press releases scraped as funds
   // shared this and nothing else.
   no_funder:              'block',
+
+  // The link resolves, the page is genuine, and it is a Charity Commission
+  // register entry or a third-party directory. Blocking for the same reason
+  // `page_describes_different_fund` blocks: the harm is a fundraiser spending a
+  // click and finding no way in, and it is HARDER to spot than a dead link
+  // because the page loads and names the right funder. Four live rows carried
+  // this on 2026-09-01 and none of them was flagged by anything.
+  apply_route_not_applyable: 'block',
 
   // A figure on the card that the funder's own page does not state.
   //
