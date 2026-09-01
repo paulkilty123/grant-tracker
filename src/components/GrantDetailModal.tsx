@@ -331,7 +331,7 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
                   <div className="px-5 py-4 border-r border-[#E8E0D1]">
                     <p className="text-[10px] font-bold text-[#5F5E5A] uppercase tracking-wider mb-1">Amount</p>
                     <p className="text-2xl font-bold" style={{ color: '#FFB74D' }}>
-                      {formatRange(grant.amount_min, grant.amount_max)}
+                      {formatRange(grant.amount_min, grant.amount_max, false, grant.funding_type)}
                     </p>
                   </div>
                   <div className="px-5 py-4">

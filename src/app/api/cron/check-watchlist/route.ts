@@ -3,6 +3,7 @@
 // On first run it builds a baseline fingerprint; on subsequent runs it diffs
 // against the stored fingerprint and raises a watchlist_alert if anything changed.
 import { NextRequest, NextResponse } from 'next/server'
+import { classifyPage } from '@/lib/verification/page-readable'
 import { createClient } from '@supabase/supabase-js'
 import { recordRun } from '@/lib/admin/cron-runs'
 import { hasCollapsed, flagRowsForUrl, extractFingerprint, type ReadVia } from '@/lib/watchlist-signals'
@@ -169,8 +170,23 @@ async function readViaProxy(url: string): Promise<{ text: string; via: ReadVia }
     // browser" page with HTTP 200. Fingerprinting that would store a baseline
     // for a page nobody has read, which is worse than recording the failure:
     // the next real read would then look like a change.
-    if (text.length < 200 || /robot challenge|checking the site connection|verifying you are (not )?a (human|bot)/i.test(text)) {
-      throw new Error(`reader proxy returned a challenge or ${text.length} chars`)
+    //
+    // THIS USED TO BE A HAND-ROLLED PATTERN PLUS A 200-CHARACTER FLOOR, and it
+    // was the same shape, and the same three phrases, that verify-row got wrong.
+    // Measured 2026-09-01: Cloudflare's interstitial is 268 characters and says
+    // "Performing security verification", which matched none of the three and
+    // cleared the floor. Seven watchers were fingerprinting a challenge page as
+    // their baseline — Ashoka, Glasgow CC, Lewes TC, NIHR, Skills for Londoners,
+    // Theatre Breakthrough and Wolfson historic-environment — found by the
+    // parallel watchlist audit the same day.
+    //
+    // One detector now, shared with the verification engine, so a wall format
+    // added for one is caught by both. `classifyPage` also names WHICH failure
+    // it was, which the message now carries: a soft 404 and an interception page
+    // want different responses from whoever reads this log.
+    const readable = classifyPage(text)
+    if (!readable.ok) {
+      throw new Error(`reader proxy returned ${readable.reason}: ${readable.detail}`)
     }
     // A not-found page arrives from the proxy with HTTP 200 and real content:
     // the direct fetch's 404 becomes a rendered "404 page not found" document.

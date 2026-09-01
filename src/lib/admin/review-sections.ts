@@ -133,7 +133,28 @@ export function sectionOf(blockingCodes: readonly string[], allCodes: readonly s
   // Unblocked is not the same claim as ready. A row the gate would publish but
   // which tells a fundraiser nothing about who may apply is not something
   // anyone would click publish on unread — it needs the page reading.
-  if (blockingCodes.length === 0) return isIncomplete(allCodes) ? 'reading' : 'ready'
+  if (blockingCodes.length === 0) {
+    if (!isIncomplete(allCodes)) return 'ready'
+    // AN UNREADABLE ROW IS NEVER SENT TO BE READ.
+    //
+    // The gaps `isIncomplete` looks for — no amount, no deadline, no
+    // eligibility — are exactly the gaps a page read would fill, which is why
+    // they route here. On a row whose page cannot be fetched at all they route
+    // a reviewer at a page that has already failed twice through both paths,
+    // and the section heading promises the read will help.
+    //
+    // Latent until 2026-09-01: `read_exhausted` used to co-occur with a
+    // blocking code on every real row, so the exhausted test below always got
+    // its turn. Withdrawing `page_describes_different_fund` from bot-walled
+    // rows left ten of them blocking on nothing but still carrying absences,
+    // and every one landed under "Needs reading".
+    //
+    // The `!isIncomplete` case above is deliberately untouched. A row with
+    // nothing blocking AND no gaps is ready whether or not it is re-readable,
+    // which is the call recorded in this file's tests: being hard to re-read is
+    // not a defect in the row.
+    return allCodes.includes('read_exhausted') ? 'exhausted' : 'reading'
+  }
 
   // Exhausted outranks every other section, and is read from ALL codes rather
   // than the blocking ones on purpose: `read_exhausted` deliberately does not

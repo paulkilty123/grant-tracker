@@ -991,7 +991,15 @@ export function toMCPOpportunitySummary(row: ScrapedGrantRow, ctx: AdapterContex
       max: row.amount_max,
       currency: 'GBP',
       typical: row.funder_brief?.typical_award ?? null,
-      undisclosed: Boolean(row.amount_undisclosed),
+      // `undisclosed` means the funder publishes no per-grant figure. An in-kind
+      // offer with no amount is a different statement — there is no cash award
+      // at all — and reporting it as "undisclosed" tells an external model the
+      // figure exists and is being withheld. `funding_type` is in the same
+      // object, so a client can already tell the two apart; this only stops us
+      // asserting the wrong one of them.
+      undisclosed: funding_type === 'in_kind' && row.amount_min == null && row.amount_max == null
+        ? false
+        : Boolean(row.amount_undisclosed),
     },
     deadline,
     geographic_scope: deriveGeographicScope(row),

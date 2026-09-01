@@ -74,11 +74,46 @@ export function formatCurrency(amount: number): string {
   return full
 }
 
-export function formatRange(min: number | null, max: number | null, undisclosed = false): string {
-  // Affirmative non-disclosure (funder publishes no fixed amount) reads
-  // differently from "we don't know yet" — say so honestly rather than
-  // implying the figure appears on application.
-  if (!min && !max) return undisclosed ? 'Amount not disclosed' : 'Amount on application'
+/**
+ * The amount slot on a card.
+ *
+ * `fundingType` is not decoration. An IN-KIND offer has no cash award, so both
+ * of the no-amount answers below are false of it:
+ *
+ *   "Amount on application"  tells a fundraiser to apply and ask what the grant
+ *                            is. LawWorks brokers free legal advice. There is no
+ *                            grant to ask about.
+ *   "Amount not disclosed"   says the funder is withholding a figure. The Hygiene
+ *                            Bank ships products. There is no figure to withhold.
+ *
+ * Measured on production 2026-09-01: 60 in-kind rows rendered "Amount on
+ * application" and 4 rendered "Amount not disclosed". Not one was true.
+ *
+ * THIS BRANCH ALREADY EXISTED, on exactly one of the fifteen call sites — the
+ * Find Funding results table wrote it inline and the other fourteen surfaces did
+ * not. That is the argument for it living here: a per-surface special case is a
+ * rule that holds wherever someone remembered it.
+ *
+ * A figure on an in-kind row is left alone, because there it means something
+ * real: the VALUE of what is donated. AWS gives £1,000 of credits, Google Ad
+ * Grants up to £10,000 a month, Microsoft £3,500. Only the absence is a category
+ * error, which is why this sits inside the `!min && !max` branch.
+ */
+export function formatRange(
+  min: number | null,
+  max: number | null,
+  undisclosed = false,
+  fundingType?: string | null,
+): string {
+  if (!min && !max) {
+    const type = String(fundingType ?? '').toLowerCase()
+    if (type === 'in_kind')   return 'In-kind'
+    if (type === 'programme') return 'Programme only'
+    // Affirmative non-disclosure (funder publishes no fixed amount) reads
+    // differently from "we don't know yet" — say so honestly rather than
+    // implying the figure appears on application.
+    return undisclosed ? 'Amount not disclosed' : 'Amount on application'
+  }
   if (!min)  return `Up to ${formatCurrency(max!)}`
   if (!max)  return `From ${formatCurrency(min)}`
   if (min === max) return formatCurrency(min)
