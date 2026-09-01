@@ -84,15 +84,13 @@ export async function isGone(key: string): Promise<boolean> {
       inflight ??= load().then(ids => { cache = { at: Date.now(), ids }; inflight = null; return ids })
       await inflight
     }
-    const hit = cache?.ids.has(k) ?? false
-    // TEMPORARY, 2026-09-01: the check works locally and did not fire in
-    // production, and the fail-open catch below hides why. Remove once the
-    // cause is known.
-    console.log('[gone] key=%s hit=%s cached=%d', k.slice(0, 12), hit, cache?.ids.size ?? -1)
-    return hit
+    return cache?.ids.has(k) ?? false
   } catch (e) {
     inflight = null
-    console.warn('[gone] lookup failed, failing open:', e instanceof Error ? e.message : String(e))
+    // Named, because failing open is silent by design and a permanently broken
+    // lookup would otherwise be indistinguishable from a catalogue with nothing
+    // removed in it. One line per instance per five minutes, not per request.
+    console.warn('[gone] lookup failed, falling through to 404:', e instanceof Error ? e.message : String(e))
     return false
   }
 }
