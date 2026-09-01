@@ -229,15 +229,14 @@ describe('gate failures reach the publish gate', () => {
   })
 
   /**
-   * Narrowed 2026-08-27. "Change We Seek grants" (Tudor Trust) had both URLs set
-   * to the same page, so the index guard suppressed a verdict the engine had
-   * recorded on 17 August, and a framework Tudor introduces in a film stayed
-   * live as a fund at £5k to £150k against their stated £100k to £1m.
-   *
-   * Pointing at the index is the right shape for a front door and the wrong
-   * shape for a row naming a specific fund. The title is what tells them apart.
+   * 2026-08-27 narrowed this so a row NAMING a fund kept the finding at the
+   * index, on "Change We Seek grants" (Tudor Trust), a row Paul had found wrong.
+   * 2026-09-01 widened it back, on Paul's ruling that a front door is not a
+   * defect: a named fund pointing at its funder's index is a weak link a
+   * fundraiser can still follow, and the Tudor row was wrong on its AMOUNT,
+   * which is the check that should hold it. See landsOnAFrontDoor().
    */
-  it('BLOCKS a row that names a fund, even when it points at the banked index', () => {
+  it('does NOT block a row that names a fund when it points at the banked index (a front door)', () => {
     const cs = codes({
       ...row(evidence('fixable_link: wrong_fund')),
       title: 'Change We Seek grants',
@@ -246,22 +245,51 @@ describe('gate failures reach the publish gate', () => {
       apply_url: 'https://tudortrust.example/our-funding',
       funding_index_url: 'https://tudortrust.example/our-funding',
     })
-    expect(cs).toContain('page_describes_different_fund')
+    expect(cs).not.toContain('page_describes_different_fund')
   })
 
-  it('reads the funder name by TOKEN, so a different dash is not a different funder', () => {
-    // "Access – The Foundation for Social Investment" against
-    // "Access — The Foundation for Social Investment": one character apart, and
-    // a substring test would call them unrelated and flag a front door.
+  it('does NOT block a row whose link is the funder HOMEPAGE, with or without a banked index', () => {
+    // 13 live rows on 2026-09-01 pointed at a bare origin. Their index had been
+    // cleared that day (it had been the homepage, posing as an index), so the
+    // index guard had nothing to compare against and every one counted as
+    // "Live and wrong".
+    for (const apply_url of ['https://gatsby.example', 'https://gatsby.example/', 'HTTPS://Gatsby.Example//']) {
+      const cs = codes({
+        ...row(evidence('fixable_link: wrong_fund')),
+        title: 'Gatsby Charitable Foundation',
+        funder: 'Gatsby Charitable Foundation',
+        funding_type: 'grant',
+        apply_url,
+        funding_index_url: null,
+      })
+      expect(cs, apply_url).not.toContain('page_describes_different_fund')
+    }
+  })
+
+  it('a homepage with a query string or a path is NOT the homepage', () => {
+    for (const apply_url of ['https://funder.example/?p=grants', 'https://funder.example/grants', 'https://funder.example/#apply']) {
+      const cs = codes({
+        ...row(evidence('fixable_link: wrong_fund')),
+        funding_type: 'grant',
+        apply_url,
+        funding_index_url: null,
+      })
+      expect(cs, apply_url).toContain('page_describes_different_fund')
+    }
+  })
+
+  it('a path that merely LOOKS like an index is not one until it is banked', () => {
+    // The 2026-08-17 lesson: a URL that looks right can be a grants-awarded
+    // list. "/grants" with no index recorded stays in the queue.
     const cs = codes({
       ...row(evidence('fixable_link: wrong_fund')),
-      title:  'Access — The Foundation for Social Investment',
-      funder: 'Access – The Foundation for Social Investment',
+      title: 'HDH Wills Charitable Trust',
+      funder: 'HDH Wills Charitable Trust',
       funding_type: 'grant',
-      apply_url: 'https://access.example/funding',
-      funding_index_url: 'https://access.example/funding',
+      apply_url: 'https://hdhwills.example/grants/',
+      funding_index_url: null,
     })
-    expect(cs).not.toContain('page_describes_different_fund')
+    expect(cs).toContain('page_describes_different_fund')
   })
 
   it('keeps blocking when the row merely shares a DOMAIN with the index', () => {

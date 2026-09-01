@@ -3,9 +3,9 @@
 //
 // No Anthropic call. DB reads only.
 //
-//   npx tsx scripts/dump-review-queue-2026-09-01.ts > /dev/null
+//   npx tsx scripts/dump-review-queue-2026-09-01.ts <out.json> > /dev/null
 //
-// Writes the full dump to scratchpad/review-queue.json.
+// Writes the full dump to the path given as the first argument.
 
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync, writeFileSync } from 'node:fs'
@@ -156,7 +156,8 @@ async function main() {
     },
   }
   console.error(JSON.stringify(out.counts, null, 2))
-  writeFileSync(resolve(HERE, '..', '..', '..', 'review-queue.json'), JSON.stringify(out, null, 2))
-  writeFileSync('/private/tmp/claude-501/-Users-paulkilty-dev-grant-tracker/3f77df1d-bb66-4b54-bed1-c11780b41641/scratchpad/review-queue.json', JSON.stringify(out, null, 2))
+  const outPath = process.argv[2]
+  if (!outPath) { console.error('usage: dump-review-queue-2026-09-01.ts <out.json>'); process.exit(2) }
+  writeFileSync(outPath, JSON.stringify(out, null, 2))
 }
 main()

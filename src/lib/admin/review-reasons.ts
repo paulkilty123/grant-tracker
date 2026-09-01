@@ -434,10 +434,13 @@ function plural(n: number, one: string, many: string): string {
  *                  products. Asking whether a fund appears on the page is a
  *                  category error, not a finding. 26 rows carry the note.
  *
- *   apply_url is   Migration 061 banks the funder's own index of its funds. When
- *   the index      a row points AT that index, we have already recorded that it
- *                  is the front door, so "this page is about the funder rather
- *                  than one fund" is the row working as intended. 59 rows.
+ *   the landing    A homepage, or the funder's own index of its funds (banked by
+ *   is a front     migration 061). Neither page is ABOUT one fund, so "this page
+ *   door           does not describe this fund" is what pointing at a front door
+ *                  looks like, not a defect. Paul's ruling of 2026-08-17,
+ *                  reaffirmed 2026-09-01: "a homepage landing is not a defect
+ *                  unless the funder runs separately paged funds we're hiding
+ *                  behind one row." 27 live rows on 1 September.
  *
  * WHAT THIS DELIBERATELY DOES NOT CATCH. A funder that renames or sub-brands a
  * fund still trips the code: Tesco Stronger Starts links to a page headed "Tesco
@@ -452,73 +455,58 @@ function plural(n: number, one: string, many: string): string {
  * the catalogue indefinitely, because nobody can fix what is not broken.
  */
 /**
- * Words that carry no identity of their own.
+ * Does the row's link land on a front door: the site's homepage, or the funding
+ * index we banked for the funder?
  *
- * A title made only of these plus the funder's own name is a front door:
- * "East End Community Foundation — Grants" says nothing "East End Community
- * Foundation" does not. A title with anything left over names something.
- */
-const GENERIC_TITLE_WORDS = new Set([
-  'grant', 'grants', 'fund', 'funds', 'funding', 'programme', 'programmes',
-  'program', 'scheme', 'schemes', 'award', 'awards', 'application',
-  'applications', 'apply', 'trust', 'trusts', 'foundation', 'charity',
-  'the', 'a', 'an', 'and', 'for', 'of', 'to', 'in', 'uk',
-  // Added 2026-09-01. These label a fund's SIZE OR SHAPE, never its identity:
-  // "Foundation Scotland — Community Fund" and "Sir Jules Thorn Charitable
-  // Trust — General Grants" are front doors written the long way round, and both
-  // were being asked whether their fund appeared on the funder's own index.
-  // "Community" is the one that carries any risk, and it is bounded: the guard
-  // still requires the row to point at the index we recorded for it, so a named
-  // fund like the Co-op Local Community Fund — which points at its own page — is
-  // untouched.
-  'main', 'general', 'core', 'open', 'small', 'large',
-  'community', 'communities', 'hub', 'overview', 'local',
-])
-
-/**
- * Does the TITLE name something beyond the funder itself?
+ * HISTORY, because this guard has moved twice and the reasons matter.
  *
- * Tokens, not substrings, because the same organisation is written differently
- * in the two columns: "Access – The Foundation for Social Investment" against
- * "Access — The Foundation for Social Investment" differ by one dash character,
- * and a substring test would call them unrelated.
+ * 2026-08-18: suppressed only when apply_url equalled the banked index.
+ *
+ * 2026-08-27: narrowed so a row whose TITLE named a fund beyond the funder kept
+ * the finding even at the index. Made on "Change We Seek grants" (Tudor Trust),
+ * a row Paul spot-checked and found wrong: £5k to £150k against Tudor's stated
+ * £100k to £1m, on a link that redirected. The narrowing let the code fire on it.
+ *
+ * 2026-09-01: widened back, and to homepages. Paul, splitting "Live and wrong"
+ * by cause: "the page is a front door that doesn't describe this fund" is its
+ * own group and is NOT launch work; "if front doors are still counting as live
+ * and wrong, the section is disagreeing with a rule already made. Fix the
+ * counter, not the rows." So a named fund pointing at its funder's index is a
+ * weak LINK, not a wrong ROW: a fundraiser landing there can find the fund.
+ * The Tudor row was wrong on its AMOUNT, and the amount check is what should
+ * have held it. The 73 bare-homepage index values cleared that same day had
+ * exposed 13 rows whose apply_url is the homepage itself, and with no index
+ * left to compare against the old guard could not see them as front doors.
+ *
+ * The "unless" in Paul's ruling — a funder with several separately paged funds
+ * that we carry as one row — has no detector: it needs the funder's index read
+ * and compared with what we hold, which is a verification change and not a
+ * review-reasons one. Noted for after 11 September.
+ *
+ * WHAT A FRONT DOOR IS HERE, AND IS NOT. The site root, or the banked index. It
+ * is NOT any page whose path merely looks like an index ("/grants" with no index
+ * recorded): the 2026-08-17 lesson is that a URL which looks right can be a
+ * grants-awarded list, so shape alone does not clear a row. Those rows stay in
+ * the queue until an index is banked for the funder.
+ *
+ * Trailing slashes and case are ignored; "https://funder.example/funding/" is
+ * the same page as "https://funder.example/funding".
  */
-function namesAFundBeyondTheFunder(row: ReviewRow): boolean {
-  const tokens = (v: unknown) =>
-    String(v ?? '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().split(' ').filter(Boolean)
+function landsOnAFrontDoor(row: ReviewRow): boolean {
+  const normalise = (u: string) => u.trim().toLowerCase().replace(/\/+$/, '')
+  const apply = row.apply_url ? normalise(String(row.apply_url)) : ''
+  if (!apply) return false
 
-  const funderTokens = new Set(tokens((row as { funder?: unknown }).funder))
-  const residual = tokens((row as { title?: unknown }).title)
-    .filter(t => !funderTokens.has(t) && !GENERIC_TITLE_WORDS.has(t))
+  // The site root: scheme, host, optional port, nothing after it.
+  if (/^https?:\/\/[^/?#]+$/.test(apply)) return true
 
-  return residual.length > 0
+  const index = row.funding_index_url ? normalise(String(row.funding_index_url)) : ''
+  return Boolean(index) && apply === index
 }
 
 function describesADiscreteFund(row: ReviewRow): boolean {
   if ((row.funding_type ?? '').toLowerCase() === 'in_kind') return false
-
-  const normalise = (u: string) => u.trim().toLowerCase().replace(/\/+$/, '')
-  const apply = row.apply_url ? normalise(String(row.apply_url)) : ''
-  const index = row.funding_index_url ? normalise(String(row.funding_index_url)) : ''
-
-  // THE INDEX GUARD ONLY COVERS A ROW THAT IS ACTUALLY FUNDER-LEVEL.
-  //
-  // Narrowed 2026-08-27, on a row Paul spot-checked. "Change We Seek grants"
-  // (Tudor Trust) had both URLs set to the same page, so this returned false and
-  // the engine's verdict — "the page does not describe this fund", recorded on
-  // 17 August — was thrown away. The row stayed live: a framework Tudor
-  // introduces in a film, sold as a fund, at £5k to £150k against their stated
-  // £100k to £1m, on a link that now redirects elsewhere.
-  //
-  // Pointing at the index is the right shape for "Sainsbury Family Charitable
-  // Trusts" and the wrong shape for a row that names a specific fund, and the
-  // original guard could not tell those apart. The title is what tells them
-  // apart, so the title is what decides.
-  //
-  // 63 live rows were being suppressed this way, and most of the first thirty
-  // named a fund rather than a funder.
-  if (apply && index && apply === index && !namesAFundBeyondTheFunder(row)) return false
-
+  if (landsOnAFrontDoor(row)) return false
   return true
 }
 
