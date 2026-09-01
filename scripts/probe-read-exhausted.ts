@@ -15,6 +15,7 @@
 //   npx tsx --env-file=.env.local scripts/probe-read-exhausted.ts --live-and-wrong [--dry]
 import { createClient } from '@supabase/supabase-js'
 import { fetchPage } from '../src/lib/verification/verify-row'
+import { looksLikeAWall } from '../src/lib/verification/bot-wall'
 
 const DRY = process.argv.includes('--dry')
 const idsArg = process.argv.find(a => a.startsWith('--ids='))
@@ -55,52 +56,17 @@ const CONSECUTIVE_FAILURES_REQUIRED = 2
  *
  * The first version of this probe called six of seven rows readable, because
  * `fetchPage` resolves happily on any 200. What it had actually collected was
- * Arts Council's Cloudflare interstitial (508 chars, "Just a moment…"),
+ * Arts Council's Cloudflare interstitial (508 chars, "Just a moment..."),
  * TechSoup's Imperva rejection (82 chars, "Request unsuccessful. Incapsula
- * incident ID…") and The Hygiene Bank returning zero characters. A probe that
+ * incident ID...") and The Hygiene Bank returning zero characters. A probe that
  * cannot fail is not a probe, and this one could not.
  *
- * LENGTH CANNOT DO THIS ON ITS OWN, and the margin was thinner than it looked.
- * The artscouncil.org.uk interstitial is 491 characters through the proxy — above
- * the 400 floor. It was the signature list that caught it, not the floor, and a
- * wall worded differently would have sailed through as page content and been
- * judged as though it described a fund. A bot check is a successful HTTP response
- * containing prose; size is not the distinguishing feature and never was.
- *
- * So the signatures are the real test and the floor is only a backstop for empty
- * and near-empty responses. Flagged by the second session, which hit the same
- * 491-character page against a 200-character threshold in its own tooling.
+ * THE DETECTOR NOW LIVES IN `src/lib/verification/bot-wall.ts` and this imports
+ * it. It was defined here and NOT in verify-row.ts, which had its own
+ * `text.length < 200`, so for months the probe knew a page was a wall and the
+ * verifier judged the same page as though it described a fund. Two readers with
+ * two answers about one page is the whole defect; one module is the fix.
  */
-const WALL_SIGNATURES = [
-  'just a moment',
-  'performing security verification',
-  'security service to protect',
-  'request unsuccessful',
-  'incapsula incident',
-  'attention required',
-  'verify you are human',
-  'verifying you are human',
-  'checking your browser',
-  'please wait while',
-  'enable javascript and cookies',
-  'access denied',
-  'ddos protection',
-  'unusual traffic',
-  'captcha',
-]
-
-const MIN_USEFUL_CHARS = 400
-
-function looksLikeAWall(text: string): { walled: boolean; why: string } {
-  const t = text.trim()
-  if (t.length === 0) return { walled: true, why: 'the page returned no text at all' }
-  if (t.length < MIN_USEFUL_CHARS) {
-    return { walled: true, why: `only ${t.length} characters returned, below the ${MIN_USEFUL_CHARS} floor` }
-  }
-  const lower = t.slice(0, 1200).toLowerCase()
-  const hit = WALL_SIGNATURES.find(s => lower.includes(s))
-  return hit ? { walled: true, why: `bot-wall signature: "${hit}"` } : { walled: false, why: '' }
-}
 
 async function main() {
   const db = createClient(

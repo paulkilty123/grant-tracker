@@ -9,6 +9,7 @@ import { asStructures, asExclusions, compareStructures, newExclusions, namesJuri
 // it was already part of this module's surface.
 import { PAGE_CAP, excerpt } from '../page-excerpt'
 import { htmlToText } from '../page-text'
+import { looksLikeAWall } from './bot-wall'
 export { excerpt } from '../page-excerpt'
 
 /**
@@ -952,8 +953,25 @@ export async function verifyRow(
       if (forceProxy) break
       continue
     }
-    if (fetched.text.length < 200) {
-      keep({ ...base, usage, outcome: 'fixable_link', gate: { pass: false, failure: 'no_content', detail: `only ${fetched.text.length} chars of text` } })
+    // A BOT WALL MUST NEVER REACH THE MODEL.
+    //
+    // This used to be `fetched.text.length < 200`, and a length test cannot do
+    // this job: Cloudflare's interstitial is 268 characters through the proxy
+    // and 491 direct, Imperva's is 678. All three cleared the floor, were sent
+    // to the model as though they were the funder's page, and came back — quite
+    // correctly — as "this page does not describe that fund". The row was then
+    // stamped `fixable_link: wrong_fund`, which is a claim about the FUNDER made
+    // on the strength of a page nobody read.
+    //
+    // 21 of the 87 rows carrying that verdict on 2026-09-01 were bot walls.
+    //
+    // `no_content` rather than `wrong_fund` is what makes this self-correcting:
+    // it is in the retryable set below, so the proxy gets its turn, and when
+    // that is walled too the row ends as a read failure instead of as an
+    // accusation. It also stops the model call, so a walled host costs nothing.
+    const wall = looksLikeAWall(fetched.text)
+    if (wall.walled) {
+      keep({ ...base, usage, outcome: 'fixable_link', gate: { pass: false, failure: 'no_content', detail: wall.why } })
       if (forceProxy) break
       continue
     }

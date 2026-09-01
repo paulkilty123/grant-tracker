@@ -23,6 +23,7 @@
 import { readGrantFlags, type GrantFlag } from '@/lib/grant-flags'
 import { readStamp, PAGE_READ_KEY, AMOUNT_UNSUPPORTED_NOTE, DEADLINE_UNSUPPORTED_NOTE, type FieldEvidence } from '@/lib/field-evidence'
 import { abstainReason } from '@/lib/verification/abstain'
+import { readBlockedByAWall } from '@/lib/verification/bot-wall'
 import { FEEDBACK_QUEUE_SOURCE } from '@/lib/feedback/triage'
 
 /** Matches cron/reenrich-stale's STALE_AFTER_DAYS. Keep in step. */
@@ -459,6 +460,16 @@ const GENERIC_TITLE_WORDS = new Set([
   'program', 'scheme', 'schemes', 'award', 'awards', 'application',
   'applications', 'apply', 'trust', 'trusts', 'foundation', 'charity',
   'the', 'a', 'an', 'and', 'for', 'of', 'to', 'in', 'uk',
+  // Added 2026-09-01. These label a fund's SIZE OR SHAPE, never its identity:
+  // "Foundation Scotland — Community Fund" and "Sir Jules Thorn Charitable
+  // Trust — General Grants" are front doors written the long way round, and both
+  // were being asked whether their fund appeared on the funder's own index.
+  // "Community" is the one that carries any risk, and it is bounded: the guard
+  // still requires the row to point at the index we recorded for it, so a named
+  // fund like the Co-op Local Community Fund — which points at its own page — is
+  // untouched.
+  'main', 'general', 'core', 'open', 'small', 'large',
+  'community', 'communities', 'hub', 'overview', 'local',
 ])
 
 /**
@@ -548,7 +559,30 @@ export function deriveReviewReasons(row: ReviewRow, todayISO?: string): ReviewRe
   // url_status path already raises it. The existing link and page reasons cover
   // this ground; a second voice saying the same thing only makes the queue look
   // busier than it is.
-  if (pageRead?.note === 'fixable_link: wrong_fund' && describesADiscreteFund(row)) {
+  //
+  // A THIRD GUARD, ADDED 2026-09-01: NOT WHEN NOBODY READ THE PAGE.
+  //
+  // "The page does not describe this fund" is a claim about the FUNDER. It is
+  // only sayable if somebody read the funder's page, and for a row behind a bot
+  // wall nobody has. `verify-row.ts` judged Cloudflare's 268-character
+  // interstitial as page content (its floor was 200 characters, and no
+  // interstitial measured since has been below it), so the model was shown an
+  // interception notice and answered, correctly, that the fund was not on it.
+  //
+  // Measured across the queue on 2026-09-01: 21 of the 87 rows carrying this
+  // reason pointed at a bot wall, and 13 of those already had
+  // `_read_exhausted.reason = 'bot_wall'` recorded against them. The system had
+  // written down that it could not read the page and was blaming the funder in
+  // the same breath.
+  //
+  // The reader is fixed in `verification/bot-wall.ts` so no NEW verdict can be
+  // written this way. This clears the ones already stored, and it withdraws only
+  // the claim about the page: `read_exhausted` still fires, so the row stays
+  // visible under "Nothing more we can do", which is what is actually true
+  // about it.
+  if (pageRead?.note === 'fixable_link: wrong_fund'
+      && describesADiscreteFund(row)
+      && !readBlockedByAWall(row.field_evidence)) {
     reasons.push({
       code: 'page_describes_different_fund', severity: 'critical',
       label: 'The page does not describe this fund',
@@ -759,8 +793,33 @@ export function deriveReviewReasons(row: ReviewRow, todayISO?: string): ReviewRe
   }
 
   // ── Amounts ──────────────────────────────────────────────────────────────
+  //
+  // AN IN-KIND OFFER HAS NO AMOUNT, AND ASKING FOR ONE IS A CATEGORY ERROR.
+  //
+  // Same shape as the `in_kind` guard on `page_describes_different_fund` twenty
+  // lines up, and found the same way. Pro bono legal advice, a donated laptop,
+  // a discounted Microsoft 365 tenancy and a desk in someone's office do not
+  // have a per-applicant pound figure, so `no_amount` fires on every one of
+  // them, files the row under "needs reading", and nothing a reader could ever
+  // find on the page will clear it. The row sits in the queue for ever.
+  //
+  // Measured 2026-09-01: 18 of the 46 rows under "Needs reading" were in-kind,
+  // 16 of them carrying `no_amount`, and 17 carrying nothing else that a re-read
+  // could resolve. That is a third of the section, permanently.
+  //
+  // `amount_zero` is suppressed for the same reason and one step worse: £0 to £0
+  // is what a seeder writes when the answer is "there is no figure", and it then
+  // reads back as a defect. TrustLaw and the National Digital Inclusion Network
+  // both carry it.
+  //
+  // Everything that asserts a WRONG figure still fires. An in-kind row claiming
+  // £5,000 the page does not state is misleading in exactly the way a grant row
+  // would be, and none of the amount_* checks below are touched.
+  const isInKind = String(row.funding_type ?? '').toLowerCase() === 'in_kind'
   const min = row.amount_min, max = row.amount_max
-  if (min !== null && min !== undefined && max !== null && max !== undefined && min > max) {
+  if (isInKind && (max === null || max === undefined || (min === 0 && max === 0))) {
+    // No reason at all: there is nothing missing.
+  } else if (min !== null && min !== undefined && max !== null && max !== undefined && min > max) {
     reasons.push({
       code: 'amount_inverted', severity: 'critical',
       label: 'Amounts inverted',
