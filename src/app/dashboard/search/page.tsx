@@ -665,10 +665,11 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
               </div>
               <div>
                 <div style={{ fontSize: 10, color: '#8A8986', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3, fontFamily: 'var(--font-dm-sans)' }}>Amount</div>
+                {/* The in-kind and programme branches used to be written out
+                    here, and ONLY here. They now live in formatRange, so the
+                    other fourteen surfaces get them too. */}
                 <div style={{ fontSize: 13, color: '#1D3C3E', fontWeight: 500, fontFamily: 'var(--font-dm-sans)' }}>{
-                  !grant.amountMin && !grant.amountMax && grant.fundingType === 'in_kind'    ? 'In-kind'
-                : !grant.amountMin && !grant.amountMax && grant.fundingType === 'programme'  ? 'Programme only'
-                : (formatRange(grant.amountMin, grant.amountMax) || '—')
+                  formatRange(grant.amountMin, grant.amountMax, grant.amountUndisclosed, grant.fundingType) || '—'
                 }</div>
               </div>
               <div>

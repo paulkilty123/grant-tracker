@@ -262,6 +262,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     row.amount_min as number | null,
     row.amount_max as number | null,
     Boolean(row.amount_undisclosed),
+    row.funding_type as string | null,
   )
   const deadlineBit = row.is_rolling
     ? 'rolling deadline'
@@ -471,7 +472,7 @@ export default async function PublicGrantPage({
             <span>
               <span style={{ display: 'block', fontFamily: UI, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.13em', textTransform: 'uppercase', color: T.inkPlace, marginBottom: 6 }}>Amount</span>
               <span style={{ display: 'block', fontFamily: UI, fontSize: 24, fontWeight: 700, letterSpacing: '-0.025em', color: T.deep, lineHeight: 1.1 }}>
-                {formatRange(grant.amount_min as number | null, grant.amount_max as number | null, Boolean(grant.amount_undisclosed))}
+                {formatRange(grant.amount_min as number | null, grant.amount_max as number | null, Boolean(grant.amount_undisclosed), grant.funding_type as string | null)}
               </span>
             </span>
             <span>
