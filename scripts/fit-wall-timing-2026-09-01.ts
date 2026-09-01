@@ -38,6 +38,11 @@
 //
 //   npx tsx scripts/fit-wall-timing-2026-09-01.ts [path]
 //
+// A synthetic file in the real run's shape lives at
+// /private/tmp/claude-501/wall-timing-SYNTHETIC.jsonl — two cadence regimes,
+// five hosts that clear and two that do not. It is what caught the excerpt-cap
+// defect below, before the real data existed to catch it with.
+//
 // Reads nothing but the file. Safe to run on a partial run: the `iter` field
 // says how far it got, and a truncated tail only costs certainty about the long
 // end of the distribution, which is where the ladder already doubles.
@@ -68,16 +73,56 @@ function main() {
 
   const iters = rows.map(r => Number(r.iter)).filter(n => Number.isFinite(n))
   const hosts = new Set(rows.map(r => hostOf(r.url)))
-  console.log(`${rows.length} reads, ${hosts.size} hosts, `
-            + `iterations ${iters.length ? Math.min(...iters) : 0}..${iters.length ? Math.max(...iters) : 0} of 17\n`)
+  // Rounds, not `iter`, and no hardcoded total. The run has been re-planned once
+  // already (17 rounds at 30 minutes became ~29 across two regimes) and `iter`
+  // is not unique across a restart, so both are read from the data.
+  const rounds = new Set(rows.map(r => r.ts)).size
+  console.log(`${rows.length} reads, ${hosts.size} hosts, ${rounds} rounds\n`)
 
   // Classify here rather than reading their verdict. `ok:false` in the file is a
   // transport failure; everything else goes through our own detector.
+  //
+  // ───────────────────────────────────────────────────────────────────────────
+  // THE LENGTH FLOOR MUST NOT BE APPLIED TO A TRUNCATED EXCERPT.
+  //
+  // The collector stores `excerpt` capped at 400 characters, and
+  // MIN_USEFUL_CHARS is 400. So a perfectly readable funder page arrives here
+  // as exactly 400 characters, trims to 399 if the cut lands on a space, and
+  // classifies as `too_short` — a wall that is entirely OUR truncation.
+  //
+  // Caught on a synthetic run before the real data landed, and it would have
+  // been near-invisible in it: every host would have read as walled for all 29
+  // rounds, the fitter would have reported "no host cleared", and that is
+  // exactly what a genuinely stubborn set of walls looks like. An eight-hour
+  // measurement would have produced a confident, wrong, unfalsifiable zero.
+  //
+  // The file also stores `chars`, which is the length of the WHOLE page. That is
+  // the honest input to a length test, so the floor is answered from it and the
+  // excerpt is used only for the signature tests it can actually support.
+  const EXCERPT_CAP = 400
   const judged = rows.map(r => {
-    const v = r.ok === false ? { ok: false as const, reason: 'empty' as UnreadableReason, detail: 'fetch failed' }
-                             : classifyPage(r.excerpt ?? '')
+    const text = r.excerpt ?? ''
+    const truncated = text.length >= EXCERPT_CAP
+    let v = r.ok === false
+      ? { ok: false as const, reason: 'empty' as UnreadableReason, detail: 'fetch failed' }
+      : classifyPage(text)
+    // A `too_short` verdict on a truncated excerpt is about the excerpt, not the
+    // page. The full length decides it.
+    if (!v.ok && v.reason === 'too_short' && truncated && (r.chars ?? 0) >= EXCERPT_CAP) {
+      v = { ok: true as const, text } as never
+    }
     return { ...r, host: hostOf(r.url), walled: !v.ok, reason: v.ok ? null : v.reason }
   }).sort((a, b) => a.ts.localeCompare(b.ts))
+
+  // Say so, loudly, if the collector's cap is at or below our floor. This is a
+  // property of the DATA that silently inverts the result, so it must not be
+  // something a reader has to know to look for.
+  const capped = rows.filter(r => (r.excerpt ?? '').length >= EXCERPT_CAP).length
+  if (capped > 0) {
+    console.log(`NOTE  ${capped} of ${rows.length} excerpts are at the ${EXCERPT_CAP}-char cap, which equals`)
+    console.log(`      MIN_USEFUL_CHARS. The length floor is answered from the stored \`chars\`,`)
+    console.log(`      not the excerpt, or every readable page would read as too_short.\n`)
+  }
 
   const byHost = new Map<string, typeof judged>()
   for (const r of judged) {
