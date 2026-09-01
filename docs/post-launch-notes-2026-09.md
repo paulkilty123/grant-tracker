@@ -74,6 +74,16 @@ judgement CLAUDE.md warns against. The right fix is to bank the index URL for
 these funders (`funding_index_url`), after which the existing rule applies with
 no code change. Post-launch: bank indexes for the 27, one funder at a time.
 
+### The admin amount fields do not say which figure they want
+
+Oxfordshire Thriving in Nature stored £500,000 as `amount_max` for two months
+because a hand edit on 29 July copied the applicant income cap into the award
+slot, and admin trust then pinned it. The Add Grant and edit forms show a bare
+input with no hint of what the page says. Cheap next step: render the figures
+the reader extracted from the page (`field_evidence`) beside the amount inputs,
+labelled, so the slip is visible at the moment it is made. Corrected 1 Sep with
+the page quote; not launch work.
+
 ### `scripts/_tmp-gone.ts`
 
 A diagnostic left from the 410 work. Delete when convenient.
