@@ -39,6 +39,19 @@ export const WALL_SIGNATURES = [
   'attention required',
   'verify you are human',
   'verifying you are human',
+  // Cloudflare Turnstile's wording, which the three above miss by one verb.
+  // nihr.ac.uk/funding says "Let's confirm you are human. Complete the security
+  // check before continuing." and fell through to the length floor as
+  // `too_short`. Found by the watchlist session's timing run on 2026-09-01, and
+  // it distorted the measurement as well as the label: NIHR would have been
+  // recorded as a host that never becomes a wall, i.e. a different population.
+  //
+  // `complete the security check` is the more durable of the two, being the
+  // INSTRUCTION rather than the greeting — a vendor is far more likely to
+  // reword "let's confirm you are human" than the step it is asking for.
+  'confirm you are human',
+  'complete the security check',
+  'before continuing',
   'checking your browser',
   'please wait while',
   'enable javascript and cookies',

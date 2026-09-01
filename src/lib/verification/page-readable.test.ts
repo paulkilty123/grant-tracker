@@ -290,31 +290,116 @@ describe('a lapsed domain being sold is not an empty page', () => {
   })
 })
 
-describe('empty and js_shell are opposite answers, told apart only by the html', () => {
-  it('calls a bare empty response empty, and lets it resolve itself', () => {
-    expect(classifyPage('').ok === false && classifyPage('')).toMatchObject({ reason: 'empty' })
+describe('an absence is never promoted to a permanent fault', () => {
+  it('stays empty, and stays self-resolving', () => {
+    // There WAS a rule here — large HTML plus no text meant `js_shell` — and it
+    // lasted about an hour before both examples it rested on turned out to be
+    // something else. southwark.gov.uk returns 32,609 bytes to a laptop and zero
+    // characters AND zero links to production, so production is not receiving
+    // the document; that is an egress difference, not a rendering one. And
+    // wellcome.org, which the rule was built around, reads perfectly from
+    // production an hour later at 7,702 characters and 48 links. One bad read.
+    //
+    // `js_shell` is not self-resolving, so the inference would have stopped a
+    // watcher permanently on evidence that could not carry it.
+    const bigButSilent = '<html><head><script src="/app.js"></script></head><body><div id="root"></div>'
+      + '<script>/* bundle */</script>'.repeat(200) + '</body></html>'
+    expect(bigButSilent.length).toBeGreaterThan(2_000)
+    const r = classifyPage('', bigButSilent)
+    expect(r.ok === false && r.reason).toBe('empty')
     expect(selfResolving('empty')).toBe(true)
   })
 
-  it('calls a large document that extracts to nothing a shell, and stops retrying it', () => {
-    // wellcome.org returns 135,882 bytes and no text. It is a LIVE row, and
-    // treating it as a flaky empty response would retry it for ever rather than
-    // surfacing that it needs rendering.
-    const shell = '<html><head><script src="/app.js"></script></head><body><div id="root"></div>'
-      + '<script>/* bundle */</script>'.repeat(200) + '</body></html>'
-    expect(shell.length).toBeGreaterThan(2_000)
-    const r = classifyPage('', shell)
-    expect(r.ok === false && r.reason).toBe('js_shell')
-    expect(selfResolving('js_shell')).toBe(false)
-  })
-
-  it('does not mistake the 114-byte parked stub for a shell', () => {
-    // The parked test runs first and the byte thresholds do not overlap.
+  it('still names the two stubs it CAN identify positively', () => {
+    // The difference is positive evidence versus inference from absence.
     expect(classifyPage('', PARKED_STUB).ok === false && classifyPage('', PARKED_STUB))
       .toMatchObject({ reason: 'parked_domain' })
+    expect(classifyPage('', SHEFFIELD_STUB).ok === false && classifyPage('', SHEFFIELD_STUB))
+      .toMatchObject({ reason: 'meta_refresh' })
   })
 
-  it('still says empty when no html was supplied, rather than guessing', () => {
+  it('says empty when no html was supplied, rather than guessing', () => {
     expect(classifyPage('', null).ok === false && classifyPage('', null)).toMatchObject({ reason: 'empty' })
+  })
+})
+
+// ── meta_refresh: the one actionable reason ─────────────────────────────────
+
+/** sheffield.gov.uk/grants, 446 bytes, verified from this machine 2026-09-01. */
+const SHEFFIELD_STUB = `<!DOCTYPE html><html><head><meta charset="UTF-8" />`
+  + `<meta http-equiv="refresh" content="0;url='/your-city-council/budgets-spending-funding/grants'" />`
+  + `<title>Redirecting to /your-city-council/budgets-spending-funding/grants</title></head>`
+  + `<body>Redirecting</body></html>`
+
+/** sutton.gov.uk/w/local-funding, VERBATIM, 646 bytes. Two things make it the
+ *  useful fixture: it clears the stub's old 600-byte bound, AND its body says
+ *  "Redirecting to ...", so it does not extract to zero text the way a hand
+ *  reconstruction implies. A `t.length === 0` gate would miss it entirely. */
+const SUTTON_STUB = `<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="refresh" content="0;url='/committees-and-elections/neighbourhood-and-community-event-grants/local-funding-grant/local-funding'" />
+
+        <title>Redirecting to /committees-and-elections/neighbourhood-and-community-event-grants/local-funding-grant/local-funding</title>
+    </head>
+    <body>
+        Redirecting to <a href="/committees-and-elections/neighbourhood-and-community-event-grants/local-funding-grant/local-funding">/committees-and-elections/neighbourhood-and-community-event-grants/local-funding-grant/local-funding</a>.
+    </body>
+</html>`
+
+describe('a page that moved is not a page that is gone', () => {
+  it('names the destination, because that is the action', () => {
+    const r = classifyPage('', SHEFFIELD_STUB)
+    expect(r.ok === false && r.reason).toBe('meta_refresh')
+    expect(r.ok === false && r.detail).toContain('/your-city-council/budgets-spending-funding/grants')
+  })
+
+  it('catches the one that cleared the old 600-byte bound', () => {
+    // Sutton was reported as `empty` for exactly this reason. No byte bound now,
+    // and the test is that the text is BELOW THE FLOOR rather than absent —
+    // this document's body says "Redirecting to ...", so it is neither.
+    expect(SUTTON_STUB.length).toBeGreaterThan(600)
+    expect(SUTTON_STUB).toContain('Redirecting to')
+    expect(classifyPage('', SUTTON_STUB).ok === false && classifyPage('', SUTTON_STUB))
+      .toMatchObject({ reason: 'meta_refresh' })
+  })
+
+  it('is NOT parked_domain, which it briefly was', () => {
+    // Sheffield was being reported as a domain for sale. Both are stubs; only
+    // one means the funder has gone.
+    expect(classifyPage('', SHEFFIELD_STUB).ok === false && classifyPage('', SHEFFIELD_STUB))
+      .not.toMatchObject({ reason: 'parked_domain' })
+  })
+
+  it('is not self-resolving, but must not be read as "retire"', () => {
+    // A caller that treats every non-self-resolving reason as retire would throw
+    // away five working council pages. The destination is in the detail.
+    expect(selfResolving('meta_refresh')).toBe(false)
+  })
+
+  it('does not fire on a real page that happens to carry a refresh tag', () => {
+    const realPage = '<html><head><meta http-equiv="refresh" content="600"></head><body>'
+      + '<p>Community Grants of up to £5,000 for local groups.</p>'.repeat(20) + '</body></html>'
+    expect(classifyPage('Community Grants of up to £5,000 for local groups. '.repeat(12), realPage).ok).toBe(true)
+  })
+})
+
+describe('bot-wall signatures cover the wording vendors actually use', () => {
+  it('catches Cloudflare Turnstile, which the earlier list missed by one verb', () => {
+    // nihr.ac.uk/funding, verbatim from production. The list had "verify you are
+    // human" and "verifying you are human" but not "confirm", so this fell
+    // through to the length floor and reported `too_short` — the same
+    // false-negative shape as the original 17-of-21, one word away.
+    const NIHR = "Let's confirm you are human Complete the security check before continuing. "
+      + "This step verifies that you are not a bot, which helps to protect your account and prevent spam. Begin"
+    expect(classifyPage(NIHR).ok === false && classifyPage(NIHR)).toMatchObject({ reason: 'bot_wall' })
+  })
+
+  it('catches the instruction as well as the greeting', () => {
+    // "complete the security check" is the more durable of the two: a vendor is
+    // likelier to reword the greeting than the step it is asking for.
+    const reworded = 'Please complete the security check before continuing. ' + 'x '.repeat(300)
+    expect(classifyPage(reworded).ok === false && classifyPage(reworded)).toMatchObject({ reason: 'bot_wall' })
   })
 })

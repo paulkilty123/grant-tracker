@@ -54,6 +54,8 @@ export type UnreadableReason =
   | 'directory_listing'
   /** The domain has lapsed and is being sold. The funder is not coming back to it. */
   | 'parked_domain'
+  /** The page is a meta-refresh stub. The real URL is in the tag: repoint, do not retire. */
+  | 'meta_refresh'
   /** A shell that renders nothing without a browser. */
   | 'js_shell'
   /** Nothing at all came back. */
@@ -125,9 +127,27 @@ const PARKED_SIGNATURES = [
   'domain is available for purchase',
   'hugedomains',
   'afternic',
+  'sedoparking',
   'sedo.com',
   'dan.com',
 ]
+
+/**
+ * Sedo's lander titles itself `<domain> - <name> Resources and Information.`
+ *
+ * mustardseedmaze.com serves exactly that and NONE of the sale phrases above
+ * appear in what production extracts, so the signature list missed it entirely.
+ * Matched as a pattern rather than a phrase because "resources and information"
+ * on its own is ordinary English that a funder could reasonably use; anchored to
+ * a bare domain and a dash, it is the vendor's template.
+ */
+const PARKED_TITLE = /\b[a-z0-9-]+\.(com|co\.uk|org|net|io|uk)\s*[-–—]\s*[^.]{0,60}resources and information/i
+
+/**
+ * An attribute only ad-serving parking pages carry. Present in the raw HTML of
+ * mustardseedmaze.com and invisible after extraction.
+ */
+const PARKED_HTML = /data-adblockkey=/i
 
 /**
  * A document whose only content is a redirect.
@@ -142,13 +162,29 @@ const PARKED_SIGNATURES = [
  */
 const REDIRECT_ONLY_BYTES = 600
 
+const REDIRECT_STUB = /window\.location|location\.href|location\.replace/i
+
 /**
- * Above this, a document that extracts to no text is a client-side shell rather
- * than an empty response. Set well clear of the redirect stub's 114 bytes and
- * well below the smallest real case measured, 35,378.
+ * A page that is nothing but `<meta http-equiv="refresh">`.
+ *
+ * SEPARATED FROM `parked_domain` ON 2026-09-01, having briefly been folded into
+ * it, which was wrong in both directions. sheffield.gov.uk/grants is 446 bytes
+ * of meta refresh and was being reported as a domain for sale; sutton.gov.uk's
+ * is 646 bytes and cleared the stub's byte bound entirely, so it was reported as
+ * an empty page. Neither is a parked domain and neither is empty: both are
+ * COUNCIL PAGES THAT MOVED, and the real pages behind them are 162,199 and
+ * 51,651 bytes.
+ *
+ * This is the actionable reason in the set. Every other one says a page cannot
+ * be read; this one says where the page went, because the destination is right
+ * there in the tag. We follow HTTP 3xx and not meta refresh, so anything reading
+ * a council site hits this — the watchlist found five in a single pass.
+ *
+ * No byte bound, deliberately. The test is that the document produced NO TEXT,
+ * which is what a stub does; a real page that happens to carry a refresh tag has
+ * content, and its content is what matters.
  */
-const SHELL_HTML_BYTES = 2_000
-const REDIRECT_STUB = /window\.location|location\.href|location\.replace|http-equiv=["']?refresh/i
+const META_REFRESH = /<meta[^>]+http-equiv=["']?refresh["']?[^>]*content=["'][^"']*url=['"]?([^"'>]+)/i
 
 /** Below this, a page has not said enough to classify. A BACKSTOP, not the test. */
 export const MIN_USEFUL_CHARS = 400
@@ -165,28 +201,50 @@ export function classifyPage(
   // it would otherwise fall into — and `empty` is self-resolving, so a dead
   // domain would rotate for ever.
   const raw = (html ?? '').trim()
+
+  // A page that moved. Checked first because the answer is a URL rather than a
+  // verdict, and because both other stub tests would claim it wrongly.
+  //
+  // BELOW THE FLOOR, not zero. The first version tested `t.length === 0` and
+  // would have missed the real thing: sutton.gov.uk/w/local-funding is 646 bytes
+  // and its body says "Redirecting to /committees-and-elections/...", so it
+  // extracts to roughly 250 characters rather than none. Production happened to
+  // report zero for that URL, which is what made the wrong condition look right.
+  // A stub's only text is its own redirect notice, so the floor is the honest
+  // test and a real page clears it.
+  const moved = t.length < MIN_USEFUL_CHARS ? raw.match(META_REFRESH) : null
+  if (moved) {
+    return { ok: false, reason: 'meta_refresh',
+             detail: `the page redirects to ${moved[1].trim().slice(0, 200)} via a meta refresh, which we do not follow` }
+  }
+
   if (raw && raw.length <= REDIRECT_ONLY_BYTES && REDIRECT_STUB.test(raw) && t.length === 0) {
     return { ok: false, reason: 'parked_domain',
              detail: `${raw.length} bytes whose only content is a redirect, which is how a parked domain answers` }
   }
 
-  // A LARGE DOCUMENT THAT EXTRACTS TO NOTHING IS A SHELL, NOT AN EMPTY RESPONSE.
+  // WHY THERE IS NO "LARGE HTML AND NO TEXT MEANS A SHELL" RULE HERE.
   //
-  // The two are opposite answers to the question that matters: `empty` is
-  // self-resolving — The Hygiene Bank returned zero characters and a full page
-  // four minutes later — while `js_shell` is a property of how the site is
-  // built and will not fix itself. Told apart only by the raw HTML, because the
-  // extracted text is identical.
+  // There was one, for about an hour on 2026-09-01, and it was wrong in the
+  // destructive direction. `js_shell` is NOT self-resolving, so labelling a page
+  // that way stops a watcher permanently — and the inference cannot support
+  // that weight, because at least three different things produce a big document
+  // with no extractable text:
   //
-  // Measured across the catalogue 2026-09-01: three hosts return zero text and
-  // 135,882, 57,033 and 35,378 bytes of HTML — wellcome.org, sutton.gov.uk and
-  // southwark.gov.uk. Wellcome is a LIVE row, and calling it a flaky empty
-  // response would have had it retried for ever instead of rendered.
-  if (t.length === 0 && raw.length >= SHELL_HTML_BYTES) {
-    return { ok: false, reason: 'js_shell',
-             detail: `${raw.length} bytes of HTML that extract to no text, so the page is rendered client-side` }
-  }
-
+  //   a genuine client-side shell
+  //   a page our egress is blocked from, which still answers with something
+  //   a page that read badly once
+  //
+  // Both of the examples it was built on turned out to be the other two.
+  // southwark.gov.uk returns 32,609 bytes to this machine and ZERO characters
+  // AND ZERO LINKS to production, so the document production receives is not the
+  // document — that is an egress difference, not a rendering one. And
+  // wellcome.org, which the rule was written around, reads perfectly from
+  // production an hour later: 7,702 characters and 48 links. One bad read.
+  //
+  // So an absence stays `empty`, which is self-resolving and keeps the row in
+  // rotation. Naming something a permanent fault requires POSITIVE evidence of
+  // that fault, and "no text came out" is evidence of nothing in particular.
   if (t.length === 0) return { ok: false, reason: 'empty', detail: 'the page returned no text at all' }
 
   const head = t.slice(0, IDENTIFYING_WINDOW).toLowerCase()
@@ -202,6 +260,9 @@ export function classifyPage(
   const parked = PARKED_SIGNATURES.find(p => head.includes(p))
   if (parked) {
     return { ok: false, reason: 'parked_domain', detail: `the domain is being sold: "${parked}"` }
+  }
+  if (PARKED_TITLE.test(head) || (raw && PARKED_HTML.test(raw.slice(0, 2000)))) {
+    return { ok: false, reason: 'parked_domain', detail: 'a registrar parking page, by its title and markup' }
   }
 
   // 3. The server is serving a filesystem. thefsi.org, 133 characters.
@@ -295,12 +356,17 @@ const SELF_RESOLVING: ReadonlySet<UnreadableReason> = new Set<UnreadableReason>(
 /**
  * Reasons a caller may stop watching for. Everything else keeps rotating.
  *
- * `js_shell`, `directory_listing` and `parked_domain` are the three: a page that
- * renders nothing without a browser is a property of how the site is built, a
- * bare directory index means the site is not serving a site at all, and a domain
- * a registrar is selling is not one the funder is coming back to. None changes
- * without somebody deploying or buying something, and if they do, intake will
- * find the funder again.
+ * `js_shell`, `directory_listing`, `parked_domain` and `meta_refresh` are the
+ * four: a page that renders nothing without a browser is a property of how the
+ * site is built, a bare directory index means the site is not serving a site at
+ * all, a domain a registrar is selling is not one the funder is coming back to,
+ * and a stub that redirects will go on redirecting until somebody repoints the
+ * row. None changes on its own.
+ *
+ * `meta_refresh` is the odd one: not self-resolving, but not a reason to RETIRE
+ * either. The detail carries the destination, so the action is to repoint. A
+ * caller that treats every non-self-resolving reason as "retire" would throw
+ * away five working council pages, which is what the watchlist nearly did.
  */
 export function selfResolving(reason: UnreadableReason): boolean {
   return SELF_RESOLVING.has(reason)
@@ -315,7 +381,8 @@ export function selfResolving(reason: UnreadableReason): boolean {
  * licenses a statement about what the funder does or does not offer.
  */
 const NOTHING_WAS_READ = new Set<UnreadableReason>([
-  'bot_wall', 'soft_404', 'directory_listing', 'parked_domain', 'js_shell', 'empty', 'too_short',
+  'bot_wall', 'soft_404', 'directory_listing', 'parked_domain', 'meta_refresh',
+  'js_shell', 'empty', 'too_short',
 ])
 
 export function nothingWasRead(reason: UnreadableReason): boolean {
