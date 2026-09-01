@@ -51,7 +51,25 @@ import { readFileSync, existsSync } from 'node:fs'
 import { classifyPage, selfResolving, type UnreadableReason } from '../src/lib/verification/page-readable'
 import { HOST_BACKOFF_HOURS } from '../src/lib/verification/host-backoff'
 
-const FILE = process.argv[2] ?? '/private/tmp/claude-501/wall-timing-2026-09-01.jsonl'
+/**
+ * One or more JSONL files, concatenated.
+ *
+ * The collection is deliberately more than one process: adding a host to a
+ * running series would be a discontinuity in it, whereas a parallel process
+ * writing its own file is none — and two processes appending to one descriptor
+ * over eight hours is a corruption risk worth avoiding. So coop.co.uk, the
+ * second Imperva host, runs beside the main seven at the same cadence and lands
+ * in its own file.
+ *
+ * Defaults to every wall-timing file in the shared directory, so a reader does
+ * not have to know how many there are.
+ */
+const DEFAULT_FILES = [
+  '/private/tmp/claude-501/wall-timing-2026-09-01.jsonl',
+  '/private/tmp/claude-501/wall-timing-2026-09-01-imperva2.jsonl',
+]
+const FILES = process.argv.slice(2).filter(a => !a.startsWith('-'))
+const SOURCES = FILES.length ? FILES : DEFAULT_FILES
 
 type Row = {
   ts: string; iter: number; url: string
@@ -82,25 +100,46 @@ const hostOf = (u: string) => u.toLowerCase().replace(/^https?:\/\/(www\.)?/, ''
  * the vendor's policy, and the answer generalises to every walled host we ever
  * meet rather than to these seven.
  */
-function vendorOf(text: string): string {
+function productOf(text: string): { vendor: string; product: string } {
   const t = (text ?? '').toLowerCase()
-  if (t.includes('incapsula') || t.includes('request unsuccessful')) return 'Imperva'
-  if (t.includes('pardon our interruption'))                          return 'Imperva/Distil'
+  // ── Imperva. TWO PRODUCTS, ONE VENDOR, AND THE DISTINCTION NEARLY BROKE THE
+  //    EXPERIMENT. Barnet answers "Request unsuccessful. Incapsula incident ID";
+  //    coop.co.uk answers "Pardon Our Interruption", which is Distil, acquired
+  //    by Imperva in 2019. Keyed on the phrase alone they landed in separate
+  //    buckets, so the simultaneity test would never have compared them — and
+  //    comparing that pair is the entire reason the second host was added.
+  //
+  //    Not collapsed either, because they were separate products with separate
+  //    block logic and may still be. So: grouped by VENDOR for the policy test,
+  //    with the PRODUCT kept visible so a reader can see they are different
+  //    challenges rather than assume one implementation.
+  if (t.includes('incapsula') || t.includes('request unsuccessful')) return { vendor: 'Imperva', product: 'Incapsula' }
+  if (t.includes('pardon our interruption')
+   || t.includes('made us think you were a bot'))                    return { vendor: 'Imperva', product: 'Distil' }
+  // ── Cloudflare. Four challenge types, one policy engine.
   if (t.includes('performing security verification')
-   || t.includes('security service to protect'))                      return 'Cloudflare managed'
-  if (t.includes('enable javascript and cookies'))                    return 'Cloudflare JS'
+   || t.includes('security service to protect'))                     return { vendor: 'Cloudflare', product: 'managed challenge' }
+  if (t.includes('enable javascript and cookies'))                   return { vendor: 'Cloudflare', product: 'JS challenge' }
   if (t.includes('confirm you are human')
-   || t.includes('complete the security check'))                      return 'Cloudflare Turnstile'
-  if (t.includes('just a moment'))                                    return 'Cloudflare IUAM'
-  if (t.includes('attention required'))                               return 'Cloudflare block'
-  return 'unclassified'
+   || t.includes('complete the security check'))                     return { vendor: 'Cloudflare', product: 'Turnstile' }
+  if (t.includes('just a moment'))                                   return { vendor: 'Cloudflare', product: 'IUAM' }
+  if (t.includes('attention required'))                              return { vendor: 'Cloudflare', product: 'block page' }
+  return { vendor: 'unclassified', product: 'unclassified' }
 }
 
+const vendorOf = (text: string) => productOf(text).vendor
+
 function main() {
-  if (!existsSync(FILE)) { console.error(`no file at ${FILE}`); process.exit(1) }
-  const rows = readFileSync(FILE, 'utf8').split('\n').filter(Boolean)
-    .map(l => { try { return JSON.parse(l) as Row } catch { return null } })
-    .filter((r): r is Row => !!r && !!r.ts && !!r.url)
+  const present = SOURCES.filter(f => existsSync(f))
+  if (present.length === 0) { console.error(`no file at ${SOURCES.join(' or ')}`); process.exit(1) }
+  for (const f of SOURCES) {
+    if (!existsSync(f)) console.log(`(not present, skipped: ${f})`)
+  }
+  const rows = present.flatMap(f =>
+    readFileSync(f, 'utf8').split('\n').filter(Boolean)
+      .map(l => { try { return JSON.parse(l) as Row } catch { return null } })
+      .filter((r): r is Row => !!r && !!r.ts && !!r.url))
+  console.log(`sources: ${present.length} file(s)`)
 
   if (rows.length === 0) {
     console.log('File is empty. The run writes one object per host per read; nothing yet.')
@@ -168,7 +207,7 @@ function main() {
 
   // Each clear is a BRACKET: `lo` is the last time we saw it walled, `hi` the
   // first time we saw it open. The truth is somewhere between.
-  const clears: { host: string; lo: number; hi: number; from: UnreadableReason; vendor: string }[] = []
+  const clears: { host: string; lo: number; hi: number; from: UnreadableReason; vendor: string; product: string }[] = []
   const stillUp: { host: string; hours: number; reason: UnreadableReason }[] = []
 
   // The cadence is a property of the run, not of the design, so it is measured.
@@ -191,12 +230,24 @@ function main() {
   }
   console.log('WHO IS DOING THE BLOCKING')
   for (const [v, hs] of Array.from(vendors.entries()).sort((a, b) => b[1].length - a[1].length)) {
-    console.log(`  ${v.padEnd(24)} ${String(hs.length).padStart(2)}  ${hs.sort().join(', ')}`)
+    console.log(`  ${v.padEnd(14)} ${String(hs.length).padStart(2)} host(s)`)
+    for (const h of hs.sort()) {
+      const prod = productOf(byHost.get(h)![0].excerpt ?? '').product
+      console.log(`       ${h.padEnd(30)} ${prod}`)
+    }
   }
+  // VENDOR, not product — the six Cloudflare hosts run four different challenge
+  // types, so calling them "one product" was simply false once the two levels
+  // were separated. The correlation risk is at the vendor level, because that is
+  // where a block-duration policy would live.
   const biggest = Math.max(...Array.from(vendors.values()).map(h => h.length))
   if (biggest > 1) {
-    console.log(`\n  ${biggest} hosts share one product, so their clears are NOT independent`)
-    console.log('  observations. Read the grouped section below, not the pooled percentile.')
+    const worst = Array.from(vendors.entries()).sort((a, b) => b[1].length - a[1].length)[0]
+    const prods = new Set(worst[1].map(h => productOf(byHost.get(h)![0].excerpt ?? '').product))
+    console.log(`\n  ${biggest} hosts sit behind ${worst[0]}`
+              + `${prods.size > 1 ? ` across ${prods.size} challenge types` : ''}, so their clears may`)
+    console.log('  NOT be independent observations. Read the grouped section below rather')
+    console.log('  than the pooled percentile.')
   }
   console.log('')
 
@@ -211,7 +262,8 @@ function main() {
     if (reads[0].walled && openIdx > 0) {
       const hi = (Date.parse(reads[openIdx].ts) - t0) / 3_600_000
       const lo = (Date.parse(reads[openIdx - 1].ts) - t0) / 3_600_000
-      clears.push({ host, lo, hi, from: reads[0].reason!, vendor: vendorOf(reads[0].excerpt ?? '') })
+      const pv = productOf(reads[0].excerpt ?? '')
+      clears.push({ host, lo, hi, from: reads[0].reason!, vendor: pv.vendor, product: pv.product })
       console.log(`  ${host.padEnd(30)} ${strip}   cleared between ${lo.toFixed(2)}h and ${hi.toFixed(2)}h`)
     } else if (reads[0].walled) {
       stillUp.push({ host, hours: span, reason: reads[0].reason! })
@@ -288,10 +340,11 @@ function main() {
     const spread = Math.max(...his) - Math.min(...los)
     console.log(`  ${v}  (${cs.length} host${cs.length === 1 ? '' : 's'} cleared)`)
     for (const c of cs.sort((a, b) => a.lo - b.lo)) {
-      console.log(`     ${c.host.padEnd(28)} ${c.lo.toFixed(2)}h to ${c.hi.toFixed(2)}h`)
+      console.log(`     ${c.host.padEnd(28)} ${c.lo.toFixed(2)}h to ${c.hi.toFixed(2)}h   (${c.product})`)
     }
     if (cs.length === 1) {
       console.log('     One host. Says nothing about the vendor, only about this site.')
+      console.log('     Two is the minimum that can test a policy.')
     } else {
       // "Together" means TWO brackets wide, not one. Two hosts under an
       // identical timeout still land one sampling step apart if one clears just
