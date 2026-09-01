@@ -1001,7 +1001,11 @@ export async function verifyRow(
     // branch, so the compiler will not let a future edit hand an interception
     // notice to `runModel`. The old shape was a boolean beside a string, and a
     // boolean is something you can forget to check.
-    const read = classifyPage(fetched.text)
+    // `fetched.source` is the RAW response — HTML on a direct read, markdown
+    // through the proxy. Passed because the parked-domain stub is invisible
+    // after text extraction: strip the script and nothing is left, so the
+    // classifier would see `empty` and a dead domain would keep being retried.
+    const read = classifyPage(fetched.text, fetched.via === 'direct' ? fetched.source : null)
     opts.hostGuard?.record(row.apply_url, read.ok ? null : read.reason)
     if (!read.ok) {
       // `no_content` rather than `wrong_fund` is what makes this

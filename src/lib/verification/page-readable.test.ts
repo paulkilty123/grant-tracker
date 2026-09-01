@@ -210,3 +210,111 @@ describe('selfResolving and isHostLevel are different questions', () => {
     expect(isHostLevel('bot_wall')).toBe(true)
   })
 })
+
+// ── parked_domain ───────────────────────────────────────────────────────────
+//
+// pilabs.co, verified from production on 2026-09-01. Two halves, each defeating
+// a different check, and the second is the dangerous one.
+
+/** The real 114-byte response. Extracts to zero text: htmlToText strips scripts. */
+const PARKED_STUB = '<!DOCTYPE html><html><head><script>window.onload=function(){window.location.href="/lander"}</script></head></html>'
+
+/** The real /lander text, 694 chars of prose that passes every other check. */
+const PARKED_LANDER = 'Excellent 4.5 out of 5 The domain name Pilabs.co is for sale! Get this domain '
+  + 'Premium Verified Domain Fast transfer Own it today for $1,488, or select Lease to Own. Buy now '
+  + 'USD$1,488 Lease to own USD$248 / month Next Free transaction support Secure payments Local '
+  + 'currency available in cart at checkout Need help? Give us a call.480-651-9741 Safe & secure '
+  + 'transactions Fast & easy transfers Hassle free payments The simple, and safe way to buy domain '
+  + 'names No matter what kind of domain you want to buy or lease, we make the transfer simple and '
+  + 'safe. Copyright © 2026 GoDaddy Operating Company, LLC. All Rights Reserved.'
+
+describe('a lapsed domain being sold is not an empty page', () => {
+  it('WITHOUT the html, the stub is indistinguishable from a flaky fetch', () => {
+    // This is the bug, stated as its own test. `empty` is self-resolving, so a
+    // dead domain classified this way would rotate for ever.
+    const r = classifyPage('')
+    expect(r.ok).toBe(false)
+    expect(r.ok === false && r.reason).toBe('empty')
+    expect(selfResolving('empty')).toBe(true)
+  })
+
+  it('WITH the html, it is named for what it is', () => {
+    const r = classifyPage('', PARKED_STUB)
+    expect(r.ok).toBe(false)
+    expect(r.ok === false && r.reason).toBe('parked_domain')
+    expect(selfResolving('parked_domain')).toBe(false)
+  })
+
+  it('catches the lander, which is 694 chars of real prose', () => {
+    // The dangerous half: without this it reads as a healthy page and gets
+    // fingerprinted as the funder's own.
+    expect(PARKED_LANDER.length).toBeGreaterThan(MIN_USEFUL_CHARS)
+    const r = classifyPage(PARKED_LANDER)
+    expect(r.ok === false && r.reason).toBe('parked_domain')
+  })
+
+  it('catches the other registrars by name', () => {
+    for (const s of ['This domain is for sale. ', 'Buy this domain. ', 'HugeDomains.com. ']) {
+      const page = s + 'Filler. '.repeat(80)
+      expect(classifyPage(page).ok, s).toBe(false)
+    }
+  })
+
+  it('does NOT fire on a funder that talks about domain names', () => {
+    // The pairing is required: "domain" alone is ordinary on a tech-for-good
+    // funder's page, so every signature carries the sale and not just the noun.
+    const page = 'Digital Inclusion Fund. We fund domain registration, hosting and website costs '
+      + 'for small charities. Grants of up to £2,000 cover a domain name, a year of hosting and '
+      + 'basic training. Who can apply: registered charities with income under £250,000. The next '
+      + 'closing date is 30 November 2026 and our panel meets quarterly. We do not fund '
+      + 'individuals, statutory bodies, or costs already incurred before the date of the award. '
+      + 'Applications are assessed by our grants panel and decisions are usually made within eight weeks.'
+    expect(page.length).toBeGreaterThan(MIN_USEFUL_CHARS)
+    expect(classifyPage(page).ok).toBe(true)
+  })
+
+  it('does not treat a real page carrying a redirect script as parked', () => {
+    // The byte bound is what separates "a document that IS a redirect" from "a
+    // document that contains one".
+    const realPage = '<html><body>' + '<p>Community Grants of up to £5,000.</p>'.repeat(40)
+      + '<script>window.location.href="/thanks"</script></body></html>'
+    expect(realPage.length).toBeGreaterThan(600)
+    expect(classifyPage('Community Grants of up to £5,000. '.repeat(20), realPage).ok).toBe(true)
+  })
+
+  it('a stub with real text alongside it is not parked', () => {
+    // Requires zero extracted text. A short page that says something is judged
+    // on what it says.
+    expect(classifyPage('Grants of up to £2,000 for local groups.', PARKED_STUB).ok === false
+      && classifyPage('Grants of up to £2,000 for local groups.', PARKED_STUB)).toMatchObject({ reason: 'too_short' })
+  })
+})
+
+describe('empty and js_shell are opposite answers, told apart only by the html', () => {
+  it('calls a bare empty response empty, and lets it resolve itself', () => {
+    expect(classifyPage('').ok === false && classifyPage('')).toMatchObject({ reason: 'empty' })
+    expect(selfResolving('empty')).toBe(true)
+  })
+
+  it('calls a large document that extracts to nothing a shell, and stops retrying it', () => {
+    // wellcome.org returns 135,882 bytes and no text. It is a LIVE row, and
+    // treating it as a flaky empty response would retry it for ever rather than
+    // surfacing that it needs rendering.
+    const shell = '<html><head><script src="/app.js"></script></head><body><div id="root"></div>'
+      + '<script>/* bundle */</script>'.repeat(200) + '</body></html>'
+    expect(shell.length).toBeGreaterThan(2_000)
+    const r = classifyPage('', shell)
+    expect(r.ok === false && r.reason).toBe('js_shell')
+    expect(selfResolving('js_shell')).toBe(false)
+  })
+
+  it('does not mistake the 114-byte parked stub for a shell', () => {
+    // The parked test runs first and the byte thresholds do not overlap.
+    expect(classifyPage('', PARKED_STUB).ok === false && classifyPage('', PARKED_STUB))
+      .toMatchObject({ reason: 'parked_domain' })
+  })
+
+  it('still says empty when no html was supplied, rather than guessing', () => {
+    expect(classifyPage('', null).ok === false && classifyPage('', null)).toMatchObject({ reason: 'empty' })
+  })
+})

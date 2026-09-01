@@ -75,6 +75,11 @@ export const MAX_BACKOFF_HOURS = 168
  */
 const HOST_LEVEL: ReadonlySet<UnreadableReason> = new Set<UnreadableReason>([
   'bot_wall', 'js_shell', 'empty', 'too_short',
+  // A sold domain is dead for every path on it, so eleven rows should discover
+  // that once rather than eleven times. The backoff is the wrong END state — the
+  // rows want retiring, not delaying — but it is the right thing to do until a
+  // human rules, and the cap means it can never become a silent permanent skip.
+  'parked_domain',
 ])
 
 export function isHostLevel(reason: UnreadableReason): boolean {

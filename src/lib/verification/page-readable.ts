@@ -52,6 +52,8 @@ export type UnreadableReason =
   | 'soft_404'
   /** A bare web-server directory index. The site is not serving a site any more. */
   | 'directory_listing'
+  /** The domain has lapsed and is being sold. The funder is not coming back to it. */
+  | 'parked_domain'
   /** A shell that renders nothing without a browser. */
   | 'js_shell'
   /** Nothing at all came back. */
@@ -78,11 +80,113 @@ const NOT_FOUND_PHRASES = [
 /** A web server serving its filesystem instead of a site. */
 const DIRECTORY_INDEX = /^\s*index of \//i
 
+/**
+ * The domain lapsed and a registrar is selling it.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * WHY THIS IS ITS OWN REASON RATHER THAN `empty` OR `directory_listing`
+ *
+ * Found by the watchlist session on 2026-09-01 and verified here. pilabs.co
+ * serves 114 bytes whose entire body is
+ *
+ *   <script>window.onload=function(){window.location.href="/lander"}</script>
+ *
+ * and `/lander` is GoDaddy's "The domain name Pilabs.co is for sale!" page.
+ * Both halves defeat a different check, and the second is the dangerous one:
+ *
+ *   the stub    extracts to ZERO TEXT, because htmlToText strips scripts. So it
+ *               lands on `empty` — which this module now treats as SELF-RESOLVING,
+ *               on the Hygiene Bank evidence. A parked domain would therefore
+ *               rotate for ever, which is the opposite of what it needs.
+ *   the lander  is 694 characters of real prose and passes every check there is.
+ *               Anything that follows the redirect fingerprints a domain-sale
+ *               page as the funder's own.
+ *
+ * The second is the same class as the bot wall: a page that looks like content
+ * and is not the funder's. That is what earns it a name rather than a fold into
+ * `directory_listing` — the action is the same, retire, but neither the
+ * detector nor the admin line can be shared, and "directory listing" on a
+ * domain-sale page would be a false explanation.
+ *
+ * THE PAIRING IS REQUIRED. "domain" alone appears on funder pages — a tech-for-
+ * good funder discussing domain names is ordinary — so every signature here
+ * carries the sale, not just the noun.
+ */
+const PARKED_SIGNATURES = [
+  'domain name is for sale',
+  'this domain is for sale',
+  'domain is for sale',
+  'is for sale!',
+  'buy this domain',
+  'lease to own',
+  'the domain name',
+  'domain for sale',
+  'this domain has expired',
+  'domain is available for purchase',
+  'hugedomains',
+  'afternic',
+  'sedo.com',
+  'dan.com',
+]
+
+/**
+ * A document whose only content is a redirect.
+ *
+ * Needs the RAW HTML, because text extraction is exactly what destroys the
+ * evidence: strip the script and nothing is left, so the caller sees `empty` and
+ * cannot tell a parked domain from a flaky fetch. Optional, so a caller with
+ * only text keeps the previous behaviour.
+ *
+ * Bounded by length: a real page can carry a redirect script somewhere in a
+ * large document, and this is only interested in one that IS the document.
+ */
+const REDIRECT_ONLY_BYTES = 600
+
+/**
+ * Above this, a document that extracts to no text is a client-side shell rather
+ * than an empty response. Set well clear of the redirect stub's 114 bytes and
+ * well below the smallest real case measured, 35,378.
+ */
+const SHELL_HTML_BYTES = 2_000
+const REDIRECT_STUB = /window\.location|location\.href|location\.replace|http-equiv=["']?refresh/i
+
 /** Below this, a page has not said enough to classify. A BACKSTOP, not the test. */
 export const MIN_USEFUL_CHARS = 400
 
-export function classifyPage(text: string | null | undefined): PageRead {
+export function classifyPage(
+  text: string | null | undefined,
+  /** The raw HTML, when the caller has it. Only the parked-domain stub needs it:
+   *  the signal is a script tag, and extracting text destroys it. */
+  html?: string | null,
+): PageRead {
   const t = (text ?? '').trim()
+
+  // A redirect stub is checked BEFORE the empty test, because that is the test
+  // it would otherwise fall into — and `empty` is self-resolving, so a dead
+  // domain would rotate for ever.
+  const raw = (html ?? '').trim()
+  if (raw && raw.length <= REDIRECT_ONLY_BYTES && REDIRECT_STUB.test(raw) && t.length === 0) {
+    return { ok: false, reason: 'parked_domain',
+             detail: `${raw.length} bytes whose only content is a redirect, which is how a parked domain answers` }
+  }
+
+  // A LARGE DOCUMENT THAT EXTRACTS TO NOTHING IS A SHELL, NOT AN EMPTY RESPONSE.
+  //
+  // The two are opposite answers to the question that matters: `empty` is
+  // self-resolving — The Hygiene Bank returned zero characters and a full page
+  // four minutes later — while `js_shell` is a property of how the site is
+  // built and will not fix itself. Told apart only by the raw HTML, because the
+  // extracted text is identical.
+  //
+  // Measured across the catalogue 2026-09-01: three hosts return zero text and
+  // 135,882, 57,033 and 35,378 bytes of HTML — wellcome.org, sutton.gov.uk and
+  // southwark.gov.uk. Wellcome is a LIVE row, and calling it a flaky empty
+  // response would have had it retried for ever instead of rendered.
+  if (t.length === 0 && raw.length >= SHELL_HTML_BYTES) {
+    return { ok: false, reason: 'js_shell',
+             detail: `${raw.length} bytes of HTML that extract to no text, so the page is rendered client-side` }
+  }
+
   if (t.length === 0) return { ok: false, reason: 'empty', detail: 'the page returned no text at all' }
 
   const head = t.slice(0, IDENTIFYING_WINDOW).toLowerCase()
@@ -92,23 +196,31 @@ export function classifyPage(text: string | null | undefined): PageRead {
   const wall = botWallSignature(t)
   if (wall) return { ok: false, reason: 'bot_wall', detail: `bot-wall signature: "${wall}"` }
 
-  // 2. The server is serving a filesystem. thefsi.org, 133 characters.
+  // 2. A registrar selling the domain. Checked before the 404 and directory
+  //    tests because a lander is long, prose-rich, and would otherwise sail
+  //    through as a readable page.
+  const parked = PARKED_SIGNATURES.find(p => head.includes(p))
+  if (parked) {
+    return { ok: false, reason: 'parked_domain', detail: `the domain is being sold: "${parked}"` }
+  }
+
+  // 3. The server is serving a filesystem. thefsi.org, 133 characters.
   if (DIRECTORY_INDEX.test(t)) {
     return { ok: false, reason: 'directory_listing', detail: 'a bare web-server directory index, not a site' }
   }
 
-  // 3. A 200 that says 404. Needs the numeral AND the wording, in the window.
+  // 4. A 200 that says 404. Needs the numeral AND the wording, in the window.
   if (/\b404\b/.test(head) && NOT_FOUND_PHRASES.some(p => head.includes(p))) {
     return { ok: false, reason: 'soft_404', detail: 'HTTP 200 on a page that says it is a 404' }
   }
 
-  // 4. A shell that needs a browser. Distinct from a wall: nobody is blocking
+  // 5. A shell that needs a browser. Distinct from a wall: nobody is blocking
   //    us, the page simply has no server-rendered content.
   if (t.length < MIN_USEFUL_CHARS && /enable\s+(js|javascript)|requires javascript|javascript is (required|disabled)/i.test(head)) {
     return { ok: false, reason: 'js_shell', detail: 'renders nothing without a browser' }
   }
 
-  // 5. The backstop. Anything this short has not told us what it is.
+  // 6. The backstop. Anything this short has not told us what it is.
   if (t.length < MIN_USEFUL_CHARS) {
     return { ok: false, reason: 'too_short', detail: `only ${t.length} characters returned, below the ${MIN_USEFUL_CHARS} floor` }
   }
@@ -183,11 +295,12 @@ const SELF_RESOLVING: ReadonlySet<UnreadableReason> = new Set<UnreadableReason>(
 /**
  * Reasons a caller may stop watching for. Everything else keeps rotating.
  *
- * `js_shell` and `directory_listing` are the two: a page that renders nothing
- * without a browser is a property of how the site is built, and a bare directory
- * index means the site is not serving a site at all. Neither changes without
- * somebody deploying something, and if they do, intake will find the funder
- * again.
+ * `js_shell`, `directory_listing` and `parked_domain` are the three: a page that
+ * renders nothing without a browser is a property of how the site is built, a
+ * bare directory index means the site is not serving a site at all, and a domain
+ * a registrar is selling is not one the funder is coming back to. None changes
+ * without somebody deploying or buying something, and if they do, intake will
+ * find the funder again.
  */
 export function selfResolving(reason: UnreadableReason): boolean {
   return SELF_RESOLVING.has(reason)
@@ -202,7 +315,7 @@ export function selfResolving(reason: UnreadableReason): boolean {
  * licenses a statement about what the funder does or does not offer.
  */
 const NOTHING_WAS_READ = new Set<UnreadableReason>([
-  'bot_wall', 'soft_404', 'directory_listing', 'js_shell', 'empty', 'too_short',
+  'bot_wall', 'soft_404', 'directory_listing', 'parked_domain', 'js_shell', 'empty', 'too_short',
 ])
 
 export function nothingWasRead(reason: UnreadableReason): boolean {
