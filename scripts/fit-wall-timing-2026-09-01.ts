@@ -60,6 +60,42 @@ type Row = {
 
 const hostOf = (u: string) => u.toLowerCase().replace(/^https?:\/\/(www\.)?/, '').split('/')[0] ?? u
 
+/**
+ * Which PRODUCT served this interstitial.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * WHY THE UNIT OF ANALYSIS IS THE VENDOR, NOT THE HOST
+ *
+ * Raised by the watchlist session, and it is a sharper objection than the small-n
+ * caution it replaces. Of the seven hosts in the run, FOUR serve a byte-similar
+ * Cloudflare managed challenge. If a block duration is a policy rather than a
+ * random draw — and WAF timeouts usually are — those four clear together and
+ * contribute four CORRELATED observations that a pooled percentile reads as four
+ * independent ones. The result then looks far more precise than it is.
+ *
+ * My own verification sample has the same shape and is no better: 10 distinct
+ * walled hosts across 4 vendors, 6 of them on the one Cloudflare product.
+ *
+ * So the interesting question is not "what is the p25 over hosts" but "does a
+ * vendor have a timeout". If the four clear within one interval of each other,
+ * that is worth more than any percentile: it means the rung should be set from
+ * the vendor's policy, and the answer generalises to every walled host we ever
+ * meet rather than to these seven.
+ */
+function vendorOf(text: string): string {
+  const t = (text ?? '').toLowerCase()
+  if (t.includes('incapsula') || t.includes('request unsuccessful')) return 'Imperva'
+  if (t.includes('pardon our interruption'))                          return 'Imperva/Distil'
+  if (t.includes('performing security verification')
+   || t.includes('security service to protect'))                      return 'Cloudflare managed'
+  if (t.includes('enable javascript and cookies'))                    return 'Cloudflare JS'
+  if (t.includes('confirm you are human')
+   || t.includes('complete the security check'))                      return 'Cloudflare Turnstile'
+  if (t.includes('just a moment'))                                    return 'Cloudflare IUAM'
+  if (t.includes('attention required'))                               return 'Cloudflare block'
+  return 'unclassified'
+}
+
 function main() {
   if (!existsSync(FILE)) { console.error(`no file at ${FILE}`); process.exit(1) }
   const rows = readFileSync(FILE, 'utf8').split('\n').filter(Boolean)
@@ -132,7 +168,7 @@ function main() {
 
   // Each clear is a BRACKET: `lo` is the last time we saw it walled, `hi` the
   // first time we saw it open. The truth is somewhere between.
-  const clears: { host: string; lo: number; hi: number; from: UnreadableReason }[] = []
+  const clears: { host: string; lo: number; hi: number; from: UnreadableReason; vendor: string }[] = []
   const stillUp: { host: string; hours: number; reason: UnreadableReason }[] = []
 
   // The cadence is a property of the run, not of the design, so it is measured.
@@ -145,6 +181,25 @@ function main() {
     else console.log('')
   }
 
+  // Vendor first, because it is the unit that decides whether the observations
+  // below are independent.
+  const vendors = new Map<string, string[]>()
+  for (const [host, reads] of Array.from(byHost.entries())) {
+    const v = vendorOf(reads[0].excerpt ?? '')
+    if (!vendors.has(v)) vendors.set(v, [])
+    vendors.get(v)!.push(host)
+  }
+  console.log('WHO IS DOING THE BLOCKING')
+  for (const [v, hs] of Array.from(vendors.entries()).sort((a, b) => b[1].length - a[1].length)) {
+    console.log(`  ${v.padEnd(24)} ${String(hs.length).padStart(2)}  ${hs.sort().join(', ')}`)
+  }
+  const biggest = Math.max(...Array.from(vendors.values()).map(h => h.length))
+  if (biggest > 1) {
+    console.log(`\n  ${biggest} hosts share one product, so their clears are NOT independent`)
+    console.log('  observations. Read the grouped section below, not the pooled percentile.')
+  }
+  console.log('')
+
   console.log('PER HOST')
   for (const [host, reads] of Array.from(byHost.entries()).sort()) {
     const strip = reads.map(r => (r.walled ? (r.reason === 'bot_wall' ? 'W' : 'x') : '.')).join('')
@@ -156,7 +211,7 @@ function main() {
     if (reads[0].walled && openIdx > 0) {
       const hi = (Date.parse(reads[openIdx].ts) - t0) / 3_600_000
       const lo = (Date.parse(reads[openIdx - 1].ts) - t0) / 3_600_000
-      clears.push({ host, lo, hi, from: reads[0].reason! })
+      clears.push({ host, lo, hi, from: reads[0].reason!, vendor: vendorOf(reads[0].excerpt ?? '') })
       console.log(`  ${host.padEnd(30)} ${strip}   cleared between ${lo.toFixed(2)}h and ${hi.toFixed(2)}h`)
     } else if (reads[0].walled) {
       stillUp.push({ host, hours: span, reason: reads[0].reason! })
@@ -205,12 +260,53 @@ function main() {
   console.log('  a day of the catalogue asserting something nobody has checked, so the')
   console.log('  two are not symmetric and the rung should sit BELOW the median.')
 
-  const suggested = HOST_BACKOFF_HOURS.find(h => h >= pct(los, 0.25)) ?? HOST_BACKOFF_HOURS[0]
+  // AT OR BELOW, which is what the line above promises. The first version took
+  // the smallest rung >= p25 and would have answered "consider 6h" to a p25 of
+  // 2.38 — the opposite of the stated rule, and in the patient direction, which
+  // is the harmful one.
+  const p25lo = pct(los, 0.25)
+  const eligible = HOST_BACKOFF_HOURS.filter(h => h <= p25lo)
+  const suggested = eligible.length ? eligible[eligible.length - 1] : HOST_BACKOFF_HOURS[0]
+  console.log(`\n  TREAT THE PERCENTILE AS A SUMMARY, NOT AN ESTIMATE. n is hosts, not`)
+  console.log(`  independent draws, and the vendor grouping above says how much of it`)
+  console.log(`  is one product answering ${clears.length} times.`)
   console.log(`\n  On this data the first rung wants to be at or below the p25 of the`)
   console.log(`  EARLIEST bound, ${pct(los, 0.25).toFixed(2)}h — the conservative end, because a rung set`)
   console.log(`  from the latest bound would be too patient by up to one interval.`)
   console.log(`  Current first rung: ${HOST_BACKOFF_HOURS[0]}h.`)
   console.log(`  ${suggested === HOST_BACKOFF_HOURS[0] ? 'No change indicated.' : `Consider ${suggested}h.`}`)
+
+  // ── The finding that would actually generalise ─────────────────────────────
+  console.log('\nGROUPED BY VENDOR — is a block duration a POLICY?')
+  const byVendor = new Map<string, typeof clears>()
+  for (const c of clears) {
+    if (!byVendor.has(c.vendor)) byVendor.set(c.vendor, [])
+    byVendor.get(c.vendor)!.push(c)
+  }
+  for (const [v, cs] of Array.from(byVendor.entries()).sort((a, b) => b[1].length - a[1].length)) {
+    const los = cs.map(c => c.lo), his = cs.map(c => c.hi)
+    const spread = Math.max(...his) - Math.min(...los)
+    console.log(`  ${v}  (${cs.length} host${cs.length === 1 ? '' : 's'} cleared)`)
+    for (const c of cs.sort((a, b) => a.lo - b.lo)) {
+      console.log(`     ${c.host.padEnd(28)} ${c.lo.toFixed(2)}h to ${c.hi.toFixed(2)}h`)
+    }
+    if (cs.length === 1) {
+      console.log('     One host. Says nothing about the vendor, only about this site.')
+    } else {
+      // "Together" means TWO brackets wide, not one. Two hosts under an
+      // identical timeout still land one sampling step apart if one clears just
+      // before a read and the other just after, so a single-bracket test calls
+      // an identical policy a difference. Two adjacent brackets is the width at
+      // which the sampling genuinely cannot tell them apart.
+      const widest = Math.max(...cs.map(c => c.hi - c.lo))
+      console.log(spread <= widest * 2
+        ? `     ALL WITHIN ${spread.toFixed(2)}h, no wider than the sampling can resolve.`
+          + '\n     That is consistent with a fixed timeout, and is worth more than the'
+          + '\n     percentile above: set the rung from the vendor, not from these hosts.'
+        : `     Spread over ${spread.toFixed(2)}h, wider than the ${widest.toFixed(2)}h brackets.`
+          + '\n     Not a single timeout, so these do behave as separate observations.')
+    }
+  }
 
   const byReason: Record<string, number[]> = {}
   for (const c of clears) (byReason[c.from] ??= []).push(c.hi)
