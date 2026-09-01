@@ -17,7 +17,8 @@
 
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync } from 'node:fs'
-import { mergeGrantUpdate, trustOf } from '../src/lib/grant-merge'
+import { mergeGrantUpdate } from '../src/lib/grant-merge'
+import { predictWrite, describePrediction } from '../src/lib/admin/dry-run-refusal'
 
 for (const l of readFileSync('.env.local', 'utf8').split('\n')) {
   const m = l.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)$/)
@@ -101,26 +102,24 @@ async function main() {
 
     // PREDICT THE LADDER, do not merely report the holder.
     //
-    // The first version of this printed "(currently admin:paulkilty1@gmail.com)"
-    // beside a change and then said "would apply 6". Both true, and together a
-    // lie: `system:` is trust 50 and cannot overwrite an admin field, so two of
-    // the six would have been refused and the dry run promised they would not
-    // be. A dry run that cannot report a refusal is not a dry run.
-    const mine = trustOf(SOURCE as never, false)
+    // Uses the same predictor the merger is tested against — see
+    // lib/admin/dry-run-refusal.ts. Rolling this by hand here is exactly how the
+    // first version came to print the holder beside a change and then claim it
+    // would apply.
     let blocked = 0
     for (const [k, v] of Object.entries(fix.fields)) {
-      const prov = ((row.field_provenance ?? {}) as Record<string, { source?: string; backfilled?: boolean }>)[k]
-      const same = JSON.stringify(row[k]) === JSON.stringify(v)
-      const theirs = prov?.source ? trustOf(prov.source as never, prov.backfilled) : 0
-      const willRefuse = !same && prov?.source && theirs > mine
-      if (willRefuse) blocked++
-      const note = same ? '  [no change]'
-        : willRefuse ? `  [WOULD BE REFUSED — held by ${prov!.source} at trust ${theirs}, this write is ${mine}]`
-        : prov?.source ? `  (currently ${prov.source}, trust ${theirs})` : ''
-      console.log(`   ${k}: ${JSON.stringify(row[k])} -> ${JSON.stringify(v)}${note}`)
+      const prov = ((row.field_provenance ?? {}) as Record<string, never>)[k]
+      const p = predictWrite({
+        field: k, currentValue: row[k], currentProv: prov, newValue: v,
+        source: SOURCE as never,
+        // The quote is what lets a fresher read withdraw a stale timing claim.
+        citation: { snippet: fix.quote.slice(0, 300), confidence: 'high' },
+      })
+      if (p.outcome === 'refused') blocked++
+      console.log(`   ${describePrediction(k, row[k], v, p)}`)
     }
     if (blocked > 0) {
-      console.log(`   >> ${blocked} field(s) need an admin decision, not a system write. See the report.`)
+      console.log(`   >> ${blocked} field(s) still need an admin decision. See the report.`)
       wouldBlock++
     }
 
@@ -128,7 +127,15 @@ async function main() {
 
     const res = await mergeGrantUpdate({
       db, id: String(row.id), fields: fix.fields, source: SOURCE as never,
+      // Every field on a fix shares the fix's quote, because the quote IS the
+      // fix's justification. Without it the perishable-field rule cannot fire
+      // and a stale admin deadline stays stale.
+      citations: Object.fromEntries(Object.keys(fix.fields).map(k =>
+        [k, { snippet: fix.quote.slice(0, 300), confidence: 'high' as const }])),
     })
+    for (const sup of res.superseded ?? []) {
+      console.log(`   SUPERSEDED ${sup.field}: ${sup.source} had ${JSON.stringify(sup.value)} since ${String(sup.setAt).slice(0,10)}`)
+    }
     if (res.rejected?.length) {
       console.log(`   REFUSED by the trust ladder: ${res.rejected.map(r => `${r.field} [${r.reason}${r.blockedBy ? ", held by " + r.blockedBy.source : ""}]`).join(', ')}`)
       refused++

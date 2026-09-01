@@ -138,7 +138,13 @@ export function trustOf(source: string, backfilled?: boolean): number {
 // ── Per-field merge decision ──────────────────────────────────────────────────
 
 export type MergeFieldDecision =
-  | { write: true; value: unknown; prov: ProvenanceEntry }
+  | {
+      write: true; value: unknown; prov: ProvenanceEntry
+      /** Set only when a perishable claim was withdrawn over a value the ladder
+       *  would otherwise have protected. Carried so the caller can log WHO was
+       *  overruled: an override nobody can see is how the pinning debt built up. */
+      superseded?: { source: string; setAt: string; value: unknown }
+    }
   | { write: false; reason: 'idempotent' | 'pinned' | 'lower_trust' }
 
 function valuesEqual(a: unknown, b: unknown): boolean {
@@ -151,11 +157,91 @@ function valuesEqual(a: unknown, b: unknown): boolean {
   return false
 }
 
+/**
+ * Fields that go out of date on their own.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * WHY THESE FOUR ARE DIFFERENT FROM EVERY OTHER TRACKED FIELD
+ *
+ * The trust ladder answers "who knows better". For a deadline that is the wrong
+ * question, because the answer changes with time and not with authority. A human
+ * who read a funder's page in July knew better than any machine that day; the
+ * same value in September is simply old, and the ladder has no way to say so.
+ *
+ * ScottishPower is the case, twice. Paul corrected its deadline by hand in July,
+ * which pinned it at trust 100. The round closed, the page now says the 2028
+ * window opens in July 2027, and nothing automated can write that because
+ * everything automated is below 100. The July 2026 sweep recorded the same
+ * pattern and the same row: *admin provenance means a human decided this at the
+ * time, not that it is still true.* It went stale again anyway, because the
+ * ladder was still the only rule.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * THE RULE, AND THE THREE THINGS THAT BOUND IT
+ *
+ * A fresher grounded read may supersede an older value ON THESE FIELDS ONLY, and
+ * only when it is REMOVING a claim. All three conditions are load-bearing:
+ *
+ *   1. REMOVALS ONLY. The new value must be null (or is_rolling true -> false).
+ *      Clearing a passed deadline takes a claim away; writing a new date adds
+ *      one, and adding still needs a human. This is the same asymmetry
+ *      verification/removal.ts is built on: the engine may take things down on
+ *      evidence and may never put things up.
+ *
+ *   2. GROUNDED. The write must carry a citation — a sentence from the funder's
+ *      page. Without it this would let any automated source clear any human
+ *      deadline on no evidence at all, which is a worse failure than staleness.
+ *
+ *   3. FRESHER. The incoming stamp must be newer than the one it supersedes.
+ *      `set_at` has been on every provenance entry all along, so the as-of date
+ *      this needs already exists and no migration is required.
+ *
+ * A supersede is REPORTED, not silent: the decision carries `superseded` so the
+ * caller can log who was overruled and on what sentence. An override nobody can
+ * see is how the pinning debt built up in the first place.
+ */
+export const PERISHABLE_FIELDS: readonly string[] = [
+  'deadline', 'next_open_date', 'deadline_cycle', 'is_rolling',
+]
+
+/** Is this write taking a timing claim away rather than making one? */
+function removesAClaim(field: string, newValue: unknown): boolean {
+  if (field === 'is_rolling') return newValue === false
+  if (field === 'deadline_cycle') return newValue === null || (Array.isArray(newValue) && newValue.length === 0)
+  return newValue === null || newValue === undefined
+}
+
+/**
+ * May this write supersede a value the trust ladder would otherwise protect?
+ *
+ * Deliberately does NOT look at trust. A perishable claim that is old, wrong and
+ * being withdrawn on the funder's own words should yield whoever wrote it, and
+ * making that depend on the writer's rank is what produced two stale rounds on
+ * the same row.
+ */
+export function supersedesAsStale(
+  field: string,
+  currentProv: ProvenanceEntry,
+  newValue: unknown,
+  newProv: ProvenanceEntry,
+): boolean {
+  if (!PERISHABLE_FIELDS.includes(field)) return false
+  if (!removesAClaim(field, newValue)) return false
+  if (!newProv.citation?.snippet) return false
+  const was = Date.parse(currentProv.set_at ?? '')
+  const now = Date.parse(newProv.set_at ?? '')
+  if (Number.isNaN(was) || Number.isNaN(now)) return false
+  return now > was
+}
+
 export function mergeFieldUpdate(
   currentValue: unknown,
   currentProv: ProvenanceEntry | undefined,
   newValue: unknown,
   newProv: ProvenanceEntry,
+  /** Needed only by the perishable-field rule; omitting it keeps the old
+   *  behaviour exactly, so every existing caller is unchanged. */
+  field?: string,
 ): MergeFieldDecision {
   // Case 1 — first write to this field
   if (!currentProv) {
@@ -201,6 +287,21 @@ export function mergeFieldUpdate(
   // Case 2b — same source rewriting its own value with something different.
   if (currentProv.source === newProv.source) {
     return { write: true, value: newValue, prov: newProv }
+  }
+
+  // Case 2c — a perishable claim being withdrawn on fresher evidence.
+  //
+  // Sits ABOVE both the pin check and the ladder, because it is answering a
+  // different question from either: not "who knows better" but "is this still
+  // true". See PERISHABLE_FIELDS for why that distinction earns its own case.
+  if (field && supersedesAsStale(field, currentProv, newValue, newProv)) {
+    return {
+      write: true, value: newValue,
+      // The superseded entry is preserved so the digest can name who is being
+      // overruled, and so a reviewer can put it back.
+      prov: { ...newProv, previous: { source: currentProv.source, value: currentValue } },
+      superseded: { source: currentProv.source, setAt: currentProv.set_at, value: currentValue },
+    }
   }
 
   // Case 3 — current value is pinned (admin deliberately set it)
@@ -284,6 +385,11 @@ export type MergeRejection = {
 export type MergeGrantResult = {
   applied: string[]
   rejected: MergeRejection[]
+  /** Perishable claims withdrawn over a value the ladder would have protected.
+   *  Empty on almost every write. Surfaced so the digest can say who was
+   *  overruled and on what sentence, rather than a human's value quietly
+   *  vanishing. */
+  superseded?: { field: string; source: string; setAt: string; value: unknown; attempted: unknown }[]
 }
 
 /**
@@ -391,6 +497,7 @@ export async function mergeGrantUpdate(opts: MergeGrantOptions): Promise<MergeGr
   const valuesToWrite: Record<string, unknown> = { ...untrackedFields }
   const nextProv: FieldProvenance = { ...currentProv }
   const applied:  string[] = [...Object.keys(untrackedFields)]
+  const superseded: NonNullable<MergeGrantResult['superseded']> = []
   const rejected: MergeGrantResult['rejected'] = []
   let anyTrackedWritten = false
 
@@ -431,12 +538,19 @@ export async function mergeGrantUpdate(opts: MergeGrantOptions): Promise<MergeGr
       currentProv[field],
       newValue,
       fieldProv,
+      field,
     )
     if (decision.write) {
       valuesToWrite[field] = decision.value
       nextProv[field]      = decision.prov
       applied.push(field)
       anyTrackedWritten = true
+      // A supersede overrules somebody, so it is reported rather than silent.
+      // The digest reads this; see PERISHABLE_FIELDS.
+      if (decision.superseded) {
+        superseded.push({ field, ...decision.superseded, attempted: compactValue(newValue) })
+        console.warn('[merge] superseded a stale perishable field', id, field, decision.superseded.source)
+      }
     } else {
       // `idempotent` has no blocker: the value was already what we proposed, so
       // there is nobody holding it and naming the last writer would misread as
@@ -474,7 +588,7 @@ export async function mergeGrantUpdate(opts: MergeGrantOptions): Promise<MergeGr
   }
 
   // Nothing actually changing (no fields applied AND no state transition)
-  if (applied.length === 0 && nextState === null) return { applied, rejected }
+  if (applied.length === 0 && nextState === null) return { applied, rejected, superseded }
 
   // Only include field_provenance in the update if a tracked field changed
   const updatePayload: Record<string, unknown> = { ...valuesToWrite }
@@ -490,7 +604,7 @@ export async function mergeGrantUpdate(opts: MergeGrantOptions): Promise<MergeGr
     .eq('id', id)
   if (updateErr) throw new Error(`mergeGrantUpdate write: ${updateErr.message}`)
 
-  return { applied, rejected }
+  return { applied, rejected, superseded }
 }
 
 // ── Whole-grant merger (batch — same fields applied to N ids) ─────────────────
