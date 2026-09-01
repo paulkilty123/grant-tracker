@@ -11,10 +11,17 @@
 // This is the only unreadable reason that comes with its own fix, so the output
 // is a list of proposed URL corrections rather than a list of problems.
 //
-// READ ONLY. Fetches raw HTML directly, because the signal is a meta tag and
-// text extraction destroys it.
+// READ ONLY, and reads FROM PRODUCTION by default.
 //
-//   npx tsx --env-file=.env.local scripts/find-meta-refresh-2026-09-01.ts
+// The first version fetched raw HTML from this machine, because the meta tag is
+// the better signal and text extraction destroys it. That sweep reported zero
+// and was worth little: 88 of 960 hosts refuse this laptop outright, and a
+// funder that will only talk to Vercel's egress is exactly the kind that has
+// been quietly broken for months. `classifyPage` now recovers the same reason
+// from the redirect notice in the stub's own body, so the sweep can run from the
+// network that works.
+//
+//   npx tsx --env-file=.env.local scripts/find-meta-refresh-2026-09-01.ts [--local]
 
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync } from 'node:fs'
@@ -32,6 +39,21 @@ const strip = (html: string) => html
   .replace(/<script[\s\S]*?<\/script>/gi, ' ').replace(/<style[\s\S]*?<\/style>/gi, ' ')
   .replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim()
 
+const LOCAL = process.argv.includes('--local')
+const SECRET = process.env.ADMIN_SECRET!
+
+/** Read a batch through production's egress. Text only — no model call, no cost. */
+async function readViaProduction(urls: string[]) {
+  const res = await fetch('https://www.shootsfunding.co.uk/api/admin/read-page', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${SECRET}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ urls }),
+    signal: AbortSignal.timeout(120_000),
+  })
+  if (!res.ok) throw new Error(`read-page HTTP ${res.status}`)
+  return (await res.json()).results as Array<{ url: string; ok: boolean; excerpt?: string; chars?: number }>
+}
+
 async function main() {
   const db = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
   const rows: Record<string, unknown>[] = []
@@ -42,33 +64,55 @@ async function main() {
     rows.push(...(data ?? [])); if ((data ?? []).length < 500) break
   }
   const targets = rows.filter(r => /^https?:\/\//i.test(String(r.apply_url ?? '')))
-  console.log(`${targets.length} rows with a web apply_url. Fetching raw HTML...\n`)
+  console.log(`${targets.length} rows with a web apply_url. Reading from ${LOCAL ? 'THIS MACHINE' : 'PRODUCTION'}...\n`)
 
   const found: { row: Record<string, unknown>; to: string }[] = []
   let checked = 0, unreachable = 0
-  const LIMIT = 8
-  let i = 0
-  async function worker() {
-    while (i < targets.length) {
-      const r = targets[i++]
-      const url = String(r.apply_url)
+
+  if (!LOCAL) {
+    const byUrl = new Map<string, Record<string, unknown>>()
+    for (const r of targets) byUrl.set(String(r.apply_url), r)
+    const urls = Array.from(byUrl.keys())
+    for (let b = 0; b < urls.length; b += 10) {
+      const batch = urls.slice(b, b + 10)
       try {
-        const res = await fetch(url, { redirect: 'follow', signal: AbortSignal.timeout(15_000),
-          headers: { 'User-Agent': UA, Accept: 'text/html,*/*', 'Accept-Encoding': 'gzip, deflate' } })
-        if (!res.ok) { unreachable++; continue }
-        if (!/html/i.test(res.headers.get('content-type') ?? '')) { unreachable++; continue }
-        const html = await res.text()
-        const v = classifyPage(strip(html), html)
-        if (!v.ok && v.reason === 'meta_refresh') {
-          const to = v.detail.replace(/^the page redirects to /, '').replace(/ via a meta refresh.*$/, '')
-          found.push({ row: r, to })
+        for (const res of await readViaProduction(batch)) {
+          checked++
+          if (!res.ok) { unreachable++; continue }
+          const v = classifyPage(res.excerpt ?? '')
+          if (!v.ok && v.reason === 'meta_refresh') {
+            const to = v.detail.replace(/^the page redirects to /, '').replace(/,? which we do not follow.*$/, '')
+            found.push({ row: byUrl.get(res.url)!, to })
+          }
         }
-      } catch { unreachable++ }
-      checked++
-      if (checked % 100 === 0) console.error(`  ${checked}/${targets.length}`)
+      } catch (e) { console.error(`  batch ${b}: ${(e as Error).message}`) }
+      if (b % 200 === 0) console.error(`  ${b}/${urls.length}`)
     }
+  } else {
+    const LIMIT = 8
+    let i = 0
+    const worker = async () => {
+      while (i < targets.length) {
+        const r = targets[i++]
+        const url = String(r.apply_url)
+        try {
+          const res = await fetch(url, { redirect: 'follow', signal: AbortSignal.timeout(15_000),
+            headers: { 'User-Agent': UA, Accept: 'text/html,*/*', 'Accept-Encoding': 'gzip, deflate' } })
+          if (!res.ok) { unreachable++; continue }
+          if (!/html/i.test(res.headers.get('content-type') ?? '')) { unreachable++; continue }
+          const html = await res.text()
+          const v = classifyPage(strip(html), html)
+          if (!v.ok && v.reason === 'meta_refresh') {
+            const to = v.detail.replace(/^the page redirects to /, '').replace(/,? (via a meta refresh|which we do not follow).*$/, '')
+            found.push({ row: r, to })
+          }
+        } catch { unreachable++ }
+        checked++
+        if (checked % 100 === 0) console.error(`  ${checked}/${targets.length}`)
+      }
+    }
+    await Promise.all(Array.from({ length: LIMIT }, () => worker()))
   }
-  await Promise.all(Array.from({ length: LIMIT }, worker))
 
   console.log(`\nchecked ${checked}, unreachable from this machine ${unreachable}`)
   console.log(`\nROWS POINTING AT A META-REFRESH STUB: ${found.length}\n`)
@@ -81,8 +125,10 @@ async function main() {
     console.log(`       to   ${abs}`)
   }
   if (!found.length) {
-    console.log('  None. Note this machine is blocked by some funder hosts, so a')
-    console.log('  clean result here is weaker evidence than the same sweep from production.')
+    console.log(LOCAL
+      ? '  None — but this machine is blocked by some funder hosts, so a clean\n'
+        + '  result here is weaker evidence than the same sweep from production.'
+      : '  None, read through the network the funders actually answer.')
   }
 }
 main()

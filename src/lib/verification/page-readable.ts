@@ -218,6 +218,25 @@ export function classifyPage(
              detail: `the page redirects to ${moved[1].trim().slice(0, 200)} via a meta refresh, which we do not follow` }
   }
 
+  // THE SAME STUB, SEEN WITHOUT THE HTML.
+  //
+  // The meta tag is the better signal and it needs the raw document, which the
+  // admin read-page route does not return — it answers in text. That matters
+  // because production's egress is the only network some funders will talk to,
+  // so a sweep that can only run from a laptop is a sweep 88 hosts refuse.
+  //
+  // A stub's BODY is its own redirect notice: Sheffield's extracts to
+  // "Redirecting to /your-city-council/budgets-spending-funding/grants". Under
+  // the floor and opening with that phrase is a shape no real funder page has,
+  // and it recovers the destination, which is the whole value of the reason.
+  const said = t.length < MIN_USEFUL_CHARS
+    ? t.match(/^\s*redirecting to\s+(\S+)/i)
+    : null
+  if (said) {
+    return { ok: false, reason: 'meta_refresh',
+             detail: `the page redirects to ${said[1].trim().replace(/[.,]$/, '').slice(0, 200)}, which we do not follow` }
+  }
+
   if (raw && raw.length <= REDIRECT_ONLY_BYTES && REDIRECT_STUB.test(raw) && t.length === 0) {
     return { ok: false, reason: 'parked_domain',
              detail: `${raw.length} bytes whose only content is a redirect, which is how a parked domain answers` }
@@ -356,17 +375,22 @@ const SELF_RESOLVING: ReadonlySet<UnreadableReason> = new Set<UnreadableReason>(
 /**
  * Reasons a caller may stop watching for. Everything else keeps rotating.
  *
+ * FALSE DOES NOT MEAN "RETIRE". Read this before using the return value.
+ *
+ * The shape of the data invites the mistake: `js_shell` and `meta_refresh` both
+ * sit on the not-self-resolving side, and one of them means the site is gone
+ * while the other means the fix is sitting in the tag. A caller that treats
+ * every `false` as a reason to drop the row throws away five working council
+ * pages, which is what the watchlist came within one step of doing on
+ * 2026-09-01. This predicate answers ONLY "will waiting help", and a caller
+ * still has to ask what the reason is.
+ *
  * `js_shell`, `directory_listing`, `parked_domain` and `meta_refresh` are the
  * four: a page that renders nothing without a browser is a property of how the
  * site is built, a bare directory index means the site is not serving a site at
  * all, a domain a registrar is selling is not one the funder is coming back to,
  * and a stub that redirects will go on redirecting until somebody repoints the
- * row. None changes on its own.
- *
- * `meta_refresh` is the odd one: not self-resolving, but not a reason to RETIRE
- * either. The detail carries the destination, so the action is to repoint. A
- * caller that treats every non-self-resolving reason as "retire" would throw
- * away five working council pages, which is what the watchlist nearly did.
+ * row. None changes on its own — but only the middle two are gone.
  */
 export function selfResolving(reason: UnreadableReason): boolean {
   return SELF_RESOLVING.has(reason)

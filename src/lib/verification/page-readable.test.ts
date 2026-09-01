@@ -378,6 +378,24 @@ describe('a page that moved is not a page that is gone', () => {
     expect(selfResolving('meta_refresh')).toBe(false)
   })
 
+  it('is found from TEXT ALONE, which is all a production sweep gets', () => {
+    // The admin read-page route answers in text, and production's egress is the
+    // only network some funders will talk to — 88 hosts refused this laptop. So
+    // the reason has to survive losing the HTML, and it recovers the
+    // destination either way, which is the whole value of it.
+    const asText = 'Redirecting to /your-city-council/budgets-spending-funding/grants'
+    const r = classifyPage(asText)
+    expect(r.ok === false && r.reason).toBe('meta_refresh')
+    expect(r.ok === false && r.detail).toContain('/your-city-council/budgets-spending-funding/grants')
+  })
+
+  it('the text fallback does not fire on a long page that mentions redirecting', () => {
+    const page = 'We are redirecting to a new application portal this autumn. '
+      + 'Community Grants of up to £5,000 for local groups. '.repeat(12)
+    expect(page.length).toBeGreaterThan(400)
+    expect(classifyPage(page).ok).toBe(true)
+  })
+
   it('does not fire on a real page that happens to carry a refresh tag', () => {
     const realPage = '<html><head><meta http-equiv="refresh" content="600"></head><body>'
       + '<p>Community Grants of up to £5,000 for local groups.</p>'.repeat(20) + '</body></html>'

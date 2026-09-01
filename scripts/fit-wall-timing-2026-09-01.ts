@@ -19,6 +19,23 @@
 // agreeing is worth something; one session reading the other's conclusions is
 // not.
 //
+// ─────────────────────────────────────────────────────────────────────────────
+// TWO PROPERTIES OF THE DATA THAT CHANGE THE ANSWER
+//
+// 1. THE INTERVALS ARE NOT UNIFORM. The run was killed and relaunched, so
+//    iterations 1 and 2 are thirteen minutes apart and the rest are thirty.
+//    `iter` is also not unique across a restart. So `ts` is the only key, and
+//    spacing is READ, never inferred — assuming even spacing would mis-time a
+//    transition in that first gap by six minutes, in the region the first
+//    backoff rung is actually about.
+//
+// 2. A TRANSITION IS INTERVAL-CENSORED, NOT OBSERVED. A host walled at 17:49 and
+//    readable at 18:02 lifted SOMEWHERE IN BETWEEN. Reporting 18:02 as the
+//    clear time systematically overstates every measurement by up to one
+//    interval, which on a 30-minute cadence is half the size of the thing being
+//    measured. So each clear is reported as a BRACKET, and the summary gives
+//    both bounds rather than a false point.
+//
 //   npx tsx scripts/fit-wall-timing-2026-09-01.ts [path]
 //
 // Reads nothing but the file. Safe to run on a partial run: the `iter` field
@@ -68,8 +85,20 @@ function main() {
     byHost.get(r.host)!.push(r)
   }
 
-  const clears: { host: string; hours: number; from: UnreadableReason }[] = []
+  // Each clear is a BRACKET: `lo` is the last time we saw it walled, `hi` the
+  // first time we saw it open. The truth is somewhere between.
+  const clears: { host: string; lo: number; hi: number; from: UnreadableReason }[] = []
   const stillUp: { host: string; hours: number; reason: UnreadableReason }[] = []
+
+  // The cadence is a property of the run, not of the design, so it is measured.
+  const stamps = Array.from(new Set(judged.map(r => r.ts))).sort()
+  const gaps = stamps.slice(1).map((t, i) => (Date.parse(t) - Date.parse(stamps[i])) / 60_000)
+  if (gaps.length) {
+    console.log(`OBSERVED CADENCE  ${gaps.map(g => `${g.toFixed(0)}m`).join('  ')}`)
+    const uneven = Math.max(...gaps) - Math.min(...gaps) > 2
+    if (uneven) console.log('  Uneven, as expected after a restart. Spacing is read from ts, never from iter.\n')
+    else console.log('')
+  }
 
   console.log('PER HOST')
   for (const [host, reads] of Array.from(byHost.entries()).sort()) {
@@ -78,11 +107,12 @@ function main() {
     const span = (Date.parse(reads[reads.length - 1].ts) - t0) / 3_600_000
 
     // The transition we care about: walled at the start, readable later.
-    const firstOpen = reads.find(r => !r.walled)
-    if (reads[0].walled && firstOpen) {
-      const hours = (Date.parse(firstOpen.ts) - t0) / 3_600_000
-      clears.push({ host, hours, from: reads[0].reason! })
-      console.log(`  ${host.padEnd(30)} ${strip}   cleared after ${hours.toFixed(1)}h`)
+    const openIdx = reads.findIndex(r => !r.walled)
+    if (reads[0].walled && openIdx > 0) {
+      const hi = (Date.parse(reads[openIdx].ts) - t0) / 3_600_000
+      const lo = (Date.parse(reads[openIdx - 1].ts) - t0) / 3_600_000
+      clears.push({ host, lo, hi, from: reads[0].reason! })
+      console.log(`  ${host.padEnd(30)} ${strip}   cleared between ${lo.toFixed(2)}h and ${hi.toFixed(2)}h`)
     } else if (reads[0].walled) {
       stillUp.push({ host, hours: span, reason: reads[0].reason! })
       console.log(`  ${host.padEnd(30)} ${strip}   still walled after ${span.toFixed(1)}h`)
@@ -105,32 +135,40 @@ function main() {
     return
   }
 
-  const sorted = clears.map(c => c.hours).sort((a, b) => a - b)
-  const pct = (p: number) => sorted[Math.min(sorted.length - 1, Math.floor(p * sorted.length))]
-  console.log(`  n = ${sorted.length} cleared, ${stillUp.length} still walled at the end (censored)`)
-  console.log(`  median ${pct(0.5).toFixed(1)}h   p25 ${pct(0.25).toFixed(1)}h   p75 ${pct(0.75).toFixed(1)}h`)
-  console.log(`  range  ${sorted[0].toFixed(1)}h to ${sorted[sorted.length - 1].toFixed(1)}h`)
+  // Reported at BOTH bounds, because the difference between them is the
+  // measurement's resolution and quoting a single number hides it.
+  const los = clears.map(c => c.lo).sort((a, b) => a - b)
+  const his = clears.map(c => c.hi).sort((a, b) => a - b)
+  const pct = (xs: number[], p: number) => xs[Math.min(xs.length - 1, Math.floor(p * xs.length))]
+  console.log(`  n = ${clears.length} cleared, ${stillUp.length} still walled at the end (right-censored)`)
+  console.log(`  earliest it could have been:  median ${pct(los, 0.5).toFixed(2)}h  p25 ${pct(los, 0.25).toFixed(2)}h`)
+  console.log(`  latest it could have been:    median ${pct(his, 0.5).toFixed(2)}h  p25 ${pct(his, 0.25).toFixed(2)}h`)
+  console.log(`  widest bracket in the set:    ${Math.max(...clears.map(c => c.hi - c.lo)).toFixed(2)}h`)
 
   console.log('\nWHAT EACH CANDIDATE FIRST RUNG WOULD HAVE COST')
-  console.log('  rung   wasted retries   rows left waiting past their clear')
+  console.log('  rung   wasted retries   rows left waiting   bracket straddles')
   for (const rung of [0.5, 1, 2, 3, 6, ...HOST_BACKOFF_HOURS.slice(0, 3)].filter((v, i, a) => a.indexOf(v) === i).sort((a, b) => a - b)) {
-    // A retry before the wall lifts is wasted; a rung longer than the clear
-    // leaves the row unverified for the difference.
-    const wasted = sorted.filter(h => h > rung).length
-    const late   = sorted.filter(h => h < rung).length
-    console.log(`  ${String(rung).padStart(4)}h  ${String(wasted).padStart(14)}   ${String(late).padStart(32)}`)
+    // Counted against the bounds a clear could NOT have fallen outside, so a
+    // host whose bracket straddles the rung is reported as unknown rather than
+    // silently assigned to whichever side flatters the number.
+    const wasted  = clears.filter(c => c.lo > rung).length
+    const late    = clears.filter(c => c.hi < rung).length
+    const straddle = clears.length - wasted - late
+    console.log(`  ${String(rung).padStart(4)}h  ${String(wasted).padStart(14)}   ${String(late).padStart(24)}   ${String(straddle).padStart(9)}`)
   }
   console.log('\n  Wasted retries cost one fetch pair each. A row left waiting costs')
   console.log('  a day of the catalogue asserting something nobody has checked, so the')
   console.log('  two are not symmetric and the rung should sit BELOW the median.')
 
-  const suggested = HOST_BACKOFF_HOURS.find(h => h >= pct(0.25)) ?? HOST_BACKOFF_HOURS[0]
-  console.log(`\n  On this data the first rung wants to be around p25 = ${pct(0.25).toFixed(1)}h.`)
+  const suggested = HOST_BACKOFF_HOURS.find(h => h >= pct(los, 0.25)) ?? HOST_BACKOFF_HOURS[0]
+  console.log(`\n  On this data the first rung wants to be at or below the p25 of the`)
+  console.log(`  EARLIEST bound, ${pct(los, 0.25).toFixed(2)}h — the conservative end, because a rung set`)
+  console.log(`  from the latest bound would be too patient by up to one interval.`)
   console.log(`  Current first rung: ${HOST_BACKOFF_HOURS[0]}h.`)
   console.log(`  ${suggested === HOST_BACKOFF_HOURS[0] ? 'No change indicated.' : `Consider ${suggested}h.`}`)
 
   const byReason: Record<string, number[]> = {}
-  for (const c of clears) (byReason[c.from] ??= []).push(c.hours)
+  for (const c of clears) (byReason[c.from] ??= []).push(c.hi)
   console.log('\nBY REASON (does a wall behave differently from a thin read?)')
   for (const [reason, hs] of Object.entries(byReason)) {
     const m = hs.slice().sort((a, b) => a - b)[Math.floor(hs.length / 2)]
