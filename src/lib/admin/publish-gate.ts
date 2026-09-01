@@ -55,6 +55,7 @@ import {
   type ReviewReasonCode,
   type ReviewRow,
 } from './review-reasons'
+import { summariseEvidence } from './evidence-summary'
 
 /**
  * Bump when the blocking set changes, so `publish_gate_decisions` rows stay
@@ -74,7 +75,13 @@ import {
  * Per the standing rule in the merge digest, a policy-version change should
  * force a dry run before the first armed run under the new version.
  */
-export const GATE_POLICY_VERSION = 'c2.3'
+/**
+ * `c2.4`, 2026-09-02: the blocking set is unchanged, but a row the gate would
+ * publish now ALSO has to pass `pageStanding` before the machine will expose it
+ * (see below), and a republish of an already-live row no longer takes a slot.
+ * Decisions either side of that are not comparable, so the version moves.
+ */
+export const GATE_POLICY_VERSION = 'c2.4'
 
 /**
  * Every reason code, classified. `block` = the row asserts something wrong or
@@ -323,6 +330,62 @@ export function gateDecision(row: ReviewRow, precomputed?: ReviewReason[]): Gate
     blocking.length === 0 ? 'publish' : wasLive ? 'attention' : 'hold'
 
   return { outcome, wasLive, blocking, informational, readiness: publishReadiness(reasons) }
+}
+
+/**
+ * What the funder's page said about a row the gate would otherwise publish.
+ *
+ * Paul, 2026-09-02: "auto-publish only rows where the page confirmed at least
+ * one line and contradicted none. Rows the page confirmed nothing on stay for
+ * me by hand." Ten of the sixteen Ready rows that night had been read and
+ * confirmed on nothing, so "no blocking reason" was too loose a bar for a
+ * machine to expose a row on unread.
+ *
+ * This is deliberately NOT a reason code. A row with nothing confirmed is not
+ * wrong, and adding a code would move it out of Ready in the Inbox, where Paul
+ * wants to find it and publish it by hand. It only decides whether the MACHINE
+ * may do that for him. Already-live rows are not asked: republishing one
+ * exposes nothing.
+ *
+ *   confirmed     at least one line the page backs, none it contradicts
+ *   contradicted  the page disagrees with something the row states
+ *   unconfirmed   read but nothing confirmed, or never read at all
+ */
+export type PageStanding = 'confirmed' | 'contradicted' | 'unconfirmed'
+
+export function pageStanding(row: ReviewRow): PageStanding {
+  const s = summariseEvidence(row.field_evidence)
+  if (!s) return 'unconfirmed'
+  if (s.counts.contradicted > 0) return 'contradicted'
+  return s.counts.confirmed > 0 ? 'confirmed' : 'unconfirmed'
+}
+
+/**
+ * May the scheduled run write this decision?
+ *
+ * Two rules on top of the gate, both from 2026-09-02:
+ *   - a not-live row also needs `pageStanding === 'confirmed'`;
+ *   - an already-live row is always allowed, because publishing it changes
+ *     nothing a user sees (see `countsAgainstCap`).
+ */
+export function machineMayPublish(row: ReviewRow, decision: GateDecision): boolean {
+  if (decision.outcome !== 'publish') return false
+  if (decision.wasLive) return true
+  return pageStanding(row) === 'confirmed'
+}
+
+/**
+ * Does applying this decision spend one of the day's publish slots?
+ *
+ * The cap exists to limit EXPOSURE: how many pages become newly visible before
+ * anyone has looked. Republishing a row that is already live exposes nothing,
+ * so it costs nothing. Until 2026-09-02 it did cost a slot, and because the
+ * nightly re-enrich sent changed live rows back to the queue every night, all
+ * five slots went to rows that were already live and nothing new was published
+ * after 13 August.
+ */
+export function countsAgainstCap(decision: GateDecision): boolean {
+  return decision.outcome === 'publish' && !decision.wasLive
 }
 
 /**

@@ -48,7 +48,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
 import { mergeGrantUpdate } from '@/lib/grant-merge'
 import { deriveReviewReasons, type ReviewRow } from '@/lib/admin/review-reasons'
-import { gateDecision, GATE_POLICY_VERSION, type GateDecision } from '@/lib/admin/publish-gate'
+import { gateDecision, machineMayPublish, countsAgainstCap, pageStanding, GATE_POLICY_VERSION, type GateDecision, type PageStanding } from '@/lib/admin/publish-gate'
 import { recordRun } from '@/lib/admin/cron-runs'
 import { resolvePublishCap } from '@/lib/admin/publish-cap'
 
@@ -222,13 +222,28 @@ export async function GET(req: NextRequest) {
     const published: string[] = []
     const failed: Array<{ id: string; title: string; reason: string }> = []
     const auditRows: Record<string, unknown>[] = []
+    // Publishable by the gate, but the page confirmed nothing on the row (or
+    // contradicted something), so the machine leaves it for a hand. Paul,
+    // 2026-09-02. These are NOT held in the gate's sense: they still sit in
+    // Ready in the Inbox, and a person can publish them from there.
+    const heldForHand: Record<PageStanding, string[]> = { confirmed: [], contradicted: [], unconfirmed: [] }
+    // Only NEWLY EXPOSED rows count towards the cap. A republish of a row that
+    // is already live changes nothing a user sees, and until 2026-09-02 those
+    // took every slot: the nightly re-enrich sent changed live rows back to the
+    // queue, and at five a day nothing new had been published since 13 August.
+    let newlyExposed = 0
 
     for (const { row, decision } of decisions) {
       let applied  = false
       let rejected: string[] = []
 
-      const withinCap = published.length < applyLimit
-      if (decision.outcome === 'publish' && !dryRun && withinCap) {
+      const mayPublish = machineMayPublish(row, decision)
+      const spendsSlot = countsAgainstCap(decision)
+      const withinCap  = !spendsSlot || newlyExposed < applyLimit
+      if (decision.outcome === 'publish' && !decision.wasLive && !mayPublish) {
+        heldForHand[pageStanding(row)].push(row.id)
+      }
+      if (mayPublish && !dryRun && withinCap) {
         try {
           // is_active is untracked, so this goes through mergeGrantUpdate's
           // untracked path, which still computes the pipeline_state transition —
@@ -244,8 +259,10 @@ export async function GET(req: NextRequest) {
           rejected = res.rejected.map(r => r.field)
           applied  = res.applied.includes('is_active')
 
-          if (applied) published.push(row.id)
-          else failed.push({
+          if (applied) {
+            published.push(row.id)
+            if (spendsSlot) newlyExposed++
+          } else failed.push({
             id: row.id,
             title: row.title ?? row.id,
             reason: rejected.length ? `write rejected: ${rejected.join(', ')}` : 'no field applied',
@@ -273,7 +290,8 @@ export async function GET(req: NextRequest) {
         // applied=false would be indistinguishable from a write the trust ladder
         // refused, and would quietly corrupt the calibration data this table
         // exists to provide.
-        dry_run:             dryRun || (decision.outcome === 'publish' && !withinCap),
+        // Likewise a publish the machine left for a hand: decided, not written.
+        dry_run:             dryRun || (decision.outcome === 'publish' && !(mayPublish && withinCap)),
       })
     }
 
@@ -298,10 +316,25 @@ export async function GET(req: NextRequest) {
         alreadyVisible: toPublish.filter(d => d.decision.wasLive).length,
       },
       written: dryRun ? 0 : published.length,
+      // Split the same way: republishing a live row is bookkeeping, and only the
+      // newly-exposed count is what the cap was limiting.
+      writtenBreakdown: {
+        newlyExposed:    dryRun ? 0 : newlyExposed,
+        alreadyVisible:  dryRun ? 0 : published.length - newlyExposed,
+      },
+      // Left for a hand: the gate would publish, the page confirmed nothing (or
+      // contradicted a line), so the machine did not. Counted in every run, dry
+      // or not, so "what would run tonight?" shows them.
+      heldForHand: {
+        unconfirmed:  heldForHand.unconfirmed.length,
+        contradicted: heldForHand.contradicted.length,
+      },
       // Never let a cap pass as full coverage. Every silent truncation this audit
       // found — the 12-row queue, the unrotated watchlist, the .limit(N)-then-
       // filter checks — read as "we covered everything" when it had not.
-      deferredByCap: dryRun ? 0 : Math.max(0, toPublish.length - published.length - failed.length),
+      deferredByCap: dryRun ? 0 : Math.max(0,
+        toPublish.length - published.length - failed.length
+        - heldForHand.unconfirmed.length - heldForHand.contradicted.length),
       applyLimit: Number.isFinite(applyLimit) ? applyLimit : null,
       failed,
       auditError,
