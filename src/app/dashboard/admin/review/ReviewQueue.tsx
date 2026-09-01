@@ -32,6 +32,7 @@ import { useToast } from '@/components/ui/Toast'
 import GrantDetailModal from '@/components/GrantDetailModal'
 import type { ReviewReason, FieldDiff } from '@/lib/admin/review-reasons'
 import type { EvidenceSummary } from '@/lib/admin/evidence-summary'
+import type { LaunchCounts, ReachabilityProbe } from '@/lib/admin/launch-bar'
 // Type-only, so the merger's server dependencies are erased at build and this
 // stays a client component.
 import type { MergeRejection } from '@/lib/grant-merge'
@@ -297,7 +298,13 @@ function EvidencePanel({ evidence }: { evidence: EvidenceSummary | null }) {
   )
 }
 
-export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; gateWindowStart?: string }) {
+/** What the server computed for the launch bar. `launch` is optional only so the
+ *  component can be rendered without it in tests; the page always passes it. */
+export type LaunchBarData = LaunchCounts & { liveRows: number; reachability: ReachabilityProbe }
+
+export function ReviewQueue({ items, gateWindowStart, launch }: {
+  items: QueueItem[]; gateWindowStart?: string; launch?: LaunchBarData
+}) {
   const router = useRouter()
   const toast = useToast()
   const [openId, setOpenId] = useState<string | null>(null)
@@ -1223,6 +1230,8 @@ export function ReviewQueue({ items, gateWindowStart }: { items: QueueItem[]; ga
       <h1 style={{ ...display, fontSize: 25, fontWeight: 500, letterSpacing: '-0.02em', margin: '0 0 16px' }}>
         Review queue
       </h1>
+
+      {launch && <LaunchBar launch={launch} />}
 
       {homeless.length > 0 && (
         <div style={{
@@ -2564,6 +2573,96 @@ const dangerBtn: React.CSSProperties = {
  * The label sits on its own line ABOVE its pills, never inline beside them. Put
  * inline it reads as another pill and the group stops being a group.
  */
+/**
+ * THE LAUNCH BAR. Three numbers, read before any queue count.
+ *
+ * Paul, 2026-09-01: "I should read three zeros before I read a 75." The two
+ * database numbers are the same reasons the Live and wrong tab is built from.
+ * The third is a probe of the public site, and it is the only one that can fail
+ * in the direction that matters, so it is the only one allowed to say "not
+ * checked": a zero it did not earn would look exactly like the all-clear.
+ *
+ * A zero reads calm. Anything else reads as the problem it is.
+ */
+function LaunchBar({ launch }: { launch: LaunchBarData }) {
+  const p = launch.reachability
+  const checkedAt = new Date(p.at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+  const host = p.origin.replace(/^https?:\/\//, '')
+  // The probe is void without its canary: nothing reached the site, so the
+  // count is unknown rather than zero.
+  const probeVoid = !p.canaryOk || p.checked === 0
+
+  const figure = (n: number, tone: 'ok' | 'bad' | 'unknown') => ({
+    ...display, fontSize: 22, fontWeight: 600, lineHeight: 1, fontVariantNumeric: 'tabular-nums' as const,
+    color: tone === 'ok' ? 'var(--color-text-tertiary)' : tone === 'bad' ? 'var(--coral-deep)' : 'var(--amber-deep)',
+  })
+  const label = { fontSize: 12.5, color: 'var(--color-text-secondary)', lineHeight: 1.3 } as const
+  const note = { fontSize: 11.5, color: 'var(--color-text-tertiary)', marginTop: 3 } as const
+
+  return (
+    <div style={{
+      background: 'var(--color-surface, #fff)', border: '0.5px solid var(--border-subtle)',
+      borderRadius: 'var(--radius-card)', padding: '12px 16px', marginBottom: 14,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, flexWrap: 'wrap', marginBottom: 10 }}>
+        <span style={{
+          ...display, fontSize: 11, fontWeight: 700, letterSpacing: '0.06em',
+          textTransform: 'uppercase', color: 'var(--color-text-tertiary)',
+        }}>Launch bar</span>
+        <span style={{ fontSize: 11.5, color: 'var(--color-text-tertiary)' }}>
+          {launch.liveRows} live rows · site checked {checkedAt} at {host}
+        </span>
+      </div>
+
+      <div style={{ display: 'flex', gap: 28, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
+          <span style={figure(launch.pastDeadline, launch.pastDeadline === 0 ? 'ok' : 'bad')}>{launch.pastDeadline}</span>
+          <span style={label}>live rows with a past deadline</span>
+        </div>
+
+        <div style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
+          <span style={figure(launch.unsupportedFigure, launch.unsupportedFigure === 0 ? 'ok' : 'bad')}>{launch.unsupportedFigure}</span>
+          <span style={label}>live rows with an unsupported figure</span>
+        </div>
+
+        <div style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
+          {probeVoid
+            ? <span style={figure(0, 'unknown')}>?</span>
+            : <span style={figure(p.reachable.length, p.reachable.length === 0 ? 'ok' : 'bad')}>{p.reachable.length}</span>}
+          <div>
+            <div style={label}>
+              hidden rows reachable
+              {!probeVoid && <span style={{ color: 'var(--color-text-tertiary)' }}> · of {p.checked} checked</span>}
+            </div>
+            {probeVoid && (
+              <div style={{ ...note, color: 'var(--amber-deep)' }}>
+                Not checked. {p.canary
+                  ? `The live page used as a control answered ${p.canary.status || 'nothing'} instead of 200, so the site could not be read and this number is unknown.`
+                  : 'No live row was available as a control, so the probe could not run.'}
+              </div>
+            )}
+            {!probeVoid && p.unchecked > 0 && (
+              <div style={{ ...note, color: 'var(--amber-deep)' }}>
+                {p.unchecked} could not be checked (no answer), so the count covers {p.checked} of {p.checked + p.unchecked}.
+              </div>
+            )}
+            {p.reachable.length > 0 && (
+              <div style={{ ...note, color: 'var(--coral-deep)' }}>
+                Still open: {p.reachable.slice(0, 3).map(h => h.title || h.key).join(', ')}{p.reachable.length > 3 ? ` and ${p.reachable.length - 3} more` : ''}.
+              </div>
+            )}
+            {p.unexpected.length > 0 && (
+              <div style={note}>
+                {p.unexpected.length} answered something other than 404 or 410: {p.unexpected.slice(0, 3).map(h => `${h.title || h.key} (${h.status})`).join(', ')}.
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function NavGroup({ label, count, divided, children }: {
   label: string; count?: number; divided?: boolean; children: React.ReactNode
 }) {
