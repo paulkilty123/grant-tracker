@@ -211,13 +211,23 @@ function main() {
   const stillUp: { host: string; hours: number; reason: UnreadableReason }[] = []
 
   // The cadence is a property of the run, not of the design, so it is measured.
-  const stamps = Array.from(new Set(judged.map(r => r.ts))).sort()
-  const gaps = stamps.slice(1).map((t, i) => (Date.parse(t) - Date.parse(stamps[i])) / 60_000)
+  // PER HOST, not across the file. Two collectors write to two files a couple of
+  // minutes apart, so the union of their timestamps alternates 8m/2m and reads
+  // as jitter that is not in either series. Brackets were never affected —
+  // those are computed from one host's own consecutive reads — but a cadence
+  // line nobody can interpret is worse than none.
+  const cadenceOf = (host: string) => {
+    const ts = Array.from(new Set((byHost.get(host) ?? []).map(r => r.ts))).sort()
+    return ts.slice(1).map((t, i) => (Date.parse(t) - Date.parse(ts[i])) / 60_000)
+  }
+  const anyHost = Array.from(byHost.keys()).sort()[0]
+  const gaps = anyHost ? cadenceOf(anyHost) : []
   if (gaps.length) {
-    console.log(`OBSERVED CADENCE  ${gaps.map(g => `${g.toFixed(0)}m`).join('  ')}`)
+    console.log(`OBSERVED CADENCE (${anyHost})  ${gaps.map(g => `${g.toFixed(0)}m`).join('  ')}`)
     const uneven = Math.max(...gaps) - Math.min(...gaps) > 2
-    if (uneven) console.log('  Uneven, as expected after a restart. Spacing is read from ts, never from iter.\n')
-    else console.log('')
+    console.log(uneven
+      ? '  Uneven, as expected after a restart. Spacing is read from ts, never from iter.\n'
+      : '')
   }
 
   // Vendor first, because it is the unit that decides whether the observations
