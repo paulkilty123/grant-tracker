@@ -6,14 +6,14 @@ Next.js 14 App Router + Supabase + Tailwind CSS, deployed on Vercel via GitHub a
 - **Live site:** https://www.shootsfunding.co.uk/ (the brand and the domain from 2026-08-27).
   Use shootsfunding for verification, admin calls and anything user-facing.
 
-  > **granttracker.co.uk does NOT redirect.** This line used to say it "308s here".
-  > It does not: as of 2026-08-30 it returns **200** and serves byte-identical
-  > content (checksums compared), so the same site is live on two domains. The
-  > canonical tag on both points at shootsfunding, which is a hint to a crawler
-  > and not a redirect. The fix is a 308 at the domain level in Vercel's project
-  > settings, not in code — flagged to Paul 2026-08-30. It matters more than a
-  > tidy-up because the launch push on 10 September is aimed partly at search and
-  > AI crawlers, and .org already outranks .co.uk. See
+  > **granttracker.co.uk now 308s here, and robots/sitemap are live.** Verified
+  > 2026-09-01 from four host variants: apex and www on BOTH domains return 308
+  > to `https://www.shootsfunding.co.uk`, on `/`, `/robots.txt` and
+  > `/sitemap.xml` alike. `robots.txt` and `sitemap.xml` both return 200 with the
+  > right content types; the sitemap carries 559 grant URLs, filtered to
+  > `is_active AND pipeline_state='published'` since it was created on
+  > 2026-08-30. This paragraph previously said the redirect did not exist and was
+  > flagged to Paul on 2026-08-30; it has been fixed since. See
   > `project_domain_confusion_grant_tracker_org`.
 - **Repo:** https://github.com/paulkilty123/grant-tracker
 - **Supabase project ID:** yrndczlqjqtfgissleev
@@ -120,6 +120,48 @@ to a file in the scratchpad and use `git commit -F <file>`.
   the readiness-probe rule: a fingerprint that is already true proves nothing.)
 - `grep -c` on an empty result exits non-zero — do not let `&&` chains swallow
   that into a silent skip.
+
+---
+
+## A number I will act on gets a fixture and a second pair of eyes
+
+Set by Paul 2026-09-01, after an evening in which four real bugs were found in
+one analysis script and **none of them came from the tests written alongside it**.
+Those tests passed throughout.
+
+Three came from building a **synthetic fixture in the real data's shape** and
+running the script against it. The fourth came from **another session challenging
+a claim**. Every one was an assumption rather than a slip, which is why a test
+written from the same assumptions could not reach them:
+
+| the bug | the assumption it rested on |
+|---|---|
+| the collector's excerpt cap was 400 and the readability floor was 400, so every readable page read as "too short" | that a stored excerpt is the page |
+| a clear was reported at the first sighting, overstating it by up to one sampling interval | that a bracket is a point |
+| the rung selector took the smallest value ABOVE the p25 while the text promised at-or-below | that the code matched its own comment |
+| Imperva's two products landed in different vendor buckets, so the one comparison the experiment existed for could never happen | that a phrase identifies a vendor |
+
+**Two rules follow, and they apply to any script whose output I will act on —
+a count, a rate, a recommendation, a row list:**
+
+1. **Write a synthetic fixture in the real shape, and predict the answer before
+   running.** Real cadence, real truncation, real vendor mix, real censoring.
+   Include at least one case *engineered to produce a known result*: the
+   simultaneity bug was caught because four hosts were built to clear together
+   and the script said they had not. Assert preconditions inside the fixture so
+   that one drifting fails loudly instead of quietly stopping testing anything.
+
+2. **A headline number gets one independent check before it reaches me.**
+   Re-derive it a different way, from a different field, or have another session
+   look. "The tests pass" is not that check — the tests share the code's
+   assumptions.
+
+**The direction that fails quietly is the one to check hardest.** When two errors
+have asymmetric costs, the one that looks like prudence hides: a backoff set too
+long reads as a system being careful, while too short announces itself as wasted
+retries. Same shape as a watcher with `last_count = 1`, and as an alarm that has
+only ever reported zero. Ask which way a threshold fails silently, and make that
+the direction that has to be argued for.
 
 ---
 
