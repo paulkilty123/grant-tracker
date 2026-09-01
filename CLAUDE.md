@@ -163,6 +163,17 @@ retries. Same shape as a watcher with `last_count = 1`, and as an alarm that has
 only ever reported zero. Ask which way a threshold fails silently, and make that
 the direction that has to be argued for.
 
+**A passing local test plus a fresh push means wait, not redesign.** Paul,
+2026-09-01. The 410 for removed grant pages was tested locally (correct), pushed,
+and checked in production seventy seconds later: 404. Because the lookup fails
+open by design, a broken lookup and a deploy that has not reached the edge yet
+look identical from outside, and the next step was very nearly a redesign around
+Edge runtime limits that were never the problem. The deploy finished; the 410
+fired; nothing was wrong. When the local test passes and the push is minutes
+old, the local test is the evidence that wins: wait for the deploy to
+propagate, re-check, and only then start diagnosing. (Pushed ≠ deployed: check
+`/deployments` if in doubt.)
+
 ---
 
 ## A passing check is not the same as the thing being right
