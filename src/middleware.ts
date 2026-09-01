@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { retiredOriginTarget } from '@/lib/mcp-retired-origin'
 import { landingCutoverTarget } from '@/lib/landing-cutover'
+import { isGone, grantKeyFromPath } from '@/lib/gone-grants'
 
 export async function middleware(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl
@@ -22,6 +23,26 @@ export async function middleware(request: NextRequest) {
   if (retiredTarget) {
     // 308 preserves method and body, so a POSTed JSON-RPC call survives.
     return NextResponse.redirect(retiredTarget, 308)
+  }
+
+  // ── Deliberately removed grant pages answer 410, not 404 ────────────────────
+  //
+  // Sits with the early exits because it needs no session: a crawler asking for
+  // a withdrawn grant has none, and the answer must hold even if Supabase auth
+  // is slow. `isGone` never throws and fails open, so a bad read falls through
+  // to the page, which 404s on its own.
+  //
+  // 404 says "not found right now" and a crawler may keep asking. 410 says the
+  // page is deliberately and permanently gone, which de-indexes faster — and
+  // `rejected` and `archived` are exactly that: somebody decided this is a
+  // duplicate, not a fund, or out of scope. Rows withheld in review keep their
+  // 404, because those can come back.
+  const grantKey = grantKeyFromPath(pathname)
+  if (grantKey && await isGone(grantKey)) {
+    return new NextResponse(null, {
+      status: 410,
+      headers: { 'X-Robots-Tag': 'noindex', 'Cache-Control': 'public, max-age=3600' },
+    })
   }
 
   // Supabase sometimes falls back to the Site URL (/) instead of /auth/callback.
