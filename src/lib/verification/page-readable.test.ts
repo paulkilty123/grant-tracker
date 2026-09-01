@@ -14,7 +14,8 @@
 // sends all three down the same road.
 
 import { describe, it, expect } from 'vitest'
-import { classifyPage, MIN_USEFUL_CHARS, type UnreadableReason } from './page-readable'
+import { classifyPage, selfResolving, MIN_USEFUL_CHARS, type UnreadableReason } from './page-readable'
+import { isHostLevel } from './host-backoff'
 
 type Fixture = { id: string; host: string; title: string; chars: number; text: string }
 
@@ -146,5 +147,66 @@ describe('a genuine funder page is never classified as unreadable', () => {
     const justOver = 'Grants of up to £2,000 for community groups in the borough. '.repeat(7)
     expect(justOver.length).toBeGreaterThan(MIN_USEFUL_CHARS)
     expect(classifyPage(justOver).ok).toBe(true)
+  })
+})
+
+// ── selfResolving: the predicate that decides whether to STOP watching ───────
+//
+// Written after getting the rule wrong out loud. I argued that resuming a
+// stopped watcher should need two consecutive GOOD reads, mirroring the two
+// consecutive failures required to stop. A walled host by definition does not
+// produce good reads, so that rule would have kept every genuinely walled funder
+// stopped for ever. The asymmetry is not stop-versus-resume; it is that stopping
+// is destructive and resuming is cheap.
+
+describe('selfResolving', () => {
+  it('keeps a walled host in the rotation however many times it has failed', () => {
+    // THE CASE THAT KILLED MY VERSION. Barnet failed twice running, Sobell
+    // twice running, and both belong in the rotation: a wall lifting is
+    // precisely the event a watchlist exists to catch, so read outcomes do not
+    // bear on the decision at all.
+    expect(selfResolving('bot_wall')).toBe(true)
+    expect(selfResolving('too_short')).toBe(true)
+  })
+
+  it('treats an empty response as transient, against the proposed mapping', () => {
+    // The Hygiene Bank returned zero characters on one probe and a full page
+    // four minutes later, which is the case probe-read-exhausted's two-failure
+    // rule was written for. Calling `empty` permanent is the exact mistake that
+    // rule prevents.
+    expect(selfResolving('empty')).toBe(true)
+  })
+
+  it('keeps watching a soft 404, because a page appearing is a change worth catching', () => {
+    expect(selfResolving('soft_404')).toBe(true)
+  })
+
+  it('allows a stop only for the two that need somebody to deploy something', () => {
+    expect(selfResolving('js_shell')).toBe(false)
+    expect(selfResolving('directory_listing')).toBe(false)
+  })
+
+  it('every reason has an answer, so a new one cannot default to stoppable', () => {
+    const all: UnreadableReason[] = [
+      'bot_wall', 'soft_404', 'directory_listing', 'js_shell', 'empty', 'too_short',
+    ]
+    // Adding a reason to the union without classifying it here should be a
+    // visible choice, not a silent "false" that quietly permits a stop.
+    const stoppable = all.filter(r => !selfResolving(r))
+    expect(stoppable.sort()).toEqual(['directory_listing', 'js_shell'])
+  })
+})
+
+describe('selfResolving and isHostLevel are different questions', () => {
+  it('disagree on directory_listing, and both are right', () => {
+    // Not worth a host backoff — one dead path says nothing about the domain —
+    // but permanent for the URL itself. Merging the two predicates would force
+    // one answer where there are two.
+    expect(selfResolving('directory_listing')).toBe(false)
+    expect(isHostLevel('directory_listing')).toBe(false)
+    // And the reverse case: a wall is worth remembering per host AND worth
+    // continuing to watch.
+    expect(selfResolving('bot_wall')).toBe(true)
+    expect(isHostLevel('bot_wall')).toBe(true)
   })
 })

@@ -35,9 +35,23 @@ import type { UnreadableReason } from './page-readable'
  *
  * Deliberately hours rather than shape C's days: a bot wall is a transient
  * property of a network path and a WAF's mood, not a funder's publishing
- * calendar. 16 of 33 cleared within a few hours. The doubling is what stops a
- * genuinely hard host being hammered, and the cap keeps a wall from becoming
- * permanent, because a permanent skip is a silent removal from verification.
+ * calendar. The doubling is what stops a genuinely hard host being hammered, and
+ * the cap keeps a wall from becoming permanent, because a permanent skip is a
+ * silent removal from verification.
+ *
+ * WHAT IS ACTUALLY MEASURED, AND WHAT THE FIRST RUNG RESTS ON. 16 of 33 walled
+ * rows read fine on a re-probe roughly two hours later. That bounds the window
+ * from above and says nothing about where inside it a wall typically lifts, so
+ * it does not justify one hour specifically — and the watchlist session's
+ * Wolfson case, one host lifting in about an hour and staying lifted, is a
+ * single transition rather than a measurement.
+ *
+ * One hour is kept because of what the first rung actually costs. A persistently
+ * walled host reaches 24 hours after four failures whatever the first rung is,
+ * so the rung only governs TRANSIENT walls, where retrying soon is the correct
+ * behaviour rather than the wasteful one. The cost of being too eager is one
+ * fetch pair; the cost of being too patient is a row sitting unverified for a
+ * day because a WAF blinked. Revisit with timings, not with intuition.
  */
 export const HOST_BACKOFF_HOURS = [1, 2, 6, 24, 72, 168] as const
 
@@ -51,6 +65,13 @@ export const MAX_BACKOFF_HOURS = 168
  * about one URL, and a soft 404 on one page says nothing about the next page on
  * the same domain — backing off the host would hide every other row on a funder
  * whose site is fine. They stay per-row findings for a reviewer.
+ *
+ * NOT THE SAME AXIS AS `selfResolving` in page-readable.ts, and the two are kept
+ * apart on purpose. This asks "is this worth remembering per host"; that asks
+ * "can this stop being true on its own". They disagree on `directory_listing` —
+ * not worth a host backoff, but permanent for the URL — and both are right for
+ * their own question. A caller deciding whether to STOP watching wants
+ * `selfResolving`; a caller deciding whether to skip a fetch wants this.
  */
 const HOST_LEVEL: ReadonlySet<UnreadableReason> = new Set<UnreadableReason>([
   'bot_wall', 'js_shell', 'empty', 'too_short',

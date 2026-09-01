@@ -117,6 +117,83 @@ export function classifyPage(text: string | null | undefined): PageRead {
 }
 
 /**
+ * Can this reason stop being true on its own?
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * WHY THIS IS A DIFFERENT QUESTION FROM ANY OTHER PREDICATE HERE
+ *
+ * Written for the watchlist, which has a decision the verification engine does
+ * not: whether to STOP WATCHING a page for ever. That is destructive — a funder
+ * that leaves the rotation is a funder nothing will look at again — so it needs
+ * a different test from "did today's read work".
+ *
+ * The parallel watchlist session got this right and I got it wrong, so the
+ * reasoning is recorded rather than just the answer. I argued that resuming a
+ * stopped watcher should need two consecutive GOOD reads, to mirror the two
+ * consecutive failures required to stop. That is wrong, and wrong in a way that
+ * would have been permanent: a walled host by definition does not produce good
+ * reads, so the rule would have kept every genuinely walled funder stopped for
+ * ever. Barnet and Sobell both failed twice running and both belong in the
+ * rotation, because A WALL LIFTING IS PRECISELY THE EVENT THE WATCHLIST EXISTS
+ * TO CATCH.
+ *
+ * The asymmetry is not between stopping and resuming. It is that STOPPING is the
+ * destructive move and must be expensive, while resuming costs one fetch per
+ * rotation and an honest error line. Getting a stop wrong took three working
+ * funders out of intake in one afternoon; getting a resume wrong costs a log
+ * entry.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * `empty` IS TRUE HERE, AND THAT IS A DELIBERATE DISAGREEMENT
+ *
+ * The mapping proposed alongside this had `empty` as non-self-resolving. This
+ * repo already documents the opposite, in the comment that justifies the
+ * two-failure rule: The Hygiene Bank returned zero characters on one probe and a
+ * full page four minutes later. An empty response is a flaky fetch at least as
+ * often as it is a dead site, so treating it as permanent is the exact mistake
+ * that rule was written to prevent.
+ *
+ * The Pi Labs stop that prompted the mapping is still right, and this does not
+ * weaken it — because that decision does not rest on the reason. It rests on two
+ * consecutive empty reads AND a history of never once having produced a
+ * fingerprint. That third clause is doing the work, and a caller stopping a
+ * watcher should require it explicitly rather than reading it out of the reason.
+ *
+ * Deliberately kept SEPARATE from `isHostLevel` in host-backoff.ts, which asks
+ * whether a reason is worth remembering per host rather than per URL. The two
+ * axes disagree on `directory_listing` — not worth a host backoff, because one
+ * dead path says nothing about the domain, but genuinely permanent for the URL
+ * itself — and both are right for their own question. Merging them would force
+ * one answer where there are two.
+ */
+const SELF_RESOLVING: ReadonlySet<UnreadableReason> = new Set<UnreadableReason>([
+  // A WAF's mood, an IP reputation, a rate limit. Lifts without anyone acting.
+  'bot_wall',
+  // A partial render or a truncated response. Sobell returned 608 characters
+  // earlier the same day it returned 83.
+  'too_short',
+  // The URL is wrong today and the funder may restore the page. It does not
+  // resolve on its own in the way a wall does, but the watchlist exists to catch
+  // a page appearing, and one fetch a rotation is the whole cost of finding out.
+  'soft_404',
+  // The Hygiene Bank: zero characters, then a full page four minutes later.
+  'empty',
+])
+
+/**
+ * Reasons a caller may stop watching for. Everything else keeps rotating.
+ *
+ * `js_shell` and `directory_listing` are the two: a page that renders nothing
+ * without a browser is a property of how the site is built, and a bare directory
+ * index means the site is not serving a site at all. Neither changes without
+ * somebody deploying something, and if they do, intake will find the funder
+ * again.
+ */
+export function selfResolving(reason: UnreadableReason): boolean {
+  return SELF_RESOLVING.has(reason)
+}
+
+/**
  * Reasons that mean NOBODY READ THE PAGE, so nothing may be asserted about the
  * funder on the strength of it.
  *
