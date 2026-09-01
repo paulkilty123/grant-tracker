@@ -223,13 +223,20 @@ export async function GET(req: NextRequest) {
       const before = { is_active: row.is_active, pipeline_state: row.pipeline_state }
       let applied: string[] = []
       let rejected: unknown[] = []
+      /** Perishable timing claims withdrawn over a value the trust ladder would
+       *  otherwise have protected. Almost always empty. Carried into the run
+       *  summary because a supersede OVERRULES somebody — usually Paul, whose
+       *  July corrections are what went stale — and an override nobody can see
+       *  is how the pinning debt built up in the first place. */
+      let superseded: unknown[] = []
       let err: string | null = null
       try {
         const res = await mergeGrantUpdate({
           id: row.id, fields: d.fields, source: SOURCE, pinned: false, db,
         })
-        applied  = res.applied
-        rejected = res.rejected
+        applied    = res.applied
+        rejected   = res.rejected
+        superseded = res.superseded ?? []
       } catch (e) {
         err = e instanceof Error ? e.message : String(e)
       }
@@ -242,6 +249,7 @@ export async function GET(req: NextRequest) {
       const record = {
         id: row.id, title: row.title, klass: d.klass, quote: d.quote,
         sourceUrl: d.sourceUrl, before, after: d.fields, applied, rejected, error: err,
+        ...(superseded.length ? { superseded } : {}),
       }
       if (err || missed.length > 0) refused.push({ ...record, missed })
       else acted.push(record)
@@ -250,6 +258,10 @@ export async function GET(req: NextRequest) {
     return {
       success: true, armed, wrote: true, scanned: rows.length,
       acted: acted.length, refusedCount: refused.length,
+      // Reported at the top level as well as per row, so the digest can lead
+      // with it rather than requiring somebody to scan every record.
+      supersededCount: acted.reduce<number>((n, r) =>
+        n + ((r as { superseded?: unknown[] }).superseded?.length ?? 0), 0),
       // Never silent. A run that left work behind says how much and of what.
       candidates: actions.length, cap, deferred: deferred.length, deferredByClass,
       byClass, held, rows: acted, refused, heldRows,
