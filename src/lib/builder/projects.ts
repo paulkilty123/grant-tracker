@@ -28,7 +28,7 @@ export interface ProjectFieldMeta {
   key: keyof Project
   label: string
   weight: number
-  /** What completing this buys the user — shown on the gap hint. */
+  /** Why a funder asks for it, in one sentence: shown beside a missing field. */
   benefit: string
   kind: 'text' | 'amount' | 'tags'
   placeholder?: string
@@ -36,28 +36,28 @@ export interface ProjectFieldMeta {
 
 export const PROJECT_FIELDS: ProjectFieldMeta[] = [
   { key: 'what_it_will_do', label: 'What it will do', weight: 20, kind: 'text',
-    benefit: 'the heart of every application answer',
+    benefit: 'Every answer starts from this, and matching cannot run without it.',
     placeholder: 'The activity: what happens, where, how often.' },
   { key: 'who_benefits', label: 'Who benefits, and the need', weight: 15, kind: 'text',
-    benefit: 'sharper beneficiary matching and need evidence for answers',
+    benefit: 'Funders ask who it is for and how you know they need it. It also narrows the matches.',
     placeholder: 'Who it serves and how you know they need it.' },
   { key: 'budget_amount', label: 'Rough budget', weight: 15, kind: 'amount',
-    benefit: 'tighter grant-size matching' },
+    benefit: 'Lets us drop funders whose grants are far too small or far too large for what you need.' },
   { key: 'sectors', label: 'Sectors', weight: 15, kind: 'tags',
-    benefit: 'the main relevance signal for matching' },
+    benefit: 'The main thing we match on. Without a sector the list is everything.' },
   { key: 'beneficiary_groups', label: 'Beneficiary groups', weight: 10, kind: 'tags',
-    benefit: 'beneficiary-fit matching' },
+    benefit: 'Narrows the matches to funders who name the people you work with.' },
   { key: 'difference_it_makes', label: 'The difference it makes', weight: 10, kind: 'text',
-    benefit: 'outcome answers and funder-priority alignment',
+    benefit: 'Most forms ask what changes as a result. It also sharpens which funders we show you.',
     placeholder: 'The change you expect to see, and how you would know.' },
   { key: 'duration', label: 'Duration', weight: 5, kind: 'text',
-    benefit: 'answers the how-long question every funder asks',
+    benefit: 'Every funder asks this, and some rule out anything under a year.',
     placeholder: 'e.g. 12 months' },
   { key: 'outreach', label: 'How people will find out', weight: 5, kind: 'text',
-    benefit: 'the outreach answer most forms ask for',
+    benefit: 'Forms usually ask how you reach the people you are trying to help.',
     placeholder: 'How participants will hear about it.' },
   { key: 'learning', label: 'Learning and evaluation', weight: 5, kind: 'text',
-    benefit: 'evaluation answers and stronger outcome framing',
+    benefit: 'Funders ask how you will know it worked. It also strengthens the outcomes you can claim.',
     placeholder: 'How you will learn from it and shape what comes next.' },
 ]
 // weights sum to 100

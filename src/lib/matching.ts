@@ -2254,10 +2254,13 @@ export function scoreColour(score: number): { bg: string; text: string; bar: str
 export const MATCH_TIER_STRONG = 80
 export const MATCH_TIER_GOOD   = 65
 
+// Dots were #639922 / #8ECB3C / #C0DD97 until 2026-09-02: 1.33, 1.71 and
+// 2.30 against a 3:1 floor for non-text. They now take the ink the search
+// page already uses for the same three bands (6.1, 5.7, 6.5 on cream).
 export const MATCH_TIER = {
-  strong:  { label: 'Strong',  bg: '#C0DD97', color: '#173404', dot: '#639922' },
-  good:    { label: 'Good',    bg: '#EAF3DE', color: '#3B6D11', dot: '#8ECB3C' },
-  partial: { label: 'Partial', bg: '#F5F1E8', color: '#5F5E5A', dot: '#C0DD97' },
+  strong:  { label: 'Strong',  bg: '#C0DD97', color: '#173404', dot: '#1B6B3D' },
+  good:    { label: 'Good',    bg: '#EAF3DE', color: '#3B6D11', dot: '#7A5E11' },
+  partial: { label: 'Partial', bg: '#F5F1E8', color: '#5F5E5A', dot: '#5F5E5A' },
 } as const
 
 /** Score -> tier colours. Reads the shared boundaries above so this cannot

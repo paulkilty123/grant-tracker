@@ -13,22 +13,7 @@ import {
 import ImportApplicationModal from '@/components/builder/ImportApplicationModal'
 import { BLOCK_TYPES, BLOCK_TYPE_LABELS, type BlockType, type CoreContentBlock } from '@/lib/builder/types'
 
-const T = {
-  lime:          '#8ECB3C',
-  greenDeep:     '#173404',
-  greenMid:      '#639922',
-  cream:         '#F5F1E8',
-  paleGreen:     '#F1F7E4',
-  white:         '#FFFFFF',
-  textPrimary:   '#2C2C2A',
-  textSecondary: '#5F5E5A',
-  textTertiary:  '#8A8986',
-  border:        'rgba(23, 52, 4, 0.08)',
-  greenBg:       '#E8F2D8',
-  greenText:     '#3F6018',
-}
-const UI   = 'var(--font-space-grotesk)'
-const BODY = 'var(--font-dm-sans)'
+import { T, UI, BODY, deepBtn } from '@/components/builder/tokens'
 
 const SOURCE_LABELS: Record<CoreContentBlock['source'], string> = {
   user_entered:              'Added by you',
@@ -124,7 +109,7 @@ export default function CoreContentSection({ orgId }: { orgId: string }) {
       <div style={{ padding: '18px 24px 6px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <BookOpen size={17} color={T.greenMid} />
+            <BookOpen size={17} color={T.sage} />
             <h2 style={{ fontFamily: UI, fontWeight: 600, fontSize: 17, color: T.textPrimary, letterSpacing: '-0.01em' }}>
               Your material
             </h2>
@@ -218,9 +203,7 @@ export default function CoreContentSection({ orgId }: { orgId: string }) {
                 onClick={save}
                 disabled={saving}
                 style={{
-                  fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: T.greenDeep,
-                  background: T.lime, border: 'none', padding: '9px 18px', borderRadius: 8,
-                  cursor: saving ? 'wait' : 'pointer', opacity: saving ? 0.7 : 1,
+                  ...deepBtn(saving), cursor: saving ? 'wait' : 'pointer',
                 }}
               >
                 {saving ? 'Saving…' : editingId === 'new' ? 'Save block' : 'Save changes'}

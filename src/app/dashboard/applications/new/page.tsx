@@ -13,7 +13,7 @@ import { ArrowLeft, Search as SearchIcon, X as XIcon, Plus, Trash2, Check, Exter
 import { createClient } from '@/lib/supabase/client'
 import { getOrganisationByOwner } from '@/lib/organisations'
 import { emitClientEvent } from '@/lib/events/client'
-import { T, UI, BODY, inputStyle, primaryBtn, forestBtn, ghostBtn } from '@/components/builder/tokens'
+import { T, UI, BODY, DEEP, inputStyle, deepBtn, ghostBtn } from '@/components/builder/tokens'
 import { OUTLINE_TEMPLATE } from '@/lib/builder/types'
 
 interface PickedOpportunity {
@@ -568,7 +568,7 @@ export default function NewApplicationPage() {
           )}
 
           <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-            <button onClick={handleParse} disabled={parsing} style={forestBtn(parsing)}>
+            <button onClick={handleParse} disabled={parsing} style={deepBtn(parsing)}>
               {parsing ? 'Reading the questions…' : 'Continue'}
             </button>
             {/* Escape hatch for portal-gated / EOI-first funders where the
@@ -633,7 +633,7 @@ export default function NewApplicationPage() {
                     aria-label={`Question ${i + 1}`}
                     style={{
                       ...inputStyle(), flex: 1, background: T.editorBg,
-                      border: `1.5px solid ${focusedQ === i ? T.greenMid : T.borderStrong}`,
+                      border: `1.5px solid ${focusedQ === i ? T.sage : T.borderStrong}`,
                       resize: 'none', overflow: 'hidden', lineHeight: 1.55, fontSize: 15,
                       padding: '12px 14px', minHeight: 48,
                     }}
@@ -673,7 +673,7 @@ export default function NewApplicationPage() {
           )}
 
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            <button onClick={handleCreate} disabled={creating} style={primaryBtn(creating)}>
+            <button onClick={handleCreate} disabled={creating} style={deepBtn(creating)}>
               {creating ? 'Setting up…' : 'Looks right, plan my answers'}
             </button>
             <button

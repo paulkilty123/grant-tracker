@@ -13,10 +13,13 @@ import { ArrowLeft, Check, ChevronDown, ChevronRight, ChevronUp, ExternalLink, R
 import { createClient } from '@/lib/supabase/client'
 import { getOrganisationByOwner } from '@/lib/organisations'
 import { emitClientEvent } from '@/lib/events/client'
-import { computeMatchScore, matchTier, MATCH_FLOOR } from '@/lib/matching'
+import { computeMatchScore, MATCH_FLOOR } from '@/lib/matching'
 import { normaliseScrapedGrant, type EnrichedGrant } from '@/lib/grants-normalise'
 import { IMPACT_SECTOR_OPTIONS, BENEFICIARY_OPTIONS } from '@/lib/tag-suggestions'
-import { T, UI, BODY, inputStyle } from '@/components/builder/tokens'
+import { T, UI, BODY, DEEP, inputStyle, deepBtn, outlineBtn, linkStyle } from '@/components/builder/tokens'
+
+const deepBtnStyle = deepBtn()
+import { typeColour } from '@/lib/funding-type-colours'
 import {
   PROJECT_FIELDS, fieldFilled, projectCompleteness, readyToMatch,
   updateProject, type Project, type ProjectFieldMeta,
@@ -44,29 +47,28 @@ type MatchBuckets = {
   support: ScoredMatch[]
 }
 
+// A project's shape is not a funding type. "Programme" used to borrow the
+// funding-type coral, which invited the reader to connect the two; all three
+// take the same neutral chip now.
 const TYPE_STYLE: Record<string, { bg: string; color: string; label: string }> = {
-  project:   { bg: T.paleGreen,  color: T.sage,      label: 'Project' },
-  campaign:  { bg: T.amberBg,    color: T.amberText, label: 'Campaign' },
-  programme: { bg: '#FAECE7',    color: '#993C1D',   label: 'Programme' },
+  project:   { bg: '#F1EDE3', color: T.textSecondary, label: 'Project' },
+  campaign:  { bg: '#F1EDE3', color: T.textSecondary, label: 'Campaign' },
+  programme: { bg: '#F1EDE3', color: T.textSecondary, label: 'Programme' },
 }
 
-// Funding-type section markers — same palette as Find Funding's tabs.
-const FUNDING_TYPE_STYLE: Record<string, { dot: string }> = {
-  grant:      { dot: '#97C459' },
-  programme:  { dot: '#F0997B' },
-  investment: { dot: '#85B7EB' },
-  in_kind:    { dot: '#EF9F27' },
-}
+// Funding-type section dots take the validated type ink from
+// funding-type-colours.ts (6.1 to 8.5:1 on cream). This file used to carry a
+// fifth palette of its own, every dot of it under 2.3:1.
+const typeDot = (key: string) => typeColour(key)?.fg ?? DEEP
 
 const CANONICAL_TYPES = new Set(['grant', 'programme', 'investment', 'in_kind'])
 const BROAD_LOCATION = new Set(['uk', 'uk-wide', 'england', 'nationwide', 'national', 'uk wide', 'all uk'])
 
-// Tier colours come from the shared canonical helper (matching.ts) so the
-// project funder-fit list, the dashboard legend and Find Funding stay in step.
-function tierLabel(score: number): { label: string; bg: string; color: string } {
-  const t = matchTier(score)
-  return { label: t.label, bg: t.bg, color: t.color }
-}
+// The list is sorted by score, so every row restating its rank ("Good 79%",
+// "Good 75%") gave three decimals of false precision on a number nobody can
+// calibrate. The top row alone is chipped, and only as a recommendation. The
+// tier still drives the expanded detail's wording (matchTier stays imported
+// for the section that opens).
 
 // "Should I apply?" panel — the assessment view behind each match row.
 // All data is already client-side (brief + scorer reasons), zero extra fetches.
@@ -95,12 +97,12 @@ function MatchDetail({ m }: { m: ScoredMatch }) {
     <div style={{ borderTop: `1px solid ${T.border}`, marginTop: 13, paddingTop: 14, display: 'flex', flexDirection: 'column', gap: 14 }}>
       {m.positives.length > 0 && (
         <div>
-          <p style={{ fontFamily: UI, fontWeight: 600, fontSize: 11.5, letterSpacing: '0.04em', textTransform: 'uppercase', color: T.sage, margin: '0 0 5px' }}>
+          <p style={{ fontFamily: UI, fontWeight: 600, fontSize: 11.5, letterSpacing: '0.04em', textTransform: 'uppercase', color: DEEP, margin: '0 0 5px' }}>
             Why this matched your project
           </p>
           {m.positives.slice(0, 4).map((r, i) => (
             <p key={i} style={{ fontFamily: BODY, fontSize: 13, color: T.textPrimary, margin: '0 0 3px', lineHeight: 1.55, display: 'flex', gap: 7 }}>
-              <span style={{ width: 6, height: 6, borderRadius: 999, background: '#1B6B3D', flexShrink: 0, marginTop: 7 }} />
+              <span style={{ width: 6, height: 6, borderRadius: 999, background: T.done, flexShrink: 0, marginTop: 7 }} />
               <span>{r}</span>
             </p>
           ))}
@@ -113,7 +115,7 @@ function MatchDetail({ m }: { m: ScoredMatch }) {
           </p>
           {m.warns.slice(0, 3).map((r, i) => (
             <p key={i} style={{ fontFamily: BODY, fontSize: 13, color: T.textPrimary, margin: '0 0 3px', lineHeight: 1.55, display: 'flex', gap: 7 }}>
-              <span style={{ width: 6, height: 6, borderRadius: 999, background: FUNDING_TYPE_STYLE.in_kind.dot, flexShrink: 0, marginTop: 7 }} />
+              <span style={{ width: 6, height: 6, borderRadius: 999, background: T.amberText, flexShrink: 0, marginTop: 7 }} />
               <span>{r}</span>
             </p>
           ))}
@@ -136,8 +138,8 @@ function MatchDetail({ m }: { m: ScoredMatch }) {
             rel="noopener noreferrer"
             onClick={e => e.stopPropagation()}
             style={{
-              fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.sage,
-              textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5,
+              ...linkStyle(), fontFamily: UI, fontSize: 12.5,
+              display: 'inline-flex', alignItems: 'center', gap: 5,
             }}
           >
             Visit the funder&apos;s site <ExternalLink size={12} />
@@ -169,7 +171,6 @@ export default function ProjectPage() {
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle')
   const [matches, setMatches] = useState<MatchBuckets | null>(null)
   const [matching, setMatching] = useState(false)
-  const [showAllGaps, setShowAllGaps] = useState(false)
   // Project fields collapse behind the completeness card once the project is
   // matchable; a not-yet-ready project opens expanded so the core fields are
   // in front of the user.
@@ -376,7 +377,7 @@ export default function ProjectPage() {
     return (
       <div style={{ maxWidth: 660, marginInline: 'auto' }}>
         <p style={{ fontFamily: BODY, fontSize: 14, color: T.textSecondary }}>
-          That project could not be found. <Link href="/dashboard/projects" style={{ color: T.sage }}>Back to projects</Link>
+          That project could not be found. <Link href="/dashboard/projects" style={linkStyle()}>Back to projects</Link>
         </p>
       </div>
     )
@@ -395,7 +396,18 @@ export default function ProjectPage() {
   const ready = readyToMatch(project)
   const type = TYPE_STYLE[project.type_label] ?? TYPE_STYLE.project
   const gaps = PROJECT_FIELDS.filter(f => !fieldFilled(project, f))
-  const visibleGaps = showAllGaps ? gaps : gaps.slice(0, 3)
+  const filledCount = PROJECT_FIELDS.length - gaps.length
+
+  // Each missing item opens the details and lands on its own field. The four
+  // rows used to be four buttons that all did the same thing: open everything.
+  const focusField = (key: string) => {
+    setDetailsOpen(true)
+    const id = key === 'budget_amount' ? 'f-budget' : key === 'duration' ? 'f-duration' : key === 'sectors' || key === 'beneficiary_groups' ? `f-${key}` : `f-${key}`
+    setTimeout(() => {
+      const el = document.getElementById(id)
+      if (el) { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); (el as HTMLElement).focus?.() }
+    }, 60)
+  }
 
   const textField = (meta: ProjectFieldMeta) => {
     const value = (project[meta.key] as string | null) ?? ''
@@ -427,7 +439,7 @@ export default function ProjectPage() {
     key: 'sectors' | 'beneficiary_groups',
     cap: number,
   ) => (
-    <div>
+    <div id={`f-${key}`} tabIndex={-1}>
       <p style={{ fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.textPrimary, margin: '0 0 8px' }}>
         {label} <span style={{ fontFamily: BODY, fontWeight: 400, fontSize: 12, color: T.textTertiary }}>(up to {cap})</span>
       </p>
@@ -447,9 +459,9 @@ export default function ProjectPage() {
               disabled={full}
               style={{
                 fontFamily: UI, fontWeight: on ? 600 : 500, fontSize: 12,
-                color: on ? '#1B6B3D' : T.textSecondary,
-                background: on ? '#E3F0E4' : T.white,
-                border: `1px solid ${on ? '#1B6B3D' : T.borderStrong}`,
+                color: on ? T.done : T.textSecondary,
+                background: on ? T.doneBg : T.white,
+                border: `1px solid ${on ? T.done : T.borderStrong}`,
                 padding: '5px 12px', borderRadius: 999, cursor: full ? 'not-allowed' : 'pointer',
                 opacity: full ? 0.45 : 1,
               }}
@@ -495,73 +507,70 @@ export default function ProjectPage() {
         </span>
       </div>
 
-      {/* Completeness */}
+      {/* Completeness. Leads with the verdict, counts in the units the list
+          below is in (fields, not a percentage), and says why "Ready to match"
+          and a part-filled bar agree. That sentence used to render only when
+          the project was NOT ready, which is the one state that never needed it. */}
       <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, padding: '18px 22px', margin: '16px 0 14px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 10 }}>
-          <p style={{ fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.textPrimary, margin: 0 }}>
-            {pct === 100 ? 'Fully described' : `${pct}% described`}
-          </p>
           <span style={{
-            fontFamily: UI, fontWeight: 600, fontSize: 11.5, padding: '4px 12px', borderRadius: 999,
-            background: ready ? T.paleGreen2 : T.cream, color: ready ? T.sage : T.textSecondary,
+            fontFamily: UI, fontWeight: 600, fontSize: 12.5, padding: '5px 13px', borderRadius: 999,
+            background: ready ? T.doneBg : '#F1EDE3', color: ready ? T.done : T.textSecondary,
             display: 'inline-flex', alignItems: 'center', gap: 5,
           }}>
             {ready && <Check size={12} />}
             {ready ? 'Ready to match' : 'Not ready to match yet'}
           </span>
+          <p style={{ fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.textSecondary, margin: 0 }}>
+            {gaps.length === 0 ? 'Fully described' : `Described ${filledCount} of ${PROJECT_FIELDS.length}`}
+          </p>
         </div>
         <div style={{ height: 7, background: 'rgba(29,60,62,0.15)', borderRadius: 999, overflow: 'hidden' }}>
           <div style={{
-            height: '100%', width: `${pct}%`, background: '#1D3C3E',
+            height: '100%', width: `${pct}%`, background: DEEP,
             borderRadius: 999, transition: 'width 250ms ease',
           }} />
         </div>
-        {!ready && (
-          <p style={{ fontFamily: BODY, fontSize: 12.5, color: T.textSecondary, margin: '10px 0 0', lineHeight: 1.55 }}>
-            To match funders we need what the project will do, at least one sector, and a rough budget.
-            Everything else sharpens the results but is not required.
-          </p>
-        )}
+        <p style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary, margin: '12px 0 0', lineHeight: 1.6, maxWidth: '78ch' }}>
+          {ready
+            ? gaps.length === 0
+              ? 'Everything a form usually asks for is here, and matching has all three things it needs.'
+              : `You have the three things matching needs: what the project does, a sector, and a budget. The ${gaps.length === 1 ? 'one below is' : `${gaps.length} below are`} optional, but each one narrows the results and answers a question most forms ask anyway.`
+            : 'To match funders we need what the project will do, at least one sector, and a rough budget. Everything else sharpens the results but is not required.'}
+        </p>
         {gaps.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 12 }}>
-            {visibleGaps.map(g => (
-              <button
-                key={String(g.key)}
-                onClick={() => setDetailsOpen(true)}
-                style={{
-                  fontFamily: BODY, fontSize: 12.5, color: T.textSecondary, margin: 0,
-                  background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, textAlign: 'left',
-                }}
-              >
-                <span style={{ fontFamily: UI, fontWeight: 600, color: T.amberText }}>Missing: {g.label}.</span>
-                {' '}Filling this buys {g.benefit}.
-              </button>
+          <div style={{ display: 'flex', flexDirection: 'column', marginTop: 12 }}>
+            {gaps.map(g => (
+              <div key={String(g.key)} style={{ display: 'flex', gap: 14, alignItems: 'baseline', padding: '10px 0', borderTop: `1px solid ${T.border}` }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: DEEP, margin: 0 }}>{g.label}</p>
+                  <p style={{ fontFamily: BODY, fontSize: 12.5, color: T.textSecondary, margin: '2px 0 0', lineHeight: 1.5 }}>{g.benefit}</p>
+                </div>
+                <button
+                  onClick={() => focusField(String(g.key))}
+                  style={{ ...linkStyle(), fontFamily: UI, fontSize: 13, background: 'transparent', border: 'none', padding: 0, flexShrink: 0 }}
+                >
+                  Add
+                </button>
+              </div>
             ))}
-            {gaps.length > 3 && !showAllGaps && (
-              <button onClick={() => setShowAllGaps(true)} style={{
-                fontFamily: UI, fontWeight: 600, fontSize: 12, color: T.sage, background: 'transparent',
-                border: 'none', cursor: 'pointer', padding: 0, textAlign: 'left',
-              }}>
-                Show {gaps.length - 3} more
-              </button>
-            )}
           </div>
         )}
 
-        {/* Expand/collapse tab for the project fields */}
+        {/* Expand/collapse for all the project fields */}
         <button
           onClick={() => setDetailsOpen(o => !o)}
           aria-expanded={detailsOpen}
           style={{
-            fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.sage,
-            background: 'transparent', border: 'none', cursor: 'pointer',
-            padding: '12px 0 0', marginTop: 12, borderTop: `1px solid ${T.border}`,
+            ...linkStyle(), fontFamily: UI, fontSize: 13.5,
+            background: 'transparent', border: 'none',
+            padding: '12px 0 0', marginTop: gaps.length > 0 ? 2 : 12, borderTop: `1px solid ${T.border}`,
             width: '100%', textAlign: 'left',
             display: 'flex', alignItems: 'center', gap: 6,
           }}
         >
+          {detailsOpen ? 'Hide project details' : 'Edit all project details'}
           {detailsOpen ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
-          {detailsOpen ? 'Hide project details' : 'Edit project details'}
         </button>
       </div>
 
@@ -630,7 +639,7 @@ export default function ProjectPage() {
               disabled={matching}
               aria-label="Re-check matches against the latest catalogue"
               style={{
-                fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.sage, background: 'transparent',
+                ...linkStyle(), fontFamily: UI, fontSize: 12.5, background: 'transparent',
                 border: 'none', cursor: matching ? 'default' : 'pointer', whiteSpace: 'nowrap',
                 display: 'inline-flex', alignItems: 'center', gap: 5, opacity: matching ? 0.6 : 1,
               }}
@@ -683,7 +692,7 @@ export default function ProjectPage() {
                   <p style={{ fontFamily: BODY, fontSize: 13.5, color: T.textSecondary, margin: 0, lineHeight: 1.6 }}>
                     No funding fits in the catalogue right now{matches.support.length > 0 ? ', though there is in-kind support below' : ''}.
                     Try broadening the sectors, or check{' '}
-                    <Link href="/dashboard/search" style={{ color: T.sage }}>Find Funding</Link> for the wider pool.
+                    <Link href="/dashboard/search" style={linkStyle()}>Find Funding</Link> for the wider pool.
                   </p>
                 </div>
               )}
@@ -693,11 +702,10 @@ export default function ProjectPage() {
                   {sections.map(({ key, type, label }) => {
                     const rows = matches[key]
                     if (rows.length === 0) return null
-                    const ts = FUNDING_TYPE_STYLE[type]
                     return (
                       <div key={key}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 10 }}>
-                          <span style={{ width: 10, height: 10, borderRadius: 999, background: ts.dot, flexShrink: 0 }} />
+                          <span style={{ width: 10, height: 10, borderRadius: 999, background: typeDot(type), flexShrink: 0 }} />
                           <h3 style={{ fontFamily: UI, fontWeight: 600, fontSize: 17, color: T.textPrimary, margin: 0, letterSpacing: '-0.01em' }}>
                             {label}
                           </h3>
@@ -707,10 +715,10 @@ export default function ProjectPage() {
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                           {rows.map(m => {
-                            const { grant, score } = m
+                            const { grant } = m
                             const id = grant.uuid ?? grant.id
                             const open = expandedId === id
-                            const tier = tierLabel(score)
+                            const isTop = id === topMatchId
                             const amount = fmtAmount(grant)
                             return (
                               <div key={id} style={{
@@ -725,15 +733,17 @@ export default function ProjectPage() {
                                 >
                                   <div style={{ flex: isMobile ? '1 1 100%' : 1, minWidth: 0 }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 2 }}>
-                                      <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 14.5, color: T.textPrimary }}>
+                                      <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 14.5, color: DEEP, textDecoration: 'underline', textUnderlineOffset: 2 }}>
                                         {grant.title}
                                       </span>
-                                      <span style={{
-                                        fontFamily: UI, fontWeight: 600, fontSize: 10.5, letterSpacing: '0.03em',
-                                        background: tier.bg, color: tier.color, padding: '2px 9px', borderRadius: 999,
-                                      }}>
-                                        {tier.label} {score}%
-                                      </span>
+                                      {isTop && (
+                                        <span style={{
+                                          fontFamily: UI, fontWeight: 600, fontSize: 11, letterSpacing: '0.02em',
+                                          background: T.doneBg, color: T.done, padding: '3px 10px', borderRadius: 999,
+                                        }}>
+                                          Best fit
+                                        </span>
+                                      )}
                                     </div>
                                     <span style={{ fontFamily: BODY, fontSize: 12.5, color: T.textSecondary }}>
                                       {grant.funder}
@@ -745,12 +755,8 @@ export default function ProjectPage() {
                                     href={`/dashboard/applications/new?opportunity=${grant.uuid}&project=${project.id}`}
                                     onClick={e => e.stopPropagation()}
                                     style={{
-                                      fontFamily: UI, fontWeight: 600, fontSize: 12.5, whiteSpace: 'nowrap', flexShrink: 0,
-                                      padding: '9px 16px', borderRadius: 999, textDecoration: 'none',
-                                      display: 'inline-flex', alignItems: 'center', gap: 5,
-                                      ...(id === topMatchId
-                                        ? { color: '#F6F1E7', background: '#1D3C3E', border: '1px solid transparent' }
-                                        : { color: '#1D3C3E', background: T.white, border: '1.5px solid rgba(29,60,62,0.24)' }),
+                                      ...(isTop ? deepBtnStyle : outlineBtn()), fontSize: 12.5, whiteSpace: 'nowrap', flexShrink: 0,
+                                      textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5,
                                     }}
                                   >
                                     <FilePenLine size={12} /> Start an application
@@ -779,7 +785,7 @@ export default function ProjectPage() {
         {ready && matches !== null && matches.support.length > 0 && (
           <div style={{ marginTop: 22, opacity: matching ? 0.6 : 1, transition: 'opacity 150ms ease' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 4 }}>
-              <span style={{ width: 10, height: 10, borderRadius: 999, background: FUNDING_TYPE_STYLE.in_kind.dot, flexShrink: 0 }} />
+              <span style={{ width: 10, height: 10, borderRadius: 999, background: typeDot('in_kind'), flexShrink: 0 }} />
               <h3 style={{ fontFamily: UI, fontWeight: 600, fontSize: 16, color: T.textPrimary, margin: 0, letterSpacing: '-0.01em' }}>
                 In-kind: worth adding alongside the funding
               </h3>
@@ -808,7 +814,7 @@ export default function ProjectPage() {
                       style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', flexWrap: isMobile ? 'wrap' : 'nowrap', rowGap: 8 }}
                     >
                       <div style={{ flex: isMobile ? '1 1 100%' : 1, minWidth: 0 }}>
-                        <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: T.textPrimary, display: 'block' }}>
+                        <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: DEEP, display: 'block', textDecoration: 'underline', textUnderlineOffset: 2 }}>
                           {grant.title}
                         </span>
                         <span style={{ fontFamily: BODY, fontSize: 12, color: T.textSecondary }}>
@@ -819,11 +825,11 @@ export default function ProjectPage() {
                         href={`/dashboard/applications/new?opportunity=${grant.uuid}&project=${project.id}`}
                         onClick={e => e.stopPropagation()}
                         style={{
-                          fontFamily: UI, fontWeight: 600, fontSize: 12, color: T.sage,
-                          textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0,
+                          ...outlineBtn(), fontSize: 12.5, whiteSpace: 'nowrap', flexShrink: 0,
+                          textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5,
                         }}
                       >
-                        Start an application
+                        <FilePenLine size={12} /> Start an application
                       </Link>
                       <ChevronDown
                         size={15}
@@ -846,7 +852,7 @@ export default function ProjectPage() {
             <Link
               href={`/dashboard/applications/new?project=${project.id}`}
               style={{
-                fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.sage, textDecoration: 'none',
+                ...linkStyle(), fontFamily: UI, fontSize: 13,
                 display: 'inline-flex', alignItems: 'center', gap: 6,
               }}
             >

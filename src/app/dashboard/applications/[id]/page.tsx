@@ -17,7 +17,7 @@ import { createClient } from '@/lib/supabase/client'
 import { createPipelineItem, updatePipelineStage } from '@/lib/pipeline'
 import { emitClientEvent } from '@/lib/events/client'
 import ImportApplicationModal from '@/components/builder/ImportApplicationModal'
-import { T, UI, BODY, inputStyle, primaryBtn, ghostBtn } from '@/components/builder/tokens'
+import { T, UI, BODY, DEEP, inputStyle, deepBtn, ghostBtn, linkStyle } from '@/components/builder/tokens'
 import {
   BLOCK_TYPES, BLOCK_TYPE_LABELS, answerHash,
   type ApplicationQuestion, type ApplicationRecord, type AnswerReview, type BlockType, type EligibilitySnapshot,
@@ -32,6 +32,19 @@ function wordCount(s: string): number {
 }
 
 const PLACEHOLDER_RE = /\[ADD:[^\]]*\]/gi
+
+/**
+ * Markdown never reaches a textarea as literal asterisks. The draft prompt now
+ * forbids it, but answers drafted before 2026-09-02 carry `**Eligibility
+ * note…**` verbatim, and a model can still slip. Strips bold/italic markers
+ * and heading hashes; leaves [ADD: …] placeholders alone.
+ */
+function stripMarkdown(s: string): string {
+  return s
+    .replace(/\*\*([^*\n]+)\*\*/g, '$1')
+    .replace(/__([^_\n]+)__/g, '$1')
+    .replace(/^#{1,6}\s+/gm, '')
+}
 
 function placeholderCount(s: string): number {
   return (s.match(PLACEHOLDER_RE) ?? []).length
@@ -196,6 +209,7 @@ export default function ApplicationWorkspacePage() {
 
   // Funder context: what the catalogue actually holds, shown not counted
   const [briefData, setBriefData] = useState<Record<string, string> | null>(null)
+  const [briefReadAt, setBriefReadAt] = useState<string | null>(null)
   const [contextOpen, setContextOpen] = useState(false)
   const [guidelinesOpen, setGuidelinesOpen] = useState(false)
   const [guidelinesText, setGuidelinesText] = useState('')
@@ -241,7 +255,13 @@ export default function ApplicationWorkspacePage() {
       const supabase = createClient()
       const { data } = await supabase.from('applications').select('*').eq('id', appId).maybeSingle()
       if (!data) { router.push('/dashboard/applications'); return }
-      setApp(data as ApplicationRecord)
+      const loaded = data as ApplicationRecord
+      // Answers saved before the plain-text rule carry literal markdown.
+      if (loaded?.questions) {
+        loaded.questions = loaded.questions.map(q =>
+          q.user_answer && /\*\*|^#{1,6}\s/m.test(q.user_answer) ? { ...q, user_answer: stripMarkdown(q.user_answer) } : q)
+      }
+      setApp(loaded)
       setOpenQid(((data as ApplicationRecord).questions ?? [])[0]?.id ?? null)
       document.title = `${(data as ApplicationRecord).grant_name || (data as ApplicationRecord).funder_name || 'Application'} · Shoots`
       // Linked project (IA: applications visibly belong to their project).
@@ -323,6 +343,7 @@ export default function ApplicationWorkspacePage() {
           if (typeof fb[k] === 'string' && (fb[k] as string).trim().length > 0) held[k] = (fb[k] as string).trim()
         }
         setBriefData(held)
+        setBriefReadAt(typeof fb.last_enriched === 'string' ? fb.last_enriched : null)
         setOppDeadline(!data?.is_rolling && data?.deadline ? String(data.deadline) : null)
       })
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -541,10 +562,10 @@ export default function ApplicationWorkspacePage() {
           if (evt.t === 'delta' && evt.text) {
             draftText += evt.text
             // Show the draft as it streams; keep the voice tail out of the editor.
-            const visible = draftText.split('---VOICE---')[0]
+            const visible = stripMarkdown(draftText.split('---VOICE---')[0])
             updateQuestion(q.id, { user_answer: visible })
           } else if (evt.t === 'done') {
-            updateQuestion(q.id, { user_answer: (evt.draft ?? draftText.split('---VOICE---')[0]).trim() })
+            updateQuestion(q.id, { user_answer: stripMarkdown(evt.draft ?? draftText.split('---VOICE---')[0]).trim() })
             if (evt.voice_prompts?.length) {
               setVoicePrompts(prev => ({ ...prev, [q.id]: evt.voice_prompts! }))
             }
@@ -994,7 +1015,7 @@ export default function ApplicationWorkspacePage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 6 }}>
             {linkedProject ? (
               <Link href={`/dashboard/projects/${linkedProject.id}`} style={{
-                fontFamily: UI, fontWeight: 600, fontSize: 11.5, color: T.sage, background: T.paleGreen,
+                fontFamily: UI, fontWeight: 600, fontSize: 11.5, color: DEEP, background: T.mint,
                 padding: '3px 10px', borderRadius: 999, textDecoration: 'none',
                 display: 'inline-flex', alignItems: 'center', gap: 4,
               }}>
@@ -1007,9 +1028,8 @@ export default function ApplicationWorkspacePage() {
                 href="/dashboard/projects/new"
                 title="Define this as a project once and match it to more funders"
                 style={{
-                  fontFamily: UI, fontWeight: 600, fontSize: 11.5, color: T.sage, background: 'transparent',
-                  border: `1px dashed ${T.borderStrong}`, padding: '3px 10px', borderRadius: 999,
-                  textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4,
+                  ...linkStyle(), fontFamily: UI, fontSize: 12,
+                  display: 'inline-flex', alignItems: 'center', gap: 4,
                 }}
               >
                 <Lightbulb size={12} /> Save as a project
@@ -1022,8 +1042,8 @@ export default function ApplicationWorkspacePage() {
               <span
                 title="Based on your profile and this funder's criteria. Always confirm on the funder's site."
                 style={{
-                  fontFamily: UI, fontWeight: 600, fontSize: 11.5, color: T.greenText,
-                  background: T.greenBg, padding: '3px 10px', borderRadius: 999,
+                  fontFamily: UI, fontWeight: 600, fontSize: 11.5, color: T.done,
+                  background: T.doneBg, padding: '3px 10px', borderRadius: 999,
                   display: 'inline-flex', alignItems: 'center', gap: 4, cursor: 'help',
                 }}
               >
@@ -1050,7 +1070,7 @@ export default function ApplicationWorkspacePage() {
             {answeredCount} of {app.questions.length} questions written
           </span>
           {saveState !== 'idle' && (
-            <span style={{ fontFamily: UI, fontSize: 11.5, color: saveState === 'saved' ? T.greenMid : T.textTertiary }}>
+            <span style={{ fontFamily: UI, fontSize: 11.5, color: T.textTertiary }}>
               {saveState === 'saving' ? 'Saving…' : 'Saved'}
             </span>
           )}
@@ -1125,9 +1145,9 @@ export default function ApplicationWorkspacePage() {
           )}
           {gate && blockers.length === 0 && warnings.length > 0 && (
             <div style={{ background: T.paleGreen, borderRadius: 12, padding: '13px 18px', display: 'flex', alignItems: 'flex-start', gap: 9 }}>
-              <CheckCircle2 size={16} color={T.greenMid} style={{ marginTop: 1, flexShrink: 0 }} />
+              <CheckCircle2 size={16} color={T.done} style={{ marginTop: 1, flexShrink: 0 }} />
               <div>
-                <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: T.sage }}>
+                <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: T.done }}>
                   {STATUS_LABELS[gate.overall_status] ?? gate.overall_status}
                 </span>
                 <span style={{ display: 'block', fontFamily: BODY, fontSize: 11.5, color: T.textSecondary, marginTop: 2 }}>
@@ -1173,7 +1193,7 @@ export default function ApplicationWorkspacePage() {
               padding: '13px 18px', background: 'transparent', border: 'none', cursor: 'pointer',
             }}
           >
-            <FileText size={15} color={thin ? T.amberText : T.greenMid} style={{ flexShrink: 0 }} />
+            <FileText size={15} color={thin ? T.amberText : DEEP} style={{ flexShrink: 0 }} />
             <span style={{ flex: 1, minWidth: 0 }}>
               <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: T.textPrimary }}>
                 What we know about this funder
@@ -1183,7 +1203,7 @@ export default function ApplicationWorkspacePage() {
                   ? heldKeys.length === 0
                     ? 'Nothing held yet. Guides and drafts will be generic for this funder unless you add their guidance.'
                     : `Limited: ${heldKeys.map(k => BRIEF_FIELD_LABELS[k].toLowerCase()).join(', ')}. Adding their guidance will sharpen guides and drafts.`
-                  : 'Guides are based on our summary of this funder. Check it against the funder’s site.'}
+                  : [app.funder_name, briefReadAt ? `read ${new Date(briefReadAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })}` : null].filter(Boolean).join(' · ') || 'Our summary of this funder'}
               </span>
             </span>
             {thin && !guidelinesOpen && (
@@ -1206,16 +1226,30 @@ export default function ApplicationWorkspacePage() {
           {/* Expanded: the actual brief content, field by field */}
           {contextOpen && (
             <div style={{ borderTop: `1px solid ${T.border}`, padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {heldKeys.map(k => (
-                <div key={k}>
-                  <div style={{ fontFamily: UI, fontWeight: 700, fontSize: 11.5, letterSpacing: '0.01em', color: T.greenMid, marginBottom: 3 }}>
-                    {BRIEF_FIELD_LABELS[k]}
+              {heldKeys.map(k => {
+                // Exclusions are the highest-value block on a page whose job is
+                // to stop wasted effort, so they carry the danger rule.
+                const exclusions = k === 'exclusions'
+                return (
+                  <div key={k} style={exclusions ? { borderLeft: `3px solid ${T.coralText}`, paddingLeft: 13 } : undefined}>
+                    <div style={{
+                      fontFamily: UI, fontWeight: 700, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase',
+                      color: exclusions ? T.coralText : DEEP, marginBottom: 4,
+                    }}>
+                      {BRIEF_FIELD_LABELS[k]}
+                    </div>
+                    <p style={{ fontFamily: BODY, fontSize: 13.5, color: T.textPrimary, margin: 0, lineHeight: 1.6, whiteSpace: 'pre-line' }}>
+                      {briefData[k]}
+                    </p>
                   </div>
-                  <p style={{ fontFamily: BODY, fontSize: 13, color: T.textPrimary, margin: 0, lineHeight: 1.6, whiteSpace: 'pre-line' }}>
-                    {briefData[k]}
-                  </p>
-                </div>
-              ))}
+                )
+              })}
+              <p style={{
+                fontFamily: BODY, fontSize: 12.5, color: T.textSecondary, margin: 0, lineHeight: 1.55,
+                paddingTop: 12, borderTop: `1px solid ${T.border}`,
+              }}>
+                This is our summary, not the funder&apos;s words. Check it on their site before you rely on it.
+              </p>
               {missingKeys.length > 0 && (
                 <p style={{ fontFamily: BODY, fontSize: 12, color: T.textTertiary, margin: 0, lineHeight: 1.5 }}>
                   Not held yet: {missingKeys.map(k => BRIEF_FIELD_LABELS[k].toLowerCase()).join(', ')}.
@@ -1225,8 +1259,8 @@ export default function ApplicationWorkspacePage() {
                 <button
                   onClick={() => setGuidelinesOpen(true)}
                   style={{
-                    ...ghostBtn(), paddingLeft: 0, textAlign: 'left',
-                    color: T.sage, fontSize: 12.5, alignSelf: 'flex-start',
+                    ...ghostBtn(), ...linkStyle(), paddingLeft: 0, textAlign: 'left',
+                    fontSize: 12.5, alignSelf: 'flex-start',
                   }}
                 >
                   Seen something on the funder&apos;s site that&apos;s missing here? Add their guidance
@@ -1263,9 +1297,7 @@ export default function ApplicationWorkspacePage() {
               {guidelinesError && <p style={{ fontFamily: BODY, fontSize: 12.5, color: T.coralText, margin: 0 }}>{guidelinesError}</p>}
               <div style={{ display: 'flex', gap: 10 }}>
                 <button onClick={submitGuidelines} disabled={guidelinesBusy} style={{
-                  fontFamily: UI, fontWeight: 600, fontSize: 13, color: '#F1F7E4',
-                  background: T.greenDeep, border: 'none', padding: '8px 16px', borderRadius: 8,
-                  cursor: guidelinesBusy ? 'wait' : 'pointer', opacity: guidelinesBusy ? 0.7 : 1,
+                  ...deepBtn(guidelinesBusy), cursor: guidelinesBusy ? 'wait' : 'pointer',
                 }}>
                   {guidelinesBusy ? 'Adding…' : 'Add guidance'}
                 </button>
@@ -1283,13 +1315,13 @@ export default function ApplicationWorkspacePage() {
       {app.supplied_guidelines && (
         <div style={{ background: T.paleGreen, borderRadius: 12, marginBottom: 16, overflow: 'hidden' }}>
           <div style={{ padding: '11px 18px', display: 'flex', alignItems: 'center', gap: 9, flexWrap: 'wrap' }}>
-            <FileText size={14} color={T.greenMid} style={{ flexShrink: 0 }} />
-            <span style={{ flex: 1, fontFamily: BODY, fontSize: 12.5, color: T.sage, minWidth: 180 }}>
+            <FileText size={14} color={DEEP} style={{ flexShrink: 0 }} />
+            <span style={{ flex: 1, fontFamily: BODY, fontSize: 12.5, color: T.textPrimary, minWidth: 180 }}>
               The funder&apos;s guidance you supplied is being used to shape guides and drafts.
             </span>
             <button
               onClick={() => setGuidelinesViewOpen(o => !o)}
-              style={{ fontFamily: UI, fontWeight: 600, fontSize: 12, color: T.sage, background: 'transparent', border: 'none', cursor: 'pointer', padding: '2px 6px' }}
+              style={{ ...linkStyle(), fontFamily: UI, fontSize: 12, background: 'transparent', border: 'none', padding: '2px 6px' }}
             >
               {guidelinesViewOpen ? 'Hide' : 'View'}
             </button>
@@ -1328,7 +1360,7 @@ export default function ApplicationWorkspacePage() {
           textAlign: 'center',
         }}>
           <div style={{
-            width: 44, height: 44, borderRadius: 12, background: T.paleGreen, color: T.greenMid,
+            width: 44, height: 44, borderRadius: 12, background: T.mint, color: DEEP,
             display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px',
           }}>
             <Compass size={20} />
@@ -1352,7 +1384,7 @@ export default function ApplicationWorkspacePage() {
             <button
               onClick={generate}
               disabled={gateBlocksGeneration}
-              style={primaryBtn(gateBlocksGeneration)}
+              style={deepBtn(gateBlocksGeneration)}
               title={gateBlocksGeneration ? 'Resolve or acknowledge the eligibility warning first' : undefined}
             >
               Plan my answers
@@ -1373,8 +1405,8 @@ export default function ApplicationWorkspacePage() {
       {/* ── Rebuild nudge: library grew after scaffolds were built ── */}
       {importedSinceBuild && hasScaffolds && !generating && (
         <div style={{ background: T.paleGreen, borderRadius: 12, padding: '12px 18px', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <Compass size={15} color={T.greenMid} style={{ flexShrink: 0 }} />
-          <span style={{ flex: 1, fontFamily: BODY, fontSize: 13, color: T.sage, minWidth: 200 }}>
+          <Compass size={15} color={DEEP} style={{ flexShrink: 0 }} />
+          <span style={{ flex: 1, fontFamily: BODY, fontSize: 13, color: T.textPrimary, minWidth: 200 }}>
             Your material grew since these answer plans were made. Re-plan to map your new material in.
           </span>
           <button onClick={generate} style={{
@@ -1415,6 +1447,10 @@ export default function ApplicationWorkspacePage() {
             onToggleGap={gapIdx => {
               const gaps = q.gaps.map((g, i) => (i === gapIdx ? { ...g, dismissed: !g.dismissed } : g))
               updateQuestion(q.id, { gaps })
+            }}
+            onToggleScaffold={sectionIdx => {
+              const scaffold = (q.scaffold ?? []).map((sec, i) => (i === sectionIdx ? { ...sec, covered: !sec.covered } : sec))
+              updateQuestion(q.id, { scaffold })
             }}
             onBank={() => openBank(q)}
             onDraft={() => draftAnswer(q)}
@@ -1464,7 +1500,7 @@ export default function ApplicationWorkspacePage() {
             <label style={{ fontFamily: UI, fontSize: 12.5, fontWeight: 600, color: T.textSecondary, display: 'block', marginBottom: 6 }}>Title</label>
             <input value={bankTitle} onChange={e => setBankTitle(e.target.value)} style={{ ...inputStyle(), marginBottom: 16 }} />
             <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={bankAnswer} disabled={bankSaving} style={primaryBtn(bankSaving)}>
+              <button onClick={bankAnswer} disabled={bankSaving} style={deepBtn(bankSaving)}>
                 {bankSaving ? 'Saving…' : 'Save it'}
               </button>
               <button onClick={() => setBankingFor(null)} style={ghostBtn()}>Cancel</button>
@@ -1542,8 +1578,8 @@ export default function ApplicationWorkspacePage() {
                           aria-label={a.apply ? 'Skip this answer' : 'Apply this answer'}
                           style={{
                             width: 18, height: 18, borderRadius: 5, flexShrink: 0, marginTop: 2,
-                            border: `1.5px solid ${T.greenMid}`,
-                            background: a.apply ? T.greenMid : 'transparent',
+                            border: `1.5px solid ${T.done}`,
+                            background: a.apply ? T.done : 'transparent',
                             display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
                           }}
                         >
@@ -1573,7 +1609,7 @@ export default function ApplicationWorkspacePage() {
                 </div>
                 {returnError && <p style={{ fontFamily: BODY, fontSize: 13, color: T.coralText, margin: '0 0 10px' }}>{returnError}</p>}
                 <div style={{ display: 'flex', gap: 10 }}>
-                  <button onClick={applyReturnedAnswers} style={primaryBtn()}>
+                  <button onClick={applyReturnedAnswers} style={deepBtn()}>
                     Apply {returnMapped.filter(a => a.apply).length} {returnMapped.filter(a => a.apply).length === 1 ? 'answer' : 'answers'}
                   </button>
                   <button onClick={() => setReturnMapped(null)} style={ghostBtn()}>Back</button>
@@ -1613,7 +1649,7 @@ export default function ApplicationWorkspacePage() {
               {editDrafts.map((d, i) => (
                 <div key={d.id} style={{ border: `1px solid ${T.border}`, borderRadius: 10, padding: '11px 13px', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
                   <span style={{
-                    fontFamily: UI, fontWeight: 700, fontSize: 12, color: T.sage, background: T.paleGreen,
+                    fontFamily: UI, fontWeight: 700, fontSize: 12, color: DEEP, background: T.mint,
                     width: 24, height: 24, borderRadius: 999, display: 'flex', alignItems: 'center',
                     justifyContent: 'center', flexShrink: 0, marginTop: 4,
                   }}>
@@ -1656,7 +1692,7 @@ export default function ApplicationWorkspacePage() {
               + Add a question
             </button>
             <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={saveEditedQuestions} disabled={editSaving} style={primaryBtn(editSaving)}>
+              <button onClick={saveEditedQuestions} disabled={editSaving} style={deepBtn(editSaving)}>
                 {editSaving ? 'Saving…' : 'Save questions'}
               </button>
               <button onClick={() => setEditQsOpen(false)} style={ghostBtn()}>Cancel</button>
@@ -1703,8 +1739,8 @@ function ScoreRing({ score, stale }: { score: number | null; stale: boolean }) {
   const colour = score === null ? 'rgba(0,0,0,0.1)'
     : score < 5 ? T.coral
     : score < 7 ? T.amber
-    : score < 8.5 ? T.greenMid
-    : '#1B6B3D'
+    : score < 8.5 ? T.sage
+    : T.done
   return (
     <svg width={52} height={52} viewBox="0 0 52 52" style={{ opacity: stale ? 0.45 : 1, flexShrink: 0 }}>
       <circle cx={26} cy={26} r={r} fill="none" stroke={T.cream} strokeWidth={5} />
@@ -1723,7 +1759,7 @@ function ScoreRing({ score, stale }: { score: number | null; stale: boolean }) {
   )
 }
 
-function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisabled, reviewing, voicePrompts, replacedAnswer, onAnswerChange, onToggleGap, onBank, onDraft, onReview, onRestoreAnswer }: {
+function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisabled, reviewing, voicePrompts, replacedAnswer, onAnswerChange, onToggleGap, onToggleScaffold, onBank, onDraft, onReview, onRestoreAnswer }: {
   index: number
   question: ApplicationQuestion
   open: boolean
@@ -1735,6 +1771,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
   replacedAnswer: string | null
   onAnswerChange: (text: string) => void
   onToggleGap: (gapIdx: number) => void
+  onToggleScaffold: (sectionIdx: number) => void
   onBank: () => void
   onDraft: () => void
   onReview: () => void
@@ -1745,7 +1782,6 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
   const [railOpen, setRailOpen] = useState(false)
   const [expandedTip, setExpandedTip] = useState<number | null>(null)
   const [expandedGap, setExpandedGap] = useState<number | null>(null)
-  const [expandedStep, setExpandedStep] = useState<number | null>(null)
   const [materialOpen, setMaterialOpen] = useState(false)
   // Empty-answer flow: lead with the draft action; "write from scratch" reveals
   // the blank textarea (redesign state A).
@@ -1792,8 +1828,8 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
   const reviewTier = review
     ? (review.score < 5 ? { bg: T.coralBg, color: T.coralText }
       : review.score < 7 ? { bg: T.amberBg, color: T.amberText }
-      : { bg: T.greenBg, color: T.greenText })
-    : { bg: T.greenBg, color: T.greenText }
+      : { bg: T.doneBg, color: T.done })
+    : { bg: T.doneBg, color: T.done }
   // Empty answer + a guide to draft from -> lead with the draft action
   // instead of a blank textarea (redesign state A).
   const showDraftPanel = !q.user_answer.trim() && hasScaffold && !scratch && !drafting
@@ -1812,7 +1848,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
     if (placeholders > 0) return { label: `${placeholders} ${placeholders === 1 ? 'placeholder' : 'placeholders'}`, bg: T.amberBg, color: T.amberText }
     if (review && !reviewStale) return { label: `${review.score % 1 === 0 ? review.score : review.score.toFixed(1)}/10`, bg: reviewTier.bg, color: reviewTier.color }
     if (words === 0) return { label: 'Not started', bg: T.cream, color: T.textTertiary }
-    return { label: 'In progress', bg: T.paleGreen2, color: T.sage }
+    return { label: 'In progress', bg: T.doneBg, color: T.done }
   })()
 
   if (!open) {
@@ -1827,7 +1863,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
         }}
       >
         <span style={{
-          fontFamily: UI, fontWeight: 700, fontSize: 12, color: T.sage, background: T.paleGreen,
+          fontFamily: UI, fontWeight: 700, fontSize: 12, color: DEEP, background: T.mint,
           width: 26, height: 26, borderRadius: 999, display: 'flex', alignItems: 'center',
           justifyContent: 'center', flexShrink: 0,
         }}>
@@ -1856,7 +1892,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
       <div style={{ padding: '16px 20px 0' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
           <span style={{
-            fontFamily: UI, fontWeight: 700, fontSize: 12, color: T.sage, background: T.paleGreen,
+            fontFamily: UI, fontWeight: 700, fontSize: 12, color: DEEP, background: T.mint,
             width: 26, height: 26, borderRadius: 999, display: 'flex', alignItems: 'center',
             justifyContent: 'center', flexShrink: 0, marginTop: 1,
           }}>
@@ -1877,8 +1913,8 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
                 <button
                   onClick={() => setShowFullQ(f => !f)}
                   style={{
-                    fontFamily: UI, fontWeight: 600, fontSize: 11.5, color: T.sage,
-                    background: 'transparent', border: 'none', cursor: 'pointer', padding: '1px 0 0',
+                    ...linkStyle(), fontFamily: UI, fontSize: 11.5,
+                    background: 'transparent', border: 'none', padding: '1px 0 0',
                     display: 'block',
                   }}
                 >
@@ -1892,71 +1928,96 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
           </button>
         </div>
 
-        {/* Status chip row (spec §4.3) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', margin: '10px 0 0', paddingLeft: 38 }}>
-          {review && (
-            <span style={{
+        {/* Metric row. Blockers on the left in the danger tint, status on the
+            right in neutral, a divider between. Four pills used to sit here in
+            one shape and three tints with no order; a reader could not tell in
+            one pass whether anything was wrong. Nothing counts before a first
+            draft: at 0 words everything is a gap, and the card must not accuse. */}
+        {(() => {
+          const pill = (label: string, tone: 'danger' | 'neutral' | 'done', key: string, dim = false) => (
+            <span key={key} style={{
               fontFamily: UI, fontWeight: 600, fontSize: 11, padding: '3px 10px', borderRadius: 999,
-              background: reviewTier.bg, color: reviewTier.color, opacity: reviewStale ? 0.55 : 1,
+              background: tone === 'danger' ? T.coralBg : tone === 'done' ? T.doneBg : '#F1EDE3',
+              color: tone === 'danger' ? T.coralText : tone === 'done' ? T.done : T.textSecondary,
+              opacity: dim ? 0.55 : 1,
             }}>
-              {review.score % 1 === 0 ? review.score : review.score.toFixed(1)} / 10{reviewStale ? ', answer changed' : ''}
+              {label}
             </span>
-          )}
-          {limit !== null && (
-            <span style={{
-              fontFamily: UI, fontWeight: 600, fontSize: 11, padding: '3px 10px', borderRadius: 999,
-              background: overLimit ? T.coralBg : T.cream, color: overLimit ? T.coralText : T.textSecondary,
-            }}>
-              {overLimit ? `${words - limit} words over the ${limit} limit` : `${words} of ${limit} words`}
-            </span>
-          )}
-          {placeholders > 0 && (
-            <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 11, padding: '3px 10px', borderRadius: 999, background: T.amberBg, color: T.amberText }}>
-              {placeholders} {placeholders === 1 ? 'placeholder' : 'placeholders'} to fill
-            </span>
-          )}
-          {openGaps.length > 0 && (
-            <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 11, padding: '3px 10px', borderRadius: 999, background: openGaps.some(g => g.severity === 'blocking') ? T.coralBg : T.amberBg, color: openGaps.some(g => g.severity === 'blocking') ? T.coralText : T.amberText }}>
-              {openGaps.length} {openGaps.length === 1 ? 'gap' : 'gaps'} to fix
-            </span>
-          )}
-          {q.answer_banked && (
-            <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 11, padding: '3px 10px', borderRadius: 999, background: T.greenBg, color: T.greenText }}>
-              In your material
-            </span>
-          )}
-        </div>
-
-        {/* Guide chips (spec §4.6): what a strong answer covers */}
-        {hasScaffold && (
-          <div style={{ margin: '10px 0 0', paddingLeft: 38 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-              <span style={{ fontFamily: UI, fontWeight: 700, fontSize: 11.5, letterSpacing: '0.01em', color: T.greenMid }}>
-                Guide
-              </span>
-              {sortedScaffold.map((s, i) => (
-                <button
-                  key={i}
-                  onClick={() => setExpandedStep(expandedStep === i ? null : i)}
-                  aria-expanded={expandedStep === i}
-                  style={{
-                    fontFamily: UI, fontWeight: 600, fontSize: 11.5, padding: '4px 11px', borderRadius: 999,
-                    background: expandedStep === i ? T.paleGreen : T.softGreen,
-                    color: T.sage, border: `1px solid ${expandedStep === i ? 'rgba(59,109,17,0.3)' : T.border}`,
-                    cursor: 'pointer',
-                  }}
-                >
-                  {i + 1}. {s.heading}
-                </button>
-              ))}
+          )
+          const hasDraft = words > 0
+          const blockers = hasDraft ? [
+            placeholders > 0 ? pill(`${placeholders} ${placeholders === 1 ? 'placeholder' : 'placeholders'} to fill`, 'danger', 'ph') : null,
+            overLimit ? pill(`${words - limit!} words over the limit`, 'danger', 'over') : null,
+          ].filter(Boolean) : []
+          const status = [
+            hasDraft && limit !== null ? pill(`${words} of ${limit} words`, 'neutral', 'words') : null,
+            review ? pill(`Scores ${review.score % 1 === 0 ? review.score : review.score.toFixed(1)} of 10${reviewStale ? ', answer changed' : ''}`, 'neutral', 'score', reviewStale) : null,
+            q.answer_banked ? pill('In your material', 'done', 'banked') : null,
+          ].filter(Boolean)
+          if (blockers.length === 0 && status.length === 0) return null
+          return (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', margin: '10px 0 0', paddingLeft: 38 }}>
+              {blockers}
+              {blockers.length > 0 && status.length > 0 && (
+                <span aria-hidden style={{ width: 1, height: 16, background: T.borderStrong, margin: '0 3px' }} />
+              )}
+              {status}
             </div>
-            {expandedStep !== null && sortedScaffold[expandedStep] && (
-              <p style={{ fontFamily: BODY, fontSize: 12.5, color: T.textSecondary, margin: '7px 0 0', lineHeight: 1.55 }}>
-                {sortedScaffold[expandedStep].guidance}
+          )
+        })()}
+
+        {/* The guide is a checklist, not a row of filter-shaped chips. Ticks are
+            the user's: click a point once the answer covers it, and the count
+            in the heading says how far along the answer is. Guidance for each
+            point sits under its heading, so nothing is hidden behind a click. */}
+        {hasScaffold && (() => {
+          const covered = sortedScaffold.filter(sec => sec.covered).length
+          return (
+            <div style={{ margin: '14px 0 0', paddingLeft: 38 }}>
+              <p style={{
+                fontFamily: UI, fontWeight: 700, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase',
+                color: T.textTertiary, margin: '0 0 8px',
+              }}>
+                What a strong answer covers · {covered} of {sortedScaffold.length} so far
               </p>
-            )}
-          </div>
-        )}
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '6px 24px' }}>
+                {sortedScaffold.map(sec => {
+                  const origIdx = q.scaffold!.indexOf(sec)
+                  const on = !!sec.covered
+                  return (
+                    <button
+                      key={origIdx}
+                      onClick={() => onToggleScaffold(origIdx)}
+                      aria-pressed={on}
+                      title={on ? 'Covered. Click to untick.' : 'Click once your answer covers this.'}
+                      style={{
+                        display: 'flex', gap: 9, alignItems: 'flex-start', textAlign: 'left',
+                        background: 'transparent', border: 'none', cursor: 'pointer', padding: '2px 0',
+                      }}
+                    >
+                      <span aria-hidden style={{
+                        fontFamily: UI, fontWeight: 700, fontSize: 13, lineHeight: '19px', flexShrink: 0, width: 14,
+                        color: on ? T.done : T.textTertiary,
+                      }}>
+                        {on ? '✓' : '○'}
+                      </span>
+                      <span style={{ minWidth: 0 }}>
+                        <span style={{ display: 'block', fontFamily: BODY, fontSize: 13.5, lineHeight: 1.4, color: on ? DEEP : T.textSecondary }}>
+                          {sec.heading}
+                        </span>
+                        {!on && (
+                          <span style={{ display: 'block', fontFamily: BODY, fontSize: 12, lineHeight: 1.45, color: T.textTertiary, marginTop: 1 }}>
+                            {sec.guidance}
+                          </span>
+                        )}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )
+        })()}
       </div>
 
       {/* Editor + rail */}
@@ -1992,8 +2053,8 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
                   <button
                     onClick={() => setPreview(p => !p)}
                     style={{
-                      fontFamily: UI, fontWeight: 600, fontSize: 11.5, color: preview ? T.sage : T.textSecondary,
-                      background: preview ? T.paleGreen : 'transparent', border: `1px solid ${preview ? 'rgba(59,109,17,0.3)' : T.borderStrong}`,
+                      fontFamily: UI, fontWeight: 600, fontSize: 11.5, color: preview ? DEEP : T.textSecondary,
+                      background: preview ? T.mint : 'transparent', border: `1px solid ${preview ? DEEP : T.borderStrong}`,
                       borderRadius: 999, padding: '4px 10px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5,
                     }}
                   >
@@ -2013,7 +2074,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
                   <span key={label} style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                     <span style={{
                       fontFamily: UI, fontWeight: 600, fontSize: 11, padding: '3px 10px', borderRadius: 999,
-                      background: i === 0 ? T.paleGreen : T.cream, color: i === 0 ? T.sage : T.textTertiary,
+                      background: i === 0 ? T.mint : T.cream, color: i === 0 ? DEEP : T.textTertiary,
                     }}>
                       {i + 1} {label}
                     </span>
@@ -2022,7 +2083,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
                 ))}
               </div>
               <div style={{
-                width: 46, height: 46, borderRadius: 12, background: T.paleGreen, color: T.sage,
+                width: 46, height: 46, borderRadius: 12, background: T.mint, color: DEEP,
                 display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px',
               }}>
                 <FilePenLine size={22} />
@@ -2034,12 +2095,12 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
                 We&apos;ll write a first version from your project and saved material. You review it,
                 check the score, then edit it into your own voice.
               </p>
-              <button onClick={onDraft} disabled={draftDisabled} style={{ ...primaryBtn(draftDisabled), display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <button onClick={onDraft} disabled={draftDisabled} style={{ ...deepBtn(draftDisabled), display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                 <FilePenLine size={15} /> Draft a starting version
               </button>
               <div style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary, marginTop: 12 }}>
                 or{' '}
-                <button onClick={() => setScratch(true)} className="gt-link" style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.sage }}>
+                <button onClick={() => setScratch(true)} style={{ ...linkStyle(), background: 'transparent', border: 'none', padding: 0, fontFamily: UI, fontSize: 13 }}>
                   write it from scratch
                 </button>
               </div>
@@ -2104,7 +2165,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
                     className="gt-link"
                     style={{
                       ...ghostBtn(), display: 'inline-flex', alignItems: 'center', gap: 6,
-                      paddingLeft: 0, color: draftDisabled && !drafting ? T.textTertiary : T.greenMid,
+                      paddingLeft: 0, ...(draftDisabled && !drafting ? { color: T.textTertiary } : linkStyle()),
                       cursor: draftDisabled ? 'wait' : 'pointer',
                     }}
                   >
@@ -2125,7 +2186,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
                   <button
                     onClick={onBank}
                     className="gt-link"
-                    style={{ ...ghostBtn(), display: 'inline-flex', alignItems: 'center', gap: 6, color: T.sage, ...(hasScaffold ? {} : { paddingLeft: 0 }) }}
+                    style={{ ...ghostBtn(), ...linkStyle(), display: 'inline-flex', alignItems: 'center', gap: 6, ...(hasScaffold ? {} : { paddingLeft: 0 }) }}
                   >
                     <BookmarkPlus size={14} /> Save to your material
                   </button>
@@ -2135,7 +2196,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
           )}
           {voicePrompts.length > 0 && (
             <div style={{ background: T.paleGreen, borderRadius: 8, padding: '10px 13px', marginTop: 8 }}>
-              <div style={{ fontFamily: UI, fontWeight: 700, fontSize: 11.5, letterSpacing: '0.01em', color: T.sage, marginBottom: 5 }}>
+              <div style={{ fontFamily: UI, fontWeight: 700, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: DEEP, marginBottom: 5 }}>
                 Make it yours
               </div>
               <ul style={{ margin: 0, paddingLeft: 16 }}>
@@ -2157,10 +2218,10 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
                   border: 'none', cursor: 'pointer', padding: 0,
                 }}
               >
-                <span style={{ fontFamily: UI, fontWeight: 700, fontSize: 11.5, letterSpacing: '0.01em', color: T.greenMid }}>
+                <span style={{ fontFamily: UI, fontWeight: 700, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: T.textTertiary }}>
                   Your material
                 </span>
-                <span style={{ fontFamily: UI, fontWeight: 700, fontSize: 10, color: T.greenText, background: T.greenBg, padding: '1px 7px', borderRadius: 999 }}>
+                <span style={{ fontFamily: UI, fontWeight: 700, fontSize: 10, color: DEEP, background: '#F1EDE3', padding: '1px 7px', borderRadius: 999 }}>
                   {q.mapped_content.length}
                 </span>
                 <ChevronDown size={12} color={T.textTertiary}
@@ -2173,7 +2234,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
                       <p style={{ fontFamily: BODY, fontSize: 12.5, color: T.textPrimary, margin: '0 0 4px', lineHeight: 1.5, fontStyle: 'italic' }}>
                         &ldquo;{m.excerpt}&rdquo;
                       </p>
-                      <span style={{ fontFamily: UI, fontSize: 11, color: T.sage }}>{m.relevance_note}</span>
+                      <span style={{ fontFamily: UI, fontSize: 11, color: T.textSecondary }}>{m.relevance_note}</span>
                     </div>
                   ))}
                 </div>
@@ -2192,7 +2253,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
             position: isMobile ? 'static' : 'sticky',
             top: 76,
           }}>
-            <div style={{ fontFamily: UI, fontWeight: 700, fontSize: 11.5, letterSpacing: '0.01em', color: T.greenMid, marginBottom: 10 }}>
+            <div style={{ fontFamily: UI, fontWeight: 700, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: T.textTertiary, marginBottom: 10 }}>
               Tips to improve
             </div>
             {railInert && (
@@ -2258,7 +2319,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
               const detail = structured ? top.detail : top
               return (
                 <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 8, padding: '10px 12px', marginBottom: 8 }}>
-                  <div style={{ fontFamily: UI, fontWeight: 700, fontSize: 11, letterSpacing: '0.01em', color: T.amberText, marginBottom: 3 }}>
+                  <div style={{ fontFamily: UI, fontWeight: 700, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: T.coralText, marginBottom: 3 }}>
                     Next best fix
                   </div>
                   <p style={{ fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.textPrimary, margin: '0 0 3px', lineHeight: 1.4 }}>{headline}</p>
@@ -2272,12 +2333,13 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
               <button
                 onClick={() => setRailOpen(true)}
                 className="gt-link"
-                style={{ ...ghostBtn(), paddingLeft: 0, fontSize: 12, color: T.sage }}
+                style={{ ...ghostBtn(), paddingLeft: 0, fontSize: 12, color: T.textSecondary }}
               >
-                {[
-                  review && review.tips.length > 1 ? `${review.tips.length - 1} more ${review.tips.length - 1 === 1 ? 'tip' : 'tips'}` : null,
+                <span style={linkStyle()}>Open all tips and gaps</span>
+                {' '}· {[
+                  review ? `${review.tips.length} ${review.tips.length === 1 ? 'tip' : 'tips'}` : null,
                   openGaps.length > 0 ? `${openGaps.length} ${openGaps.length === 1 ? 'gap' : 'gaps'}` : null,
-                ].filter(Boolean).join(' · ') || 'Details'}{' '}· Open tips and gaps
+                ].filter(Boolean).join(', ')}
               </button>
             )}
 
@@ -2288,8 +2350,8 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
                   <div style={{ marginBottom: 10 }}>
                     {review.strengths.map((s, i) => (
                       <div key={i} style={{ display: 'flex', gap: 7, alignItems: 'flex-start', marginBottom: 4 }}>
-                        <CheckCircle2 size={13} color={T.greenMid} style={{ flexShrink: 0, marginTop: 2 }} />
-                        <span style={{ fontFamily: BODY, fontSize: 12, color: T.sage, lineHeight: 1.45 }}>{s}</span>
+                        <CheckCircle2 size={13} color={T.done} style={{ flexShrink: 0, marginTop: 2 }} />
+                        <span style={{ fontFamily: BODY, fontSize: 12, color: T.textPrimary, lineHeight: 1.45 }}>{s}</span>
                       </div>
                     ))}
                   </div>

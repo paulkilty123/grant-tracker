@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation'
 import { FilePenLine, Plus, ChevronRight, ChevronDown, Trash2, Lightbulb, HelpCircle } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { getOrganisationByOwner } from '@/lib/organisations'
-import { T, UI, BODY } from '@/components/builder/tokens'
+import { T, UI, BODY, linkStyle } from '@/components/builder/tokens'
 import type { ApplicationRecord } from '@/lib/builder/types'
 import { hueMap, PROJECT_HUE_INK, PROJECT_HUE_NONE } from '@/lib/project-hues'
 import { HowItWorksPanel, DisclosureControl } from '@/components/HowItWorksPanel'
@@ -41,12 +41,21 @@ function HowItWorks({ withCta }: { withCta?: boolean }) {
   )
 }
 
+/** "today", "yesterday", "3 days ago", or a short date beyond a fortnight. */
+function relativeDay(iso: string): string {
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000)
+  if (days <= 0) return 'today'
+  if (days === 1) return 'yesterday'
+  if (days < 14) return `${days} days ago`
+  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+}
+
 const STATUS_STYLE: Record<string, { bg: string; color: string; label: string }> = {
   // "In progress" and "Complete" are states of the application, so they take
   // the green that means "this is true". Draft is the absence of one and stays
   // neutral — as does the "Identified" chip on a Ready-to-start row, which is a
   // pipeline stage rather than a state of anything drafted.
-  draft:       { bg: '#F1EDE3',    color: '#5F5E5A',       label: 'Draft' },
+  draft:       { bg: '#F1EDE3',    color: '#5F5E5A',       label: 'Not started' },
   in_progress: { bg: '#E3F0E4',    color: '#1B6B3D',       label: 'In progress' },
   complete:    { bg: '#B4D496',    color: '#1D3C3E',       label: 'Complete' },
 }
@@ -368,13 +377,21 @@ export default function ApplicationsPage() {
                     {status.label}
                   </span>
                 </div>
+                {/* One line that tells duplicates apart: three rows called Youth
+                    Fund with the same funder and date were indistinguishable. */}
                 <span style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary }}>
-                  {app.funder_name && app.grant_name
-                    ? app.funder_name
-                    : `${total} ${total === 1 ? 'question' : 'questions'}`}
-                  {(app as { created_at?: string }).created_at
-                    ? ` · ${new Date((app as { created_at: string }).created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
-                    : ''}
+                  {[
+                    app.funder_name && app.grant_name ? app.funder_name : null,
+                    `${total} ${total === 1 ? 'question' : 'questions'}`,
+                    (app as { created_at?: string }).created_at
+                      ? `started ${new Date((app as { created_at: string }).created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
+                      : null,
+                    answered === 0
+                      ? 'nothing written yet'
+                      : (app as { updated_at?: string }).updated_at
+                        ? `last edited ${relativeDay((app as { updated_at: string }).updated_at)}`
+                        : null,
+                  ].filter(Boolean).join(' · ')}
                 </span>
                 {/* Filed, or the control to file it. The affordance is
                     self-cancelling — choose a project and the swatch takes its
@@ -410,24 +427,23 @@ export default function ApplicationsPage() {
                     <button
                       onClick={() => { setAssignError(null); setAssigningId(app.id) }}
                       style={{
-                        fontFamily: UI, fontWeight: 600, fontSize: 11.5, color: T.textSecondary,
-                        background: 'transparent', border: `1px dashed ${T.borderStrong}`,
-                        borderRadius: 999, padding: '4px 10px', cursor: 'pointer',
+                        ...linkStyle(), fontFamily: UI, fontSize: 12,
+                        background: 'transparent', border: 'none', padding: 0,
                       }}
                     >
-                      Assign project
+                      Assign a project
                     </button>
                   )}
                 </span>
               </div>
               {total > 0 && (
                 <div style={isMobile ? { width: '100%', order: 9 } : { width: 132, flexShrink: 0 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                    <span style={{ fontFamily: BODY, fontSize: 11.5, color: T.textSecondary }}>
+                  {/* One representation of progress: the sentence and the bar.
+                      The percentage that used to sit beside them was the same
+                      number a third time. */}
+                  <div style={{ textAlign: 'right', marginBottom: 5 }}>
+                    <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: answered === 0 ? T.textTertiary : '#1D3C3E' }}>
                       {answered} of {total} written
-                    </span>
-                    <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: '#1D3C3E' }}>
-                      {Math.round((answered / total) * 100)}%
                     </span>
                   </div>
                   {/* Track was T.cream on a white card — 1.04:1, invisible, so the bar read as a floating stub. Same bug as the Find Funding sort pill. */}

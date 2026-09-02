@@ -36,7 +36,7 @@ export default function NewProjectPage() {
     setError(null)
     if (!orgId) { setError('Complete your organisation profile first'); return }
     if (rawText.trim().length < 30) {
-      setError('Describe the project in a sentence or two first')
+      setError('A sentence or two is enough, but it needs at least thirty characters')
       return
     }
     const budgetNum = budget.trim() ? Number(budget.replace(/[£,\s]/g, '')) : null
@@ -95,37 +95,49 @@ export default function NewProjectPage() {
         Describe your project
       </h1>
       <p style={{ fontFamily: BODY, fontSize: 13.5, color: '#5F5E5A', margin: '0 0 22px', lineHeight: 1.55, maxWidth: 560 }}>
-        In your own words: what it will do, who it is for, and the difference it makes. Rough
-        notes are fine, and you can paste straight from an old application or project plan. We
-        will sort it into sections you can edit.
+        In your own words: what it will do, who it is for, and the difference it makes. A
+        sentence or two is enough to start, and you can paste straight from an old application.
+        We will sort it into sections you can edit.
       </p>
 
       <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, padding: '20px 24px' }}>
         <label htmlFor="project-description" style={{
-          fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.textPrimary, display: 'block', marginBottom: 8,
+          fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.textPrimary, display: 'block', marginBottom: 5,
         }}>
           The project
         </label>
+        {/* The example used to be the placeholder, which vanished the moment the
+            user started typing, exactly when they were trying to follow it. It
+            stays above the field, in italics so it reads as a quotation. */}
+        <p style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary, margin: '0 0 10px', lineHeight: 1.6 }}>
+          For example: <i>&ldquo;Weekly football coaching for 40 young people aged 11 to 16 on the Larkfield estate, where there is nothing for them after school. Two qualified coaches, a year of sessions, and kit. Around £12,000.&rdquo;</i>
+        </p>
         <textarea
           id="project-description"
           value={rawText}
-          onChange={e => setRawText(e.target.value)}
-          rows={10}
-          placeholder={'e.g. We want to run weekly football coaching for 40 young people aged 11 to 16 on the Larkfield estate, where there is nothing for them after school. Two qualified coaches, a year of sessions, and kit. Around £12,000.'}
+          onChange={e => { setRawText(e.target.value); e.target.style.height = 'auto'; e.target.style.height = `${e.target.scrollHeight}px` }}
+          rows={5}
+          aria-describedby="project-description-hint"
           style={{
             ...inputStyle(),
             background: T.editorBg,
             resize: 'vertical',
-            minHeight: 180,
+            overflow: 'hidden',
             lineHeight: 1.6,
           }}
         />
+        <p id="project-description-hint" style={{ fontFamily: BODY, fontSize: 12.5, color: T.textTertiary, margin: '6px 0 0' }}>
+          A sentence or two is enough, thirty characters at the least. The box grows as you type.
+        </p>
 
         <label htmlFor="project-budget" style={{
           fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.textPrimary, display: 'block', margin: '18px 0 8px',
         }}>
-          Rough budget <span style={{ fontFamily: BODY, fontWeight: 400, fontSize: 12.5, color: T.textTertiary }}>(optional, sharpens grant-size matching)</span>
+          Rough budget <span style={{ fontFamily: BODY, fontWeight: 400, fontSize: 12.5, color: T.textSecondary }}>(optional)</span>
         </label>
+        <p style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary, margin: '-4px 0 10px', lineHeight: 1.6 }}>
+          Lets us drop funders whose grants are far too small or far too large for what you need.
+        </p>
         <div style={{ position: 'relative', maxWidth: 220 }}>
           <span style={{
             position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
