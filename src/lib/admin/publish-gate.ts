@@ -80,8 +80,12 @@ import { summariseEvidence } from './evidence-summary'
  * publish now ALSO has to pass `pageStanding` before the machine will expose it
  * (see below), and a republish of an already-live row no longer takes a slot.
  * Decisions either side of that are not comparable, so the version moves.
+ *
+ * `c2.5`, 2026-09-02: page_says_invite_only added as `withhold` (holds a
+ * not-live row, informational on a live one); deadline_implausible yields to a
+ * page-confirmed date.
  */
-export const GATE_POLICY_VERSION = 'c2.4'
+export const GATE_POLICY_VERSION = 'c2.5'
 
 /**
  * Every reason code, classified. `block` = the row asserts something wrong or
