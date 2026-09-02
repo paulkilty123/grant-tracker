@@ -86,6 +86,9 @@ const CODE_SECTION: Partial<Record<ReviewReasonCode, SectionId>> = {
   // A register entry is a link problem even though the link works: what needs
   // to change is the URL, which is exactly what this section is for.
   apply_route_not_applyable:     'link',
+  // Confirmed by the page: nobody can apply from here. Filed with the other
+  // no-route rows rather than as a judgement, because there is none to make.
+  page_says_invite_only:         'link',
 
   // ── Nothing has read the page ──
   never_verified:  'reading',

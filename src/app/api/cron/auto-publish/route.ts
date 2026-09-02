@@ -83,6 +83,10 @@ const COLS = [
   // rows the review queue shows as clear — and the queue and the gate agreeing
   // is the whole premise of this route sharing deriveReviewReasons with it.
   'funding_type', 'apply_url', 'funding_index_url',
+  // Read by page_says_invite_only. Missing it here means the reason can never
+  // fire in the gate while the Inbox shows it, which is the drift this list
+  // exists to prevent.
+  'is_invite_only',
 ].join(', ')
 
 type Row = ReviewRow & { title?: string | null; funder?: string | null; pipeline_state?: string }

@@ -89,7 +89,7 @@ const REVIEW_COLS = [
   'amount_min', 'amount_max', 'deadline', 'is_rolling', 'next_open_date', 'deadline_cycle',
   'eligible_structures', 'impact_sectors', 'target_beneficiaries',
   'funder_brief', 'field_provenance', 'raw_data', 'needs_intervention_reason',
-  'field_evidence', 'funding_type', 'apply_url', 'funding_index_url',
+  'field_evidence', 'funding_type', 'apply_url', 'funding_index_url', 'is_invite_only',
 ].join(', ')
 
 function arraysEqualUnordered(a: unknown, b: unknown): boolean {

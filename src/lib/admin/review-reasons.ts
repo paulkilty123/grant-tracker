@@ -136,6 +136,12 @@ export type ReviewReasonCode =
   | 'page_describes_different_fund'
   | 'no_funder'
   | 'apply_route_not_applyable'
+  // The row says invitation only and the funder's page confirms it. Paul,
+  // 2026-09-02: "a confirmed no-route". Added the day the gate started exposing
+  // rows on its own: Baring's International Development Programme and Ufi's
+  // VocTech Ignite both had "by invitation only" as their one confirmed line,
+  // and would have been the first two rows the machine ever published.
+  | 'page_says_invite_only'
   | 'never_verified'
   // Both fetch paths have failed twice running, or the link is not a web page.
   // Deliberately NON-BLOCKING: these rows are already blocked by whatever could
@@ -194,6 +200,8 @@ export type ReviewRow = {
   funding_type?: string | null
   /** Where the row sends an applicant. */
   apply_url?: string | null
+  /** Applications by invitation only. Read with the `is_invite_only` stamp. */
+  is_invite_only?: boolean | null
   /** The funder's own index of its funds, banked by the URL-correction pass
    *  (migration 061). When `apply_url` equals it, the row IS the front door. */
   funding_index_url?: string | null
@@ -854,6 +862,23 @@ export function deriveReviewReasons(row: ReviewRow, todayISO?: string): ReviewRe
       code: 'apply_route_not_applyable', severity: 'critical',
       label: 'Nowhere to apply from this link',
       detail: badRoute.why,
+    })
+  }
+
+  // The row says invitation only and the page confirms it, in its own words.
+  //
+  // Requires BOTH. The stamp's `agrees` means "the page matched what we hold",
+  // so agrees:true on a row that holds is_invite_only=false is the page
+  // confirming the fund is OPEN (the Law Society Pro Bono Charter reads exactly
+  // that way) and must not fire. An unconfirmed is_invite_only=true is a claim
+  // nothing stands behind and does not fire either; the gate blocks on what the
+  // funder said, not on what a scraper guessed.
+  const inviteStamp = readStamp(row.field_evidence, 'is_invite_only')
+  if (row.is_invite_only === true && inviteStamp?.agrees === true && inviteStamp.quote?.trim()) {
+    reasons.push({
+      code: 'page_says_invite_only', severity: 'critical',
+      label: 'Invitation only, and the page says so',
+      detail: `the funder's page says "${inviteStamp.quote.trim()}", so there is no route in for a fundraiser who finds this`,
     })
   }
 

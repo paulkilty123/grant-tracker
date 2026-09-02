@@ -171,6 +171,12 @@ const POLICY: Record<ReviewReasonCode, 'block' | 'info'> = {
   // this on 2026-09-01 and none of them was flagged by anything.
   apply_route_not_applyable: 'block',
 
+  // The funder's page confirms applications are by invitation. A confirmed
+  // no-route, Paul 2026-09-02. Blocks for the same reason as the code above:
+  // the page loads, names the fund, and there is nowhere for a fundraiser to
+  // go from it.
+  page_says_invite_only:  'block',
+
   // A figure on the card that the funder's own page does not state.
   //
   // Shipped 'info' on 2026-08-19 with the reasoning that blocking on an unmeasured

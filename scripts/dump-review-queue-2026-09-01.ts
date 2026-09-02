@@ -24,7 +24,7 @@ for (const line of readFileSync(resolve(HERE, '..', '.env.local'), 'utf8').split
 }
 
 const COLS = [
-  'id', 'external_id', 'title', 'funder', 'apply_url', 'funding_index_url', 'is_active', 'pipeline_state',
+  'id', 'external_id', 'title', 'funder', 'apply_url', 'funding_index_url', 'is_active', 'pipeline_state', 'is_invite_only',
   'url_status', 'url_quality_score',
   'amount_min', 'amount_max', 'deadline', 'is_rolling', 'next_open_date', 'deadline_cycle',
   'eligible_structures', 'impact_sectors', 'target_beneficiaries', 'niche_tags', 'funding_type',
