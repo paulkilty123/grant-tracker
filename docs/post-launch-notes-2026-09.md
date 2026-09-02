@@ -102,3 +102,34 @@ memory index; noted here in case the old wording resurfaces.
 - Link needs fixing (17 after the counter fix): none live, nobody misled.
   Post-launch, propose-not-apply.
 - Nothing truthful to show: dropped 1 Sep (three rows, `rejected`).
+
+## Found 2 September
+
+### Eleven relinks, propose after the 11th
+
+Five live rows carry a banked `funding_index_url` that differs from their
+link, so the front-door rule does not cover them and the engine reads the link
+as a different fund: Robertson Trust, Esmée Fairbairn (Creative, Confident
+Communities), Essex CF, Devon CF, Idlewild Trust. Six more live rows link to a
+page named after a fund, where whether the page is about this row's fund is a
+reading question: Community Shares Booster Fund, Heathrow HAPi, VCSE Contract
+Readiness, Historic England Heritage at Risk, Catch22 GoodTech Ventures, AF3
+(also unreadable). Plus Quartet's Express Grant Programme, whose link is the
+programmes index while the fund's own page
+(`/grants/express-grant-programme/`) states the £5,000 ceiling. Propose, do
+not apply.
+
+### Law Society Pro Bono Charter is held by hand
+
+Marked `saved_for_later` on 2 Sep. The page confirms it is OPEN ("applications
+can be made using the form below"), so the invitation-only rule does not
+catch it, and the machine would have published it. It is a charter for law
+firms to sign, not funding a charity can apply for. Nothing detects that
+without a new rule. Paul to rule: reject as out of scope, or keep.
+
+### Five live invitation-only trusts
+
+The `page_says_invite_only` rule (2 Sep) surfaced five LIVE rows whose page
+confirms applications are by invitation: Alan and Babette Sainsbury Charitable
+Fund, Indigo Trust, Mark Leonard Trust, Linbury Trust, Aurora Trust. They now
+sit in Live and wrong. Not retracted; Paul's call.
