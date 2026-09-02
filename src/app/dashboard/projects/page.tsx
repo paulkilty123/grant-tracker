@@ -303,7 +303,7 @@ export default function ProjectsPage() {
           </Link>
         )}
 
-        {loaded && projects.length > 0 && projects.length <= 2 && <HowItWorks />}
+        {loaded && projects.length > 0 && <HowItWorks />}
       </div>
     </div>
   )
