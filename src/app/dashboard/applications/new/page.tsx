@@ -13,7 +13,7 @@ import { ArrowLeft, Search as SearchIcon, X as XIcon, Plus, Trash2, Check, Exter
 import { createClient } from '@/lib/supabase/client'
 import { getOrganisationByOwner } from '@/lib/organisations'
 import { emitClientEvent } from '@/lib/events/client'
-import { T, UI, BODY, inputStyle, primaryBtn, deepBtn, ghostBtn } from '@/components/builder/tokens'
+import { T, UI, BODY, inputStyle, primaryBtn, forestBtn, ghostBtn } from '@/components/builder/tokens'
 import { OUTLINE_TEMPLATE } from '@/lib/builder/types'
 
 interface PickedOpportunity {
@@ -568,7 +568,7 @@ export default function NewApplicationPage() {
           )}
 
           <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-            <button onClick={handleParse} disabled={parsing} style={deepBtn(parsing)}>
+            <button onClick={handleParse} disabled={parsing} style={forestBtn(parsing)}>
               {parsing ? 'Reading the questions…' : 'Continue'}
             </button>
             {/* Escape hatch for portal-gated / EOI-first funders where the
