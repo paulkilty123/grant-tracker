@@ -139,6 +139,7 @@ export default function ApplicationWorkspacePage() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
   const appId = params.id
+  const isMobile = useIsMobile()
 
   const [app, setApp] = useState<ApplicationRecord | null>(null)
   const [linkedProject, setLinkedProject] = useState<{ id: string; name: string } | null>(null)
@@ -867,7 +868,7 @@ export default function ApplicationWorkspacePage() {
       boxShadow: '0 10px 32px rgba(26,46,43,0.14)', overflow: 'hidden', padding: '4px 0',
     }
     return (
-      <div style={{ display: 'flex', gap: 8, flexShrink: 0, alignItems: 'center' }}>
+      <div style={{ display: 'flex', gap: 8, flexShrink: 0, alignItems: 'center', flexWrap: 'wrap' }}>
         {menuOpen && (
           <div style={{ position: 'fixed', inset: 0, zIndex: 50 }} onClick={() => setMenuOpen(null)} />
         )}
@@ -968,14 +969,19 @@ export default function ApplicationWorkspacePage() {
           position: 'sticky', top: 8, zIndex: 40,
           background: T.white, border: `1px solid ${T.border}`, borderRadius: 12,
           padding: '9px 16px', marginBottom: 12, boxShadow: '0 6px 24px rgba(26,46,43,0.10)',
-          display: 'flex', alignItems: 'center', gap: 12,
+          display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
         }}>
           <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 14, color: T.textPrimary, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {app.grant_name || app.funder_name || 'Application'}
           </span>
-          <span style={{ fontFamily: UI, fontSize: 12, color: T.textSecondary, whiteSpace: 'nowrap' }}>
-            {answeredCount} of {app.questions.length} written{saveState === 'saving' ? ' · saving…' : ' · autosaved'}
-          </span>
+          {/* The count is dropped under 640px: the title and the three
+              buttons already fill two lines, and the count is repeated in
+              the progress row directly below the header. */}
+          {!isMobile && (
+            <span style={{ fontFamily: UI, fontSize: 12, color: T.textSecondary, whiteSpace: 'nowrap' }}>
+              {answeredCount} of {app.questions.length} written{saveState === 'saving' ? ' · saving…' : ' · autosaved'}
+            </span>
+          )}
           <HeaderActions compact />
         </div>
       )}

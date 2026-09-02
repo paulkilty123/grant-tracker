@@ -13,6 +13,7 @@ import { T, UI, BODY } from '@/components/builder/tokens'
 import type { ApplicationRecord } from '@/lib/builder/types'
 import { hueMap, PROJECT_HUE_INK, PROJECT_HUE_NONE } from '@/lib/project-hues'
 import { HowItWorksPanel, DisclosureControl } from '@/components/HowItWorksPanel'
+import { useIsMobile } from '@/hooks/useIsMobile'
 
 // The Apply-tier ethos as a few plain principles. Leads with the funder's-eye
 // reframe (the highest-value move for first-time applicants), closes on voice.
@@ -77,6 +78,7 @@ export default function ApplicationsPage() {
   const [howOpen, setHowOpen] = useState(false)
   const [principlesOpen, setPrinciplesOpen] = useState(false)
   const [hoveredId, setHoveredId] = useState<string | null>(null)
+  const isMobile = useIsMobile()
   const [deadlineSoon, setDeadlineSoon] = useState(0)
   const [readyToStart, setReadyToStart] = useState<PipeItem[]>([])
   const [projectNames, setProjectNames] = useState<Record<string, string>>({})
@@ -337,6 +339,10 @@ export default function ApplicationsPage() {
                 background: T.white, border: `1px solid ${T.border}`, borderRadius: 12,
                 padding: '14px 18px', textDecoration: 'none',
                 display: 'flex', alignItems: 'center', gap: 14,
+                /* Under 640px the row wraps: the progress block drops to its
+                   own full-width line, and the delete control is always shown
+                   because there is no hover on a touch screen. */
+                flexWrap: isMobile ? 'wrap' : 'nowrap', rowGap: 10,
               }}
             >
               {/* The project's hue, or neutral. Neutral is the honest state,
@@ -415,7 +421,7 @@ export default function ApplicationsPage() {
                 </span>
               </div>
               {total > 0 && (
-                <div style={{ width: 132, flexShrink: 0 }}>
+                <div style={isMobile ? { width: '100%', order: 9 } : { width: 132, flexShrink: 0 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
                     <span style={{ fontFamily: BODY, fontSize: 11.5, color: T.textSecondary }}>
                       {answered} of {total} written
@@ -462,7 +468,7 @@ export default function ApplicationsPage() {
                   style={{
                     background: 'transparent', border: 'none', cursor: 'pointer',
                     color: T.textTertiary, padding: 6, borderRadius: 6, flexShrink: 0,
-                    opacity: hoveredId === app.id ? 1 : 0, transition: 'opacity 150ms ease',
+                    opacity: isMobile || hoveredId === app.id ? 1 : 0, transition: 'opacity 150ms ease',
                   }}
                 >
                   <Trash2 size={15} />
@@ -505,6 +511,7 @@ export default function ApplicationsPage() {
                   <div key={p.id} style={{
                     background: T.white, border: `1px solid ${T.border}`, borderRadius: 12,
                     padding: '13px 16px', display: 'flex', alignItems: 'center', gap: 14,
+                    flexWrap: isMobile ? 'wrap' : 'nowrap', rowGap: 10,
                   }}>
                     <span style={{
                       width: 38, height: 38, borderRadius: 10, flexShrink: 0,

@@ -14,6 +14,7 @@ import { T, UI, BODY } from '@/components/builder/tokens'
 import { projectCompleteness, readyToMatch, type Project } from '@/lib/builder/projects'
 import { hueMap, PROJECT_HUE_INK, PROJECT_HUE_NONE } from '@/lib/project-hues'
 import { HowItWorksPanel } from '@/components/HowItWorksPanel'
+import { useIsMobile } from '@/hooks/useIsMobile'
 
 const STATUS_STYLE: Record<string, { bg: string; color: string; label: string }> = {
   active:   { bg: '#E3F0E4',    color: '#1B6B3D',       label: 'Active' },
@@ -46,6 +47,7 @@ export default function ProjectsPage() {
   const [loaded, setLoaded] = useState(false)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [hoveredId, setHoveredId] = useState<string | null>(null)
+  const isMobile = useIsMobile()
 
   async function handleDelete(id: string) {
     setProjects(prev => prev.filter(p => p.id !== id))
@@ -194,6 +196,10 @@ export default function ProjectsPage() {
                 background: T.white, border: `1px solid ${T.border}`, borderRadius: 12,
                 padding: '14px 18px', textDecoration: 'none',
                 display: 'flex', alignItems: 'center', gap: 14,
+                /* Under 640px the row wraps: the progress block drops to its
+                   own full-width line, and the delete control is always shown
+                   because there is no hover on a touch screen. */
+                flexWrap: isMobile ? 'wrap' : 'nowrap', rowGap: 10,
               }}
             >
               {/* The project's own hue, from the shared fixed order, so this
@@ -229,7 +235,7 @@ export default function ProjectsPage() {
                   {p.created_at ? ` · ${new Date(p.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : ''}
                 </span>
               </div>
-              <div style={{ width: 132, flexShrink: 0 }}>
+              <div style={isMobile ? { width: '100%', order: 9 } : { width: 132, flexShrink: 0 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
                   <span style={{ fontFamily: BODY, fontSize: 11.5, color: T.textSecondary }}>Described</span>
                   <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 11.5, color: '#1D3C3E' }}>{pct}%</span>
@@ -275,7 +281,7 @@ export default function ProjectsPage() {
                   style={{
                     background: 'transparent', border: 'none', cursor: 'pointer',
                     color: T.textTertiary, padding: 6, borderRadius: 6, flexShrink: 0,
-                    opacity: hoveredId === p.id ? 1 : 0, transition: 'opacity 150ms ease',
+                    opacity: isMobile || hoveredId === p.id ? 1 : 0, transition: 'opacity 150ms ease',
                   }}
                 >
                   <Trash2 size={15} />
