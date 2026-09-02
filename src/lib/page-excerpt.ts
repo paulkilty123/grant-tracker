@@ -41,7 +41,14 @@
 export const PAGE_CAP = 12000
 
 /** Words that mark the part of a funder page we actually need. */
-export const RELEVANCE = /income|turnover|deadline|closing date|closes|apply by|eligib|unsolicited|invitation|invited|rolling|year round|not accept|criteria|who can apply|£\s?[\d,]+/gi
+// Round wording added 2026-09-02, from JJ Charitable Trust: its page runs 834
+// characters over the cap, and its "Timeline" says "grants three times per
+// year", "cut-off points" and "applications by 4th March 2026". None of that
+// scored, so the only window with the dates was the one dropped, and the brief
+// reported that the source states no application windows. "applications by"
+// is not "apply by"; a round is not a deadline; a cut-off is not a closing
+// date. The scorer now knows all three, plus the date shape itself.
+export const RELEVANCE = /income|turnover|deadline|closing date|closes|apply by|applications? by|cut-?off|grant round|funding round|application window|times (?:a|per) year|decision within|eligib|unsolicited|invitation|invited|rolling|year round|not accept|criteria|who can apply|£\s?[\d,]+|\b\d{1,2}(?:st|nd|rd|th)? (?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]* \d{4}\b/gi
 
 export type Excerpted = {
   /** The text to send. Dropped stretches are marked ' […] '. */
