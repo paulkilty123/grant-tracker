@@ -303,6 +303,13 @@ export async function POST(req: NextRequest) {
   if (pastedContent && pastedContent.trim().length > 100) {
     sections.push(`Primary source (pasted):\n---\n${pastedContent.trim().slice(0, 10000)}\n---`)
     primaryFetchDebug = 'used pasted content'
+    // A pasted page IS the page. Until 2026-09-02 this path left the flag
+    // false, so a brief written from text a reviewer supplied by hand was
+    // stamped knowledge_fallback, and the queue then raised "page unreadable"
+    // on the very row somebody had just read for it. Three Arts Council rows
+    // came back labelled as written from memory with the page in front of the
+    // model.
+    fetchedFromUrl = true
   } else if (grant.apply_url) {
     const primaryUrl = grant.apply_url
     /**
