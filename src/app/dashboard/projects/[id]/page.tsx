@@ -22,6 +22,7 @@ import {
   updateProject, type Project, type ProjectFieldMeta,
 } from '@/lib/builder/projects'
 import type { Organisation } from '@/types'
+import { useIsMobile } from '@/hooks/useIsMobile'
 
 interface LinkedApp {
   id: string
@@ -176,6 +177,7 @@ export default function ProjectPage() {
   // One expanded match at a time; expands fire opportunity_viewed once per
   // grant per page view (the matched -> assessed funnel signal).
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const isMobile = useIsMobile()
   const viewedIds = useRef<Set<string>>(new Set())
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -477,7 +479,7 @@ export default function ProjectPage() {
           onChange={e => queueSave({ name: e.target.value })}
           aria-label="Project name"
           style={{
-            fontFamily: UI, fontWeight: 600, fontSize: 31, color: '#1D3C3E', letterSpacing: '-0.025em',
+            fontFamily: UI, fontWeight: 600, fontSize: isMobile ? 24 : 31, color: '#1D3C3E', letterSpacing: '-0.025em',
             border: 'none', background: 'transparent', outline: 'none', padding: 0,
             flex: '1 1 280px', minWidth: 200,
           }}
@@ -719,7 +721,7 @@ export default function ProjectPage() {
                                   onClick={() => toggleMatch(m)}
                                   role="button"
                                   aria-expanded={open}
-                                  style={{ display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer' }}
+                                  style={{ display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', flexWrap: isMobile ? 'wrap' : 'nowrap', rowGap: 10 }}
                                 >
                                   <div style={{ flex: 1, minWidth: 0 }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 2 }}>
@@ -803,7 +805,7 @@ export default function ProjectPage() {
                       onClick={() => toggleMatch(m)}
                       role="button"
                       aria-expanded={open}
-                      style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}
+                      style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', flexWrap: isMobile ? 'wrap' : 'nowrap', rowGap: 8 }}
                     >
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: T.textPrimary, display: 'block' }}>
