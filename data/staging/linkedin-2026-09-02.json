@@ -1,0 +1,39 @@
+[
+  {
+    "funder": "Oglesby Charitable Trust",
+    "title": "Spotlight: Local Climate Action",
+    "apply_url": "https://oglesbycharitabletrust.org.uk/spotlight-local-climate-action/",
+    "description": "An open-application fund of £100,000 for work with local people that takes nature-based action on climate change across the ten boroughs of Greater Manchester. Grants of £500 to £5,000 for running costs, new projects, capital or continuation. Applications open 8 September 2026 and close 3 November 2026.",
+    "amount_min": 500,
+    "amount_max": 5000,
+    "deadline": "2026-11-03",
+    "next_open_date": "2026-09-08",
+    "is_rolling": false,
+    "location_tag": "Greater Manchester",
+    "funding_type": "grant",
+    "funder_type": "trust_foundation",
+    "who_can_apply": "Small charities, CICs limited by guarantee and constituted community groups based in Greater Manchester and working in one or more of its ten boroughs, with an annual turnover under £250,000 and a bank account requiring two signatories. Organisations currently funded by the Oglesby Charitable Trust cannot apply.",
+    "what_they_fund": "Nature-based local climate action with communities, under three focus areas: representation of communities often excluded from climate action, cohesion between groups under a shared purpose, and participation that gives local people agency to shape climate solutions.",
+    "impact_sectors": ["environment", "community"],
+    "eligible_structures": ["registered_charity", "cio", "cic_guarantee", "unincorporated"],
+    "source_note": "LinkedIn post by the trust's relationship manager, 2 Sep 2026; figures and dates read from the fund page the same day: 'Grant Size £100,000 is available in grants of between £500 – £5,000', 'Application Deadline 3rd November 2026', 'The fund will open for applications here on 8th September'."
+  },
+  {
+    "funder": "Blue Earth",
+    "title": "BE:IMPACT Prize 2026",
+    "apply_url": "https://blueearthsummit.com/impact-prize",
+    "description": "An annual live pitching prize for registered UK charities with an active or ready-to-launch campaign delivering social or environmental impact, delivered by Blue Earth with founding partner The Kindness Forecast. Six finalists pitch on the Main Stage at Blue Earth Summit in London on 14 October 2026. The winner receives £10,000 unrestricted; each of five runners-up receives £1,000. Applications opened 25 August 2026; the closing date is not stated on the page.",
+    "amount_min": 1000,
+    "amount_max": 10000,
+    "deadline": null,
+    "is_rolling": false,
+    "location_tag": "UK",
+    "funding_type": "grant",
+    "funder_type": "corporate",
+    "who_can_apply": "Organisations registered with the Charity Commission in the UK with an annual income between £5,000 and £1 million, with an active campaign or a clearly defined campaign ready to launch, able to pitch live in London on 14 October 2026.",
+    "what_they_fund": "Charity campaigns already creating meaningful, measurable social or environmental impact. Prize money is unrestricted, with storytelling support, mentoring and introductions to funders.",
+    "impact_sectors": ["environment", "community"],
+    "eligible_structures": ["registered_charity", "cio"],
+    "source_note": "Charity Excellence LinkedIn post (says applications close 21 September 2026); the funder's page states no closing date, so none is recorded. Figures read from blueearthsummit.com/impact-prize on 2 Sep 2026: 'One will receive £10,000 in unrestricted funding', 'Runners up will each receive £1,000', 'annual income between £5,000 and £1 million'."
+  }
+]
