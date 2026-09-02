@@ -723,7 +723,7 @@ export default function ProjectPage() {
                                   aria-expanded={open}
                                   style={{ display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', flexWrap: isMobile ? 'wrap' : 'nowrap', rowGap: 10 }}
                                 >
-                                  <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div style={{ flex: isMobile ? '1 1 100%' : 1, minWidth: 0 }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 2 }}>
                                       <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 14.5, color: T.textPrimary }}>
                                         {grant.title}
@@ -807,7 +807,7 @@ export default function ProjectPage() {
                       aria-expanded={open}
                       style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', flexWrap: isMobile ? 'wrap' : 'nowrap', rowGap: 8 }}
                     >
-                      <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ flex: isMobile ? '1 1 100%' : 1, minWidth: 0 }}>
                         <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: T.textPrimary, display: 'block' }}>
                           {grant.title}
                         </span>
