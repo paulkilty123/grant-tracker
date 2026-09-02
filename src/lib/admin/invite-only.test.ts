@@ -51,3 +51,35 @@ describe('page_says_invite_only', () => {
     expect(codes(r)).not.toContain('page_says_invite_only')
   })
 })
+
+describe('withhold: a live invitation-only row is a confirmation, not a defect (Paul, 2 Sep)', () => {
+  const ev = {
+    _page_read: stamp({ note: 'verified' }),
+    is_invite_only: stamp({ agrees: true, quote: 'Grants are made by invitation only.' }),
+  }
+  it('holds a not-live row', () => {
+    expect(gateDecision(base({ is_invite_only: true, field_evidence: ev })).outcome).toBe('hold')
+  })
+  it('does not make a live row attention', () => {
+    const d = gateDecision(base({ is_invite_only: true, is_active: true, field_evidence: ev }))
+    expect(d.outcome).toBe('publish')
+    expect(d.informational.map(r => r.code)).toContain('page_says_invite_only')
+  })
+})
+
+describe('deadline_implausible accepts a date the page states (A Sinclair Henderson)', () => {
+  it('fires on a far date nothing supports', () => {
+    expect(codes(base({ deadline: '2028-05-31' }))).toContain('deadline_implausible')
+  })
+  it('does not fire when the deadline stamp confirms it with a quote', () => {
+    const r = base({ deadline: '2028-05-31', field_evidence: {
+      _page_read: stamp({ note: 'verified' }),
+      deadline: stamp({ agrees: true, quote: 'The next meeting will be in June 2028. Applications should be received by the previous month.' }),
+    } })
+    expect(codes(r)).not.toContain('deadline_implausible')
+  })
+  it('agrees without a quote does not clear it', () => {
+    const r = base({ deadline: '2028-05-31', field_evidence: { deadline: stamp({ agrees: true, quote: '' }) } })
+    expect(codes(r)).toContain('deadline_implausible')
+  })
+})

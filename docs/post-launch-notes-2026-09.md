@@ -133,3 +133,22 @@ The `page_says_invite_only` rule (2 Sep) surfaced five LIVE rows whose page
 confirms applications are by invitation: Alan and Babette Sainsbury Charitable
 Fund, Indigo Trust, Mark Leonard Trust, Linbury Trust, Aurora Trust. They now
 sit in Live and wrong. Not retracted; Paul's call.
+
+### A page addressed to the giver: three now, detector after launch
+
+Turing Trust "give-computers" (a donation route for old hardware), the SYCF
+donor page (August), and the Law Society Pro Bono Charter (a charter for law
+firms to sign; rejected out_of_scope 2 Sep). All three read cleanly, name a
+funder, and state no defect the engine looks for, because they are written to
+the person GIVING rather than the one applying. Paul: note it, no new rule
+this week. Cheap next step: the reader already extracts who-can-apply; a
+who-can-apply that names donors, firms, or "your organisation's old equipment"
+is the signal.
+
+### Angels' Den 2026 is a closed pitch round showing an event date
+
+The row's deadline is 9 September 2026, which is the pitch event at The
+Elgiva; the description itself says applications closed 11 May 2026. The
+£120,000 was nulled on 2 Sep as a pool. The date is a launch-invariant
+question the day after the event: it will trip "deadline passed" on
+10 September and the removal actuator will take it from there.

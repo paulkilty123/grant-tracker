@@ -99,7 +99,15 @@ export const GATE_POLICY_VERSION = 'c2.4'
  * silently ignored by the gate. That is the exact failure this layer exists to
  * stop, so it must not be possible to reintroduce by omission.
  */
-const POLICY: Record<ReviewReasonCode, 'block' | 'info'> = {
+/**
+ * A third class, added 2026-09-02: `withhold`. The row must not be EXPOSED by
+ * the machine, but a live row carrying it is not wrong. Paul, on the five
+ * invitation-only trusts that were flagged invite-only on 17 August and whose
+ * pages confirm it: "Page confirms invite-only, row says invite-only: that's a
+ * confirmation, not a defect." So the code holds a not-live row (Baring, Ufi)
+ * and says nothing about a live one.
+ */
+const POLICY: Record<ReviewReasonCode, 'block' | 'info' | 'withhold'> = {
   // ── Wrong or invented: a user acting on this is misled ──
   no_brief:             'block',  // nothing was ever read; every field is unsourced
   page_unreadable:      'block',  // brief written from the model's memory, not the page
@@ -175,7 +183,7 @@ const POLICY: Record<ReviewReasonCode, 'block' | 'info'> = {
   // no-route, Paul 2026-09-02. Blocks for the same reason as the code above:
   // the page loads, names the fund, and there is nowhere for a fundraiser to
   // go from it.
-  page_says_invite_only:  'block',
+  page_says_invite_only:  'withhold',
 
   // A figure on the card that the funder's own page does not state.
   //
@@ -257,7 +265,7 @@ const POLICY: Record<ReviewReasonCode, 'block' | 'info'> = {
 
 /** The blocking set, derived so it can never disagree with POLICY. */
 export const BLOCKING_CODES: readonly ReviewReasonCode[] =
-  (Object.keys(POLICY) as ReviewReasonCode[]).filter(c => POLICY[c] === 'block')
+  (Object.keys(POLICY) as ReviewReasonCode[]).filter(c => POLICY[c] !== 'info')
 
 /** The informational set, derived so it can never disagree with POLICY. */
 export const INFORMATIONAL_CODES: readonly ReviewReasonCode[] =
@@ -279,8 +287,10 @@ export const INFORMATIONAL_CODES: readonly ReviewReasonCode[] =
  * ever needs per-row nuance again, put it in deriveReviewReasons as a distinct
  * CODE, not as a severity branch here.
  */
-export function isBlocking(reason: ReviewReason): boolean {
-  return POLICY[reason.code] === 'block'
+export function isBlocking(reason: ReviewReason, wasLive = false): boolean {
+  const policy = POLICY[reason.code]
+  if (policy === 'withhold') return !wasLive
+  return policy === 'block'
 }
 
 export type GateOutcome =
@@ -328,9 +338,9 @@ export type GateDecision = {
  */
 export function gateDecision(row: ReviewRow, precomputed?: ReviewReason[]): GateDecision {
   const reasons       = precomputed ?? deriveReviewReasons(row)
-  const blocking      = reasons.filter(isBlocking)
-  const informational = reasons.filter(r => !isBlocking(r))
   const wasLive       = row.is_active === true
+  const blocking      = reasons.filter(r => isBlocking(r, wasLive))
+  const informational = reasons.filter(r => !isBlocking(r, wasLive))
 
   const outcome: GateOutcome =
     blocking.length === 0 ? 'publish' : wasLive ? 'attention' : 'hold'

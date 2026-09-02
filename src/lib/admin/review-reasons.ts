@@ -1091,7 +1091,16 @@ export function deriveReviewReasons(row: ReviewRow, todayISO?: string): ReviewRe
       label: 'Deadline passed',
       detail: `closed on ${row.deadline} and no next round is recorded`,
     })
-  } else if (row.deadline && row.deadline > horizonISO(today, DEADLINE_HORIZON_MONTHS)) {
+  } else if (
+    row.deadline && row.deadline > horizonISO(today, DEADLINE_HORIZON_MONTHS)
+    // A date the funder's own page states is a deadline however far off it is.
+    // Paul, 2026-09-02, on A Sinclair Henderson: trustees meet every even year,
+    // the next in June 2028, applications the month before. The page says so
+    // in full and the row was showing as a defect for being right. A confirmed
+    // deadline stamp with a quote is the page's word; nothing else clears this.
+    && !(readStamp(row.field_evidence, 'deadline')?.agrees === true
+         && readStamp(row.field_evidence, 'deadline')?.quote?.trim())
+  ) {
     reasons.push({
       code: 'deadline_implausible', severity: 'critical',
       label: 'Date is not an application deadline',
