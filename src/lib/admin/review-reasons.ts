@@ -773,7 +773,13 @@ export function deriveReviewReasons(row: ReviewRow, todayISO?: string): ReviewRe
       label: 'Never enriched',
       detail: 'nothing has been read from the funder’s page yet',
     })
-  } else if (brief.source === 'knowledge_fallback' && !readSinceFallback(row)) {
+  } else if (brief.source === 'knowledge_fallback' && !readSinceFallback(row) && !routeAccepted) {
+    // `!routeAccepted`: a reviewer has ruled that a non-web route (The Paley
+    // Trust's mailto) is the real one. There is no page, so a brief written
+    // without one is the only kind there can be. The flag already silenced
+    // read_exhausted; on 2026-09-02 the row was still "live and wrong" from
+    // this reason and link_unverified, so the ruling was re-litigated by two
+    // more counters. Same flag, all three.
     reasons.push({
       code: 'page_unreadable', severity: 'critical',
       label: 'Page unreadable',
@@ -825,7 +831,8 @@ export function deriveReviewReasons(row: ReviewRow, todayISO?: string): ReviewRe
       label: 'Link dead',
       detail: 'the application link did not resolve to a live page',
     })
-  } else if (row.url_status && row.url_status !== 'ok') {
+  } else if (row.url_status && row.url_status !== 'ok' && !routeAccepted) {
+    // An accepted non-web route (mailto) can never reach url_status 'ok'.
     reasons.push({
       code: 'link_unverified', severity: 'check',
       label: 'Link not verified',
