@@ -34,8 +34,8 @@ export type RejectReason = {
 export const REJECT_REASONS: RejectReason[] = [
   { code: 'non_funder',         label: 'Not a funder',
     detail: 'A directory, a news item, an award, or an organisation that does not give money.' },
-  { code: 'out_of_scope',       label: 'Out of scope',
-    detail: 'Real funding, but not for UK charities, CICs or social enterprises.' },
+  { code: 'out_of_scope',       label: 'Out of scope or not relevant',
+    detail: 'Real, but not for UK charities, CICs or social enterprises, or not something a fundraiser would look for here: a service for individuals, a discount, a supplier.' },
   { code: 'duplicate',          label: 'Duplicate',
     detail: 'We already carry this fund under another row.' },
   { code: 'dead_url',           label: 'Dead link, no replacement',
