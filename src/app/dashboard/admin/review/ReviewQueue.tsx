@@ -889,8 +889,33 @@ export function ReviewQueue({ items, gateWindowStart, launch }: {
       router.refresh()
       return
     }
-    noteAction(item.id, 'Page re-read and tags refreshed')
-    toast.success('Page re-read and tags refreshed')
+    // THIRD READER. enrich-grant and the classifier rewrite the brief and the
+    // tags; neither writes the `_page_read` stamp, which is what "The funder's
+    // page has never been read" tests. So on 2026-09-02 Paul pressed this
+    // button on JJ Charitable Trust, the card said "page confirms us", and the
+    // never-read note stayed. The verifier is the only thing that clears it,
+    // and it takes an admin session on GET with ?ids=, so run it for this row.
+    // It refuses politely if a scheduled run is in flight; that is not a
+    // failure of the re-read, so it is reported as a wait, not an error.
+    setBusyLabel('Checking the row against the page')
+    try {
+      const res = await fetch(`/api/cron/verify-rows?ids=${encodeURIComponent(item.id)}&run=true`)
+      const j = await res.json().catch(() => ({})) as { ranWork?: boolean; skipped?: string; verify?: { failures?: number } }
+      if (!res.ok) {
+        toast.error(`Page re-read and tags refreshed, but the verifier could not run (HTTP ${res.status}).`)
+      } else if (j.skipped) {
+        toast.success('Page re-read and tags refreshed. The verifier is busy with a scheduled run; the read stamp will land when it reaches this row.')
+      } else if (!j.ranWork) {
+        toast.success('Page re-read and tags refreshed. The verifier is switched off, so the read stamp was not written.')
+      } else if ((j.verify?.failures ?? 0) > 0) {
+        toast.error('Page re-read and tags refreshed, but the verifier could not read the page. See the row for why.')
+      } else {
+        toast.success('Page re-read, tags refreshed, and the row checked against the page')
+      }
+    } catch {
+      toast.error('Page re-read and tags refreshed, but the verifier did not answer.')
+    }
+    noteAction(item.id, 'Page re-read, tags refreshed, row verified')
     router.refresh()
   }, [runJob, classify, router, toast, noteAction])
 
