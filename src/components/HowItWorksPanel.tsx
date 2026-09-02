@@ -20,7 +20,11 @@ import { UI, BODY, T } from '@/components/builder/tokens'
  * terracotta and teal, which measures 2.85 and 2.41 — under even the
  * large-text floor.
  */
-export const HOW_HUES = ['#D67558', '#4EAAB4', '#EBCE78', '#9BCA9D'] as const
+// One treatment for every step. Until 2026-09-02 each number sat on its own
+// hue (coral, teal, yellow, sage: the old Grant Tracker palette), which read as
+// four categories where there is only a sequence. The number carries the order;
+// the colour does not need to.
+const STEP_BG = '#E3F0E4'
 
 export interface HowStep { title: string; body: string }
 
@@ -44,7 +48,7 @@ export function HowItWorksPanel({
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 13 }}>
               <span style={{
                 fontFamily: UI, fontWeight: 700, fontSize: 19, color: '#1D3C3E',
-                background: HOW_HUES[i % HOW_HUES.length], letterSpacing: '-0.01em',
+                background: STEP_BG, letterSpacing: '-0.01em',
                 width: 44, height: 44, borderRadius: 999, display: 'inline-flex',
                 alignItems: 'center', justifyContent: 'center', flexShrink: 0,
               }}>

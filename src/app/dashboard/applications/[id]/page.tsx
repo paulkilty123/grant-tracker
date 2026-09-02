@@ -918,8 +918,8 @@ export default function ApplicationWorkspacePage() {
         </div>
         {hasScaffolds && app?.status !== 'complete' && (
           <button onClick={markSubmitted} style={{
-            fontFamily: UI, fontWeight: 600, fontSize: compact ? 12.5 : 13, color: '#F1F7E4',
-            background: T.greenDeep, border: 'none', padding: compact ? '6px 12px' : '8px 14px',
+            fontFamily: UI, fontWeight: 600, fontSize: compact ? 12.5 : 13, color: '#F6F1E7',
+            background: '#1D3C3E', border: 'none', padding: compact ? '6px 12px' : '8px 14px',
             borderRadius: 999, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6,
           }}>
             <Check size={14} /> Mark as submitted
