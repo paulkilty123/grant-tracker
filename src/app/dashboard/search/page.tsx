@@ -18,7 +18,7 @@ import {
   ORG_LEGAL_STRUCTURES, ORG_LEGAL_STRUCTURE_VALUES,
 } from '@/lib/structure-opportunity'
 import { getInteractions, recordInteraction, removeInteraction, getSavedReminders, setSavedReminder, getDismissSnoozes, setDismissSnooze, getSavedNotes, setSavedNote } from '@/lib/interactions'
-import { getMatchFeedback, type StoredFeedback } from '@/lib/matchFeedback'
+import { getMatchFeedback, deleteMatchFeedback, type StoredFeedback } from '@/lib/matchFeedback'
 import { eligibilityStated, ELIGIBILITY_NOT_STATED, ELIGIBILITY_NOT_STATED_SHORT } from '@/lib/eligibility-disclosure'
 import {
   LIKE_SCORE_BOOST, DISLIKE_SCORE_PENALTY, LIKE_SECTOR_BOOST, DISLIKE_SECTOR_PENALTY,
@@ -264,7 +264,7 @@ function StalenessBadge({ lastVerifiedAt }: { lastVerifiedAt?: string }) {
 }
 
 // ── Grant Card ───────────────────────────────────────────────────────────────
-function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline, onRemoveFromPipeline, onDismiss, onUndismiss, onLike, onDislike, onSave, onUnsave, onMarkApplied, showIfDismissed, isInPipeline, pipelineStage }: {
+function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline, onRemoveFromPipeline, onDismiss, onUndoFeedback, onUndismiss, onLike, onDislike, onSave, onUnsave, onMarkApplied, showIfDismissed, isInPipeline, pipelineStage }: {
   item: DisplayGrant
   hasOrg: boolean
   hasSearch: boolean
@@ -273,6 +273,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
   onAddToPipeline: (g: GrantOpportunity) => void
   onRemoveFromPipeline?: (g: GrantOpportunity) => void
   onDismiss: (grantId: string) => void
+  onUndoFeedback?: (id: string) => void
   onUndismiss: (grantId: string) => void
   onLike: (grantId: string) => void
   onDislike: (grantId: string) => void
@@ -900,22 +901,28 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                   </div>
                 </div>
                 {!!feedbackBoost && (
-                  <span
-                    title={feedbackBoost > 0
+                  /* The chip is the undo. The feedback block under the chevron
+                     has an undo link too, but a user looking at "Boosted by your
+                     feedback" looks here first. Paul, 2026-09-03. */
+                  <button
+                    type="button"
+                    onClick={e => { e.stopPropagation(); onUndoFeedback?.(grant.id) }}
+                    title={(feedbackBoost > 0
                       ? `Your previous thumbs-up promotes this match (+${feedbackBoost} in ranking). The displayed % is the raw match.`
                       : `Your previous thumbs-down demotes this match (${feedbackBoost} in ranking). The displayed % is the raw match.`
-                    }
+                    ) + ' Click to undo.'}
                     style={{
                       display: 'inline-flex', alignItems: 'center', gap: 4,
                       padding: '4px 9px', borderRadius: 999, flexShrink: 0,
                       fontFamily: 'var(--font-space-grotesk)', fontSize: 11, fontWeight: 600,
                       background: feedbackBoost > 0 ? '#22874C' : '#993C1D',
                       color: '#fff',
-                      border: 'none',
+                      border: 'none', cursor: 'pointer',
                     }}
                   >
                     {feedbackBoost > 0 ? '↑ Boosted by your feedback' : '↓ Down-ranked by your feedback'}
-                  </span>
+                    <span style={{ opacity: 0.75, fontWeight: 500 }}>· undo</span>
+                  </button>
                 )}
                 {/* Chevron — rotates in place */}
                 <button
@@ -941,6 +948,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <span style={{ fontSize: 13, color: '#8A8986', fontFamily: 'var(--font-dm-sans)', whiteSpace: 'nowrap' }}>Improve your matches</span>
                     <MatchFeedbackBlock
+                      key={`fb-${feedbackBoost ?? 0}`}
                       grantId={grant.id}
                       userId={org.owner_id}
                       matchScore={score}
@@ -980,6 +988,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
           <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8, flexWrap: 'wrap' }}>
             <span style={{ fontSize: 13, color: '#8A8986', fontFamily: 'var(--font-dm-sans)', whiteSpace: 'nowrap' }}>Improve your matches</span>
             <MatchFeedbackBlock
+                      key={`fb-${feedbackBoost ?? 0}`}
               grantId={grant.id}
               userId={org.owner_id}
               matchScore={score}
@@ -1644,6 +1653,16 @@ export default function SearchPage() {
   // handleUndismiss and update interactions state so the grant drops out of the
   // list immediately (the matches filter hides anything marked 'dismissed').
   // Without this it only disappeared on the next page load — the reported bug.
+  // Undo from the "Boosted / Down-ranked by your feedback" chip. Deletes the
+  // stored match_feedback row and drops it from the map so the score, the
+  // ranking and the chip all revert without a reload.
+  async function handleUndoFeedback(grantId: string) {
+    const uid = org?.owner_id ?? userId
+    if (!uid) return
+    await deleteMatchFeedback(uid, grantId)
+    setMatchFeedbackMap(prev => { const next = new Map(prev); next.delete(grantId); return next })
+  }
+
   async function handleDismiss(grantId: string) {
     if (!org) return
     await recordInteraction(org.id, grantId, 'dismissed')
@@ -3480,6 +3499,7 @@ export default function SearchPage() {
                 pipelineStage={pipelinedIds.get(item.grant.title)?.stage}
                 onRemoveFromPipeline={handleRemoveFromPipeline}
                 onDismiss={handleDismiss}
+                onUndoFeedback={handleUndoFeedback}
                 onUndismiss={handleUndismiss}
                 onLike={handleLike}
                 onDislike={handleDislike}
@@ -3533,6 +3553,7 @@ export default function SearchPage() {
                 pipelineStage={pipelinedIds.get(item.grant.title)?.stage}
                 onRemoveFromPipeline={handleRemoveFromPipeline}
                 onDismiss={handleDismiss}
+                onUndoFeedback={handleUndoFeedback}
                 onUndismiss={handleUndismiss}
                 onLike={handleLike}
                 onDislike={handleDislike}
@@ -3657,6 +3678,7 @@ export default function SearchPage() {
                 pipelineStage={pipelinedIds.get(item.grant.title)?.stage}
                 onRemoveFromPipeline={handleRemoveFromPipeline}
                 onDismiss={handleDismiss}
+                onUndoFeedback={handleUndoFeedback}
                 onUndismiss={handleUndismiss}
                 onLike={handleLike}
                 onDislike={handleDislike}
