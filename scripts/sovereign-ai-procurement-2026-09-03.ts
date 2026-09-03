@@ -27,7 +27,7 @@ const ROW = {
   title: TITLE,
   funder: 'Sovereign AI Fund (Department for Science, Innovation and Technology)',
   funder_type: 'government',
-  funding_type: 'programme',
+  funding_type: 'grant',   // Paul, 2026-09-03: non-dilutive money you keep belongs in Grants; the description says it is a contract
   apply_url: PAGE,
   url_status: 'unchecked',
   location_tag: 'UK',
