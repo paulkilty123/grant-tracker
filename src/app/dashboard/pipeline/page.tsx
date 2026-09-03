@@ -928,9 +928,12 @@ export default function PipelinePage() {
                 {/* Count and vocabulary on one line in a pill, rather than
                     stacked. Stacked, the 8px vocabulary line was smaller than
                     anything else on the board and read as a rendering artefact. */}
-                <span className="ml-auto text-[11.5px] font-bold" style={{ color: headerCol, background: 'rgba(255,255,255,0.72)', borderRadius: 999, padding: '2px 9px', fontFamily: 'var(--font-space-grotesk)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                {/* Count only. With the vocabulary word inside the pill the
+                    pill won the width contest and the stage name truncated to
+                    "IDEN…" at ordinary laptop widths. The word survives as the
+                    pill's tooltip. Paul, 2026-09-03. */}
+                <span className="ml-auto text-[11.5px] font-bold" title={`${stageItems.length} ${STAGE_VOCAB[stage.id]}`} style={{ color: headerCol, background: 'rgba(255,255,255,0.72)', borderRadius: 999, padding: '2px 9px', fontFamily: 'var(--font-space-grotesk)', whiteSpace: 'nowrap', flexShrink: 0 }}>
                   {stageItems.length}
-                  <span style={{ fontWeight: 600, opacity: 0.7, marginLeft: 4, letterSpacing: 0 }}>{STAGE_VOCAB[stage.id]}</span>
                 </span>
               </div>
               {stageItems.length === 0 && (() => {
