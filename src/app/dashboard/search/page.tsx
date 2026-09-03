@@ -2304,6 +2304,9 @@ export default function SearchPage() {
     actionableOnly,
     // Without this the preview picks a structure and nothing re-scores.
     scoringOrg,
+    // Without this an undo deletes the feedback row and the chip stays on
+    // screen until a reload, because nothing re-scores.
+    matchFeedbackMap,
   ])
 
   // ── Capture layer ──────────────────────────────────────────────────────────
