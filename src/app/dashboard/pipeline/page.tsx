@@ -17,7 +17,7 @@ import { emitClientEvent } from '@/lib/events/client'
 import { track } from '@/lib/analytics'
 import { PIPELINE_STAGES, formatDeadline, formatRange, formatCurrency, cn } from '@/lib/utils'
 import type { PipelineItem, PipelineStage, Organisation } from '@/types'
-import { Sparkles, Loader2, Link, ArrowRight, Calendar, AlarmClock, X as XIcon, GripVertical, StickyNote, User as UserIcon, BarChart3, Star } from 'lucide-react'
+import { Sparkles, Loader2, Link, Calendar, AlarmClock, X as XIcon, GripVertical, StickyNote, User as UserIcon, BarChart3, Star } from 'lucide-react'
 import { PipelineModal, STAGE_ICONS, getWritingStage } from '@/components/PipelineModal'
 
 /**
@@ -414,35 +414,17 @@ function AddModal({
         <div className="px-6 py-5 border-b border-warm flex justify-between items-start flex-shrink-0">
           <div>
             <h3 className="text-lg font-bold" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#1D3C3E', letterSpacing: '-0.02em' }}>Add a fund not listed</h3>
-            <p className="text-sm text-mid mt-0.5">Track a funding opportunity in your pipeline</p>
+            <p className="text-sm text-mid mt-0.5">Track something that is not in the Shoots catalogue yet.</p>
           </div>
           <button onClick={onClose} className="text-light hover:text-mid text-xl leading-none mt-0.5">✕</button>
         </div>
 
         <div className="overflow-y-auto flex-1">
-          {/* Tip: add from funding list */}
-          <div className="mx-6 mt-5 flex items-start gap-3 px-4 py-3 rounded-lg border border-sage/30 bg-sage/5">
-            <Sparkles className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: '#1B6B3D' }} strokeWidth={2} />
-            <div className="text-sm text-[#2C2C2A] leading-relaxed">
-              The fastest way to add a grant is directly from the{' '}
-              <a
-                href="/dashboard/search"
-                className="underline underline-offset-2 font-semibold inline-flex items-center gap-0.5" style={{ color: '#1D3C3E' }}
-              >
-                funding search <ArrowRight className="w-3 h-3" />
-              </a>
-              {' '}— just hit <span className="font-semibold">+ Pipeline</span> on any result.
-            </div>
-          </div>
-
-          {/* Divider */}
-          <div className="flex items-center gap-3 mx-6 mt-5">
-            <div className="flex-1 h-px bg-warm" />
-            <span className="text-xs text-light font-medium uppercase tracking-wider">Or add manually</span>
-            <div className="flex-1 h-px bg-warm" />
-          </div>
-          <p className="text-xs text-mid text-center mt-1.5 mx-6">
-            Found a grant not in our database? Paste the URL below to auto-fill the details, or fill in the form yourself.
+          {/* No "go and use Find Funding instead" tip here. The user clicked
+              "Add a fund not listed", so the catalogue route is the one they
+              could not take. One helper line, then the form. Paul, 2026-09-03. */}
+          <p className="text-xs text-mid text-center mt-5 mx-6">
+            Paste the funder&apos;s page and we will fill in what we can, or type the details yourself.
           </p>
 
           {/* URL auto-fill */}
