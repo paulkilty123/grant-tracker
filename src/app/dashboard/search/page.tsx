@@ -2581,11 +2581,12 @@ export default function SearchPage() {
       }
 
       // Actionable filter (?actionable=1 from dashboard "See all N →" link).
-      // Only count rows scoring ≥ 50 so the tab badges sum to the same number
-      // the dashboard headlined as "Worth your attention".
+      // Same floor as the list (MATCH_FLOOR). It was a hardcoded 50 while the
+      // list used 55, so the badge said 48 eligible over a list of 24.
+      // Paul, 2026-09-03.
       if (actionableOnly && org) {
         const score = computeMatchScore(g, org).score
-        if (score < 50) return
+        if (score < MATCH_FLOOR) return
       }
 
       counts[gType]++
