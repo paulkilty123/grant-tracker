@@ -92,6 +92,19 @@ export default async function DashboardPage() {
     savedCount = count ?? 0
   }
 
+  // Grants the org has hidden on Find Funding stay hidden here too. Without
+  // this, a dismissed grant could still top the Matches card and the
+  // deadlines widget, because both read the scored list below.
+  const hiddenIds = new Set<string>()
+  if (typedOrg) {
+    const { data: hiddenRows } = await supabase
+      .from('grant_interactions')
+      .select('grant_id')
+      .eq('org_id', typedOrg.id)
+      .eq('action', 'dismissed')
+    for (const r of hiddenRows ?? []) if (r.grant_id) hiddenIds.add(String(r.grant_id))
+  }
+
   // ── Matched Opportunities — definition aligned with Find Funding's
   // crossTabCounts (src/app/dashboard/search/page.tsx:2108). A "match" is
   // a pure FILTER, not a scored result. Same row that surfaces in Find
@@ -140,6 +153,7 @@ export default async function DashboardPage() {
 
       scoredAll = grantRows
         .map(row => {
+          if (hiddenIds.has(String((row as Record<string, unknown>).id ?? ''))) return null
           const g = normaliseScrapedGrant(row as Record<string, unknown>)
           const ge = g as ReturnType<typeof normaliseScrapedGrant> & { impactSectors?: string[]; geoScope?: string[] }
           const ft = (g.fundingType ?? 'grant') as string
