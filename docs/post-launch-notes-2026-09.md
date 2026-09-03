@@ -152,3 +152,18 @@ Elgiva; the description itself says applications closed 11 May 2026. The
 £120,000 was nulled on 2 Sep as a pool. The date is a launch-invariant
 question the day after the event: it will trip "deadline passed" on
 10 September and the removal actuator will take it from there.
+
+## Structures guessed by the backstop classifier, never confirmed (3 Sep)
+
+Ernest Kleinwort Medium Grants listed CICs as eligible; the trust's grants
+page says charities only and names CICs as unsupported. The structures came
+from `ai_classifier:structures_backstop:v1` (26 Jul), which guesses from the
+description when nothing is tagged, and the row's page (/apply/) carries no
+eligibility wording, so the verifier could neither confirm nor contradict.
+
+Measured 3 Sep across the 591 live rows: 134 carry backstop-guessed
+structures, 86 of those have never been confirmed or contradicted by a
+quote, and 19 have been contradicted (those should already be proposals in
+the queue). Post-launch: work the 19 first; for the 86, bank the funder's
+index page where the row points at an apply form, so the verifier reads the
+page that states the rule. Not a sweep before the 11th.
