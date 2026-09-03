@@ -167,3 +167,23 @@ quote, and 19 have been contradicted (those should already be proposals in
 the queue). Post-launch: work the 19 first; for the 86, bank the funder's
 index page where the row points at an apply form, so the verifier reads the
 page that states the rule. Not a sweep before the 11th.
+
+## Structures still unverified after the 3 Sep pass (13 rows)
+
+The guessed-structure job is done except for rows whose sites cannot be
+read from here, in a browser or otherwise:
+
+- SiteGround captcha (a real captcha, not solved by design): Allen Lane
+  Foundation, Leeds Community Foundation, East End Community Foundation,
+  Percy Bilton Charity (applyOrg).
+- 401/403 even in a browser from this network: Heart of England CF (Alan
+  Higgs, Harry Payne, Birmingham and Black Country), Berkshire CF (Grassroots,
+  Older People), Music Venue Trust Liveline.
+- TechSoup UK (Incapsula), Business Wales (maintenance page), Fredericks
+  Foundation (TLS reset; site may be gone).
+
+Paul can open any of these on his own machine and paste the "who can apply"
+sentence; the fix is then one line in a script. Not blocking launch: the
+community foundations and Percy Bilton hold the usual CF or charity-only sets,
+which is the likely truth. Fredericks and Music Venue Trust are the two to
+look at first, since neither may be a fund for this audience at all.
