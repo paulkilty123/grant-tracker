@@ -187,3 +187,7 @@ sentence; the fix is then one line in a script. Not blocking launch: the
 community foundations and Percy Bilton hold the usual CF or charity-only sets,
 which is the likely truth. Fredericks and Music Venue Trust are the two to
 look at first, since neither may be a fund for this audience at all.
+
+## Dashboard "See all N" opens a page that shows a different N (3 Sep)
+
+Dashboard says 70 you can apply for; the `?actionable=1` Find Funding view it opens shows tab badges adding to 35. The two pages filter the same rows differently (see memory project_dashboard_vs_findfunding_count). Fix in two parts: reconcile the two counts so the link delivers the number it promises, then add a strip at the top of the filtered view: "Showing your 70 best matches. Show all 191 you can apply for", whose button clears the filter. Paul agreed the shape on 3 Sep. For the launch video, open Find Funding from the sidebar instead.
