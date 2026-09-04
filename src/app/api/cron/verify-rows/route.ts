@@ -56,7 +56,8 @@
 // reported. A run that ran out of time says so.
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import { getAdminDb } from '@/lib/admin/admin-db'
 import Anthropic from '@anthropic-ai/sdk'
 import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
 import { recordRun } from '@/lib/admin/cron-runs'
@@ -143,10 +144,7 @@ const REPORT_CAP = 25
 // silently does nothing while the handler reports non-zero counts. That has
 // happened to three crons in this codebase.
 function adminClient(): SupabaseClient {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  )
+  return getAdminDb()
 }
 
 // `next_open_date` and `field_evidence` are here for the cadence, not for the

@@ -32,7 +32,7 @@
 //       signature (564 such rows as of 2026-07-25) — re-checking those would
 //       resurrect grants Paul deliberately hid. Do not widen this predicate.
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { getAdminDb } from '@/lib/admin/admin-db'
 import { checkUrl, deepCheckUrl } from '@/lib/url-validator'
 import { mergeGrantUpdate } from '@/lib/grant-merge'
 import { SEED_GRANTS } from '@/lib/grants'
@@ -70,10 +70,7 @@ const QUEUE_BUDGET_MS = 60_000
 const QUEUE_LIMIT = 60
 
 function getAdminClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
+  return getAdminDb()
 }
 
 // Processes items in parallel batches. When `deadline` is supplied, stops

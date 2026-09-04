@@ -32,7 +32,7 @@
 // now just the fetch ceiling.
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { getAdminDb } from '@/lib/admin/admin-db'
 import { recordRun, usageFromAdminJson } from '@/lib/admin/cron-runs'
 
 export const dynamic     = 'force-dynamic'
@@ -49,10 +49,7 @@ const BATCH_LIMIT = 24
 const TIME_BUDGET_MS = 240_000
 
 function adminClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
+  return getAdminDb()
 }
 
 // Internal admin calls send a Bearer ADMIN_SECRET, so they MUST hit the

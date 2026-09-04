@@ -17,7 +17,7 @@
 // Returns: per-query results + a summary count.
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { getAdminDb } from '@/lib/admin/admin-db'
 import { computeMatchScore } from '@/lib/matching'
 import { normaliseScrapedGrant } from '@/lib/grants-normalise'
 import type { Organisation, ImpactSector, BeneficiaryGroup, FundingType, LegalStructure } from '@/types'
@@ -43,10 +43,7 @@ async function isAuthorised(req: NextRequest): Promise<boolean> {
 }
 
 function getAdminClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  )
+  return getAdminDb()
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

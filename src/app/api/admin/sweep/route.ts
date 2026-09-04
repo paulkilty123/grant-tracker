@@ -18,7 +18,7 @@
 // Auth: ADMIN_SECRET bearer token or authenticated admin session
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { getAdminDb } from '@/lib/admin/admin-db'
 import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
 import { mergeGrantUpdate } from '@/lib/grant-merge'
 import { nextCycleDeadline, type CycleEntry } from '@/lib/deadline-cycle'
@@ -29,10 +29,7 @@ const SWEEP_VERSION    = 'v1'
 const PROVENANCE_SOURCE = `system:sweep:${SWEEP_VERSION}`
 
 function adminClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
+  return getAdminDb()
 }
 
 async function isAuthorised(req: NextRequest): Promise<boolean> {

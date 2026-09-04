@@ -2,7 +2,7 @@
 // Checks for pipeline items with deadlines exactly 7 or 14 days away
 // and emails the organisation owner a reminder via Resend.
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { getAdminDb } from '@/lib/admin/admin-db'
 import { Resend } from 'resend'
 import { recordRun } from '@/lib/admin/cron-runs'
 import { EMAIL_FROM_HEADER, EMAIL_APP_URL, MCP_BRAND_NAME } from '@/lib/mcp-brand'
@@ -14,10 +14,7 @@ export const dynamic = 'force-dynamic'
 
 
 function adminClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  )
+  return getAdminDb()
 }
 
 function isoDate(daysFromNow: number): string {

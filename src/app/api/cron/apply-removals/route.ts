@@ -54,7 +54,8 @@
 // `cron_runs.summary`, and that is the only way back. Do not remove it.
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import { getAdminDb } from '@/lib/admin/admin-db'
 import { recordRun } from '@/lib/admin/cron-runs'
 import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
 import { mergeGrantUpdate } from '@/lib/grant-merge'
@@ -110,10 +111,7 @@ function adminClient(): SupabaseClient {
   // cookie-based helper runs as `anon`, RLS matches zero rows, PostgREST returns
   // no error, and every write silently does nothing while the handler reports
   // non-zero counts. That has happened to three crons in this codebase.
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  )
+  return getAdminDb()
 }
 
 export async function GET(req: NextRequest) {

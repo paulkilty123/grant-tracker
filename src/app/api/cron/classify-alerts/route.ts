@@ -31,7 +31,8 @@
 // status check unless one is spelled out, so this one has ?peek from the start.
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import { getAdminDb } from '@/lib/admin/admin-db'
 import Anthropic from '@anthropic-ai/sdk'
 import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
 import { recordRun } from '@/lib/admin/cron-runs'
@@ -54,10 +55,7 @@ function adminClient(): SupabaseClient {
   // Service-role, never the cookie-based helper: a cron carries no session, that
   // client resolves to anon, RLS matches nothing, and every write silently does
   // nothing while the handler reports success. Three crons here have done it.
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  )
+  return getAdminDb()
 }
 
 type AlertRow = {

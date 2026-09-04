@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient as createServerClient } from '@/lib/supabase/server'
-import { createClient } from '@supabase/supabase-js'
+import { getAdminDb } from '@/lib/admin/admin-db'
 
 const ADMIN_EMAIL = 'paulkilty1@gmail.com'
 
@@ -36,10 +36,7 @@ export async function GET() {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
-  const admin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  )
+  const admin = getAdminDb()
 
   // Pull all auth users (admin API)
   const { data: list, error: listErr } = await admin.auth.admin.listUsers({ perPage: 1000 })

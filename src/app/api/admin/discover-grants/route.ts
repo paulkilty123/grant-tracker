@@ -7,7 +7,7 @@
 // Auth: ADMIN_SECRET bearer token or authenticated admin session
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { getAdminDb } from '@/lib/admin/admin-db'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { DEFAULT_QUERIES, DiscoveryFundingType as FundingType } from '@/lib/discovery-queries'
 
@@ -271,10 +271,7 @@ async function searchForOpportunities(query: string, fundingType: FundingType, a
 }
 
 function getAdminClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  )
+  return getAdminDb()
 }
 
 interface DiscoveredOpportunity {

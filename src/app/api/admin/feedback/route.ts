@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient as createServerClient } from '@/lib/supabase/server'
-import { createClient } from '@supabase/supabase-js'
+import { getAdminDb } from '@/lib/admin/admin-db'
 
 const ADMIN_EMAIL = 'paulkilty1@gmail.com'
 
@@ -13,10 +13,7 @@ export async function GET() {
   }
 
   // Service role client — bypasses RLS to read all feedback
-  const admin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
+  const admin = getAdminDb()
 
   const { data: feedback, error } = await admin
     .from('match_feedback')

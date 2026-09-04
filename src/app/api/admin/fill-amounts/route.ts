@@ -4,7 +4,7 @@
 // using the shared cue-based extractor in src/lib/grant-amounts.ts. No AI calls.
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { getAdminDb } from '@/lib/admin/admin-db'
 import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
 import { mergeGrantUpdate } from '@/lib/grant-merge'
 import { buildAwardText, extractGrantAmounts } from '@/lib/grant-amounts'
@@ -30,10 +30,7 @@ async function isAuthorised(req: NextRequest): Promise<boolean> {
 }
 
 function adminClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  )
+  return getAdminDb()
 }
 
 // Amount parsing now uses the shared cue-based implementation in

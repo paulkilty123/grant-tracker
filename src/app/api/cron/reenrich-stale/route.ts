@@ -35,7 +35,7 @@
 // below.
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { getAdminDb } from '@/lib/admin/admin-db'
 import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
 import { recordRun, usageFromAdminJson } from '@/lib/admin/cron-runs'
 import { gateDecision } from '@/lib/admin/publish-gate'
@@ -122,10 +122,7 @@ function detectMaterialDiff(
 }
 
 function adminClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
+  return getAdminDb()
 }
 
 // Internal admin calls send a Bearer ADMIN_SECRET, so they MUST hit the

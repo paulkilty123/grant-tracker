@@ -4,7 +4,7 @@
 // against the stored fingerprint and raises a watchlist_alert if anything changed.
 import { NextRequest, NextResponse } from 'next/server'
 import { classifyPage } from '@/lib/verification/page-readable'
-import { createClient } from '@supabase/supabase-js'
+import { getAdminDb } from '@/lib/admin/admin-db'
 import { recordRun } from '@/lib/admin/cron-runs'
 import { hasCollapsed, flagRowsForUrl, extractFingerprint, type ReadVia } from '@/lib/watchlist-signals'
 
@@ -33,10 +33,7 @@ const BATCH_LIMIT    = 150
 const TIME_BUDGET_MS = 240_000
 
 function getAdminClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
+  return getAdminDb()
 }
 
 /**

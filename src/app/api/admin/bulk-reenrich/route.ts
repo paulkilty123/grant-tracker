@@ -9,7 +9,7 @@
 // Auth: ADMIN_SECRET bearer token or admin session
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { getAdminDb } from '@/lib/admin/admin-db'
 import Anthropic from '@anthropic-ai/sdk'
 import { syncLocationFields } from '@/lib/funder-brief'
 import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
@@ -30,10 +30,7 @@ async function isAuthorised(req: NextRequest): Promise<boolean> {
 }
 
 function getAdminClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  )
+  return getAdminDb()
 }
 
 // Mirror of enrich-grant's fetchPageText — kept here so this route can run

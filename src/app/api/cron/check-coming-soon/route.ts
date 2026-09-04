@@ -29,7 +29,7 @@
 // next_open_date still goes through the trust ladder.
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { getAdminDb } from '@/lib/admin/admin-db'
 import { mergeGrantUpdate } from '@/lib/grant-merge'
 import { recordRun } from '@/lib/admin/cron-runs'
 import { detectReopening } from '@/lib/verification/reopening'
@@ -39,10 +39,7 @@ export const dynamic = 'force-dynamic'
 const PROVENANCE_SOURCE = 'system:check_coming_soon:v2'
 
 function getAdminClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  )
+  return getAdminDb()
 }
 
 export async function GET(req: NextRequest) {

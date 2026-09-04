@@ -1,7 +1,7 @@
 // Vercel Cron handler — runs every Friday at 08:00 UTC
 // Sends each organisation owner a weekly summary of their funding pipeline.
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { getAdminDb } from '@/lib/admin/admin-db'
 import { Resend } from 'resend'
 import { recordRun } from '@/lib/admin/cron-runs'
 import { EMAIL_FROM_HEADER, EMAIL_APP_URL } from '@/lib/mcp-brand'
@@ -13,10 +13,7 @@ export const dynamic = 'force-dynamic'
 
 
 function adminClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  )
+  return getAdminDb()
 }
 
 interface PipelineRow {

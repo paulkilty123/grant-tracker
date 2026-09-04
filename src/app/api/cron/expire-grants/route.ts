@@ -8,7 +8,7 @@
 // occurrence, so the grant stays in the catalogue between rounds without
 // admin intervention.
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { getAdminDb } from '@/lib/admin/admin-db'
 import { mergeGrantUpdate } from '@/lib/grant-merge'
 import { recordRun } from '@/lib/admin/cron-runs'
 import { nextCycleDeadline, type CycleEntry } from '@/lib/deadline-cycle'
@@ -23,10 +23,7 @@ export const dynamic = 'force-dynamic'
 // the handler reported non-zero counts. Diagnosed 2026-07-25: provenance
 // source `system:expire_grants:*` appeared on 0 of 1,729 rows.
 function getAdminClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  )
+  return getAdminDb()
 }
 
 // Bump if the roll-forward parser or between-rounds behaviour changes materially.
