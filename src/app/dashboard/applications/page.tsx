@@ -573,8 +573,12 @@ export default function ApplicationsPage() {
           </div>
         )}
 
-        {/* How it works: full strip for 1-2 applications, collapsed link for 3+ */}
-        {loaded && apps.length > 0 && apps.length <= 2 && <HowItWorks />}
+        {/* How it works: full strip for 0-2 applications, collapsed link for 3+.
+            The zero case here is "nothing drafted but something ready to
+            start"; the fully empty page renders the CTA version above. Without
+            this branch a first-time user with a pipeline saw no guide at all.
+            Paul, 2026-09-04. */}
+        {loaded && apps.length <= 2 && (apps.length > 0 || readyToStart.length > 0) && <HowItWorks />}
         {loaded && apps.length >= 3 && (
           howOpen
             ? <HowItWorks />
