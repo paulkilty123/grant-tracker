@@ -403,6 +403,31 @@ export async function POST(req: NextRequest) {
   }
 
   const combinedContent = sections.length > 0 ? sections.join('\n\n') : ''
+  // A BRIEF WRITTEN FROM MEMORY MUST NOT REPLACE ONE WRITTEN FROM THE PAGE.
+  //
+  // When the fetch fails this route still writes, stamping the result
+  // `knowledge_fallback`. On a host that blocks us — Arts Council, Groundwork,
+  // Historic England, several community foundations — every re-enrich would
+  // therefore downgrade a real brief to a remembered one, and the review queue
+  // would then raise "Page unreadable" on a row that was fine an hour earlier.
+  // Nothing stopped that until 2026-09-04, when a 105-row enrichment pass was
+  // about to run across exactly those hosts.
+  //
+  // Refuses the write rather than merging: the two briefs disagree field by
+  // field and there is no way to tell which half came from the page. Placed
+  // BEFORE the model call, so a refusal costs nothing.
+  {
+    const prevSource = (grant.funder_brief as { source?: unknown } | null)?.source
+    if (!fetchedFromUrl && prevSource === 'live_fetch') {
+      console.warn('[enrich-grant] fetch failed; kept the existing live_fetch brief', { grantId, primaryFetchDebug })
+      return NextResponse.json({
+        success: true, skipped: 'fetch_failed_kept_live_brief',
+        detail: 'The page could not be read, and this row already has a brief written from it. Nothing was overwritten.',
+        primaryFetchDebug,
+      })
+    }
+  }
+
   const sourceNote = fetchedFromUrl
     ? 'Content was fetched live from the funder\'s website.'
     : 'The funder\'s website could not be fetched — use your training knowledge about this UK funder to fill in as many fields as possible, and note any uncertainty.'
