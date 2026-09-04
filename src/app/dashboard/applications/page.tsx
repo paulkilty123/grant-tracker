@@ -288,7 +288,10 @@ export default function ApplicationsPage() {
         </DisclosureControl>
         {principlesOpen && (
           <div style={{
-            background: T.softGreen, border: `1px solid ${T.border}`, borderRadius: 12,
+            /* White, not softGreen. The tint is a hair off the cream page and
+               read as a wrong shade rather than as a panel, and the How it
+               works strip below it is white. Paul, 2026-09-04. */
+            background: T.white, border: `1px solid ${T.border}`, borderRadius: 12,
             padding: '18px 20px', marginTop: 10, display: 'flex', flexDirection: 'column', gap: 12,
           }}>
             {STRONG_APPLICATION_PRINCIPLES.map((p, i) => (
