@@ -6,7 +6,7 @@
 // Auth: ADMIN_SECRET bearer token, or admin session.
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { getAdminDb } from '@/lib/admin/admin-db'
 import { computeMatchScore } from '@/lib/matching'
 import { normaliseScrapedGrant } from '@/lib/grants-normalise'
 import type { Organisation } from '@/types'
@@ -27,12 +27,12 @@ async function isAuthorised(req: NextRequest): Promise<boolean> {
   } catch { return false }
 }
 
-function getAdminClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  )
-}
+// getAdminDb, not a bare createClient: it wraps fetch with cache: 'no-store'.
+// Found 2026-09-04: this route kept returning Albert Gubay with a
+// next_open_date the database no longer held, across two deployments, while
+// the REST API and a local run of the same scorer returned the cleared row.
+// `export const dynamic = 'force-dynamic'` did not stop the read being served
+// from cache; the no-store fetch is what admin-db.ts exists for.
 
 export async function GET(req: NextRequest) {
   if (!(await isAuthorised(req))) {
@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
     }, { status: 400 })
   }
 
-  const sb = getAdminClient()
+  const sb = getAdminDb()
 
   const [{ data: org, error: orgErr }, { data: row, error: grantErr }] = await Promise.all([
     sb.from('organisations').select('*').eq('id', orgId).maybeSingle(),
