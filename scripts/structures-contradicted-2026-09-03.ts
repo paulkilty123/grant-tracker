@@ -94,7 +94,7 @@ async function main() {
   let changed = 0
   for (const r of ROWS) {
     const cur = (byId.get(r.id)!.eligible_structures as string[]) ?? []
-    const to = [...new Set(r.to)].sort()
+    const to = Array.from(new Set(r.to)).sort()
     const same = JSON.stringify([...cur].sort()) === JSON.stringify(to)
     const dropped = cur.filter(s => !to.includes(s)); const added = to.filter(s => !cur.includes(s))
     console.log(`  ${r.title.padEnd(46)} ${same ? 'no change' : `-${dropped.join(',') || '-'} +${added.join(',') || '-'}`}`)

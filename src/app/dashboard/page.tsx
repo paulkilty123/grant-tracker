@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getDeadlineAlerts, formatCurrency, formatNextOpen } from '@/lib/utils'
 import type { PipelineItem, Organisation } from '@/types'
 import { Award, TrendingUp, Users, Rocket, GraduationCap, Gift, ArrowRight, CalendarDays, Check, Sparkles, Bookmark, ListChecks, UserPlus, FilePenLine, Lightbulb, CircleCheck } from 'lucide-react'
-import { computeMatchScore, MATCH_TIER, MATCH_FLOOR, MATCH_TIER_STRONG, MATCH_TIER_GOOD } from '@/lib/matching'
+import { computeMatchScore, grantMatchesLocationText, MATCH_TIER, MATCH_FLOOR, MATCH_TIER_STRONG, MATCH_TIER_GOOD } from '@/lib/matching'
 import { normaliseScrapedGrant } from '@/lib/grants-normalise'
 import { getBuilderUser } from '@/lib/builder/access'
 import { agentEnabledForOrg } from '@/lib/agent/orchestrator/config'
@@ -127,7 +127,6 @@ export default async function DashboardPage() {
   const today = new Date().toISOString().split('T')[0]
   type ScoredGrant = { grant: ReturnType<typeof normaliseScrapedGrant>; score: number; lastSeenAt: string | null }
   // UK-wide / nation-wide scopes always pass the location check.
-  const BROAD_LOCATION = new Set(['uk', 'uk-wide', 'england', 'nationwide', 'national', 'uk wide', 'all uk'])
   let scoredAll: ScoredGrant[] = []
   let grantPoolRaw: Record<string, unknown>[] = []  // reused for per-project "funders fit"
   if (typedOrg) {
@@ -168,15 +167,12 @@ export default async function DashboardPage() {
             if (!ge.impactSectors.some((s: string) => orgSectors.has(s))) return null
           }
 
-          // Location — only fires when both sides have location set; broad
-          // scopes (UK-wide etc.) always pass
-          if (orgLocation && ge.geoScope && ge.geoScope.length > 0) {
-            const passes = ge.geoScope.some((s: string) => {
-              const sl = s.toLowerCase()
-              return BROAD_LOCATION.has(sl) || sl.includes(orgLocation) || orgLocation.includes(sl)
-            })
-            if (!passes) return null
-          }
+          // Location: the SAME test Find Funding applies when the profile is
+          // on (grantMatchesLocationText on location_tag). Until 2026-09-04
+          // this gate read geoScope through a broad allow-list, which let 421
+          // rows through for a Leeds org where Find Funding showed 183, so
+          // the two screens disagreed on every count. One gate, one number.
+          if (orgLocation && !grantMatchesLocationText(g.locationTag, typedOrg.primary_location ?? '')) return null
 
           // Score within the matched set (used for top-4 + quality buckets)
           const result = computeMatchScore(g, typedOrg)
@@ -191,6 +187,29 @@ export default async function DashboardPage() {
     }
   }
   const totalMatchCount = scoredAll.length
+
+  // "YOU CAN APPLY FOR" IS ONE NUMBER ON BOTH SCREENS.
+  //
+  // Paul, 2026-09-04, from the demo: the dashboard said "67 you can apply
+  // for" and Find Funding, one click later, said "148 grants you can apply
+  // for". The dashboard's 67 was a SCORE threshold (50+) over rows that had
+  // already passed sector and location gates; Find Funding's 148 was the
+  // structure gate alone over every open row. Same phrase, two definitions.
+  //
+  // The phrase now means what Find Funding's tab badges mean with the profile
+  // on (search/page.tsx crossTabCounts): an open row of a canonical type, not
+  // hidden, that passes the structure gate, the sector overlap and the
+  // location text test. That is exactly scoredAll, now that the location gate
+  // above is the same function, so the headline is scoredAll counted per
+  // type and the quality tiers keep their own words below it. Predicted for
+  // Bramble Arts Collective (Leeds) before deploy: grants 146, programmes 5,
+  // against 148 and 5 on Paul's recording, the gap being that day's catalogue
+  // changes.
+  const eligibleCounts: Record<string, number> = { all: scoredAll.length, grant: 0, programme: 0, investment: 0, in_kind: 0 }
+  for (const m of scoredAll) {
+    const ft = (m.grant.fundingType ?? 'grant') as string
+    eligibleCounts[ft] = (eligibleCounts[ft] ?? 0) + 1
+  }
 
   // ── "Your work" band (cohort/builder only) — in-progress applications +
   // projects. Fully gated: non-builder users get the byte-identical dashboard.
@@ -275,9 +294,7 @@ export default async function DashboardPage() {
             if (!CANONICAL_TYPES.has((g.fundingType ?? 'grant') as string)) continue
             const es = g.eligibleStructures
             if (orgStructure && es && es.length > 0 && !es.includes(orgStructure)) continue
-            if (orgLoc && ge.geoScope && ge.geoScope.length > 0) {
-              if (!ge.geoScope.some(s => { const sl = s.toLowerCase(); return BROAD_LOCATION.has(sl) || sl.includes(orgLoc) || orgLoc.includes(sl) })) continue
-            }
+            if (orgLoc && !grantMatchesLocationText(g.locationTag, typedOrg.primary_location ?? '')) continue
             if (projectSectors.size > 0 && ge.impactSectors && ge.impactSectors.length > 0) {
               if (!ge.impactSectors.some(s => projectSectors.has(s))) continue
             }
@@ -1148,9 +1165,10 @@ export default async function DashboardPage() {
 
         const emptyTiers = { strong: 0, good: 0, partial: 0, weak: 0 }
         const matchScopes: MatchScope[] = [
-          { key: 'all' as ScopeKey, actionable: actionableCount, tiers: qualityCounts, top: scoredAll.slice(0, 3).map(shapeRow) },
+          { key: 'all' as ScopeKey, eligible: eligibleCounts.all, actionable: actionableCount, tiers: qualityCounts, top: scoredAll.slice(0, 3).map(shapeRow) },
           ...TYPE_KEYS.map(k => ({
             key: k as ScopeKey,
+            eligible: eligibleCounts[k] ?? 0,
             actionable: typeCounts[k] ?? 0,
             tiers: tiersByType[k] ?? emptyTiers,
             top: scoredAll.filter(m => (m.grant.fundingType ?? 'grant') === k).slice(0, 3).map(shapeRow),

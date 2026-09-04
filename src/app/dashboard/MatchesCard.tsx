@@ -29,6 +29,9 @@ export type ScopeKey = 'all' | TypeKey
 
 export type MatchScope = {
   key: ScopeKey
+  /** Open rows the org's structure is allowed to apply to. Same definition as Find Funding's tab badges. */
+  eligible: number
+  /** Of the rows scored against the full profile, those at 50 or above. */
   actionable: number
   tiers: { strong: number; good: number; partial: number; weak: number }
   top: MatchRow[]
@@ -85,7 +88,7 @@ export default function MatchesCard({ scopes, totalScored }: { scopes: MatchScop
 
   const scope = scopes.find(s => s.key === active) ?? scopes[0]
   const hue   = TYPE[active]
-  const empty = scope.actionable === 0
+  const empty = scope.eligible === 0
 
   /**
    * The sub-line. Zero tiers are omitted rather than printed as "0 strong",
@@ -222,7 +225,7 @@ export default function MatchesCard({ scopes, totalScored }: { scopes: MatchScop
             Nothing in {hue.label.toLowerCase()} yet
           </p>
           <p style={{ fontSize: 13, lineHeight: 1.55, color: INK_MUTED, margin: 0, maxWidth: '42ch' }}>
-            {scope.tiers.weak} {hue.label.toLowerCase()} opportunit{scope.tiers.weak === 1 ? 'y was' : 'ies were'} scored against your profile — none of them cleared the eligibility line.
+            Nothing open in {hue.label.toLowerCase()} names your organisation type as eligible right now.
           </p>
           <a href={`/dashboard/search?fundingType=${active}`} style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: DEEP, textDecoration: 'none', border: '1.5px solid rgba(29,60,62,0.22)', borderRadius: 999, padding: '8px 18px' }}>
             Browse all {hue.label.toLowerCase()} →
@@ -237,8 +240,13 @@ export default function MatchesCard({ scopes, totalScored }: { scopes: MatchScop
                 good result as a bad one. Every hard disqualifier caps below 50,
                 so 50+ is the line where eligibility has been cleared: right
                 size, right structure, right place, open to organisations. */}
+            {/* The ELIGIBLE count, since 2026-09-04. This used to be the
+                actionable count (score 50+), and Find Funding one click away
+                put "you can apply for" on a structure-only count more than
+                twice the size. The phrase now has one definition on both
+                screens; the score tiers keep their own words below. */}
             <span style={{ fontSize: 34, fontWeight: 600, color: DEEP, fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.03em', lineHeight: 1 }}>
-              {scope.actionable}
+              {scope.eligible}
             </span>
             <span style={{ fontSize: 14.5, fontWeight: 600, color: DEEP, fontFamily: 'var(--font-space-grotesk)' }}>
               you can apply for
@@ -247,6 +255,10 @@ export default function MatchesCard({ scopes, totalScored }: { scopes: MatchScop
 
           {/* Two lines of room, so a longer scope wrapping doesn't resize the card. */}
           <p style={{ fontSize: 12.2, lineHeight: 1.45, margin: '6px 0 12px', minHeight: 34, color: INK_MUTED }}>
+            {scope.actionable > 0 && (
+              <span style={{ color: DEEP, fontWeight: 600 }}>{scope.actionable} worth your attention</span>
+            )}
+            {scope.actionable > 0 && showTiers && <span style={{ color: INK_PLACE }}>: </span>}
             {showTiers && <span>{tierParts.map((t, i) => (
               <span key={t}>
                 {i > 0 && <span style={{ color: INK_PLACE }}> · </span>}
@@ -259,7 +271,7 @@ export default function MatchesCard({ scopes, totalScored }: { scopes: MatchScop
                 {/* Not "less relevant" — these are funds the org cannot apply
                     for, not near-misses being neglected. Set a step back so it
                     cannot be misread as loss, but still above the text floor. */}
-                <span style={{ color: INK_PLACE }}>{scope.tiers.weak} ruled out on size, location or structure</span>
+                <span style={{ color: INK_PLACE }}>{scope.tiers.weak} scored under 50</span>
               </>
             )}
           </p>
