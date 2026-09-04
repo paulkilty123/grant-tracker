@@ -143,7 +143,7 @@ export default function MatchesCard({ scopes, totalScored }: { scopes: MatchScop
         {TABS.map((t, i) => {
           const on = t.key === active
           const c  = TYPE[t.key]
-          const n  = scopes.find(s => s.key === t.key)?.actionable ?? 0
+          const n  = scopes.find(s => s.key === t.key)?.eligible ?? 0   // same rule as Find Funding's tab badges
           return (
             <button
               key={t.key}
