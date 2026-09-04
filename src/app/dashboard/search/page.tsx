@@ -3366,6 +3366,27 @@ export default function SearchPage() {
               activeFunderCategory !== 'all', activeGeoScope !== 'all', !!locationFilter,
             ].filter(Boolean).length
 
+            // ── B0. Search still running ────────────────────────────
+            // The keyword pass is empty for most natural phrases while the
+            // AI search is in flight, and this card used to say "No results"
+            // under a button still saying "Searching". A verdict has to wait
+            // for the answer. Paul, 2026-09-04.
+            if (filterQuery && aiLoading) return (
+              <div style={emptyCardStyle}>
+                <div className="flex justify-center mb-5">
+                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: '#F5F3EF', color: '#888' }}>
+                    <Search size={24} strokeWidth={1.5} />
+                  </div>
+                </div>
+                <h3 className="text-lg font-semibold mb-2" style={{ color: '#2C2C2A' }}>
+                  Searching for &ldquo;{filterQuery}&rdquo;
+                </h3>
+                <p className="text-sm leading-relaxed mx-auto" style={{ color: '#6B6A67', maxWidth: 380 }}>
+                  Reading the catalogue for the closest matches. A few seconds.
+                </p>
+              </div>
+            )
+
             // ── B. Search query active ──────────────────────────────
             if (filterQuery) return (
               <div style={emptyCardStyle}>
@@ -3378,7 +3399,7 @@ export default function SearchPage() {
                   No results for &ldquo;{filterQuery}&rdquo;
                 </h3>
                 <p className="text-sm leading-relaxed mb-6 mx-auto" style={{ color: '#6B6A67', maxWidth: 380 }}>
-                  We couldn&rsquo;t find any matches for that search. Try broader terms — e.g. drop specific words, or search for the funder name.
+                  We couldn&rsquo;t find any matches for that search. Try broader terms, drop specific words, or search for the funder name.
                 </p>
                 <button
                   onClick={() => { setInputValue(''); setFilterQuery('') }}
