@@ -582,6 +582,18 @@ export function grantMatchesLocationText(locationTag: string | null | undefined,
   if (!text.trim()) return true
   const c = classifyLocationTag(locationTag)
   if (c.kind === 'national' || c.kind === 'unknown' || c.kind === 'multi') return true
+  // A nation tag ("England & Wales", "Scotland") is not a region: the org's
+  // location text is a town or a county, so string-matching "Leeds" against
+  // "England & Wales" fails and every England-and-Wales funder vanished from
+  // Find Funding for a Leeds organisation (Yapp, Albert Gubay; Paul, from the
+  // demo, 2026-09-04). Decide by nation, the same way the scorer does: the
+  // text names Scotland, Wales or Northern Ireland, or it is in England.
+  if (c.nations && c.nations.length > 0) {
+    const t = text.toLowerCase()
+    const orgNation: UKNation =
+      t.includes('scotland') ? 'scotland' : t.includes('wales') ? 'wales' : t.includes('northern ireland') ? 'ni' : 'england'
+    return c.nations.includes(orgNation)
+  }
   return orgMatchesRegionalTag(locationTag ?? '', text)
 }
 

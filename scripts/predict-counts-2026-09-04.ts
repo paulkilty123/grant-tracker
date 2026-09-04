@@ -37,6 +37,7 @@ async function main() {
   const findFunding: Record<string, number> = { all: 0, grant: 0, programme: 0, investment: 0, in_kind: 0 }
   const tiers = { strong: 0, good: 0, partial: 0, weak: 0 }
   let scored = 0
+  const ranked: { title: string; ft: string; sc: number; tag: string | null }[] = []
   for (const row of rows ?? []) {
     if (hiddenIds.has(String(row.id))) continue
     const ft = String(row.funding_type ?? 'grant')
@@ -52,6 +53,14 @@ async function main() {
     scored++
     const sc = computeMatchScore(g, org as Organisation).score
     if (sc >= 80) tiers.strong++; else if (sc >= 65) tiers.good++; else if (sc >= 50) tiers.partial++; else tiers.weak++
+    ranked.push({ title: g.title, ft, sc, tag: g.locationTag ?? null })
+  }
+  ranked.sort((a, b) => b.sc - a.sc)
+  console.log('top of the gated set by score (what both screens should lead with):')
+  ranked.slice(0, 8).forEach((r, i) => console.log(`  ${i + 1}. ${r.sc}%  ${r.title}  [${r.ft}, ${r.tag}]`))
+  for (const needle of (process.argv[3] ?? '').split('|').filter(Boolean)) {
+    const i = ranked.findIndex(r => r.title.toLowerCase().includes(needle.toLowerCase()))
+    console.log(`  "${needle}": ${i < 0 ? 'NOT in the gated set' : `position ${i + 1}, ${ranked[i].sc}%`}`)
   }
   console.log(`org ${org.name} (${structure}, ${loc || 'no location'})`)
   console.log(`Structure gate only: grants ${structureOnly.grant}, programmes ${structureOnly.programme}, investment ${structureOnly.investment}, in-kind ${structureOnly.in_kind} (all ${structureOnly.all})`)
