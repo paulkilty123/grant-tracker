@@ -93,6 +93,14 @@ export async function GET(req: NextRequest) {
       nicheTags:           opp.nicheTags ?? null,
       targetBeneficiaries: opp.targetBeneficiaries ?? null,
       eligibleStructures:  opp.eligibleStructures ?? null,
+      // Timing, as the scorer sees it. Added 2026-09-04 when this endpoint
+      // kept scoring Albert Gubay as "closed" after next_open_date had been
+      // cleared and the REST API returned the cleared row: the only way to
+      // tell a stale read from a scoring bug is to print what was read.
+      isRolling:           opp.isRolling,
+      deadline:            opp.deadline ?? null,
+      nextOpenDate:        (opp as { nextOpenDate?: string | null }).nextOpenDate ?? null,
+      readAt:              new Date().toISOString(),
     },
     result,
   })
