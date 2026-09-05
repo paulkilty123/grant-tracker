@@ -19,11 +19,12 @@ export const dynamic = 'force-dynamic'
 function staticEntries(now: Date): MetadataRoute.Sitemap {
   // Deliberately NOT listed:
   //   /signup             — reachable by URL but unlinked until launch
+  //   /apply              — closed-cohort recruitment copy; stays live for direct
+  //                         links only and carries noindex (Paul, 2026-09-05)
   //   /cohort-signup-7k9m2x — unlisted path, must not be published anywhere
   //   /dashboard/*, /auth/*, /oauth/*, /onboarding/* — behind the auth gate
   return [
     { url: `${MCP_APP_ORIGIN}/`,          lastModified: now, changeFrequency: 'weekly',  priority: 1.0 },
-    { url: `${MCP_APP_ORIGIN}/apply`,     lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${MCP_APP_ORIGIN}/mcp`,       lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${MCP_APP_ORIGIN}/mcp/terms`, lastModified: now, changeFrequency: 'yearly',  priority: 0.2 },
     { url: `${MCP_APP_ORIGIN}/privacy`,   lastModified: now, changeFrequency: 'yearly',  priority: 0.2 },
