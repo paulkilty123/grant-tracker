@@ -1,6 +1,7 @@
 import type { DigestModel } from './build'
 import { esc, humanDayDate, plural, spell } from './text'
 import { FUNDING_TYPE_COLOUR, type FundingTypeKey } from '@/lib/funding-type-colours'
+import { UI, BODY, C } from '@/lib/email/tokens'
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Email HTML — "ground D".
@@ -20,19 +21,8 @@ import { FUNDING_TYPE_COLOUR, type FundingTypeKey } from '@/lib/funding-type-col
    ever returns it returns in ADDITION to the fill, never instead of it.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-const UI   = "'Space Grotesk',Helvetica,Arial,sans-serif"
-const BODY = "'Plus Jakarta Sans',Helvetica,Arial,sans-serif"
-
-const C = {
-  page:   '#FFFFFF',
-  card:   '#EDF6F1',
-  deep:   '#1D3C3E',
-  onDeep: '#F6F1E7',
-  body:   '#5F5E5A',
-  muted:  '#73726F',
-  rule:   'rgba(29,60,62,.10)',
-  danger: '#B94040',
-}
+/* Palette and type stack live in `@/lib/email/tokens` now that a second email
+   is built from them. They were declared here until 2026-09-05. */
 
 /**
  * Countdown tile tiers (spec §1b).
