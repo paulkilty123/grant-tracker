@@ -38,7 +38,7 @@ async function main() {
     if (!APPLY) continue
     const res = await mergeGrantUpdate({ id: r.id, source: SOURCE, db,
       fields: { eligible_structures: r.to, grant_sources: [{ url: r.url, label: 'Eligibility page, read 2026-09-05', added_at: '2026-09-05' }] },
-      citations: { eligible_structures: { snippet: r.quote, confidence: 'high', source_url: r.url } } })
+      citations: { eligible_structures: { snippet: r.quote, confidence: 'high' } } })
     const refused = res.rejected.filter(x => x.reason !== 'idempotent')
     console.log(`     applied [${res.applied.join(', ')}]${refused.length ? ' REFUSED ' + JSON.stringify(refused) : ''}`)
   }
