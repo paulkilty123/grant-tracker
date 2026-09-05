@@ -857,25 +857,43 @@ export function unsupportedFigures(current: Pick<VerifyResult, 'evidence'>): ('a
  * reviewer, not a page this fund's terms can be verified against. Order is the
  * order they were banked, which is the order somebody thought they mattered.
  */
-export function bankedSourceTargets(row: Pick<VerifyRow, 'apply_url' | 'grant_sources'>, visited: string[]): string[] {
+const BANKED_HINT: Record<LinkWant, RegExp> = {
+  funding: /£|amount|grant size|how much|what we offer|award|funding/i,
+  timing:  /deadline|dates?|when|round|apply|timeline|window/i,
+  detail:  /eligib|who can|criteria|what we (do not |don.t )?fund|exclusion/i,
+}
+
+/**
+ * ...ranked by what the hop is looking for. Yapp banks four pages and the
+ * £3,000 is on the fourth, its homepage, labelled "grant size"; the engine
+ * has a three-page budget and spent it on the first two (2026-09-05). A label
+ * or URL that names the thing we lack goes first; banked order breaks ties.
+ */
+export function bankedSourceTargets(
+  row: Pick<VerifyRow, 'apply_url' | 'grant_sources'>,
+  visited: string[],
+  want?: LinkWant,
+): string[] {
   if (!row.apply_url || !Array.isArray(row.grant_sources)) return []
   const norm = (u: string) => u.replace(/\/$/, '').split('#')[0]
   const seen = new Set(visited.map(norm))
   const host = (u: string): string | null => { try { return new URL(u).hostname } catch { return null } }
   const applyHost = host(row.apply_url)
   if (!applyHost) return []
-  const out: string[] = []
-  for (const s of row.grant_sources) {
+  const out: { url: string; hinted: boolean; i: number }[] = []
+  row.grant_sources.forEach((s, i) => {
     const url = typeof s?.url === 'string' ? s.url.trim() : ''
-    if (!/^https?:\/\//i.test(url)) continue
+    if (!/^https?:\/\//i.test(url)) return
     const h = host(url)
-    if (!h || !sameSite(applyHost, h)) continue
+    if (!h || !sameSite(applyHost, h)) return
     const n = norm(url)
-    if (seen.has(n)) continue
+    if (seen.has(n)) return
     seen.add(n)
-    out.push(url)
-  }
-  return out
+    const hint = want ? BANKED_HINT[want] : null
+    const hinted = !!hint && hint.test(`${typeof s?.label === 'string' ? s.label : ''} ${url}`)
+    out.push({ url, hinted, i })
+  })
+  return out.sort((a, b) => Number(b.hinted) - Number(a.hinted) || a.i - b.i).map(o => o.url)
 }
 
 export function decideHop(
@@ -1115,7 +1133,7 @@ export async function verifyRow(
 
     // Banked sources before guessed links: a page somebody banked as the one
     // that states the terms beats a link scored by its wording.
-    const banked = bankedSourceTargets(row, visited)
+    const banked = bankedSourceTargets(row, visited, want)
     const scored = lastFetched
       ? candidateLinks(lastFetched.source, lastFetched.url, lastFetched.isMarkdown, want, visited)
       : []

@@ -374,3 +374,26 @@ describe('bankedSourceTargets — read what somebody banked before guessing a li
     expect(bankedSourceTargets({ apply_url: row.apply_url, grant_sources: null }, [])).toEqual([])
   })
 })
+
+describe('bankedSourceTargets — the page that names what we lack goes first', () => {
+  // Yapp as banked on 2026-09-04: the £3,000 is on the homepage, banked last.
+  const yapp = {
+    apply_url: 'https://yappcharitabletrust.org.uk/how-to-apply/',
+    grant_sources: [
+      { url: 'https://yappcharitabletrust.org.uk/what-we-fund/', label: 'What we fund' },
+      { url: 'https://yappcharitabletrust.org.uk/what-we-dont-fund/', label: 'What we do not fund' },
+      { url: 'https://yappcharitabletrust.org.uk/', label: 'Homepage (grant size), read 2026-09-04' },
+    ],
+  }
+  it('puts the grant-size page first when the hop wants funding', () => {
+    expect(bankedSourceTargets(yapp, [yapp.apply_url], 'funding')[0]).toBe('https://yappcharitabletrust.org.uk/')
+  })
+  it('puts the eligibility pages first when the hop wants detail, in banked order', () => {
+    expect(bankedSourceTargets(yapp, [yapp.apply_url], 'detail').slice(0, 2)).toEqual([
+      'https://yappcharitabletrust.org.uk/what-we-fund/', 'https://yappcharitabletrust.org.uk/what-we-dont-fund/',
+    ])
+  })
+  it('keeps banked order when nothing is asked for', () => {
+    expect(bankedSourceTargets(yapp, [yapp.apply_url])[0]).toBe('https://yappcharitabletrust.org.uk/what-we-fund/')
+  })
+})
