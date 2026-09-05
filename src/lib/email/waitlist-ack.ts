@@ -27,10 +27,11 @@ import { UI, BODY, C, logoLockup } from './tokens'
  *   - No trial or free-plan language. `TRIAL_IS_LIVE` is false, and the same
  *     rule that governs the Connect page governs this.
  *
- *   - No launch DATE, only "the second week of September". `founding-cohort.ts`
- *     names the 8th, but that constant governs who is called founding cohort,
- *     not what we have promised a stranger in writing. If the date slips, a
- *     week is still true and a date is a broken promise sitting in an inbox.
+ *   - No launch DATE, only "later this week". Sent Monday 7 September for a
+ *     Thursday launch (Paul, 2026-09-05). If Thursday slips to Friday it is
+ *     still true; a named day would be a broken promise sitting in an inbox.
+ *     "Later this week", not "aiming to": a hedge reads as doubt, and doubt
+ *     in the first email carries into the second.
  *
  * HOUSE COPY. No dashes anywhere in the user-facing strings — commas and full
  * stops. The reference mock uses em dashes throughout; CLAUDE.md's house copy
@@ -47,18 +48,18 @@ export interface WaitlistAckOptions {
 export const WAITLIST_ACK_SUBJECT = 'You are on the list for Shoots'
 
 const PREHEADER =
-  'We open in the second week of September. One email, then nothing until then.'
+  'We open later this week. One email the morning we do, then nothing else before then.'
 
 /** Plain-text alternative. Sent alongside the HTML, not instead of it. */
 export function renderWaitlistAckText(opts: WaitlistAckOptions): string {
   return [
     'You are on the list',
     '',
-    'Thanks for signing up. Shoots opens to everyone in the second week of',
-    'September, and you will get an email the day it does, with a link',
-    'straight to signup rather than to a form.',
+    'Thanks for signing up. Shoots opens later this week. You will get one',
+    'email the morning it does, with a link straight to signup, and setting',
+    'up takes about five minutes.',
     '',
-    'That is the only email you will get until we open.',
+    'That is the only other email you will get before then.',
     '',
     `Take me off the list: ${opts.removalUrl}`,
     '',
@@ -98,12 +99,12 @@ export function renderWaitlistAck(opts: WaitlistAckOptions): string {
 
 <tr><td class="gutter" style="background:${C.page};border-radius:16px 16px 0 0;padding:30px 30px 0;">
   <p style="margin:0 0 10px;font-family:${UI};font-size:24px;font-weight:600;letter-spacing:-.4px;color:${C.deep};line-height:1.25;">You are on the list</p>
-  <p style="margin:0 0 20px;font-family:${BODY};font-size:15.5px;line-height:1.65;color:${C.deep};">Thanks for signing up. Shoots opens to everyone in the second week of September, and you will get an email the day it does, with a link straight to signup rather than to a form.</p>
+  <p style="margin:0 0 20px;font-family:${BODY};font-size:15.5px;line-height:1.65;color:${C.deep};">Thanks for signing up. Shoots opens later this week. You will get one email the morning it does, with a link straight to signup, and setting up takes about five minutes.</p>
 </td></tr>
 
 <tr><td class="gutter" style="background:${C.page};border-radius:0 0 16px 16px;padding:4px 30px 30px;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="border-top:1px solid ${C.rule};padding-top:18px;">
-    <p style="margin:0;font-family:${BODY};font-size:13.5px;line-height:1.6;color:${C.body};">That is the only email you will get until we open. <a href="${esc(removalUrl)}" style="color:${C.deep};font-weight:600;text-decoration:underline;">Take me off the list</a>.</p>
+    <p style="margin:0;font-family:${BODY};font-size:13.5px;line-height:1.6;color:${C.body};">That is the only other email you will get before then. <a href="${esc(removalUrl)}" style="color:${C.deep};font-weight:600;text-decoration:underline;">Take me off the list</a>.</p>
   </td></tr></table>
 </td></tr>
 
