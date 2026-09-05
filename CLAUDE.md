@@ -17,21 +17,35 @@ Next.js 14 App Router + Supabase + Tailwind CSS, deployed on Vercel via GitHub a
   > `project_domain_confusion_grant_tracker_org`.
 - **Repo:** https://github.com/paulkilty123/grant-tracker
 - **Supabase project ID:** yrndczlqjqtfgissleev
-- **Pricing (final, set by Paul 2026-08-29):** three tiers, monthly or annual only.
+- **Pricing (set by Paul 2026-09-05):** three tiers, monthly or annual only.
 
-  | Tier | Monthly | Annual | Founding rate |
-  |------|--------:|-------:|--------------:|
-  | Match | £15 | £150 | £12 |
-  | Apply | £25 | £250 | £20 |
-  | Team  | £45 | £450 | £36 |
+  | Tier | List monthly | List annual | Launch price |
+  |------|-------------:|------------:|-------------:|
+  | Match | £19 | £190 | £15 / £150 |
+  | Apply | £35 | £350 | £25 / £250 |
+  | Team  | no price shown, "get in touch" | | none |
 
-  The founding rate is **permanent** for those who take it, applied as its own
-  Stripe price rather than a coupon, and **closes at the end of October**.
+  The **launch price** lasts **12 months from signup**, then moves to list. It is
+  NOT permanent. It is its own Stripe price rather than a coupon, and it
+  **closes to new signups at the end of October**. Call it "launch price" in
+  all public copy, never "founding rate": the founding rate belongs to the
+  founding cohort (20 to 30 orgs), who were promised a permanent rate on the
+  apply and terms pages. What that cohort rate is remains an open question;
+  do not reword those pages until Paul decides.
+
+  Team shows no price at all. It is not built yet, the aim is interest, and
+  every enquiry is a pricing conversation. Keep the description (five people
+  or five organisation profiles) so the right people write in.
+
   Products and prices are created from config, never in the dashboard — the
   repo is the single source of truth and the Stripe dashboard stays empty.
+  **Not yet applied:** `src/config/plans.ts`, `/pricing` ("from £45") and the
+  Stripe sandbox still carry the 29 August numbers below. The 12-month end to
+  the launch price also still needs building on the billing branch.
 
-  Supersedes "Match £12, Apply £18", which superseded "£65/6 months, £115/year".
-  Anything quoting either of those, MCP upgrade copy included, is stale.
+  Supersedes "Match £15, Apply £25, Team £45 with a permanent founding rate of
+  £12/£20/£36" (29 August), which superseded "Match £12, Apply £18", which
+  superseded "£65/6 months, £115/year". Anything quoting those is stale.
 - **Vercel plan: Pro** (team `paulkilty1-3944s-projects`). Verified against the
   Vercel API 2026-08-04. Sub-daily cron schedules (`*/N`) are now permitted.
   Note the API reports the PERSONAL account as `hobby` and the TEAM as `pro`;
