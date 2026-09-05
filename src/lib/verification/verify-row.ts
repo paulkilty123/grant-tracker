@@ -1162,7 +1162,9 @@ export async function verifyRow(
       // A hop that lands on the wrong fund is not a finding about our row. Keep
       // what we had and record where we went, rather than downgrading a sound
       // verdict because one link was mis-scored.
-      current.notes = [...current.notes, `followed ${target} because ${why}, and it did not describe this fund`]
+      const g = deeper.gate as { failure?: string; detail?: string }
+      current.notes = [...current.notes,
+        `followed ${target} because ${why}, and it was dropped: ${g.failure ?? 'gate failed'}${g.detail ? ` (${g.detail})` : ''}${banked.includes(target) ? ' [banked]' : ' [scored link]'}`]
       current.usage = usage
       break
     }
