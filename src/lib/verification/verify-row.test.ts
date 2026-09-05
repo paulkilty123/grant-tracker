@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { isFrontDoorUrl, timingAnswered, detailAnswered, decideHop, foldEvidence, candidateLinks, statesDatedWindows, unsupportedFigures, bankedSourceTargets } from './verify-row'
+import { isFrontDoorUrl, timingAnswered, detailAnswered, decideHop, foldEvidence, candidateLinks, statesDatedWindows, unsupportedFigures, bankedSourceTargets, parseJson } from './verify-row'
 import { AMOUNT_UNSUPPORTED_NOTE, DEADLINE_UNSUPPORTED_NOTE } from '../field-evidence'
 import type { VerifyResult } from './verify-row'
 
@@ -395,5 +395,14 @@ describe('bankedSourceTargets — the page that names what we lack goes first', 
   })
   it('keeps banked order when nothing is asked for', () => {
     expect(bankedSourceTargets(yapp, [yapp.apply_url])[0]).toBe('https://yappcharitabletrust.org.uk/what-we-fund/')
+  })
+})
+
+describe('parseJson', () => {
+  it('reads an object followed by prose, and one with a brace inside a quote', () => {
+    expect(parseJson('Here you go:\n{"a": 1}\nHope that helps.')).toEqual({ a: 1 })
+    expect(parseJson('{"q": "grants of £1,000 } to £10,000", "n": {"x": 2}} trailing')).toEqual({ q: 'grants of £1,000 } to £10,000', n: { x: 2 } })
+    expect(parseJson('```json\n{"a": 1}\n```')).toEqual({ a: 1 })
+    expect(parseJson('{"a": 1')).toBeNull()
   })
 })

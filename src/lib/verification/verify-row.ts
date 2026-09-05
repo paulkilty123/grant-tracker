@@ -736,12 +736,34 @@ Shape:
  "still_listed":{"value":true,"quote":null},"is_grant":{"value":true,"quote":null}}}`
 }
 
-function parseJson(raw: string): Record<string, unknown> | null {
+export function parseJson(raw: string): Record<string, unknown> | null {
   const cleaned = raw.trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim()
   try { return JSON.parse(cleaned) } catch { /* fall through */ }
-  const match = cleaned.match(/\{[\s\S]*\}/)
-  if (!match) return null
-  try { return JSON.parse(match[0]) } catch { return null }
+  // Greedy first-to-last brace fails when prose follows the object, or when
+  // the model emits two objects. Walk the braces from the first "{" and stop
+  // at the one that balances it, string-aware so a "}" inside a quote does
+  // not close the object early.
+  const start = cleaned.indexOf('{')
+  if (start < 0) return null
+  let depth = 0, inStr = false, esc = false
+  for (let i = start; i < cleaned.length; i++) {
+    const ch = cleaned[i]
+    if (inStr) {
+      if (esc) esc = false
+      else if (ch === '\\') esc = true
+      else if (ch === '"') inStr = false
+      continue
+    }
+    if (ch === '"') inStr = true
+    else if (ch === '{') depth++
+    else if (ch === '}') {
+      depth--
+      if (depth === 0) {
+        try { return JSON.parse(cleaned.slice(start, i + 1)) } catch { return null }
+      }
+    }
+  }
+  return null
 }
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
@@ -1235,7 +1257,7 @@ async function runModel(
   if (!parsed) {
     return { ...base, usage, outcome: 'fixable_link',
              gate: { pass: false, failure: 'no_content',
-                     detail: `model returned unparseable JSON (stop_reason ${res.stop_reason ?? 'unknown'}, ${usage.output} output tokens)` } }
+                     detail: `model returned unparseable JSON (stop_reason ${res.stop_reason ?? 'unknown'}, ${usage.output} output tokens; reply began ${JSON.stringify(text.slice(0, 160))})` } }
   }
 
   const g = (parsed.gate ?? {}) as {
