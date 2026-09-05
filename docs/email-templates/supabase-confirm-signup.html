@@ -19,11 +19,12 @@
     granttracker.co.uk and nothing in the repo caught it.
 
   EXPIRY WORDING
-    "24 hours" must match Authentication -> Providers -> Email. If you would
-    rather not keep the two in step, use this line instead and drop the number:
-      "If this link has expired, ask for a new one from the sign-in page."
+    No number, deliberately. Supabase has ONE expiry (mailer_otp_exp) for every
+    link, and it was 3600 when this was written: one hour, not the 24 the spec
+    assumed. The reset email states the hour because it is true there and
+    matters there; this one says nothing rather than something wrong.
 -->
-<div style="display:none;max-height:0;overflow:hidden;opacity:0;">One click and your Shoots account is ready. The link works for 24 hours.</div>
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;">One click and your Shoots account is ready.</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#FFFFFF;margin:0;padding:0;">
   <tr>
     <td align="center" style="padding:32px 16px 44px;">
@@ -59,7 +60,7 @@
             </table>
 
             <p style="margin:22px 0 0;font-family:'Plus Jakarta Sans',Helvetica,Arial,sans-serif;font-size:13.5px;line-height:1.6;color:#5F5E5A;">
-              This link works for 24 hours. If the button does not work, paste this into your browser:
+              If this link has expired, ask for a new one from the sign-in page. If the button does not work, paste this into your browser:
             </p>
             <p style="margin:6px 0 0;font-family:'Plus Jakarta Sans',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.5;">
               <a href="{{ .ConfirmationURL }}" target="_blank" style="color:#1D3C3E;font-weight:600;word-break:break-all;">{{ .ConfirmationURL }}</a>
