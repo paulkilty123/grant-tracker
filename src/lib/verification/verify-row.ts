@@ -1220,7 +1220,12 @@ async function runModel(
 
   const res = await anthropic.messages.create({
     model: MODEL,
-    max_tokens: 1200,
+    // 2000, not 1200: Sussex Community Foundation's Main Grants page, read as
+    // a banked hop for Lewes Fund on 2026-09-05, came back as unparseable JSON
+    // twice running. The reply was cut at the limit mid-object, and the stamp
+    // said only "unparseable". The stop reason is now in the detail, so a
+    // truncation cannot pass as a model error again.
+    max_tokens: 2000,
     messages: [{ role: 'user', content: buildPrompt(row, pageText, todayISO) }],
   })
   const usage = { input: res.usage.input_tokens, output: res.usage.output_tokens }
@@ -1228,7 +1233,9 @@ async function runModel(
   const parsed = parseJson(text)
 
   if (!parsed) {
-    return { ...base, usage, outcome: 'fixable_link', gate: { pass: false, failure: 'no_content', detail: 'model returned unparseable JSON' } }
+    return { ...base, usage, outcome: 'fixable_link',
+             gate: { pass: false, failure: 'no_content',
+                     detail: `model returned unparseable JSON (stop_reason ${res.stop_reason ?? 'unknown'}, ${usage.output} output tokens)` } }
   }
 
   const g = (parsed.gate ?? {}) as {
