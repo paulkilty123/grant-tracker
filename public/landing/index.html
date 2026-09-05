@@ -481,7 +481,7 @@
       <nav>
         <a class="brand" href="#top"><svg class="brand-svg" viewBox="0 0 24 24" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 10a6 6 0 0 0 -6 -6h-3v2a6 6 0 0 0 6 6h3" stroke="#1D3C3E"/><path d="M12 14a6 6 0 0 1 6 -6h3v1a6 6 0 0 1 -6 6h-3" stroke="#1D3C3E"/><path d="M12 20l0 -10" stroke="#1D3C3E"/></svg><span class="logo">shoots</span></a>
         <div class="nav-center"><a href="#how">How it works</a><a href="#funding">Funding mix</a><a href="#pricing">Pricing</a><a href="#about" class="nav-opt">About</a><a href="#faq">FAQ</a></div>
-        <div class="nav-right"><a href="/auth/login" class="nav-signin" style="font-weight:600;">Sign in</a><a class="btn btn-primary nav-btn" href="#pricing">Join the waitlist</a><button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="mobileMenu" aria-label="Open menu"><i class="ti ti-menu-2" aria-hidden="true"></i></button></div>
+        <div class="nav-right"><a href="/auth/login" class="nav-signin" style="font-weight:600;">Sign in</a><a class="btn btn-primary nav-btn" href="/signup">Create your account</a><button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="mobileMenu" aria-label="Open menu"><i class="ti ti-menu-2" aria-hidden="true"></i></button></div>
       </nav>
       <div class="mobile-menu" id="mobileMenu" hidden>
         <a href="#how">How it works</a>
@@ -507,7 +507,7 @@
             <span><i class="ti ti-users-group" aria-hidden="true"></i>Built with UK charities, CICs and social enterprises</span>
           </p>
           <div class="hero-cta">
-            <a href="#pricing" class="btn btn-primary">Join the waitlist</a>
+            <a href="/signup" class="btn btn-primary">Create your account</a>
             <a href="#how" class="hero-cta-link">See how it works <span class="arw" aria-hidden="true">&rarr;</span></a>
           </div>
           <p class="hero-reassure">Tell us about your organisation and see what fits, in about three minutes.</p>
@@ -799,7 +799,7 @@
       "name": "Is Shoots free?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Plans are being finalised now and will be priced for smaller organisations. Join the waitlist on this page to see launch pricing first."
+        "text": "Plans start at £15 a month and are priced for smaller organisations, whilst catering for bigger teams. You see full pricing before you choose a plan."
       }
     },
     {
@@ -807,7 +807,7 @@
       "name": "Will I be able to try it before paying?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "That's the plan, with the details confirmed at launch. Join the waitlist and you'll be the first to know. Either way you can sign up to our newsletter, with new funding opportunities in your sectors, and pick up where you left off whenever you're ready."
+        "text": "Yes. Create an account, build your profile and see your matches before you choose a plan. No card is needed to start."
       }
     },
     {
@@ -874,9 +874,9 @@
         <details class="faq-item"><summary>How does grant matching work?</summary>
           <p>You set up a profile once, covering your legal structure, location, size, sector and funding stage. Every opportunity in the catalogue is checked against all five, with the reasons why you match shown alongside each result.</p></details>
         <details class="faq-item"><summary>Is Shoots free?</summary>
-          <p>Plans are being finalised now and will be priced for smaller organisations. Join the waitlist on this page to see launch pricing first.</p></details>
+          <p>Plans start at £15 a month and are priced for smaller organisations, whilst catering for bigger teams. You see full pricing before you choose a plan.</p></details>
         <details class="faq-item"><summary>Will I be able to try it before paying?</summary>
-          <p>That's the plan, with the details confirmed at launch. Join the waitlist and you'll be the first to know. Either way you can sign up to our newsletter, with new funding opportunities in your sectors, and pick up where you left off whenever you're ready.</p></details>
+          <p>Yes. Create an account, build your profile and see your matches before you choose a plan. No card is needed to start.</p></details>
         <details class="faq-item"><summary>What kinds of funding does Shoots cover?</summary>
           <p>The full funding mix: grants, social investment, programmes such as incubators, accelerators, training and support, and in-kind support like pro bono services and donated tools.</p></details>
         <details class="faq-item"><summary>How is Shoots different from other funding databases?</summary>
@@ -911,19 +911,13 @@
   <section class="sec pricing" id="pricing">
     <div class="wrap">
       <p class="eyb">Pricing for charities, CICs and community groups</p>
-      <h2>Pricing coming soon</h2>
-      <p class="lead" style="color:#5f6b64;max-width:56ch;">Simple plans priced for smaller organisations, whilst catering for bigger teams. Join the waitlist to see launch pricing first.</p>
+      <h2>Pricing</h2>
+      <p class="lead" style="color:#5f6b64;max-width:56ch;">Plans start at £15 a month, priced for smaller organisations, whilst catering for bigger teams.</p>
       <div class="waitlist-card" style="background:var(--deep);border-radius:16px;padding:clamp(28px,4vw,44px);margin-top:28px;">
-        <h3 style="color:var(--cream);margin:0 0 6px;">Join the waitlist</h3>
-        <p style="color:rgba(246,241,231,.75);margin:0 0 18px;font-size:.95rem;">Be first in when we launch.</p>
-        <form id="wl-form" method="POST" action="/api/waitlist" style="display:flex;gap:10px;flex-wrap:wrap;align-items:stretch;">
-          <label for="wl-email" class="sr-only" style="position:absolute;left:-9999px;">Email address</label>
-          <input id="wl-email" type="email" name="email" required aria-describedby="wl-consent" placeholder="you@yourorganisation.org.uk" style="flex:1;min-width:220px;padding:12px 16px;border-radius:10px;border:1px solid rgba(246,241,231,.3);background:rgba(246,241,231,.08);color:var(--cream);font:inherit;">
-          <button id="wl-submit" type="submit" class="btn btn-primary" style="white-space:nowrap;">Join the waitlist</button>
-        </form>
-        <p id="wl-consent" style="color:rgba(246,241,231,.55);margin:12px 0 0;font-size:.85rem;line-height:1.5;">We'll email you when Shoots opens, plus occasional funding updates. Unsubscribe any time. See our <a href="/privacy" style="color:rgba(246,241,231,.85);text-decoration:underline;">privacy policy</a>.</p>
-        <p id="wl-status" role="status" aria-live="polite" style="margin:14px 0 0;font-size:.9rem;min-height:1.25em;color:rgba(246,241,231,.75);"></p>
-        <p style="color:rgba(246,241,231,.55);margin:8px 0 0;font-size:.85rem;">No card, no spam. Just launch news.</p>
+        <h3 style="color:var(--cream);margin:0 0 6px;">Create your account</h3>
+        <p style="color:rgba(246,241,231,.75);margin:0 0 18px;font-size:.95rem;">See your matches before you choose a plan. No card needed to start.</p>
+        <a class="btn btn-primary" href="/signup" style="white-space:nowrap;">Create your account</a>
+        <p style="color:rgba(246,241,231,.55);margin:14px 0 0;font-size:.85rem;">Takes about 5 minutes to set up.</p>
       </div>
       <div class="partner" style="margin-top:28px;">
         <span class="partner-ic"><i class="ti ti-users-group" aria-hidden="true"></i></span>
@@ -942,8 +936,8 @@
   <section class="sec cta">
     <div class="wrap">
       <h2>Start with funding you can actually win.</h2>
-      <p>Launching soon. Join the waitlist for first access.</p>
-      <a class="btn btn-primary" style="padding:16px 40px;font-size:17px;" href="#pricing">Join the waitlist</a>
+      <p>Shoots is open. Create your account and see your matches today.</p>
+      <a class="btn btn-primary" style="padding:16px 40px;font-size:17px;" href="/signup">Create your account</a>
     </div>
   </section>
 

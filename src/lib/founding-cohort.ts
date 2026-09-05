@@ -24,13 +24,14 @@
 
 /**
  * When public signup opens, and therefore when founding cohort membership
- * closes. Second week of September 2026.
+ * closes. Thursday 10 September 2026: one date, nothing opens before it.
+ * The waitlist are emailed that morning and are public signups, not cohort.
  *
  * KEEP THIS IN STEP WITH THE ACTUAL LAUNCH DATE. If launch moves and this does
  * not, the first people through public signup are told they are founding
  * cohort members.
  */
-export const PUBLIC_SIGNUP_OPENS = '2026-09-08T00:00:00.000Z'
+export const PUBLIC_SIGNUP_OPENS = '2026-09-10T00:00:00.000Z'
 
 /** Accounts created before public signup opened are founding cohort. */
 export function isFoundingCohort(userCreatedAt: string | null | undefined): boolean {

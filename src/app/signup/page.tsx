@@ -10,12 +10,10 @@ import '@/styles/shoots-band-a.css'
 
 /* Band A direction B — split canvas. Deep panel left, form right on cream.
    ============================================================
-   BUILT BUT UNLINKED. This route exists and works, and nothing public points
-   at it. The live landing page's only two entry points are /auth/login and
-   the #waitlist anchor, verified against shootsfunding.co.uk, and that stays
-   true until launch. Do not add a link to this page from the landing header,
-   the login page, or anywhere else public. Someone will otherwise helpfully
-   wire it up. Spec sequencing rule 3.
+   LINKED FROM LAUNCH, 10 September 2026. Until then this route existed and
+   was deliberately unlinked: the landing page's only entry points were
+   /auth/login and the waitlist anchor. From launch the landing CTAs, the
+   /auth/signup redirect and every public opportunity page point here.
 
    Google sign-up is absent for the same reason it is absent from login: all
    31 auth identities on the project are `email` and the provider has never
