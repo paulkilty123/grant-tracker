@@ -93,6 +93,10 @@ export type VerifyRow = {
    *  states is not reported as new when we already carry it. */
   location_tag?:   string | null
   funder_brief?:   Record<string, unknown> | null
+  /** Pages a reviewer or a script has banked as the ones that state this
+   *  fund's terms. Read before any guessed link when a figure we show is
+   *  missing from apply_url: that is where the figure usually is. */
+  grant_sources?:  { url?: string | null; label?: string | null }[] | null
 }
 
 export type GateFailure =
@@ -825,6 +829,55 @@ export type HopScope = 'timing' | 'any'
  * detail at all is a worse starting point than a page missing one answer, and
  * a multi-fund page is a catalogue finding rather than a data gap.
  */
+/**
+ * Fields we show a figure for that the page read so far did not state.
+ *
+ * THE VERIFIER JUDGED A ROW AGAINST ONE PAGE. Found 2026-09-04: eleven live rows
+ * flagged "we state a figure this page does not", and in every one checked the
+ * figure was real and on another page of the same site. Yapp's £3,000 is on its
+ * homepage while apply_url is how-to-apply; The Fore's £45,000 is on
+ * what-we-offer while apply_url is who-we-fund. The 2 September amount sweep
+ * nulled both on the strength of that one-page read. This is the signal that
+ * turns an unsupported figure into a reason to read further, not a verdict.
+ */
+export function unsupportedFigures(current: Pick<VerifyResult, 'evidence'>): ('amount' | 'deadline')[] {
+  const out = new Set<'amount' | 'deadline'>()
+  for (const e of current.evidence) {
+    if (e.agrees !== null) continue
+    if ((e.field === 'amount_min' || e.field === 'amount_max') && e.note === AMOUNT_UNSUPPORTED_NOTE) out.add('amount')
+    if (e.field === 'deadline' && e.note === DEADLINE_UNSUPPORTED_NOTE) out.add('deadline')
+  }
+  return Array.from(out)
+}
+
+/**
+ * The banked sources worth reading next, on this funder's site, not yet read.
+ *
+ * Same site only: a source on a directory or a news site is context for a
+ * reviewer, not a page this fund's terms can be verified against. Order is the
+ * order they were banked, which is the order somebody thought they mattered.
+ */
+export function bankedSourceTargets(row: Pick<VerifyRow, 'apply_url' | 'grant_sources'>, visited: string[]): string[] {
+  if (!row.apply_url || !Array.isArray(row.grant_sources)) return []
+  const norm = (u: string) => u.replace(/\/$/, '').split('#')[0]
+  const seen = new Set(visited.map(norm))
+  const host = (u: string): string | null => { try { return new URL(u).hostname } catch { return null } }
+  const applyHost = host(row.apply_url)
+  if (!applyHost) return []
+  const out: string[] = []
+  for (const s of row.grant_sources) {
+    const url = typeof s?.url === 'string' ? s.url.trim() : ''
+    if (!/^https?:\/\//i.test(url)) continue
+    const h = host(url)
+    if (!h || !sameSite(applyHost, h)) continue
+    const n = norm(url)
+    if (seen.has(n)) continue
+    seen.add(n)
+    out.push(url)
+  }
+  return out
+}
+
 export function decideHop(
   current: Pick<VerifyResult, 'gate' | 'outcome' | 'evidence' | 'fundsOnPage'>,
   rowTitle: string,
@@ -839,6 +892,15 @@ export function decideHop(
     return { want: 'funding', why: 'the page covers several funds and one of them is ours' }
   }
   if (!(current.gate.pass && current.outcome === 'verified')) return null
+
+  // A figure we show that this page did not state is the first reason to read
+  // on. It outranks the timing and detail questions because it is the one that
+  // ends in a wrong null if nobody looks further.
+  const missing = unsupportedFigures(current)
+  if (missing.length > 0) {
+    return { want: missing.includes('amount') ? 'funding' : 'timing',
+             why: `the page did not state the ${missing.join(' and ')} we show` }
+  }
 
   // Stop early when the question is answered. The common case costs nothing
   // extra, which is what makes this affordable at catalogue scale.
@@ -1051,10 +1113,13 @@ export async function verifyRow(
     if (!decision) break
     const { want, why } = decision
 
+    // Banked sources before guessed links: a page somebody banked as the one
+    // that states the terms beats a link scored by its wording.
+    const banked = bankedSourceTargets(row, visited)
     const scored = lastFetched
       ? candidateLinks(lastFetched.source, lastFetched.url, lastFetched.isMarkdown, want, visited)
       : []
-    const target = scored[0] ?? followedFrom.find(l => !visited.includes(norm(l)))
+    const target = banked[0] ?? scored[0] ?? followedFrom.find(l => !visited.includes(norm(l)))
     if (!target) {
       current.notes = [...current.notes, `nothing to follow, though ${why}`]
       break

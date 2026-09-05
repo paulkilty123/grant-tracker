@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { isFrontDoorUrl, timingAnswered, detailAnswered, decideHop, foldEvidence, candidateLinks, statesDatedWindows } from './verify-row'
+import { isFrontDoorUrl, timingAnswered, detailAnswered, decideHop, foldEvidence, candidateLinks, statesDatedWindows, unsupportedFigures, bankedSourceTargets } from './verify-row'
+import { AMOUNT_UNSUPPORTED_NOTE, DEADLINE_UNSUPPORTED_NOTE } from '../field-evidence'
 import type { VerifyResult } from './verify-row'
 
 /**
@@ -296,5 +297,80 @@ describe('link noise, after the 16 August measurement run', () => {
       'https://example.org/', false, 'detail',
     )
     expect(out).toEqual(['https://example.org/grants/eligibility'])
+  })
+})
+
+/**
+ * A figure we show that the page did not state is a reason to read on, not a
+ * verdict. Fixtures are the two rows that proved it on 2026-09-04: Yapp's
+ * £3,000 sits on its homepage while apply_url is how-to-apply, and The Fore's
+ * £45,000 sits on what-we-offer while apply_url is who-we-fund. Before this
+ * change decideHop returned null for both (timing was answered) and the
+ * unsupported stamp stood; the 2 September sweep then nulled both figures.
+ */
+describe('unsupported figures make the engine read further', () => {
+  const stamped = (field: string, note: string) => ({ field, agrees: null, quote: null, source_url: 'https://x/', note })
+  const verified = (evidence: object[]): Pick<VerifyResult, 'gate' | 'outcome' | 'evidence' | 'fundsOnPage'> =>
+    ({ gate: { pass: true, fund_on_page: 'Yapp Charitable Trust' }, outcome: 'verified', evidence: evidence as VerifyResult['evidence'] })
+
+  it('names the figures the page left unsupported, and nothing else', () => {
+    const r = verified([
+      ev('deadline', true, 'Deadlines are 15 March, 15 July and 15 November.'),
+      stamped('amount_max', AMOUNT_UNSUPPORTED_NOTE),
+      ev('eligible_structures', null),
+    ])
+    expect(unsupportedFigures(r)).toEqual(['amount'])
+    expect(unsupportedFigures(verified([stamped('deadline', DEADLINE_UNSUPPORTED_NOTE)]))).toEqual(['deadline'])
+    expect(unsupportedFigures(verified([ev('amount_max', null)]))).toEqual([])   // silent, but we show nothing
+  })
+
+  it('hops for funding when an amount we show was not on the page, even though timing is answered', () => {
+    const r = verified([
+      ev('deadline', true, 'Deadlines are 15 March, 15 July and 15 November.'),
+      stamped('amount_max', AMOUNT_UNSUPPORTED_NOTE),
+    ])
+    expect(decideHop(r, 'Yapp Charitable Trust', 'timing')).toEqual({
+      want: 'funding', why: 'the page did not state the amount we show',
+    })
+  })
+
+  it('hops for timing when the date we show was not on the page', () => {
+    const r = verified([stamped('deadline', DEADLINE_UNSUPPORTED_NOTE), ev('amount_max', true, 'Up to £45,000')])
+    expect(decideHop(r, 'The Fore Grants Programme', 'timing')?.want).toBe('timing')
+  })
+
+  it('a banked page that states the figure replaces the unsupported stamp when folded', () => {
+    const first = [stamped('amount_max', AMOUNT_UNSUPPORTED_NOTE)]
+    const hop   = [ev('amount_max', true, 'Grants are normally for a maximum of £3,000 per year', 'https://yappcharitabletrust.org.uk/')]
+    const folded = foldEvidence(first as VerifyResult['evidence'], hop as VerifyResult['evidence'])
+    expect(folded).toHaveLength(1)
+    expect(folded[0].agrees).toBe(true)
+    expect(folded[0].source_url).toBe('https://yappcharitabletrust.org.uk/')
+  })
+})
+
+describe('bankedSourceTargets — read what somebody banked before guessing a link', () => {
+  const row = {
+    apply_url: 'https://thefore.org/who-we-fund/',
+    grant_sources: [
+      { url: 'https://thefore.org/what-we-offer/', label: 'What we offer (grant size)' },
+      { url: 'https://thefore.org/apply/' },
+      { url: 'https://fundingforall.org.uk/funds/the-fore/', label: 'directory' },   // off site
+      { url: 'not a url' },
+      { url: null },
+    ],
+  }
+  it('returns same-site sources in banked order and drops the rest', () => {
+    expect(bankedSourceTargets(row, ['https://thefore.org/who-we-fund/'])).toEqual([
+      'https://thefore.org/what-we-offer/', 'https://thefore.org/apply/',
+    ])
+  })
+  it('skips pages already read, ignoring a trailing slash or fragment', () => {
+    expect(bankedSourceTargets(row, ['https://thefore.org/who-we-fund', 'https://thefore.org/what-we-offer#top']))
+      .toEqual(['https://thefore.org/apply/'])
+  })
+  it('has nothing to offer without an apply_url or without sources', () => {
+    expect(bankedSourceTargets({ apply_url: null, grant_sources: row.grant_sources }, [])).toEqual([])
+    expect(bankedSourceTargets({ apply_url: row.apply_url, grant_sources: null }, [])).toEqual([])
   })
 })
