@@ -1137,7 +1137,7 @@ export async function verifyRow(
     lastFetched = { source: fetched.source, url: fetched.url, isMarkdown: fetched.via === 'proxy', links: fetched.links }
 
     modelCalls++
-    const deeper = await runModel(row, fetched.text, anthropic, base, target)
+    const deeper = await runModel(row, fetched.text, anthropic, base, target, banked.includes(target))
     usage = { input: usage.input + (deeper.usage?.input ?? 0), output: usage.output + (deeper.usage?.output ?? 0) }
 
     if (!deeper.gate.pass) {
@@ -1183,6 +1183,15 @@ async function runModel(
   base: Omit<VerifyResult, 'outcome' | 'gate'>,
   /** The page these facts came from — stamped onto every piece of evidence. */
   sourceUrl: string | null,
+  /**
+   * A page somebody banked on the funder's own site as the one that states
+   * this fund's terms. The "is our fund on this page" gate is skipped for it:
+   * The Fore's what-we-offer page states "Up to £45,000 over one to three
+   * years" without naming the programme the way our row does, and the gate
+   * threw the hop away before any figure was read (2026-09-05). The banking
+   * IS the identification; the model is asked only what the page states.
+   */
+  trusted = false,
 ): Promise<VerifyResult> {
   // One clock read for the whole call: the prompt and the comparison below must
   // agree on what day it is, or a date could be "future" to one and "past" to
@@ -1214,14 +1223,18 @@ async function runModel(
     && fundOnPage !== null
     && (namesMatch(row.title, fundOnPage) || (row.funder ? namesMatch(row.funder, fundOnPage) : false))
 
+  const gateNotes: string[] = []
   if (g.describes_our_fund !== true && !selfContradicted) {
-    return {
-      ...base, usage, outcome: 'fixable_link',
-      gate: { pass: false, failure: 'wrong_fund', fund_on_page: fundOnPage,
-              detail: fundOnPage ? `page describes "${fundOnPage}"` : 'our fund is not on this page' },
+    if (!trusted) {
+      return {
+        ...base, usage, outcome: 'fixable_link',
+        gate: { pass: false, failure: 'wrong_fund', fund_on_page: fundOnPage,
+                detail: fundOnPage ? `page describes "${fundOnPage}"` : 'our fund is not on this page' },
+      }
     }
+    gateNotes.push(`banked page read without the fund-name gate${fundOnPage ? ` (model saw "${fundOnPage}")` : ''}`)
   }
-  if (g.has_funding_detail !== true) {
+  if (g.has_funding_detail !== true && !trusted) {
     return {
       ...base, usage, outcome: 'fixable_link',
       gate: { pass: false, failure: 'no_funding_detail', fund_on_page: fundOnPage,
@@ -1258,7 +1271,7 @@ async function runModel(
   const proposals: Proposal[] = []
   const confirmed: string[] = []
   const notFound: string[] = []
-  const notes: string[] = []
+  const notes: string[] = [...gateNotes]
   const evidence: EvidenceInput[] = []
 
   /**

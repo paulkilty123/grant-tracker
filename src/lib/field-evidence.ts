@@ -86,6 +86,7 @@ export type EvidenceStamp = {
    * visit by the one code path that knows the answer.
    */
   silent_streak?: number
+  hops?: string[]
 }
 
 export type FieldEvidence = Record<string, EvidenceStamp>
@@ -196,6 +197,7 @@ function stampOf(evidence: FieldEvidence | null | undefined, field: string): Evi
     ...(typeof stamp.note === 'string' ? { note: stamp.note } : {}),
     ...(typeof stamp.silent_streak === 'number' && Number.isFinite(stamp.silent_streak)
       ? { silent_streak: stamp.silent_streak } : {}),
+    ...(Array.isArray(stamp.hops) && stamp.hops.length > 0 ? { hops: stamp.hops } : {}),
   }
 }
 
@@ -293,6 +295,10 @@ export type EvidenceInput = {
   note?:      string
   /** Consecutive silent reads. Page-read stamp only. See `EvidenceStamp`. */
   silent_streak?: number
+  /** What the engine did after the first page: which pages it followed and why
+   *  a hop was kept or dropped. Page-read stamp only. Added 2026-09-05 after a
+   *  dropped hop could only be diagnosed by guessing. */
+  hops?: string[]
 }
 
 export type BuiltPatch = {
@@ -340,6 +346,7 @@ export function buildEvidencePatch(
       // Zero is meaningful — it is how "the page answered, start the backoff
       // over" is recorded — so this tests for a number rather than truthiness.
       ...(typeof input.silent_streak === 'number' ? { silent_streak: input.silent_streak } : {}),
+      ...(Array.isArray(input.hops) && input.hops.length > 0 ? { hops: input.hops } : {}),
     }
   }
 

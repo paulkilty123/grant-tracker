@@ -431,6 +431,7 @@ export async function GET(req: NextRequest) {
           source_url: result.followedUrl ?? row.apply_url,
           note: result.gate.pass ? result.outcome : `${result.outcome}: ${gate.failure ?? 'gate failed'}`,
           silent_streak: cadence.silentStreak,
+          hops: result.notes,
         },
       ], { by: VERIFIER, checkedAt })
       tally.unquoted += unquoted.length
