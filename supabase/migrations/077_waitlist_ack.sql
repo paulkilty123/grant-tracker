@@ -1,6 +1,8 @@
--- 075: the waitlist acknowledgement needs somewhere to record itself.
+-- 077: the waitlist acknowledgement needs somewhere to record itself.
 --
--- APPLIED to production 2026-09-05.
+-- APPLIED to production 2026-09-05, under the name 075_waitlist_ack. Renamed
+-- here because money/stripe-foundation already holds 075 and 076; the number
+-- in supabase_migrations is the applied name and cannot be changed.
 --
 -- `waitlist_signups` had four columns and no memory of anything we had sent.
 -- That was fine while the answer was "nothing" — api/waitlist wrote a row and
