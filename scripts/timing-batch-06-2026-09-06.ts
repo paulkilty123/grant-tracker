@@ -98,7 +98,7 @@ const ROWS: Row[] = [
   { id: 'e3c90440-3ea2-4bb9-a98c-07cd5d32a2e2', re: /Newcastle Culture Investment Fund|Newcastle-based/,
     fields: { is_rolling: true, deadline: null },
     cits: { is_rolling: { snippet: 'Rolling grant fund', confidence: 'high',
-      source_url: 'https://www.communityfoundation.org.uk/grants/supporting-newcastle-based-organisations-to-engage-residents-in-culture/' } } },
+      source_url: 'https://www.communityfoundation.org.uk/grants/supporting-newcastle-based-arts-organisations-to-impact-the-health-and-wellbeing-of-newcastle-city-residents/' } } },
 ]
 
 const REPORT: Report[] = [
