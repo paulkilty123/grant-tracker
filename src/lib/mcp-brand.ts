@@ -259,6 +259,21 @@ export const EMAIL_FROM_HEADER = EMAIL_FROM.includes('<')
   ? EMAIL_FROM
   : `${EMAIL_FROM_NAME} <${EMAIL_FROM}>`
 
+/**
+ * Where a reply goes.
+ *
+ * `EMAIL_FROM` is alerts@, which nobody reads. Any email that INVITES a reply
+ * has to carry this, or the invitation is a lie told in our own voice, and the
+ * person who took us up on it concludes we ignored them. Paul confirmed on
+ * 2026-09-05 that this address is monitored.
+ *
+ * The rule, from the first-run spec: if an email says "reply to this", it sets
+ * a reply-to. If nobody will read the replies, the LINE gets cut rather than
+ * the header quietly omitted. Sending an uninvited reply into a black hole is
+ * the smaller harm; sending an invited one is the larger.
+ */
+export const EMAIL_REPLY_TO = readString('EMAIL_REPLY_TO', `paul@${EMAIL_BRAND_HOST}`)
+
 /** Where internal notifications land: the contact form and in-app feedback. */
 export const EMAIL_NOTIFY_TO = readString('FEEDBACK_NOTIFY_EMAIL', MCP_CONTACT_EMAIL)
 
