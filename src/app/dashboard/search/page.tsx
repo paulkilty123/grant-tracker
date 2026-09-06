@@ -3046,7 +3046,10 @@ export default function SearchPage() {
                   <span className="text-[15px] font-semibold leading-tight" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#1D3C3E', letterSpacing: '-0.01em' }}>
                     {tab.label}
                   </span>
-                  {tab.count > 0 && (
+                  {/* Hidden while a search is in flight, for the same reason the
+                      list is: these counts come from the instant keyword pass, and
+                      a number that appears before the answer is a first answer. */}
+                  {tab.count > 0 && !(filterQuery && aiLoading) && (
                     <span className="text-xs leading-none"
                       style={{ color: isActive ? c.fg : '#5F5E5A', fontWeight: isActive ? 600 : 400 }}>
                       {/* "eligible", not "matches". These counts have no score
