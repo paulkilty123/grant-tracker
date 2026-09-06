@@ -218,3 +218,16 @@ should try the banked page before giving up. Small change in
 `verify-row.ts`; do it with a fixture that has a homepage apply_url and a
 banked fund page. Until then, figures on rows with an index or homepage link
 are confirmed by hand, not by the checker.
+
+### A live host can be taken over and still return 200
+
+Found 7 Sept by the verdicts session: foundationeast.org, a CDFI's domain,
+now serves a casino affiliate site under the charity's name, with a
+fabricated staff bio. The row was hidden, so nobody saw it. `url_status`
+would call that page healthy, and so would any check that looks only at the
+status code. The check that catches it: does the page's title or body still
+name the funder and the fund. `verify-row`'s name gate does this on the rows
+it reads, but the URL checker does not, and a live row is only re-read on the
+verifier's cadence. Post-launch: give the URL checker a name test (funder or
+title word present in the page), and treat a 200 that fails it as
+`page_unreadable`, not `ok`.
