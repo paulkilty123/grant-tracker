@@ -100,6 +100,7 @@ export function proseOpenDate(fields: Record<string, unknown>): string | null {
 type ResultsFile = {
   batches: { batch: number; written: unknown[]; report: Report[] }[]
   pins_outlived: PinOutlived[]
+  summary?: unknown
 }
 
 function readResults(): ResultsFile {
@@ -117,6 +118,13 @@ function readResults(): ResultsFile {
 // refusals have since been resolved by Paul, and a re-run would quietly move
 // those rows from `report` into `written` — crediting this job with writes it
 // did not make and blinding the count check that caught them.
+export function recordSummary(summary: unknown) {
+  const file = readResults()
+  file.summary = summary
+  writeFileSync(RESULTS, JSON.stringify(file, null, 1) + '\n')
+  console.log(`  summary -> ${RESULTS}`)
+}
+
 export function recordPins(pins: PinOutlived[]) {
   const file = readResults()
   const ids = new Set(pins.map(p => `${p.id}:${p.field}`))
