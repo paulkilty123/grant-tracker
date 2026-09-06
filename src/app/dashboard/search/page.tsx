@@ -3190,7 +3190,9 @@ export default function SearchPage() {
       })()}
 
       {/* ── Results header (hidden when empty — empty-state card owns that space) ── */}
-      {activeView === 'browse' && hasSearched && displayGrants.length > 0 && (
+      {/* Also hidden while a search is in flight: a count over the keyword list
+          is a first answer that the AI answer then contradicts. One verdict. */}
+      {activeView === 'browse' && hasSearched && displayGrants.length > 0 && !(filterQuery && aiLoading) && (
         <div className="mb-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             {/* Count + match status */}
@@ -3340,7 +3342,16 @@ export default function SearchPage() {
       {activeView === 'browse' && hasSearched && grantsLoaded && (() => {
         const dismissedCount = displayGrants.filter(item => isHidden(item.grant.id)).length
         const visibleGrants  = displayGrants.filter(item => !isHidden(item.grant.id))
-        return visibleGrants.length === 0 && dismissedCount === 0 ? (
+        // ONE ANSWER PER SEARCH. The keyword pass is instant and the AI pass
+        // follows a few seconds later, and until 2026-09-06 both rendered in
+        // turn: a list of keyword hits, then a different list. Two answers to
+        // one question reads as the first being wrong. While the AI pass is in
+        // flight the empty-state branch owns the space and shows its B0
+        // "Searching" card; the list appears once, when the answer is known.
+        // If the AI pass fails, aiLoading clears and the keyword list stands
+        // as the fallback, with the error banner above it saying so.
+        const searchInFlight = !!filterQuery && aiLoading
+        return searchInFlight || (visibleGrants.length === 0 && dismissedCount === 0) ? (
           (() => {
             // Detection priority: B (search) → C (filters) → A (category empty)
             const emptyCardStyle: React.CSSProperties = {
