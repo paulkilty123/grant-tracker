@@ -59,6 +59,8 @@ export function renderWaitlistAckText(opts: WaitlistAckOptions): string {
     'email the morning it does, with a link straight to signup, and setting',
     'up takes about five minutes.',
     '',
+    'If you want to get in touch for any reason, email hello@shootsfunding.co.uk.',
+    '',
     'That is the only other email you will get before then.',
     '',
     `Take me off the list: ${opts.removalUrl}`,
@@ -100,6 +102,7 @@ export function renderWaitlistAck(opts: WaitlistAckOptions): string {
 <tr><td class="gutter" style="background:${C.page};border-radius:16px 16px 0 0;padding:30px 30px 0;">
   <p style="margin:0 0 10px;font-family:${UI};font-size:24px;font-weight:600;letter-spacing:-.4px;color:${C.deep};line-height:1.25;">You are on the list</p>
   <p style="margin:0 0 20px;font-family:${BODY};font-size:15.5px;line-height:1.65;color:${C.deep};">Thanks for signing up. Shoots opens later this week. You will get one email the morning it does, with a link straight to signup, and setting up takes about five minutes.</p>
+  <p style="margin:0 0 20px;font-family:${BODY};font-size:15.5px;line-height:1.65;color:${C.deep};">If you want to get in touch for any reason, email <a href="mailto:hello@shootsfunding.co.uk" style="color:${C.deep};font-weight:600;text-decoration:underline;">hello@shootsfunding.co.uk</a>.</p>
 </td></tr>
 
 <tr><td class="gutter" style="background:${C.page};border-radius:0 0 16px 16px;padding:4px 30px 30px;">
