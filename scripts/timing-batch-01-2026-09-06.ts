@@ -16,7 +16,7 @@
 
 import { getAdminDb } from '../src/lib/admin/admin-db'
 import { mergeGrantUpdate } from '../src/lib/grant-merge'
-import { appendBatch, type Row, type Report } from './timing-lib-2026-09-06'
+import { appendBatch, withParsedOpenDate, type Row, type Report } from './timing-lib-2026-09-06'
 
 const APPLY  = process.argv.includes('--apply')
 const SOURCE = 'user_verified:timing-2026-09-06'
@@ -161,7 +161,7 @@ async function main() {
     if (!data) throw new Error(`${r.id}: no row`)
     if (!r.re.test(data.title)) throw new Error(`${r.id}: title "${data.title}" does not match ${r.re}`)
 
-    const fields: Record<string, unknown> = { ...r.fields }
+    const fields: Record<string, unknown> = withParsedOpenDate({ ...r.fields })
     if (r.sources?.length) {
       const existing = (data.grant_sources as { url?: string }[] | null) ?? []
       const have = new Set(existing.map(s => s.url))

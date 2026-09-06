@@ -257,5 +257,258 @@
     "note": "Opened 03/07/26, closed 07/08/26, decisions end of December 2026. No next round published."
    }
   ]
+ },
+ {
+  "batch": 2,
+  "written": [
+   {
+    "id": "d83e1ad9-b8d5-4367-8a26-0fed8b5698f4",
+    "state": "dated",
+    "fields": {
+     "deadline": "2026-11-09",
+     "is_rolling": false
+    },
+    "citations": {
+     "deadline": {
+      "snippet": "9th Nov 2026",
+      "confidence": "high",
+      "source_url": "https://foundationscotland.org.uk/beinneun-community"
+     }
+    }
+   },
+   {
+    "id": "c51eaae1-2007-4930-a45a-4da9f7542c1c",
+    "state": "rolling",
+    "fields": {
+     "is_rolling": true,
+     "deadline": null
+    },
+    "citations": {
+     "is_rolling": {
+      "snippet": "We accept grant applications all year round.",
+      "confidence": "high",
+      "source_url": "https://bernardsunley.org/our-grant-giving/"
+     }
+    }
+   },
+   {
+    "id": "a9364402-f2a3-45b0-bf80-d33d9e5efdf5",
+    "state": "reopens",
+    "fields": {
+     "is_rolling": false,
+     "deadline": null,
+     "next_open_date": "Expected to be open to application in the autumn of 2026"
+    },
+    "citations": {
+     "next_open_date": {
+      "snippet": "The Community Catalyst Fund 2027 to 2029 is expected to be open to application in the autumn of 2026.",
+      "confidence": "high",
+      "source_url": "https://www.brighton-hove.gov.uk/people-and-communities/community-support-and-grants/community-catalyst-fund"
+     }
+    }
+   },
+   {
+    "id": "0346c786-fb9c-4df9-9307-205a4337acab",
+    "state": "dated",
+    "fields": {
+     "deadline": "2026-09-16",
+     "is_rolling": false
+    },
+    "citations": {
+     "deadline": {
+      "snippet": "Please submit your application before 12pm (midday) on Wednesday 16th September 2026 for consideration in this grant round.",
+      "confidence": "high",
+      "source_url": "http://www.cbandhhtaylortrust.com/applications-for-autumn-2026"
+     }
+    }
+   },
+   {
+    "id": "ff1e6699-e169-4f34-89f6-3742137b2394",
+    "state": "dated",
+    "fields": {
+     "deadline": "2026-10-23",
+     "is_rolling": false
+    },
+    "citations": {
+     "deadline": {
+      "snippet": "Friday 23rd October 2026",
+      "confidence": "high",
+      "source_url": "https://www.turnertrust.co.uk/grant-deadlines/"
+     }
+    }
+   },
+   {
+    "id": "94b70915-331b-48ef-8d4e-094881d3812a",
+    "state": "dated",
+    "fields": {
+     "deadline": "2026-09-18",
+     "is_rolling": false
+    },
+    "citations": {
+     "deadline": {
+      "snippet": "18 September 2026",
+      "confidence": "high",
+      "source_url": "https://charleshaywardfoundation.org.uk/our-process-when-to-apply/"
+     }
+    }
+   },
+   {
+    "id": "d29103be-5800-4beb-920f-205b48a78e78",
+    "state": "dated",
+    "fields": {
+     "deadline": "2026-09-08",
+     "is_rolling": false
+    },
+    "citations": {
+     "deadline": {
+      "snippet": "12 noon on Tuesday, 8 September 2026",
+      "confidence": "high",
+      "source_url": "https://www.citybridgefoundation.org.uk/funding"
+     }
+    }
+   },
+   {
+    "id": "32e9cb1d-4e0d-4554-a4c3-569bc4e0b9fb",
+    "state": "rolling",
+    "fields": {
+     "is_rolling": true,
+     "deadline_cycle": [
+      {
+       "day": 23,
+       "month": 9,
+       "label": "Stage two round (full application)"
+      },
+      {
+       "day": 6,
+       "month": 1,
+       "label": "Stage two round (full application)"
+      },
+      {
+       "day": 24,
+       "month": 3,
+       "label": "Stage two round (full application)"
+      },
+      {
+       "day": 7,
+       "month": 7,
+       "label": "Stage two round (full application)"
+      }
+     ]
+    },
+    "citations": {
+     "is_rolling": {
+      "snippet": "You can submit an EOI at any time throughout the year.",
+      "confidence": "high",
+      "source_url": "https://www.londonmarathonfoundation.org/active-spaces-fund"
+     }
+    }
+   }
+  ],
+  "report": [
+   {
+    "id": "9891bd8a-798b-4c2c-98d5-f25ba9b10faf",
+    "title": "BE:IMPACT Prize 2026",
+    "why": "unreadable",
+    "quote": "Loading content...",
+    "url": "https://blueearthsummit.com/impact-prize",
+    "note": "300KB of JavaScript and two \"Loading content...\" placeholders. Nothing about the prize renders without a browser."
+   },
+   {
+    "id": "5373485f-109c-4ef7-9af1-c59312bbc63f",
+    "title": "Bedfordshire & Luton Community Foundation — Community Grants",
+    "why": "not_stated",
+    "quote": "You can find all our funds in the grants section on our website. Each has its own criteria document and application form.",
+    "url": "https://blcf.org.uk/apply-for-a-grant/",
+    "note": "Funder-level row over roughly a dozen named funds on separate timetables. The apply page states no date for any of them."
+   },
+   {
+    "id": "9e714a60-a849-409f-8f52-0394b8c2fbb4",
+    "title": "Black Founders Programme",
+    "why": "not_stated",
+    "quote": "If you are interested in updates and news about the Black Founders Programme, fill out the short form below.",
+    "url": "https://www.digicatapult.org.uk/programmes/programme/black-founders-programme/",
+    "note": "An accelerator that runs in cohorts; the page describes the 2025 cohort and offers a mailing list, and names no application window."
+   },
+   {
+    "id": "87805cc2-c24b-4562-9a2b-129559fcdf9f",
+    "title": "Buttle UK — Chances for Children Grants",
+    "why": "not_stated",
+    "quote": "Make sure to submit your application only when you have time to speak with us.",
+    "url": "https://buttleuk.org/grants/faqs/",
+    "note": "Criteria page, grants page and FAQs all say when in a child's circumstances to apply and never when in the year."
+   },
+   {
+    "id": "b12c394d-346d-4246-a254-06ca5bbadd08",
+    "title": "Calouste Gulbenkian Foundation UK Branch — Grants",
+    "why": "not_stated",
+    "quote": "The UK Branch aims to strengthen arts and civil society ecosystems by supporting transnational exchange, reciprocal capacity development and knowledge sharing between Portugal and the UK.",
+    "url": "https://gulbenkian.pt/uk-branch/our-work/our-grant-making/",
+    "note": "The page carries no sentence about timing at all, so the quote is the closest thing to one: what the branch funds, with no word on when. Last updated 18 December 2025."
+   },
+   {
+    "id": "856cbdaf-7e60-4c78-8ad2-e7c0b6fddbd8",
+    "title": "Camden Climate Fund",
+    "why": "unreadable",
+    "quote": "Just a moment...",
+    "url": "https://www.camden.gov.uk/camden-climate-fund",
+    "note": "HTTP 403 behind a Cloudflare interstitial."
+   },
+   {
+    "id": "88259250-6936-41d6-b60d-83aa880917ba",
+    "title": "Camden Council - Family-Friendly and Inclusive Evenings Grant Scheme",
+    "why": "unreadable",
+    "quote": "Just a moment...",
+    "url": "https://www.camden.gov.uk/family-friendly-evenings",
+    "note": "HTTP 403 behind a Cloudflare interstitial. Same host as the Camden Climate Fund row; both need a browser."
+   },
+   {
+    "id": "91737208-0bd3-45c4-8866-ec6256e85a58",
+    "title": "Cash for Kids - Cost of Living Grants",
+    "why": "not_stated",
+    "quote": "As our ability to grant depends on the donations we receive, application forms will close when we reach capacity – so may not be available for all areas at all times.",
+    "url": "https://cashforkids.org.uk/grants/",
+    "note": "Neither dated nor rolling: forms open and shut by area as money allows, and the page will not say when for any of them."
+   },
+   {
+    "id": "571f93e2-d0b5-41d7-adf1-d36b3a039ec6",
+    "title": "Charity Digital Exchange — Software Donations",
+    "why": "not_stated",
+    "quote": "Please log in or Register to access these exclusive discounts.",
+    "url": "https://charitydigital.org.uk/products",
+    "note": "A login-walled catalogue of donated software rather than a round. No window stated on the public side."
+   },
+   {
+    "id": "99a71fd2-fccc-4947-a4fd-4fdd81b58bd0",
+    "title": "Charity Digital Skills Programme",
+    "why": "not_stated",
+    "quote": "Your destination for trusted technology, exclusive discounts and great deals. Keep up with our latest offers by signing up here.",
+    "url": "https://charitydigital.org.uk/",
+    "note": "apply_url is the site home page. It carries webinar and event dates, none of which is an application window for this row."
+   },
+   {
+    "id": "75990799-a1a4-490e-a651-90f3147ec669",
+    "title": "Charity IT Association (CITA) — Tech Volunteers",
+    "why": "not_stated",
+    "quote": "CITA provides charities with access to affordable, trustworthy, and independent technology professionals to enable their strategic mission through technology.",
+    "url": "https://www.cita.org.uk/",
+    "note": "A volunteer-matching service with no round and no stated window."
+   },
+   {
+    "id": "c6800212-145e-47f7-9879-42f8a891f057",
+    "title": "City & Guilds Foundation — Local Community Skills Fund",
+    "why": "closed_no_date",
+    "quote": "Expressions of Interest are currently closed. Sign up to our newsletter to hear about future rounds.",
+    "url": "https://cityandguildsfoundation.org/what-we-offer/funding/local-community-skills-fund/",
+    "note": "The page also says \"We aim to open our community grants programme at regular intervals throughout the year\", which is an intention rather than a date, so nothing is written."
+   },
+   {
+    "id": "014ccbcd-cd35-4447-8467-d25fb34db0d2",
+    "title": "Civitates — Pooled Fund for European Democracy",
+    "why": "not_stated",
+    "quote": "Sign up for news, updates from our grantee partners and calls for proposals.",
+    "url": "https://civitates-eu.org/",
+    "note": "Grants go out in calls for proposals; no call is open on the site and no next one is dated."
+   }
+  ]
  }
 ]
