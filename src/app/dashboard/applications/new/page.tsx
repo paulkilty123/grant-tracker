@@ -7,6 +7,9 @@
 // point before any generation spend.
 
 import { useEffect, useRef, useState } from 'react'
+import {
+  allowanceExhausted, allowanceRefusalMessage, allowanceStatusLine, type ApplicationAllowance,
+} from '@/lib/builder/allowance'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Search as SearchIcon, X as XIcon, Plus, Trash2, Check, ExternalLink } from 'lucide-react'
@@ -142,6 +145,20 @@ export default function NewApplicationPage() {
   // ── Step 2 state ──
   const [questions, setQuestions] = useState<EditableQuestion[]>([])
   const [creating, setCreating] = useState(false)
+  // How many applications this org may still start (migration 079). Null
+  // until known, and the page never blocks on it: if the read fails the
+  // insert trigger still refuses, and the route's message is shown instead.
+  const [allowance, setAllowance] = useState<ApplicationAllowance | null>(null)
+  useEffect(() => {
+    if (!orgId) return
+    let live = true
+    fetch(`/api/builder/allowance?org_id=${orgId}`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(a => { if (live && a && typeof a.used === 'number') setAllowance(a as ApplicationAllowance) })
+      .catch(() => {})
+    return () => { live = false }
+  }, [orgId])
+  const exhausted = allowance ? allowanceExhausted(allowance) : false
   const [focusedQ, setFocusedQ] = useState<number | null>(null)
 
   useEffect(() => {
@@ -672,8 +689,13 @@ export default function NewApplicationPage() {
             <p style={{ fontFamily: BODY, fontSize: 13.5, color: T.coralText, margin: 0 }}>{error}</p>
           )}
 
+          {allowance && exhausted && (
+            <p style={{ fontFamily: BODY, fontSize: 13.5, color: T.coralText, margin: 0 }}>
+              {allowanceRefusalMessage(allowance)}
+            </p>
+          )}
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            <button onClick={handleCreate} disabled={creating} style={deepBtn(creating)}>
+            <button onClick={handleCreate} disabled={creating || exhausted} style={deepBtn(creating || exhausted)}>
               {creating ? 'Setting up…' : 'Looks right, plan my answers'}
             </button>
             <button
@@ -688,6 +710,11 @@ export default function NewApplicationPage() {
               Back
             </button>
           </div>
+          {allowance && !exhausted && allowanceStatusLine(allowance) && (
+            <p style={{ fontFamily: BODY, fontSize: 13, color: '#5F5E5A', margin: 0 }}>
+              {allowanceStatusLine(allowance)}
+            </p>
+          )}
         </div>
       )}
     </div>
