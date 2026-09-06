@@ -1,0 +1,3580 @@
+[
+ {
+  "id": "d2083d32-698f-4620-a3c4-5ff597a565c8",
+  "title": "7Stars Foundation",
+  "apply_url": "https://the7starsfoundation.co.uk/apply-for-funding",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "England",
+  "amount_min": 500,
+  "amount_max": 60000,
+  "deadline_cycle": [
+   {
+    "day": 13,
+    "label": "Social Impact Funding (Anti-Racism, Online Abuse), Individual Funding, Child Poverty",
+    "month": 7
+   },
+   {
+    "day": 1,
+    "label": "Project Funding, Social Impact Funding (Child Exploitation, Child Mental Health), Individual Funding",
+    "month": 2
+   },
+   {
+    "day": 1,
+    "label": "Project Funding, Social Impact Funding (LGBTQ+ Inclusion & Support), Individual Funding",
+    "month": 5
+   }
+  ],
+  "banked_sources": [],
+  "brief_open_status": "mixed",
+  "brief_decision_timeline": "Applications close mid-month with successful applicants notified mid-month of the following month. For example, applications closing 13 July 2026 result in decisions in November 2026. Grant reports required six months post-award.",
+  "brief_last_enriched": "2026-07-26"
+ },
+ {
+  "id": "a94ae453-629b-46ca-a21e-11606403bfc9",
+  "title": "A B Charitable Trust Funding",
+  "apply_url": "https://abcharitabletrust.org.uk/how-we-fund",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": 10000,
+  "amount_max": 30000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "The Grants Committee and Board meet quarterly. Applications to the open programme go through a shortlisting process before Board/Committee decision. Decision timescales are not specified.",
+  "brief_last_enriched": "2026-07-31"
+ },
+ {
+  "id": "5ed056e6-d5dd-4a82-b845-65c27a9a9eb5",
+  "title": "Accelerate",
+  "apply_url": "https://communityenterprise.co.uk/get-support",
+  "funding_index_url": null,
+  "funding_type": "programme",
+  "location_tag": "Scotland",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Someone will get back to you after you submit the Expression of Interest form. No specific response timeframe is stated.",
+  "brief_last_enriched": "2026-08-13"
+ },
+ {
+  "id": "1694669a-605f-44ea-9775-c6a492f0362e",
+  "title": "Achievement Award Scheme",
+  "apply_url": "https://www.jackpetcheyfoundation.org.uk/opportunities/grant-programmes/achievement-awards/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "London & Essex",
+  "amount_min": 300,
+  "amount_max": 6400,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Around 12,000 Achievement Award winners are recognised each year. Award winners are invited to attend ceremonies where they are presented with a medallion in front of families, friends and VIPs. No specific application deadlines or decision timelines are stated.",
+  "brief_last_enriched": "2026-08-04"
+ },
+ {
+  "id": "81c50185-6ad9-4b77-b10f-c0677d14f03a",
+  "title": "Achlachan Wind Farm Community Fund",
+  "apply_url": "https://foundationscotland.org.uk/apply-for-funding/funding-available/achlachan",
+  "funding_index_url": "https://www.foundationscotland.org.uk/apply-for-funding",
+  "funding_type": "grant",
+  "location_tag": "Halkirk, Highland",
+  "amount_min": null,
+  "amount_max": 10000,
+  "deadline_cycle": [
+   {
+    "day": 15,
+    "month": 3
+   },
+   {
+    "day": 15,
+    "month": 6
+   },
+   {
+    "day": 15,
+    "month": 9
+   },
+   {
+    "day": 15,
+    "month": 12
+   }
+  ],
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Four application rounds per year with deadlines on 15th March, 15th June, 15th September, and 15th December. Decisions are notified at the end of May, August, November, and February respectively. A panel of local residents meets four times yearly to consider applications.",
+  "brief_last_enriched": "2026-08-21"
+ },
+ {
+  "id": "32e9cb1d-4e0d-4554-a4c3-569bc4e0b9fb",
+  "title": "Active Spaces Fund",
+  "apply_url": "https://www.londonmarathonfoundation.org/active-spaces-fund",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "London",
+  "amount_min": 10000,
+  "amount_max": 80000,
+  "deadline_cycle": [
+   {
+    "day": 11,
+    "label": "Full Application Round 1",
+    "month": 12
+   },
+   {
+    "day": 25,
+    "label": "Full Application Round 2",
+    "month": 3
+   },
+   {
+    "day": 8,
+    "label": "Full Application Round 3",
+    "month": 7
+   },
+   {
+    "day": 23,
+    "label": "Full Application Round 4",
+    "month": 9
+   }
+  ],
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Stage One (Expression of Interest): submit anytime; decision within 30 working days. Stage Two (Full Application): four rounds per year with deadlines 11 December 2025, 25 March 2026, 8 July 2026, and 23 September 2026. Full application outcomes (under £100,000) arrive end of February, May, September, and November 2026 respectively. Full applications must be submitted within 12 months of successful EOI notification.",
+  "brief_last_enriched": "2026-07-27"
+ },
+ {
+  "id": "86380b2e-1c74-4cd3-b560-663a021bc097",
+  "title": "Adint Charitable Trust",
+  "apply_url": "https://youngcamdenfoundation.org.uk/funding/adint-charitable-trust",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "England, Wales & Scotland",
+  "amount_min": 5000,
+  "amount_max": 10000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "Applications are considered at regular meetings of the Trustees, and grants are awarded throughout the year. No specific meeting dates are published.",
+  "brief_last_enriched": "2026-08-29"
+ },
+ {
+  "id": "df926186-9453-40d9-ab0a-33bbbba6bcb1",
+  "title": "Alan Higgs Community Grants",
+  "apply_url": "https://www.heartofenglandcf.org/alan-higgs-community-grants/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "Coventry & Warwickshire",
+  "amount_min": 100,
+  "amount_max": 1000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "No specific decision timeline or application windows stated on the page.",
+  "brief_last_enriched": "2026-06-30"
+ },
+ {
+  "id": "da45f5fc-31ff-4a5d-9fd9-9821c65b46d7",
+  "title": "Allen Lane Foundation — Older People",
+  "apply_url": "https://allenlane.org.uk/older-people/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": 2000,
+  "amount_max": 15000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "No specific decision timeline or trustee meeting dates are provided on this page.",
+  "brief_last_enriched": "2026-08-21"
+ },
+ {
+  "id": "9d1b13f1-607d-48b1-80df-80e127cd8933",
+  "title": "Annandale and Nithsdale Community Benefit Company",
+  "apply_url": "https://foundationscotland.org.uk/ancbc",
+  "funding_index_url": "https://www.foundationscotland.org.uk/apply-for-funding",
+  "funding_type": "grant",
+  "location_tag": "Dumfries and Galloway",
+  "amount_min": 500,
+  "amount_max": 20000,
+  "deadline_cycle": [
+   {
+    "day": 5,
+    "label": "Round 1",
+    "month": 1
+   },
+   {
+    "day": 2,
+    "label": "Round 2",
+    "month": 4
+   },
+   {
+    "day": 3,
+    "label": "Round 3",
+    "month": 9
+   }
+  ],
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Three application rounds per year. Round 1: Application deadline 5 January 2026, decisions 18 March 2026. Round 2: Application deadline 2 April 2026, decisions week of 25 May 2026. Round 3: Application deadline 3 September 2026, decisions week of 26 October 2026.",
+  "brief_last_enriched": "2026-07-29"
+ },
+ {
+  "id": "0704b87e-ea54-4ae3-87d3-7a95559d36a9",
+  "title": "Arts Council of Northern Ireland — Lottery Grants",
+  "apply_url": "https://artscouncil-ni.org/funding",
+  "funding_index_url": "https://artscouncil-ni.org/funding",
+  "funding_type": "grant",
+  "location_tag": "Northern Ireland",
+  "amount_min": 500,
+  "amount_max": 50000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "Programme application opening dates for 2025/26 are indicative and may be subject to change. Applicants should refer to the News section, social media channels, or subscribe to the fortnightly newsletter for confirmed funding programme opening dates.",
+  "brief_last_enriched": "2026-07-21"
+ },
+ {
+  "id": "bcd035bf-e0e7-462d-8895-84c1aee05953",
+  "title": "Arts Council of Wales — Arts, Health and Wellbeing",
+  "apply_url": "https://arts.wales/funding/organisations/arts-health-and-wellbeing",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "Wales",
+  "amount_min": 500,
+  "amount_max": 50000,
+  "deadline_cycle": [
+   {
+    "day": 23,
+    "label": "Round 1",
+    "month": 9
+   },
+   {
+    "day": 20,
+    "label": "Round 2",
+    "month": 1
+   }
+  ],
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Applications for funding of £50,000 or under receive a decision within 8 weeks of the deadline. Applications requesting over £50,000 receive a decision within 12 weeks of the deadline. Register on the portal at least 5 working days before you plan to apply, as account activation takes up to 5 working days.",
+  "brief_last_enriched": "2026-07-27"
+ },
+ {
+  "id": "033b3ddf-fd0c-4aea-b440-7cb4c12be8d7",
+  "title": "Arts Council of Wales — Create and Engage",
+  "apply_url": "https://arts.wales/funding/individuals/create-and-engage",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "Wales",
+  "amount_min": null,
+  "amount_max": 100000,
+  "deadline_cycle": [
+   {
+    "day": 29,
+    "label": "Large Create & Engage Round 1",
+    "month": 4
+   },
+   {
+    "day": 29,
+    "label": "Large Create & Engage Round 2",
+    "month": 7
+   },
+   {
+    "day": 30,
+    "label": "Large Create & Engage Round 3",
+    "month": 9
+   },
+   {
+    "day": 16,
+    "label": "Large Create & Engage Round 4",
+    "month": 12
+   }
+  ],
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "For Small Create & Engage: no set deadlines, but allow minimum ten working weeks between submission and project start date. For Large Create & Engage: four set deadlines per year (29 April, 29 July, 30 September, 16 December 2026); allow minimum twelve working weeks between deadline date and project start. All deadlines are 1pm on the stated dates.",
+  "brief_last_enriched": "2026-07-28"
+ },
+ {
+  "id": "b774d28f-4f07-4ebd-8702-8f3c3e0cfe5a",
+  "title": "Arts Council of Wales — Have a Go",
+  "apply_url": "https://arts.wales/funding/creative-learning/have-a-go",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "Wales",
+  "amount_min": null,
+  "amount_max": 1500,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "The source does not specify decision timelines or when application rounds close. Register on the online portal at least 5 working days before you intend to start your application.",
+  "brief_last_enriched": "2026-07-28"
+ },
+ {
+  "id": "edaed6a2-448f-4209-b763-5006d6874cf2",
+  "title": "ASTOP — Rent-Free Property for Charities",
+  "apply_url": "https://astop.org.uk/",
+  "funding_index_url": null,
+  "funding_type": "in_kind",
+  "location_tag": "UK",
+  "amount_min": 0,
+  "amount_max": 0,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Not specified. Contact ASTOP directly for matching timescales; this depends on available landlord properties and landlord decision processes.",
+  "brief_last_enriched": "2026-06-30"
+ },
+ {
+  "id": "e2b9494b-b4af-4e29-9843-df8a3980aa3c",
+  "title": "Aurora Trust",
+  "apply_url": "https://auroratrust.org.uk/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": 20000,
+  "amount_max": 200000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "between_rounds",
+  "brief_decision_timeline": "Aurora Trust issues periodic 'Calls for Proposals' for its programme areas. Application windows and decision timelines are announced when a Call is issued.",
+  "brief_last_enriched": "2026-07-29"
+ },
+ {
+  "id": "cb9780e6-9898-4913-9f41-aa7034908269",
+  "title": "B&Q Foundation — Home Improvement & Home-Starter Kits Funds",
+  "apply_url": "https://bqfoundation.org.uk/apply-for-a-grant/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": 10000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "Up to 12 weeks after the deadline to hear the outcome.",
+  "brief_last_enriched": "2026-09-04"
+ },
+ {
+  "id": "040888ac-bdd1-4a22-9f33-cc841f9b5cbb",
+  "title": "Backstage Trust performing arts grants",
+  "apply_url": "https://fundingforall.org.uk/funds/backstage-trust/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": 500000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "No deadline; applications are accepted at any time. The trust aims to say within twelve weeks of receipt whether the trustees can consider the project. If the ask is urgent, say so when you email.",
+  "brief_last_enriched": "2026-09-02"
+ },
+ {
+  "id": "614ffed1-b5c4-44d0-9ad4-34c4496f3137",
+  "title": "Bairdwatson Charitable Trust",
+  "apply_url": "https://foundationscotland.org.uk/apply-for-funding/funding-available/bairdwatson-charitable-trust",
+  "funding_index_url": "https://www.foundationscotland.org.uk/apply-for-funding",
+  "funding_type": "grant",
+  "location_tag": "Scotland",
+  "amount_min": null,
+  "amount_max": 20000,
+  "deadline_cycle": [
+   {
+    "day": 3,
+    "month": 7
+   },
+   {
+    "day": 7,
+    "month": 8
+   }
+  ],
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Applications open 3 July 2026 and close 7 August 2026. Decisions are expected by the end of December 2026.",
+  "brief_last_enriched": "2026-08-16"
+ },
+ {
+  "id": "7e2f1cd7-bc26-4028-afbd-5a42d5438322",
+  "title": "Barrow Cadbury Trust Grants",
+  "apply_url": "https://barrowcadbury.org.uk/our-work/applying-for-funding/",
+  "funding_index_url": "https://barrowcadbury.org.uk/our-work/applying-for-funding/",
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "The Trust aims to respond to enquiry forms within 10 working days. If invited to submit a full application, the assessment and decision process may take up to four months, though it is usually shorter. Offer letters are issued within a few days of a decision. Payment starts once your Chair signs the agreement, either immediately or on an agreed start date.",
+  "brief_last_enriched": "2026-09-05"
+ },
+ {
+  "id": "9891bd8a-798b-4c2c-98d5-f25ba9b10faf",
+  "title": "BE:IMPACT Prize 2026",
+  "apply_url": "https://blueearthsummit.com/impact-prize",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": 1000,
+  "amount_max": 10000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Six finalists selected through expert review. Finalists pitch live on the Main Stage at Blue Earth Summit on Wednesday 14 October 2026. Winner decided through expert judge scores and live audience vote.",
+  "brief_last_enriched": "2026-09-03"
+ },
+ {
+  "id": "5373485f-109c-4ef7-9af1-c59312bbc63f",
+  "title": "Bedfordshire & Luton Community Foundation — Community Grants",
+  "apply_url": "https://blcf.org.uk/apply-for-a-grant/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "Bedfordshire & Luton",
+  "amount_min": null,
+  "amount_max": 10000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "The funder is implementing a new grants management system which will allow applicants to see application status updates in real time. Taster sessions will be hosted in the near future with dates to be confirmed by email. No specific decision timeframes are stated.",
+  "brief_last_enriched": "2026-07-08"
+ },
+ {
+  "id": "d83e1ad9-b8d5-4367-8a26-0fed8b5698f4",
+  "title": "Beinneun Community Fund",
+  "apply_url": "https://foundationscotland.org.uk/beinneun-community",
+  "funding_index_url": "https://www.foundationscotland.org.uk/apply-for-funding",
+  "funding_type": "grant",
+  "location_tag": "Highland",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": [
+   {
+    "day": 25,
+    "label": "Round 1",
+    "month": 5
+   },
+   {
+    "day": 24,
+    "label": "Round 2",
+    "month": 8
+   },
+   {
+    "day": 9,
+    "label": "Round 3",
+    "month": 11
+   }
+  ],
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Three application rounds per year. Community Panel meets approximately 6–7 weeks after each deadline to make decisions. Decisions are final with no appeals process. Grants must normally be spent within one year of award.",
+  "brief_last_enriched": "2026-08-17"
+ },
+ {
+  "id": "c51eaae1-2007-4930-a45a-4da9f7542c1c",
+  "title": "Bernard Sunley Foundation — Social Welfare Grants",
+  "apply_url": "https://bernardsunley.org/our-grant-giving/social-welfare/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Rolling programme with no deadlines. Applications accepted year-round.",
+  "brief_last_enriched": "2026-08-10"
+ },
+ {
+  "id": "9e714a60-a849-409f-8f52-0394b8c2fbb4",
+  "title": "Black Founders Programme",
+  "apply_url": "https://www.digicatapult.org.uk/programmes/programme/black-founders-programme/",
+  "funding_index_url": null,
+  "funding_type": "programme",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": 1500000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "Not specified. A showcase event is scheduled for 5 March 2025, suggesting a cohort-based intake model, but application windows and decision timelines are not detailed.",
+  "brief_last_enriched": "2026-09-04"
+ },
+ {
+  "id": "a9364402-f2a3-45b0-bf80-d33d9e5efdf5",
+  "title": "Brighton & Hove — Community Catalyst Fund (2027–2029)",
+  "apply_url": "https://www.brighton-hove.gov.uk/people-and-communities/community-support-and-grants/community-catalyst-fund",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "Brighton & Hove",
+  "amount_min": 1000,
+  "amount_max": 20000,
+  "deadline_cycle": [
+   {
+    "label": "Expected opening of 2027–2029 round",
+    "month": 9,
+    "reason": "stated as 'autumn 2026', no specific day given"
+   }
+  ],
+  "banked_sources": [],
+  "brief_open_status": "between_rounds",
+  "brief_decision_timeline": "The 2025–2027 round has been completed. The 2027–2029 round is expected to open to application in autumn 2026.",
+  "brief_last_enriched": "2026-08-18"
+ },
+ {
+  "id": "87805cc2-c24b-4562-9a2b-129559fcdf9f",
+  "title": "Buttle UK — Chances for Children Grants",
+  "apply_url": "https://buttleuk.org/grants/grant-criteria/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": 2400,
+  "deadline_cycle": null,
+  "banked_sources": [
+   "https://buttleuk.org/grants/grant-criteria/"
+  ],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Not specified.",
+  "brief_last_enriched": "2026-05-19"
+ },
+ {
+  "id": "0346c786-fb9c-4df9-9307-205a4337acab",
+  "title": "C B & H H Taylor 1984 Trust — Grants",
+  "apply_url": "http://www.cbandhhtaylortrust.com/guidelines-for-grant-programmes",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "Global",
+  "amount_min": 500,
+  "amount_max": 2000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "between_rounds",
+  "brief_decision_timeline": "Applications accepted for Autumn 2026 round. No specific meeting dates or decision timescales stated.",
+  "brief_last_enriched": "2026-06-25"
+ },
+ {
+  "id": "b12c394d-346d-4246-a254-06ca5bbadd08",
+  "title": "Calouste Gulbenkian Foundation UK Branch — Grants",
+  "apply_url": "https://gulbenkian.pt/uk-branch/our-work/our-grant-making/",
+  "funding_index_url": "https://gulbenkian.pt/uk-branch/our-work/our-grant-making/",
+  "funding_type": "grant",
+  "location_tag": "UK & Portugal",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": null,
+  "brief_last_enriched": "2026-09-04"
+ },
+ {
+  "id": "856cbdaf-7e60-4c78-8ad2-e7c0b6fddbd8",
+  "title": "Camden Climate Fund",
+  "apply_url": "https://www.camden.gov.uk/camden-climate-fund",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "Camden",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Applications are open all year round. Decisions are made by a panel of Camden residents from different backgrounds and across the borough, but specific decision timescales are not stated.",
+  "brief_last_enriched": "2026-07-08"
+ },
+ {
+  "id": "88259250-6936-41d6-b60d-83aa880917ba",
+  "title": "Camden Council - Family-Friendly and Inclusive Evenings Grant Scheme",
+  "apply_url": "https://www.camden.gov.uk/family-friendly-evenings",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "Camden",
+  "amount_min": 500,
+  "amount_max": 2000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "No application deadline, decision timeline, or application window is stated.",
+  "brief_last_enriched": "2026-07-25"
+ },
+ {
+  "id": "91737208-0bd3-45c4-8866-ec6256e85a58",
+  "title": "Cash for Kids - Cost of Living Grants",
+  "apply_url": "https://cashforkids.org.uk/grants/",
+  "funding_index_url": "https://cashforkids.org.uk/grants/",
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": null,
+  "brief_last_enriched": "2026-09-04"
+ },
+ {
+  "id": "ff1e6699-e169-4f34-89f6-3742137b2394",
+  "title": "Charitable Grants",
+  "apply_url": "https://www.turnertrust.co.uk/apply-for-a-grant/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "West Midlands",
+  "amount_min": 2000,
+  "amount_max": 5000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "The trust accepts applications by email year-round. All correspondence including acknowledgements and results will be sent by email.",
+  "brief_last_enriched": "2026-09-05"
+ },
+ {
+  "id": "571f93e2-d0b5-41d7-adf1-d36b3a039ec6",
+  "title": "Charity Digital Exchange — Software Donations",
+  "apply_url": "https://charitydigital.org.uk/products",
+  "funding_index_url": null,
+  "funding_type": "in_kind",
+  "location_tag": "UK",
+  "amount_min": 0,
+  "amount_max": 0,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Immediate access upon registration and membership approval. No application decision period — software access is instantaneous.",
+  "brief_last_enriched": "2026-09-04"
+ },
+ {
+  "id": "99a71fd2-fccc-4947-a4fd-4fdd81b58bd0",
+  "title": "Charity Digital Skills Programme",
+  "apply_url": "https://charitydigital.org.uk/",
+  "funding_index_url": null,
+  "funding_type": "in_kind",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Not applicable as a traditional grant scheme. Upcoming events and training sessions are scheduled throughout 2026 (e.g. webinars and masterclasses listed with specific dates).",
+  "brief_last_enriched": "2026-09-04"
+ },
+ {
+  "id": "75990799-a1a4-490e-a651-90f3147ec669",
+  "title": "Charity IT Association (CITA) — Tech Volunteers",
+  "apply_url": "https://www.cita.org.uk/",
+  "funding_index_url": null,
+  "funding_type": "in_kind",
+  "location_tag": "UK",
+  "amount_min": 0,
+  "amount_max": 0,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": null,
+  "brief_last_enriched": "2026-08-25"
+ },
+ {
+  "id": "94b70915-331b-48ef-8d4e-094881d3812a",
+  "title": "Charles Hayward Foundation Grants",
+  "apply_url": "https://charleshaywardfoundation.org.uk/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": 15000,
+  "amount_max": 25000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "between_rounds",
+  "brief_decision_timeline": null,
+  "brief_last_enriched": "2026-08-07"
+ },
+ {
+  "id": "c6800212-145e-47f7-9879-42f8a891f057",
+  "title": "City & Guilds Foundation — Local Community Skills Fund",
+  "apply_url": "https://cityandguildsfoundation.org/what-we-offer/funding/local-community-skills-fund/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": 10000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "between_rounds",
+  "brief_decision_timeline": "Most applicants will know if successful within two months of submitting an Expression of Interest (EoI), though this is a guide and not guaranteed.",
+  "brief_last_enriched": "2026-07-29"
+ },
+ {
+  "id": "d29103be-5800-4beb-920f-205b48a78e78",
+  "title": "City Bridge Foundation — Grants for London",
+  "apply_url": "https://www.citybridgefoundation.org.uk/funding",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "London",
+  "amount_min": 125000,
+  "amount_max": 450000,
+  "deadline_cycle": [
+   {
+    "day": 8,
+    "label": "Climate & Environmental Justice Round One",
+    "month": 9
+   }
+  ],
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Climate & Environmental Justice Round One deadline is 12 noon Tuesday, 8 September 2026. Social Investment Fund operates on a rolling basis with no stated decision timeline. No other decision or meeting dates are published.",
+  "brief_last_enriched": "2026-08-03"
+ },
+ {
+  "id": "014ccbcd-cd35-4447-8467-d25fb34db0d2",
+  "title": "Civitates — Pooled Fund for European Democracy",
+  "apply_url": "https://civitates-eu.org/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "Europe",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "The source does not specify application deadlines, decision timelines, or trustee meeting schedules.",
+  "brief_last_enriched": "2026-09-05"
+ },
+ {
+  "id": "ed047490-107e-4805-8ea2-6cd85520b3ae",
+  "title": "Clore Social Leadership Programme",
+  "apply_url": "https://cloresocialleadership.org.uk/",
+  "funding_index_url": null,
+  "funding_type": "programme",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "The Emerging Leader programme runs October 2026 to May 2027 (seven months). The Experienced Leader programme runs September 2026 to March 2027 (seven months). The Leading Social Impact programme runs September 2026 to December 2026 (four months). Applications are currently open for these cohorts.",
+  "brief_last_enriched": "2026-08-06"
+ },
+ {
+  "id": "15c7fa72-3e20-47e6-a211-a478ffc364af",
+  "title": "Coalfields Regeneration Trust",
+  "apply_url": "https://www.coalfields-regen.org.uk/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "England & Scotland & Wales",
+  "amount_min": 5000,
+  "amount_max": 100000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "Not stated on the website.",
+  "brief_last_enriched": "2026-09-04"
+ },
+ {
+  "id": "aec5dee3-6c6b-43b4-abe7-92ece9c390c0",
+  "title": "Comic Relief — International Development",
+  "apply_url": "https://www.comicrelief.com/funding",
+  "funding_index_url": "https://www.comicrelief.com/funding",
+  "funding_type": "grant",
+  "location_tag": "Global",
+  "amount_min": 50000,
+  "amount_max": 300000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "The source does not provide application windows, decision timelines, or trustee meeting dates.",
+  "brief_last_enriched": "2026-08-14"
+ },
+ {
+  "id": "c32ecdba-2fab-4131-a430-69bf1e6a1cae",
+  "title": "Community and Environment Grants",
+  "apply_url": "https://www.veoliatrust.org/funding/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "The source mentions funding round closing dates exist but does not provide specific dates or decision timescales.",
+  "brief_last_enriched": "2026-08-03"
+ },
+ {
+  "id": "056ad3b9-2bb0-4d09-be11-672e6c6c23e5",
+  "title": "Community Capacity Fund",
+  "apply_url": "https://oxfordshire.org/ocf_grants/community-capacity-2/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "Oxfordshire",
+  "amount_min": 5000,
+  "amount_max": 20000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "between_rounds",
+  "brief_decision_timeline": "Fund opens autumn 2026. The source does not specify closing date or decision timeline for this round.",
+  "brief_last_enriched": "2026-07-29"
+ },
+ {
+  "id": "fafa223d-1008-46c6-8019-585afd5014b7",
+  "title": "Community Energy GO!",
+  "apply_url": "https://www.cse.org.uk/my-community/",
+  "funding_index_url": "https://www.cse.org.uk/my-community/",
+  "funding_type": "programme",
+  "location_tag": "England",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "No specific decision timeline or application deadline provided.",
+  "brief_last_enriched": "2026-07-23"
+ },
+ {
+  "id": "12269ada-77e7-4e89-9db0-0d95414bb483",
+  "title": "Community Foundation for Northern Ireland Grants",
+  "apply_url": "https://communityfoundationni.org/achieving-impact/available-grants/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "Northern Ireland",
+  "amount_min": 2000,
+  "amount_max": 5000,
+  "deadline_cycle": [
+   {
+    "day": 17,
+    "label": "The Randal Foundation Small Grant",
+    "month": 9
+   }
+  ],
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "The Randal Foundation Small Grant has a closing date of 17 September 2026 at 13:00. SWEF Enterprise Fund grants operate on rolling programmes with no fixed deadline.",
+  "brief_last_enriched": "2026-08-25"
+ },
+ {
+  "id": "f375d0d1-f7e5-4393-a078-8b3ab3cec3b4",
+  "title": "Community Foundation North East — Grants",
+  "apply_url": "https://www.communityfoundation.org.uk/apply/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "North East England",
+  "amount_min": 500,
+  "amount_max": 25000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Most funds operate on rolling basis (applications accepted year-round) or have specific call-for-applications deadlines. Open funds with deadlines in 2026 include Mayor's Opportunity Fund (27 July 2026), The Ringtons Fund (7 August 2026), Dynamo Digital Inclusion Fund (10 August 2026), The Pargiter Trust Fund (31 August 2026), Tyne & Wear High Sheriff's Awards (19 October 2026), and Northumberland High Sheriff Awards (26 October 2026). Rolling grants accept applications at any time of year.",
+  "brief_last_enriched": "2026-07-25"
+ },
+ {
+  "id": "cc5f93d2-aa9e-4873-aaa9-2a425b8868e1",
+  "title": "Community Foundation Wales — Grants Hub",
+  "apply_url": "https://communityfoundationwales.org.uk/grants-overview/",
+  "funding_index_url": "https://communityfoundationwales.org.uk/grants-overview/",
+  "funding_type": "grant",
+  "location_tag": "Wales",
+  "amount_min": 500,
+  "amount_max": 30000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": null,
+  "brief_last_enriched": "2026-09-04"
+ },
+ {
+  "id": "057225d1-6b86-4341-b2df-766f3851ee62",
+  "title": "Community Grant Programme",
+  "apply_url": "https://www.nationalgrid.com/responsibility/community/community-grant-programme",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": 10000,
+  "amount_max": 20000,
+  "deadline_cycle": [
+   {
+    "day": 30,
+    "label": "Q1 Application window opens",
+    "month": 4
+   },
+   {
+    "day": 30,
+    "label": "Q2 Application window opens",
+    "month": 7
+   },
+   {
+    "day": 31,
+    "label": "Q3 Application window opens",
+    "month": 10
+   },
+   {
+    "day": 31,
+    "label": "Q4 Application window opens",
+    "month": 1
+   }
+  ],
+  "banked_sources": [
+   ""
+  ],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "Applications are reviewed on a quarterly basis. The timeline is: application window opens, applications reviewed against criteria (following month), panel session and decisions made (month after that). Full decisions communicated after panel review.",
+  "brief_last_enriched": "2026-06-22"
+ },
+ {
+  "id": "a8a34a8e-4570-4fbd-9260-cbbcc8926637",
+  "title": "Community Grants",
+  "apply_url": "https://thetrustenfield.org.uk/grants/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "Enfield",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "Grant decisions are taken on a quarterly basis by the fifteen Trustees. You will be informed of the Trustees' decision after the relevant grant meeting.",
+  "brief_last_enriched": "2026-06-24"
+ },
+ {
+  "id": "3665afff-c092-41c1-83e9-fb67b8d4d563",
+  "title": "Community Grants",
+  "apply_url": "https://www.hamptonfund.co.uk/community-grants/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "Richmond upon Thames",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": [
+   {
+    "day": null,
+    "label": "March trustee meeting",
+    "month": 3
+   },
+   {
+    "day": null,
+    "label": "June trustee meeting",
+    "month": 6
+   },
+   {
+    "day": null,
+    "label": "September trustee meeting",
+    "month": 9
+   },
+   {
+    "day": null,
+    "label": "December trustee meeting",
+    "month": 12
+   }
+  ],
+  "banked_sources": [
+   ""
+  ],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Trustees meet four times a year in March, June, September and December. Application submission deadlines are usually 6–8 weeks before each meeting. Contact the team for exact deadline dates. Applicants are advised of outcomes shortly after the trustee meeting.",
+  "brief_last_enriched": "2026-06-24"
+ },
+ {
+  "id": "49a1fffd-2412-4105-8897-8a5af286b797",
+  "title": "Continuo Foundation Project Grants",
+  "apply_url": "https://www.continuofoundation.co.uk/our-grants",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": [
+   {
+    "day": 1,
+    "label": "Spring round (approx)",
+    "month": 3
+   },
+   {
+    "day": 1,
+    "label": "Autumn round (approx)",
+    "month": 9
+   }
+  ],
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Two-stage selection process: initial assessment by Expert Advisory Panel, followed by Trustee evaluation and final selection. Grants are awarded twice annually. Recent rounds awarded in March and September. Funds are only paid out upon project completion.",
+  "brief_last_enriched": "2026-07-07"
+ },
+ {
+  "id": "08bdec62-f80f-43dd-ad82-43f80787494c",
+  "title": "Corra Foundation — Alcohol and Drugs Fund: Local Support Micro Grants",
+  "apply_url": "https://www.corra.scot/grants/alcohol-and-drugs-fund-local-support-fund-micro-grants/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "Scotland",
+  "amount_min": 1000,
+  "amount_max": 15000,
+  "deadline_cycle": [
+   {
+    "day": null,
+    "label": "Panel meeting",
+    "month": 7
+   },
+   {
+    "day": null,
+    "label": "Panel meeting",
+    "month": 9
+   },
+   {
+    "day": null,
+    "label": "Panel meeting",
+    "month": 11
+   }
+  ],
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "The fund opened to applications in June 2026 and operates as a rolling fund with no fixed closing date. Decision-making panels meet in July, September, and November 2026 and every two months thereafter. Applicants can expect to hear the outcome of their application within two months of submission.",
+  "brief_last_enriched": "2026-07-13"
+ },
+ {
+  "id": "21812fb7-2496-4dba-a2a0-3fca9ba64b14",
+  "title": "Coventry, Solihull & Warwickshire Communities Fund",
+  "apply_url": "https://www.heartofenglandcf.org/coventry-solihull-warwickshire-fund/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "Coventry, Solihull & Warwickshire",
+  "amount_min": 500,
+  "amount_max": 3000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "No specific decision timeline or application windows are stated.",
+  "brief_last_enriched": "2026-06-15"
+ },
+ {
+  "id": "bfdbf2a8-09b7-4df5-a994-4361ba2fbe3a",
+  "title": "Creative Scotland — Open Fund",
+  "apply_url": "https://www.creativescotland.com/funding",
+  "funding_index_url": "https://www.creativescotland.com/funding",
+  "funding_type": "grant",
+  "location_tag": "Scotland",
+  "amount_min": 1000,
+  "amount_max": 150000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": null,
+  "brief_last_enriched": "2026-09-04"
+ },
+ {
+  "id": "aa1e8f3f-e938-4852-9bda-3294ab4c1380",
+  "title": "Crowdfunder — Match Funding",
+  "apply_url": "https://www.crowdfunder.co.uk/funds",
+  "funding_index_url": "https://www.crowdfunder.co.uk/funds",
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": 1000,
+  "amount_max": 25000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": null,
+  "brief_last_enriched": "2026-07-29"
+ },
+ {
+  "id": "094397c0-1d2c-47dc-b112-c15d3d14bfd4",
+  "title": "Cumbria Community Foundation — Community Grants",
+  "apply_url": "https://www.cumbriafoundation.org/apply-for-a-grant/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "Cumbria",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [
+   "https://www.cumbriafoundation.org/apply-for-a-grant/grant-priorities/",
+   "https://www.cumbriafoundation.org/apply-for-a-grant/am-i-eligible/",
+   "https://www.cumbriafoundation.org/our-funds/"
+  ],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Applications are checked for eligibility and assessed against fund priorities. Some are reviewed by a grants panel, others by a donor, advisory group, or Senior Leadership Team depending on the fund and funding request size. Overall success rate is around 86%. Applicants should check specific application deadlines before submitting.",
+  "brief_last_enriched": "2026-07-08"
+ },
+ {
+  "id": "c34f6859-efee-491f-98e8-aa560f2c0b35",
+  "title": "Devon Community Foundation — Community Grants",
+  "apply_url": "https://www.devoncf.com/current-funds/",
+  "funding_index_url": "https://www.devoncf.com/current-funds/",
+  "funding_type": "grant",
+  "location_tag": "Devon",
+  "amount_min": null,
+  "amount_max": 5000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "No single standing deadline — funds open and close on rotating schedules. The foundation matches registered organisations to funds as they become available and invites applications; some funds use a randomised database shortlist.",
+  "brief_last_enriched": "2026-07-08"
+ },
+ {
+  "id": "4075bfa0-5ca1-4732-bac4-2b050c542015",
+  "title": "Digital Candle — Free Digital Advice",
+  "apply_url": "https://digitalcandle.org.uk/",
+  "funding_index_url": null,
+  "funding_type": "in_kind",
+  "location_tag": "UK",
+  "amount_min": 0,
+  "amount_max": 0,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "You are matched with an expert and arrange a convenient time to chat. No formal approval or waiting period stated.",
+  "brief_last_enriched": "2026-09-04"
+ },
+ {
+  "id": "39d92511-a517-4afe-8ff4-f3c8c5ce68b0",
+  "title": "Digital funding for small charities",
+  "apply_url": "https://www.fatbeehivefoundation.org.uk/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": 2500,
+  "deadline_cycle": [
+   {
+    "day": null,
+    "label": "Trustee meeting",
+    "month": 4
+   },
+   {
+    "day": null,
+    "label": "Trustee meeting",
+    "month": 10
+   }
+  ],
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "Applications are accepted twice per year. Trustees meet in April and October, with successful applicants notified shortly after these meetings.",
+  "brief_last_enriched": "2026-06-16"
+ },
+ {
+  "id": "ca53ae09-15ca-41a3-bd09-70d97d1b068f",
+  "title": "Dixie Rose Findlay Charitable Trust",
+  "apply_url": "https://youngcamdenfoundation.org.uk/funding/dixie-rose-findlay-charitable-trust",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": 1000,
+  "amount_max": 2500,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Applications may be submitted at any time. No formal decision timeline or meeting schedule is published. Funding amounts fluctuate annually depending on the trust's income.",
+  "brief_last_enriched": "2026-07-03"
+ },
+ {
+  "id": "b3dac130-3d54-4bb6-8714-034016f18611",
+  "title": "Doc Society — Documentary Film Funds",
+  "apply_url": "https://docsociety.org/funds/",
+  "funding_index_url": "https://docsociety.org/funds/",
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": 30000,
+  "amount_max": 150000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "Not specified in the source.",
+  "brief_last_enriched": "2026-08-06"
+ },
+ {
+  "id": "574fc073-bca6-4b01-95c0-a7dc8627c3e0",
+  "title": "Dulverton Trust Grants",
+  "apply_url": "https://www.dulverton.org/#apply",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Trustees meet at least quarterly including an autumn Board meeting for cathedral capital projects. Many more applications received than can be funded. For specific timescales and assessment process, see FAQ.",
+  "brief_last_enriched": "2026-08-01"
+ },
+ {
+  "id": "a7b1e535-b639-471c-9231-1d87cff07489",
+  "title": "DWF Foundation",
+  "apply_url": "https://dwfgroup.com/en/about-us/dwf-foundation",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "Multi-country",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "Not specified. The source does not state how long decisions take or when trustees meet.",
+  "brief_last_enriched": "2026-08-06"
+ },
+ {
+  "id": "0d90187a-15da-4625-8739-34ae7134aecd",
+  "title": "East End Community Foundation — Grants",
+  "apply_url": "https://eastendcf.org/grants/",
+  "funding_index_url": "https://eastendcf.org/grants/",
+  "funding_type": "grant",
+  "location_tag": "East London",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "Not specified. Contact the grants team at grants@eastendcf.org or 020 7345 4444 for programme-specific timelines.",
+  "brief_last_enriched": "2026-06-14"
+ },
+ {
+  "id": "a7e93d28-fc29-48ff-91fa-b06b1f30eafe",
+  "title": "East Midlands Airport Community Fund Grant",
+  "apply_url": "https://www.eastmidlandsairport.com/community/supporting-the-local-community/",
+  "funding_index_url": "https://www.eastmidlandsairport.com/community/supporting-the-local-community/",
+  "funding_type": "grant",
+  "location_tag": "East Midlands",
+  "amount_min": null,
+  "amount_max": 2000,
+  "deadline_cycle": [
+   {
+    "day": 11,
+    "label": "Application deadline",
+    "month": 4
+   },
+   {
+    "day": 6,
+    "label": "Application deadline",
+    "month": 7
+   },
+   {
+    "day": 5,
+    "label": "Application deadline",
+    "month": 10
+   }
+  ],
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Applications are assessed by the EMA Community Fund Committee. Committee meetings are held on 11 May 2026, 03 August 2026, and 02 November 2026. Application deadlines are 11 April 2026, 06 July 2026, and 05 October 2026 respectively.",
+  "brief_last_enriched": "2026-07-25"
+ },
+ {
+  "id": "dab46d8f-9841-408e-a862-489dd45493d4",
+  "title": "Edgbaston & Northfield NNS Fund for Older Adults (50+)",
+  "apply_url": "https://www.heartofenglandcf.org/nns/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "Birmingham",
+  "amount_min": null,
+  "amount_max": 10000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "Not specified on the website.",
+  "brief_last_enriched": "2026-06-15"
+ },
+ {
+  "id": "8cdb1c33-750e-4c9c-8bb4-77c997ceeefd",
+  "title": "Edgbaston & Northfield NNS Fund for Younger Adults",
+  "apply_url": "https://www.heartofenglandcf.org/nns-younger-adults/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "Birmingham",
+  "amount_min": null,
+  "amount_max": 10000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "No specific decision timeline or application deadline stated on the page.",
+  "brief_last_enriched": "2026-06-15"
+ },
+ {
+  "id": "c67c1e54-64e2-4b82-b651-952aecfa434d",
+  "title": "Employer Partnership (sports coaching apprenticeships)",
+  "apply_url": "https://coachcore.org.uk/become-an-employer/",
+  "funding_index_url": null,
+  "funding_type": "programme",
+  "location_tag": "UK",
+  "amount_min": 3500,
+  "amount_max": 3500,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Not specified. Employers are invited to register interest and get in touch for information, advice and guidance.",
+  "brief_last_enriched": "2026-06-19"
+ },
+ {
+  "id": "8f5a1cfb-e408-4dfb-a0da-ad4d632a0d4c",
+  "title": "Energy Industry Voluntary Redress Scheme",
+  "apply_url": "https://energyredress.org.uk/apply-funding",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": 20000,
+  "amount_max": null,
+  "deadline_cycle": [
+   {
+    "day": 31,
+    "label": "January review",
+    "month": 1
+   },
+   {
+    "day": 30,
+    "label": "April review",
+    "month": 4
+   },
+   {
+    "day": 31,
+    "label": "July review",
+    "month": 7
+   },
+   {
+    "day": 31,
+    "label": "October review",
+    "month": 10
+   }
+  ],
+  "banked_sources": [],
+  "brief_open_status": "between_rounds",
+  "brief_decision_timeline": "Applications are carefully reviewed by Development Officers, then top-scoring applications are reviewed by an independent expert panel. Applicants are usually notified of outcomes 8–10 weeks after a funding round closes, depending on application volume.",
+  "brief_last_enriched": "2026-08-24"
+ },
+ {
+  "id": "21f84400-4330-4267-9a62-4540617a573d",
+  "title": "Eranda Rothschild Foundation",
+  "apply_url": "https://erandarothschild.org/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "Not specified on the website.",
+  "brief_last_enriched": "2026-08-30"
+ },
+ {
+  "id": "af98107b-eda0-4294-9fcb-0e125e2733ff",
+  "title": "Esmée Fairbairn Foundation — A Fairer Future",
+  "apply_url": "https://esmeefairbairn.org.uk/apply-for-a-grant/a-fairer-future-guidance/",
+  "funding_index_url": "https://esmeefairbairn.org.uk/what-we-fund",
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Youth-led creativity programme planning to make grants in 2026. No application deadline dates specified for currently open priorities. Trustees' decision timeline not stated.",
+  "brief_last_enriched": "2026-06-17"
+ },
+ {
+  "id": "732a41ad-8df9-405f-a74f-cd25be2b64c2",
+  "title": "Esmée Fairbairn Foundation — Creative, Confident Communities",
+  "apply_url": "https://esmeefairbairn.org.uk/apply-for-a-grant/creative-confident-communities-guidance/",
+  "funding_index_url": "https://esmeefairbairn.org.uk/what-we-fund",
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": null,
+  "brief_last_enriched": "2026-06-16"
+ },
+ {
+  "id": "6bee86de-f50a-4c01-b409-d72a6f4ed686",
+  "title": "Esmée Fairbairn Foundation — Natural World",
+  "apply_url": "https://esmeefairbairn.org.uk/apply-for-a-grant/our-natural-world-guidance/",
+  "funding_index_url": "https://esmeefairbairn.org.uk/what-we-fund",
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "Application process begins with Expression of Interest (EOI) submission. No specific decision timescales or Board meeting dates are stated on this page.",
+  "brief_last_enriched": "2026-06-14"
+ },
+ {
+  "id": "7e5b73df-1210-42a9-9c24-fafeb8357cef",
+  "title": "Family Fund — Grants for Families with Disabled Children",
+  "apply_url": "https://www.familyfund.org.uk/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [
+   "https://www.familyfund.org.uk/grants/schemes/"
+  ],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Not specified. Contact Family Fund on 01904 550055 for information on application windows and decision timescales for your specific programme.",
+  "brief_last_enriched": "2026-05-19"
+ },
+ {
+  "id": "bfaa140a-ed84-4862-a455-6e48ca22e906",
+  "title": "Fine & Country Foundation — Homelessness Grants",
+  "apply_url": "https://www.fineandcountryfoundation.com/grants",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": 3000,
+  "deadline_cycle": [
+   {
+    "day": 1,
+    "label": "Spring applications open",
+    "month": 3
+   },
+   {
+    "day": 1,
+    "label": "Autumn applications open",
+    "month": 10
+   }
+  ],
+  "banked_sources": [],
+  "brief_open_status": "between_rounds",
+  "brief_decision_timeline": "Spring cycle: applications open in March, assessed in April, decisions and funds distributed by end of May. Autumn cycle: applications open in October, assessed in November, decisions and funds distributed by end of November. You will be contacted within two weeks of submission to confirm receipt and request any additional information.",
+  "brief_last_enriched": "2026-07-29"
+ },
+ {
+  "id": "3b8727a4-faa4-49b7-a162-c46212af731b",
+  "title": "Fishmongers' Company — Charitable Grants",
+  "apply_url": "https://fishmongers.org.uk/grants/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "London",
+  "amount_min": 15000,
+  "amount_max": 90000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "between_rounds",
+  "brief_decision_timeline": "After submission you will receive an acknowledgement email. The funder may request further information. Your application will be formally assessed and submitted to the next Philanthropy and Grants meeting for decision. Please note there may be delays in hearing back at all stages due to high application volumes.",
+  "brief_last_enriched": "2026-07-29"
+ },
+ {
+  "id": "2172377c-724f-4261-ae35-389af8de6867",
+  "title": "Forces in Mind Trust — Veterans Mental Health Programme",
+  "apply_url": "https://www.fim-trust.org/",
+  "funding_index_url": null,
+  "funding_type": "programme",
+  "location_tag": "UK",
+  "amount_min": 323000,
+  "amount_max": 2500000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": null,
+  "brief_last_enriched": "2026-09-04"
+ },
+ {
+  "id": "595ccabb-817c-48a1-9f3d-de394d09a458",
+  "title": "Forte Charitable Foundation — Small & Major Grants",
+  "apply_url": "https://www.fortecharitablefoundation.org.uk/our-grants",
+  "funding_index_url": "https://www.fortecharitablefoundation.org.uk/our-grants",
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": 2000,
+  "amount_max": 100000,
+  "deadline_cycle": null,
+  "banked_sources": [
+   "https://www.fortecharitablefoundation.org.uk/our-grants/small-grants",
+   "https://www.fortecharitablefoundation.org.uk/our-grants/major-grants"
+  ],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Small Grants: usually final decision within 8 weeks of application receipt. Major Grants: decided at Grants Committee meetings in January, April, July and October; allow 12–15 weeks for the entire two-stage process. Applications open year-round with no deadlines, but organisations should not apply too far in advance of when funding is needed.",
+  "brief_last_enriched": "2026-08-18"
+ },
+ {
+  "id": "c3718c76-0cb3-405b-901d-6c8ae11e93eb",
+  "title": "Foundation Scotland — Community Fund",
+  "apply_url": "https://www.foundationscotland.org.uk/apply-for-funding/",
+  "funding_index_url": "https://www.foundationscotland.org.uk/apply-for-funding/",
+  "funding_type": "grant",
+  "location_tag": "Scotland",
+  "amount_min": 500,
+  "amount_max": 25000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Each fund has its own application deadline. There may be more than one round of funding per year for some funds. Check the key dates listed for each fund carefully to avoid missing deadlines.",
+  "brief_last_enriched": "2026-08-04"
+ },
+ {
+  "id": "58982bd3-de15-4000-9c4b-a4f7a767a64d",
+  "title": "Funding for STEM activities in the North East",
+  "apply_url": "https://www.communityfoundation.org.uk/grants/funding-for-stem-activities-in-the-north-east/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "Tyne & Wear and Northumberland",
+  "amount_min": 1000,
+  "amount_max": 10000,
+  "deadline_cycle": [
+   {
+    "day": 30,
+    "month": 9
+   },
+   {
+    "day": 31,
+    "month": 12
+   },
+   {
+    "day": 31,
+    "month": 3
+   },
+   {
+    "day": 30,
+    "month": 6
+   }
+  ],
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Applications are considered on a quarterly basis with deadlines on the final day of September, December, March, and June. Decisions are sent to the donors for consideration following these quarterly deadlines.",
+  "brief_last_enriched": "2026-07-30"
+ },
+ {
+  "id": "3b836a87-fd0e-4d5c-bfdc-b44f7c793eb1",
+  "title": "Gatsby Charitable Foundation",
+  "apply_url": "https://www.gatsby.org.uk/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "Not specified in available content. Annual reports are published, but specific application windows or decision timelines are not detailed.",
+  "brief_last_enriched": "2026-06-02"
+ },
+ {
+  "id": "5dca172c-1c80-4f3e-9f89-0ba7f574e9a1",
+  "title": "General Grantmaking Programme",
+  "apply_url": "https://29may1961charity.org.uk/how-to-apply",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": [
+   {
+    "day": 31,
+    "label": "Meetings take place quarterly, normally in March",
+    "month": 3
+   },
+   {
+    "day": 30,
+    "label": "Meetings take place quarterly, normally in June",
+    "month": 6
+   },
+   {
+    "day": 30,
+    "label": "Meetings take place quarterly, normally in September",
+    "month": 9
+   },
+   {
+    "day": 31,
+    "label": "Meetings take place quarterly, normally in December",
+    "month": 12
+   }
+  ],
+  "banked_sources": [
+   "https://29may1961charity.org.uk/faqs"
+  ],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": null,
+  "brief_last_enriched": "2026-08-17"
+ },
+ {
+  "id": "ca27a805-4ee8-437d-9ae6-a90cc9e66739",
+  "title": "Glasspool — Flexible Frontline Fund",
+  "apply_url": "https://www.glasspool.org.uk/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "closed",
+  "brief_decision_timeline": "Not specified. The fund was launched in April 2024. Decision timelines and processing windows are not detailed on the website.",
+  "brief_last_enriched": "2026-07-29"
+ },
+ {
+  "id": "c80591fa-fdf6-4e2d-97a5-c14020cff1bb",
+  "title": "Grants for Good Fund",
+  "apply_url": "https://www.matthewgoodfoundation.org/amplify-fund-grants-for-good/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": 2000,
+  "amount_max": 5000,
+  "deadline_cycle": [
+   {
+    "day": 15,
+    "label": "Window closes",
+    "month": 3
+   },
+   {
+    "day": 15,
+    "label": "Window closes",
+    "month": 6
+   },
+   {
+    "day": 15,
+    "label": "Window closes",
+    "month": 9
+   },
+   {
+    "day": 15,
+    "label": "Window closes",
+    "month": 12
+   }
+  ],
+  "banked_sources": [],
+  "brief_open_status": null,
+  "brief_decision_timeline": "Applications run on a quarterly cycle. Four windows per year (Dec–Mar, Mar–Jun, Jun–Sep, Sep–Dec). Results announced within three months of each deadline. Longlisted organisations go through reference checks and informal video meetings before final shortlisting.",
+  "brief_last_enriched": "2026-04-30"
+ },
+ {
+  "id": "acbff6c1-4f2f-47a7-8f98-58d0f2072410",
+  "title": "Hatch Enterprise Business Support Programme",
+  "apply_url": "https://hatchenterprise.org/our-programmes/",
+  "funding_index_url": "https://hatchenterprise.org/our-programmes/",
+  "funding_type": "programme",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Applications are currently open. No specific decision timeline or application window end date is stated on the website.",
+  "brief_last_enriched": "2026-08-05"
+ },
+ {
+  "id": "0266d366-dec6-4bd1-8a2f-76386846dfba",
+  "title": "Hedley Foundation — Small Grants",
+  "apply_url": "https://www.hedleyfoundation.org.uk/apply-now",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": 250,
+  "amount_max": 5000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Trustees meet regularly to discuss applications. If you do not hear anything within four months of submitting an application, you should assume it has not been successful. Due to the volume of appeals, the foundation is unable to respond to queries regarding submitted applications.",
+  "brief_last_enriched": "2026-08-18"
+ },
+ {
+  "id": "ce059535-b345-4642-b6d7-59fe37581025",
+  "title": "Help the Homeless Grants",
+  "apply_url": "https://www.help-the-homeless.org.uk/applying-for-funding",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": 5000,
+  "deadline_cycle": [
+   {
+    "day": 20,
+    "month": 3
+   },
+   {
+    "day": 20,
+    "month": 6
+   },
+   {
+    "day": 20,
+    "month": 9
+   },
+   {
+    "day": 20,
+    "month": 12
+   }
+  ],
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "No specific decision timeline or trustee meeting dates are stated.",
+  "brief_last_enriched": "2026-07-27"
+ },
+ {
+  "id": "71a96f39-3506-493f-8e48-b56206b175f8",
+  "title": "Heritage and Nature Grants",
+  "apply_url": "https://www.wscf.org.uk/grants-and-support/groups/heritage-and-nature-grants/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "Wiltshire and Swindon",
+  "amount_min": 5000,
+  "amount_max": 18000,
+  "deadline_cycle": [
+   {
+    "day": null,
+    "label": "Applications typically invited in autumn",
+    "month": 10
+   },
+   {
+    "day": null,
+    "label": "Grants awarded in February or March",
+    "month": 2
+   }
+  ],
+  "banked_sources": [],
+  "brief_open_status": "between_rounds",
+  "brief_decision_timeline": "Applications are by invitation only, typically in autumn with grants awarded in February or March. Applicants have 12 months to spend the grant and complete the project, and should plan to start spending within 6 months of award.",
+  "brief_last_enriched": "2026-07-25"
+ },
+ {
+  "id": "356e9de1-76ae-43bd-999c-134b1567841c",
+  "title": "Heritage of London Trust — Restoration Grants",
+  "apply_url": "https://www.heritageoflondon.org/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "London",
+  "amount_min": 5000,
+  "amount_max": 25000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "The source does not specify decision timelines, meeting dates, or application windows.",
+  "brief_last_enriched": "2026-09-04"
+ },
+ {
+  "id": "fc678f81-2c43-46f9-83e8-fe962c65b730",
+  "title": "Historic England — Grants for Heritage",
+  "apply_url": "https://historicengland.org.uk/services-skills/grants/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "England",
+  "amount_min": 10000,
+  "amount_max": 500000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "The source does not specify application deadlines, decision timelines, or how frequently rounds open.",
+  "brief_last_enriched": "2026-07-25"
+ },
+ {
+  "id": "af59412f-f54b-4909-a113-7cc5ae92657f",
+  "title": "Horizon Europe — Cluster 2: Culture, Creativity and Inclusive Society",
+  "apply_url": "https://research-and-innovation.ec.europa.eu/funding/funding-opportunities/funding-programmes-and-open-calls/horizon-europe/cluster-2-culture-creativity-and-inclusive-society_en",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "EU and Associated Countries",
+  "amount_min": 200000,
+  "amount_max": 3000000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "Applications are submitted through the EU Funding & Tenders portal. Specific decision timelines and assessment periods for Cluster 2 calls are not detailed in this source. Consult individual call documentation on the portal for submission deadlines and evaluation timelines.",
+  "brief_last_enriched": "2026-07-18"
+ },
+ {
+  "id": "550e7273-d37c-4307-8afe-dcf45b2ec5ba",
+  "title": "Horizon Europe — Cluster 3: Civil Security for Society",
+  "apply_url": "https://research-and-innovation.ec.europa.eu/funding/funding-opportunities/funding-programmes-and-open-calls/horizon-europe/cluster-3-civil-security-society_en",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "EU",
+  "amount_min": 100000,
+  "amount_max": 2000000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "Decisions made according to multiannual work programme cycles. Current work programmes cover 2025 and 2026-27.",
+  "brief_last_enriched": "2026-08-18"
+ },
+ {
+  "id": "a7540da6-3414-4feb-8a45-c0c6cbcbd0c8",
+  "title": "Hyde Foundation Community Investment",
+  "apply_url": "https://www.hyde-housing.co.uk/hyde-foundation/",
+  "funding_index_url": "https://www.hyde-housing.co.uk/hyde-foundation/",
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "No explicit application windows, deadlines, or decision timelines are stated.",
+  "brief_last_enriched": "2026-08-07"
+ },
+ {
+  "id": "bec586cc-4172-4d15-bb05-5fd5f24c7bb9",
+  "title": "Innovate UK Innovation Loans",
+  "apply_url": "https://iuk-business-connect.org.uk/programme/innovation-loans/",
+  "funding_index_url": null,
+  "funding_type": "investment",
+  "location_tag": "UK",
+  "amount_min": 100000,
+  "amount_max": 5000000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Quarterly financial covenants are tested throughout the loan period. Project monitoring is ongoing via a Project Monitoring Officer. No explicit decision timeline stated for application assessment.",
+  "brief_last_enriched": "2026-06-02"
+ },
+ {
+  "id": "4f67eb88-7752-44bf-9c74-047046a80ed9",
+  "title": "Islington Giving — The Disability Fund",
+  "apply_url": "https://islingtongiving.org.uk/apply-for-funding/grants-programmes/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "Islington",
+  "amount_min": null,
+  "amount_max": 3000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": null,
+  "brief_last_enriched": "2026-09-06"
+ },
+ {
+  "id": "328baf9b-67e8-4241-a641-d01263a582ad",
+  "title": "John Ellerman Foundation Grants",
+  "apply_url": "https://ellerman.org.uk/apply-for-funding",
+  "funding_index_url": "https://ellerman.org.uk/apply-for-funding",
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": 10000,
+  "amount_max": 60000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "The foundation runs monthly Q&A webinars for applicants. Specific decision timelines are not published.",
+  "brief_last_enriched": "2026-08-25"
+ },
+ {
+  "id": "843e2992-bed2-4525-b29f-b48d98be2364",
+  "title": "John Lyon's Charity Grants",
+  "apply_url": "https://www.jlc.london/grants/",
+  "funding_index_url": "https://www.jlc.london/grants/",
+  "funding_type": "grant",
+  "location_tag": "London",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "Not specified in the source. Trustees meet to make funding decisions, but specific decision timelines and application windows are not stated on this overview page.",
+  "brief_last_enriched": "2026-07-25"
+ },
+ {
+  "id": "af3eed37-f766-4e08-8880-541c4c36f28b",
+  "title": "Joseph Rowntree Reform Trust",
+  "apply_url": "https://www.jrrt.org.uk/apply-for-a-grant/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": 300000,
+  "deadline_cycle": [
+   {
+    "day": 24,
+    "label": "Outline proposals – no later than 10am",
+    "month": 8
+   },
+   {
+    "day": 1,
+    "label": "Final applications – 10am",
+    "month": 9
+   },
+   {
+    "day": 2,
+    "label": "Decisions made",
+    "month": 10
+   },
+   {
+    "day": 12,
+    "label": "earliest grant start date",
+    "month": 10
+   },
+   {
+    "day": 2,
+    "label": "Outline proposals – no later than 10am",
+    "month": 11
+   },
+   {
+    "day": 9,
+    "label": "Final applications – 10am",
+    "month": 11
+   },
+   {
+    "day": 11,
+    "label": "Decisions made",
+    "month": 12
+   },
+   {
+    "day": 4,
+    "label": "earliest grant start date",
+    "month": 1
+   }
+  ],
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Small grants (up to £10,000) can be applied for at any time with a fast-response process. Larger grants considered in quarterly application rounds. In 2024, 89% of small grant applications and 64% of large grant applications were successful.",
+  "brief_last_enriched": "2026-07-28"
+ },
+ {
+  "id": "6344f1bf-cc8a-4410-a4b6-f15e200559f5",
+  "title": "JRCT — Power & Accountability Programme",
+  "apply_url": "https://www.jrct.org.uk/power-and-accountability",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": [
+   {
+    "day": 13,
+    "label": "Expression of Interest (2026 round) – now closed",
+    "month": 7
+   },
+   {
+    "day": null,
+    "label": "Full Application (2026 round) – open only to invited EOI applicants",
+    "month": 9
+   }
+  ],
+  "banked_sources": [],
+  "brief_open_status": null,
+  "brief_decision_timeline": "Not specified. Application deadlines vary by programme — check the website for current dates.",
+  "brief_last_enriched": "2026-04-16"
+ },
+ {
+  "id": "8f8bc717-1cbb-44de-abc1-fe04e0efcce2",
+  "title": "JRCT — Rights & Justice Programme",
+  "apply_url": "https://www.jrct.org.uk/rights-and-justice",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "Application deadline dates are referenced as part of the process, but specific dates are not provided in this source. Check the Application process section for current deadlines.",
+  "brief_last_enriched": "2026-07-25"
+ },
+ {
+  "id": "0a0158ee-9fbb-44d3-b991-6a39656e90a2",
+  "title": "Kelly Family Charitable Trust",
+  "apply_url": "https://kfct.org.uk/application-criteria/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": 300,
+  "amount_max": 5000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "Unsuccessful applicants must wait 1 year before resubmitting an application. Specific trustee meeting dates and decision timescales not stated.",
+  "brief_last_enriched": "2026-08-29"
+ },
+ {
+  "id": "5772cd18-ed5f-4b2e-a3cc-5325ac8689bb",
+  "title": "Kent Community Foundation Grants",
+  "apply_url": "https://www.kentcf.org.uk/funding/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "Kent and Medway",
+  "amount_min": 10000,
+  "amount_max": 100000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "Not specified on the page.",
+  "brief_last_enriched": "2026-09-04"
+ },
+ {
+  "id": "b7d19a10-753c-4294-95ad-ec43ac71595d",
+  "title": "Kusuma Trust UK — Education, Communities & Environment",
+  "apply_url": "https://www.kusumatrust.org/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": 3000,
+  "amount_max": 5000000,
+  "deadline_cycle": [
+   {
+    "day": 18,
+    "label": "Excellence Prize (2026)",
+    "month": 9
+   }
+  ],
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Not specified in available information. The Excellence Prize opens on A-level results day with applications closing 18 September (2026 round noted).",
+  "brief_last_enriched": "2026-09-05"
+ },
+ {
+  "id": "5a368644-3211-4a40-9447-d5594938a519",
+  "title": "Lambeth Community Connections Fund",
+  "apply_url": "https://www.lambeth.gov.uk/community-connections-fund",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "Lambeth",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "Not specified. The source does not state how long decisions take or when trustees meet.",
+  "brief_last_enriched": "2026-09-04"
+ },
+ {
+  "id": "a5da4678-2d9e-49ce-9c9a-599c155046ef",
+  "title": "LawWorks — Free Legal Advice for Charities",
+  "apply_url": "https://www.lawworks.org.uk/",
+  "funding_index_url": null,
+  "funding_type": "in_kind",
+  "location_tag": "England & Wales",
+  "amount_min": 0,
+  "amount_max": 0,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "No stated application window or decision timeline. LawWorks operates continuous advice clinics and programmes rather than competitive grant rounds.",
+  "brief_last_enriched": "2026-07-18"
+ },
+ {
+  "id": "9f2bbfca-91ed-4f0e-a3d2-cf9e1486ce8d",
+  "title": "Lush Charity Pot — Grants",
+  "apply_url": "https://connectedvoice.org.uk/services/support-and-development/funding/lush-charity-pot-animal-protection-environment-and-human",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": 2000,
+  "amount_max": 10000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "No information provided on decision timelines, trustee meeting dates, or application windows.",
+  "brief_last_enriched": "2026-06-25"
+ },
+ {
+  "id": "83377536-631c-4d17-9554-58516596b6d4",
+  "title": "Maudsley Charity - Building Brighter Futures",
+  "apply_url": "https://maudsleycharity.org/grants/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "South London",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "Not specified. The source does not state application windows, decision timescales, or trustee meeting dates.",
+  "brief_last_enriched": "2026-06-30"
+ },
+ {
+  "id": "6d8568db-e597-476b-9075-d856e94229ff",
+  "title": "Michael Cornish Core Grants Programme",
+  "apply_url": "https://lincolnshirecf.co.uk/grants/mccgp/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "Greater Lincolnshire",
+  "amount_min": null,
+  "amount_max": 10000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "between_rounds",
+  "brief_decision_timeline": "Applicants are generally notified within six weeks of a closing date with the outcome of their application. Payments are usually made in advance.",
+  "brief_last_enriched": "2026-07-23"
+ },
+ {
+  "id": "497400aa-4785-41b3-ae15-88e35fe38845",
+  "title": "Morrisons Foundation",
+  "apply_url": "https://www.morrisonsfoundation.com/connecting-communities-grant-request",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "England, Scotland & Wales",
+  "amount_min": null,
+  "amount_max": 20000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Not stated on the funder's page.",
+  "brief_last_enriched": "2026-08-18"
+ },
+ {
+  "id": "2828f266-4dae-4933-a041-b3d1d56c17a4",
+  "title": "National Lottery Heritage Fund — Heritage in Need: Places of Worship",
+  "apply_url": "https://www.heritagefund.org.uk/funding/strategic-initiatives/heritage-need-places-worship",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": 250000,
+  "amount_max": 10000000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "For grants up to £250,000: optional Project Enquiry available for feedback before full application. For grants over £250,000: Expression of Interest must be submitted before full application. Follow National Lottery Heritage Grants guidance for submission and assessment processes.",
+  "brief_last_enriched": "2026-07-02"
+ },
+ {
+  "id": "2eb128b6-e14f-4f6f-a4da-8b7da56c48ca",
+  "title": "National Lottery Heritage Fund — Heritage Places",
+  "apply_url": "https://www.heritagefund.org.uk/funding/strategic-initiatives/heritage-places",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK (15 designated places)",
+  "amount_min": 250000,
+  "amount_max": 10000000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "For grants up to £250,000, decisions are made monthly by staff in your nation or area. For grants over £250,000, recommendations are made by nation/area committees with final decisions made quarterly by the Board of Trustees. For grants up to £250,000, an optional project enquiry is available for feedback on your project idea. For grants over £250,000, you must first submit an expression of interest.",
+  "brief_last_enriched": "2026-08-28"
+ },
+ {
+  "id": "758d3705-6589-43c8-b87f-f01cca2e5ddc",
+  "title": "National Lottery Heritage Fund — Landscape Connections",
+  "apply_url": "https://www.heritagefund.org.uk/funding/strategic-initiatives/landscape-connections",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": 50000,
+  "amount_max": 10000000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "For grants under £250,000: decisions made monthly by senior investment or engagement staff in your nation/area. For grants over £250,000: recommendations by nation/area committees, with final Board decisions on a quarterly basis. Expression of Interest required for grants over £250,000; optional Project Enquiry available for grants up to £250,000.",
+  "brief_last_enriched": "2026-08-02"
+ },
+ {
+  "id": "72fc0c20-8491-49e4-bdc8-ad909b13cf50",
+  "title": "National Lottery Heritage Grants £10,000 to £250,000",
+  "apply_url": "https://www.heritagefund.org.uk/funding/national-lottery-heritage-grants-10k-250k",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": 10000,
+  "amount_max": 250000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Aim to give a decision within eight weeks of receiving a complete application with all supporting documents. There is no application deadline; you can apply whenever you are ready. Payments are typically made in three stages: 50% in advance, 30% in advance, and 20% in arrears.",
+  "brief_last_enriched": "2026-08-08"
+ },
+ {
+  "id": "4b989eab-79b0-4981-987d-f308f0843fdc",
+  "title": "National Lottery Heritage Grants £250,000 to £10million",
+  "apply_url": "https://www.heritagefund.org.uk/funding/national-lottery-heritage-grants-250k-10m",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": 250000,
+  "amount_max": 10000000,
+  "deadline_cycle": [
+   {
+    "day": null,
+    "label": "Quarterly deadlines for development and delivery applications",
+    "month": null
+   }
+  ],
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "You must submit an Expression of Interest first; if successful, you will be invited to apply. Deadlines for development and delivery applications are quarterly. Once your application and supporting documents are received, assessment takes approximately 12 weeks, followed by assignment to the next scheduled decision meeting.",
+  "brief_last_enriched": "2026-08-12"
+ },
+ {
+  "id": "3745ad11-a75d-4152-b604-9c95bc21915d",
+  "title": "Network for Social Change — Grants",
+  "apply_url": "https://www.thenetworkforsocialchange.org.uk/how-we-fund/",
+  "funding_index_url": "https://www.thenetworkforsocialchange.org.uk/how-we-fund/",
+  "funding_type": "grant",
+  "location_tag": "Global",
+  "amount_min": 25000,
+  "amount_max": 100000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "No specific application deadlines or decision timelines are stated. Applications require member sponsorship before formal review.",
+  "brief_last_enriched": "2026-06-25"
+ },
+ {
+  "id": "e3c90440-3ea2-4bb9-a98c-07cd5d32a2e2",
+  "title": "Newcastle Culture Investment Fund",
+  "apply_url": "https://www.communityfoundation.org.uk/grants/supporting-newcastle-based-arts-organisations-to-impact-the-health-and-wellbeing-of-newcastle-city-residents/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "Newcastle",
+  "amount_min": null,
+  "amount_max": 12000,
+  "deadline_cycle": [
+   {
+    "day": 27,
+    "month": 2
+   },
+   {
+    "day": 1,
+    "month": 5
+   },
+   {
+    "day": 6,
+    "month": 7
+   },
+   {
+    "day": 4,
+    "month": 9
+   },
+   {
+    "day": 6,
+    "month": 11
+   }
+  ],
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Decisions are made bi-monthly by an independent panel. For 2026, deadlines are 27 February, 1 May, 6 July, 4 September, and 6 November. Applications should be for projects starting within the current financial year.",
+  "brief_last_enriched": "2026-09-06"
+ },
+ {
+  "id": "fc84cf7f-1b48-4f28-86dd-71de69cd3354",
+  "title": "NHS Charities Together — Community Grants",
+  "apply_url": "https://nhscharitiestogether.co.uk/about-us/our-programmes/",
+  "funding_index_url": "https://nhscharitiestogether.co.uk/about-us/our-programmes/",
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "The source does not specify application deadlines, decision timescales, or trustee meeting dates.",
+  "brief_last_enriched": "2026-08-01"
+ },
+ {
+  "id": "c90fec54-7a88-486a-bb7f-d711784dc498",
+  "title": "Norfolk Community Foundation — Grants for Groups",
+  "apply_url": "https://www.norfolkfoundation.com/funding-support/grants/groups/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "Norfolk",
+  "amount_min": 1000,
+  "amount_max": 10000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Multiple deadlines across different funds in 2026, ranging from July to September. Programmes Advisors available Monday–Thursday 9am–5pm, Friday 9am–4pm for pre-application support. No decision timeline stated.",
+  "brief_last_enriched": "2026-07-08"
+ },
+ {
+  "id": "68a158d4-e2c7-42af-934b-fbb418f08e28",
+  "title": "North East Create Growth Programme",
+  "apply_url": "https://www.wearecreative.uk/support/regional-growth-programmes/north-east/",
+  "funding_index_url": null,
+  "funding_type": "programme",
+  "location_tag": "North East England",
+  "amount_min": null,
+  "amount_max": 150000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "The North East Create Growth Programme is a 6-9 month intensive investment readiness programme; specific application deadlines are not stated on the page.",
+  "brief_last_enriched": "2026-06-19"
+ },
+ {
+  "id": "e316f5e1-0dcb-4952-b835-02ea3326d38e",
+  "title": "Northern Ireland Screen — Production Fund",
+  "apply_url": "https://northernirelandscreen.co.uk/funding/production-funding/",
+  "funding_index_url": "https://www.northernirelandscreen.co.uk/funding/",
+  "funding_type": "grant",
+  "location_tag": "Northern Ireland",
+  "amount_min": 5000,
+  "amount_max": 1000000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "Not specified in the available information. Applicants should contact Northern Ireland Screen directly or check the Production Fund page for current application windows and decision timelines.",
+  "brief_last_enriched": "2026-07-25"
+ },
+ {
+  "id": "93e4b316-cb4b-45fb-b8a8-b74f5fb6b831",
+  "title": "Open Society Foundations — Europe & UK Programmes",
+  "apply_url": "https://www.opensocietyfoundations.org/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "Europe & Central Asia",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "Not specified on the page. The source indicates trustees or decision bodies exist but does not detail meeting frequency, application windows, or decision timescales.",
+  "brief_last_enriched": "2026-09-04"
+ },
+ {
+  "id": "52d6008d-17c3-414e-84be-909177c218ed",
+  "title": "Organisation Grants",
+  "apply_url": "https://www.debk.org.uk/organisations",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "Hammersmith & Fulham",
+  "amount_min": null,
+  "amount_max": 5000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Trustees meet regularly and consider applications across the year. Decisions are at trustees' discretion and cannot be appealed. Full report required at end of funding period showing how money was used and benefits to beneficiaries.",
+  "brief_last_enriched": "2026-06-14"
+ },
+ {
+  "id": "a6736794-2668-4ea0-aaf2-6523240c163c",
+  "title": "Peabody Community Foundation",
+  "apply_url": "https://www.peabodygroup.org.uk/our-work/peabody-community-foundation-pcf/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "London",
+  "amount_min": null,
+  "amount_max": 200000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "Not specified in the source material. Applicants should contact the foundation for information on application windows and decision timelines.",
+  "brief_last_enriched": "2026-07-25"
+ },
+ {
+  "id": "3fe7c722-1434-4bdb-8d66-48749104b5e3",
+  "title": "People's Health Trust — Health Justice Fund",
+  "apply_url": "https://www.peopleshealthtrust.org.uk/funding/health-justice-fund",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "Not stated on this page.",
+  "brief_last_enriched": "2026-07-24"
+ },
+ {
+  "id": "c2c9241d-e7f4-449d-b7ac-0418505906bf",
+  "title": "People's Trust for Endangered Species — Grants",
+  "apply_url": "https://ptes.org/grants/",
+  "funding_index_url": "https://ptes.org/grants/",
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": 10000,
+  "amount_max": 20000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": null,
+  "brief_last_enriched": "2026-09-04"
+ },
+ {
+  "id": "3a37a464-8110-4e6f-9591-92baf6254893",
+  "title": "Persimmon Homes — Persimmon Community Champions",
+  "apply_url": "https://www.persimmonhomes.com/community-champions",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": 6000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Donations are made quarterly by each office. No specific decision timescale or announcement dates are stated.",
+  "brief_last_enriched": "2026-07-18"
+ },
+ {
+  "id": "a2c9cddb-26a2-466e-a1ae-6811368e9813",
+  "title": "Pilkington Charities' Fund",
+  "apply_url": "https://cfmerseyside.org.uk/grants/pilkington-charities-fund",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "Merseyside",
+  "amount_min": null,
+  "amount_max": 20000,
+  "deadline_cycle": [
+   {
+    "day": 1,
+    "label": "Opening Date",
+    "month": 10
+   },
+   {
+    "day": 1,
+    "label": "Decision Date",
+    "month": 1
+   }
+  ],
+  "banked_sources": [],
+  "brief_open_status": "between_rounds",
+  "brief_decision_timeline": "Opening October 2026, with decisions expected in early 2027.",
+  "brief_last_enriched": "2026-07-23"
+ },
+ {
+  "id": "824677b4-075c-45a0-baed-5a36fd733135",
+  "title": "Public Sector Contracts (Social Value Act)",
+  "apply_url": "https://www.gov.uk/government/publications/social-value-act-information-and-resources",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "Not specified. This is a legislative requirement embedded in public procurement processes rather than a fund with a single application cycle.",
+  "brief_last_enriched": "2026-09-04"
+ },
+ {
+  "id": "0aac4dfb-fc85-4cdf-a3e9-79ca9dd4f7d3",
+  "title": "Q Futures Community Fund",
+  "apply_url": "https://lincolnshirecf.co.uk/grants/qfcf/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "Lincolnshire",
+  "amount_min": null,
+  "amount_max": 5000,
+  "deadline_cycle": [
+   {
+    "day": 1,
+    "month": 5
+   },
+   {
+    "day": 1,
+    "month": 11
+   }
+  ],
+  "banked_sources": [],
+  "brief_open_status": "between_rounds",
+  "brief_decision_timeline": "Closing dates are 1 May and 1 November every year. Decisions notified within eight weeks of closing date. All funds must be spent within a year of receipt or otherwise agreed.",
+  "brief_last_enriched": "2026-07-23"
+ },
+ {
+  "id": "8687dd37-8bc0-4c35-9830-aa31f9b6eeb3",
+  "title": "Rayne Foundation",
+  "apply_url": "https://www.raynefoundation.org.uk/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "between_rounds",
+  "brief_decision_timeline": "The foundation has moved to regular, targeted and time-limited calls in priority areas (replacing rolling open applications as of June 2026). Specific decision timelines and meeting schedules not stated.",
+  "brief_last_enriched": "2026-07-20"
+ },
+ {
+  "id": "970ce070-6fea-44fc-bfea-a7317776681a",
+  "title": "Reach Volunteering — TrusteeWorks",
+  "apply_url": "https://reachvolunteering.org.uk/build-dynamic-trustee-board",
+  "funding_index_url": null,
+  "funding_type": "in_kind",
+  "location_tag": "UK",
+  "amount_min": 0,
+  "amount_max": 0,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Posting a trustee role is immediate upon approval by Reach's service team. Roles are published for up to six months. Volunteers receive weekly alerts about new opportunities matching their interests. No formal grant decision timeline applies as this is a recruitment service rather than a grants programme.",
+  "brief_last_enriched": "2026-08-01"
+ },
+ {
+  "id": "35ba6bf6-d21b-4239-b490-6ed905c81898",
+  "title": "Red Hill Trust",
+  "apply_url": "https://redhilltrust.org/grant-criteria/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "South-East England",
+  "amount_min": 2000,
+  "amount_max": 7000,
+  "deadline_cycle": [
+   {
+    "day": 1,
+    "month": 2
+   },
+   {
+    "day": 1,
+    "month": 9
+   }
+  ],
+  "banked_sources": [
+   "https://redhilltrust.org/"
+  ],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Trustees meet twice annually in March and October. Applications must be submitted by 1 February or 1 September to be considered in the relevant round.",
+  "brief_last_enriched": "2026-08-28"
+ },
+ {
+  "id": "25466243-4af6-453a-9ea4-5f471919fa30",
+  "title": "Resolution Foundation Workertech Partnership",
+  "apply_url": "https://www.resolutionfoundation.org/ventures",
+  "funding_index_url": null,
+  "funding_type": "investment",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Not specified. Applications are open; no decision timeline or assessment window is detailed.",
+  "brief_last_enriched": "2026-09-04"
+ },
+ {
+  "id": "d828c430-1b85-4e6c-9634-55d7bc4346c7",
+  "title": "Rewilding Challenge Fund",
+  "apply_url": "https://www.rewildingbritain.org.uk/how-to-rewild/funding-for-rewilding/rewilding-challenge-fund",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "England, Wales & Scotland",
+  "amount_min": 50000,
+  "amount_max": 100000,
+  "deadline_cycle": [
+   {
+    "day": null,
+    "label": "Applications open 2026",
+    "month": null
+   }
+  ],
+  "banked_sources": [],
+  "brief_open_status": "between_rounds",
+  "brief_decision_timeline": "Two-stage process. Stage 1: Expressions of Interest assessed by steering group; selected projects invited to Stage 2. Stage 2: Full applications with short presentation assessed by steering group before final decision. Selected project must deliver within two years of award.",
+  "brief_last_enriched": "2026-07-26"
+ },
+ {
+  "id": "181c66e2-24d0-4ba5-addb-02ecc3c7c236",
+  "title": "Rye Fund (via SCF Main Grants)",
+  "apply_url": "https://sussexcommunityfoundation.org/grants/how-to-apply/main-grants/rye-fund/",
+  "funding_index_url": "https://sussexcommunityfoundation.org/grants",
+  "funding_type": "grant",
+  "location_tag": "Rye",
+  "amount_min": null,
+  "amount_max": 2000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "between_rounds",
+  "brief_decision_timeline": "Once a year — applications close at the SCF Main Grants September deadline.",
+  "brief_last_enriched": "2026-05-27"
+ },
+ {
+  "id": "50a75c68-f590-42ce-96b3-bc71f63faff5",
+  "title": "Sainsbury Family Charitable Trusts",
+  "apply_url": "https://www.sfct.org.uk/the-trusts/",
+  "funding_index_url": "https://www.sfct.org.uk/the-trusts/",
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": 5000,
+  "amount_max": 500000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": null,
+  "brief_last_enriched": "2026-09-04"
+ },
+ {
+  "id": "18d9e659-bfdc-4d37-9625-6e740f7b46e8",
+  "title": "ScottishPower Foundation — Annual Grants Programme",
+  "apply_url": "https://www.scottishpower.com/pages/annual_grants_programme.aspx",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": 50000,
+  "amount_max": 100000,
+  "deadline_cycle": [
+   {
+    "day": 18,
+    "label": "Annual round deadline",
+    "month": 7
+   }
+  ],
+  "banked_sources": [],
+  "brief_open_status": "closed",
+  "brief_decision_timeline": "Applications for Annual Grants Fund 2027 are closed. The application window for Annual Grants Fund 2028 is anticipated to open in July 2027. Projects must start between 31 March 2027 and 31 December 2027 and be completed within 12 months.",
+  "brief_last_enriched": "2026-09-04"
+ },
+ {
+  "id": "49dba18b-28ee-47b6-98b8-b90104057183",
+  "title": "Screen Scotland — Production & Development Funding",
+  "apply_url": "https://www.screen.scot/funding-and-support/funding/film-development-and-production-fund",
+  "funding_index_url": "https://www.screen.scot/funding-and-support/",
+  "funding_type": "investment",
+  "location_tag": "Scotland",
+  "amount_min": 5000,
+  "amount_max": 1500000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "Applications require a two-step process: first apply to the BFI Diversity Standards portal, then submit the Screen Scotland application form. You do not need to wait for a BFI response before submitting to Screen Scotland.",
+  "brief_last_enriched": "2026-09-04"
+ },
+ {
+  "id": "dd88b889-6926-42e8-9e8f-954b3b9e5af4",
+  "title": "Sigrid Rausing Trust — Grants",
+  "apply_url": "https://www.sigrid-rausing-trust.org/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "Global",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "closed",
+  "brief_decision_timeline": "No specific decision timeline or application deadlines published.",
+  "brief_last_enriched": "2026-06-25"
+ },
+ {
+  "id": "b5814b20-cfd4-46db-a8dd-3e623ed1c9fd",
+  "title": "Sir Jules Thorn Charitable Trust — General Grants",
+  "apply_url": "https://www.julesthorntrust.org.uk/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": null,
+  "brief_last_enriched": "2026-09-04"
+ },
+ {
+  "id": "ce83058b-740b-479c-9848-b97e9e2ef383",
+  "title": "Smallwood Trust",
+  "apply_url": "https://www.smallwoodtrust.org.uk/grants/",
+  "funding_index_url": "https://www.smallwoodtrust.org.uk/grants/",
+  "funding_type": "programme",
+  "location_tag": "UK",
+  "amount_min": 5000,
+  "amount_max": 30000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": null,
+  "brief_last_enriched": "2026-09-04"
+ },
+ {
+  "id": "e48bb644-14c4-4785-8825-47babba04a2b",
+  "title": "Social Investment Programme",
+  "apply_url": "https://www.postcodeinnovationtrust.org.uk/social-investment",
+  "funding_index_url": null,
+  "funding_type": "investment",
+  "location_tag": "UK",
+  "amount_min": 50000,
+  "amount_max": 300000,
+  "deadline_cycle": [
+   {
+    "day": null,
+    "label": "Four investment rounds per year (exact dates not specified)",
+    "month": null
+   }
+  ],
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "EOI response within 2 weeks. Four investment rounds per year, with a maximum of 4 full applications progressed per round. Full application review followed by in-person pitch to investment panel at Edinburgh office. Trustee approval 2 weeks after panel recommendation. Legal agreements typically take 2–3 weeks. Payment within 21 days of signed contracts and recent bank statement.",
+  "brief_last_enriched": "2026-07-16"
+ },
+ {
+  "id": "05fcaae0-a3d3-43b7-87b8-69d951b45c24",
+  "title": "Somerset Community Foundation Grants",
+  "apply_url": "https://www.somersetcf.org.uk/grants-and-funding/grants-and-funding-for-groups/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "Somerset",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": [
+   {
+    "day": 4,
+    "label": "Somerset Crisis and Resilience Alliance (EOI)",
+    "month": 9
+   },
+   {
+    "day": 24,
+    "label": "HPC Community Fund Small Grants",
+    "month": 8
+   },
+   {
+    "day": 7,
+    "label": "HPC Community Fund Open Grants",
+    "month": 9
+   },
+   {
+    "day": 12,
+    "label": "Oake Sunshine Fund",
+    "month": 10
+   },
+   {
+    "day": 21,
+    "label": "Somerset Social Investment Programme",
+    "month": 8
+   }
+  ],
+  "banked_sources": [],
+  "brief_open_status": "mixed — multiple funds open year-round with rolling deadlines; several currently closed with reopen dates in autumn 2026 or later; see individual fund pages for current status",
+  "brief_decision_timeline": "Depends on fund. Quick-turnaround funds (Stronger Communities, Wessex Water Community Fund): decisions every 2 months. Standard funds: 3-month decision cycle. Large grants (over £50,000): approximately 8 months. Crisis and Resilience Alliance: decision by end of September 2026 (expressions of interest stage).",
+  "brief_last_enriched": "2026-08-18"
+ },
+ {
+  "id": "f999cba2-95c7-4c48-940a-611ecd0e6514",
+  "title": "South Lanarkshire Renewable Energy Fund",
+  "apply_url": "https://www.southlanarkshire.gov.uk/info/200168/getting_involved_in_your_community/744/renewable_energy_fund",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "South Lanarkshire",
+  "amount_min": 75,
+  "amount_max": 20000,
+  "deadline_cycle": [
+   {
+    "day": 20,
+    "label": "Application deadline",
+    "month": 1
+   },
+   {
+    "day": 7,
+    "label": "Application deadline",
+    "month": 4
+   },
+   {
+    "day": 7,
+    "label": "Application deadline",
+    "month": 7
+   },
+   {
+    "day": 15,
+    "label": "Application deadline",
+    "month": 9
+   },
+   {
+    "day": 8,
+    "label": "Application deadline",
+    "month": 12
+   }
+  ],
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "Applications are considered by the Council's Community and Enterprise Committee. View grant deadlines and decision dates on the fund's page for current timings.",
+  "brief_last_enriched": "2026-08-10"
+ },
+ {
+  "id": "8ce6d37f-0c85-44aa-a8ff-faa71ed8ab2e",
+  "title": "South Yorkshire's Community Foundation — Grants",
+  "apply_url": "https://www.sycf.org.uk/apply/search-our-grants",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "South Yorkshire",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": [
+   {
+    "day": 31,
+    "label": "Panel review date",
+    "month": 1
+   },
+   {
+    "day": 31,
+    "label": "Panel review date",
+    "month": 3
+   },
+   {
+    "day": 30,
+    "label": "Panel review date",
+    "month": 6
+   },
+   {
+    "day": 30,
+    "label": "Panel review date",
+    "month": 9
+   },
+   {
+    "day": 31,
+    "label": "Panel review date",
+    "month": 12
+   }
+  ],
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "The foundation is transitioning to a new application system, which may affect processing timelines. Weekly MS Teams drop-in support is available on Wednesdays 4–5pm to discuss applications. Reminder emails with deadlines are sent 1 month and 1 week before the due date.",
+  "brief_last_enriched": "2026-09-06"
+ },
+ {
+  "id": "f1c42af9-3659-4b39-8fb5-4c00a8f5ce7e",
+  "title": "Southwark Council — Neighbourhood Grants",
+  "apply_url": "https://southwarkgrants.benefactorcloud.co.uk/Home/Programmes",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "Southwark",
+  "amount_min": 500,
+  "amount_max": 50000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "Source does not specify decision timescales or trustee meeting dates. For opening and closing dates, applicants are directed to a separate information page.",
+  "brief_last_enriched": "2026-08-18"
+ },
+ {
+  "id": "6d512c2b-f3b9-43d2-9b9d-83399dc49d0c",
+  "title": "SSE Match Trading Grant",
+  "apply_url": "https://www.matchtrading.com/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "No specific application deadlines or decision timescales are provided.",
+  "brief_last_enriched": "2026-08-09"
+ },
+ {
+  "id": "32949533-a7ae-4c48-a7a6-57368e083dee",
+  "title": "Strategic Legal Fund for Vulnerable Young Migrants",
+  "apply_url": "https://strategiclegalfund.org.uk/how-to-apply/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": [
+   {
+    "day": 7,
+    "month": 9
+   },
+   {
+    "day": 26,
+    "month": 10
+   }
+  ],
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Applications are assessed by ILPA's in-house team for completeness and eligibility, then considered at the next Expert Panel meeting (minimum three panellists). Final decision made by ILPA decision-making panel. Applicants normally hear within six weeks of the closing date whether funding is offered.",
+  "brief_last_enriched": "2026-07-29"
+ },
+ {
+  "id": "853a4569-c998-4f24-8450-5830a891efc6",
+  "title": "Stronger Communities Fund",
+  "apply_url": "https://www.welovemcrcharity.org/apply-for-funding/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "Manchester",
+  "amount_min": 0,
+  "amount_max": 2000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "Not specified.",
+  "brief_last_enriched": "2026-09-04"
+ },
+ {
+  "id": "33e3bb3f-4d36-4ee6-8984-b3e3befa62e5",
+  "title": "Suffolk Carers Fund",
+  "apply_url": "https://suffolkcf.org.uk/grants/suffolk-carers-fund/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "Suffolk",
+  "amount_min": null,
+  "amount_max": 30000,
+  "deadline_cycle": [
+   {
+    "day": 21,
+    "label": "Application deadline",
+    "month": 8
+   }
+  ],
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Applications open 10 July 2026. Deadline 21 August 2026 with decisions expected by the end of October 2026.",
+  "brief_last_enriched": "2026-07-23"
+ },
+ {
+  "id": "5c396ce2-92b2-40c2-96d0-2c334009acbf",
+  "title": "Suffolk Community Foundation Grants",
+  "apply_url": "https://www.suffolkcf.org.uk/grants/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "Suffolk",
+  "amount_min": 500,
+  "amount_max": 40000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "The new Plinth platform launches 1 June 2026, streamlining applications. Most funds are open all year round or have rolling deadlines. Suffolk Giving Fund awards grants four times a year. Some named funds open at specific times (e.g. Edward and Ivy Rose Hood 'now open for Expressions of Interest'). Exact decision timescales not stated.",
+  "brief_last_enriched": "2026-07-29"
+ },
+ {
+  "id": "cf23c001-d792-4938-93bb-5fd2b99286f5",
+  "title": "Supporting Newcastle based organisations to engage residents in culture",
+  "apply_url": "https://www.communityfoundation.org.uk/grants/supporting-newcastle-based-organisations-to-engage-residents-in-culture/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "Newcastle",
+  "amount_min": null,
+  "amount_max": 12000,
+  "deadline_cycle": [
+   {
+    "day": 27,
+    "month": 2
+   },
+   {
+    "day": 1,
+    "month": 5
+   },
+   {
+    "day": 6,
+    "month": 7
+   },
+   {
+    "day": 4,
+    "month": 9
+   },
+   {
+    "day": 6,
+    "month": 11
+   }
+  ],
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Decisions are made bi-monthly by an independent panel. The 2026 application deadlines are 27 February, 1 May, 6 July, 4 September, and 6 November. Projects should start within the current financial year (2026/27).",
+  "brief_last_enriched": "2026-07-30"
+ },
+ {
+  "id": "c2cbe217-c515-4c4b-b7ad-e719621c598f",
+  "title": "Sussex Community Foundation — Brighton and Hove Legacy Fund",
+  "apply_url": "https://sussexcommunityfoundation.org/grants/how-to-apply/main-grants/brighton-and-hove-legacy-fund/",
+  "funding_index_url": "https://sussexcommunityfoundation.org/grants",
+  "funding_type": "grant",
+  "location_tag": "Brighton and Hove",
+  "amount_min": null,
+  "amount_max": 5000,
+  "deadline_cycle": null,
+  "banked_sources": [
+   "https://sussexcommunityfoundation.org/grants/how-to-apply/guidance-on-applying/"
+  ],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "Most applicants receive a decision within 1–3 months, depending on application type and whether a second stage is needed. If no match is found immediately, applications are kept on file for up to 12 months. Ineligible applications or those needing further work usually receive a response within one month of submission.",
+  "brief_last_enriched": "2026-05-20"
+ },
+ {
+  "id": "24a624c6-27a3-413f-baa7-742d1cb02c60",
+  "title": "Sussex Crisis Fund — Sussex Community Foundation",
+  "apply_url": "https://sussexcommunityfoundation.org/grants/",
+  "funding_index_url": "https://sussexcommunityfoundation.org/grants/",
+  "funding_type": "grant",
+  "location_tag": "Sussex",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": null,
+  "brief_last_enriched": "2026-09-04"
+ },
+ {
+  "id": "e38ac17b-5035-44b4-bfcc-faf1090d13c7",
+  "title": "SWEF Enterprise Fund",
+  "apply_url": "https://eastendcf.org/grants/",
+  "funding_index_url": "https://eastendcf.org/grants/",
+  "funding_type": "grant",
+  "location_tag": "East London",
+  "amount_min": 500,
+  "amount_max": 2000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": null,
+  "brief_last_enriched": "2026-08-31"
+ },
+ {
+  "id": "5fcfa9df-c3f9-41c0-8701-417b90dece8e",
+  "title": "SWEF Enterprise Fund Business Grant",
+  "apply_url": "https://communityfoundationni.org/grants/swef-enterprise-fund-business-grant/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "Northern Ireland",
+  "amount_min": null,
+  "amount_max": 2000,
+  "deadline_cycle": [
+   {
+    "day": 28,
+    "label": "Monthly application deadline",
+    "month": null
+   }
+  ],
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Applications are compiled at the start of each new month. Apply before the 28th of each month for your application to be assessed in the following month. Final decision aim is within 6–8 weeks. If awarded, you will receive payment one month after accepting the terms and conditions.",
+  "brief_last_enriched": "2026-07-30"
+ },
+ {
+  "id": "168943e0-ffa2-4200-a811-a1a2630b2436",
+  "title": "SWEF Enterprise Fund Start-Up Grant",
+  "apply_url": "https://communityfoundationni.org/grants/swef-enterprise-fund-start-up-grant/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "Northern Ireland",
+  "amount_min": null,
+  "amount_max": 500,
+  "deadline_cycle": [
+   {
+    "day": 28,
+    "label": "Monthly applications deadline",
+    "month": 1
+   },
+   {
+    "day": 28,
+    "label": "Monthly applications deadline",
+    "month": 2
+   },
+   {
+    "day": 28,
+    "label": "Monthly applications deadline",
+    "month": 3
+   },
+   {
+    "day": 28,
+    "label": "Monthly applications deadline",
+    "month": 4
+   },
+   {
+    "day": 28,
+    "label": "Monthly applications deadline",
+    "month": 5
+   },
+   {
+    "day": 28,
+    "label": "Monthly applications deadline",
+    "month": 6
+   },
+   {
+    "day": 28,
+    "label": "Monthly applications deadline",
+    "month": 7
+   },
+   {
+    "day": 28,
+    "label": "Monthly applications deadline",
+    "month": 8
+   },
+   {
+    "day": 28,
+    "label": "Monthly applications deadline",
+    "month": 9
+   },
+   {
+    "day": 28,
+    "label": "Monthly applications deadline",
+    "month": 10
+   },
+   {
+    "day": 28,
+    "label": "Monthly applications deadline",
+    "month": 11
+   },
+   {
+    "day": 28,
+    "label": "Monthly applications deadline",
+    "month": 12
+   }
+  ],
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Applications are assessed within 6–8 weeks of submission. You may be invited to an online meeting with staff from Community Foundation NI and SWEF Enterprise Fund. Applications are compiled at the start of each new month, so apply before the 28th of each month for assessment in the following month.",
+  "brief_last_enriched": "2026-08-16"
+ },
+ {
+  "id": "573f008c-93bf-4ab6-a347-4fd0aeab62ea",
+  "title": "Sylvia Waddilove Foundation UK — Visual & Performing Arts Grants",
+  "apply_url": "https://pwwsolicitors.co.uk/charity-grants/waddilove-foundation-uk/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": 1000,
+  "amount_max": 5000,
+  "deadline_cycle": [
+   {
+    "day": 31,
+    "label": "Summer 2026",
+    "month": 7
+   }
+  ],
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Trustees meet four times a year and aim to consider 30 applications per meeting. All applicants are contacted following the trustee meeting with the outcome. No feedback is provided on unsuccessful applications. The Summer 2026 round deadline is 12:00 Friday 31 July 2026; the Foundation reserves the right to close early if high volume is received.",
+  "brief_last_enriched": "2026-08-01"
+ },
+ {
+  "id": "89a22fca-ffc6-44f2-be88-78eb6d92cf9b",
+  "title": "The 1989 Willan Charitable Trust",
+  "apply_url": "https://www.communityfoundation.org.uk/grants/the-1989-willan-charitable-trust/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "Tyne & Wear and Northumberland",
+  "amount_min": 1000,
+  "amount_max": 10000,
+  "deadline_cycle": [
+   {
+    "day": 15,
+    "label": "March meeting",
+    "month": 2
+   },
+   {
+    "day": 15,
+    "label": "June meeting",
+    "month": 5
+   },
+   {
+    "day": 15,
+    "label": "September meeting",
+    "month": 8
+   },
+   {
+    "day": 15,
+    "label": "December meeting",
+    "month": 11
+   }
+  ],
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "The Fund Advisory Panel meets in March, June, September, and December. Applications are considered at the next scheduled meeting if received by the 15th of the preceding month. Applicants are encouraged to submit early to ensure consideration at the next available meeting. All applicants are contacted with the outcome of their application.",
+  "brief_last_enriched": "2026-07-31"
+ },
+ {
+  "id": "05d6dbdf-d370-4d34-9a5b-80540e3b06fa",
+  "title": "The Alan and Babette Sainsbury Charitable Fund",
+  "apply_url": "https://abscharitablefund.org.uk/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "closed",
+  "brief_decision_timeline": "Grants have been approved on dates including 11/15/2022, 5/24/2022, 11/23/2021, 5/18/2021, and 11/10/2020, suggesting at least two decision cycles per year, but specific application deadlines and decision timescales are not publicly stated.",
+  "brief_last_enriched": "2026-07-22"
+ },
+ {
+  "id": "3b887829-eff4-41fe-823c-3f8155755b2e",
+  "title": "The Fore Grants Programme",
+  "apply_url": "https://thefore.org/who-we-fund/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": 45000,
+  "deadline_cycle": null,
+  "banked_sources": [
+   "https://thefore.org/what-we-offer/",
+   "https://thefore.org/apply/"
+  ],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "Application process and decision timeline not specified in the source material.",
+  "brief_last_enriched": "2026-07-28"
+ },
+ {
+  "id": "809e464b-0cdb-46cb-b844-8eca7d4644a9",
+  "title": "The Grocers' Charity — Small Grants",
+  "apply_url": "https://grocershall.co.uk/the-charity/the-charity-application",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": 5000,
+  "deadline_cycle": [
+   {
+    "day": 17,
+    "label": "Application deadline",
+    "month": 7
+   }
+  ],
+  "banked_sources": [],
+  "brief_open_status": "between_rounds",
+  "brief_decision_timeline": "Applications close 17 July 2026. Up to six weeks after the deadline, applicants receive notification of whether their initial application will proceed to stage two. If invited to stage two, decisions are made in December, March, May, or June. The funder typically takes around four months from application date to payment of successful applications.",
+  "brief_last_enriched": "2026-07-31"
+ },
+ {
+  "id": "efe671c9-9c04-48a2-bd28-587b6cf1ba92",
+  "title": "The Harry Payne Fund",
+  "apply_url": "https://www.heartofenglandcf.org/harry-payne-fund/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "Coventry & Warwickshire",
+  "amount_min": 500,
+  "amount_max": 2000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "No specific decision timeline or meeting schedule stated in the source material.",
+  "brief_last_enriched": "2026-06-30"
+ },
+ {
+  "id": "d1a4d7c2-dc0a-4f97-a910-52ab5d64d355",
+  "title": "The Headley Trust",
+  "apply_url": "https://www.sfct.org.uk/the-headley-trust/",
+  "funding_index_url": "https://www.sfct.org.uk/the-trusts",
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "The Trust identifies organisations through its own research. After submitting an enquiry form and reading guidelines, applicants await Trust review. Trustees meet to make decisions, but specific meeting dates and decision turnaround times are not stated.",
+  "brief_last_enriched": "2026-07-31"
+ },
+ {
+  "id": "1dcfec77-f432-4bc6-8cf4-bf553ea73e4e",
+  "title": "The Indigo Trust",
+  "apply_url": "https://www.sfct.org.uk/indigo-trust/",
+  "funding_index_url": "https://www.sfct.org.uk/the-trusts",
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "Not specified in available information.",
+  "brief_last_enriched": "2026-08-10"
+ },
+ {
+  "id": "c94379cc-bd70-482c-a3cd-76d406e9908f",
+  "title": "The Julia Rausing Trust — Grants",
+  "apply_url": "https://juliarausingtrust.org/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": 27500,
+  "amount_max": 2500000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "Not stated in available information.",
+  "brief_last_enriched": "2026-09-04"
+ },
+ {
+  "id": "b9dd4a92-ace3-4223-8190-7d8e949537d2",
+  "title": "The Linbury Trust",
+  "apply_url": "https://linburytrust.org.uk/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": 10000,
+  "amount_max": 150000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "closed",
+  "brief_decision_timeline": "The funder does not accept unsolicited applications and instead identifies organisations through partnership and research.",
+  "brief_last_enriched": "2026-08-16"
+ },
+ {
+  "id": "4317a983-3349-41ac-ade4-367dbec4b59b",
+  "title": "The Mark Leonard Trust",
+  "apply_url": "https://www.sfct.org.uk/the-mark-leonard-trust/",
+  "funding_index_url": "https://www.sfct.org.uk/the-trusts",
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": 10000,
+  "amount_max": 100000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "closed",
+  "brief_decision_timeline": "Not specified. The Trust publishes open grants data on 360Giving for further details on previous grants.",
+  "brief_last_enriched": "2026-08-15"
+ },
+ {
+  "id": "5bb5658f-c526-4fc2-8dbc-a8162056574d",
+  "title": "The Tedworth Charitable Trust",
+  "apply_url": "https://www.sfct.org.uk/the-tedworth-charitable-trust/",
+  "funding_index_url": "https://www.sfct.org.uk/the-trusts",
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "Not specified. The funder states that applications are generally invited by Trustees or initiated at their request, suggesting a non-standard timeline.",
+  "brief_last_enriched": "2026-08-14"
+ },
+ {
+  "id": "5f1c3fd2-c8e9-451d-a0ef-1ae501ce0093",
+  "title": "The Three Guineas Trust",
+  "apply_url": "https://www.sfct.org.uk/the-three-guineas-trust/",
+  "funding_index_url": "https://www.sfct.org.uk/the-trusts",
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": 1000,
+  "amount_max": 20000,
+  "deadline_cycle": [
+   {
+    "day": null,
+    "label": "Annual holiday play schemes round",
+    "month": null
+   },
+   {
+    "day": null,
+    "label": "Biennial access to justice round",
+    "month": null
+   }
+  ],
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "Annual grants round for holiday play schemes. Biennial grants round for access to justice projects. Long-term selective funding for other projects identified through research. Specific decision dates and timescales not provided.",
+  "brief_last_enriched": "2026-07-27"
+ },
+ {
+  "id": "1ffe7161-587d-48ce-86a2-39a94a9120ad",
+  "title": "The Weavers' Company Charitable Funds",
+  "apply_url": "https://www.weavers.org.uk/charity/charitable-grants/guidelines/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": 15000,
+  "deadline_cycle": [
+   {
+    "day": null,
+    "label": "February deadline",
+    "month": 2
+   },
+   {
+    "day": null,
+    "label": "June deadline",
+    "month": 6
+   },
+   {
+    "day": null,
+    "label": "October deadline",
+    "month": 10
+   }
+  ],
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "The Committee meets in February, June, and October. Applications can take up to 4 months from date of receipt to process through assessment stages. You will be advised within 2 weeks of a closing date if shortlisted, and within 2 weeks of the Committee meeting of the final decision.",
+  "brief_last_enriched": "2026-09-04"
+ },
+ {
+  "id": "036a2937-bb8f-4f9e-9840-33a4bd450b33",
+  "title": "Tim Parry Johnathan Ball Foundation Grants",
+  "apply_url": "https://timparryjohnathanballfoundation.org.uk/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": null,
+  "brief_last_enriched": "2026-06-15"
+ },
+ {
+  "id": "97352e7c-d16c-4a1c-98a6-ee508bce182b",
+  "title": "Toy Trust",
+  "apply_url": "https://www.toytrust.co.uk/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": 5000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": null,
+  "brief_last_enriched": "2026-09-04"
+ },
+ {
+  "id": "60206220-abaa-45e2-9534-bc6d41e94940",
+  "title": "Trust for London — Poverty & Inequality Grants",
+  "apply_url": "https://www.trustforlondon.org.uk/funding/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "London",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "Not stated in current guidance.",
+  "brief_last_enriched": "2026-08-17"
+ },
+ {
+  "id": "0e506d16-9e5c-47e0-aae9-7f3444b3646c",
+  "title": "TrustLaw — Pro Bono Legal Programme",
+  "apply_url": "https://www.trust.org/trustlaw/",
+  "funding_index_url": null,
+  "funding_type": "in_kind",
+  "location_tag": "Global",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Not specified. The process involves scoping a legal request in an initial call, drafting a clear overview of the matter, sharing the request with legal members, collating offers of assistance, and connecting the organisation with a chosen legal team.",
+  "brief_last_enriched": "2026-08-07"
+ },
+ {
+  "id": "f4cc6956-affd-496c-9954-09c189ddea02",
+  "title": "Ulverscroft Foundation",
+  "apply_url": "https://www.ulverscroft-foundation.org.uk/grants/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Not specified in the source material.",
+  "brief_last_enriched": "2026-07-18"
+ },
+ {
+  "id": "b4552ae7-42bd-44c2-b42a-e3e0a05271f4",
+  "title": "Variety — The Children's Charity",
+  "apply_url": "https://www.variety.org.uk/grants/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": 500,
+  "amount_max": 20000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "Not specified in the source material.",
+  "brief_last_enriched": "2026-07-21"
+ },
+ {
+  "id": "b3086bff-58af-4ffa-836c-855cf136a499",
+  "title": "Vicar's Relief Fund — St Martin-in-the-Fields Charity",
+  "apply_url": "https://smitfc.org/the-vicars-relief-fund/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "London",
+  "amount_min": 350,
+  "amount_max": 500,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "Grants are issued quickly and efficiently via experienced support workers, though specific decision timescales are not detailed.",
+  "brief_last_enriched": "2026-08-18"
+ },
+ {
+  "id": "7b37ff2e-13f0-4b71-87bf-24b0b6fdcd80",
+  "title": "Virgin Money Foundation",
+  "apply_url": "https://virginmoneyfoundation.org.uk/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": null,
+  "brief_last_enriched": "2026-09-04"
+ },
+ {
+  "id": "e84785f4-a275-4f0b-9bf5-0c2924003319",
+  "title": "W F Southall Trust — Grants",
+  "apply_url": "https://southalltrust.org/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": 1000,
+  "amount_max": 5000,
+  "deadline_cycle": null,
+  "banked_sources": [
+   "https://southalltrust.org/whatwesupport/",
+   "https://southalltrust.org/how-to-apply/"
+  ],
+  "brief_open_status": "open",
+  "brief_decision_timeline": "The Trust now has application deadlines (specific dates available via the website). All applicants should receive an email receipt following submission. Due to high volume, no indication of approval chances is given—outcomes depend on how your application compares to others at the time of assessment.",
+  "brief_last_enriched": "2026-06-30"
+ },
+ {
+  "id": "b99ad2bd-ae8f-41a5-8316-70e51052aa75",
+  "title": "W.G. Edwards Charitable Foundation Grants (Older People)",
+  "apply_url": "https://www.wgedwardscharitablefoundation.org.uk/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": 1000,
+  "amount_max": 3000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "The source states 'Check when to apply' but does not display specific application windows or decision timelines on the available content. Contact the Foundation or check their website for current deadlines.",
+  "brief_last_enriched": "2026-06-09"
+ },
+ {
+  "id": "05aa2cda-e64d-4f21-8b89-0727637d5515",
+  "title": "Waterloo Foundation Grant Programmes",
+  "apply_url": "https://waterloofoundation.org.uk/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK & Global",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "The source does not specify decision timescales or trustee meeting dates. Check 'Active Calls and Deadlines' and individual application guidelines for current deadlines.",
+  "brief_last_enriched": "2026-08-17"
+ },
+ {
+  "id": "20fe8bd9-20ad-4536-bfc6-cac264c653c5",
+  "title": "Wellcome Trust — Public Engagement & Society and Ethics Grants",
+  "apply_url": "https://wellcome.org/grant-funding",
+  "funding_index_url": "https://wellcome.org/grant-funding",
+  "funding_type": "grant",
+  "location_tag": "Worldwide",
+  "amount_min": 5000,
+  "amount_max": 500000,
+  "deadline_cycle": null,
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "Applications are managed through the Wellcome Funding Platform. The source does not specify decision timelines or application windows for this particular scheme.",
+  "brief_last_enriched": "2026-08-23"
+ },
+ {
+  "id": "61989785-35af-40d7-9961-011cf4711f44",
+  "title": "William A Cadbury Charitable Trust Grants",
+  "apply_url": "https://wa-cadbury.org.uk/grants-policy/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "UK",
+  "amount_min": 250,
+  "amount_max": 2000,
+  "deadline_cycle": [
+   {
+    "day": null,
+    "label": "Large grants trustee meeting",
+    "month": 5
+   },
+   {
+    "day": null,
+    "label": "Large grants trustee meeting",
+    "month": 11
+   }
+  ],
+  "banked_sources": [],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "Small grant applications (postal submissions and requests under £5,000) are considered monthly. Trustees meet in May and November for large grants. Applicants selected for consideration at the next half-yearly meeting will be notified in the month prior to the meeting. All applicants receive a response whether or not successful.",
+  "brief_last_enriched": "2026-08-23"
+ },
+ {
+  "id": "581fab6f-e73b-4584-82fd-d0ab9f355aed",
+  "title": "Zochonis Charitable Trust — Grants",
+  "apply_url": "https://www.zochonischaritabletrust.com/how-to-apply/",
+  "funding_index_url": null,
+  "funding_type": "grant",
+  "location_tag": "Manchester",
+  "amount_min": null,
+  "amount_max": null,
+  "deadline_cycle": null,
+  "banked_sources": [
+   "https://www.zochonischaritabletrust.com/areas-of-focus/"
+  ],
+  "brief_open_status": "unknown",
+  "brief_decision_timeline": "The trust considers funding for their current financial year only. No explicit decision timeline or trustee meeting dates are stated.",
+  "brief_last_enriched": "2026-07-08"
+ }
+]
