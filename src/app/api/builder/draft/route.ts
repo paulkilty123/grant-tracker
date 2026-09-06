@@ -21,7 +21,7 @@ import type { ApplicationQuestion, CoreContentBlock } from '@/lib/builder/types'
 export const dynamic     = 'force-dynamic'
 export const maxDuration = 120
 
-const DRAFT_MODEL = 'claude-sonnet-4-6'
+const DRAFT_MODEL = 'claude-sonnet-5'   // was claude-sonnet-4-6 until 2026-09-06: newer, and a third cheaper per token
 
 const VOICE_MARKER = '---VOICE---'
 
