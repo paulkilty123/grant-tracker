@@ -17,6 +17,15 @@ import { getAdminDb } from '../src/lib/admin/admin-db'
 import { RESULTS, type Verdict } from './verdicts-lib-2026-09-07'
 
 const SNAPSHOT = process.argv.includes('--snapshot')
+
+// State changes this job did not make and has acknowledged. The alarm exists to
+// catch THIS job moving a row; another session acting on a verdict is a correct
+// outcome, and silencing it wholesale would retire the alarm. So each one is
+// named here with who did it and why, and anything not on the list still fails.
+const ACKNOWLEDGED: Record<string, string> = {
+  '29d000d3-e3fa-439e-89f8-e03109af0f44': 'Foundation East: rejected by grant-tracker-be on 7 Sept after batch 2 reported the domain takeover',
+  'e31c28ad-10a0-4d7c-9076-33c8f8cf91e9': 'FSI: rejected by grant-tracker-be on 7 Sept after batch 2 reported the dead host',
+}
 const LIST = join(__dirname, '..', 'docs', 'handoffs', 'verdict-rows-2026-09-07.json')
 const BASELINE = join(__dirname, '..', 'docs', 'handoffs', 'verdict-state-baseline-2026-09-07.json')
 
@@ -53,19 +62,24 @@ async function main() {
   const after = await readState(ids)
 
   const moved: string[] = []
+  const acknowledged: string[] = []
   const gone: string[] = []
   for (const id of ids) {
     const b = before[id], a = after[id]
     if (!b) { moved.push(`${id}: not in the baseline`); continue }
     if (!a) { gone.push(`${b.title} (${id})`); continue }
     if (b.is_active !== a.is_active || b.pipeline_state !== a.pipeline_state || b.rejection_reason !== a.rejection_reason) {
-      moved.push(`${a.title} (${id}): is_active ${b.is_active}->${a.is_active}, state ${b.pipeline_state}->${a.pipeline_state}, reject ${JSON.stringify(b.rejection_reason)}->${JSON.stringify(a.rejection_reason)}`)
+      const line = `${a.title} (${id}): is_active ${b.is_active}->${a.is_active}, state ${b.pipeline_state}->${a.pipeline_state}`
+      if (ACKNOWLEDGED[id]) acknowledged.push(`${line}  [${ACKNOWLEDGED[id]}]`)
+      else moved.push(`${line}, reject ${JSON.stringify(b.rejection_reason)}->${JSON.stringify(a.rejection_reason)}`)
     }
   }
 
   console.log(`rows in the job          ${ids.length}`)
   console.log(`state moved              ${moved.length}   <- must be zero, and this check can fail`)
   for (const m of moved) console.log(`   ${m}`)
+  console.log(`moved by someone else    ${acknowledged.length}   <- named, not silenced`)
+  for (const m of acknowledged) console.log(`   ${m}`)
   console.log(`no longer readable       ${gone.length}`)
   for (const g of gone) console.log(`   ${g}`)
 

@@ -373,6 +373,192 @@
     "HOLD    Henry Smith Foundation — Career Ready — Career Ready and Maternity Equity are both cards on this one page, and the page carries exactly one \"Coming Soon\" badge and one \"Closed\" badge. Which belongs to which does not survive a text read, and guessing would put a wrong status on one of them. Needs a browser look; the two rows should be decided together.",
     "HOLD    Henry Smith Foundation — Maternity Equity — Paired with the Career Ready row above and blocked the same way. This row already records \"Listed as Coming Soon; no opening date published\", which is a park only if a date appears; today the page still gives none."
    ]
+  },
+  {
+   "batch": 3,
+   "pile": "A",
+   "verdicts": [
+    {
+     "id": "9e3b71a8-1f2c-40ea-8d03-31bcb0c82e99",
+     "title": "Horsham District Council — Community Grant",
+     "pile": "A",
+     "verdict": "hold",
+     "quote": "",
+     "url": "https://www.horsham.gov.uk/community/grants-for-community-projects/horsham-district-council-community-grant",
+     "tidied": [],
+     "for_paul": "HTTP 403 behind a Cloudflare interstitial, so nothing could be read today. Its amount_min and amount_max are also admin-pinned, so even a good read could not tidy them."
+    },
+    {
+     "id": "93f38ed1-ca74-4b6f-9249-51c95a134006",
+     "title": "Jobs and Skills Funding Opportunities",
+     "pile": "A",
+     "verdict": "hold",
+     "quote": "Although the Greater London Authority does not manage the process of becoming a subcontractor, there are organisations which have been awarded Adult Skills Fund funding and may have subcontracting opportunities.",
+     "url": "https://www.london.gov.uk/programmes-strategies/jobs-and-skills/funding",
+     "tidied": [],
+     "for_paul": "Second GLA row in this pile pointing at a funding index rather than a fund. 287KB of site navigation, no single programme, and the closest thing to a route is a note that the GLA does not manage subcontracting. Relink to a named programme or reject."
+    },
+    {
+     "id": "6f3892eb-3e7f-4976-b60b-8d46ca476573",
+     "title": "Key Fund Social Investment Loans",
+     "pile": "A",
+     "verdict": "reject",
+     "code": "duplicate",
+     "quote": "We invest in the community and social enterprises that have traditionally been excluded; turned down by mainstream banks and building societies.",
+     "url": "https://thekeyfund.co.uk/apply/",
+     "tidied": [],
+     "for_paul": "Duplicate of the live row b818a116, Key Fund Flexible Finance. Key Fund has eleven rows in the catalogue, seven of them live and each a named product; this one points at the shared apply page. A row with this exact apply_url (d3b226dc) has already been rejected once."
+    },
+    {
+     "id": "27f913f2-d5d1-4773-a410-35ceb8eeba18",
+     "title": "LawWorks Clinics Network",
+     "pile": "A",
+     "verdict": "reject",
+     "code": "duplicate",
+     "quote": "Where a not-for-profit organisation needs or thinks it may need legal assistance, we can match eligible organisations with a volunteer solicitor. The advice is given for free (pro bono).",
+     "url": "https://www.lawworks.org.uk/legal-advice-not-profits/free-legal-assistance",
+     "tidied": [],
+     "for_paul": "Duplicate of the live row a5da4678, LawWorks — Free Legal Advice for Charities. Worth noting before rejecting: the live row points at lawworks.org.uk, the bare home page, while these two hidden rows point at the pages that actually describe the service and its eligibility. Relinking the live row to one of them would be an improvement."
+    },
+    {
+     "id": "f44a6141-5b8f-43b8-81b0-f1d5ba0930da",
+     "title": "LawWorks Not-for-Profits Programme",
+     "pile": "A",
+     "verdict": "reject",
+     "code": "duplicate",
+     "quote": "The Not-for-Profits Programme brokers legal advice on a wide range of legal issues to small not-for-profit organisations meeting our eligibility criteria.",
+     "url": "https://www.lawworks.org.uk/legal-advice-not-profits",
+     "tidied": [],
+     "for_paul": "Second LawWorks duplicate of a5da4678, and this is the page I would relink the live row to: it names who is helped, the two things offered, and links the eligibility criteria."
+    },
+    {
+     "id": "5fa1e39d-b4bd-4376-a339-b72b33077a2a",
+     "title": "Leathersellers' Foundation Main Grants",
+     "pile": "A",
+     "verdict": "hold",
+     "quote": "This programme closed to expressions of interest at 5pm on Thursday 30th April 2026. 516 expressions of interest were received.",
+     "url": "https://leathersellers.org/grant/charity-main-grants/",
+     "tidied": [],
+     "for_paul": "A strong fund, now in its fifth year: four-year unrestricted grants of £20,000 to £25,000 a year for UK charities and CIOs with income of £200,000 to £2 million. This year's cycle is fully dated through to December 2026 decisions, and the page gives no date for the next expression-of-interest window. Hold for the 2027 dates, or park it once they appear."
+    },
+    {
+     "id": "96c68ed0-0147-4aa1-9b4f-098a80bb7523",
+     "title": "Macmillan Q Lab — Holistic Cancer Care",
+     "pile": "A",
+     "verdict": "hold",
+     "quote": "",
+     "url": "https://www.macmillan.org.uk/about-us/what-we-do/macmillan-funding-grants/q-lab",
+     "tidied": [],
+     "for_paul": "The page returns 329KB in which the readable text is almost entirely analytics tracking attributes; no programme content survives a text read. Needs a browser look."
+    },
+    {
+     "id": "56a8cc5f-a0a2-4d6b-af11-fa60b7f0e453",
+     "title": "Microsoft 365 Nonprofit Cloud Subscription (via Charity Digital)",
+     "pile": "A",
+     "verdict": "reject",
+     "code": "duplicate",
+     "quote": "Please log in or Register to access these exclusive discounts.",
+     "url": "https://charitydigital.org.uk/products/",
+     "tidied": [],
+     "for_paul": "Duplicate of the live row 571f93e2, Charity Digital Exchange — Software Donations. The specific product URL now redirects to the login-walled catalogue index, so there is no longer a page for this one subscription."
+    },
+    {
+     "id": "f6b2ac5d-3004-452c-81e6-2d2fa32ccae3",
+     "title": "Microsoft Nonprofit Software Donations Programme",
+     "pile": "A",
+     "verdict": "hold",
+     "quote": "",
+     "url": "https://www.techsoup.uk/partners/microsoft/faqs",
+     "tidied": [],
+     "for_paul": "Reject as a duplicate of the live row 3c2c6766, Microsoft for Nonprofits, unless you disagree — recorded as a hold only because its URL returns HTTP 200 with a 205-byte empty body (the same TechSoup shell the amounts job found), so there is no sentence from the page to cite."
+    },
+    {
+     "id": "5afd77c4-190b-4387-9be1-46a05d8bfe7d",
+     "title": "National Grid Community Grants",
+     "pile": "A",
+     "verdict": "hold",
+     "quote": "",
+     "url": "https://www.nationalgrid.com/community-grants",
+     "tidied": [],
+     "for_paul": "Reject as a duplicate of the live row 057225d1, Community Grant Programme (National Grid Electricity Transmission), unless you disagree — recorded as a hold because both National Grid URLs sit behind the same Cloudflare 403 and neither could be read today."
+    },
+    {
+     "id": "45d5140a-8536-4331-b4d3-57462e108a9f",
+     "title": "Nationwide Foundation Grants Programme",
+     "pile": "A",
+     "verdict": "hold",
+     "quote": "From local neighbourhoods to Parliament, we are making a difference by demonstrating what good housing looks like, generating compelling evidence for decision makers and putting people and home at the heart of everything we do.",
+     "url": "https://nationwidefoundation.org.uk/",
+     "tidied": [],
+     "for_paul": "apply_url is the foundation home page, which describes its housing strategy and names no programme, no route and no figure. A home page cannot carry a complete brief. Relink to a named programme if one is open, or reject."
+    },
+    {
+     "id": "ded31718-e5bd-4062-b1cd-2ddf5baa47dc",
+     "title": "Neighbourhood Fund",
+     "pile": "A",
+     "verdict": "park",
+     "quote": "The winter Round opens for applications on 23rd November and the deadline to apply is midday, 11th January.",
+     "url": "https://www.dorsetcommunityfoundation.org/funds/neighbourhood-fund/",
+     "tidied": [
+      "next_open_date",
+      "next_open_date_parsed",
+      "is_rolling"
+     ]
+    },
+    {
+     "id": "08a08c30-453d-469f-9ce2-65a2dafbe0d8",
+     "title": "Peter Kershaw Trust — Ordinary Grants",
+     "pile": "A",
+     "verdict": "hold",
+     "quote": "",
+     "url": "https://peterkershawtrust.org/ordinary-grants",
+     "tidied": [],
+     "for_paul": "The page returns 1MB and nothing about eligibility, amounts or dates survives a text read. Needs a browser look."
+    },
+    {
+     "id": "ec676c7f-93b3-404c-aaf9-7bb1ec71b83b",
+     "title": "Postcode Society Trust (South England including London)",
+     "pile": "A",
+     "verdict": "park",
+     "quote": "Our funding rounds for 2026 are now closed. Funding rounds for 2027 will be published in the new year.",
+     "url": "https://www.postcodesocietytrust.org.uk/apply-for-a-grant",
+     "tidied": [
+      "next_open_date",
+      "next_open_date_parsed",
+      "is_rolling"
+     ]
+    },
+    {
+     "id": "6e6d726e-0b1b-41bb-a282-2eb5c3853ac6",
+     "title": "Robertson Trust Large Grants",
+     "pile": "A",
+     "verdict": "park",
+     "quote": "We are pleased to announce that we will re-open our Large Grants fund on Monday, 14th September 2026.",
+     "url": "https://www.therobertsontrust.org.uk/funding/types-of-funding/large-grants/",
+     "tidied": [
+      "next_open_date",
+      "next_open_date_parsed",
+      "is_rolling"
+     ]
+    }
+   ],
+   "paul_list": [
+    "PARK    Neighbourhood Fund",
+    "PARK    Postcode Society Trust (South England including London)",
+    "PARK    Robertson Trust Large Grants",
+    "REJECT  Key Fund Social Investment Loans (duplicate) — Duplicate of the live row b818a116, Key Fund Flexible Finance. Key Fund has eleven rows in the catalogue, seven of them live and each a named product; this one points at the shared apply page. A row with this exact apply_url (d3b226dc) has already been rejected once.",
+    "REJECT  LawWorks Clinics Network (duplicate) — Duplicate of the live row a5da4678, LawWorks — Free Legal Advice for Charities. Worth noting before rejecting: the live row points at lawworks.org.uk, the bare home page, while these two hidden rows point at the pages that actually describe the service and its eligibility. Relinking the live row to one of them would be an improvement.",
+    "REJECT  LawWorks Not-for-Profits Programme (duplicate) — Second LawWorks duplicate of a5da4678, and this is the page I would relink the live row to: it names who is helped, the two things offered, and links the eligibility criteria.",
+    "REJECT  Microsoft 365 Nonprofit Cloud Subscription (via Charity Digital) (duplicate) — Duplicate of the live row 571f93e2, Charity Digital Exchange — Software Donations. The specific product URL now redirects to the login-walled catalogue index, so there is no longer a page for this one subscription.",
+    "HOLD    Horsham District Council — Community Grant — HTTP 403 behind a Cloudflare interstitial, so nothing could be read today. Its amount_min and amount_max are also admin-pinned, so even a good read could not tidy them.",
+    "HOLD    Jobs and Skills Funding Opportunities — Second GLA row in this pile pointing at a funding index rather than a fund. 287KB of site navigation, no single programme, and the closest thing to a route is a note that the GLA does not manage subcontracting. Relink to a named programme or reject.",
+    "HOLD    Leathersellers' Foundation Main Grants — A strong fund, now in its fifth year: four-year unrestricted grants of £20,000 to £25,000 a year for UK charities and CIOs with income of £200,000 to £2 million. This year's cycle is fully dated through to December 2026 decisions, and the page gives no date for the next expression-of-interest window. Hold for the 2027 dates, or park it once they appear.",
+    "HOLD    Macmillan Q Lab — Holistic Cancer Care — The page returns 329KB in which the readable text is almost entirely analytics tracking attributes; no programme content survives a text read. Needs a browser look.",
+    "HOLD    Microsoft Nonprofit Software Donations Programme — Reject as a duplicate of the live row 3c2c6766, Microsoft for Nonprofits, unless you disagree — recorded as a hold only because its URL returns HTTP 200 with a 205-byte empty body (the same TechSoup shell the amounts job found), so there is no sentence from the page to cite.",
+    "HOLD    National Grid Community Grants — Reject as a duplicate of the live row 057225d1, Community Grant Programme (National Grid Electricity Transmission), unless you disagree — recorded as a hold because both National Grid URLs sit behind the same Cloudflare 403 and neither could be read today.",
+    "HOLD    Nationwide Foundation Grants Programme — apply_url is the foundation home page, which describes its housing strategy and names no programme, no route and no figure. A home page cannot carry a complete brief. Relink to a named programme if one is open, or reject.",
+    "HOLD    Peter Kershaw Trust — Ordinary Grants — The page returns 1MB and nothing about eligibility, amounts or dates survives a text read. Needs a browser look."
+   ]
   }
  ]
 }
