@@ -559,6 +559,231 @@
     "HOLD    Nationwide Foundation Grants Programme — apply_url is the foundation home page, which describes its housing strategy and names no programme, no route and no figure. A home page cannot carry a complete brief. Relink to a named programme if one is open, or reject.",
     "HOLD    Peter Kershaw Trust — Ordinary Grants — The page returns 1MB and nothing about eligibility, amounts or dates survives a text read. Needs a browser look."
    ]
+  },
+  {
+   "batch": 4,
+   "pile": "A",
+   "verdicts": [
+    {
+     "id": "ec46883d-f99b-4295-a61c-6b6eb06c2aa1",
+     "title": "ROCB CDFI Loans",
+     "pile": "A",
+     "verdict": "hold",
+     "quote": "We're able to lend between £5k and £25k for up to 18 months at a rate of 2% interest per month.",
+     "url": "https://www.rocbf.co.uk/cashflow-loans-for-not-for-profits/",
+     "tidied": [],
+     "for_paul": "The row's domain rocbf.org.uk no longer resolves, but Robert Owen Community Banking is trading at rocbf.co.uk with a Community Cashflow Fund for charities and social enterprises in Wales (£5,000 to £25,000, 18 months, 2% a month) and a Community Energy Fund. An archived row, 0362621b, already holds rocbf.co.uk. Relink this row to the cashflow fund, or revive the archived one, or split the lender into its two not-for-profit products."
+    },
+    {
+     "id": "08819057-94cd-4b9c-879f-af3652675886",
+     "title": "Salesforce Nonprofit Cloud - Power of Us Programme",
+     "pile": "A",
+     "verdict": "reject",
+     "code": "duplicate",
+     "quote": "Through the Power of Us Programme , any eligible nonprofit receives 10 Salesforce Nonprofit Cloud or Sales/Service Cloud licences, at no cost.",
+     "url": "https://www.salesforce.com/uk/nonprofit/pricing/",
+     "tidied": [],
+     "for_paul": "Duplicate of the live row 53dd63b0, Salesforce Power of Us Program. A relink for the list: the live row points at salesforce.com/nonprofit/ and this page is the one that states the ten free licences and the three steps to claim them."
+    },
+    {
+     "id": "7948612a-70f9-4cce-82a0-c14d9a53e2bd",
+     "title": "Screwfix Foundation Grants",
+     "pile": "A",
+     "verdict": "hold",
+     "quote": "",
+     "url": "https://www.screwfixfoundation.com/",
+     "tidied": [],
+     "for_paul": "screwfixfoundation.com resolves but refuses the TLS handshake, from a script and from a real browser, so nothing could be read today. The Screwfix Foundation is a registered charity and this looks like an outage rather than a closure. Re-check before rejecting."
+    },
+    {
+     "id": "8e5f63e4-85d9-47db-b278-56263c8ab4f7",
+     "title": "Severn Trent Community Fund",
+     "pile": "A",
+     "verdict": "reject",
+     "code": "duplicate",
+     "quote": "The Severn Trent Community Fund is supporting local charities and community groups with £2million a year.",
+     "url": "https://www.stwater.co.uk/about-us/severn-trent-community-fund/",
+     "tidied": [],
+     "for_paul": "Duplicate of the live row 7bda3614, Severn Trent Community Fund Core Funding Grant. This row is the fund's index page, which states no eligibility, no amount and no way in. Separately for the dedup list: 1ef69197 and f4225849 are both New Project Funding on the same URL."
+    },
+    {
+     "id": "9f87b6cf-69ce-48e3-8d21-a17361ae0084",
+     "title": "Simon Gibson Charitable Trust — Grants",
+     "pile": "A",
+     "verdict": "hold",
+     "quote": "The Trust does not provide support to Individuals or organisations applying on behalf of individuals Students seeking sponsorship for educational or gap-year purposes Conferences, seminars or workshops Overseas charities, other than conservation charities or those known to the Trustees Community Interest Companies",
+     "url": "https://sgctrust.org.uk/eligibility/",
+     "tidied": [],
+     "for_paul": "Two admin-held fields the page now contradicts. eligible_structures holds cic_guarantee, cic_shares, ltd_guarantee, cooperative and unincorporated; the trust's eligibility page funds \"UK Registered Charities\" and lists \"Community Interest Companies\" under what it does not fund. location_tag holds Wales; the page names Suffolk, Norfolk, Cambridgeshire, Hertfordshire, Glamorganshire, Gwent, Powys, Camarthanshire and Berkshire. The timing and the amounts are right (form open 1 January to 31 March, typically £5,000 to £10,000 up to £20,000), so this is publishable the moment the two pins move."
+    },
+    {
+     "id": "26029120-6cfa-4346-8834-36f77b0af3b2",
+     "title": "Social Investment Business Loan & Grant Funds",
+     "pile": "A",
+     "verdict": "reject",
+     "code": "duplicate",
+     "quote": "Loans of between £100k to £1.5m to UK charities and social enterprises",
+     "url": "https://www.sibgroup.org.uk/",
+     "tidied": [],
+     "for_paul": "Duplicate of three live rows: 0adbc570 Community Builders Fund, 007e7f00 Reach Fund and 6e6e8050 Energy Resilience Fund. This row is SIB's homepage, and the three products it lists are those three rows plus Flexible Finance (9eb92571, between rounds)."
+    },
+    {
+     "id": "829751a6-9ad0-409a-818c-e32d62f0d1ad",
+     "title": "Social Investment Cymru Loan Fund",
+     "pile": "A",
+     "verdict": "hold",
+     "quote": "The Fund is investing a total of £6 million in small loans until 2022, with Social Investment Cymru managing access to these fund for social businesses in Wales.",
+     "url": "https://www.goodfinance.org.uk/investors-advisors/social-investment-cymru",
+     "tidied": [],
+     "for_paul": "The row points at a Good Finance directory profile whose named funds ran to 2022, and its amount_max of £6,000,000 is that fund's total rather than an award. Social Investment Cymru is alive at wcva.cymru/social-investment-cymru/ with three current products (Bridge and Build Loans, Clean Energy Fund, Community Asset Loan Fund), so this needs relinking to one named fund or splitting into three, not a single date."
+    },
+    {
+     "id": "a48f24a5-43b6-43d4-a4b5-093f4718477a",
+     "title": "Spotlight: Local Climate Action",
+     "pile": "A",
+     "verdict": "publish",
+     "quote": "£100,000 is available in grants of between £500 – £5,000.",
+     "url": "https://oglesbycharitabletrust.org.uk/spotlight-local-climate-action/",
+     "tidied": [
+      "next_open_date",
+      "next_open_date_parsed",
+      "deadline",
+      "is_rolling",
+      "amount_min",
+      "amount_max",
+      "funder_brief.who_can_apply",
+      "funder_brief.what_they_fund",
+      "funder_brief.how_to_apply",
+      "funder_brief.exclusions",
+      "funder_brief.decision_timeline",
+      "funder_brief.typical_award",
+      "funder_brief.open_status"
+     ]
+    },
+    {
+     "id": "01aa47c7-4db6-4f51-a129-66ab25e3b548",
+     "title": "St Giles & St George Education Charity",
+     "pile": "A",
+     "verdict": "publish",
+     "quote": "We fund not-for-profit organisations (including charities, schools, churches and social enterprises) delivering activities that support our mission to children and young people from birth to 25 years old.",
+     "url": "https://stgilesandstgeorge.org.uk/education/grants-for-education/",
+     "tidied": [
+      "apply_url",
+      "deadline",
+      "is_rolling",
+      "amount_max",
+      "funder_brief.who_can_apply",
+      "funder_brief.what_they_fund",
+      "funder_brief.how_to_apply",
+      "funder_brief.exclusions",
+      "funder_brief.decision_timeline",
+      "funder_brief.typical_award",
+      "funder_brief.open_status"
+     ]
+    },
+    {
+     "id": "3b2b8d07-3338-4109-a6f3-c06a27d06196",
+     "title": "Step Change",
+     "pile": "A",
+     "verdict": "hold",
+     "quote": "Friday 30th October 2026 Wednesday 25th November 2026",
+     "url": "https://oxfordshire.org/ocf_grants/step-change-2/",
+     "tidied": [],
+     "for_paul": "The admin-held deadline is 4 September 2026, which has passed. The page's dates table gives one more 2026 round, closing Friday 30 October with the panel on 25 November, and the page's own summary line still says 4 September, so the funder is behind too. The fund itself is in good order (£10,000 to £50,000, income £100,000 to £1m, a volunteer project manager with every grant), so moving the pin to 30 October is all this needs."
+    },
+    {
+     "id": "f5c454d7-728e-4f11-b7f1-1dc139393d3e",
+     "title": "Supporting community groups within a 10-mile radius of the Green Rigg Wind Farm",
+     "pile": "A",
+     "verdict": "publish",
+     "quote": "Grants of between £1,000 and £5,000 are available, with up to £9,000 in exceptional circumstances.",
+     "url": "https://www.communityfoundation.org.uk/grants/supporting-community-groups-within-10-mile-radius-green-rigg-wind-farm/",
+     "tidied": [
+      "apply_url",
+      "deadline",
+      "is_rolling",
+      "amount_min",
+      "amount_max",
+      "funder_brief.who_can_apply",
+      "funder_brief.what_they_fund",
+      "funder_brief.how_to_apply",
+      "funder_brief.exclusions",
+      "funder_brief.decision_timeline",
+      "funder_brief.typical_award",
+      "funder_brief.open_status"
+     ]
+    },
+    {
+     "id": "db97dbb6-63b5-4604-8ccb-10a4722ea2b1",
+     "title": "Supporting the community in the Parish of Shotley Low Quarter",
+     "pile": "A",
+     "verdict": "publish",
+     "quote": "Applicants can apply for a minimum of £1,000 up to the maximum funds available in the fund year.",
+     "url": "https://www.communityfoundation.org.uk/grants/supporting-the-community-in-the-parish-of-shotley-low-quarter/",
+     "tidied": [
+      "apply_url",
+      "deadline",
+      "is_rolling",
+      "amount_min",
+      "amount_max",
+      "funder_brief.who_can_apply",
+      "funder_brief.what_they_fund",
+      "funder_brief.how_to_apply",
+      "funder_brief.exclusions",
+      "funder_brief.decision_timeline",
+      "funder_brief.typical_award",
+      "funder_brief.open_status"
+     ]
+    },
+    {
+     "id": "3e386cdc-60ab-413e-a348-11f659d3e4fb",
+     "title": "Tech for Good Accelerator Programme",
+     "pile": "A",
+     "verdict": "hold",
+     "quote": "We only invest in for-profit companies limited by shares. We require that you're incorporated in the UK for us to be able to invest.",
+     "url": "https://www.bethnalgreenventures.com/apply",
+     "tidied": [],
+     "for_paul": "An audience call at the edge. BGV invests £60,000 for equity and says it only invests in for-profit companies limited by shares, which rules out charities, CIOs and companies limited by guarantee; the row's eligible_structures list cic_guarantee, ltd_guarantee and cooperative, all of which the page excludes. If an equity accelerator for for-profit ventures belongs in the catalogue, this is a park: applications for Autumn 2026 are closed and the page says the next ones open in November. If it does not, it is out_of_scope."
+    },
+    {
+     "id": "1f67aead-7d02-49ad-87ae-77f9f9daece7",
+     "title": "Theatre and Charitable Grants",
+     "pile": "A",
+     "verdict": "hold",
+     "quote": "",
+     "url": "https://register-of-charities.charitycommission.gov.uk/en/charity-search/-/charity-details/327751",
+     "tidied": [],
+     "for_paul": "A register row: apply_url is the Charity Commission entry, which states no eligibility and no route, and the Mackintosh Foundation has no working website (mackintoshfoundation.org is an unbuilt placeholder). Its amount_min, amount_max, location_tag and eligible_structures are all admin-held. Same class as the other register rows: keep holding, or reject them together."
+    },
+    {
+     "id": "a91f58e0-5572-4d9b-85ad-d67df0e72e0d",
+     "title": "Time to Shine Fellowship",
+     "pile": "A",
+     "verdict": "reject",
+     "code": "out_of_scope",
+     "quote": "Traditionally organisations are invited to apply for the scheme by Rank's staff team.",
+     "url": "https://rankfoundation.com/our-approach/leadership/time-to-shine/",
+     "tidied": [],
+     "for_paul": "Invitation only: Rank's staff pick the organisations, and the next programme starts in April 2027. Two things to note before rejecting. The row's apply_url, rankfoundation.com/time-to-shine/, now serves a PNG image with no page behind it, in Chrome as well as from a script, and that is what the row's needs_intervention_reason records; the note is a tombstone, so it stays until you clear it. And an archived row, 0efbafbc, already points at the working page."
+    }
+   ],
+   "paul_list": [
+    "PUBLISH Spotlight: Local Climate Action",
+    "PUBLISH St Giles & St George Education Charity",
+    "PUBLISH Supporting community groups within a 10-mile radius of the Green Rigg Wind Farm",
+    "PUBLISH Supporting the community in the Parish of Shotley Low Quarter",
+    "REJECT  Salesforce Nonprofit Cloud - Power of Us Programme (duplicate) — Duplicate of the live row 53dd63b0, Salesforce Power of Us Program. A relink for the list: the live row points at salesforce.com/nonprofit/ and this page is the one that states the ten free licences and the three steps to claim them.",
+    "REJECT  Severn Trent Community Fund (duplicate) — Duplicate of the live row 7bda3614, Severn Trent Community Fund Core Funding Grant. This row is the fund's index page, which states no eligibility, no amount and no way in. Separately for the dedup list: 1ef69197 and f4225849 are both New Project Funding on the same URL.",
+    "REJECT  Social Investment Business Loan & Grant Funds (duplicate) — Duplicate of three live rows: 0adbc570 Community Builders Fund, 007e7f00 Reach Fund and 6e6e8050 Energy Resilience Fund. This row is SIB's homepage, and the three products it lists are those three rows plus Flexible Finance (9eb92571, between rounds).",
+    "REJECT  Time to Shine Fellowship (out_of_scope) — Invitation only: Rank's staff pick the organisations, and the next programme starts in April 2027. Two things to note before rejecting. The row's apply_url, rankfoundation.com/time-to-shine/, now serves a PNG image with no page behind it, in Chrome as well as from a script, and that is what the row's needs_intervention_reason records; the note is a tombstone, so it stays until you clear it. And an archived row, 0efbafbc, already points at the working page.",
+    "HOLD    ROCB CDFI Loans — The row's domain rocbf.org.uk no longer resolves, but Robert Owen Community Banking is trading at rocbf.co.uk with a Community Cashflow Fund for charities and social enterprises in Wales (£5,000 to £25,000, 18 months, 2% a month) and a Community Energy Fund. An archived row, 0362621b, already holds rocbf.co.uk. Relink this row to the cashflow fund, or revive the archived one, or split the lender into its two not-for-profit products.",
+    "HOLD    Screwfix Foundation Grants — screwfixfoundation.com resolves but refuses the TLS handshake, from a script and from a real browser, so nothing could be read today. The Screwfix Foundation is a registered charity and this looks like an outage rather than a closure. Re-check before rejecting.",
+    "HOLD    Simon Gibson Charitable Trust — Grants — Two admin-held fields the page now contradicts. eligible_structures holds cic_guarantee, cic_shares, ltd_guarantee, cooperative and unincorporated; the trust's eligibility page funds \"UK Registered Charities\" and lists \"Community Interest Companies\" under what it does not fund. location_tag holds Wales; the page names Suffolk, Norfolk, Cambridgeshire, Hertfordshire, Glamorganshire, Gwent, Powys, Camarthanshire and Berkshire. The timing and the amounts are right (form open 1 January to 31 March, typically £5,000 to £10,000 up to £20,000), so this is publishable the moment the two pins move.",
+    "HOLD    Social Investment Cymru Loan Fund — The row points at a Good Finance directory profile whose named funds ran to 2022, and its amount_max of £6,000,000 is that fund's total rather than an award. Social Investment Cymru is alive at wcva.cymru/social-investment-cymru/ with three current products (Bridge and Build Loans, Clean Energy Fund, Community Asset Loan Fund), so this needs relinking to one named fund or splitting into three, not a single date.",
+    "HOLD    Step Change — The admin-held deadline is 4 September 2026, which has passed. The page's dates table gives one more 2026 round, closing Friday 30 October with the panel on 25 November, and the page's own summary line still says 4 September, so the funder is behind too. The fund itself is in good order (£10,000 to £50,000, income £100,000 to £1m, a volunteer project manager with every grant), so moving the pin to 30 October is all this needs.",
+    "HOLD    Tech for Good Accelerator Programme — An audience call at the edge. BGV invests £60,000 for equity and says it only invests in for-profit companies limited by shares, which rules out charities, CIOs and companies limited by guarantee; the row's eligible_structures list cic_guarantee, ltd_guarantee and cooperative, all of which the page excludes. If an equity accelerator for for-profit ventures belongs in the catalogue, this is a park: applications for Autumn 2026 are closed and the page says the next ones open in November. If it does not, it is out_of_scope.",
+    "HOLD    Theatre and Charitable Grants — A register row: apply_url is the Charity Commission entry, which states no eligibility and no route, and the Mackintosh Foundation has no working website (mackintoshfoundation.org is an unbuilt placeholder). Its amount_min, amount_max, location_tag and eligible_structures are all admin-held. Same class as the other register rows: keep holding, or reject them together."
+   ]
   }
  ]
 }

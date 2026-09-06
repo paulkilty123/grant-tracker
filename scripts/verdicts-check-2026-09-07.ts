@@ -25,6 +25,13 @@ const SNAPSHOT = process.argv.includes('--snapshot')
 const ACKNOWLEDGED: Record<string, string> = {
   '29d000d3-e3fa-439e-89f8-e03109af0f44': 'Foundation East: rejected by grant-tracker-be on 7 Sept after batch 2 reported the domain takeover',
   'e31c28ad-10a0-4d7c-9076-33c8f8cf91e9': 'FSI: rejected by grant-tracker-be on 7 Sept after batch 2 reported the dead host',
+  // Not in either pile — it was live when the baseline was taken, so this entry
+  // can never fire. It is here as the record of a state change made during the
+  // job, not as a silenced alarm: grant-tracker-be rejected it closed_for_good
+  // on 7 Sept after batch 2, because SIB's funding page lists only its three
+  // successor funds and all three are live rows. Batch 4 rejected the row that
+  // points at SIB's homepage on the same reasoning.
+  '583f0378-26e6-4abe-886c-0686bd8b9d2b': 'Social Investment Business Resilience Fund: rejected closed_for_good by grant-tracker-be on 7 Sept, outside this job\'s row set',
 }
 const LIST = join(__dirname, '..', 'docs', 'handoffs', 'verdict-rows-2026-09-07.json')
 const BASELINE = join(__dirname, '..', 'docs', 'handoffs', 'verdict-state-baseline-2026-09-07.json')
