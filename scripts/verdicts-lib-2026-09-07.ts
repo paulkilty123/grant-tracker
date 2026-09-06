@@ -129,8 +129,12 @@ export function briefGaps(fields: Record<string, string> | undefined, cits: Cit 
   for (const f of BRIEF_FIELDS) {
     const v = (fields ?? {})[f]
     if (!v || !v.trim()) { gaps.push(`${f} missing`); continue }
-    // "Not stated" is the thing Paul objected to. It is allowed only for
-    // exclusions, and only in the exact form the brief prescribes.
+    // "Not stated" is the thing Paul objected to, and it stays blocked. An
+    // HONEST ABSENCE is different and is allowed for any field, ruled 7 Sept:
+    // "The page states no decision timeline", with the closest sentence cited,
+    // is a finding about the page rather than a gap in the reading. The
+    // citation requirement below still applies, so an absence cannot be
+    // asserted without showing what was read.
     if (/^\s*(not stated|see website|n\/a|unknown)\s*\.?\s*$/i.test(v)) gaps.push(`${f} says "${v.trim()}"`)
     if (!(cits ?? {})[f]) gaps.push(`${f} has no citation`)
   }
@@ -283,7 +287,11 @@ export async function runBatch(opts: {
           if (notAdmin.length) throw new Error(`${title}: refused by something other than an admin decision — ${JSON.stringify(notAdmin)}`)
           throw new Error(`${title}: admin-held field refused the tidy — this row should have been a hold, not a ${r.verdict}`)
         }
-        tidied.push(...res.applied.filter(f => f !== 'grant_sources'))
+        // `tidied` records what the ROW now holds because of this verdict, not
+        // what this particular run changed. A re-run makes every write
+        // idempotent, and reporting an empty tidied list then would understate
+        // the work and mislead the checker about which fields to re-read.
+        tidied.push(...Object.keys(r.fields))
         // Reaching here means nothing was refused: a refusal throws above. An
         // EMPTY applied list is the idempotent case — the row already holds the
         // value — and the brief may still describe it. Treating "applied
@@ -316,7 +324,7 @@ export async function runBatch(opts: {
           const held = refused2.map(x => `${x.reason} by ${((x.blockedBy as { source?: string } | undefined)?.source) ?? '?'}`).join('; ')
           throw new Error(`${title}: publish blocked, the brief was refused (${held}). The row keeps whatever brief it had, so this is a hold until the source question is settled.`)
         }
-        if (res2.applied.includes('funder_brief')) tidied.push(...Object.keys(r.brief).map(k => `funder_brief.${k}`))
+        tidied.push(...Object.keys(r.brief).map(k => `funder_brief.${k}`))
       } else if (r.brief) {
         console.log(`      brief NOT written — the columns it describes were not applied`)
       }

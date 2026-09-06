@@ -27,6 +27,7 @@ import { runBatch, type Row } from './verdicts-lib-2026-09-07'
 const APPLY = process.argv.includes('--apply')
 const BATCH = 1
 
+const CB   = 'https://www.charitybank.org/loans/green-loans/'
 const COOP = 'https://www.co-operativebank.co.uk/business/products/lending/Charity-and-Co-operative-lending-fund/'
 
 const ROWS: Row[] = [
@@ -120,11 +121,32 @@ const ROWS: Row[] = [
       open_status: { snippet: 'All businesses can apply for a loan from a minimum of £25,020.', confidence: 'med', source_url: COOP },
     } },
 
-  // 11. Six of seven. See the header note.
-  { id: 'be85b0fc-7d63-4741-97ce-1ce6f37113b5', re: /Green Loans/, pile: 'A', verdict: 'hold',
+  // 11. Held through two applies as six-of-seven, then promoted on the 7 Sept
+  // ruling that an honest absence is complete: the page says nothing about how
+  // long a decision takes, so decision_timeline says exactly that and cites the
+  // closest sentence. The row's £150,000 to £7.5m already agrees with the page,
+  // so the tidy is the brief alone.
+  { id: 'be85b0fc-7d63-4741-97ce-1ce6f37113b5', re: /Green Loans/, pile: 'A', verdict: 'publish',
     quote: 'We offer loans up to £7.5 million, with larger amounts available through partnerships with other social lenders.',
-    url: 'https://www.charitybank.org/loans/green-loans/',
-    for_paul: 'A good row blocked by one gap. The page supports six of the seven brief fields and says nothing about how long a decision takes, so it cannot pass the depth bar. Charity Bank also has a live general lending row (72739682), so folding Green Loans into that as a product may be better than a second row.' },
+    url: CB,
+    brief: {
+      who_can_apply: 'Charities and social enterprises delivering social impact. Charity Bank states no minimum income and no list of eligible legal forms; every borrower is expected to be delivering social impact, and loans are secured.',
+      what_they_fund: 'Energy efficiency and environmental projects: building or retrofitting for energy efficiency, reducing emissions, promoting biodiversity, transitioning to sustainable energy, and sustainable waste management. Part of a £50 million Energy Efficiency Loan Programme covering measures such as heat pumps and solar panels.',
+      how_to_apply: 'Fill in the step-by-step enquiry form on the green loans page, which gathers what the bank needs to discuss a loan. A relationship team then works with the borrower through the process.',
+      exclusions: 'The page states no exclusions. The only condition it sets on a borrower is that they are delivering social impact.',
+      decision_timeline: 'The page states no decision timeline. It says only that the team works with borrowers throughout the process.',
+      typical_award: 'Secured loans from £150,000, up to £7.5 million, with larger amounts available through partnerships with other social lenders. Terms typically up to 25 years.',
+      open_status: 'open',
+    },
+    briefCits: {
+      who_can_apply: { snippet: 'If you\'re a Charity or social enterprise looking for a loan to amplify your social impact, you\'re in the right place.', confidence: 'high', source_url: CB },
+      what_they_fund: { snippet: 'Projects eligible for green loans include building or retrofitting for energy efficiency, reducing emissions, promoting biodiversity, transitioning to sustainable energy, and delivering sustainable waste management.', confidence: 'high', source_url: CB },
+      how_to_apply: { snippet: 'Talk us through what you need by filling in our easy step-by-step form which will give us all the information we need to discuss your loan.', confidence: 'high', source_url: CB },
+      exclusions: { snippet: 'All our borrowers are delivering social impact.', confidence: 'med', source_url: CB },
+      decision_timeline: { snippet: 'Our team will work with you throughout the process, ensuring you have the support you need at every step.', confidence: 'med', source_url: CB },
+      typical_award: { snippet: 'We offer loans up to £7.5 million, with larger amounts available through partnerships with other social lenders.', confidence: 'high', source_url: CB },
+      open_status: { snippet: 'Talk us through what you need by filling in our easy step-by-step form which will give us all the information we need to discuss your loan.', confidence: 'med', source_url: CB },
+    } },
 
   // 12. Dedup: the homepage version of a lender already carried.
   { id: 'fdcc973a-c87c-48cf-819c-e921c23fbc73', re: /Charity Bank Loans/, pile: 'A', verdict: 'reject', code: 'duplicate',
