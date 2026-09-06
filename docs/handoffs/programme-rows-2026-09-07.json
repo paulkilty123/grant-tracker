@@ -1,0 +1,6593 @@
+[
+ {
+  "id": "dd307785-6c27-4c1a-a19a-8c9572550b55",
+  "title": "10,000 Small Businesses",
+  "funder": "Goldman Sachs",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.goldmansachs.com",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": []
+ },
+ {
+  "id": "b07546ca-03db-484b-a6e9-8bf2fb756026",
+  "title": "100x Impact Accelerator",
+  "funder": "LSE Marshall Institute",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "accelerator"
+  ],
+  "apply_url": "https://www.lse.ac.uk/marshall-institute/100x-impact-accelerator",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "social_innovation",
+   "health",
+   "education",
+   "environment"
+  ]
+ },
+ {
+  "id": "1fd4f940-ca6e-4e91-9c72-9f021c952e93",
+  "title": "A guide for the commercialisation of Creative Industries Research (Grant)",
+  "funder": "UK Research and Innovation, Arts and Humanities Research Council",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.find-government-grants.service.gov.uk/grants/a-guide-for-the-commercialisation-of-creative-industries-research-grant-1",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "creative",
+   "tech",
+   "education"
+  ]
+ },
+ {
+  "id": "5ed056e6-d5dd-4a82-b845-65c27a9a9eb5",
+  "title": "Accelerate",
+  "funder": "Community Enterprise",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "support_programme"
+  ],
+  "apply_url": "https://communityenterprise.co.uk/get-support",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "Scotland",
+  "impact_sectors": [
+   "community",
+   "social_economy",
+   "employment"
+  ]
+ },
+ {
+  "id": "6621aeb1-5ca6-414f-92a9-355b86dac4a7",
+  "title": "Accelerated Growth Programme — Business Wales",
+  "funder": "Business Wales (Welsh Government)",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "support_programme"
+  ],
+  "apply_url": "https://businesswales.gov.wales/topics-and-guidance/accelerated-growth-programme",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "Wales",
+  "impact_sectors": [
+   "employment",
+   "social_economy"
+  ]
+ },
+ {
+  "id": "3c0357c4-3bd4-4c44-8459-4bc992cc1fdb",
+  "title": "AccelerateTech",
+  "funder": "Sussex Innovation",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.sussexinnovation.co.uk/acceleratetech/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "Sussex",
+  "impact_sectors": [
+   "tech",
+   "environment"
+  ]
+ },
+ {
+  "id": "1f7c97b2-2a02-4c60-a3ea-420f471ef3d0",
+  "title": "Accelerator Programme",
+  "funder": "Alzheimer's Society",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://www.alzheimers.org.uk/research/our-research/dementia-innovation/accelerator-programme",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "health",
+   "social_innovation",
+   "tech"
+  ]
+ },
+ {
+  "id": "1a1486eb-2cb3-430b-954a-216276963345",
+  "title": "Access — 2025 Dormant Assets Release",
+  "funder": "Access — The Foundation for Social Investment",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://access-socialinvestment.org.uk/what-we-do/2025-dormant-assets-release",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": null,
+  "impact_sectors": [
+   "social_economy",
+   "employment",
+   "community"
+  ]
+ },
+ {
+  "id": "6192dca0-0913-47ca-82cb-3891a30eed3a",
+  "title": "Access — The Foundation for Social Investment",
+  "funder": "Access — The Foundation for Social Investment",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "blended",
+   "loan",
+   "social_investment"
+  ],
+  "apply_url": "https://www.access-socialinvestment.org.uk/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "England",
+  "impact_sectors": [
+   "social_economy",
+   "financial",
+   "social_innovation"
+  ]
+ },
+ {
+  "id": "54983933-3832-4b42-9bed-8fe4016f4419",
+  "title": "Access Growth Fund",
+  "funder": "Access – The Foundation for Social Investment",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "blended",
+   "loan",
+   "social_investment"
+  ],
+  "apply_url": "https://access-socialinvestment.org.uk/",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "England",
+  "impact_sectors": [
+   "financial",
+   "social_economy",
+   "community"
+  ]
+ },
+ {
+  "id": "5fb87bee-79cd-438c-832c-35e3a0c14d3f",
+  "title": "Access Growth Fund (Blended Finance)",
+  "funder": "Access – The Foundation for Social Investment",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://access-socialinvestment.org.uk/our-work/growth-fund/",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "social_economy",
+   "community"
+  ]
+ },
+ {
+  "id": "d3325aa8-bdd2-4b31-b65e-24e218263198",
+  "title": "Accounting for Good CIC",
+  "funder": "Accounting for Good CIC",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "pro_bono_consulting"
+  ],
+  "apply_url": "https://www.accountingforgood.co.uk/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "financial",
+   "social_economy",
+   "community"
+  ]
+ },
+ {
+  "id": "f7ac79ae-312c-4f74-8ebb-fb539bc3ebbc",
+  "title": "Acumen Academy UK Fellowship",
+  "funder": "Acumen Academy",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://acumenacademy.org/fellowship/uk",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "social_economy",
+   "social_innovation"
+  ]
+ },
+ {
+  "id": "0ccdf6c5-0a6e-4b3f-a400-3de5a90e0432",
+  "title": "Adult Community Learning — Online and Local Courses across Wales",
+  "funder": "Adult Learning Wales (Addysg Oedolion Cymru)",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.adultlearning.wales/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "Wales",
+  "impact_sectors": [
+   "education",
+   "employment"
+  ]
+ },
+ {
+  "id": "3718e89e-0b6c-4d18-a7bf-659e578c18ef",
+  "title": "Advancing innovation in drug and alcohol addiction healthcare",
+  "funder": "Office for Life Sciences (OLS) ",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.find-government-grants.service.gov.uk/grants/advancing-innovation-in-drug-and-alcohol-addiction-healthcare-1",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "England",
+  "impact_sectors": [
+   "health",
+   "tech"
+  ]
+ },
+ {
+  "id": "29740517-2d8b-4557-9d95-c85743c238b3",
+  "title": "AI Growth Lab",
+  "funder": "Department for Business, Innovation, Science and Trade",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "support_programme"
+  ],
+  "apply_url": "https://www.find-government-grants.service.gov.uk/grants/ai-growth-labs-1",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "tech",
+   "justice",
+   "social_innovation"
+  ]
+ },
+ {
+  "id": "75040abd-4796-479d-ba18-2f3596a3e7a8",
+  "title": "All About Business Entrepreneurs Fund",
+  "funder": "Reed",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.reed.com/entrepreneurs",
+  "is_active": false,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "employment",
+   "social_innovation"
+  ]
+ },
+ {
+  "id": "43a4424c-015d-4fce-a69c-f8b5d5362d27",
+  "title": "Amazon — AWS Nonprofit Credits",
+  "funder": "Amazon Web Services",
+  "funding_type": "in_kind",
+  "funding_subtypes": null,
+  "apply_url": "https://aws.amazon.com/government-education/nonprofits/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "tech"
+  ]
+ },
+ {
+  "id": "dc33bc71-60d1-4b7a-a88f-67fa9490852d",
+  "title": "Amazon Sustainability Accelerator",
+  "funder": "Amazon",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "accelerator"
+  ],
+  "apply_url": "https://sell.amazon.co.uk/programmes/sustainability-accelerator",
+  "is_active": false,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "environment",
+   "tech"
+  ]
+ },
+ {
+  "id": "ca290a3a-6f64-4fdb-a48f-e02d6b0bb1b3",
+  "title": "American Express - Community Giving Programme",
+  "funder": "American Express Foundation",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.americanexpress.com/en-us/company/corporate-sustainability/community-impact/",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "community",
+   "employment",
+   "social_innovation"
+  ]
+ },
+ {
+  "id": "45ee7b31-8654-4ba6-88ee-c4d94cdee37e",
+  "title": "Antimicrobial resistance and infection prevention community engagement fund",
+  "funder": "Scottish Government",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.find-government-grants.service.gov.uk/grants/antimicrobial-resistance-and-infection-prevention-community-engagement-fund-1",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "Scotland",
+  "impact_sectors": [
+   "health",
+   "community",
+   "social_innovation"
+  ]
+ },
+ {
+  "id": "83f700c0-0081-4609-bb1f-cb35b5346fa1",
+  "title": "Apply for Investment (Fund Manager Route)",
+  "funder": "Better Society Capital",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://bigsocietycapital.com/our-approach/making-investments/apply-investment/",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "housing",
+   "employment",
+   "environment",
+   "health"
+  ]
+ },
+ {
+  "id": "a030d425-e5d2-4170-9348-36bdb5447ae8",
+  "title": "Archived Funds",
+  "funder": "Creative Scotland",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "restricted"
+  ],
+  "apply_url": "https://www.creativescotland.com/funding/archive",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": null,
+  "impact_sectors": []
+ },
+ {
+  "id": "7b5863de-46ff-44e1-a53f-c6ec73801935",
+  "title": "ART Business Loans — Social Enterprise Lending",
+  "funder": "ART Business Loans",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://artbusinessloans.co.uk/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "West Midlands",
+  "impact_sectors": [
+   "employment",
+   "social_economy"
+  ]
+ },
+ {
+  "id": "6a12b85c-974d-40c5-a610-947961f55b93",
+  "title": "Arts Council of Wales — Creative Practice",
+  "funder": "Arts Council of Wales",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://arts.wales/funding/individuals/creative-practice",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "Wales",
+  "impact_sectors": [
+   "creative"
+  ]
+ },
+ {
+  "id": "f575c9d7-07cf-437e-9219-15df29e6f758",
+  "title": "Arts Council of Wales — Creative Steps for Individuals",
+  "funder": "Arts Council of Wales",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://arts.wales/funding/individuals/creative-steps-for-individuals",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "Wales",
+  "impact_sectors": [
+   "creative"
+  ]
+ },
+ {
+  "id": "e5fa6087-9dc3-4ae1-9876-c0d73339c674",
+  "title": "Arts Council of Wales — Experiment",
+  "funder": "Arts Council of Wales",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://arts.wales/funding/creative-learning/experiment",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "Wales",
+  "impact_sectors": [
+   "education",
+   "creative",
+   "health"
+  ]
+ },
+ {
+  "id": "d400a2c7-c4e8-481d-a5fa-135bbfac519c",
+  "title": "Arts Council of Wales — Explore",
+  "funder": "Arts Council of Wales",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://arts.wales/funding/creative-learning/explore",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "Wales",
+  "impact_sectors": [
+   "creative",
+   "education",
+   "mental_health"
+  ]
+ },
+ {
+  "id": "45e97924-0a07-4a9a-896b-63e4b2882d1e",
+  "title": "Arts Council of Wales — Extend",
+  "funder": "Arts Council of Wales",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://arts.wales/funding/creative-learning/extend-creative-leadership-programme",
+  "is_active": false,
+  "pipeline_state": "between_rounds_scheduled",
+  "location_tag": "Wales",
+  "impact_sectors": [
+   "creative",
+   "education"
+  ]
+ },
+ {
+  "id": "324d3776-917a-4498-9537-27888f142f2d",
+  "title": "Ashoka Fellowship",
+  "funder": "Ashoka",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.ashoka.org/en-gb",
+  "is_active": false,
+  "pipeline_state": "tagged_awaiting_review",
+  "location_tag": "UK & Ireland",
+  "impact_sectors": [
+   "social_innovation",
+   "education",
+   "community"
+  ]
+ },
+ {
+  "id": "bd9d30f1-07b0-4960-a571-26a22a90609a",
+  "title": "Associate Programme",
+  "funder": "On Purpose",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "fellowship"
+  ],
+  "apply_url": "https://onpurpose.org/en/register-your-interest-associate-programme/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "London",
+  "impact_sectors": [
+   "social_innovation"
+  ]
+ },
+ {
+  "id": "edaed6a2-448f-4209-b763-5006d6874cf2",
+  "title": "ASTOP — Rent-Free Property for Charities",
+  "funder": "ASTOP",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "office_space"
+  ],
+  "apply_url": "https://astop.org.uk/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "community",
+   "housing"
+  ]
+ },
+ {
+  "id": "b27897b5-83f7-483d-bcf8-5b87bdfb3a01",
+  "title": "Aviva Community Fund",
+  "funder": "Aviva",
+  "funding_type": "corporate_programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.aviva.co.uk/aviva-community-fund/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": null,
+  "impact_sectors": [
+   "community",
+   "environment",
+   "financial"
+  ]
+ },
+ {
+  "id": "e1bdcc14-9c13-42fd-ac93-dacc5cd6ef96",
+  "title": "AWS Imagine Grant",
+  "funder": "Amazon Web Services",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "tech_product"
+  ],
+  "apply_url": "https://aws.amazon.com/government-education/nonprofits/aws-imagine-grant-program/aws-imagine-grant-uk/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "tech",
+   "social_innovation"
+  ]
+ },
+ {
+  "id": "171ceb65-7ddf-4a90-ac4c-57adf480279f",
+  "title": "AWS Nonprofit Credit Program",
+  "funder": "Amazon Web Services",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "tech_product"
+  ],
+  "apply_url": "https://aws.amazon.com/government-education/nonprofits/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "Worldwide",
+  "impact_sectors": [
+   "tech",
+   "social_innovation"
+  ]
+ },
+ {
+  "id": "bb65eea9-0e79-452a-b5de-f9b14914a4b9",
+  "title": "Barclays 100x100 UK Community Fund",
+  "funder": "Barclays",
+  "funding_type": "corporate_grant",
+  "funding_subtypes": null,
+  "apply_url": "https://home.barclays/citizenship/giving/barclays-100x100/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": null,
+  "impact_sectors": [
+   "community",
+   "education",
+   "employment",
+   "financial"
+  ]
+ },
+ {
+  "id": "c8915e5e-8b12-4a9c-8eeb-f3c1da1ad328",
+  "title": "Barclays Black Founder Accelerator",
+  "funder": "Barclays",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "accelerator"
+  ],
+  "apply_url": "https://labs.uk.barclays/what-we-offer/our-programmes/barclays-black-founder-accelerator/",
+  "is_active": false,
+  "pipeline_state": "between_rounds_scheduled",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "employment",
+   "tech"
+  ]
+ },
+ {
+  "id": "7430666a-27b7-4f34-884a-f293d438c5a7",
+  "title": "BCG UK Social Enterprise Award",
+  "funder": "Boston Consulting Group",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "pro_bono_consulting"
+  ],
+  "apply_url": "https://www.bcg.com/united-kingdom/bcg-uk-social-enterprise-award",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "health",
+   "education",
+   "social_economy"
+  ]
+ },
+ {
+  "id": "5795d395-7e8a-4602-962d-e568b605ef0c",
+  "title": "BCL Solicitors CSR Programme",
+  "funder": "BCL Solicitors",
+  "funding_type": "in_kind",
+  "funding_subtypes": null,
+  "apply_url": "https://www.bcl.com/corporate-social-responsibility",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": null,
+  "impact_sectors": [
+   "community",
+   "justice"
+  ]
+ },
+ {
+  "id": "d10fa3c8-8c04-4321-8128-8c55734eacb1",
+  "title": "BCRS Business Loans — Social Enterprise Finance",
+  "funder": "BCRS Business Loans",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://bcrs.org.uk/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "West Midlands",
+  "impact_sectors": []
+ },
+ {
+  "id": "97949835-da9c-4100-8c98-55cf3e3d865d",
+  "title": "Better Commissioning Pathways ",
+  "funder": "Department for Culture, Media and Sport",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.find-government-grants.service.gov.uk/grants/better-commissioning-pathways-1",
+  "is_active": false,
+  "pipeline_state": "published",
+  "location_tag": "England",
+  "impact_sectors": [
+   "employment",
+   "community",
+   "social_economy"
+  ]
+ },
+ {
+  "id": "1be57832-feca-4fef-af8e-3c40724cdb0e",
+  "title": "Better Futures Fund: Learning and Development Service",
+  "funder": "The Department for Culture, Media and Sport",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.find-government-grants.service.gov.uk/grants/better-futures-fund-learning--development-service-1",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "England",
+  "impact_sectors": [
+   "education",
+   "social_innovation",
+   "community"
+  ]
+ },
+ {
+  "id": "302207ff-dfe9-49dd-86b5-768d2757fc94",
+  "title": "Better Society Capital — Wholesale Social Investment",
+  "funder": "Better Society Capital",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://bettersocietycapital.com/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "social_economy",
+   "financial"
+  ]
+ },
+ {
+  "id": "41d96aaf-6752-4fb3-98ab-a045ae22fdb5",
+  "title": "BFI National Lottery Innovation Challenge Fund",
+  "funder": "British Film Institute",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.bfi.org.uk/get-funding-support/bfi-national-lottery-innovation-challenge-fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "creative",
+   "social_innovation",
+   "tech"
+  ]
+ },
+ {
+  "id": "fb7d23b2-8848-4ace-becc-b28766bc9a7d",
+  "title": "Big Give - Women and Girls Match Fund",
+  "funder": "Big Give",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://biggive.org/women-girls-match-fund/",
+  "is_active": false,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "women",
+   "community",
+   "tech"
+  ]
+ },
+ {
+  "id": "124a6b30-fc2a-4244-9b4e-a4cd5d61ffb0",
+  "title": "Big Issue Invest — Social Investment",
+  "funder": "Big Issue Invest",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://www.bigissueinvest.com/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "housing",
+   "employment",
+   "health"
+  ]
+ },
+ {
+  "id": "c19f4266-4e48-424d-a89e-d362e8636dd3",
+  "title": "Big Issue Invest — Social Investment",
+  "funder": "Big Issue Invest",
+  "funding_type": "social_investment",
+  "funding_subtypes": null,
+  "apply_url": "https://www.bigissueinvest.com/apply/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": null,
+  "impact_sectors": []
+ },
+ {
+  "id": "d1fa687c-8ae9-499b-ae84-f6682f46c273",
+  "title": "Big Issue Invest Loan Finance",
+  "funder": "Big Issue Invest",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://bigissueinvest.com/finance/",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": null,
+  "impact_sectors": [
+   "social_economy",
+   "community",
+   "employment",
+   "health"
+  ]
+ },
+ {
+  "id": "52492f76-0299-4c27-81d0-d2cd5dacddba",
+  "title": "Big Issue Invest Social Enterprise Investment",
+  "funder": "Big Issue Invest",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://www.bigissue.com/invest/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "employment",
+   "housing",
+   "health",
+   "community"
+  ]
+ },
+ {
+  "id": "324b95d5-650f-4350-88d0-45f517d15692",
+  "title": "Big Society Capital Social Investment Wholesale Funding",
+  "funder": "Big Society Capital",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://bigsocietycapital.com/",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "housing",
+   "employment",
+   "environment",
+   "health"
+  ]
+ },
+ {
+  "id": "9e714a60-a849-409f-8f52-0394b8c2fbb4",
+  "title": "Black Founders Programme",
+  "funder": "Digital Catapult",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "accelerator"
+  ],
+  "apply_url": "https://www.digicatapult.org.uk/programmes/programme/black-founders-programme/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "creative",
+   "tech",
+   "social_innovation"
+  ]
+ },
+ {
+  "id": "c55985ea-2ad1-4214-84ae-420ead940bb0",
+  "title": "Black Seed Investment Fund",
+  "funder": "Black Seed",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "equity"
+  ],
+  "apply_url": "https://www.blackseedvc.co.uk/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "tech",
+   "social_innovation",
+   "employment"
+  ]
+ },
+ {
+  "id": "55d3592a-1a6b-4495-9f55-e772f1857d60",
+  "title": "Black Seed VC",
+  "funder": "Black Seed Ventures",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "equity"
+  ],
+  "apply_url": "https://www.blackseedvc.co.uk/fund",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "tech",
+   "social_innovation"
+  ]
+ },
+ {
+  "id": "0c9aa487-7fe1-459a-802b-89447b3cc3a1",
+  "title": "Brave Futures",
+  "funder": "Arts Fundraising & Philanthropy",
+  "funding_type": "in_kind",
+  "funding_subtypes": null,
+  "apply_url": "https://artsfundraising.org.uk/programmes/brave-futures/",
+  "is_active": false,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "creative",
+   "heritage"
+  ]
+ },
+ {
+  "id": "ef36f740-2f40-40e6-a561-8aa4c72a8a97",
+  "title": "Brewers Foundation",
+  "funder": "Brewers Foundation",
+  "funding_type": "in_kind",
+  "funding_subtypes": null,
+  "apply_url": "https://info.brewers.co.uk/the-brewers-foundation",
+  "is_active": false,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "community",
+   "creative",
+   "health",
+   "food"
+  ]
+ },
+ {
+  "id": "5a9464eb-f3a2-42cd-a5c2-97d0a0f91105",
+  "title": "Bridges Evergreen & Social Impact Funds",
+  "funder": "Bridges Fund Management",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://www.bridgesfundmanagement.com/",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": null,
+  "impact_sectors": [
+   "health",
+   "education",
+   "environment",
+   "social_economy"
+  ]
+ },
+ {
+  "id": "5db10efd-bae4-4370-a393-efecec036a3f",
+  "title": "Bridges Fund Management — Social Outcomes Fund",
+  "funder": "Bridges Fund Management",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://www.bridgesfundmanagement.com/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "housing",
+   "education",
+   "health",
+   "employment"
+  ]
+ },
+ {
+  "id": "c61531ee-8a48-43a6-8c19-d16bd06cf157",
+  "title": "Buddle - free club and community organisation support",
+  "funder": "Sport England",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "training"
+  ],
+  "apply_url": "https://buddle.co/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "sport",
+   "community",
+   "health"
+  ]
+ },
+ {
+  "id": "c9285972-0cea-48f0-a1c3-3a342db82a7c",
+  "title": "Business Enterprise Fund (BEF) — North of England Loans",
+  "funder": "Business Enterprise Fund",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://www.befund.org/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "North of England",
+  "impact_sectors": []
+ },
+ {
+  "id": "6c5b16b7-0c43-4b03-9e68-e551603c6a26",
+  "title": "Business Loans",
+  "funder": "Triodos Bank UK",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "loan"
+  ],
+  "apply_url": "https://www.triodos.co.uk/business-lending",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "environment",
+   "health",
+   "creative",
+   "education"
+  ]
+ },
+ {
+  "id": "bcdfd60d-9991-49cf-a648-9803ac43ca30",
+  "title": "Business Support for Scotland",
+  "funder": "Scottish Government",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.find-government-grants.service.gov.uk/grants/business-support-for-scotland",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "Scotland",
+  "impact_sectors": [
+   "employment"
+  ]
+ },
+ {
+  "id": "082947f9-16c2-47b7-804d-5d64ada6debf",
+  "title": "CAF Bank Secured Loans",
+  "funder": "CAF Bank",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "loan"
+  ],
+  "apply_url": "https://www.cafonline.org/home/caf-bank/secured-loans",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "financial",
+   "environment"
+  ]
+ },
+ {
+  "id": "bca685d5-8462-4071-95d5-f598d9dde1b3",
+  "title": "CAF Venturesome",
+  "funder": "Charities Aid Foundation (CAF)",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://www.cafonline.org/charities/borrowing/venturesome",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": null,
+  "impact_sectors": [
+   "social_economy",
+   "social_innovation",
+   "community"
+  ]
+ },
+ {
+  "id": "1df738d5-d952-425c-bfa6-a4c2b4057f61",
+  "title": "CAF Venturesome Impact Fund",
+  "funder": "CAF Venturesome",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "loan",
+   "blended",
+   "social_investment"
+  ],
+  "apply_url": "https://www.cafonline.org/services-for-charities/funding-for-charities/social-investment",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "social_economy"
+  ]
+ },
+ {
+  "id": "9ae71432-a044-4988-8eae-1f2c3223c764",
+  "title": "Cambridge Social Ventures",
+  "funder": "Cambridge Judge Business School",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "incubator",
+   "support_programme",
+   "training"
+  ],
+  "apply_url": "https://www.jbs.cam.ac.uk/faculty-research/centres/social-innovation/cambridge-social-ventures/",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "social_innovation",
+   "environment"
+  ]
+ },
+ {
+  "id": "ecf0fffd-8693-4c11-9176-a94895e23d85",
+  "title": "Camden Community Wealth Fund - Diversity Fund",
+  "funder": "Camden Community Wealth Fund",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://camdencommunitywealthfund.co.uk/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "Camden",
+  "impact_sectors": [
+   "community",
+   "employment"
+  ]
+ },
+ {
+  "id": "e53c6f5a-bd7a-4ae1-8d37-e3e2333c569e",
+  "title": "Canva for Nonprofits",
+  "funder": "Canva",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "tech_product"
+  ],
+  "apply_url": "https://www.canva.com/nonprofits/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "Worldwide",
+  "impact_sectors": [
+   "tech"
+  ]
+ },
+ {
+  "id": "57137834-ecd2-45cf-937a-ea2a0cd24aa4",
+  "title": "Carbon Literacy — Training for Welsh Organisations",
+  "funder": "Cynnal Cymru — Sustain Wales",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://cynnalcymru.com/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "Wales",
+  "impact_sectors": [
+   "environment"
+  ]
+ },
+ {
+  "id": "ef11edf5-15dd-4a03-9d73-9d59dbf81595",
+  "title": "Cartier Women's Initiative",
+  "funder": "Cartier",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "award"
+  ],
+  "apply_url": "https://www.cartierwomensinitiative.com/",
+  "is_active": false,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "employment"
+  ]
+ },
+ {
+  "id": "86a561b4-8487-44e8-8a20-33f772a5055c",
+  "title": "CAST — Free Digital and AI Support for Charities",
+  "funder": "CAST (Centre for Acceleration of Social Technology)",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "pro_bono_consulting",
+   "training"
+  ],
+  "apply_url": "https://wearecast.org.uk/our-work/programmes-and-initiatives/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "tech",
+   "social_innovation",
+   "community"
+  ]
+ },
+ {
+  "id": "22761b70-bc1a-454f-a157-6af6edd8db78",
+  "title": "CAST Digital Fellowship",
+  "funder": "CAST (Centre for Acceleration of Social Technology)",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "fellowship"
+  ],
+  "apply_url": "https://www.wearecast.org.uk/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "tech",
+   "social_innovation"
+  ]
+ },
+ {
+  "id": "1335abc5-ad75-43a3-9f29-c500cdf3e06f",
+  "title": "CAST Fellowship and Digital Support Programmes",
+  "funder": "CAST (Centre for Acceleration of Social Technology)",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://wearecast.org.uk/",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": null,
+  "impact_sectors": [
+   "tech",
+   "social_innovation"
+  ]
+ },
+ {
+  "id": "4930d739-e76d-4028-b81e-f6c730fe6b9b",
+  "title": "Catalyst Digital Support Programme",
+  "funder": "Catalyst",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.thecatalyst.org.uk/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "tech",
+   "community"
+  ]
+ },
+ {
+  "id": "fc3f9fe3-ae00-46f0-b7e1-f200163f7e80",
+  "title": "Catch22 — GoodTech Ventures Accelerator",
+  "funder": "Catch22",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "accelerator"
+  ],
+  "apply_url": "https://www.catch-22.org.uk/find-services/goodtech-ventures/",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "social_innovation",
+   "tech",
+   "employment",
+   "justice"
+  ]
+ },
+ {
+  "id": "1bdaf355-61f0-49ea-a882-4816b7037a4c",
+  "title": "Centre for Quantum Commercialisation Skills",
+  "funder": "Engineering and Physical Sciences Research Council (EPSRC)",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.ukri.org/opportunity/centre-for-quantum-commercialisation-skills/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": null,
+  "impact_sectors": [
+   "tech",
+   "education",
+   "employment"
+  ]
+ },
+ {
+  "id": "d7c556c0-18a6-48e1-b881-46444b7723bd",
+  "title": "Change Makers Partnership",
+  "funder": "National Lottery Community Fund",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.tnlcommunityfund.org.uk/funding/funding-programmes/change-makers",
+  "is_active": false,
+  "pipeline_state": "published",
+  "location_tag": "England",
+  "impact_sectors": [
+   "community",
+   "social_innovation",
+   "justice"
+  ]
+ },
+ {
+  "id": "7aeaa6a0-d7d7-42c6-9ed0-1d68c94ceb4c",
+  "title": "ChangemakerXchange Fellowship",
+  "funder": "ChangemakerXchange / Ashoka",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "fellowship"
+  ],
+  "apply_url": "https://changemakerxchange.org/",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "Global",
+  "impact_sectors": [
+   "social_innovation",
+   "education",
+   "environment",
+   "justice"
+  ]
+ },
+ {
+  "id": "6473d69e-24c6-47c1-bcfc-4c7dda66f9d6",
+  "title": "Changing Futures 2026-29: Learning and Support Grant",
+  "funder": "Ministry of Housing, Communities and Local Government",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.find-government-grants.service.gov.uk/grants/changing-futures-2026-29-tbc-1",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "England",
+  "impact_sectors": [
+   "community",
+   "housing"
+  ]
+ },
+ {
+  "id": "f57c3373-26f6-4f44-a766-761aec387dcd",
+  "title": "Charities and Social Enterprises Lending",
+  "funder": "Triodos Bank",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://www.triodos.co.uk/business-lending/large-loans/charities-and-social-enterprises",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "community",
+   "creative",
+   "health",
+   "housing"
+  ]
+ },
+ {
+  "id": "e1ae0341-15ae-4c05-98b5-18fed2989a88",
+  "title": "Charity and Co-operative Lending Fund",
+  "funder": "Co-operative Bank",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://www.co-operativebank.co.uk/business/products/lending/Charity-and-Co-operative-lending-fund/",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "social_economy",
+   "community",
+   "environment"
+  ]
+ },
+ {
+  "id": "be85b0fc-7d63-4741-97ce-1ce6f37113b5",
+  "title": "Charity Bank — Green Loans",
+  "funder": "Charity Bank",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://www.charitybank.org/loans/green-loans/",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "environment",
+   "community"
+  ]
+ },
+ {
+  "id": "fdcc973a-c87c-48cf-819c-e921c23fbc73",
+  "title": "Charity Bank Loans",
+  "funder": "Charity Bank",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://www.charitybank.org/",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "community",
+   "environment",
+   "social_innovation"
+  ]
+ },
+ {
+  "id": "72739682-6794-487d-95dc-fac4d4ce3f1f",
+  "title": "Charity Bank Loans for Social Purpose",
+  "funder": "Charity Bank",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "loan",
+   "social_investment"
+  ],
+  "apply_url": "https://charitybank.org/loans",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "housing",
+   "health",
+   "education",
+   "community"
+  ]
+ },
+ {
+  "id": "a9b45831-f734-460b-aab3-b9141a3f80c3",
+  "title": "Charity Bank Social Enterprise & Charity Loans",
+  "funder": "Charity Bank",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://charitybank.org/",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": null,
+  "impact_sectors": [
+   "social_economy",
+   "community",
+   "housing"
+  ]
+ },
+ {
+  "id": "571f93e2-d0b5-41d7-adf1-d36b3a039ec6",
+  "title": "Charity Digital Exchange — Software Donations",
+  "funder": "Charity Digital",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "tech_product"
+  ],
+  "apply_url": "https://charitydigital.org.uk/products",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "tech",
+   "community"
+  ]
+ },
+ {
+  "id": "99a71fd2-fccc-4947-a4fd-4fdd81b58bd0",
+  "title": "Charity Digital Skills Programme",
+  "funder": "Charity Digital",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "training"
+  ],
+  "apply_url": "https://charitydigital.org.uk/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "education",
+   "tech",
+   "social_innovation"
+  ]
+ },
+ {
+  "id": "30706aff-5124-4dba-8776-1e15561c6a78",
+  "title": "Charity Entrepreneurship Incubation Program",
+  "funder": "Charity Entrepreneurship",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "incubator"
+  ],
+  "apply_url": "https://www.charityentrepreneurship.com/incubation-program",
+  "is_active": false,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "social_innovation",
+   "health",
+   "international"
+  ]
+ },
+ {
+  "id": "c003d4e8-be6f-4c83-9123-7599c21e209c",
+  "title": "Charity Furniture Reuse and Donation Network",
+  "funder": "Furniture Reuse Network (FRN)",
+  "funding_type": "in_kind",
+  "funding_subtypes": null,
+  "apply_url": "https://frn.org.uk/",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": null,
+  "impact_sectors": [
+   "community",
+   "social_economy",
+   "environment"
+  ]
+ },
+ {
+  "id": "75990799-a1a4-490e-a651-90f3147ec669",
+  "title": "Charity IT Association (CITA) — Tech Volunteers",
+  "funder": "Charity IT Association",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "pro_bono_consulting",
+   "volunteering"
+  ],
+  "apply_url": "https://www.cita.org.uk/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "tech",
+   "community"
+  ]
+ },
+ {
+  "id": "5067b65b-6595-4a7b-b764-2f821a4584fa",
+  "title": "Charterpath Pro Bono Accountancy for Charities",
+  "funder": "Charterpath",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "pro_bono_consulting",
+   "volunteering"
+  ],
+  "apply_url": "https://www.charterpath.org.uk/for-non-profits",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "community"
+  ]
+ },
+ {
+  "id": "2639ca58-7207-45ac-867d-3b474728fc59",
+  "title": "Child Focused Court IDVA - Coventry and Warwickshire",
+  "funder": "West Midlands Police and Crime Commissioner and Warwickshire Police and Crime Commissioner",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.find-government-grants.service.gov.uk/grants/child-focused-court-idva---coventry-and-warwickshire-1",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "Coventry & Warwickshire",
+  "impact_sectors": [
+   "justice",
+   "mental_health",
+   "community"
+  ]
+ },
+ {
+  "id": "ca11a595-5a4b-4e00-a926-fadcf4b8c218",
+  "title": "Child Focused Court IDVA- Cheshire & Merseyside",
+  "funder": "Office of the Police and Crime Commissioner for Merseyside",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.find-government-grants.service.gov.uk/grants/child-focused-courts-idva--cheshire--merseyside-1",
+  "is_active": false,
+  "pipeline_state": "published",
+  "location_tag": "Merseyside and Cheshire",
+  "impact_sectors": [
+   "justice",
+   "women",
+   "community"
+  ]
+ },
+ {
+  "id": "ed047490-107e-4805-8ea2-6cd85520b3ae",
+  "title": "Clore Social Leadership Programme",
+  "funder": "Clore Social Leadership",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "fellowship"
+  ],
+  "apply_url": "https://cloresocialleadership.org.uk/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "education",
+   "community"
+  ]
+ },
+ {
+  "id": "00c9f4c5-a4fb-47e0-96d9-fbfd5b623450",
+  "title": "Collaborate with researchers in Norway",
+  "funder": "UK Research and Innovation, Arts and Humanities Research Council (AHRC), Engineering and Physical Sciences Research Council (EPSRC), Economic and Social Research Council (ESRC), Medical Research Council (MRC), Natural Environment Research Council (NERC)",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.ukri.org/opportunity/collaborate-with-researchers-in-norway/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": null,
+  "impact_sectors": [
+   "tech",
+   "education"
+  ]
+ },
+ {
+  "id": "904e77b5-3eb1-4ab5-93ed-49f5dbd8f547",
+  "title": "Collaborate with the functional genomics screening laboratory",
+  "funder": "Medical Research Council (MRC)",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.ukri.org/opportunity/collaborate-with-the-functional-genomics-screening-laboratory/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": null,
+  "impact_sectors": [
+   "health",
+   "tech"
+  ]
+ },
+ {
+  "id": "6780e074-46a5-4e0e-b6d1-5760c84d3c4a",
+  "title": "Communications Support and Volunteer Matching",
+  "funder": "Media Trust",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "training",
+   "mentoring",
+   "volunteering"
+  ],
+  "apply_url": "https://mediatrust.org/communications-support/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "creative",
+   "community"
+  ]
+ },
+ {
+  "id": "0adbc570-5d75-4d6e-af6d-3263559896a3",
+  "title": "Community Builders Fund",
+  "funder": "Social Investment Business",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "loan",
+   "social_investment"
+  ],
+  "apply_url": "https://www.sibgroup.org.uk/fund/community-builders-fund/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "England, Wales & Scotland",
+  "impact_sectors": [
+   "community",
+   "environment",
+   "health"
+  ]
+ },
+ {
+  "id": "266a1eac-562b-4a32-9d89-f5e42bfaeb4e",
+  "title": "Community Business Fund",
+  "funder": "Key Fund",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "loan",
+   "social_investment"
+  ],
+  "apply_url": "https://thekeyfund.co.uk/funding/community-business-fund/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "North and Midlands",
+  "impact_sectors": [
+   "community",
+   "social_economy",
+   "employment"
+  ]
+ },
+ {
+  "id": "12cf1f69-c273-4ead-8e61-0a962afd7b88",
+  "title": "Community Business Funding Programmes",
+  "funder": "Power to Change",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://powertochange.org.uk/get-support/",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": null,
+  "impact_sectors": [
+   "community",
+   "employment",
+   "social_economy"
+  ]
+ },
+ {
+  "id": "f55718a8-449b-4973-a88e-faa405cd788f",
+  "title": "Community Business Programmes — Yorkshire & Humber",
+  "funder": "Power To Change",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.powertochange.org.uk/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "England",
+  "impact_sectors": [
+   "community",
+   "social_economy",
+   "employment"
+  ]
+ },
+ {
+  "id": "fafa223d-1008-46c6-8019-585afd5014b7",
+  "title": "Community Energy GO!",
+  "funder": "Centre for Sustainable Energy",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "support_programme",
+   "training"
+  ],
+  "apply_url": "https://www.cse.org.uk/my-community/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "England",
+  "impact_sectors": [
+   "environment",
+   "community",
+   "financial"
+  ]
+ },
+ {
+  "id": "18627ca4-7544-4719-93d8-1d7c80a10489",
+  "title": "Community Enterprise Fund",
+  "funder": "Social Investment Business (SIB)",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://fundingforall.org.uk/funds/social-investment-business-community-enterprise-fund/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "England & Wales",
+  "impact_sectors": [
+   "community",
+   "social_economy",
+   "employment"
+  ]
+ },
+ {
+  "id": "9bcadb67-6618-4ac7-9b9a-49cec783360e",
+  "title": "Community Finance Ireland (UCIT) — Social Loans",
+  "funder": "Ulster Community Investment Trust (Community Finance Ireland)",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "loan",
+   "social_investment"
+  ],
+  "apply_url": "https://www.communityfinanceireland.com/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "Northern Ireland",
+  "impact_sectors": [
+   "community",
+   "social_economy",
+   "sport"
+  ]
+ },
+ {
+  "id": "f2791500-e1cb-4cd3-ae9d-5caa399df3ca",
+  "title": "Community Housing Fund",
+  "funder": "Greater London Authority (Mayor of London)",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://www.london.gov.uk/programmes-strategies/housing-and-land/housing-and-land-funding-programmes",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "location_tag": null,
+  "impact_sectors": [
+   "housing",
+   "community"
+  ]
+ },
+ {
+  "id": "085f3c7e-9021-41cb-a66b-1342830ed886",
+  "title": "Community Investment Enterprise Facility (CIEF)",
+  "funder": "Big Society Capital (now Better Society Capital)",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://bigsocietycapital.com/information/community-development-finance-institutions/",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "employment",
+   "community",
+   "housing",
+   "environment"
+  ]
+ },
+ {
+  "id": "987ea3f3-091b-43ea-bf20-897fc7ac65fc",
+  "title": "Community Shares — Booster Fund & Community Share Offers",
+  "funder": "Community Shares Unit",
+  "funding_type": "blended_finance",
+  "funding_subtypes": null,
+  "apply_url": "https://communityshares.org.uk/resources/booster-fund",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": null,
+  "impact_sectors": []
+ },
+ {
+  "id": "283f4277-aca4-4cc1-ae9e-2d2aebcf54f3",
+  "title": "Community Shares Booster Fund",
+  "funder": "Community Shares",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "restricted"
+  ],
+  "apply_url": "https://www.uk.coop/support-your-co-op/community-shares/support/booster-fund/apply",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "England, Scotland & Wales",
+  "impact_sectors": [
+   "social_economy"
+  ]
+ },
+ {
+  "id": "c2f62efc-64e7-4635-8a2c-9802e2ea089d",
+  "title": "Computers 4 Charity — Refurbished Hardware",
+  "funder": "Computers 4 Charity",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "pro_bono_consulting"
+  ],
+  "apply_url": "https://www.computers4charity.org/",
+  "is_active": false,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "tech",
+   "education",
+   "employment"
+  ]
+ },
+ {
+  "id": "d9b2ef3f-51f0-421b-b37d-f03fc4bb5aea",
+  "title": "Computing resources on the STFC DiRAC HPC facility (RAC19)",
+  "funder": "Science and Technology Facilities Council (STFC)",
+  "funding_type": "in_kind",
+  "funding_subtypes": null,
+  "apply_url": "https://www.ukri.org/opportunity/computing-resources-on-the-stfc-dirac-hpc-facility-rac19/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "tech"
+  ]
+ },
+ {
+  "id": "469158b8-0057-4fab-a633-eae276da1b78",
+  "title": "Contracts for Innovation in drug and alcohol addiction healthcare",
+  "funder": "Office for Life Sciences (OLS) ",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.find-government-grants.service.gov.uk/grants/contracts-for-innovation-in-drug-and-alcohol-addiction-healthcare-1",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "health",
+   "tech"
+  ]
+ },
+ {
+  "id": "cbe84427-1a04-4fbc-8f8c-b09f7af4385d",
+  "title": "CPCA Social Impact Investment Fund",
+  "funder": "Cambridgeshire and Peterborough Combined Authority / Future Business Centre",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://futurebusinesscentre.co.uk/programmes/cpca-social-impact-investment-fund/",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "location_tag": "Cambridgeshire and Peterborough",
+  "impact_sectors": [
+   "social_economy",
+   "community"
+  ]
+ },
+ {
+  "id": "0967c01b-4171-4082-903d-d80774586dc3",
+  "title": "Cranfield Trust — Pro Bono Management Consultancy",
+  "funder": "Cranfield Trust",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "pro_bono_consulting",
+   "mentoring"
+  ],
+  "apply_url": "https://www.cranfieldtrust.org/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "community"
+  ]
+ },
+ {
+  "id": "1f97d169-cf10-413e-abb5-8da368c15c7e",
+  "title": "Creative Catalyst",
+  "funder": "Innovate UK (UKRI)",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "accelerator"
+  ],
+  "apply_url": "https://www.ukri.org/what-we-do/browse-our-areas-of-investment-and-support/creative-catalyst/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "creative",
+   "social_innovation",
+   "tech"
+  ]
+ },
+ {
+  "id": "26945401-f658-477f-913a-a0e74baae548",
+  "title": "CultureStep",
+  "funder": "Arts & Business Cymru",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://aandb.cymru/culturestep/",
+  "is_active": false,
+  "pipeline_state": "published",
+  "location_tag": "Wales",
+  "impact_sectors": [
+   "creative",
+   "health",
+   "community",
+   "education"
+  ]
+ },
+ {
+  "id": "70dca930-041d-464f-9b01-ad0c78e1a19f",
+  "title": "Dartington Service Design Academy",
+  "funder": "Dartington Service Design Lab",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "training"
+  ],
+  "apply_url": "https://www.dartington.org/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "Devon",
+  "impact_sectors": [
+   "social_innovation",
+   "community"
+  ]
+ },
+ {
+  "id": "50343bc9-4d8e-4416-8aad-c9e3ed2300ac",
+  "title": "Data First Aid",
+  "funder": "Pro Bono Economics",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "pro_bono_consulting",
+   "volunteering"
+  ],
+  "apply_url": "https://pbe.co.uk/our-services/data-first-aid/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "social_innovation",
+   "tech"
+  ]
+ },
+ {
+  "id": "785a1e2a-9f22-4bbc-879c-e0f2e24f66d0",
+  "title": "Defra Farming Innovation Investor Partnership",
+  "funder": "The Department for Environment, Food and Rural Affairs (Defra) ",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://www.find-government-grants.service.gov.uk/grants/defra-farming-innovation-investor-partnership-1",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "environment",
+   "tech"
+  ]
+ },
+ {
+  "id": "2288f202-38c2-475a-b3f3-af3d68f706ce",
+  "title": "Design Generators round two",
+  "funder": "Arts and Humanities Research Council (AHRC)",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.ukri.org/opportunity/design-generators-round-two/",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "environment",
+   "creative",
+   "social_innovation"
+  ]
+ },
+ {
+  "id": "0a9e6108-c367-4a93-8df5-d5268d03b7b2",
+  "title": "Desk Space and Meeting Room Hire for Charities",
+  "funder": "thinkNPC (New Philanthropy Capital)",
+  "funding_type": "in_kind",
+  "funding_subtypes": null,
+  "apply_url": "https://www.thinknpc.org/about-npc/desk-space-and-meeting-room-hire/",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "location_tag": "London",
+  "impact_sectors": [
+   "community"
+  ]
+ },
+ {
+  "id": "63f70b09-057c-4455-b864-14724329c67c",
+  "title": "Developing Your Creative Practice (DYCP)",
+  "funder": "Arts Council England",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.artscouncil.org.uk/dycp",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": null,
+  "impact_sectors": [
+   "creative"
+  ]
+ },
+ {
+  "id": "b939fb23-2b84-46cb-bac3-c61c861941f0",
+  "title": "Diesis Network - Social Economy Support Programme",
+  "funder": "Diesis Network",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "pro_bono_consulting"
+  ],
+  "apply_url": "https://www.diesis.coop/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "employment"
+  ]
+ },
+ {
+  "id": "4075bfa0-5ca1-4732-bac4-2b050c542015",
+  "title": "Digital Candle — Free Digital Advice",
+  "funder": "Digital Candle",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "pro_bono_consulting",
+   "volunteering"
+  ],
+  "apply_url": "https://digitalcandle.org.uk/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "tech",
+   "social_innovation"
+  ]
+ },
+ {
+  "id": "b65522ba-0ff5-4784-a190-3ca32eca2e08",
+  "title": "Diverse Leaders Fund",
+  "funder": "Big Issue Invest",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://www.bigissue.com/invest/apply-for-funding/",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "housing",
+   "employment",
+   "health",
+   "financial"
+  ]
+ },
+ {
+  "id": "7e771e39-7d19-40f0-b326-56376fc90130",
+  "title": "Do It Now Now — Innovate Now with Wellcome",
+  "funder": "Do It Now Now",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.doitnownow.com/innovate-now-with-wellcome",
+  "is_active": false,
+  "pipeline_state": "between_rounds_scheduled",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "tech",
+   "social_innovation",
+   "education"
+  ]
+ },
+ {
+  "id": "cc7b1131-fd6f-4ef7-88dd-3f03e9ce4058",
+  "title": "Doctoral focal award plus: innovating in data-driven research (Grant)",
+  "funder": "UK Research and Innovation, Economic and Social Research Council",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.find-government-grants.service.gov.uk/grants/doctoral-focal-award-plus-innovating-in-data-driven-research-grant-1",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "education",
+   "tech",
+   "social_innovation"
+  ]
+ },
+ {
+  "id": "1f0d312f-8dca-4d47-9bcf-270f7391d7c6",
+  "title": "Doctoral focal award: environmental evidence synthesis",
+  "funder": "Natural Environment Research Council (NERC), Economic and Social Research Council (ESRC)",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.ukri.org/opportunity/doctoral-focal-award-environmental-evidence-synthesis/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": null,
+  "impact_sectors": [
+   "environment",
+   "tech"
+  ]
+ },
+ {
+  "id": "cc4800a1-3d4a-481b-9bf8-d7d640088b3d",
+  "title": "Doctoral focal awards in data-intensive sciences (grant)",
+  "funder": "UK Research and Innovation, Science and Technology Research Council",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.find-government-grants.service.gov.uk/grants/doctoral-focal-awards-in-data-intensive-sciences-grant-1",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "tech",
+   "education",
+   "social_innovation"
+  ]
+ },
+ {
+  "id": "3e92d23a-b238-4fb4-8d4f-75dc9793d8bd",
+  "title": "Doit Life Volunteer Matching Platform",
+  "funder": "Doit Foundation",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "volunteering",
+   "tech_product"
+  ],
+  "apply_url": "https://www.doit.life/non-profits",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "community",
+   "social_economy"
+  ]
+ },
+ {
+  "id": "2df4a8ac-2902-4ffb-9a86-e945b1dbc23b",
+  "title": "Domestic Pro Bono Resources / LawWorks Referral Network",
+  "funder": "The Law Society",
+  "funding_type": "in_kind",
+  "funding_subtypes": null,
+  "apply_url": "https://www.lawsociety.org.uk/topics/pro-bono/domestic-pro--bono-resources",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "England & Wales",
+  "impact_sectors": [
+   "justice",
+   "community"
+  ]
+ },
+ {
+  "id": "67f13b86-837d-4202-a94c-6e638eb6f14f",
+  "title": "Donate Computers Programme",
+  "funder": "The Turing Trust",
+  "funding_type": "in_kind",
+  "funding_subtypes": null,
+  "apply_url": "https://turingtrust.co.uk/give-computers/",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "education",
+   "tech",
+   "environment"
+  ]
+ },
+ {
+  "id": "5d2c75fc-0a77-4ec5-9891-3edb0ca8be92",
+  "title": "Donated and Discounted Software for Charities",
+  "funder": "TechSoup UK",
+  "funding_type": "in_kind",
+  "funding_subtypes": null,
+  "apply_url": "https://www.techsoup.org.uk/",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "tech"
+  ]
+ },
+ {
+  "id": "dd2be45a-f7b7-48f7-9892-4a3e40773be9",
+  "title": "DRIVE35 innovation fund: collaborate three",
+  "funder": "Innovate UK",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.ukri.org/opportunity/drive35-innovation-fund-collaborate-three/",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "environment",
+   "tech"
+  ]
+ },
+ {
+  "id": "4353dbc2-9254-4ad1-aa0b-ce1c7ea6be45",
+  "title": "Early Education Partnerships Grant",
+  "funder": "Department for Education",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.find-government-grants.service.gov.uk/grants/early-education-partnership-1",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "England",
+  "impact_sectors": [
+   "education",
+   "disability",
+   "community"
+  ]
+ },
+ {
+  "id": "a249100b-4402-4b51-b709-b1a7382c984a",
+  "title": "Early independence: BBSRC fellowships: full stage (Fellowship)",
+  "funder": "UK Research and Innovation, Biotechnology and Biological Sciences Research Council (BBSRC)",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.find-government-grants.service.gov.uk/grants/early-independence-bbsrc-fellowships-full-stage-fellowship-1",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "tech",
+   "education"
+  ]
+ },
+ {
+  "id": "393d6f1f-01ea-47ea-bf20-3cde5e939fc0",
+  "title": "Early independence: BBSRC fellowships: outline",
+  "funder": "Biotechnology and Biological Sciences Research Council (BBSRC)",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.ukri.org/opportunity/early-independence-bbsrc-fellowships-outline/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": null,
+  "impact_sectors": [
+   "tech",
+   "education"
+  ]
+ },
+ {
+  "id": "4c47cbda-f8de-4786-866d-a51a9fb6eb2b",
+  "title": "Early independence: career development fellowship",
+  "funder": "Medical Research Council (MRC)",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.ukri.org/opportunity/early-independence-career-development-fellowship/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": null,
+  "impact_sectors": [
+   "tech",
+   "health"
+  ]
+ },
+ {
+  "id": "8a7be129-c212-421c-816b-39ed40e61a3a",
+  "title": "Ecology Building Society — Sustainable Property Mortgages",
+  "funder": "Ecology Building Society",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://www.ecology.co.uk/mortgages/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "housing",
+   "environment"
+  ]
+ },
+ {
+  "id": "f83ffef7-affe-4a69-878f-aa5213b54c5a",
+  "title": "Emergency Essentials",
+  "funder": "BBC Children in Need",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "goods",
+   "emergency"
+  ],
+  "apply_url": "https://www.bbcchildreninneed.co.uk/grants/apply/emergency-essentials/",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "community",
+   "health",
+   "young_people"
+  ]
+ },
+ {
+  "id": "c67c1e54-64e2-4b82-b651-952aecfa434d",
+  "title": "Employer Partnership (sports coaching apprenticeships)",
+  "funder": "Coach Core Foundation",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "support_programme",
+   "training"
+  ],
+  "apply_url": "https://coachcore.org.uk/become-an-employer/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "sport",
+   "employment",
+   "education"
+  ]
+ },
+ {
+  "id": "97be169d-2e01-4157-a057-4e974fdfcb8d",
+  "title": "Employer-Supported Skilled Volunteering Programmes",
+  "funder": "Business in the Community (BITC)",
+  "funding_type": "in_kind",
+  "funding_subtypes": null,
+  "apply_url": "https://www.bitc.org.uk/social-impact-and-employee-volunteering/",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "location_tag": "England, Wales & Scotland",
+  "impact_sectors": [
+   "employment",
+   "community",
+   "education"
+  ]
+ },
+ {
+  "id": "a10666fa-ef94-4d42-b09e-71a0c89aecbc",
+  "title": "Enable and Invest Grants",
+  "funder": "Lloyds Bank Foundation for England and Wales",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.lloydsbankfoundation.org.uk/our-funding/",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": null,
+  "impact_sectors": [
+   "community",
+   "social_economy"
+  ]
+ },
+ {
+  "id": "ba76fee4-7d8e-48e5-acac-f9df576c320c",
+  "title": "Energy Resilience Fund",
+  "funder": "Social Investment Business (SIB)",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://www.goodfinance.org.uk/investors-advisors/social-investment-business",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "location_tag": "England",
+  "impact_sectors": [
+   "environment",
+   "community",
+   "social_economy"
+  ]
+ },
+ {
+  "id": "94447c6d-5fe2-4148-9578-f15c36e97550",
+  "title": "Energy Resilience Fund — Key Fund",
+  "funder": "Key Fund",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "loan"
+  ],
+  "apply_url": "https://thekeyfund.co.uk/funding/energy-resilience-fund/",
+  "is_active": false,
+  "pipeline_state": "published",
+  "location_tag": "England",
+  "impact_sectors": [
+   "environment",
+   "social_economy"
+  ]
+ },
+ {
+  "id": "6e6e8050-27ca-456a-846c-91a1198681fd",
+  "title": "Energy Resilience Fund — Social Investment Business",
+  "funder": "Social Investment Business",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "blended",
+   "loan",
+   "social_investment"
+  ],
+  "apply_url": "https://www.sibgroup.org.uk/fund/energy-resilience-fund/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "England",
+  "impact_sectors": [
+   "environment",
+   "community"
+  ]
+ },
+ {
+  "id": "61a8bf66-5695-47bf-96b5-17fe2de0740c",
+  "title": "Enrichment Expansion Programme - Delivery Partner",
+  "funder": "Department for Culture, Media and Sport",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.find-government-grants.service.gov.uk/grants/enrichment-expansion-programme---delivery-partner-1",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "England",
+  "impact_sectors": [
+   "education",
+   "creative"
+  ]
+ },
+ {
+  "id": "28b6843b-5b2a-454f-b3a7-f74afc1d2c2f",
+  "title": "Enterprise Northern Ireland — Social Enterprise Support",
+  "funder": "Enterprise Northern Ireland",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://www.enterpriseni.com/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "Northern Ireland",
+  "impact_sectors": [
+   "employment",
+   "community",
+   "social_economy"
+  ]
+ },
+ {
+  "id": "3666e75d-b82a-49ca-b216-0b87dcb31c89",
+  "title": "ESRC Connect Awards (pilot)",
+  "funder": "Economic and Social Research Council (ESRC)",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.ukri.org/opportunity/esrc-connect-awards-pilot/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": null,
+  "impact_sectors": [
+   "social_innovation"
+  ]
+ },
+ {
+  "id": "8719ebc9-f8ac-41ab-9f3b-a75cdd3154d4",
+  "title": "ESRC Connect Awards (pilot) (Grant)",
+  "funder": "UK Research and Innovation, Economic and Social Research Council",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.find-government-grants.service.gov.uk/grants/esrc-connect-awards-pilot-grant-1",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "tech",
+   "social_innovation"
+  ]
+ },
+ {
+  "id": "424835ba-217c-4bb2-bfdc-b68960f77e61",
+  "title": "ESRC postdoctoral fellowships",
+  "funder": "Economic and Social Research Council (ESRC)",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.ukri.org/opportunity/esrc-postdoctoral-fellowships/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": null,
+  "impact_sectors": [
+   "education"
+  ]
+ },
+ {
+  "id": "45beb1ea-2e4e-452a-a072-c815e2d7a8ec",
+  "title": "ESRC responsive mode: new investigator grants round two",
+  "funder": "Economic and Social Research Council (ESRC)",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.ukri.org/opportunity/esrc-responsive-mode-new-investigator-grants-round-two/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": null,
+  "impact_sectors": [
+   "education"
+  ]
+ },
+ {
+  "id": "4a4faf4c-e975-4ec9-9f81-c70944bd331f",
+  "title": "ESRC responsive mode: working with Luxembourg researchers round two",
+  "funder": "Economic and Social Research Council (ESRC)",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.ukri.org/opportunity/esrc-responsive-mode-working-with-luxembourg-researchers-round-two/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": null,
+  "impact_sectors": [
+   "education"
+  ]
+ },
+ {
+  "id": "b2dd8088-88c4-4696-a4d2-6fe034422d65",
+  "title": "Ethex Positive Investment Platform",
+  "funder": "Ethex",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "community_shares",
+   "social_investment"
+  ],
+  "apply_url": "https://www.ethex.org.uk/user/fundraiser",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "environment",
+   "social_economy",
+   "housing",
+   "community"
+  ]
+ },
+ {
+  "id": "eae4707d-3f42-41e9-b31a-48618b09b2f8",
+  "title": "Ethical Property Affordable Charity Workspace",
+  "funder": "Ethical Property",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "office_space"
+  ],
+  "apply_url": "https://www.ethicalproperty.co.uk/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "community",
+   "social_economy"
+  ]
+ },
+ {
+  "id": "956504ff-2cce-48d0-9fbc-c4fa5027c292",
+  "title": "Expression of interest: Precision prevention: biological mechanisms of response variation",
+  "funder": "Medical Research Council (MRC)",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.ukri.org/opportunity/precision-prevention-biological-mechanisms-of-response-variation/",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "health",
+   "tech"
+  ]
+ },
+ {
+  "id": "10588575-9aa1-471b-9b7b-b8aa4c5d82c2",
+  "title": "Expression of interest: sandpit: AI supported research using UKRI social science data",
+  "funder": "Economic and Social Research Council (ESRC), UK Research and Innovation",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.ukri.org/opportunity/sandpit-ai-supported-research-using-ukri-social-science-data/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": null,
+  "impact_sectors": [
+   "tech",
+   "education"
+  ]
+ },
+ {
+  "id": "985b3216-a7bb-43ca-b086-3e81c1e69126",
+  "title": "EY Foundation Programmes for Young People",
+  "funder": "EY Foundation",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://ey.foundation/",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "employment",
+   "education"
+  ]
+ },
+ {
+  "id": "d1dd5f06-ebc0-4ca8-a76f-8cb511f6c219",
+  "title": "Fair By Design Fund — Tackling the Poverty Premium",
+  "funder": "Fair By Design (Finance Birmingham / Ascension Ventures)",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "social_investment"
+  ],
+  "apply_url": "https://fairbydesign.com/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "financial",
+   "social_innovation",
+   "tech"
+  ]
+ },
+ {
+  "id": "624987ee-d7c8-4d5e-a113-080b92016dc5",
+  "title": "Fair4All Finance — Financial Inclusion Investment",
+  "funder": "Fair4All Finance",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://fair4allfinance.org.uk/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "financial"
+  ]
+ },
+ {
+  "id": "1b62fbe2-6a97-45bd-9f40-63a8b59dc7eb",
+  "title": "FareShare Greater Manchester — Community Food Membership",
+  "funder": "FareShare Greater Manchester",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "goods"
+  ],
+  "apply_url": "https://faresharegm.org.uk/get-support/join-our-community-membership/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "Greater Manchester",
+  "impact_sectors": [
+   "food",
+   "community"
+  ]
+ },
+ {
+  "id": "cac5db24-95ec-4888-bb2a-c7f03a42063b",
+  "title": "Finance For Enterprise — Yorkshire Lending",
+  "funder": "Finance For Enterprise",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://www.finance-for-enterprise.co.uk/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "Yorkshire",
+  "impact_sectors": []
+ },
+ {
+  "id": "bdcda65e-0236-4ac2-9939-9389b990e108",
+  "title": "Financial Support for Social Enterprises in NI",
+  "funder": "Social Enterprise NI",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://socialenterpriseni.org/funding/",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "Northern Ireland",
+  "impact_sectors": [
+   "social_economy",
+   "employment",
+   "community"
+  ]
+ },
+ {
+  "id": "f16233d7-1c70-4006-b704-6c509bc879c1",
+  "title": "First Enterprise — East Midlands Social Enterprise Loans",
+  "funder": "First Enterprise",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://www.first-enterprise.co.uk/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "East Midlands",
+  "impact_sectors": []
+ },
+ {
+  "id": "1e994bdb-bb99-4c97-b02c-ee23c1874e18",
+  "title": "Firstport Start It Programme",
+  "funder": "Firstport",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "incubator",
+   "includes_grant",
+   "support_programme"
+  ],
+  "apply_url": "https://www.firstport.org.uk/funding/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "Scotland",
+  "impact_sectors": [
+   "social_economy",
+   "employment",
+   "community"
+  ]
+ },
+ {
+  "id": "9eb92571-387a-4742-9389-184205cadf6f",
+  "title": "Flexible Finance",
+  "funder": "Social Investment Business",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "loan"
+  ],
+  "apply_url": "https://www.sibgroup.org.uk/fund/flexible-finance/",
+  "is_active": false,
+  "pipeline_state": "between_rounds_scheduled",
+  "location_tag": "England",
+  "impact_sectors": [
+   "social_economy",
+   "community"
+  ]
+ },
+ {
+  "id": "2172377c-724f-4261-ae35-389af8de6867",
+  "title": "Forces in Mind Trust — Veterans Mental Health Programme",
+  "funder": "Forces in Mind Trust",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.fim-trust.org/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "mental_health",
+   "housing",
+   "employment",
+   "health"
+  ]
+ },
+ {
+  "id": "09b093ef-17a6-415d-bc6f-659c614d0f78",
+  "title": "Forsters for Good – Pro Bono Legal Support",
+  "funder": "Forsters LLP",
+  "funding_type": "in_kind",
+  "funding_subtypes": null,
+  "apply_url": "https://www.forsters.co.uk/forsters-for-good/communities",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "community",
+   "housing",
+   "justice",
+   "environment"
+  ]
+ },
+ {
+  "id": "29d000d3-e3fa-439e-89f8-e03109af0f44",
+  "title": "Foundation East CDFI Loans",
+  "funder": "Foundation East",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://www.foundationeast.org/",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "location_tag": null,
+  "impact_sectors": [
+   "employment",
+   "social_economy"
+  ]
+ },
+ {
+  "id": "b7656b4f-58dd-427d-81d5-c1961b0a0f77",
+  "title": "Foundation Scotland — Social Investment Fund",
+  "funder": "Foundation Scotland",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "blended",
+   "social_investment"
+  ],
+  "apply_url": "https://www.foundationscotland.org.uk/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "Scotland",
+  "impact_sectors": [
+   "community",
+   "financial",
+   "employment"
+  ]
+ },
+ {
+  "id": "4bcca8ed-8bbd-48e5-8689-b65cd84b00b1",
+  "title": "Foundervine Programmes",
+  "funder": "Foundervine",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "accelerator"
+  ],
+  "apply_url": "https://www.foundervine.com/programmes",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "social_innovation",
+   "tech",
+   "employment"
+  ]
+ },
+ {
+  "id": "d33aa458-0eb8-473a-8b28-547cd8557a71",
+  "title": "Fredericks Foundation — Community Business Loans",
+  "funder": "Fredericks Foundation",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "loan"
+  ],
+  "apply_url": "https://www.fredericksfoundation.org/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "employment",
+   "social_economy",
+   "community"
+  ]
+ },
+ {
+  "id": "64247ee8-6da1-4020-8b91-aadebce7b2df",
+  "title": "Fredericks Foundation — Interest-Free Microloans",
+  "funder": "Fredericks Foundation",
+  "funding_type": "social_investment",
+  "funding_subtypes": null,
+  "apply_url": "https://www.fredericksfoundation.org/apply",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": null,
+  "impact_sectors": [
+   "employment",
+   "financial"
+  ]
+ },
+ {
+  "id": "e31c28ad-10a0-4d7c-9076-33c8f8cf91e9",
+  "title": "FSI Small Charity Training and Capacity Building Programme",
+  "funder": "The Foundation for Social Improvement (FSI)",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://thefsi.org/",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "location_tag": null,
+  "impact_sectors": [
+   "community",
+   "education"
+  ]
+ },
+ {
+  "id": "aac6b9c0-9cf1-4d47-8c3f-f86132550957",
+  "title": "Funding and Development Programme Deadlines",
+  "funder": "Creative Scotland",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "restricted"
+  ],
+  "apply_url": "https://www.creativescotland.com/funding/funding-deadlines",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": null,
+  "impact_sectors": [
+   "creative",
+   "education"
+  ]
+ },
+ {
+  "id": "fa1cc1d5-75fa-4a7e-aa6f-178cc3931770",
+  "title": "Funding Futures Programme",
+  "funder": "UnLtd",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "award"
+  ],
+  "apply_url": "https://unltd.org.uk/awards/funding-futures-programme/",
+  "is_active": false,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "employment",
+   "financial"
+  ]
+ },
+ {
+  "id": "2e760e2a-6637-4ab9-b38c-e4d85923821f",
+  "title": "GC Business Finance — Greater Manchester Loans",
+  "funder": "GC Business Finance",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://gcbusinessfinance.co.uk/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "Greater Manchester",
+  "impact_sectors": [
+   "social_economy",
+   "community"
+  ]
+ },
+ {
+  "id": "470d8fd8-3e7d-47bf-918b-4101019881c8",
+  "title": "Get Grants FREE Virtual Conference 2026",
+  "funder": null,
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.getgrants.org.uk/",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "UK",
+  "impact_sectors": []
+ },
+ {
+  "id": "a4ee2034-0ec1-40d4-9a8b-a4b745916b5b",
+  "title": "GLL Social Enterprise Accelerator",
+  "funder": "GLL (Better)",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "accelerator",
+   "support_programme"
+  ],
+  "apply_url": "https://www.gll.org/services-and-impact/business-support/social-enterprise-accelerator",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "social_economy",
+   "health",
+   "creative",
+   "community"
+  ]
+ },
+ {
+  "id": "e15c53e3-3c20-430c-9e04-e49a05099b4d",
+  "title": "Go! London Capacity Building Programme",
+  "funder": "Go! London (Mayor of London / London Marathon Foundation / Sport England)",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://golondon.org.uk/about/the-go-london-capacity-building-programme/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "London",
+  "impact_sectors": [
+   "sport",
+   "community",
+   "young_people"
+  ]
+ },
+ {
+  "id": "eb46e253-9835-467c-ae2f-867f6c871e0b",
+  "title": "Good Finance",
+  "funder": "Good Finance (Better Society Capital)",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "pro_bono_consulting"
+  ],
+  "apply_url": "https://www.goodfinance.org.uk/",
+  "is_active": false,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "social_economy",
+   "financial"
+  ]
+ },
+ {
+  "id": "75f72d6e-c93b-4cd7-9830-49b70995b1e3",
+  "title": "Google Ad Grants",
+  "funder": "Google",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "tech_product"
+  ],
+  "apply_url": "https://www.google.com/grants/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "Global",
+  "impact_sectors": [
+   "creative",
+   "education",
+   "health",
+   "mental_health"
+  ]
+ },
+ {
+  "id": "0d4ec360-0e88-4ac8-aa6f-524339515e4b",
+  "title": "Google.org — Nonprofit Tech Grants & Ad Credits",
+  "funder": "Google.org",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "office_space"
+  ],
+  "apply_url": "https://www.google.com/nonprofits/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "Global",
+  "impact_sectors": [
+   "tech",
+   "social_innovation",
+   "community"
+  ]
+ },
+ {
+  "id": "31135104-a0a9-4dd9-9325-d0d176d31151",
+  "title": "Government Better Futures Fund",
+  "funder": "UK Government (Cabinet Office)",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://www.gov.uk/government/collections/social-investment",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "education",
+   "housing",
+   "mental_health",
+   "employment"
+  ]
+ },
+ {
+  "id": "20280f1e-616d-431b-9555-7dcaab82fd9f",
+  "title": "Green-Works Furniture Reuse Scheme",
+  "funder": "Green-Works",
+  "funding_type": "in_kind",
+  "funding_subtypes": null,
+  "apply_url": "https://en.wikipedia.org/wiki/Green-Works",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "environment",
+   "community"
+  ]
+ },
+ {
+  "id": "77902adb-140a-4301-ab5e-e556c6a2cb27",
+  "title": "Growth cohorts: next generation low carbon concrete cohort entry",
+  "funder": "Innovate UK",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.ukri.org/opportunity/growth-cohorts-next-generation-low-carbon-concrete-cohort-entry/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": null,
+  "impact_sectors": [
+   "environment",
+   "tech"
+  ]
+ },
+ {
+  "id": "18dcac42-fa21-4f81-a689-57da1bd0dd92",
+  "title": "Growth Impact Fund",
+  "funder": "Big Issue Invest Fund Management Ltd",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "loan",
+   "equity",
+   "revenue_share",
+   "social_investment"
+  ],
+  "apply_url": "https://growthimpactfund.org.uk/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "employment",
+   "education",
+   "disability",
+   "social_innovation"
+  ]
+ },
+ {
+  "id": "acbff6c1-4f2f-47a7-8f98-58d0f2072410",
+  "title": "Hatch Enterprise Business Support Programme",
+  "funder": "Hatch Enterprise",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "support_programme",
+   "training"
+  ],
+  "apply_url": "https://hatchenterprise.org/our-programmes/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "employment",
+   "social_economy",
+   "disability"
+  ]
+ },
+ {
+  "id": "8f0e5171-379b-41c8-a17d-e0caa0867332",
+  "title": "Healthy Ageing Award",
+  "funder": "UnLtd",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://unltd.org.uk/awards/healthy-ageing/",
+  "is_active": false,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "health",
+   "social_innovation"
+  ]
+ },
+ {
+  "id": "c64543b4-56f7-40bf-804d-fac7a5e5ee74",
+  "title": "Housing Pathways Fund",
+  "funder": "Social and Sustainable Capital (SASC)",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://www.socialandsustainable.com/our-funds/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "housing",
+   "community"
+  ]
+ },
+ {
+  "id": "e44b2f5f-d044-4466-850b-eba2804c007e",
+  "title": "HSBC UK No Fixed Address Fund",
+  "funder": "HSBC UK",
+  "funding_type": "corporate_grant",
+  "funding_subtypes": null,
+  "apply_url": "https://www.hsbc.co.uk/community/no-fixed-address/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": null,
+  "impact_sectors": [
+   "community",
+   "financial",
+   "housing"
+  ]
+ },
+ {
+  "id": "1ab3dcfc-230d-44e6-9aa0-ead6a728fb77",
+  "title": "Human Lending Library",
+  "funder": "Expert Impact",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "mentoring"
+  ],
+  "apply_url": "https://www.expertimpact.com/expert-mentoring",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "social_innovation",
+   "employment"
+  ]
+ },
+ {
+  "id": "d07619f8-3bfe-4f70-a95f-3db7d8ae6016",
+  "title": "Ignite Social Impact Competition",
+  "funder": "Ignite (backed by the Ford Family Foundation)",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://ignitecomp.co.uk/more-info/",
+  "is_active": false,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "social_innovation",
+   "tech",
+   "employment",
+   "environment"
+  ]
+ },
+ {
+  "id": "2be0272a-0b66-47f7-b277-9a7389a37438",
+  "title": "Immersive Arts phase two: invite only",
+  "funder": "Arts and Humanities Research Council (AHRC)",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.ukri.org/opportunity/immersive-arts-phase-two-invite-only/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": null,
+  "impact_sectors": [
+   "creative",
+   "tech"
+  ]
+ },
+ {
+  "id": "c57f8bba-b4e4-4a24-997a-90a2c59ff573",
+  "title": "Impact Hub Programmes",
+  "funder": "Impact Hub",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "accelerator",
+   "incubator"
+  ],
+  "apply_url": "https://london.impacthub.net/programmes",
+  "is_active": false,
+  "pipeline_state": "between_rounds_scheduled",
+  "location_tag": "London",
+  "impact_sectors": [
+   "social_innovation",
+   "environment",
+   "tech"
+  ]
+ },
+ {
+  "id": "6ad4db4c-125f-47c8-95ca-4637fa76773c",
+  "title": "Impact Loans England",
+  "funder": "Big Issue Invest",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://www.bigissue.com/invest/impact-loans-england/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "England",
+  "impact_sectors": [
+   "housing",
+   "education",
+   "health",
+   "creative"
+  ]
+ },
+ {
+  "id": "3e1f3112-b680-408d-a0a5-31ca4c8ea8e0",
+  "title": "Impetus — Youth Employment & Race Equity Grant",
+  "funder": "Impetus",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "restricted"
+  ],
+  "apply_url": "https://www.impetus.org.uk/funding-opportunities",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "employment",
+   "education",
+   "young_people"
+  ]
+ },
+ {
+  "id": "d230bbd1-5d29-4de7-9d51-03a013dfc9ed",
+  "title": "Impetus Private Equity Foundation Programme",
+  "funder": "Impetus",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "cohort_grant"
+  ],
+  "apply_url": "https://www.impetus.org.uk/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "young_people",
+   "education",
+   "employment",
+   "social_innovation"
+  ]
+ },
+ {
+  "id": "5e62ecae-3f4e-458c-9fdf-013e6f018c73",
+  "title": "In Kind Direct — Charity Network Membership",
+  "funder": "In Kind Direct",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "goods"
+  ],
+  "apply_url": "https://www.inkinddirect.org/with-charitable-organisations",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "community",
+   "financial"
+  ]
+ },
+ {
+  "id": "e95c39ec-da7e-4fdc-b111-9fc219fee6e9",
+  "title": "Innovate 2026",
+  "funder": "Sound Connections",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.sound-connections.org.uk/what-we-do/innovate/",
+  "is_active": false,
+  "pipeline_state": "published",
+  "location_tag": "England",
+  "impact_sectors": [
+   "creative",
+   "education",
+   "young_people"
+  ]
+ },
+ {
+  "id": "f2e16253-0b5f-4aac-8415-0cfb00771d81",
+  "title": "Innovate UK Growth Catalyst — Investor Partnerships",
+  "funder": "Innovate UK",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://iuk-business-connect.org.uk/programme/investor-partnerships/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "tech",
+   "social_innovation",
+   "employment"
+  ]
+ },
+ {
+  "id": "bec586cc-4172-4d15-bb05-5fd5f24c7bb9",
+  "title": "Innovate UK Innovation Loans",
+  "funder": "Innovate UK",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "loan"
+  ],
+  "apply_url": "https://iuk-business-connect.org.uk/programme/innovation-loans/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "tech",
+   "social_innovation"
+  ]
+ },
+ {
+  "id": "607b2eb5-d8d9-4937-945b-3d4490030dba",
+  "title": "Innovate UK Venture Builder Pilot Expression of Interest",
+  "funder": "Innovate UK",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://www.ukri.org/opportunity/innovate-uk-venture-builder-pilot-expression-of-interest/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": null,
+  "impact_sectors": [
+   "tech"
+  ]
+ },
+ {
+  "id": "1981a846-3cce-48d2-b568-033df30ca589",
+  "title": "Integrate Donated Office Space",
+  "funder": "Integrate",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "office_space"
+  ],
+  "apply_url": "https://integratespace.co/charities",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "community"
+  ]
+ },
+ {
+  "id": "b4e594fe-dc26-4f6c-9b42-905336a27bc1",
+  "title": "International Digital Technical Standards Grant Scheme 2026-29:  Improving Proficiency, Capacity and Participation",
+  "funder": "Department for Science, Innovation and Technology",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.find-government-grants.service.gov.uk/grants/international-digital-technical-standards-grant-scheme-2026-29--improving-proficiency-capacity-and-participation-1",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "tech",
+   "education",
+   "employment"
+  ]
+ },
+ {
+  "id": "54523b31-0594-45aa-a097-d945f333bca4",
+  "title": "Isambard-AI and Dawn AIRR supercomputers: Gateway route",
+  "funder": "UK Research and Innovation, Arts and Humanities Research Council (AHRC), Biotechnology and Biological Sciences Research Council (BBSRC), Economic and Social Research Council (ESRC), Engineering and Physical Sciences Research Council (EPSRC), Innovate UK, Medical Research Council (MRC), Natural Environment Research Council (NERC), Science and Technology Facilities Council (STFC)",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "restricted"
+  ],
+  "apply_url": "https://www.ukri.org/opportunity/access-to-isambard-ai-and-dawn-airr-supercomputers-gateway-route/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": null,
+  "impact_sectors": [
+   "tech"
+  ]
+ },
+ {
+  "id": "c6753b04-96e9-44c4-9c50-842006ad7b15",
+  "title": "Isambard-AI and Dawn AIRR supercomputers: Rapid Access route",
+  "funder": "UK Research and Innovation, Arts and Humanities Research Council (AHRC), Biotechnology and Biological Sciences Research Council (BBSRC), Economic and Social Research Council (ESRC), Engineering and Physical Sciences Research Council (EPSRC), Innovate UK, Medical Research Council (MRC), Natural Environment Research Council (NERC), Science and Technology Facilities Council (STFC)",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "pro_bono_consulting"
+  ],
+  "apply_url": "https://www.ukri.org/opportunity/isambard-ai-and-dawn-airr-supercomputers-rapid-access-route/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": null,
+  "impact_sectors": [
+   "tech"
+  ]
+ },
+ {
+  "id": "93f38ed1-ca74-4b6f-9249-51c95a134006",
+  "title": "Jobs and Skills Funding Opportunities",
+  "funder": "Greater London Authority (GLA) / London City Hall",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.london.gov.uk/programmes-strategies/jobs-and-skills/funding",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "location_tag": null,
+  "impact_sectors": [
+   "employment",
+   "education"
+  ]
+ },
+ {
+  "id": "cd00991f-0b57-468f-b55b-a7a337a9d634",
+  "title": "Jobs Guarantee",
+  "funder": "Department for Work and Pensions",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.find-government-grants.service.gov.uk/grants/jobs-guarantee-1",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "employment",
+   "education"
+  ]
+ },
+ {
+  "id": "e4cb0712-1507-434c-b31e-1ca464946760",
+  "title": "Joseph Rowntree Foundation — Social Investment Programme",
+  "funder": "Joseph Rowntree Foundation",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "blended",
+   "social_investment"
+  ],
+  "apply_url": "https://www.jrf.org.uk/social-investment/apply-for-social-investment",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "environment",
+   "housing",
+   "social_economy",
+   "financial"
+  ]
+ },
+ {
+  "id": "a89ee8f2-cdc6-4673-958c-786a135792c9",
+  "title": "Just Enterprise (Scotland)",
+  "funder": "Just Enterprise",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "pro_bono_consulting",
+   "training"
+  ],
+  "apply_url": "https://justenterprise.org/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "Scotland",
+  "impact_sectors": [
+   "social_economy",
+   "employment",
+   "environment"
+  ]
+ },
+ {
+  "id": "e1073daf-2f51-497d-a700-54ef00c2c5fd",
+  "title": "Kent Social Enterprise Loan Fund (KSELF)",
+  "funder": "Kent Community Foundation",
+  "funding_type": "blended_finance",
+  "funding_subtypes": null,
+  "apply_url": "https://kentcf.org.uk/loans/social-enterprises",
+  "is_active": false,
+  "pipeline_state": "between_rounds_scheduled",
+  "location_tag": null,
+  "impact_sectors": [
+   "social_economy",
+   "social_innovation",
+   "community",
+   "employment"
+  ]
+ },
+ {
+  "id": "d4ffd3c0-5feb-4649-a515-c03e27b67b30",
+  "title": "Key Fund — Social Enterprise Investment",
+  "funder": "Key Fund",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "social_investment"
+  ],
+  "apply_url": "https://thekeyfund.co.uk/funding/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "employment",
+   "community",
+   "financial"
+  ]
+ },
+ {
+  "id": "963e340b-e3b7-4ce5-8477-96dfca7c9a95",
+  "title": "Key Fund — Social Investment Loans",
+  "funder": "Key Fund",
+  "funding_type": "social_investment",
+  "funding_subtypes": [
+   "loan"
+  ],
+  "apply_url": "https://thekeyfund.co.uk/our-funding/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": null,
+  "impact_sectors": []
+ },
+ {
+  "id": "b818a116-3579-4eb3-8808-b40abc38e393",
+  "title": "Key Fund Flexible Finance",
+  "funder": "Key Fund",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "blended",
+   "loan",
+   "social_investment"
+  ],
+  "apply_url": "https://thekeyfund.co.uk/funding/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "North of England & Midlands",
+  "impact_sectors": [
+   "community",
+   "social_economy",
+   "creative",
+   "health"
+  ]
+ },
+ {
+  "id": "c49bde44-2abb-4ff4-a3fa-76061d5cbad9",
+  "title": "Key Fund Flexible Finance",
+  "funder": "Key Fund",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "loan"
+  ],
+  "apply_url": "https://thekeyfund.co.uk/funding/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "England & North England & Midlands",
+  "impact_sectors": [
+   "social_economy",
+   "community",
+   "employment"
+  ]
+ },
+ {
+  "id": "d3b226dc-7c18-43e4-894b-d055c2e56d37",
+  "title": "Key Fund Social Enterprise Loans and Investment",
+  "funder": "Key Fund",
+  "funding_type": "blended_finance",
+  "funding_subtypes": null,
+  "apply_url": "https://thekeyfund.co.uk/apply/",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": null,
+  "impact_sectors": [
+   "social_economy",
+   "community",
+   "employment",
+   "housing"
+  ]
+ },
+ {
+  "id": "6f3892eb-3e7f-4976-b60b-8d46ca476573",
+  "title": "Key Fund Social Investment Loans",
+  "funder": "Key Fund",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://thekeyfund.co.uk/apply/",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "location_tag": "North of England and Midlands",
+  "impact_sectors": [
+   "social_economy",
+   "community"
+  ]
+ },
+ {
+  "id": "afc610a3-a6e8-4e27-a688-edf8667a7696",
+  "title": "Knowledge Transfer Partnership",
+  "funder": "Innovate UK, Arts and Humanities Research Council (AHRC), Biotechnology and Biological Sciences Research Council (BBSRC), Economic and Social Research Council (ESRC), Engineering and Physical Sciences Research Council (EPSRC), Natural Environment Research Council (NERC), Science and Technology Facilities Council (STFC)",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "cohort_grant"
+  ],
+  "apply_url": "https://www.ukri.org/opportunity/knowledge-transfer-partnership/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": null,
+  "impact_sectors": [
+   "tech",
+   "employment"
+  ]
+ },
+ {
+  "id": "050c966f-e6a3-4ac5-926e-b561bc1620b6",
+  "title": "Lawtech Grant Competition Phase III",
+  "funder": "Ministry of Justice",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.find-government-grants.service.gov.uk/grants/lawtechuk-grant-phase-3-1",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "England & Wales",
+  "impact_sectors": [
+   "tech",
+   "justice",
+   "social_innovation"
+  ]
+ },
+ {
+  "id": "a5da4678-2d9e-49ce-9c9a-599c155046ef",
+  "title": "LawWorks — Free Legal Advice for Charities",
+  "funder": "LawWorks",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "pro_bono_legal"
+  ],
+  "apply_url": "https://www.lawworks.org.uk/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "England & Wales",
+  "impact_sectors": [
+   "justice",
+   "community"
+  ]
+ },
+ {
+  "id": "27f913f2-d5d1-4773-a410-35ceb8eeba18",
+  "title": "LawWorks Clinics Network",
+  "funder": "LawWorks",
+  "funding_type": "in_kind",
+  "funding_subtypes": null,
+  "apply_url": "https://www.lawworks.org.uk/legal-advice-not-profits/free-legal-assistance",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "location_tag": "England & Wales",
+  "impact_sectors": [
+   "justice",
+   "community"
+  ]
+ },
+ {
+  "id": "f44a6141-5b8f-43b8-81b0-f1d5ba0930da",
+  "title": "LawWorks Not-for-Profits Programme",
+  "funder": "LawWorks",
+  "funding_type": "in_kind",
+  "funding_subtypes": null,
+  "apply_url": "https://www.lawworks.org.uk/legal-advice-not-profits",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "location_tag": "England & Wales",
+  "impact_sectors": [
+   "justice",
+   "community"
+  ]
+ },
+ {
+  "id": "089689a6-4292-44d6-9610-65e7eaf781b3",
+  "title": "Lead the Change",
+  "funder": "Community Foundation for Northern Ireland",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://communityfoundationni.org/grants/lead-the-change/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "Northern Ireland",
+  "impact_sectors": [
+   "community",
+   "education"
+  ]
+ },
+ {
+  "id": "465c36ce-6bb5-47e5-97e7-ce87924ef67a",
+  "title": "Lead The Change",
+  "funder": "Two Ridings Community Foundation",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://tworidingscf.org.uk/fund/lead-the-change/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "Yorkshire",
+  "impact_sectors": [
+   "community"
+  ]
+ },
+ {
+  "id": "11724c27-c30e-4556-ae06-957d4220114f",
+  "title": "Let's Do Business — South East Enterprise Loans",
+  "funder": "Let's Do Business Group",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://www.letsdobusinessfinance.co.uk/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "South East",
+  "impact_sectors": [
+   "social_economy",
+   "employment"
+  ]
+ },
+ {
+  "id": "2d0123e4-fd03-4253-8687-d637e7c235e1",
+  "title": "Lloyds Bank Foundation — Invest Programme",
+  "funder": "Lloyds Bank Foundation",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "cohort_grant"
+  ],
+  "apply_url": "https://www.lloydsbankfoundation.org.uk/our-programmes/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": null,
+  "impact_sectors": [
+   "community",
+   "housing",
+   "mental_health",
+   "financial"
+  ]
+ },
+ {
+  "id": "8825cb0f-f53f-45d4-93ab-dc6fd8036f21",
+  "title": "Lloyds Bank Foundation — Specialist Programme",
+  "funder": "Lloyds Bank Foundation for England and Wales",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "includes_grant",
+   "support_programme"
+  ],
+  "apply_url": "https://www.lloydsbankfoundation.org.uk/funding",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "England & Wales",
+  "impact_sectors": [
+   "community",
+   "health",
+   "mental_health"
+  ]
+ },
+ {
+  "id": "6fa4bec9-8827-4216-ba92-6e5b827ab38a",
+  "title": "Lloyds Bank Foundation Enhance Programme",
+  "funder": "Lloyds Bank Foundation",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.lloydsbankfoundation.org.uk/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "England & Wales",
+  "impact_sectors": [
+   "community",
+   "financial",
+   "health",
+   "employment"
+  ]
+ },
+ {
+  "id": "2134268d-b413-42c7-a0db-39e6d1a3b0fb",
+  "title": "Local Skills Improvement Programmes — South Yorkshire",
+  "funder": "South Yorkshire Mayoral Combined Authority",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.southyorkshire-ca.gov.uk/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "South Yorkshire",
+  "impact_sectors": [
+   "employment",
+   "education"
+  ]
+ },
+ {
+  "id": "da21de99-d4ec-4b26-b071-3f43939a3801",
+  "title": "Localgiving — Charity Match Funding Rounds",
+  "funder": "Localgiving",
+  "funding_type": "blended_finance",
+  "funding_subtypes": null,
+  "apply_url": "https://localgiving.org/information/match-funding",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": null,
+  "impact_sectors": []
+ },
+ {
+  "id": "d1fbacab-f343-445e-bd5c-98ac7b9f1840",
+  "title": "Locality — Community-Led Investment & Development",
+  "funder": "Locality",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://locality.org.uk/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "England",
+  "impact_sectors": []
+ },
+ {
+  "id": "96c68ed0-0147-4aa1-9b4f-098a80bb7523",
+  "title": "Macmillan Q Lab — Holistic Cancer Care",
+  "funder": "Macmillan Cancer Support / Q (NHS Alliance)",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.macmillan.org.uk/about-us/what-we-do/macmillan-funding-grants/q-lab",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "location_tag": null,
+  "impact_sectors": [
+   "health",
+   "social_innovation",
+   "community"
+  ]
+ },
+ {
+  "id": "52201b05-b444-4c00-82ae-9bb608a6e27e",
+  "title": "Match My Project — Hackney",
+  "funder": "Match My Project",
+  "funding_type": "in_kind",
+  "funding_subtypes": null,
+  "apply_url": "https://matchmyproject.org/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "Hackney",
+  "impact_sectors": [
+   "community"
+  ]
+ },
+ {
+  "id": "045df11d-0a67-4152-b823-558cef76b050",
+  "title": "Mathematical sciences open and open plus fellowship",
+  "funder": "Engineering and Physical Sciences Research Council (EPSRC)",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.ukri.org/opportunity/mathematical-sciences-open-and-open-plus-fellowship/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": null,
+  "impact_sectors": [
+   "tech",
+   "education"
+  ]
+ },
+ {
+  "id": "0b0c7fb1-d9b1-4a0b-9e6f-7f18aa6d9141",
+  "title": "Mathematical sciences postdoctoral fellowship",
+  "funder": "Engineering and Physical Sciences Research Council (EPSRC)",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.ukri.org/opportunity/mathematical-sciences-postdoctoral-fellowship/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": null,
+  "impact_sectors": [
+   "tech",
+   "education"
+  ]
+ },
+ {
+  "id": "4a3ec7f5-dba6-4105-82ad-b15d81773b86",
+  "title": "Metascience research grants: round two",
+  "funder": "Economic and Social Research Council (ESRC), Natural Environment Research Council (NERC), Biotechnology and Biological Sciences Research Council (BBSRC), Arts and Humanities Research Council (AHRC), Science and Technology Facilities Council (STFC), Engineering and Physical Sciences Research Council (EPSRC), Medical Research Council (MRC)",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.ukri.org/opportunity/metascience-research-grants-round-2/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": null,
+  "impact_sectors": [
+   "tech",
+   "education"
+  ]
+ },
+ {
+  "id": "56a8cc5f-a0a2-4d6b-af11-fa60b7f0e453",
+  "title": "Microsoft 365 Nonprofit Cloud Subscription (via Charity Digital)",
+  "funder": "Charity Digital",
+  "funding_type": "in_kind",
+  "funding_subtypes": null,
+  "apply_url": "https://charitydigital.org.uk/products/microsoft-365-nonprofit-cloud-subscription",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "tech"
+  ]
+ },
+ {
+  "id": "3c2c6766-220f-4d54-ad18-4bade01df7a5",
+  "title": "Microsoft for Nonprofits",
+  "funder": "Microsoft",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "tech_product"
+  ],
+  "apply_url": "https://www.microsoft.com/en-gb/nonprofits",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "Global",
+  "impact_sectors": [
+   "tech"
+  ]
+ },
+ {
+  "id": "f6b2ac5d-3004-452c-81e6-2d2fa32ccae3",
+  "title": "Microsoft Nonprofit Software Donations Programme",
+  "funder": "Microsoft",
+  "funding_type": "in_kind",
+  "funding_subtypes": null,
+  "apply_url": "https://www.techsoup.uk/partners/microsoft/faqs",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "tech"
+  ]
+ },
+ {
+  "id": "1765c329-ba73-4c58-b779-1eb0db6fc87a",
+  "title": "Microsoft Tech for Social Impact",
+  "funder": "Microsoft",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "tech_product"
+  ],
+  "apply_url": "https://www.microsoft.com/en-us/nonprofits",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "Global",
+  "impact_sectors": [
+   "tech",
+   "social_innovation",
+   "community"
+  ]
+ },
+ {
+  "id": "c55ed7e8-5b10-46b7-99a3-97a64bdcff62",
+  "title": "Mind Cymru — Mental Health Support Programmes for Welsh Communities",
+  "funder": "Mind Cymru",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.mind.org.uk/about-us/mind-cymru/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "Wales",
+  "impact_sectors": [
+   "mental_health",
+   "community"
+  ]
+ },
+ {
+  "id": "7eb61b99-36e4-4246-a7da-bc91a61e3e8e",
+  "title": "More than a Pub",
+  "funder": "Key Fund",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "loan",
+   "social_investment"
+  ],
+  "apply_url": "https://thekeyfund.co.uk/funding/more-than-a-pub/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "England",
+  "impact_sectors": [
+   "community",
+   "social_economy",
+   "housing"
+  ]
+ },
+ {
+  "id": "859899af-b95f-4001-9ae2-08a0d48a7258",
+  "title": "MRC: new investigator research grant: applicant-led",
+  "funder": "Medical Research Council (MRC)",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.ukri.org/opportunity/mrc-new-investigator-research-grant-applicant-led/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": null,
+  "impact_sectors": [
+   "health"
+  ]
+ },
+ {
+  "id": "959a853b-a16f-4c46-a18d-d841a5fe55fa",
+  "title": "Music for All — Community Project Funding",
+  "funder": "Music for All",
+  "funding_type": "in_kind",
+  "funding_subtypes": null,
+  "apply_url": "https://www.musicforall.org.uk/schools-and-community-groups-awards/",
+  "is_active": false,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "creative",
+   "community",
+   "education"
+  ]
+ },
+ {
+  "id": "469b52bf-f8b9-4b4a-b8cd-54789928562e",
+  "title": "National Digital Inclusion Network membership",
+  "funder": "Good Things Foundation",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "goods",
+   "training"
+  ],
+  "apply_url": "https://www.goodthingsfoundation.org/network",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "tech",
+   "education",
+   "financial"
+  ]
+ },
+ {
+  "id": "644e4d08-e0fd-46ef-8568-d056d273adfd",
+  "title": "National Lottery Heritage Fund — Nature Towns and Cities",
+  "funder": "National Lottery Heritage Fund",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.heritagefund.org.uk/funding/strategic-initiatives/nature-towns-and-cities",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "environment",
+   "heritage",
+   "community"
+  ]
+ },
+ {
+  "id": "17212af5-20b4-4bc1-a4a6-683592c60687",
+  "title": "National Pro Bono Centre",
+  "funder": "National Pro Bono Centre",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "pro_bono_legal"
+  ],
+  "apply_url": "https://www.nationalprobonocentre.org.uk/",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "justice",
+   "community"
+  ]
+ },
+ {
+  "id": "c38b2440-f2b6-42fd-96cd-d765a1da0de8",
+  "title": "NatWest Women In Business",
+  "funder": "NatWest",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "pro_bono_consulting"
+  ],
+  "apply_url": "https://www.natwest.com/business/business-services/women-in-business.html",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "employment",
+   "social_innovation"
+  ]
+ },
+ {
+  "id": "368c7f4b-2915-455b-9663-8e2c57d615dc",
+  "title": "NCVO — Support for Voluntary Organisations",
+  "funder": "NCVO",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "training"
+  ],
+  "apply_url": "https://www.ncvo.org.uk/",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "community"
+  ]
+ },
+ {
+  "id": "0ebb775d-0ff1-44cd-880b-5853f73b060f",
+  "title": "NCVO Learning & Development Programmes",
+  "funder": "NCVO",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "training"
+  ],
+  "apply_url": "https://www.ncvo.org.uk/training-events/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "England",
+  "impact_sectors": [
+   "education",
+   "community"
+  ]
+ },
+ {
+  "id": "d5da3c99-fdf2-4a8d-9778-ff5935fb747c",
+  "title": "Neighbourly — Surplus Food, Product Donations and Corporate Grant Funds",
+  "funder": "Neighbourly",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "goods",
+   "volunteering"
+  ],
+  "apply_url": "https://www.neighbourly.com/goodcause/new",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "food",
+   "community"
+  ]
+ },
+ {
+  "id": "464dea17-da2b-4d39-8812-496eaad4b5a0",
+  "title": "Nesta Impact Investments — Early Stage Social Ventures",
+  "funder": "Nesta",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://www.nesta.org.uk/project/impact-investments/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "health",
+   "education",
+   "environment",
+   "financial"
+  ]
+ },
+ {
+  "id": "f7e51198-d22b-484a-bec3-aadbe08fb748",
+  "title": "Network Membership",
+  "funder": "StreetGames",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "training"
+  ],
+  "apply_url": "https://www.streetgames.org/partner-with-us/join-the-network/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "sport",
+   "community",
+   "young_people"
+  ]
+ },
+ {
+  "id": "1a6fd288-8aa3-4162-8bc9-8d712cd784d9",
+  "title": "Newid Programme — Digital Mentoring for Welsh Third Sector",
+  "funder": "Cwmpas",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://cwmpas.coop/our-services/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "Wales",
+  "impact_sectors": [
+   "community",
+   "tech",
+   "social_economy"
+  ]
+ },
+ {
+  "id": "68a158d4-e2c7-42af-934b-fbb418f08e28",
+  "title": "North East Create Growth Programme",
+  "funder": "Creative UK",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "support_programme",
+   "includes_grant"
+  ],
+  "apply_url": "https://www.wearecreative.uk/support/regional-growth-programmes/north-east/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "North East England",
+  "impact_sectors": [
+   "creative",
+   "social_economy",
+   "tech"
+  ]
+ },
+ {
+  "id": "5e37d1c3-0cc8-4b9a-9459-086a0d3027cc",
+  "title": "Northern Cultural Regeneration Fund",
+  "funder": "Key Fund",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "loan",
+   "social_investment"
+  ],
+  "apply_url": "https://thekeyfund.co.uk/funding/northern-cultural-regeneration-fund/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "Northern England (11 LEP areas)",
+  "impact_sectors": [
+   "creative",
+   "social_economy",
+   "community"
+  ]
+ },
+ {
+  "id": "0185be29-2511-48a8-9195-f2943c557e70",
+  "title": "Northern Impact Fund",
+  "funder": "Key Fund",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://thekeyfund.co.uk/funding/",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "North of England & Midlands",
+  "impact_sectors": [
+   "social_economy",
+   "employment",
+   "community"
+  ]
+ },
+ {
+  "id": "105cf22a-e502-436b-8806-b1f0c56b4df1",
+  "title": "Northern Impact Fund 2",
+  "funder": "Key Fund",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "blended",
+   "loan",
+   "social_investment"
+  ],
+  "apply_url": "https://thekeyfund.co.uk/funding/northern-impact-fund-2/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "North of England & Midlands",
+  "impact_sectors": [
+   "social_economy",
+   "community",
+   "employment"
+  ]
+ },
+ {
+  "id": "05c2be65-b4be-4ee1-96d0-71b5bd111005",
+  "title": "Nurturing Ideas to Change the Housing System",
+  "funder": "Nationwide Foundation",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://nationwidefoundation.org.uk/our-programmes/nurturing-ideas-for-change-to-the-housing-system/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": null,
+  "impact_sectors": [
+   "housing",
+   "social_innovation"
+  ]
+ },
+ {
+  "id": "e97466b2-44cf-4e9a-8439-a4f43d31ec46",
+  "title": "Organisational Development Fund",
+  "funder": "Two Ridings Community Foundation",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://tworidingscf.org.uk/fund/organisational-development/",
+  "is_active": false,
+  "pipeline_state": "between_rounds_scheduled",
+  "location_tag": "North Yorkshire",
+  "impact_sectors": [
+   "community",
+   "employment",
+   "health"
+  ]
+ },
+ {
+  "id": "61c3f5b4-d6a9-46e8-9112-ed915acc8fd4",
+  "title": "Other Sources of Support",
+  "funder": "Creative Scotland",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "pro_bono_consulting"
+  ],
+  "apply_url": "https://www.creativescotland.com/resources-publications/other-sources-of-support",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": null,
+  "impact_sectors": []
+ },
+ {
+  "id": "c1a86516-b4be-4535-90cc-4a672750d652",
+  "title": "Pilotlight — Pro Bono Support Matching",
+  "funder": "Pilotlight",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "pro_bono_consulting",
+   "mentoring"
+  ],
+  "apply_url": "https://www.pilotlight.org.uk/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "community"
+  ]
+ },
+ {
+  "id": "c1caaf02-8461-4393-8ba1-c81096cded8a",
+  "title": "Pilotlight 360",
+  "funder": "Pilotlight",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "pro_bono_consulting",
+   "mentoring"
+  ],
+  "apply_url": "https://www.pilotlight.org.uk/charities/apply-for-support",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "community",
+   "social_innovation",
+   "education"
+  ]
+ },
+ {
+  "id": "f89bad1b-0fcd-48fc-9762-25e22adc48ea",
+  "title": "Power to Change — Trade Up Programme",
+  "funder": "Power to Change",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://www.powertochange.org.uk/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "England",
+  "impact_sectors": []
+ },
+ {
+  "id": "e93c189e-a40a-4251-bb75-ca5be59d7130",
+  "title": "Power Up London",
+  "funder": "Big Issue Invest",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.bigissue.com/invest/power-up-london/",
+  "is_active": false,
+  "pipeline_state": "between_rounds_scheduled",
+  "location_tag": "London",
+  "impact_sectors": [
+   "social_innovation",
+   "employment",
+   "community"
+  ]
+ },
+ {
+  "id": "75464f79-ae59-4006-81d4-2d9a0bfc9443",
+  "title": "POWER UP Participant Programme",
+  "funder": "PRS Foundation",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "cohort_grant"
+  ],
+  "apply_url": "https://prsfoundation.com/power-up-participant-programme/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "creative"
+  ]
+ },
+ {
+  "id": "42662ee9-87b7-47bd-95d4-5a5c1e7df187",
+  "title": "PowerUp - capacity building for Deaf and Disabled People's Organisations",
+  "funder": "Inclusion London",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.inclusionlondon.org.uk/services-and-support/powerup/development/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "London",
+  "impact_sectors": [
+   "disability",
+   "community"
+  ]
+ },
+ {
+  "id": "792c4cce-e971-4544-8f5c-3e4d098bf087",
+  "title": "Pre-announcement: Gambling harms research grants",
+  "funder": "Arts and Humanities Research Council (AHRC), Economic and Social Research Council (ESRC), Medical Research Council (MRC), UK Research and Innovation",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.ukri.org/opportunity/gambling-harms-research-grants/",
+  "is_active": false,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "health",
+   "mental_health",
+   "social_innovation"
+  ]
+ },
+ {
+  "id": "71609919-6bc4-4bd1-bea5-a2d89007c92c",
+  "title": "Pro Bono Charter Signatory Firms",
+  "funder": "The Law Society",
+  "funding_type": "in_kind",
+  "funding_subtypes": null,
+  "apply_url": "https://www.lawsociety.org.uk/topics/pro-bono/pro-bono-charter",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "justice",
+   "community"
+  ]
+ },
+ {
+  "id": "38f3cae0-7d56-422a-aa1f-8691c2540fc9",
+  "title": "Pro Bono Economics Advisory",
+  "funder": "Pro Bono Economics",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "pro_bono_consulting",
+   "training"
+  ],
+  "apply_url": "https://pbe.co.uk/our-services/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "social_innovation",
+   "education",
+   "community"
+  ]
+ },
+ {
+  "id": "cc0252b3-e362-401c-80b6-5407fed2dfc8",
+  "title": "Property Fund",
+  "funder": "Key Fund",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "social_investment"
+  ],
+  "apply_url": "https://thekeyfund.co.uk/funding/property-fund/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "Yorkshire and Humber",
+  "impact_sectors": [
+   "housing",
+   "social_economy"
+  ]
+ },
+ {
+  "id": "6f5693ef-679c-4643-ad79-f933f9cdf7b1",
+  "title": "Purple Shoots — Wales Microfinance",
+  "funder": "Purple Shoots",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://www.purpleshoots.org/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "Wales",
+  "impact_sectors": [
+   "employment",
+   "social_economy",
+   "community"
+  ]
+ },
+ {
+  "id": "0efbafbc-a44f-4dff-b276-9d2a50dc3fb0",
+  "title": "Rank Foundation — Time to Shine Leadership Programme",
+  "funder": "Rank Foundation",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "cohort_grant"
+  ],
+  "apply_url": "https://rankfoundation.com/our-approach/leadership/time-to-shine/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "education",
+   "community"
+  ]
+ },
+ {
+  "id": "262d608f-15f9-4c6c-8761-02af3c3ea140",
+  "title": "Reach Fund",
+  "funder": "Groundwork",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.groundwork.org.uk/thrive-together/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "social_innovation"
+  ]
+ },
+ {
+  "id": "a93d83d5-6f1a-4170-8327-324c59663b57",
+  "title": "Reach Volunteering — Skilled Volunteers",
+  "funder": "Reach Volunteering",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "volunteering"
+  ],
+  "apply_url": "https://reachvolunteering.org.uk/",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "community"
+  ]
+ },
+ {
+  "id": "970ce070-6fea-44fc-bfea-a7317776681a",
+  "title": "Reach Volunteering — TrusteeWorks",
+  "funder": "Reach Volunteering",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "volunteering"
+  ],
+  "apply_url": "https://reachvolunteering.org.uk/build-dynamic-trustee-board",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "community"
+  ]
+ },
+ {
+  "id": "27f81d81-7ce9-45a9-aa2c-76a1437bea67",
+  "title": "Refurbished Computer Donation Scheme",
+  "funder": "Computer Aid International",
+  "funding_type": "in_kind",
+  "funding_subtypes": null,
+  "apply_url": "https://www.computeraid.org/blog/how-to-recycle-used-computers-for-charity-in-the-uk/",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "tech",
+   "education",
+   "community"
+  ]
+ },
+ {
+  "id": "25466243-4af6-453a-9ea4-5f471919fa30",
+  "title": "Resolution Foundation Workertech Partnership",
+  "funder": "Resolution Foundation",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "social_investment"
+  ],
+  "apply_url": "https://www.resolutionfoundation.org/ventures",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "employment",
+   "tech",
+   "social_innovation"
+  ]
+ },
+ {
+  "id": "957a8b0a-3983-4f66-bc52-58b66f58faf2",
+  "title": "Resonance — Community Investment Fund",
+  "funder": "Resonance",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "social_investment"
+  ],
+  "apply_url": "https://resonance.ltd.uk/get-investment/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "England",
+  "impact_sectors": [
+   "housing",
+   "financial",
+   "health",
+   "education"
+  ]
+ },
+ {
+  "id": "ebe92869-c346-408b-a466-1c28861986e6",
+  "title": "Resonance — National Homelessness Property Fund",
+  "funder": "Resonance",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "social_investment"
+  ],
+  "apply_url": "https://resonance.ltd.uk/impact-property-funds",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "housing",
+   "community",
+   "employment"
+  ]
+ },
+ {
+  "id": "5ccc0ee4-504b-4901-84e7-212e0bf975e6",
+  "title": "Resonance Community Developers (RCD)",
+  "funder": "Resonance",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://resonance.ltd.uk/news/news/resonance-launches-new-8-million-social-impact-investment-fund",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "Cornwall & Devon, Greater Manchester, Gloucestershire",
+  "impact_sectors": [
+   "housing",
+   "sport",
+   "environment",
+   "community"
+  ]
+ },
+ {
+  "id": "b1b546ce-02d6-4789-beae-f5109ef627d7",
+  "title": "Resonance Enterprise Investment Fund",
+  "funder": "Resonance",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://resonance.ltd.uk/for-investors/investment-opportunities/enterprise-growth-funds/resonance-enterprise-investment-fund",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": null,
+  "impact_sectors": [
+   "housing",
+   "employment",
+   "community",
+   "social_economy"
+  ]
+ },
+ {
+  "id": "250e4dea-d08b-49e7-9a1e-cde60c135849",
+  "title": "Resonance Enterprise Investment Fund",
+  "funder": "Resonance",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://resonance.ltd.uk/get-investment/enterprise-growth-funds/resonance-enterprise-investment-fund",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "South West England, West Midlands and North West England",
+  "impact_sectors": [
+   "social_economy",
+   "health",
+   "employment",
+   "environment"
+  ]
+ },
+ {
+  "id": "cc8a885c-bb12-4939-bf8e-7641851bc8c6",
+  "title": "Resources for Charities and Community Groups (Meeting Space Listings)",
+  "funder": "London Plus",
+  "funding_type": "in_kind",
+  "funding_subtypes": null,
+  "apply_url": "https://londonplus.org/resources-for-charities-and-community-groups-march-2025/",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "London",
+  "impact_sectors": [
+   "community",
+   "education",
+   "employment"
+  ]
+ },
+ {
+  "id": "c6f0aeb5-a3e7-41e7-8243-109526af4679",
+  "title": "Responsible Finance CDFI Loan Finder",
+  "funder": "Responsible Finance",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://responsiblefinance.org.uk/find-a-loan/",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": null,
+  "impact_sectors": [
+   "social_economy",
+   "financial",
+   "employment"
+  ]
+ },
+ {
+  "id": "011655cc-3391-43d4-8fdb-bbdfda4479ab",
+  "title": "Revenue Share for Social Enterprises",
+  "funder": "Fredericks Foundation",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "revenue_share"
+  ],
+  "apply_url": "https://www.fredericksfoundation.org/looking-for-funding/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "England, Wales & Scotland",
+  "impact_sectors": [
+   "social_economy",
+   "social_innovation"
+  ]
+ },
+ {
+  "id": "d6b42c3a-1f96-4c7e-903d-8a70dee69eb2",
+  "title": "Richmond Furniture Scheme (RFS) Furniture Donation Service",
+  "funder": "Richmond Furniture Scheme",
+  "funding_type": "in_kind",
+  "funding_subtypes": null,
+  "apply_url": "https://www.rfsonline.co.uk/",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "Richmond",
+  "impact_sectors": [
+   "housing",
+   "community",
+   "environment"
+  ]
+ },
+ {
+  "id": "0362621b-10b3-48f5-9e8e-890ba4588185",
+  "title": "Robert Owen Community Banking — Wales Social Enterprise Lending",
+  "funder": "Robert Owen Community Banking",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://www.rocbf.co.uk/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "Wales",
+  "impact_sectors": [
+   "social_economy",
+   "employment"
+  ]
+ },
+ {
+  "id": "ec46883d-f99b-4295-a61c-6b6eb06c2aa1",
+  "title": "ROCB CDFI Loans",
+  "funder": "Robert Owen Community Banking Fund (ROCB)",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://www.rocbf.org.uk/",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "location_tag": "Wales",
+  "impact_sectors": [
+   "employment",
+   "social_economy",
+   "financial"
+  ]
+ },
+ {
+  "id": "2d0ad47b-91a3-40f9-9ece-afed4b621007",
+  "title": "Rosa — Rise Fund",
+  "funder": "Rosa UK Fund for Women & Girls",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://rosauk.org/our-programmes/rise-fund/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "women",
+   "community"
+  ]
+ },
+ {
+  "id": "4907513b-6875-46cb-b9d3-e36d8e0746bd",
+  "title": "Roundhouse Young Creatives Programme",
+  "funder": "Roundhouse",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.roundhouse.org.uk/young-creatives-11-30/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "creative",
+   "education"
+  ]
+ },
+ {
+  "id": "200ad44b-7a81-48e0-9ce5-1118aaaba9f0",
+  "title": "S J Noble Trust",
+  "funder": "S J Noble Trust",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "loan"
+  ],
+  "apply_url": "https://sjnobletrust.scot/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "Argyll & Bute",
+  "impact_sectors": [
+   "employment",
+   "community",
+   "financial"
+  ]
+ },
+ {
+  "id": "08819057-94cd-4b9c-879f-af3652675886",
+  "title": "Salesforce Nonprofit Cloud - Power of Us Programme",
+  "funder": "Salesforce.org",
+  "funding_type": "in_kind",
+  "funding_subtypes": null,
+  "apply_url": "https://www.salesforce.com/uk/nonprofit/pricing/",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "tech",
+   "community"
+  ]
+ },
+ {
+  "id": "53dd63b0-f850-4a8e-a28f-6b84704e810f",
+  "title": "Salesforce Power of Us Program",
+  "funder": "Salesforce",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "tech_product"
+  ],
+  "apply_url": "https://www.salesforce.com/nonprofit/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "Global",
+  "impact_sectors": [
+   "tech",
+   "social_innovation"
+  ]
+ },
+ {
+  "id": "5da1bb15-e93e-4949-a91b-c886ecd75294",
+  "title": "Scottish Schools Pipes and Drums Trust — Funding and Bagpipe Loans",
+  "funder": "Scottish Schools Pipes and Drums Trust",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "goods"
+  ],
+  "apply_url": "https://sspdt.org.uk/funding/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "Scotland",
+  "impact_sectors": [
+   "heritage",
+   "creative",
+   "education"
+  ]
+ },
+ {
+  "id": "49dba18b-28ee-47b6-98b8-b90104057183",
+  "title": "Screen Scotland — Production & Development Funding",
+  "funder": "Screen Scotland",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "restricted"
+  ],
+  "apply_url": "https://www.screen.scot/funding-and-support/funding/film-development-and-production-fund",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "Scotland",
+  "impact_sectors": [
+   "creative",
+   "tech"
+  ]
+ },
+ {
+  "id": "482cfc54-f0a5-4529-8571-2614a9cd3dac",
+  "title": "Seed Funding for Social Entrepreneurs",
+  "funder": "Shackleton Foundation",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "restricted"
+  ],
+  "apply_url": "https://www.shackletonfoundation.org/who-we-fund/#how-to-apply",
+  "is_active": false,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "education",
+   "employment",
+   "health",
+   "mental_health"
+  ]
+ },
+ {
+  "id": "5a00d50c-5244-4850-a6f9-af242703b7f2",
+  "title": "Selco Community Heroes 2026",
+  "funder": "Selco Builders Warehouse",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "goods"
+  ],
+  "apply_url": "https://www.selcobw.com/info/selco-community-heroes",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "community",
+   "housing"
+  ]
+ },
+ {
+  "id": "df7a1f6e-3800-4c0c-97f7-6a300207c6fd",
+  "title": "Shared Interest — Fair Trade Social Investment",
+  "funder": "Shared Interest Society",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://www.shared-interest.com/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": []
+ },
+ {
+  "id": "72ae7755-cb0a-476b-af41-31b497b0503a",
+  "title": "Sheffield Mind — Community Mental Health Programmes",
+  "funder": "Sheffield Mind",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.sheffieldmind.co.uk/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "Sheffield",
+  "impact_sectors": [
+   "mental_health",
+   "education"
+  ]
+ },
+ {
+  "id": "65dfe2c9-4ec9-4bbc-9828-b35f292d4f5d",
+  "title": "Skills for Londoners Community Outreach Programme",
+  "funder": "Greater London Authority (Mayor of London)",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.london.gov.uk/programmes-strategies/jobs-and-skills/funding/skills-for-londoners-community-outreach-programme",
+  "is_active": false,
+  "pipeline_state": "between_rounds_scheduled",
+  "location_tag": null,
+  "impact_sectors": [
+   "employment",
+   "education",
+   "community"
+  ]
+ },
+ {
+  "id": "763f13e2-f1aa-4b50-88be-7d31a9a08bc0",
+  "title": "Slack for Nonprofits",
+  "funder": "Slack (Salesforce)",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "tech_product"
+  ],
+  "apply_url": "https://slack.com/intl/en-gb/help/articles/204368833-Apply-for-the-Slack-for-Charities-discount",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "International",
+  "impact_sectors": [
+   "social_innovation",
+   "tech",
+   "health"
+  ]
+ },
+ {
+  "id": "ce83058b-740b-479c-9848-b97e9e2ef383",
+  "title": "Smallwood Trust",
+  "funder": "Smallwood Trust",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "restricted"
+  ],
+  "apply_url": "https://www.smallwoodtrust.org.uk/grants/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "financial",
+   "justice",
+   "community"
+  ]
+ },
+ {
+  "id": "d5b25f39-58de-4d2a-912a-8bae26b0635a",
+  "title": "Social & Community Capital — Charity & Social Enterprise Loans",
+  "funder": "Social & Community Capital",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://socialandcapital.com/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": []
+ },
+ {
+  "id": "6a031a55-b108-402b-9dd2-171f6f27d981",
+  "title": "Social and Sustainable Capital — Social Lending",
+  "funder": "Social and Sustainable Capital",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://socialandsustainable.com/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "housing",
+   "mental_health",
+   "disability",
+   "education"
+  ]
+ },
+ {
+  "id": "4e036244-6f5c-4c1b-b475-129eaf4e55de",
+  "title": "Social Business Trust — Strategic Growth Support",
+  "funder": "Social Business Trust",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "includes_grant",
+   "support_programme"
+  ],
+  "apply_url": "https://socialbusinesstrust.org/",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "education",
+   "employment",
+   "health"
+  ]
+ },
+ {
+  "id": "05639da8-7a99-46b9-af71-53ad6b191827",
+  "title": "Social Business Trust Capacity Building Support",
+  "funder": "Social Business Trust",
+  "funding_type": "in_kind",
+  "funding_subtypes": null,
+  "apply_url": "https://www.sbtrust.org.uk/",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "social_economy",
+   "employment"
+  ]
+ },
+ {
+  "id": "a846666d-d8c1-47ba-b1ef-8d3045a969e1",
+  "title": "Social Business Trust Growth Programme",
+  "funder": "Social Business Trust",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.socialbusinesstrust.org/",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "education",
+   "employment",
+   "health",
+   "social_economy"
+  ]
+ },
+ {
+  "id": "3f603b49-5a9d-4e0c-8ca7-bdc59e84b626",
+  "title": "Social Enterprise Accelerator",
+  "funder": "Nottingham Trent University & NCVS",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "accelerator"
+  ],
+  "apply_url": "https://www.ntu.ac.uk/business-and-employers/financial-and-funded-support/social-enterprise-accelerator",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "Nottingham",
+  "impact_sectors": [
+   "social_economy",
+   "health",
+   "employment",
+   "environment"
+  ]
+ },
+ {
+  "id": "6bedd7b3-7b89-4aa2-9ed7-2d9f1c72b9f8",
+  "title": "Social Enterprise Acumen CIC Programme",
+  "funder": "Social Enterprise Acumen",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "training"
+  ],
+  "apply_url": "https://socialenterpriseacumen.co.uk/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "West Midlands",
+  "impact_sectors": [
+   "social_economy",
+   "employment"
+  ]
+ },
+ {
+  "id": "4fa14077-7904-4fd9-ba4f-d8ad7a501bff",
+  "title": "Social Enterprise Growth Accelerator (SEGA)",
+  "funder": "Sheffield Social Enterprise Network",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "accelerator"
+  ],
+  "apply_url": "https://www.ssen.org.uk/sega",
+  "is_active": false,
+  "pipeline_state": "published",
+  "location_tag": "Sheffield",
+  "impact_sectors": [
+   "social_economy",
+   "employment"
+  ]
+ },
+ {
+  "id": "6e70b3c0-fbc5-4e38-bef2-8431c0bde380",
+  "title": "Social Enterprise Scotland Support Programme",
+  "funder": "Social Enterprise Scotland",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://socialenterprise.scot/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "Scotland",
+  "impact_sectors": [
+   "social_economy",
+   "community"
+  ]
+ },
+ {
+  "id": "2b7a0bd8-edbd-4467-8951-24dc99296d84",
+  "title": "Social Enterprise UK — Buy Social Corporate Challenge",
+  "funder": "Social Enterprise UK",
+  "funding_type": "in_kind",
+  "funding_subtypes": null,
+  "apply_url": "https://www.socialenterprise.org.uk/social-enterprise-uk-programmes/buy-social-corporate-challenge/",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "social_economy",
+   "employment"
+  ]
+ },
+ {
+  "id": "6e850f0b-fd12-4c73-a420-9b4bc1231049",
+  "title": "Social Finance — Outcomes Partnerships",
+  "funder": "Social Finance",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://www.socialfinance.org.uk/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "social_innovation",
+   "housing",
+   "mental_health",
+   "justice"
+  ]
+ },
+ {
+  "id": "d881ca00-a65b-4326-a918-34e75ea648a0",
+  "title": "Social Firms Wales",
+  "funder": "Social Firms Wales",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "pro_bono_consulting",
+   "training"
+  ],
+  "apply_url": "https://www.socialfirmswales.co.uk/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "Wales",
+  "impact_sectors": [
+   "employment",
+   "community"
+  ]
+ },
+ {
+  "id": "30794c2c-f8c5-4126-9340-676e297e3d96",
+  "title": "Social Impact Debt Fund IV",
+  "funder": "Big Issue Invest",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://www.bigissue.com/invest/investments-funds-programmes/fund-iv/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "health",
+   "housing",
+   "community",
+   "social_economy"
+  ]
+ },
+ {
+  "id": "759177bd-20e8-4141-821a-93f5ebe820dd",
+  "title": "Social Investment",
+  "funder": "Esmée Fairbairn Foundation",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "social_investment"
+  ],
+  "apply_url": "https://esmeefairbairn.org.uk/our-support/social-investment/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "environment",
+   "employment",
+   "justice",
+   "social_economy"
+  ]
+ },
+ {
+  "id": "7d46d20f-6ce6-498b-a6f3-77758a2414d7",
+  "title": "Social Investment Business — Growth Fund",
+  "funder": "Social Investment Business",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "loan"
+  ],
+  "apply_url": "https://www.sibgroup.org.uk/funding/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "social_economy",
+   "community",
+   "environment",
+   "financial"
+  ]
+ },
+ {
+  "id": "d5917227-c125-445c-bcac-5761392ed061",
+  "title": "Social Investment Business — Resilience & Recovery Loans",
+  "funder": "Social Investment Business",
+  "funding_type": "social_investment",
+  "funding_subtypes": null,
+  "apply_url": "https://sibgroup.org.uk/finance/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": null,
+  "impact_sectors": []
+ },
+ {
+  "id": "583f0378-26e6-4abe-886c-0686bd8b9d2b",
+  "title": "Social Investment Business — Resilience Fund",
+  "funder": "Social Investment Business",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "loan",
+   "blended",
+   "social_investment"
+  ],
+  "apply_url": "https://www.sibgroup.org.uk/funding",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "England",
+  "impact_sectors": [
+   "social_economy",
+   "community"
+  ]
+ },
+ {
+  "id": "26029120-6cfa-4346-8834-36f77b0af3b2",
+  "title": "Social Investment Business Loan & Grant Funds",
+  "funder": "Social Investment Business",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://www.sibgroup.org.uk/",
+  "is_active": false,
+  "pipeline_state": "tagged_awaiting_review",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "community",
+   "housing",
+   "social_economy"
+  ]
+ },
+ {
+  "id": "829751a6-9ad0-409a-818c-e32d62f0d1ad",
+  "title": "Social Investment Cymru Loan Fund",
+  "funder": "Social Investment Cymru",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://www.goodfinance.org.uk/investors-advisors/social-investment-cymru",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "location_tag": "Wales",
+  "impact_sectors": [
+   "social_economy",
+   "community"
+  ]
+ },
+ {
+  "id": "23771e83-0c3c-4fd0-90a1-7ecc5c96ee6c",
+  "title": "Social Investment Fund (Scotland)",
+  "funder": "Foundation Scotland",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://www.foundationscotland.org.uk/apply-for-funding/funding-available/social-investment-fund",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "Scotland",
+  "impact_sectors": [
+   "community",
+   "employment",
+   "education",
+   "financial"
+  ]
+ },
+ {
+  "id": "b81f41be-db1a-4b9e-9e7f-da7cacff19b1",
+  "title": "Social Investment Fund for London",
+  "funder": "City Bridge Foundation",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "social_investment"
+  ],
+  "apply_url": "https://www.citybridgefoundation.org.uk/funding/social-investment-fund-for-london",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "London",
+  "impact_sectors": [
+   "justice",
+   "environment",
+   "employment",
+   "community"
+  ]
+ },
+ {
+  "id": "e48bb644-14c4-4785-8825-47babba04a2b",
+  "title": "Social Investment Programme",
+  "funder": "Postcode Innovation Trust",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "blended",
+   "loan",
+   "social_investment"
+  ],
+  "apply_url": "https://www.postcodeinnovationtrust.org.uk/social-investment",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "health",
+   "young_people",
+   "disability",
+   "environment"
+  ]
+ },
+ {
+  "id": "aa43adba-9454-4147-9ff1-614c334d3195",
+  "title": "Social Investment Scotland — Loan Funding",
+  "funder": "Social Investment Scotland",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "loan",
+   "social_investment"
+  ],
+  "apply_url": "https://www.socialinvestmentscotland.com/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "Scotland",
+  "impact_sectors": [
+   "social_economy",
+   "community",
+   "employment"
+  ]
+ },
+ {
+  "id": "4c5b51d6-8da6-4bba-875c-61085bbb1f0f",
+  "title": "Somerset Social Investment Programme",
+  "funder": "Somerset Community Foundation",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "social_investment"
+  ],
+  "apply_url": "https://www.somersetcf.org.uk/grants-funding/details/somerset-social-investment-programme/",
+  "is_active": false,
+  "pipeline_state": "published",
+  "location_tag": "Somerset",
+  "impact_sectors": [
+   "social_economy",
+   "employment",
+   "community"
+  ]
+ },
+ {
+  "id": "ced26048-d908-4919-bc4b-0bdad1c2d155",
+  "title": "Spacehive — Civic Crowdfunding with Council Match",
+  "funder": "Spacehive",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "match_funding"
+  ],
+  "apply_url": "https://www.spacehive.com",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK & Ireland",
+  "impact_sectors": [
+   "community",
+   "environment",
+   "health",
+   "young_people"
+  ]
+ },
+ {
+  "id": "f1cd5881-e810-4928-875c-17071197523f",
+  "title": "Sported — Funding Programmes",
+  "funder": "Sported Foundation",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "unrestricted"
+  ],
+  "apply_url": "https://sported.org.uk/sported-programmes/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "sport",
+   "community",
+   "education"
+  ]
+ },
+ {
+  "id": "57c4802f-2d34-4d89-969e-a21f9ef397db",
+  "title": "SSE — All Programmes",
+  "funder": "School for Social Entrepreneurs",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "cohort_grant"
+  ],
+  "apply_url": "https://www.the-sse.org/learning-support/programmes/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "England",
+  "impact_sectors": [
+   "social_economy",
+   "environment",
+   "community"
+  ]
+ },
+ {
+  "id": "6a73baa9-087b-454b-b06e-731a783e2f03",
+  "title": "SSE Fellowship Programme — Learning & Bursary",
+  "funder": "School for Social Entrepreneurs",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.the-sse.org/courses/the-fellowship-programme/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "social_economy",
+   "social_innovation"
+  ]
+ },
+ {
+  "id": "7ba9920b-5517-4ead-bff2-12c499c31180",
+  "title": "SSE Fellowship Programme — Learning & Bursary",
+  "funder": "School for Social Entrepreneurs",
+  "funding_type": "accelerator",
+  "funding_subtypes": null,
+  "apply_url": "https://www.sse.org.uk/programmes/apply-for-a-programme",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": null,
+  "impact_sectors": [
+   "social_innovation",
+   "employment"
+  ]
+ },
+ {
+  "id": "ed7d7251-fca7-46b3-9ba2-3873956e54a3",
+  "title": "SSE Fully Funded Learning Programmes",
+  "funder": "School for Social Entrepreneurs (SSE)",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://the-sse.org/courses/",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "social_innovation",
+   "education",
+   "community"
+  ]
+ },
+ {
+  "id": "f46773fa-4719-49a9-887b-8ed8ab50add7",
+  "title": "SSE London Growth & Resilience Programme",
+  "funder": "School for Social Entrepreneurs",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.the-sse.org/london-growth-resilience-programme",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": null,
+  "impact_sectors": [
+   "community",
+   "employment"
+  ]
+ },
+ {
+  "id": "5b3ee9d2-efea-43ca-b4e6-94005e070a09",
+  "title": "SSE Social Investment Gateway Programme",
+  "funder": "School for Social Entrepreneurs",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.the-sse.org/programme/social-investment-gateway-programme/",
+  "is_active": false,
+  "pipeline_state": "published",
+  "location_tag": "England",
+  "impact_sectors": [
+   "social_economy",
+   "employment",
+   "community"
+  ]
+ },
+ {
+  "id": "ddc93bb0-b74d-42e7-86a7-172f9a39913c",
+  "title": "SSE Start Up Programme",
+  "funder": "School for Social Entrepreneurs (SSE)",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "includes_grant",
+   "support_programme",
+   "training"
+  ],
+  "apply_url": "https://www.the-sse.org/programmes/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "England",
+  "impact_sectors": [
+   "social_economy",
+   "social_innovation",
+   "environment",
+   "community"
+  ]
+ },
+ {
+  "id": "8f63ed16-b59e-4dd5-9ea5-56130e9aaf2e",
+  "title": "Start Up Loans",
+  "funder": "British Business Bank / Start Up Loans Company",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "loan"
+  ],
+  "apply_url": "https://www.startuploans.co.uk/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "employment",
+   "social_economy"
+  ]
+ },
+ {
+  "id": "a9bf3c97-5e60-403d-9951-6fc218d4150c",
+  "title": "Start Up Loans — South West (SWIG Finance)",
+  "funder": "SWIG Finance",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "loan"
+  ],
+  "apply_url": "https://www.swigfinance.co.uk/start-up-loans/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "South West England",
+  "impact_sectors": [
+   "employment",
+   "social_economy"
+  ]
+ },
+ {
+  "id": "fc653e05-73e5-4a48-90b8-a8b8de429211",
+  "title": "Superhighways — Digital Support for London Charities",
+  "funder": "Superhighways",
+  "funding_type": "in_kind",
+  "funding_subtypes": null,
+  "apply_url": "https://superhighways.org.uk/",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "London",
+  "impact_sectors": [
+   "tech",
+   "employment"
+  ]
+ },
+ {
+  "id": "895556e0-623d-4661-b245-ad0870a7869a",
+  "title": "Superhighways Digital Support for London VCSEs",
+  "funder": "Kingston Voluntary Action",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "training",
+   "pro_bono_consulting"
+  ],
+  "apply_url": "https://superhighways.org.uk/training-advice-and-technical/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "London",
+  "impact_sectors": [
+   "tech",
+   "education",
+   "community"
+  ]
+ },
+ {
+  "id": "5cbdb2dd-d274-4619-b468-8dd5bfe54154",
+  "title": "Taproot Foundation Pro Bono Consulting",
+  "funder": "Taproot Foundation",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "pro_bono_consulting",
+   "volunteering"
+  ],
+  "apply_url": "https://taprootfoundation.org/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "USA",
+  "impact_sectors": [
+   "community",
+   "social_innovation"
+  ]
+ },
+ {
+  "id": "a5b9182e-a0e1-4fc9-ad3f-4465ebc51c85",
+  "title": "Teacher Development Fund",
+  "funder": "Paul Hamlyn Foundation",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.phf.org.uk/funding/teacher-development-fund/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "creative",
+   "education"
+  ]
+ },
+ {
+  "id": "3e386cdc-60ab-413e-a348-11f659d3e4fb",
+  "title": "Tech for Good Accelerator Programme",
+  "funder": "Bethnal Green Ventures",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://www.bethnalgreenventures.com/apply",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "tech",
+   "social_innovation",
+   "community"
+  ]
+ },
+ {
+  "id": "0ce8470d-9557-40a3-a8d2-ef01daba3f09",
+  "title": "Tech for Good Programme",
+  "funder": "Bethnal Green Ventures",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "equity"
+  ],
+  "apply_url": "https://bethnalgreenventures.com/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "Europe",
+  "impact_sectors": [
+   "social_innovation",
+   "tech",
+   "environment",
+   "health"
+  ]
+ },
+ {
+  "id": "b98c7493-ff5c-42f4-ab1d-b205940e550c",
+  "title": "TechSoup UK Donated & Discounted Technology",
+  "funder": "TechSoup UK",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "tech_product",
+   "goods"
+  ],
+  "apply_url": "https://www.techsoup.uk/product-catalog",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "tech"
+  ]
+ },
+ {
+  "id": "fd2c0559-c0e6-48bf-a75a-9641be1e4411",
+  "title": "TERN Entrepreneurs Programme",
+  "funder": "TERN - The Entrepreneurial Refugee Network",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://wearetern.org/entrepreneurs/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": null,
+  "impact_sectors": [
+   "employment",
+   "social_economy",
+   "community"
+  ]
+ },
+ {
+  "id": "7c4c6f1f-b19a-40aa-ae0b-0b67d872808b",
+  "title": "TERN Entrepreneurs Programme",
+  "funder": "TERN - The Entrepreneurial Refugee Network",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "cohort_grant"
+  ],
+  "apply_url": "https://wearetern.org/entrepreneurs/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "employment"
+  ]
+ },
+ {
+  "id": "ffdbd5ab-27d8-41d2-9a6e-2a4082da8bf4",
+  "title": "Tesco Community Grants (Bags of Help)",
+  "funder": "Tesco",
+  "funding_type": "corporate_grant",
+  "funding_subtypes": null,
+  "apply_url": "https://www.tesco.com/community-grants",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": null,
+  "impact_sectors": [
+   "community",
+   "creative",
+   "sport",
+   "young_people"
+  ]
+ },
+ {
+  "id": "1c36afbb-7b42-4d75-8cdd-ce03e2efce63",
+  "title": "The Analyst Programme",
+  "funder": "Social Finance",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.socialfinance.org.uk/people/analyst-programme",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "education",
+   "health",
+   "employment",
+   "housing"
+  ]
+ },
+ {
+  "id": "47ffb17f-f14e-4955-b512-7344ddf294f1",
+  "title": "The Hygiene Bank — Products for Organisations",
+  "funder": "The Hygiene Bank",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "goods"
+  ],
+  "apply_url": "https://thehygienebank.com/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "community",
+   "health"
+  ]
+ },
+ {
+  "id": "9ac47fd7-b03c-438b-825d-19679af56cfe",
+  "title": "The King's Trust — Enterprise Programme",
+  "funder": "The King's Trust",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "cohort_grant"
+  ],
+  "apply_url": "https://www.kings-trust.org.uk/how-we-can-help/enterprise-programme",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": null,
+  "impact_sectors": [
+   "young_people",
+   "employment",
+   "social_economy"
+  ]
+ },
+ {
+  "id": "cb7c81c1-62a0-44db-939f-8b9f7dd2d066",
+  "title": "The Kings Fund Leadership Programme",
+  "funder": "The Kings Fund",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.kingsfund.org.uk/leadership-development",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "health",
+   "social_innovation"
+  ]
+ },
+ {
+  "id": "a54704d3-3cb0-40b3-a351-1c07b3346355",
+  "title": "The LEGO Foundation Fellowship",
+  "funder": "LEGO Foundation (administered by Social Science Research Council)",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "fellowship"
+  ],
+  "apply_url": "https://www.ssrc.org/programs/the-lego-foundation-fellowship/application-details/",
+  "is_active": false,
+  "pipeline_state": "published",
+  "location_tag": "Global",
+  "impact_sectors": [
+   "education",
+   "young_people",
+   "disability",
+   "tech"
+  ]
+ },
+ {
+  "id": "fb63af5d-9b6a-4830-afec-27fe74e02d77",
+  "title": "The NextGen Fund",
+  "funder": "Forever Manchester",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://forevermanchester.com/fund/the-nextgen-fund/",
+  "is_active": false,
+  "pipeline_state": "published",
+  "location_tag": "Manchester",
+  "impact_sectors": [
+   "education",
+   "employment",
+   "community"
+  ]
+ },
+ {
+  "id": "beeef87a-a070-44e0-97d0-2ded1024f0c8",
+  "title": "The Social Enterprise Loan Fund (TSELF) — Wales",
+  "funder": "Wales Council for Voluntary Action",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://wcva.cymru/funding/social-enterprise-loan-fund/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "Wales",
+  "impact_sectors": []
+ },
+ {
+  "id": "1f5efb49-9e91-4857-8f7a-f00969787504",
+  "title": "Theatre Tax Relief",
+  "funder": "HM Revenue & Customs",
+  "funding_type": "in_kind",
+  "funding_subtypes": null,
+  "apply_url": "https://www.gov.uk/guidance/corporation-tax-creative-industry-tax-reliefs",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "creative"
+  ]
+ },
+ {
+  "id": "4f507ab2-bda9-41a9-a26d-2a590b30f73d",
+  "title": "TheGivingMachine — GivingLottery",
+  "funder": "TheGivingMachine",
+  "funding_type": "in_kind",
+  "funding_subtypes": null,
+  "apply_url": "https://www.thegivingmachine.co.uk/solutions/for-causes/lottery/",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "community"
+  ]
+ },
+ {
+  "id": "a91f58e0-5572-4d9b-85ad-d67df0e72e0d",
+  "title": "Time to Shine Fellowship",
+  "funder": "Rank Foundation",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.rankfoundation.com/time-to-shine/",
+  "is_active": false,
+  "pipeline_state": "captured",
+  "location_tag": null,
+  "impact_sectors": [
+   "social_economy",
+   "social_innovation",
+   "young_people",
+   "community"
+  ]
+ },
+ {
+  "id": "b4b7b06a-3916-48eb-a633-5c21a0d563c1",
+  "title": "Trading for Good",
+  "funder": "School for Social Entrepreneurs",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "cohort_grant"
+  ],
+  "apply_url": "https://www.the-sse.org/programme/trading-for-good/",
+  "is_active": false,
+  "pipeline_state": "between_rounds_scheduled",
+  "location_tag": "England",
+  "impact_sectors": [
+   "social_economy",
+   "community",
+   "employment"
+  ]
+ },
+ {
+  "id": "a06424c3-643c-458c-8f97-a228cef657a6",
+  "title": "Trading for Good: Bury",
+  "funder": "School for Social Entrepreneurs",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "cohort_grant"
+  ],
+  "apply_url": "https://www.the-sse.org/programme/trading-for-good-bury/",
+  "is_active": false,
+  "pipeline_state": "published",
+  "location_tag": "Bury",
+  "impact_sectors": [
+   "community",
+   "employment",
+   "financial"
+  ]
+ },
+ {
+  "id": "8b5c4025-318d-4354-a766-228b361ffba3",
+  "title": "Trading for Good: Community Business",
+  "funder": "School for Social Entrepreneurs",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "includes_grant",
+   "support_programme"
+  ],
+  "apply_url": "https://www.the-sse.org/programme/trading-for-good-community-business/",
+  "is_active": false,
+  "pipeline_state": "tagged_awaiting_review",
+  "location_tag": "England",
+  "impact_sectors": [
+   "social_economy",
+   "employment",
+   "community"
+  ]
+ },
+ {
+  "id": "15eaab1e-d531-403b-a4da-d7c75c3b113b",
+  "title": "Trading for Good: Milton Keynes",
+  "funder": "School for Social Entrepreneurs",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "cohort_grant"
+  ],
+  "apply_url": "https://www.the-sse.org/programme/trading-for-good-milton-keynes/",
+  "is_active": false,
+  "pipeline_state": "published",
+  "location_tag": "Milton Keynes",
+  "impact_sectors": [
+   "social_economy",
+   "community",
+   "employment"
+  ]
+ },
+ {
+  "id": "dc32afec-6ae0-4e3c-aca0-50792a6b9b40",
+  "title": "Trading for Good: Stockport",
+  "funder": "School for Social Entrepreneurs",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "cohort_grant"
+  ],
+  "apply_url": "https://www.the-sse.org/programme/trading-for-good-stockport/",
+  "is_active": false,
+  "pipeline_state": "published",
+  "location_tag": "Stockport",
+  "impact_sectors": [
+   "community",
+   "employment",
+   "financial"
+  ]
+ },
+ {
+  "id": "3f9c1fc3-6a19-4cde-affe-6e7f83077c99",
+  "title": "Travers Smith Pro Bono Programme",
+  "funder": "Travers Smith",
+  "funding_type": "in_kind",
+  "funding_subtypes": null,
+  "apply_url": "https://www.traverssmith.com/all-services/pro-bono/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "justice",
+   "environment",
+   "community"
+  ]
+ },
+ {
+  "id": "ec70ac6e-bd4e-4891-b54a-f4cff376b797",
+  "title": "Triodos Bank Business Banking and Loans",
+  "funder": "Triodos Bank UK",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://www.triodos.co.uk/business-banking",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "location_tag": null,
+  "impact_sectors": [
+   "social_economy",
+   "environment",
+   "creative",
+   "community"
+  ]
+ },
+ {
+  "id": "d4ee1f61-caeb-4a87-90fd-e1afe31a2d0f",
+  "title": "Triodos Crowdfunding — Community Shares & Bonds",
+  "funder": "Triodos Bank UK",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://www.triodoscrowdfunding.co.uk/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": []
+ },
+ {
+  "id": "6ffdea3c-fb1c-4e33-87af-b717e961ad91",
+  "title": "Trust for London — Social Investment Programme",
+  "funder": "Trust for London",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "loan",
+   "equity",
+   "social_investment"
+  ],
+  "apply_url": "https://trustforlondon.org.uk/funding/social-investment/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "London",
+  "impact_sectors": [
+   "housing",
+   "employment",
+   "financial",
+   "justice"
+  ]
+ },
+ {
+  "id": "5506d23a-de1b-49e7-9e69-0ba26262a6a8",
+  "title": "Trustees Unlimited — Board Recruitment",
+  "funder": "Trustees Unlimited",
+  "funding_type": "in_kind",
+  "funding_subtypes": null,
+  "apply_url": "https://www.trusteesunlimited.co.uk/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "community"
+  ]
+ },
+ {
+  "id": "0e506d16-9e5c-47e0-aae9-7f3444b3646c",
+  "title": "TrustLaw — Pro Bono Legal Programme",
+  "funder": "Thomson Reuters Foundation",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "pro_bono_legal"
+  ],
+  "apply_url": "https://www.trust.org/trustlaw/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "Global",
+  "impact_sectors": [
+   "justice",
+   "social_economy",
+   "community"
+  ]
+ },
+ {
+  "id": "5b24d4b2-43ba-4e59-984d-36024b72ff41",
+  "title": "UAL Creative Business Accelerator",
+  "funder": "University of the Arts London",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.arts.ac.uk/students/student-careers/awards-funding-and-support/creative-business-accelerator",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": null,
+  "impact_sectors": [
+   "creative",
+   "employment"
+  ]
+ },
+ {
+  "id": "37a8f875-7834-495f-8e14-a0fade147ebf",
+  "title": "Ufi VocTech Trust",
+  "funder": "Ufi VocTech Trust",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "restricted"
+  ],
+  "apply_url": "https://ufi.co.uk/grant-funding/",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "education",
+   "employment",
+   "tech",
+   "social_innovation"
+  ]
+ },
+ {
+  "id": "6ce1fac3-9818-4f0c-bfde-7186f74320ae",
+  "title": "Ufi VocTech Trust — VocTech Ignite",
+  "funder": "Ufi VocTech Trust",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://ufi.co.uk/grant-funding/voctech-ignite/",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "education",
+   "employment",
+   "tech"
+  ]
+ },
+ {
+  "id": "3d144f51-ecc8-4413-b760-021684a6e442",
+  "title": "Ufi VocTech Trust — VocTech Impact Fund",
+  "funder": "Ufi VocTech Trust",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "social_investment"
+  ],
+  "apply_url": "https://ufi.co.uk/grant-funding/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "education",
+   "employment",
+   "tech"
+  ]
+ },
+ {
+  "id": "e15e9d51-f5ad-4d82-a080-fcf2ff911db0",
+  "title": "Ufi VocTech Trust — VocTech Together Support Programme",
+  "funder": "Ufi VocTech Trust",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://ufi.co.uk/how-we-work/challenge-programmes/voctech-together/support-programme/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "education",
+   "employment",
+   "tech"
+  ]
+ },
+ {
+  "id": "8d3c54a1-4d06-48a0-89b6-4fd75c0869eb",
+  "title": "UK National Coordinator and survey data collection for the European Social Survey, Round 13 and 14",
+  "funder": "Economic and Social Research Council (ESRC)",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.ukri.org/opportunity/uk-national-coordinator-and-survey-data-collection-for-the-european-social-survey-round-13-and-14/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": null,
+  "impact_sectors": [
+   "tech"
+  ]
+ },
+ {
+  "id": "9db8f14b-62c1-4d15-9d9b-69b17f204d17",
+  "title": "Ultra Long Duration Energy Storage Project Development Studies",
+  "funder": "Innovate UK, part of UK Research and Innovation (UKRI)",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.find-government-grants.service.gov.uk/grants/ultra-long-duration-energy-storage-project-development-studies-1",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "environment",
+   "tech"
+  ]
+ },
+ {
+  "id": "eb8b4219-8587-45e5-bdaf-91475c80f9ea",
+  "title": "Unity Trust Bank — Social Enterprise Banking",
+  "funder": "Unity Trust Bank",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://www.unity.co.uk/business-banking/social-enterprise/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": []
+ },
+ {
+  "id": "81ea7507-d967-44b1-a42a-f71305eb1a0c",
+  "title": "Unity Trust Bank Social Enterprise Lending",
+  "funder": "Unity Trust Bank",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://www.unity.co.uk/",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": null,
+  "impact_sectors": [
+   "social_economy",
+   "community",
+   "employment",
+   "housing"
+  ]
+ },
+ {
+  "id": "d9fcd4dd-b45b-4658-bf7e-a1f5013e7fa6",
+  "title": "UnLtd — Introduction to UnLtd and Social Enterprise",
+  "funder": "UnLtd",
+  "funding_type": "support_programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.eventbrite.co.uk/e/introduction-to-unltd-and-social-enterprise-tickets-1990081754098",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "social_economy",
+   "social_innovation"
+  ]
+ },
+ {
+  "id": "d78c3c0e-9b59-4354-995b-f265e6802750",
+  "title": "UnLtd Awards (Try It / Do It)",
+  "funder": "UnLtd – The Foundation for Social Entrepreneurs",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.unltd.org.uk/our-support",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "social_innovation",
+   "social_economy"
+  ]
+ },
+ {
+  "id": "60c1680e-eae5-406a-a752-959f2bef0d58",
+  "title": "UnLtd Awards for Social Entrepreneurs",
+  "funder": "UnLtd",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.unltd.org.uk/our-support/our-funding",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "social_innovation",
+   "community",
+   "environment"
+  ]
+ },
+ {
+  "id": "97761b5c-badb-44ef-bd68-524386dda090",
+  "title": "Unreasonable Impact UK & Europe",
+  "funder": "Barclays & Unreasonable Group",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://home.barclays/news/press-releases/2025/03/unreasonable-impact-announces-new-roster-of-ventures-for-the-202/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "employment",
+   "environment"
+  ]
+ },
+ {
+  "id": "23774850-f7bd-4f23-abdd-265d1c1b5690",
+  "title": "Valour Recognised: Centres Development Fund",
+  "funder": "Armed Forces Covenant Fund Trust",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://covenantfund.org.uk/programme/valour-recognised-centres-development-fund/",
+  "is_active": false,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "community",
+   "health"
+  ]
+ },
+ {
+  "id": "571452cd-970a-4e09-8f4b-1fdc607ae050",
+  "title": "VCSE Contract Readiness Programme",
+  "funder": "Social Enterprise UK / Voice4Change England",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "training",
+   "support_programme"
+  ],
+  "apply_url": "https://www.socialenterprise.org.uk/public-service-hub/vcse-contract-readiness-programme/",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "social_economy",
+   "education",
+   "community"
+  ]
+ },
+ {
+  "id": "1e6c3908-dde9-4254-9a64-1ddba2f5d4a4",
+  "title": "Visa CatalyseHer Programme",
+  "funder": "Visa Foundation & INCO",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "training",
+   "includes_grant"
+  ],
+  "apply_url": "https://catalyseher-uk.inco-group.co/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "employment",
+   "social_economy"
+  ]
+ },
+ {
+  "id": "eb625734-ad25-42cf-b2f8-08f0cd6b0ca6",
+  "title": "Vivensa Academy",
+  "funder": "Vivensa Foundation (formerly Dunhill Medical Trust)",
+  "funding_type": "in_kind",
+  "funding_subtypes": null,
+  "apply_url": "https://vivensafoundation.org.uk/academy/",
+  "is_active": false,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "health",
+   "education",
+   "social_innovation"
+  ]
+ },
+ {
+  "id": "585e97a7-d779-4653-8995-0c32c902d6d0",
+  "title": "Volunteer Consultancy & Membership",
+  "funder": "Sported",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "pro_bono_consulting",
+   "volunteering"
+  ],
+  "apply_url": "https://sported.org.uk/capacity-building/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "sport",
+   "community"
+  ]
+ },
+ {
+  "id": "81ce3a93-8452-4fb8-a1c0-727a1155a3b1",
+  "title": "Volunteering for Health – Test, Learn and Innovate Programme",
+  "funder": "Northamptonshire Community Foundation",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.ncf.uk.com/grants/grants-available/volunteering-for-health-test-learn-and-innovate-programme",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "Northamptonshire",
+  "impact_sectors": [
+   "health",
+   "community"
+  ]
+ },
+ {
+  "id": "2576bcc1-9fbf-4200-9e53-2c577f856149",
+  "title": "Warm Homes Loan Scheme",
+  "funder": "Department for Energy Security and Net Zero",
+  "funding_type": "investment",
+  "funding_subtypes": null,
+  "apply_url": "https://www.find-government-grants.service.gov.uk/grants/warm-homes-loan-scheme-1",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "environment",
+   "housing"
+  ]
+ },
+ {
+  "id": "ab84f123-5b0a-4f11-a277-f9715ebaf7a6",
+  "title": "WCIT AI/ML Learning Exchange for Charities",
+  "funder": "Worshipful Company of Information Technologists",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "training",
+   "support_programme"
+  ],
+  "apply_url": "https://ai4c.org.uk/",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "tech",
+   "social_innovation"
+  ]
+ },
+ {
+  "id": "279016ce-2758-436a-9387-6fa286c0c2dd",
+  "title": "WCVA Social Investment Cymru — Communities Investment Fund",
+  "funder": "WCVA (Social Investment Cymru)",
+  "funding_type": "investment",
+  "funding_subtypes": [
+   "loan",
+   "social_investment"
+  ],
+  "apply_url": "https://wcva.cymru/funding/social-investment-cymru/communities-investment-fund/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "Wales",
+  "impact_sectors": [
+   "social_economy",
+   "employment"
+  ]
+ },
+ {
+  "id": "e44a8640-45f0-4730-8b82-f51be95c55a6",
+  "title": "Wellcome Mental Health Data Prize UK 2026",
+  "funder": "Wellcome Trust",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "award"
+  ],
+  "apply_url": "https://www.socialfinance.org.uk/impact/the-wellcome-mental-health-data-prize-uk",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "tech",
+   "mental_health"
+  ]
+ },
+ {
+  "id": "adc7ec22-6479-48fe-b580-10cda79b5fd5",
+  "title": "Weston Charity Awards",
+  "funder": "Garfield Weston Foundation (with Pilotlight)",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://garfieldweston.org/applications-are-now-open-for-the-annual-weston-charity-awards/",
+  "is_active": false,
+  "pipeline_state": "between_rounds_scheduled",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "community",
+   "education",
+   "environment",
+   "social_innovation"
+  ]
+ },
+ {
+  "id": "73c320f7-46f1-4819-aa19-7c31fb6150c1",
+  "title": "Weston Charity Awards",
+  "funder": "Garfield Weston Foundation with Pilotlight",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.pilotlight.org.uk/weston-charity-awards",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "North England, Midlands & Wales",
+  "impact_sectors": [
+   "community",
+   "health",
+   "environment",
+   "young_people"
+  ]
+ },
+ {
+  "id": "492655da-74d2-44d3-8c5e-07206f47405d",
+  "title": "What Works Centre (WWC) for local employment support (Grant)",
+  "funder": "UK Research and Innovation, \tEconomic and Social Research Council",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.find-government-grants.service.gov.uk/grants/what-works-centre-wwc-for-local-employment-support-grant-1",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "employment",
+   "education"
+  ]
+ },
+ {
+  "id": "166aa0c7-b17a-4f45-897d-ef7b9e768a48",
+  "title": "Wickes Community Programme — Materials Donations",
+  "funder": "Wickes",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "goods"
+  ],
+  "apply_url": "https://www.wickes.co.uk/community-programme",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "community"
+  ]
+ },
+ {
+  "id": "f8762ca5-10b0-4dd5-8d05-07aa93f60617",
+  "title": "Wildlife Warden & Community Conservation Programmes — Yorkshire Wildlife Trust",
+  "funder": "Yorkshire Wildlife Trust",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.ywt.org.uk/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "Yorkshire and the Humber",
+  "impact_sectors": [
+   "environment",
+   "community"
+  ]
+ },
+ {
+  "id": "5488f71b-3edc-42a0-a876-981840308806",
+  "title": "Year Here Fellowship",
+  "funder": "Year Here",
+  "funding_type": "programme",
+  "funding_subtypes": [
+   "fellowship"
+  ],
+  "apply_url": "https://yearhere.org/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": "London",
+  "impact_sectors": [
+   "social_innovation",
+   "community"
+  ]
+ },
+ {
+  "id": "5438550b-eec4-48a6-8452-f64ebcb32d35",
+  "title": "Yorkshire Universities — Higher Education Partnership Programmes",
+  "funder": "Yorkshire Universities",
+  "funding_type": "in_kind",
+  "funding_subtypes": null,
+  "apply_url": "https://yorkshireuniversities.ac.uk/",
+  "is_active": false,
+  "pipeline_state": "rejected",
+  "location_tag": "Yorkshire",
+  "impact_sectors": [
+   "education",
+   "employment",
+   "environment",
+   "health"
+  ]
+ },
+ {
+  "id": "efb34147-a31c-4088-bd85-f8ab17980990",
+  "title": "Young Foundation Social Innovation Support Programmes",
+  "funder": "Young Foundation",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://youngfoundation.org/",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "location_tag": "UK",
+  "impact_sectors": [
+   "social_innovation",
+   "community",
+   "environment"
+  ]
+ },
+ {
+  "id": "59c0546c-3b91-465c-a7fd-bcf1580ac266",
+  "title": "Youth Social Action",
+  "funder": "Heart of England Community Foundation",
+  "funding_type": "programme",
+  "funding_subtypes": null,
+  "apply_url": "https://www.heartofenglandcf.org/available-grants/",
+  "is_active": false,
+  "pipeline_state": "archived",
+  "location_tag": null,
+  "impact_sectors": [
+   "community",
+   "young_people"
+  ]
+ },
+ {
+  "id": "b7f40968-6892-4004-9bd7-ea2af8410635",
+  "title": "Zoom for Nonprofits",
+  "funder": "Zoom",
+  "funding_type": "in_kind",
+  "funding_subtypes": [
+   "tech_product"
+  ],
+  "apply_url": "https://www.zoom.com/en/zoom-cares/",
+  "is_active": true,
+  "pipeline_state": "published",
+  "location_tag": "Global",
+  "impact_sectors": [
+   "tech",
+   "education",
+   "environment",
+   "social_innovation"
+  ]
+ },
+ {
+  "id": "cfdaf194-6b06-4aab-81fd-2310d31197ba",
+  "title": "Zoom for Nonprofits Discount Programme",
+  "funder": "Zoom",
+  "funding_type": "in_kind",
+  "funding_subtypes": null,
+  "apply_url": "https://www.techsoup.uk/partners",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "location_tag": null,
+  "impact_sectors": [
+   "tech"
+  ]
+ }
+]
