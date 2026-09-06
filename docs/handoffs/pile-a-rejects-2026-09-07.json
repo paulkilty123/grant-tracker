@@ -1,0 +1,199 @@
+[
+ {
+  "id": "83f700c0-0081-4609-bb1f-cb35b5346fa1",
+  "title": "Apply for Investment (Fund Manager Route)",
+  "code": "out_of_scope",
+  "note": "Better Society Capital lends to fund managers, not to charities. Nothing here for a fundraiser to apply to.",
+  "dupe_of": null
+ },
+ {
+  "id": "1e50dd77-8cd0-46dc-9c53-04065ff01f2a",
+  "title": "B&Q Foundation Community Grants",
+  "code": "duplicate",
+  "note": "Duplicate of the live row cb9780e6, B&Q Foundation Home Improvement & Home-Starter Kits Funds, which points at bqfoundation.org.uk. This row points at the diy.com retail site, where the foundation gets one line and no application route.",
+  "dupe_of": null
+ },
+ {
+  "id": "a71a1786-dc06-4e11-b04d-def0b9538f96",
+  "title": "Barclays 100x100 UK Community Relief Programme",
+  "code": "historical_deadline",
+  "note": "A COVID-19 relief programme from 2020. apply_url was never Barclays' own page but an Idox GrantFinder listing, which now returns 404, so there is nothing to relink to either.",
+  "dupe_of": null
+ },
+ {
+  "id": "5d883343-70fd-4f10-b28b-5b21324cbca5",
+  "title": "Baring Foundation \u2014 International Development Programme",
+  "code": "out_of_scope",
+  "note": "Invitation only, in the foundation's own words and without qualification. The Baring Foundation's other programmes may be worth carrying separately; this one has no route in.",
+  "dupe_of": null
+ },
+ {
+  "id": "324b95d5-650f-4350-88d0-45f517d15692",
+  "title": "Big Society Capital Social Investment Wholesale Funding",
+  "code": "out_of_scope",
+  "note": "The same wholesaler as row 2 and the same reason: it invests in fund managers, not in charities. apply_url here is the homepage, so the sentence is quoted from the apply-for-investment page on the same site. Also a near-duplicate of row 2, though neither is live.",
+  "dupe_of": null
+ },
+ {
+  "id": "f57c3373-26f6-4f44-a766-761aec387dcd",
+  "title": "Charities and Social Enterprises Lending",
+  "code": "duplicate",
+  "note": "Duplicate of the live row 6c5b16b7, Triodos Bank UK Business Loans, at triodos.co.uk/business-lending. Worth knowing before rejecting: this hidden row's URL is the more specific charities and social enterprises page, so relinking the live row to it and rejecting this one may be the better trade.",
+  "dupe_of": null
+ },
+ {
+  "id": "fdcc973a-c87c-48cf-819c-e921c23fbc73",
+  "title": "Charity Bank Loans",
+  "code": "duplicate",
+  "note": "Duplicate of the live row 72739682, Charity Bank Loans for Social Purpose, at charitybank.org/loans. This row points at the bank's homepage and its amount_max of \u00a33.25m matches nothing on it.",
+  "dupe_of": null
+ },
+ {
+  "id": "085f3c7e-9021-41cb-a66b-1342830ed886",
+  "title": "Community Investment Enterprise Facility (CIEF)",
+  "code": "out_of_scope",
+  "note": "CIEF puts capital into CDFIs, which then lend to small businesses. The \u00a325,000 to \u00a3250,000 on the row is what a CDFI lends on, not what this facility offers an applicant. Third Better Society Capital row in this pile with the same shape.",
+  "dupe_of": null
+ },
+ {
+  "id": "cbe84427-1a04-4fbc-8f8c-b09f7af4385d",
+  "title": "CPCA Social Impact Investment Fund",
+  "code": "dead_url",
+  "note": "futurebusinesscentre.co.uk now redirects to alliaworkspace.co.uk, which sells flexible offices and meeting rooms. No trace of the CPCA fund anywhere on it.",
+  "dupe_of": null
+ },
+ {
+  "id": "0a9e6108-c367-4a93-8df5-d5268d03b7b2",
+  "title": "Desk Space and Meeting Room Hire for Charities",
+  "code": "out_of_scope",
+  "note": "Priced workspace hire, not an in-kind offer: \u00a3120 a month for a fixed desk, \u00a330 a day for a hot desk. The row carried it as in-kind with a \u00a3200 ceiling, which is a price rather than an award.",
+  "dupe_of": null
+ },
+ {
+  "id": "9de97466-69b9-4c0e-a182-83c821b109b8",
+  "title": "Edward Gostling Foundation Grants",
+  "code": "closed_for_good",
+  "note": "All application programmes closed; the foundation now works only with invited Legacy Partners while it spends out.",
+  "dupe_of": null
+ },
+ {
+  "id": "ba76fee4-7d8e-48e5-acac-f9df576c320c",
+  "title": "Energy Resilience Fund",
+  "code": "duplicate",
+  "note": "Duplicate of the live row 6e6e8050, Energy Resilience Fund \u2014 Social Investment Business, whose \u00a325,000 to \u00a3250,000 already matches the fund page. This hidden row points at goodfinance.org.uk, a third-party directory, and carries \u00a360,000 to \u00a315,000,000, which describes SIB's lending in general rather",
+  "dupe_of": null
+ },
+ {
+  "id": "29d000d3-e3fa-439e-89f8-e03109af0f44",
+  "title": "Foundation East CDFI Loans",
+  "code": "dead_url",
+  "note": "The CDFI's domain has been taken over and now serves a gambling affiliate site under the charity's name, complete with casino bonus tables and an invented staff bio. Reject the row, and it may be worth checking whether anything else in the catalogue points at foundationeast.org.",
+  "dupe_of": null
+ },
+ {
+  "id": "e31c28ad-10a0-4d7c-9076-33c8f8cf91e9",
+  "title": "FSI Small Charity Training and Capacity Building Programme",
+  "code": "dead_url",
+  "note": "thefsi.org serves a bare Apache directory index with one cgi-bin folder last modified in 2023. The Foundation for Social Improvement's site is gone.",
+  "dupe_of": null
+ },
+ {
+  "id": "6f3892eb-3e7f-4976-b60b-8d46ca476573",
+  "title": "Key Fund Social Investment Loans",
+  "code": "duplicate",
+  "note": "Duplicate of the live row b818a116, Key Fund Flexible Finance. Key Fund has eleven rows in the catalogue, seven of them live and each a named product; this one points at the shared apply page. A row with this exact apply_url (d3b226dc) has already been rejected once.",
+  "dupe_of": null
+ },
+ {
+  "id": "27f913f2-d5d1-4773-a410-35ceb8eeba18",
+  "title": "LawWorks Clinics Network",
+  "code": "duplicate",
+  "note": "Duplicate of the live row a5da4678, LawWorks \u2014 Free Legal Advice for Charities. Worth noting before rejecting: the live row points at lawworks.org.uk, the bare home page, while these two hidden rows point at the pages that actually describe the service and its eligibility. Relinking the live row to ",
+  "dupe_of": null
+ },
+ {
+  "id": "f44a6141-5b8f-43b8-81b0-f1d5ba0930da",
+  "title": "LawWorks Not-for-Profits Programme",
+  "code": "duplicate",
+  "note": "Second LawWorks duplicate of a5da4678, and this is the page I would relink the live row to: it names who is helped, the two things offered, and links the eligibility criteria.",
+  "dupe_of": null
+ },
+ {
+  "id": "56a8cc5f-a0a2-4d6b-af11-fa60b7f0e453",
+  "title": "Microsoft 365 Nonprofit Cloud Subscription (via Charity Digital)",
+  "code": "duplicate",
+  "note": "Duplicate of the live row 571f93e2, Charity Digital Exchange \u2014 Software Donations. The specific product URL now redirects to the login-walled catalogue index, so there is no longer a page for this one subscription.",
+  "dupe_of": null
+ },
+ {
+  "id": "f6b2ac5d-3004-452c-81e6-2d2fa32ccae3",
+  "title": "Microsoft Nonprofit Software Donations Programme",
+  "code": "duplicate",
+  "note": "Duplicate of the live row 3c2c6766, Microsoft for Nonprofits. Proved from the database rather than the page: this URL returns HTTP 200 with a 205-byte empty body, the same TechSoup shell the amounts job found, so there is no sentence to cite.",
+  "dupe_of": [
+   "3c2c6766"
+  ]
+ },
+ {
+  "id": "5afd77c4-190b-4387-9be1-46a05d8bfe7d",
+  "title": "National Grid Community Grants",
+  "code": "duplicate",
+  "note": "Duplicate of the live row 057225d1, Community Grant Programme (National Grid Electricity Transmission). Proved from the database rather than the page: both National Grid URLs sit behind the same Cloudflare 403 and neither could be read.",
+  "dupe_of": [
+   "057225d1"
+  ]
+ },
+ {
+  "id": "08819057-94cd-4b9c-879f-af3652675886",
+  "title": "Salesforce Nonprofit Cloud - Power of Us Programme",
+  "code": "duplicate",
+  "note": "Duplicate of the live row 53dd63b0, Salesforce Power of Us Program. A relink for the list: the live row points at salesforce.com/nonprofit/ and this page is the one that states the ten free licences and the three steps to claim them.",
+  "dupe_of": null
+ },
+ {
+  "id": "8e5f63e4-85d9-47db-b278-56263c8ab4f7",
+  "title": "Severn Trent Community Fund",
+  "code": "duplicate",
+  "note": "Duplicate of the live row 7bda3614, Severn Trent Community Fund Core Funding Grant. This row is the fund's index page, which states no eligibility, no amount and no way in. Separately for the dedup list: 1ef69197 and f4225849 are both New Project Funding on the same URL.",
+  "dupe_of": null
+ },
+ {
+  "id": "26029120-6cfa-4346-8834-36f77b0af3b2",
+  "title": "Social Investment Business Loan & Grant Funds",
+  "code": "duplicate",
+  "note": "Duplicate of three live rows: 0adbc570 Community Builders Fund, 007e7f00 Reach Fund and 6e6e8050 Energy Resilience Fund. This row is SIB's homepage, and the three products it lists are those three rows plus Flexible Finance (9eb92571, between rounds).",
+  "dupe_of": null
+ },
+ {
+  "id": "a91f58e0-5572-4d9b-85ad-d67df0e72e0d",
+  "title": "Time to Shine Fellowship",
+  "code": "out_of_scope",
+  "note": "Invitation only: Rank's staff pick the organisations, and the next programme starts in April 2027. Two things to note before rejecting. The row's apply_url, rankfoundation.com/time-to-shine/, now serves a PNG image with no page behind it, in Chrome as well as from a script, and that is what the row'",
+  "dupe_of": null
+ },
+ {
+  "id": "ec70ac6e-bd4e-4891-b54a-f4cff376b797",
+  "title": "Triodos Bank Business Banking and Loans",
+  "code": "duplicate",
+  "note": "Duplicate of the live row 6c5b16b7, Triodos Business Loans, at triodos.co.uk/business-lending. This row's apply_url, /business-banking, now returns 404. Batch 1 rejected a third Triodos row on the same grounds.",
+  "dupe_of": [
+   "6c5b16b7"
+  ]
+ },
+ {
+  "id": "6ce1fac3-9818-4f0c-bfde-7186f74320ae",
+  "title": "Ufi VocTech Trust \u2014 VocTech Ignite",
+  "code": "out_of_scope",
+  "note": "Invitation only, and closed even to that: the invitation goes only to projects that have already applied to a Ufi round and been turned down. Nothing here a fundraiser can apply to.",
+  "dupe_of": null
+ },
+ {
+  "id": "cfdaf194-6b06-4aab-81fd-2310d31197ba",
+  "title": "Zoom for Nonprofits Discount Programme",
+  "code": "duplicate",
+  "note": "Duplicate of the live row b7f40968, Zoom for Nonprofits, which points at Zoom's own page. This row points at techsoup.uk/partners, which returns an empty 205-byte body, so the verdict rests on the database rather than the page. The TechSoup catalogue itself is already carried as the live row b98c749",
+  "dupe_of": [
+   "b7f40968"
+  ]
+ }
+]
