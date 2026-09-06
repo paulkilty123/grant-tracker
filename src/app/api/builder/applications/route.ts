@@ -17,6 +17,7 @@ import { createClient as createServerClient } from '@/lib/supabase/server'
 import { getBuilderUser } from '@/lib/builder/access'
 import { emitEvent } from '@/lib/events/emit'
 import type { ApplicationQuestion } from '@/lib/builder/types'
+import { allowanceExhausted, allowanceRefusalMessage, type ApplicationAllowance } from '@/lib/builder/allowance'
 
 export const dynamic = 'force-dynamic'
 
@@ -53,6 +54,19 @@ export async function POST(req: NextRequest) {
 
   // Session client — RLS enforces org ownership on the insert.
   const supabase = await createServerClient()
+
+  // The allowance (migration 079): two on trial, five a month on Apply. Asked
+  // here so the refusal is a sentence rather than a trigger error; the trigger
+  // on `applications` is the guard that cannot be forgotten, and its 53400 is
+  // caught below for the case where two clicks race past this read.
+  const { data: allowRows } = await supabase.rpc('application_allowance', { p_org: body.org_id })
+  const allowance = (Array.isArray(allowRows) ? allowRows[0] : allowRows) as ApplicationAllowance | undefined
+  if (allowance && allowanceExhausted(allowance)) {
+    return NextResponse.json(
+      { error: allowanceRefusalMessage(allowance), code: 'application_limit', allowance },
+      { status: 403 },
+    )
+  }
 
   const opportunityId =
     body.opportunity_id && UUID_RE.test(body.opportunity_id) ? body.opportunity_id : null
@@ -109,6 +123,12 @@ export async function POST(req: NextRequest) {
     .single()
 
   if (error || !created) {
+    if (error?.code === '53400' && allowance) {
+      return NextResponse.json(
+        { error: allowanceRefusalMessage(allowance), code: 'application_limit', allowance },
+        { status: 403 },
+      )
+    }
     return NextResponse.json({ error: error?.message ?? 'Could not create the application' }, { status: 500 })
   }
 
