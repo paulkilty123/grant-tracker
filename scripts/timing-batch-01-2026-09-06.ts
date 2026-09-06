@@ -15,12 +15,10 @@
 //   npx tsx --env-file=.env.local scripts/timing-batch-01-2026-09-06.ts [--apply]
 
 import { getAdminDb } from '../src/lib/admin/admin-db'
-import { mergeGrantUpdate } from '../src/lib/grant-merge'
-import { appendBatch, withParsedOpenDate, type Row, type Report } from './timing-lib-2026-09-06'
+import { runBatch, type Row, type Report } from './timing-lib-2026-09-06'
 
-const APPLY  = process.argv.includes('--apply')
-const SOURCE = 'user_verified:timing-2026-09-06'
-const BATCH  = 1
+const APPLY = process.argv.includes('--apply')
+const BATCH = 1
 
 const ROWS: Row[] = [
   // 1. Four rounds a year; the October 2026 round closed 13.07.26. The next
@@ -125,7 +123,7 @@ const REPORT: Report[] = [
     quote: 'Application deadline: 03/09/26',
     url: 'https://foundationscotland.org.uk/ancbc',
     note: 'Three rounds listed for 2026 (05/01, 02/04, 03/09); the last passed three days ago and no 2027 date is published. The dates move year to year, so there is no cycle to roll forward.' },
-  { id: '0704b87e-ea54-4ae3-87d3-7a95559d36a9', title: 'Arts Council of Northern Ireland — Lottery Grants', why: 'not_stated',
+  { id: '0704b87e-ea54-4ae3-87d3-7a95559d36a9', title: 'Arts Council of Northern Ireland — Lottery Grants', why: 'index_over_programmes',
     quote: 'Our Funding Programmes are open to individuals and to organisations. Each funding programme is different, and each programme has useful guidance notes on who can apply, and what you can apply for.',
     url: 'https://artscouncil-ni.org/funding',
     note: 'apply_url is the funding index. It states no dates and does not name a single scheme this row could be, so nothing is followed.' },
@@ -152,34 +150,6 @@ const REPORT: Report[] = [
 ]
 
 async function main() {
-  const db = getAdminDb()
-  console.log(`batch ${BATCH} — ${APPLY ? 'APPLY' : 'DRY RUN'} — ${ROWS.length} writes, ${REPORT.length} reported`)
-
-  for (const r of ROWS) {
-    const { data } = await db.from('scraped_grants')
-      .select('id, title, deadline, is_rolling, next_open_date_parsed, grant_sources').eq('id', r.id).single()
-    if (!data) throw new Error(`${r.id}: no row`)
-    if (!r.re.test(data.title)) throw new Error(`${r.id}: title "${data.title}" does not match ${r.re}`)
-
-    const fields: Record<string, unknown> = withParsedOpenDate({ ...r.fields })
-    if (r.sources?.length) {
-      const existing = (data.grant_sources as { url?: string }[] | null) ?? []
-      const have = new Set(existing.map(s => s.url))
-      const add = r.sources.filter(s => !have.has(s.url)).map(s => ({ url: s.url, text: '', label: s.label }))
-      if (add.length) fields.grant_sources = [...existing, ...add]
-    }
-
-    console.log(`  ${data.title.slice(0, 44).padEnd(44)} ${JSON.stringify(r.fields)}`)
-    for (const [k, c] of Object.entries(r.cits)) console.log(`      ${k}: "${c.snippet}"`)
-    if (!APPLY) continue
-
-    const res = await mergeGrantUpdate({ id: r.id, fields, source: SOURCE, db, citations: r.cits })
-    const refused = res.rejected.filter(x => x.reason !== 'idempotent')
-    console.log(`      applied [${res.applied.join(', ') || 'nothing'}]${refused.length ? `  REFUSED ${JSON.stringify(refused)}` : ''}`)
-    if (refused.length) throw new Error(`${data.title}: refused ${JSON.stringify(refused)} — log as pinned and rerun without this row`)
-  }
-
-  for (const r of REPORT) console.log(`  report  ${r.title.slice(0, 40).padEnd(40)} ${r.why}`)
-  if (APPLY) appendBatch(BATCH, ROWS, REPORT)
+  await runBatch({ batch: BATCH, rows: ROWS, report: REPORT, apply: APPLY, db: getAdminDb() })
 }
 main().catch(e => { console.error(e); process.exit(1) })
