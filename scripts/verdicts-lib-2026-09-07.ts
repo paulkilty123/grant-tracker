@@ -57,6 +57,13 @@ export type Row = {
   url: string
   /** Hold and reject only: one sentence on what Paul is deciding. */
   for_paul?: string
+  /** Live row ids this row duplicates. Ruled 7 Sept by grant-tracker-be: a
+   *  duplicate proved in the database is a reject on that evidence alone, the
+   *  live id and the matching host or title standing in for the page's
+   *  sentence. Without it an unreadable page could only ever be a hold, which
+   *  is how the Microsoft and National Grid rows ended up in batch 3's holds
+   *  when the database already answered the question. */
+  dupe_of?: string[]
   /** The tidy. Tracked columns. */
   fields?: Record<string, unknown>
   cits?: Cit
@@ -76,6 +83,7 @@ export type Verdict = {
   code?: string; quote: string; url: string
   tidied: string[]
   for_paul?: string
+  dupe_of?: string[]
 }
 
 type ResultsFile = {
@@ -243,7 +251,13 @@ export async function runBatch(opts: {
     if (r.verdict !== 'publish' && r.verdict !== 'park' && (r.fields || r.brief)) {
       throw new Error(`${r.id}: a ${r.verdict} writes nothing on the row`)
     }
-    if (!r.quote.trim() && r.verdict !== 'hold') throw new Error(`${r.id}: a ${r.verdict} needs the page's sentence`)
+    // A verdict without a verbatim sentence is a hold, with one exception: a
+    // duplicate proved in the database. The live row's id and the matching host
+    // or title are the evidence, and an unreadable page cannot take that away.
+    const provedDupe = r.verdict === 'reject' && r.code === 'duplicate' && (r.dupe_of?.length ?? 0) > 0
+    if (!r.quote.trim() && r.verdict !== 'hold' && !provedDupe) {
+      throw new Error(`${r.id}: a ${r.verdict} needs the page's sentence, or dupe_of naming the live row it duplicates`)
+    }
     if (r.verdict === 'publish') {
       const gaps = briefGaps(r.brief, r.briefCits)
       if (gaps.length) {
@@ -344,6 +358,7 @@ export async function runBatch(opts: {
       ...(r.code ? { code: r.code } : {}),
       quote: r.quote, url: r.url, tidied,
       ...(r.for_paul ? { for_paul: r.for_paul } : {}),
+      ...(r.dupe_of?.length ? { dupe_of: r.dupe_of } : {}),
     })
   }
 

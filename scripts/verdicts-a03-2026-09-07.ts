@@ -60,17 +60,22 @@ const ROWS: Row[] = [
     quote: 'Please log in or Register to access these exclusive discounts.',
     url: 'https://charitydigital.org.uk/products/',
     for_paul: 'Duplicate of the live row 571f93e2, Charity Digital Exchange — Software Donations. The specific product URL now redirects to the login-walled catalogue index, so there is no longer a page for this one subscription.' },
-  // Would be a reject as a duplicate of 3c2c6766, and is a hold instead because
-  // its page cannot be read: the brief says a verdict without a verbatim
-  // sentence from the page is a hold, and a duplicate proved from the database
-  // rather than the page has no sentence to give. Same for National Grid below.
-  { id: 'f6b2ac5d-3004-452c-81e6-2d2fa32ccae3', re: /Microsoft Nonprofit Software/, pile: 'A', verdict: 'hold',
+  // These two were holds when this batch first ran, because the brief said a
+  // verdict without a verbatim sentence is a hold and neither page could be
+  // read. grant-tracker-be ruled on 7 Sept that a duplicate proved in the
+  // DATABASE is a reject on that evidence alone — the live row's id and the
+  // matching host or title standing in for the sentence — and asked for the
+  // ruling to be applied backwards. dupe_of carries the proof, and the runner
+  // now accepts it in place of a quote. Re-run with --apply to restate batch 3.
+  { id: 'f6b2ac5d-3004-452c-81e6-2d2fa32ccae3', re: /Microsoft Nonprofit Software/, pile: 'A', verdict: 'reject', code: 'duplicate',
     quote: '', url: 'https://www.techsoup.uk/partners/microsoft/faqs',
-    for_paul: 'Reject as a duplicate of the live row 3c2c6766, Microsoft for Nonprofits, unless you disagree — recorded as a hold only because its URL returns HTTP 200 with a 205-byte empty body (the same TechSoup shell the amounts job found), so there is no sentence from the page to cite.' },
+    dupe_of: ['3c2c6766'],
+    for_paul: 'Duplicate of the live row 3c2c6766, Microsoft for Nonprofits. Proved from the database rather than the page: this URL returns HTTP 200 with a 205-byte empty body, the same TechSoup shell the amounts job found, so there is no sentence to cite.' },
 
-  { id: '5afd77c4-190b-4387-9be1-46a05d8bfe7d', re: /National Grid Community Grants/, pile: 'A', verdict: 'hold',
+  { id: '5afd77c4-190b-4387-9be1-46a05d8bfe7d', re: /National Grid Community Grants/, pile: 'A', verdict: 'reject', code: 'duplicate',
     quote: '', url: 'https://www.nationalgrid.com/community-grants',
-    for_paul: 'Reject as a duplicate of the live row 057225d1, Community Grant Programme (National Grid Electricity Transmission), unless you disagree — recorded as a hold because both National Grid URLs sit behind the same Cloudflare 403 and neither could be read today.' },
+    dupe_of: ['057225d1'],
+    for_paul: 'Duplicate of the live row 057225d1, Community Grant Programme (National Grid Electricity Transmission). Proved from the database rather than the page: both National Grid URLs sit behind the same Cloudflare 403 and neither could be read.' },
 
   { id: '45d5140a-8536-4331-b4d3-57462e108a9f', re: /Nationwide Foundation/, pile: 'A', verdict: 'hold',
     quote: 'From local neighbourhoods to Parliament, we are making a difference by demonstrating what good housing looks like, generating compelling evidence for decision makers and putting people and home at the heart of everything we do.',

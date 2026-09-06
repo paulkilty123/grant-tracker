@@ -466,21 +466,29 @@
      "id": "f6b2ac5d-3004-452c-81e6-2d2fa32ccae3",
      "title": "Microsoft Nonprofit Software Donations Programme",
      "pile": "A",
-     "verdict": "hold",
+     "verdict": "reject",
+     "code": "duplicate",
      "quote": "",
      "url": "https://www.techsoup.uk/partners/microsoft/faqs",
      "tidied": [],
-     "for_paul": "Reject as a duplicate of the live row 3c2c6766, Microsoft for Nonprofits, unless you disagree — recorded as a hold only because its URL returns HTTP 200 with a 205-byte empty body (the same TechSoup shell the amounts job found), so there is no sentence from the page to cite."
+     "for_paul": "Duplicate of the live row 3c2c6766, Microsoft for Nonprofits. Proved from the database rather than the page: this URL returns HTTP 200 with a 205-byte empty body, the same TechSoup shell the amounts job found, so there is no sentence to cite.",
+     "dupe_of": [
+      "3c2c6766"
+     ]
     },
     {
      "id": "5afd77c4-190b-4387-9be1-46a05d8bfe7d",
      "title": "National Grid Community Grants",
      "pile": "A",
-     "verdict": "hold",
+     "verdict": "reject",
+     "code": "duplicate",
      "quote": "",
      "url": "https://www.nationalgrid.com/community-grants",
      "tidied": [],
-     "for_paul": "Reject as a duplicate of the live row 057225d1, Community Grant Programme (National Grid Electricity Transmission), unless you disagree — recorded as a hold because both National Grid URLs sit behind the same Cloudflare 403 and neither could be read today."
+     "for_paul": "Duplicate of the live row 057225d1, Community Grant Programme (National Grid Electricity Transmission). Proved from the database rather than the page: both National Grid URLs sit behind the same Cloudflare 403 and neither could be read.",
+     "dupe_of": [
+      "057225d1"
+     ]
     },
     {
      "id": "45d5140a-8536-4331-b4d3-57462e108a9f",
@@ -550,12 +558,12 @@
     "REJECT  LawWorks Clinics Network (duplicate) — Duplicate of the live row a5da4678, LawWorks — Free Legal Advice for Charities. Worth noting before rejecting: the live row points at lawworks.org.uk, the bare home page, while these two hidden rows point at the pages that actually describe the service and its eligibility. Relinking the live row to one of them would be an improvement.",
     "REJECT  LawWorks Not-for-Profits Programme (duplicate) — Second LawWorks duplicate of a5da4678, and this is the page I would relink the live row to: it names who is helped, the two things offered, and links the eligibility criteria.",
     "REJECT  Microsoft 365 Nonprofit Cloud Subscription (via Charity Digital) (duplicate) — Duplicate of the live row 571f93e2, Charity Digital Exchange — Software Donations. The specific product URL now redirects to the login-walled catalogue index, so there is no longer a page for this one subscription.",
+    "REJECT  Microsoft Nonprofit Software Donations Programme (duplicate) — Duplicate of the live row 3c2c6766, Microsoft for Nonprofits. Proved from the database rather than the page: this URL returns HTTP 200 with a 205-byte empty body, the same TechSoup shell the amounts job found, so there is no sentence to cite.",
+    "REJECT  National Grid Community Grants (duplicate) — Duplicate of the live row 057225d1, Community Grant Programme (National Grid Electricity Transmission). Proved from the database rather than the page: both National Grid URLs sit behind the same Cloudflare 403 and neither could be read.",
     "HOLD    Horsham District Council — Community Grant — HTTP 403 behind a Cloudflare interstitial, so nothing could be read today. Its amount_min and amount_max are also admin-pinned, so even a good read could not tidy them.",
     "HOLD    Jobs and Skills Funding Opportunities — Second GLA row in this pile pointing at a funding index rather than a fund. 287KB of site navigation, no single programme, and the closest thing to a route is a note that the GLA does not manage subcontracting. Relink to a named programme or reject.",
     "HOLD    Leathersellers' Foundation Main Grants — A strong fund, now in its fifth year: four-year unrestricted grants of £20,000 to £25,000 a year for UK charities and CIOs with income of £200,000 to £2 million. This year's cycle is fully dated through to December 2026 decisions, and the page gives no date for the next expression-of-interest window. Hold for the 2027 dates, or park it once they appear.",
     "HOLD    Macmillan Q Lab — Holistic Cancer Care — The page returns 329KB in which the readable text is almost entirely analytics tracking attributes; no programme content survives a text read. Needs a browser look.",
-    "HOLD    Microsoft Nonprofit Software Donations Programme — Reject as a duplicate of the live row 3c2c6766, Microsoft for Nonprofits, unless you disagree — recorded as a hold only because its URL returns HTTP 200 with a 205-byte empty body (the same TechSoup shell the amounts job found), so there is no sentence from the page to cite.",
-    "HOLD    National Grid Community Grants — Reject as a duplicate of the live row 057225d1, Community Grant Programme (National Grid Electricity Transmission), unless you disagree — recorded as a hold because both National Grid URLs sit behind the same Cloudflare 403 and neither could be read today.",
     "HOLD    Nationwide Foundation Grants Programme — apply_url is the foundation home page, which describes its housing strategy and names no programme, no route and no figure. A home page cannot carry a complete brief. Relink to a named programme if one is open, or reject.",
     "HOLD    Peter Kershaw Trust — Ordinary Grants — The page returns 1MB and nothing about eligibility, amounts or dates survives a text read. Needs a browser look."
    ]
@@ -784,6 +792,151 @@
     "HOLD    Tech for Good Accelerator Programme — An audience call at the edge. BGV invests £60,000 for equity and says it only invests in for-profit companies limited by shares, which rules out charities, CIOs and companies limited by guarantee; the row's eligible_structures list cic_guarantee, ltd_guarantee and cooperative, all of which the page excludes. If an equity accelerator for for-profit ventures belongs in the catalogue, this is a park: applications for Autumn 2026 are closed and the page says the next ones open in November. If it does not, it is out_of_scope.",
     "HOLD    Theatre and Charitable Grants — A register row: apply_url is the Charity Commission entry, which states no eligibility and no route, and the Mackintosh Foundation has no working website (mackintoshfoundation.org is an unbuilt placeholder). Its amount_min, amount_max, location_tag and eligible_structures are all admin-held. Same class as the other register rows: keep holding, or reject them together."
    ]
+  },
+  {
+   "batch": 5,
+   "pile": "A",
+   "verdicts": [
+    {
+     "id": "8b5c4025-318d-4354-a766-228b361ffba3",
+     "title": "Trading for Good: Community Business",
+     "pile": "A",
+     "verdict": "park",
+     "quote": "Applications will open again in Spring 2027",
+     "url": "https://www.the-sse.org/programme/trading-for-good-community-business/",
+     "tidied": []
+    },
+    {
+     "id": "ec70ac6e-bd4e-4891-b54a-f4cff376b797",
+     "title": "Triodos Bank Business Banking and Loans",
+     "pile": "A",
+     "verdict": "reject",
+     "code": "duplicate",
+     "quote": "We provide specialist, sustainable lending, finance and savings accounts for businesses and organisations working to tackle the biggest challenges of our time.",
+     "url": "https://www.triodos.co.uk/business",
+     "tidied": [],
+     "for_paul": "Duplicate of the live row 6c5b16b7, Triodos Business Loans, at triodos.co.uk/business-lending. This row's apply_url, /business-banking, now returns 404. Batch 1 rejected a third Triodos row on the same grounds.",
+     "dupe_of": [
+      "6c5b16b7"
+     ]
+    },
+    {
+     "id": "37a8f875-7834-495f-8e14-a0fade147ebf",
+     "title": "Ufi VocTech Trust",
+     "pile": "A",
+     "verdict": "hold",
+     "quote": "Grant funding for vocational technology from £10k to £250k. Help your ideas thrive with funding and expert support from Ufi.",
+     "url": "https://ufi.co.uk/grant-funding/",
+     "tidied": [],
+     "for_paul": "A funder-level index over four calls, and the admin-pinned £30,000 to £150,000 matches none of them: VocTech Together is up to £10,000, VocTech Activate £30,000 to £60,000, VocTech Challenge £200,000 to £250,000, and VocTech Ignite is invitation only. Today Challenge is closed and Activate says applications open in early 2027 with a stage one deadline of 2 February 2027. Splitting this into one row per call, starting with Activate, is the fix; a single date or figure is not."
+    },
+    {
+     "id": "6ce1fac3-9818-4f0c-bfde-7186f74320ae",
+     "title": "Ufi VocTech Trust — VocTech Ignite",
+     "pile": "A",
+     "verdict": "reject",
+     "code": "out_of_scope",
+     "quote": "Grant status: By invitation only to projects who have previously submitted an unsuccessful application to a Ufi grant funding round.",
+     "url": "https://ufi.co.uk/grant-funding/voctech-ignite/",
+     "tidied": [],
+     "for_paul": "Invitation only, and closed even to that: the invitation goes only to projects that have already applied to a Ufi round and been turned down. Nothing here a fundraiser can apply to."
+    },
+    {
+     "id": "7b924e63-a2a6-42f2-9968-4786de21cb47",
+     "title": "Virgin Media O2 - Apprenticeship Talent Fund",
+     "pile": "A",
+     "verdict": "publish",
+     "quote": "If you're a small business, charity, social enterprise or local authority that doesn't already pay into the levy, this talent fund is for you.",
+     "url": "https://news.virginmediao2.co.uk/apprenticeship-talent-fund/",
+     "tidied": [
+      "is_rolling",
+      "funder_brief.who_can_apply",
+      "funder_brief.what_they_fund",
+      "funder_brief.how_to_apply",
+      "funder_brief.exclusions",
+      "funder_brief.decision_timeline",
+      "funder_brief.typical_award",
+      "funder_brief.open_status"
+     ]
+    },
+    {
+     "id": "efb34147-a31c-4088-bd85-f8ab17980990",
+     "title": "Young Foundation Social Innovation Support Programmes",
+     "pile": "A",
+     "verdict": "hold",
+     "quote": "Part of our work, as a community-led intermediary funder, supports funders and grant-making bodies with the design and delivery of grant programmes",
+     "url": "https://www.youngfoundation.org/innovation-and-practice/",
+     "tidied": [],
+     "for_paul": "apply_url is the foundation's home page, which names no programme, no route and no figure. Its innovation and practice page does list funding programmes, including the Community Knowledge Fund and Community Research Networks, but mixes current and finished ones with no dates and no eligibility, so nothing there can carry a brief either. Relink to a named programme if one is open, or reject it as an intermediary that funds funders rather than applicants."
+    },
+    {
+     "id": "cfdaf194-6b06-4aab-81fd-2310d31197ba",
+     "title": "Zoom for Nonprofits Discount Programme",
+     "pile": "A",
+     "verdict": "reject",
+     "code": "duplicate",
+     "quote": "",
+     "url": "https://www.techsoup.uk/partners",
+     "tidied": [],
+     "for_paul": "Duplicate of the live row b7f40968, Zoom for Nonprofits, which points at Zoom's own page. This row points at techsoup.uk/partners, which returns an empty 205-byte body, so the verdict rests on the database rather than the page. The TechSoup catalogue itself is already carried as the live row b98c7493.",
+     "dupe_of": [
+      "b7f40968"
+     ]
+    }
+   ],
+   "paul_list": [
+    "PUBLISH Virgin Media O2 - Apprenticeship Talent Fund",
+    "PARK    Trading for Good: Community Business",
+    "REJECT  Triodos Bank Business Banking and Loans (duplicate) — Duplicate of the live row 6c5b16b7, Triodos Business Loans, at triodos.co.uk/business-lending. This row's apply_url, /business-banking, now returns 404. Batch 1 rejected a third Triodos row on the same grounds.",
+    "REJECT  Ufi VocTech Trust — VocTech Ignite (out_of_scope) — Invitation only, and closed even to that: the invitation goes only to projects that have already applied to a Ufi round and been turned down. Nothing here a fundraiser can apply to.",
+    "REJECT  Zoom for Nonprofits Discount Programme (duplicate) — Duplicate of the live row b7f40968, Zoom for Nonprofits, which points at Zoom's own page. This row points at techsoup.uk/partners, which returns an empty 205-byte body, so the verdict rests on the database rather than the page. The TechSoup catalogue itself is already carried as the live row b98c7493.",
+    "HOLD    Ufi VocTech Trust — A funder-level index over four calls, and the admin-pinned £30,000 to £150,000 matches none of them: VocTech Together is up to £10,000, VocTech Activate £30,000 to £60,000, VocTech Challenge £200,000 to £250,000, and VocTech Ignite is invitation only. Today Challenge is closed and Activate says applications open in early 2027 with a stage one deadline of 2 February 2027. Splitting this into one row per call, starting with Activate, is the fix; a single date or figure is not.",
+    "HOLD    Young Foundation Social Innovation Support Programmes — apply_url is the foundation's home page, which names no programme, no route and no figure. Its innovation and practice page does list funding programmes, including the Community Knowledge Fund and Community Research Networks, but mixes current and finished ones with no dates and no eligibility, so nothing there can carry a brief either. Relink to a named programme if one is open, or reject it as an intermediary that funds funders rather than applicants."
+   ]
   }
- ]
+ ],
+ "summary": {
+  "job": "verdicts on the rows that are not live",
+  "brief": "docs/handoffs/verdicts-2026-09-07.md",
+  "finished": "2026-09-07",
+  "state_changes_made": 0,
+  "state_changes_by_others": [
+   "29d000d3 Foundation East — rejected by grant-tracker-be after batch 2 reported the domain takeover",
+   "e31c28ad FSI — rejected by grant-tracker-be after batch 2 reported the dead host",
+   "583f0378 Social Investment Business Resilience Fund — rejected closed_for_good by grant-tracker-be; live when the baseline was taken, so outside both piles"
+  ],
+  "pile_a": {
+   "rows": 67,
+   "publish": 7,
+   "park": 5,
+   "reject": 27,
+   "hold": 28,
+   "reject_codes": {
+    "out_of_scope": 7,
+    "duplicate": 15,
+    "historical_deadline": 1,
+    "dead_url": 3,
+    "closed_for_good": 1
+   },
+   "rows_tidied": 10
+  },
+  "pile_b": {
+   "rows": 195,
+   "verdicts": 0,
+   "note": "not started; handed to another session"
+  },
+  "what_the_holds_are": {
+   "unreadable_page": "a 403 behind Cloudflare, a body that is all tracking attributes, a URL that serves a PNG, a refused TLS handshake. Every one needs a browser look, not another script.",
+   "index_over_programmes": "apply_url points at a funder home page or a fund index covering several calls on different timetables. A single date or figure cannot be right for it. The fix is a relink or a split, both of which are Paul's.",
+   "admin_pin_the_page_contradicts": "rule 5. Simon Gibson holds cic_guarantee and cic_shares while the trust lists Community Interest Companies under what it does not fund; Step Change holds a deadline that has passed; Ufi holds £30,000 to £150,000, which matches none of its four calls.",
+   "audience_at_the_edge": "Bethnal Green Ventures invests only in for-profit companies limited by shares, which rules out charities, CIOs and companies limited by guarantee.",
+   "charity_commission_register_rows": "apply_url is a register entry, which states no eligibility and no route. Held as a class."
+  },
+  "patterns_worth_acting_on": [
+   "The dominant reject is duplicate, 15 of 27, and almost all of them are the same shape: a provider with several products gets one row per page somebody happened to scrape, and the hidden copy points at the provider home page or a fund index while the named products are separate live rows. Key Fund has eleven rows, LawWorks three, Microsoft four, Triodos four, Severn Trent six.",
+   "Several of those duplicates point at the BETTER page. LawWorks, Salesforce and Microsoft live rows all sit on a home page while the hidden copy sits on the page that states the offer and the route. Those are relinks before they are rejections.",
+   "Two hosts serve a 200 that is not the funder: foundationeast.org now serves casino content under the charity's name, and techsoup.uk/partners returns an empty 205-byte shell. Both look like health to a URL checker.",
+   "Community foundation funds are carried one row per named fund, not one per foundation. Three CFNE wind-farm funds are already live, which is why batch 4 published two more rather than rejecting them as duplicates."
+  ]
+ }
 }
