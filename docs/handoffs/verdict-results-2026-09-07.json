@@ -193,6 +193,186 @@
     "HOLD    Commonweal Housing — Call for New Ideas — Open until 16 October, which matches the row's deadline, and the fund is real. The row carries £5,000 to £10,000 and the page states no figure anywhere — it is in the downloadable Application Guide. Confirm the range from the guide or clear it, and this becomes a publish.",
     "HOLD    Community Housing Fund — Two problems. apply_url points at the GLA's funding-programmes index, where the fund is a bare link; its own page (quoted here) describes the route but gives no dates, no amounts and no exclusions, so it cannot carry a full brief. Its published allocations also stop at Q4 2024-25. Relink and confirm the programme is still running, or reject it as ended."
    ]
+  },
+  {
+   "batch": 2,
+   "pile": "A",
+   "verdicts": [
+    {
+     "id": "085f3c7e-9021-41cb-a66b-1342830ed886",
+     "title": "Community Investment Enterprise Facility (CIEF)",
+     "pile": "A",
+     "verdict": "reject",
+     "code": "out_of_scope",
+     "quote": "We established the Community Investment Enterprise Facility (CIEF) in 2015 (in partnership with Social Investment Scotland) to provide CDFIs with the capital they need to meet demand",
+     "url": "https://bettersocietycapital.com/information/community-development-finance-institutions/",
+     "tidied": [],
+     "for_paul": "CIEF puts capital into CDFIs, which then lend to small businesses. The £25,000 to £250,000 on the row is what a CDFI lends on, not what this facility offers an applicant. Third Better Society Capital row in this pile with the same shape."
+    },
+    {
+     "id": "cbe84427-1a04-4fbc-8f8c-b09f7af4385d",
+     "title": "CPCA Social Impact Investment Fund",
+     "pile": "A",
+     "verdict": "reject",
+     "code": "dead_url",
+     "quote": "Social impact workspace, next to Peterborough United FC stadium.",
+     "url": "https://alliaworkspace.co.uk/",
+     "tidied": [],
+     "for_paul": "futurebusinesscentre.co.uk now redirects to alliaworkspace.co.uk, which sells flexible offices and meeting rooms. No trace of the CPCA fund anywhere on it."
+    },
+    {
+     "id": "043634a3-19fa-4636-9a0f-d5449163948c",
+     "title": "DCR Allen Charitable Trust",
+     "pile": "A",
+     "verdict": "hold",
+     "quote": "Total expenditure: £163,658",
+     "url": "https://register-of-charities.charitycommission.gov.uk/en/charity-search/-/charity-details/277293/charity-overview",
+     "tidied": [],
+     "for_paul": "apply_url is a Charity Commission register entry rather than a funder page: it can say who may apply and never how to apply, so the row cannot carry a complete brief. The trust is real and spending £163,658 a year, and it has no website. Carry it as a funder a fundraiser can only write to, or reject it as unapproachable?"
+    },
+    {
+     "id": "0a9e6108-c367-4a93-8df5-d5268d03b7b2",
+     "title": "Desk Space and Meeting Room Hire for Charities",
+     "pile": "A",
+     "verdict": "reject",
+     "code": "out_of_scope",
+     "quote": "Looking for desk space on an ad hoc basis with no ongoing commitment? Then we can offer you a hot desk for as little as £30 per day.",
+     "url": "https://www.thinknpc.org/about-npc/desk-space-and-meeting-room-hire/",
+     "tidied": [],
+     "for_paul": "Priced workspace hire, not an in-kind offer: £120 a month for a fixed desk, £30 a day for a hot desk. The row carried it as in-kind with a £200 ceiling, which is a price rather than an award."
+    },
+    {
+     "id": "9de97466-69b9-4c0e-a182-83c821b109b8",
+     "title": "Edward Gostling Foundation Grants",
+     "pile": "A",
+     "verdict": "reject",
+     "code": "closed_for_good",
+     "quote": "We have closed all our grant application programmes and instead have invited carefully chosen charities to work with us going forward as Legacy Partners.",
+     "url": "https://edwardgostlingfoundation.org.uk/",
+     "tidied": [],
+     "for_paul": "All application programmes closed; the foundation now works only with invited Legacy Partners while it spends out."
+    },
+    {
+     "id": "97be169d-2e01-4157-a057-4e974fdfcb8d",
+     "title": "Employer-Supported Skilled Volunteering Programmes",
+     "pile": "A",
+     "verdict": "hold",
+     "quote": "Coaches and individuals meet virtually for up to six sessions over the course of several weeks.",
+     "url": "https://www.bitc.org.uk/social-impact-and-employee-volunteering/",
+     "tidied": [],
+     "for_paul": "The page is written for corporate members wanting to deploy their staff, and states no route for a charity to request support. Its apply_url is admin-pinned, so it cannot be relinked in this job. Probably a reject as a membership body, but the pin makes it yours."
+    },
+    {
+     "id": "ba76fee4-7d8e-48e5-acac-f9df576c320c",
+     "title": "Energy Resilience Fund",
+     "pile": "A",
+     "verdict": "reject",
+     "code": "duplicate",
+     "quote": "Currently open? yes",
+     "url": "https://www.sibgroup.org.uk/funds/energy-resilience-fund/",
+     "tidied": [],
+     "for_paul": "Duplicate of the live row 6e6e8050, Energy Resilience Fund — Social Investment Business, whose £25,000 to £250,000 already matches the fund page. This hidden row points at goodfinance.org.uk, a third-party directory, and carries £60,000 to £15,000,000, which describes SIB's lending in general rather than this fund. Two smaller things while you are there: the live row's apply_url uses /fund/ where the page I read today is /funds/, and there is a second live SIB row (583f0378, Social Investment Business — Resilience Fund) pointing at the funding index."
+    },
+    {
+     "id": "985b3216-a7bb-43ca-b086-3e81c1e69126",
+     "title": "EY Foundation Programmes for Young People",
+     "pile": "A",
+     "verdict": "hold",
+     "quote": "",
+     "url": "https://ey.foundation/",
+     "tidied": [],
+     "for_paul": "ey.foundation did not answer on repeated attempts, so nothing could be read today. Needs a re-read before any verdict."
+    },
+    {
+     "id": "29d000d3-e3fa-439e-89f8-e03109af0f44",
+     "title": "Foundation East CDFI Loans",
+     "pile": "A",
+     "verdict": "reject",
+     "code": "dead_url",
+     "quote": "EE Pay By Mobile Casino UK: 2026's Premier Guide | Foundation East",
+     "url": "https://www.foundationeast.org/",
+     "tidied": [],
+     "for_paul": "The CDFI's domain has been taken over and now serves a gambling affiliate site under the charity's name, complete with casino bonus tables and an invented staff bio. Reject the row, and it may be worth checking whether anything else in the catalogue points at foundationeast.org."
+    },
+    {
+     "id": "e31c28ad-10a0-4d7c-9076-33c8f8cf91e9",
+     "title": "FSI Small Charity Training and Capacity Building Programme",
+     "pile": "A",
+     "verdict": "reject",
+     "code": "dead_url",
+     "quote": "Index of / Name Last Modified Size cgi-bin Proudly Served by LiteSpeed Web Server at thefsi.org Port 443",
+     "url": "https://thefsi.org/",
+     "tidied": [],
+     "for_paul": "thefsi.org serves a bare Apache directory index with one cgi-bin folder last modified in 2023. The Foundation for Social Improvement's site is gone."
+    },
+    {
+     "id": "0b03c55e-32d9-4054-b1cb-353260f01a96",
+     "title": "Gatwick Foundation Fund (via SCF Main Grants)",
+     "pile": "A",
+     "verdict": "hold",
+     "quote": "The maximum grant available is £10,000 for exceptional projects, although many successful applications will be for less than this amount.",
+     "url": "https://sussexcommunityfoundation.org/grants/how-to-apply/main-grants/london-gatwick-community-fund/",
+     "tidied": [],
+     "for_paul": "The fund is real, open and has been renamed the London Gatwick Community Fund; apply_url redirects to the new page. Seven of its fields are admin-pinned, including apply_url and a deadline of 5 June that has passed, so nothing can be tidied here. Sussex Main grants close on 11 September. Unpin and it is a publish."
+    },
+    {
+     "id": "65961bc8-8648-4c82-9b5e-4a4fd0d2ff68",
+     "title": "General Grants",
+     "pile": "A",
+     "verdict": "hold",
+     "quote": "Grants are made to registered charities.",
+     "url": "https://register-of-charities.charitycommission.gov.uk/en/about-the-register-of-charities/-/charity-details/280500",
+     "tidied": [],
+     "for_paul": "apply_url is a Charity Commission register entry rather than a funder page: it can say who may apply and never how to apply, so the row cannot carry a complete brief. The Djanogly Foundation spends £330,942 a year and has no site of its own."
+    },
+    {
+     "id": "2506cc66-7ba4-4da7-80fb-070b5961783d",
+     "title": "Harford Charitable Trust",
+     "pile": "A",
+     "verdict": "hold",
+     "quote": "We are a small Family Trust making grants (maximum £2,000) to registered charities (not individuals).",
+     "url": "https://register-of-charities.charitycommission.gov.uk/en/charity-search/-/charity-details/299945/charity-overview",
+     "tidied": [],
+     "for_paul": "The best of the four register rows: the entry states who may apply, a £2,000 ceiling and that individuals are excluded, which is three of the seven brief fields. It still cannot say how to apply, because a Charity Commission register entry rather than a funder page: it can say who may apply and never how to apply, so the row cannot carry a complete brief."
+    },
+    {
+     "id": "1cf9567c-46b3-494d-823f-b906dead142a",
+     "title": "Henry Smith Foundation — Career Ready",
+     "pile": "A",
+     "verdict": "hold",
+     "quote": "You can see which programmes are currently open below. If your work aligns with our priorities but funding isn't open right now, sign up to our mailing list to hear when programmes open.",
+     "url": "https://henrysmith.foundation/grants/",
+     "tidied": [],
+     "for_paul": "Career Ready and Maternity Equity are both cards on this one page, and the page carries exactly one \"Coming Soon\" badge and one \"Closed\" badge. Which belongs to which does not survive a text read, and guessing would put a wrong status on one of them. Needs a browser look; the two rows should be decided together."
+    },
+    {
+     "id": "cf29bfb0-3223-4a7d-a279-c6345b495681",
+     "title": "Henry Smith Foundation — Maternity Equity",
+     "pile": "A",
+     "verdict": "hold",
+     "quote": "You can see which programmes are currently open below. If your work aligns with our priorities but funding isn't open right now, sign up to our mailing list to hear when programmes open.",
+     "url": "https://henrysmith.foundation/grants/",
+     "tidied": [],
+     "for_paul": "Paired with the Career Ready row above and blocked the same way. This row already records \"Listed as Coming Soon; no opening date published\", which is a park only if a date appears; today the page still gives none."
+    }
+   ],
+   "paul_list": [
+    "REJECT  Community Investment Enterprise Facility (CIEF) (out_of_scope) — CIEF puts capital into CDFIs, which then lend to small businesses. The £25,000 to £250,000 on the row is what a CDFI lends on, not what this facility offers an applicant. Third Better Society Capital row in this pile with the same shape.",
+    "REJECT  CPCA Social Impact Investment Fund (dead_url) — futurebusinesscentre.co.uk now redirects to alliaworkspace.co.uk, which sells flexible offices and meeting rooms. No trace of the CPCA fund anywhere on it.",
+    "REJECT  Desk Space and Meeting Room Hire for Charities (out_of_scope) — Priced workspace hire, not an in-kind offer: £120 a month for a fixed desk, £30 a day for a hot desk. The row carried it as in-kind with a £200 ceiling, which is a price rather than an award.",
+    "REJECT  Edward Gostling Foundation Grants (closed_for_good) — All application programmes closed; the foundation now works only with invited Legacy Partners while it spends out.",
+    "REJECT  Energy Resilience Fund (duplicate) — Duplicate of the live row 6e6e8050, Energy Resilience Fund — Social Investment Business, whose £25,000 to £250,000 already matches the fund page. This hidden row points at goodfinance.org.uk, a third-party directory, and carries £60,000 to £15,000,000, which describes SIB's lending in general rather than this fund. Two smaller things while you are there: the live row's apply_url uses /fund/ where the page I read today is /funds/, and there is a second live SIB row (583f0378, Social Investment Business — Resilience Fund) pointing at the funding index.",
+    "REJECT  Foundation East CDFI Loans (dead_url) — The CDFI's domain has been taken over and now serves a gambling affiliate site under the charity's name, complete with casino bonus tables and an invented staff bio. Reject the row, and it may be worth checking whether anything else in the catalogue points at foundationeast.org.",
+    "REJECT  FSI Small Charity Training and Capacity Building Programme (dead_url) — thefsi.org serves a bare Apache directory index with one cgi-bin folder last modified in 2023. The Foundation for Social Improvement's site is gone.",
+    "HOLD    DCR Allen Charitable Trust — apply_url is a Charity Commission register entry rather than a funder page: it can say who may apply and never how to apply, so the row cannot carry a complete brief. The trust is real and spending £163,658 a year, and it has no website. Carry it as a funder a fundraiser can only write to, or reject it as unapproachable?",
+    "HOLD    Employer-Supported Skilled Volunteering Programmes — The page is written for corporate members wanting to deploy their staff, and states no route for a charity to request support. Its apply_url is admin-pinned, so it cannot be relinked in this job. Probably a reject as a membership body, but the pin makes it yours.",
+    "HOLD    EY Foundation Programmes for Young People — ey.foundation did not answer on repeated attempts, so nothing could be read today. Needs a re-read before any verdict.",
+    "HOLD    Gatwick Foundation Fund (via SCF Main Grants) — The fund is real, open and has been renamed the London Gatwick Community Fund; apply_url redirects to the new page. Seven of its fields are admin-pinned, including apply_url and a deadline of 5 June that has passed, so nothing can be tidied here. Sussex Main grants close on 11 September. Unpin and it is a publish.",
+    "HOLD    General Grants — apply_url is a Charity Commission register entry rather than a funder page: it can say who may apply and never how to apply, so the row cannot carry a complete brief. The Djanogly Foundation spends £330,942 a year and has no site of its own.",
+    "HOLD    Harford Charitable Trust — The best of the four register rows: the entry states who may apply, a £2,000 ceiling and that individuals are excluded, which is three of the seven brief fields. It still cannot say how to apply, because a Charity Commission register entry rather than a funder page: it can say who may apply and never how to apply, so the row cannot carry a complete brief.",
+    "HOLD    Henry Smith Foundation — Career Ready — Career Ready and Maternity Equity are both cards on this one page, and the page carries exactly one \"Coming Soon\" badge and one \"Closed\" badge. Which belongs to which does not survive a text read, and guessing would put a wrong status on one of them. Needs a browser look; the two rows should be decided together.",
+    "HOLD    Henry Smith Foundation — Maternity Equity — Paired with the Career Ready row above and blocked the same way. This row already records \"Listed as Coming Soon; no opening date published\", which is a park only if a date appears; today the page still gives none."
+   ]
   }
  ]
 }
