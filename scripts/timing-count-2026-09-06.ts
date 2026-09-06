@@ -54,8 +54,9 @@ async function main() {
   for (const r of drift) console.log(`   ${r.id}  ${r.title}`)
 
   if (!existsSync(RESULTS)) return
-  const written = new Set((JSON.parse(readFileSync(RESULTS, 'utf8')) as { written: { id: string }[] }[])
-    .flatMap(b => b.written.map(w => w.id)))
+  const results = JSON.parse(readFileSync(RESULTS, 'utf8'))
+  const batches = (Array.isArray(results) ? results : results.batches) as { written: { id: string }[] }[]
+  const written = new Set(batches.flatMap(b => b.written.map(w => w.id)))
   const rows = await db.from('scraped_grants')
     .select('id, title, deadline, is_rolling, next_open_date, next_open_date_parsed, field_provenance')
     .in('id', ids).eq('is_active', true).eq('pipeline_state', 'published')

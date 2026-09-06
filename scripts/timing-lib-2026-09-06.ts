@@ -36,6 +36,23 @@ export type Report = {
 
 export type State = 'rolling' | 'dated' | 'reopens' | 'cycle'
 
+// A row where an admin value blocked the write AND the page has since moved on.
+// Collected across batches at the orchestrating session's request so the whole
+// set can go to Paul once rather than one interruption at a time. Every entry
+// pairs what the row holds with what the page says today; that pairing is the
+// decision, and neither half is enough on its own.
+export type PinOutlived = {
+  id: string
+  title: string
+  field: string
+  reason: string
+  held_by: string
+  held_since?: string
+  row_holds: unknown
+  page_says: string
+  url: string
+}
+
 export const RESULTS = join(__dirname, '..', 'docs', 'handoffs', 'timing-results-2026-09-06.json')
 
 // Which of the four states a row's written fields represent. Derived from the
@@ -80,8 +97,36 @@ export function proseOpenDate(fields: Record<string, unknown>): string | null {
   return parsed
 }
 
-export function appendBatch(batch: number, rows: Row[], report: Report[]) {
-  const all: unknown[] = existsSync(RESULTS) ? JSON.parse(readFileSync(RESULTS, 'utf8')) : []
+type ResultsFile = {
+  batches: { batch: number; written: unknown[]; report: Report[] }[]
+  pins_outlived: PinOutlived[]
+}
+
+function readResults(): ResultsFile {
+  if (!existsSync(RESULTS)) return { batches: [], pins_outlived: [] }
+  const raw = JSON.parse(readFileSync(RESULTS, 'utf8'))
+  // The file was a bare array of batches until batch 6, when pins_outlived was
+  // added alongside it. Read either shape rather than losing five batches.
+  if (Array.isArray(raw)) return { batches: raw, pins_outlived: [] }
+  return { batches: raw.batches ?? [], pins_outlived: raw.pins_outlived ?? [] }
+}
+
+// Merge pins into the results file without touching a batch entry. Used to
+// backfill the refusals from batches 2 to 5, which happened before pins_outlived
+// existed. Re-running those batches would have worked too, but three of the six
+// refusals have since been resolved by Paul, and a re-run would quietly move
+// those rows from `report` into `written` — crediting this job with writes it
+// did not make and blinding the count check that caught them.
+export function recordPins(pins: PinOutlived[]) {
+  const file = readResults()
+  const ids = new Set(pins.map(p => `${p.id}:${p.field}`))
+  file.pins_outlived = file.pins_outlived.filter(p => !ids.has(`${p.id}:${p.field}`)).concat(pins)
+  writeFileSync(RESULTS, JSON.stringify(file, null, 1) + '\n')
+  console.log(`  pins_outlived -> ${file.pins_outlived.length} entries`)
+}
+
+export function appendBatch(batch: number, rows: Row[], report: Report[], pins: PinOutlived[] = []) {
+  const file = readResults()
   const entry = {
     batch,
     written: rows.map(r => ({
@@ -92,11 +137,15 @@ export function appendBatch(batch: number, rows: Row[], report: Report[]) {
     })),
     report,
   }
-  const kept = (all as { batch: number }[]).filter(b => b.batch !== batch)
-  kept.push(entry as never)
-  kept.sort((a, b) => a.batch - b.batch)
-  writeFileSync(RESULTS, JSON.stringify(kept, null, 1) + '\n')
-  console.log(`  results -> ${RESULTS} (batch ${batch}: ${rows.length} written, ${report.length} reported)`)
+  file.batches = file.batches.filter(b => b.batch !== batch)
+  file.batches.push(entry)
+  file.batches.sort((a, b) => a.batch - b.batch)
+
+  const pinIds = new Set(pins.map(p => `${p.id}:${p.field}`))
+  file.pins_outlived = file.pins_outlived.filter(p => !pinIds.has(`${p.id}:${p.field}`)).concat(pins)
+
+  writeFileSync(RESULTS, JSON.stringify(file, null, 1) + '\n')
+  console.log(`  results -> ${RESULTS} (batch ${batch}: ${rows.length} written, ${report.length} reported, ${pins.length} pins outlived)`)
 }
 
 // One runner for every batch, so a fix found in batch 3 cannot leave batch 7
@@ -130,6 +179,7 @@ export async function runBatch(opts: {
 
   const written: Row[] = []
   const extraReport: Report[] = []
+  const pins: PinOutlived[] = []
 
   for (const r of rows) {
     const { data } = await db.from('scraped_grants')
@@ -166,6 +216,17 @@ export async function runBatch(opts: {
         quote: cit?.snippet ?? '', url: cit?.source_url ?? '',
         note: `mergeGrantUpdate refused ${refused.map(x => `${x.field} (${x.reason}, held by ${blocker(x)})`).join('; ')}. Left as the admin decision set it.`,
       })
+      const row = data as Record<string, unknown>
+      for (const x of refused) {
+        const held = x.blockedBy as { source?: string; set_at?: string } | undefined
+        const c = r.cits[x.field] ?? cit
+        pins.push({
+          id: r.id, title: data.title, field: x.field, reason: x.reason,
+          held_by: held?.source ?? 'unknown', held_since: held?.set_at,
+          row_holds: row[x.field] ?? null,
+          page_says: c?.snippet ?? '', url: c?.source_url ?? '',
+        })
+      }
       continue
     }
 
@@ -183,5 +244,6 @@ export async function runBatch(opts: {
   }
 
   for (const r of [...report, ...extraReport]) console.log(`  report  ${r.title.slice(0, 40).padEnd(40)} ${r.why}`)
-  if (apply) appendBatch(batch, written, [...report, ...extraReport])
+  for (const p of pins) console.log(`  pin     ${p.title.slice(0, 34).padEnd(34)} ${p.field} held by ${p.held_by}`)
+  if (apply) appendBatch(batch, written, [...report, ...extraReport], pins)
 }

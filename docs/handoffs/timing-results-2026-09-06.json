@@ -1,1228 +1,1515 @@
-[
- {
-  "batch": 1,
-  "written": [
-   {
-    "id": "d2083d32-698f-4620-a3c4-5ff597a565c8",
-    "state": "dated",
-    "fields": {
-     "deadline": "2027-02-01",
-     "is_rolling": false
-    },
-    "citations": {
-     "deadline": {
-      "snippet": "01.02.27",
-      "confidence": "high",
-      "source_url": "https://the7starsfoundation.co.uk/apply-for-funding"
-     }
-    }
-   },
-   {
-    "id": "a94ae453-629b-46ca-a21e-11606403bfc9",
-    "state": "dated",
-    "fields": {
-     "deadline": "2026-10-23",
-     "is_rolling": false
-    },
-    "citations": {
-     "deadline": {
-      "snippet": "23rd October 2026",
-      "confidence": "high",
-      "source_url": "https://abcharitabletrust.org.uk/apply"
-     }
-    }
-   },
-   {
-    "id": "81c50185-6ad9-4b77-b10f-c0677d14f03a",
-    "state": "cycle",
-    "fields": {
-     "deadline": "2026-09-15",
-     "is_rolling": false,
-     "deadline_cycle": [
-      {
-       "day": 15,
-       "month": 3,
-       "label": "Quarterly panel"
-      },
-      {
-       "day": 15,
-       "month": 6,
-       "label": "Quarterly panel"
-      },
-      {
-       "day": 15,
-       "month": 9,
-       "label": "Quarterly panel"
-      },
-      {
-       "day": 15,
-       "month": 12,
-       "label": "Quarterly panel"
+{
+ "batches": [
+  {
+   "batch": 1,
+   "written": [
+    {
+     "id": "d2083d32-698f-4620-a3c4-5ff597a565c8",
+     "state": "dated",
+     "fields": {
+      "deadline": "2027-02-01",
+      "is_rolling": false
+     },
+     "citations": {
+      "deadline": {
+       "snippet": "01.02.27",
+       "confidence": "high",
+       "source_url": "https://the7starsfoundation.co.uk/apply-for-funding"
       }
-     ]
-    },
-    "citations": {
-     "deadline": {
-      "snippet": "15th March, 15th June, 15th September, 15th December",
-      "confidence": "high",
-      "source_url": "https://foundationscotland.org.uk/apply-for-funding/funding-available/achlachan"
      }
-    }
-   },
-   {
-    "id": "32e9cb1d-4e0d-4554-a4c3-569bc4e0b9fb",
-    "state": "rolling",
-    "fields": {
-     "is_rolling": true,
-     "deadline": null
     },
-    "citations": {
-     "is_rolling": {
-      "snippet": "You can submit an EOI at any time throughout the year.",
-      "confidence": "high",
-      "source_url": "https://www.londonmarathonfoundation.org/active-spaces-fund"
-     }
-    }
-   },
-   {
-    "id": "86380b2e-1c74-4cd3-b560-663a021bc097",
-    "state": "rolling",
-    "fields": {
-     "is_rolling": true,
-     "deadline": null
-    },
-    "citations": {
-     "is_rolling": {
-      "snippet": "Applications are considered at the regular meetings of the trustees and grants are awarded throughout the year.",
-      "confidence": "med",
-      "source_url": "https://youngcamdenfoundation.org.uk/funding/adint-charitable-trust"
-     }
-    }
-   },
-   {
-    "id": "da45f5fc-31ff-4a5d-9fd9-9821c65b46d7",
-    "state": "rolling",
-    "fields": {
-     "is_rolling": true,
-     "deadline": null
-    },
-    "citations": {
-     "is_rolling": {
-      "snippet": "we process applications all through the year, and will come back to you within a couple of weeks with our initial thoughts.",
-      "confidence": "high",
-      "source_url": "https://allenlane.org.uk/applying-for-funding/"
-     }
-    }
-   },
-   {
-    "id": "bcd035bf-e0e7-462d-8895-84c1aee05953",
-    "state": "dated",
-    "fields": {
-     "deadline": "2026-09-23",
-     "is_rolling": false
-    },
-    "citations": {
-     "deadline": {
-      "snippet": "The current funding round is now open for applications and will close at 1pm on Wednesday 23 September 2026",
-      "confidence": "high",
-      "source_url": "https://arts.wales/funding/organisations/arts-health-and-wellbeing"
-     }
-    }
-   },
-   {
-    "id": "033b3ddf-fd0c-4aea-b440-7cb4c12be8d7",
-    "state": "dated",
-    "fields": {
-     "deadline": "2026-09-30",
-     "is_rolling": false
-    },
-    "citations": {
-     "deadline": {
-      "snippet": "Wednesday 30 September 2026",
-      "confidence": "high",
-      "source_url": "https://arts.wales/funding/individuals/create-and-engage"
-     }
-    }
-   },
-   {
-    "id": "040888ac-bdd1-4a22-9f33-cc841f9b5cbb",
-    "state": "rolling",
-    "fields": {
-     "is_rolling": true,
-     "deadline": null
-    },
-    "citations": {
-     "is_rolling": {
-      "snippet": "Deadline: Ongoing",
-      "confidence": "high",
-      "source_url": "https://fundingforall.org.uk/funds/backstage-trust/"
-     }
-    }
-   },
-   {
-    "id": "7e2f1cd7-bc26-4028-afbd-5a42d5438322",
-    "state": "rolling",
-    "fields": {
-     "is_rolling": true,
-     "deadline": null
-    },
-    "citations": {
-     "is_rolling": {
-      "snippet": "You can apply at any time. We do not have set grant-making deadlines.",
-      "confidence": "high",
-      "source_url": "https://barrowcadbury.org.uk/our-work/applying-for-funding/"
-     }
-    }
-   }
-  ],
-  "report": [
-   {
-    "id": "5ed056e6-d5dd-4a82-b845-65c27a9a9eb5",
-    "title": "Accelerate",
-    "why": "not_stated",
-    "quote": "If you would like to apply for support through our Accelerate programme, please fill out our simple online expression of interest form.",
-    "url": "https://communityenterprise.co.uk/accelerate",
-    "note": "Programme page and the get-support page both carry an always-available EOI form and no dates anywhere. An open form is not a statement that applications are accepted at any time."
-   },
-   {
-    "id": "1694669a-605f-44ea-9775-c6a492f0362e",
-    "title": "Achievement Award Scheme",
-    "why": "not_stated",
-    "quote": "Each year, we recognise circa 12,000 Achievement Award winners and invest £3.5m through the Achievement Award scheme.",
-    "url": "https://www.jackpetcheyfoundation.org.uk/opportunities/grant-programmes/achievement-awards/",
-    "note": "Organisations join the scheme rather than apply to a round. Closest the page comes to timing is the annual volume."
-   },
-   {
-    "id": "df926186-9453-40d9-ab0a-33bbbba6bcb1",
-    "title": "Alan Higgs Community Grants",
-    "why": "not_stated",
-    "quote": "Please read the Fund Factsheet and our Essential Information before applying.",
-    "url": "https://www.heartofenglandcf.org/alan-higgs-community-grants/",
-    "note": "The fund page has no dates and no rounds. Any timing is in the linked factsheet."
-   },
-   {
-    "id": "9d1b13f1-607d-48b1-80df-80e127cd8933",
-    "title": "Annandale and Nithsdale Community Benefit Company",
-    "why": "closed_no_date",
-    "quote": "Application deadline: 03/09/26",
-    "url": "https://foundationscotland.org.uk/ancbc",
-    "note": "Three rounds listed for 2026 (05/01, 02/04, 03/09); the last passed three days ago and no 2027 date is published. The dates move year to year, so there is no cycle to roll forward."
-   },
-   {
-    "id": "0704b87e-ea54-4ae3-87d3-7a95559d36a9",
-    "title": "Arts Council of Northern Ireland — Lottery Grants",
-    "why": "index_over_programmes",
-    "quote": "Our Funding Programmes are open to individuals and to organisations. Each funding programme is different, and each programme has useful guidance notes on who can apply, and what you can apply for.",
-    "url": "https://artscouncil-ni.org/funding",
-    "note": "apply_url is the funding index. It states no dates and does not name a single scheme this row could be, so nothing is followed."
-   },
-   {
-    "id": "b774d28f-4f07-4ebd-8702-8f3c3e0cfe5a",
-    "title": "Arts Council of Wales — Have a Go",
-    "why": "not_stated",
-    "quote": "We recommend that you register at least 5 working days before you wish to start your application.",
-    "url": "https://arts.wales/funding/creative-learning/have-a-go",
-    "note": "Unlike its sibling funds, this page states neither a deadline nor that there is none. The registration lead time is the only timing on it."
-   },
-   {
-    "id": "edaed6a2-448f-4209-b763-5006d6874cf2",
-    "title": "ASTOP — Rent-Free Property for Charities",
-    "why": "not_stated",
-    "quote": "Whether you’re a landlord with empty space or a charitable organization seeking a home, we invite you to explore how ASTOP can help you make a positive impact on your community.",
-    "url": "https://astop.org.uk/",
-    "note": "A matching service with a contact form, no application window stated."
-   },
-   {
-    "id": "e2b9494b-b4af-4e29-9843-df8a3980aa3c",
-    "title": "Aurora Trust",
-    "why": "invite_only",
-    "quote": "The Aurora Trust does not generally accept unsolicited applications.",
-    "url": "https://auroratrust.org.uk/",
-    "note": "Reported rather than written: whether the row belongs live is a separate question from timing."
-   },
-   {
-    "id": "cb9780e6-9898-4913-9f41-aa7034908269",
-    "title": "B&Q Foundation — Home Improvement & Home-Starter Kits Funds",
-    "why": "not_stated",
-    "quote": "Please note that due to the high volume of applications, it may take up to 12 weeks after the deadline to hear the outcome.",
-    "url": "https://bqfoundation.org.uk/apply-for-a-grant/",
-    "note": "The page implies a deadline without stating one. Both application links go to Neighbourly campaign pages (HomeImprovementGrants2026, BQHomeStarterKits26) which render nothing without JavaScript."
-   },
-   {
-    "id": "614ffed1-b5c4-44d0-9ad4-34c4496f3137",
-    "title": "Bairdwatson Charitable Trust",
-    "why": "closed_no_date",
-    "quote": "Applications close: 07/08/26",
-    "url": "https://foundationscotland.org.uk/apply-for-funding/funding-available/bairdwatson-charitable-trust",
-    "note": "Opened 03/07/26, closed 07/08/26, decisions end of December 2026. No next round published."
-   }
-  ]
- },
- {
-  "batch": 2,
-  "written": [
-   {
-    "id": "d83e1ad9-b8d5-4367-8a26-0fed8b5698f4",
-    "state": "dated",
-    "fields": {
-     "deadline": "2026-11-09",
-     "is_rolling": false
-    },
-    "citations": {
-     "deadline": {
-      "snippet": "9th Nov 2026",
-      "confidence": "high",
-      "source_url": "https://foundationscotland.org.uk/beinneun-community"
-     }
-    }
-   },
-   {
-    "id": "c51eaae1-2007-4930-a45a-4da9f7542c1c",
-    "state": "rolling",
-    "fields": {
-     "is_rolling": true,
-     "deadline": null
-    },
-    "citations": {
-     "is_rolling": {
-      "snippet": "We accept grant applications all year round.",
-      "confidence": "high",
-      "source_url": "https://bernardsunley.org/our-grant-giving/"
-     }
-    }
-   },
-   {
-    "id": "a9364402-f2a3-45b0-bf80-d33d9e5efdf5",
-    "state": "reopens",
-    "fields": {
-     "is_rolling": false,
-     "deadline": null,
-     "next_open_date": "Expected to be open to application in the autumn of 2026"
-    },
-    "citations": {
-     "next_open_date": {
-      "snippet": "The Community Catalyst Fund 2027 to 2029 is expected to be open to application in the autumn of 2026.",
-      "confidence": "high",
-      "source_url": "https://www.brighton-hove.gov.uk/people-and-communities/community-support-and-grants/community-catalyst-fund"
-     }
-    }
-   },
-   {
-    "id": "0346c786-fb9c-4df9-9307-205a4337acab",
-    "state": "dated",
-    "fields": {
-     "deadline": "2026-09-16",
-     "is_rolling": false
-    },
-    "citations": {
-     "deadline": {
-      "snippet": "Please submit your application before 12pm (midday) on Wednesday 16th September 2026 for consideration in this grant round.",
-      "confidence": "high",
-      "source_url": "http://www.cbandhhtaylortrust.com/applications-for-autumn-2026"
-     }
-    }
-   },
-   {
-    "id": "ff1e6699-e169-4f34-89f6-3742137b2394",
-    "state": "dated",
-    "fields": {
-     "deadline": "2026-10-23",
-     "is_rolling": false
-    },
-    "citations": {
-     "deadline": {
-      "snippet": "Friday 23rd October 2026",
-      "confidence": "high",
-      "source_url": "https://www.turnertrust.co.uk/grant-deadlines/"
-     }
-    }
-   },
-   {
-    "id": "94b70915-331b-48ef-8d4e-094881d3812a",
-    "state": "dated",
-    "fields": {
-     "deadline": "2026-09-18",
-     "is_rolling": false
-    },
-    "citations": {
-     "deadline": {
-      "snippet": "18 September 2026",
-      "confidence": "high",
-      "source_url": "https://charleshaywardfoundation.org.uk/our-process-when-to-apply/"
-     }
-    }
-   },
-   {
-    "id": "d29103be-5800-4beb-920f-205b48a78e78",
-    "state": "dated",
-    "fields": {
-     "deadline": "2026-09-08",
-     "is_rolling": false
-    },
-    "citations": {
-     "deadline": {
-      "snippet": "12 noon on Tuesday, 8 September 2026",
-      "confidence": "high",
-      "source_url": "https://www.citybridgefoundation.org.uk/funding"
-     }
-    }
-   },
-   {
-    "id": "32e9cb1d-4e0d-4554-a4c3-569bc4e0b9fb",
-    "state": "rolling",
-    "fields": {
-     "is_rolling": true,
-     "deadline_cycle": [
-      {
-       "day": 23,
-       "month": 9,
-       "label": "Stage two round (full application)"
-      },
-      {
-       "day": 6,
-       "month": 1,
-       "label": "Stage two round (full application)"
-      },
-      {
-       "day": 24,
-       "month": 3,
-       "label": "Stage two round (full application)"
-      },
-      {
-       "day": 7,
-       "month": 7,
-       "label": "Stage two round (full application)"
+    {
+     "id": "a94ae453-629b-46ca-a21e-11606403bfc9",
+     "state": "dated",
+     "fields": {
+      "deadline": "2026-10-23",
+      "is_rolling": false
+     },
+     "citations": {
+      "deadline": {
+       "snippet": "23rd October 2026",
+       "confidence": "high",
+       "source_url": "https://abcharitabletrust.org.uk/apply"
       }
-     ]
-    },
-    "citations": {
-     "is_rolling": {
-      "snippet": "You can submit an EOI at any time throughout the year.",
-      "confidence": "high",
-      "source_url": "https://www.londonmarathonfoundation.org/active-spaces-fund"
      }
-    }
-   }
-  ],
-  "report": [
-   {
-    "id": "9891bd8a-798b-4c2c-98d5-f25ba9b10faf",
-    "title": "BE:IMPACT Prize 2026",
-    "why": "unreadable",
-    "quote": "Loading content...",
-    "url": "https://blueearthsummit.com/impact-prize",
-    "note": "300KB of JavaScript and two \"Loading content...\" placeholders. Nothing about the prize renders without a browser."
-   },
-   {
-    "id": "5373485f-109c-4ef7-9af1-c59312bbc63f",
-    "title": "Bedfordshire & Luton Community Foundation — Community Grants",
-    "why": "index_over_programmes",
-    "quote": "You can find all our funds in the grants section on our website. Each has its own criteria document and application form.",
-    "url": "https://blcf.org.uk/apply-for-a-grant/",
-    "note": "Funder-level row over roughly a dozen named funds on separate timetables. The apply page states no date for any of them."
-   },
-   {
-    "id": "9e714a60-a849-409f-8f52-0394b8c2fbb4",
-    "title": "Black Founders Programme",
-    "why": "not_stated",
-    "quote": "If you are interested in updates and news about the Black Founders Programme, fill out the short form below.",
-    "url": "https://www.digicatapult.org.uk/programmes/programme/black-founders-programme/",
-    "note": "An accelerator that runs in cohorts; the page describes the 2025 cohort and offers a mailing list, and names no application window."
-   },
-   {
-    "id": "87805cc2-c24b-4562-9a2b-129559fcdf9f",
-    "title": "Buttle UK — Chances for Children Grants",
-    "why": "not_stated",
-    "quote": "Make sure to submit your application only when you have time to speak with us.",
-    "url": "https://buttleuk.org/grants/faqs/",
-    "note": "Criteria page, grants page and FAQs all say when in a child's circumstances to apply and never when in the year."
-   },
-   {
-    "id": "b12c394d-346d-4246-a254-06ca5bbadd08",
-    "title": "Calouste Gulbenkian Foundation UK Branch — Grants",
-    "why": "not_stated",
-    "quote": "The UK Branch aims to strengthen arts and civil society ecosystems by supporting transnational exchange, reciprocal capacity development and knowledge sharing between Portugal and the UK.",
-    "url": "https://gulbenkian.pt/uk-branch/our-work/our-grant-making/",
-    "note": "The page carries no sentence about timing at all, so the quote is the closest thing to one: what the branch funds, with no word on when. Last updated 18 December 2025."
-   },
-   {
-    "id": "856cbdaf-7e60-4c78-8ad2-e7c0b6fddbd8",
-    "title": "Camden Climate Fund",
-    "why": "unreadable",
-    "quote": "Just a moment...",
-    "url": "https://www.camden.gov.uk/camden-climate-fund",
-    "note": "HTTP 403 behind a Cloudflare interstitial."
-   },
-   {
-    "id": "88259250-6936-41d6-b60d-83aa880917ba",
-    "title": "Camden Council - Family-Friendly and Inclusive Evenings Grant Scheme",
-    "why": "unreadable",
-    "quote": "Just a moment...",
-    "url": "https://www.camden.gov.uk/family-friendly-evenings",
-    "note": "HTTP 403 behind a Cloudflare interstitial. Same host as the Camden Climate Fund row; both need a browser."
-   },
-   {
-    "id": "91737208-0bd3-45c4-8866-ec6256e85a58",
-    "title": "Cash for Kids - Cost of Living Grants",
-    "why": "index_over_programmes",
-    "quote": "As our ability to grant depends on the donations we receive, application forms will close when we reach capacity – so may not be available for all areas at all times.",
-    "url": "https://cashforkids.org.uk/grants/",
-    "note": "Neither dated nor rolling: forms open and shut by area as money allows, and the page will not say when for any of them."
-   },
-   {
-    "id": "571f93e2-d0b5-41d7-adf1-d36b3a039ec6",
-    "title": "Charity Digital Exchange — Software Donations",
-    "why": "not_stated",
-    "quote": "Please log in or Register to access these exclusive discounts.",
-    "url": "https://charitydigital.org.uk/products",
-    "note": "A login-walled catalogue of donated software rather than a round. No window stated on the public side."
-   },
-   {
-    "id": "99a71fd2-fccc-4947-a4fd-4fdd81b58bd0",
-    "title": "Charity Digital Skills Programme",
-    "why": "not_stated",
-    "quote": "Your destination for trusted technology, exclusive discounts and great deals. Keep up with our latest offers by signing up here.",
-    "url": "https://charitydigital.org.uk/",
-    "note": "apply_url is the site home page. It carries webinar and event dates, none of which is an application window for this row."
-   },
-   {
-    "id": "75990799-a1a4-490e-a651-90f3147ec669",
-    "title": "Charity IT Association (CITA) — Tech Volunteers",
-    "why": "not_stated",
-    "quote": "CITA provides charities with access to affordable, trustworthy, and independent technology professionals to enable their strategic mission through technology.",
-    "url": "https://www.cita.org.uk/",
-    "note": "A volunteer-matching service with no round and no stated window."
-   },
-   {
-    "id": "c6800212-145e-47f7-9879-42f8a891f057",
-    "title": "City & Guilds Foundation — Local Community Skills Fund",
-    "why": "closed_no_date",
-    "quote": "Expressions of Interest are currently closed. Sign up to our newsletter to hear about future rounds.",
-    "url": "https://cityandguildsfoundation.org/what-we-offer/funding/local-community-skills-fund/",
-    "note": "The page also says \"We aim to open our community grants programme at regular intervals throughout the year\", which is an intention rather than a date, so nothing is written."
-   },
-   {
-    "id": "014ccbcd-cd35-4447-8467-d25fb34db0d2",
-    "title": "Civitates — Pooled Fund for European Democracy",
-    "why": "not_stated",
-    "quote": "Sign up for news, updates from our grantee partners and calls for proposals.",
-    "url": "https://civitates-eu.org/",
-    "note": "Grants go out in calls for proposals; no call is open on the site and no next one is dated."
-   }
-  ]
- },
- {
-  "batch": 3,
-  "written": [
-   {
-    "id": "c32ecdba-2fab-4131-a430-69bf1e6a1cae",
-    "state": "dated",
-    "fields": {
-     "deadline": "2026-10-01",
-     "is_rolling": false
     },
-    "citations": {
-     "deadline": {
-      "snippet": "01 October 2026",
-      "confidence": "high",
-      "source_url": "https://www.veoliatrust.org/when-to-apply/"
-     }
-    }
-   },
-   {
-    "id": "12269ada-77e7-4e89-9db0-0d95414bb483",
-    "state": "dated",
-    "fields": {
-     "deadline": "2026-09-17",
-     "is_rolling": false
-    },
-    "citations": {
-     "deadline": {
-      "snippet": "Closing Date: Sep 17, 2026 13:00",
-      "confidence": "high",
-      "source_url": "https://communityfoundationni.org/achieving-impact/available-grants/"
-     }
-    }
-   },
-   {
-    "id": "f375d0d1-f7e5-4393-a078-8b3ab3cec3b4",
-    "state": "rolling",
-    "fields": {
-     "is_rolling": true,
-     "deadline": null
-    },
-    "citations": {
-     "is_rolling": {
-      "snippet": "As long as your organisation is in Tyne and Wear or Northumberland, you can do so at any time of year.",
-      "confidence": "high",
-      "source_url": "https://www.communityfoundation.org.uk/apply/"
-     }
-    }
-   },
-   {
-    "id": "a8a34a8e-4570-4fbd-9260-cbbcc8926637",
-    "state": "rolling",
-    "fields": {
-     "is_rolling": true,
-     "deadline": null
-    },
-    "citations": {
-     "is_rolling": {
-      "snippet": "Grant decisions are taken on a quarterly basis by the fifteen Trustees",
-      "confidence": "high",
-      "source_url": "https://thetrustenfield.org.uk/grants/"
-     }
-    }
-   },
-   {
-    "id": "bfdbf2a8-09b7-4df5-a994-4361ba2fbe3a",
-    "state": "rolling",
-    "fields": {
-     "is_rolling": true,
-     "deadline": null
-    },
-    "citations": {
-     "is_rolling": {
-      "snippet": "The fund is open all year round",
-      "confidence": "high",
-      "source_url": "https://www.creativescotland.com/funding/funding-programmes/open-funding/national-lottery-open-fund-for-organisations"
-     }
-    }
-   }
-  ],
-  "report": [
-   {
-    "id": "ed047490-107e-4805-8ea2-6cd85520b3ae",
-    "title": "Clore Social Leadership Programme",
-    "why": "index_over_programmes",
-    "quote": "Applications open",
-    "url": "https://cloresocialleadership.org.uk/",
-    "note": "Three programmes with their own states: Emerging Leader closed (runs Oct 2026 to May 2027), Experienced Leader open (Sep 2026 to Mar 2027), Leading Social Impact open (Sep 2026 to Dec 2026). Those are course run dates, not application windows, and no closing date is given for either open programme."
-   },
-   {
-    "id": "15c7fa72-3e20-47e6-a211-a478ffc364af",
-    "title": "Coalfields Regeneration Trust",
-    "why": "index_over_programmes",
-    "quote": "Applications for 2026/27 are currently paused due to high demand.",
-    "url": "https://www.coalfields-regen.org.uk/grants",
-    "note": "The row covers England, Scotland and Wales. The grants page lists Wales programmes in three different states: Breaking Barriers \"Rolling programme\", Game On Kit Grant paused, Surveys and Professional Fees described as rolling but with \"Applications are currently paused\" under How To Apply. Nothing on the page is true of the row as a whole."
-   },
-   {
-    "id": "aec5dee3-6c6b-43b4-abe7-92ece9c390c0",
-    "title": "Comic Relief — International Development",
-    "why": "index_over_programmes",
-    "quote": "We have open and confidential feedback forms available for every funding call we release.",
-    "url": "https://www.comicrelief.com/grants/",
-    "note": "Grants go out in named funding calls under six themes, each with its own page. The grants index dates none of them and no call is shown as open."
-   },
-   {
-    "id": "fafa223d-1008-46c6-8019-585afd5014b7",
-    "title": "Community Energy GO!",
-    "why": "not_stated",
-    "quote": "Launching in October 2025, we'll be working with eligible groups who are in the early stages of developing a low-carbon or renewable energy initiative.",
-    "url": "https://www.cse.org.uk/my-community/community-energy-go/",
-    "note": "Free advisory support rather than a round. The launch date is the only date on the page and it has passed."
-   },
-   {
-    "id": "cc5f93d2-aa9e-4873-aaa9-2a425b8868e1",
-    "title": "Community Foundation Wales — Grants Hub",
-    "why": "index_over_programmes",
-    "quote": "Come learn about our new application form and our open funds!",
-    "url": "https://communityfoundationwales.org.uk/grants-overview/",
-    "note": "The grants overview is a fund-finder widget (who are you, where are you) over the foundation's open funds. It states no date for any of them and, unlike the North East, offers no general application route."
-   },
-   {
-    "id": "057225d1-6b86-4341-b2df-766f3851ee62",
-    "title": "Community Grant Programme",
-    "why": "unreadable",
-    "quote": "Just a moment...",
-    "url": "https://www.nationalgrid.com/responsibility/community/community-grant-programme",
-    "note": "HTTP 403 behind a Cloudflare interstitial."
-   },
-   {
-    "id": "3665afff-c092-41c1-83e9-fb67b8d4d563",
-    "title": "Community Grants (Hampton Fund)",
-    "why": "not_stated",
-    "quote": "Application submission deadlines are usually 6-8 weeks before the meetings and the dates are available on request.",
-    "url": "https://www.hamptonfund.co.uk/community-grants/",
-    "note": "Trustees meet in March, June, September and December, so there are four deadlines a year and the fund will not publish them. \"Usually 6-8 weeks before\" is not a date and the meeting months are not deadlines, so neither a deadline nor a cycle can be written."
-   },
-   {
-    "id": "49a1fffd-2412-4105-8897-8a5af286b797",
-    "title": "Continuo Foundation Project Grants",
-    "why": "not_stated",
-    "quote": "By offering project grants on a competitive basis, twice annually, we ensure that there will be a steady flow of high calibre chamber performances across the year.",
-    "url": "https://www.continuofoundation.co.uk/our-grants",
-    "note": "Eleven rounds since 2021, announced each March and September, but the page dates only the announcements and never the application window."
-   },
-   {
-    "id": "21812fb7-2496-4dba-a2a0-3fca9ba64b14",
-    "title": "Coventry, Solihull & Warwickshire Communities Fund",
-    "why": "not_stated",
-    "quote": "Before applying for a grant, please read the Fund Factsheet .",
-    "url": "https://www.heartofenglandcf.org/coventry-solihull-warwickshire-fund/",
-    "note": "Second Heart of England Community Foundation row with this shape, after Alan Higgs in batch 1: the fund page carries criteria and no dates, and any timing is in the linked factsheet."
-   },
-   {
-    "id": "aa1e8f3f-e938-4852-9bda-3294ab4c1380",
-    "title": "Crowdfunder — Match Funding",
-    "why": "unreadable",
-    "quote": "Just a moment...",
-    "url": "https://www.crowdfunder.co.uk/funds",
-    "note": "HTTP 403 behind a Cloudflare interstitial."
-   },
-   {
-    "id": "094397c0-1d2c-47dc-b112-c15d3d14bfd4",
-    "title": "Cumbria Community Foundation — Community Grants",
-    "why": "index_over_programmes",
-    "quote": "Completed applications and all supporting documents must be submitted by the relevant application deadline. Please check application deadline dates carefully before starting your application.",
-    "url": "https://www.cumbriafoundation.org/apply-for-a-grant/",
-    "note": "Says plainly that deadlines exist and that they belong to each fund, and gives none."
-   },
-   {
-    "id": "c34f6859-efee-491f-98e8-aa560f2c0b35",
-    "title": "Devon Community Foundation — Community Grants",
-    "why": "invite_only",
-    "quote": "Invitation to apply; we will invite the number of organisations we are able to fund",
-    "url": "https://devoncf.com/current-funds/",
-    "note": "Every current fund on the page is awarded by longlist, randomised shortlist and invitation, with the number of groups to be invited stated up front. There is a Getting to Know You form but no open application. Worth a look beyond timing: a fundraiser cannot apply here at all."
-   },
-   {
-    "id": "4075bfa0-5ca1-4732-bac4-2b050c542015",
-    "title": "Digital Candle — Free Digital Advice",
-    "why": "not_stated",
-    "quote": "Ask us a question, and we'll connect you with a volunteer expert. No question is too broad or too niche.",
-    "url": "https://digitalcandle.org.uk/",
-    "note": "A question form matched to volunteer experts. No round, and the page never says the form is always open."
-   },
-   {
-    "id": "056ad3b9-2bb0-4d09-be11-672e6c6c23e5",
-    "title": "Community Capacity Fund",
-    "why": "pinned",
-    "quote": "Closing date: Coming autumn 2026",
-    "url": "https://oxfordshire.org/ocf_grants/community-capacity-2/",
-    "note": "mergeGrantUpdate refused next_open_date (pinned, held by admin:paulkilty1@gmail.com). Left as the admin decision set it."
-   },
-   {
-    "id": "08bdec62-f80f-43dd-ad82-43f80787494c",
-    "title": "Corra Foundation — Alcohol and Drugs Fund: Local Support Micro Grants",
-    "why": "pinned",
-    "quote": "It is a rolling fund, so there is no fixed closing date.",
-    "url": "https://www.corra.scot/grants/alcohol-and-drugs-fund-local-support-fund-micro-grants/",
-    "note": "mergeGrantUpdate refused is_rolling (lower_trust, held by admin:rolling-ruling-2026-08-21). Left as the admin decision set it."
-   }
-  ]
- },
- {
-  "batch": 4,
-  "written": [
-   {
-    "id": "39d92511-a517-4afe-8ff4-f3c8c5ce68b0",
-    "state": "rolling",
-    "fields": {
-     "is_rolling": true,
-     "deadline": null
-    },
-    "citations": {
-     "is_rolling": {
-      "snippet": "We award grants twice a year, and will notify successful applicants shortly after our trustee meetings which take place in April and October.",
-      "confidence": "med",
-      "source_url": "https://www.fatbeehivefoundation.org.uk/"
-     }
-    }
-   },
-   {
-    "id": "ca53ae09-15ca-41a3-bd09-70d97d1b068f",
-    "state": "rolling",
-    "fields": {
-     "is_rolling": true,
-     "deadline": null
-    },
-    "citations": {
-     "is_rolling": {
-      "snippet": "Applications may be submitted at any time and must be made in writing.",
-      "confidence": "med",
-      "source_url": "https://youngcamdenfoundation.org.uk/funding/dixie-rose-findlay-charitable-trust"
-     }
-    }
-   },
-   {
-    "id": "a7e93d28-fc29-48ff-91fa-b06b1f30eafe",
-    "state": "dated",
-    "fields": {
-     "deadline": "2026-10-05",
-     "is_rolling": false
-    },
-    "citations": {
-     "deadline": {
-      "snippet": "05 October 2026",
-      "confidence": "high",
-      "source_url": "https://www.eastmidlandsairport.com/community/supporting-the-local-community/"
-     }
-    }
-   },
-   {
-    "id": "af98107b-eda0-4294-9fcb-0e125e2733ff",
-    "state": "rolling",
-    "fields": {
-     "is_rolling": true,
-     "deadline": null
-    },
-    "citations": {
-     "is_rolling": {
-      "snippet": "Unless specified otherwise, we accept applications on a rolling basis with no deadlines.",
-      "confidence": "high",
-      "source_url": "https://esmeefairbairn.org.uk/apply-for-a-grant/submit-an-application/"
-     }
-    }
-   },
-   {
-    "id": "732a41ad-8df9-405f-a74f-cd25be2b64c2",
-    "state": "rolling",
-    "fields": {
-     "is_rolling": true,
-     "deadline": null
-    },
-    "citations": {
-     "is_rolling": {
-      "snippet": "Unless specified otherwise, we accept applications on a rolling basis with no deadlines.",
-      "confidence": "high",
-      "source_url": "https://esmeefairbairn.org.uk/apply-for-a-grant/submit-an-application/"
-     }
-    }
-   },
-   {
-    "id": "6bee86de-f50a-4c01-b409-d72a6f4ed686",
-    "state": "rolling",
-    "fields": {
-     "is_rolling": true,
-     "deadline": null
-    },
-    "citations": {
-     "is_rolling": {
-      "snippet": "Unless specified otherwise, we accept applications on a rolling basis with no deadlines.",
-      "confidence": "high",
-      "source_url": "https://esmeefairbairn.org.uk/apply-for-a-grant/submit-an-application/"
-     }
-    }
-   },
-   {
-    "id": "595ccabb-817c-48a1-9f3d-de394d09a458",
-    "state": "rolling",
-    "fields": {
-     "is_rolling": true,
-     "deadline": null
-    },
-    "citations": {
-     "is_rolling": {
-      "snippet": "you can make applications at any time of the year",
-      "confidence": "high",
-      "source_url": "https://www.fortecharitablefoundation.org.uk/our-grants"
-     }
-    }
-   }
-  ],
-  "report": [
-   {
-    "id": "b3dac130-3d54-4bb6-8714-034016f18611",
-    "title": "Doc Society — Documentary Film Funds",
-    "why": "index_over_programmes",
-    "quote": "BFI Doc Society Development Fund Fund CLOSED",
-    "url": "https://docsociety.org/more/",
-    "note": "apply_url /funds/ redirects to /more/, which lists five funds: Development, Made of Truth, Expanded Screen and RAD all marked CLOSED, and the Talent Development Programme marked OPEN, which is year-round activity rather than a grant. No reopening date for any of them."
-   },
-   {
-    "id": "574fc073-bca6-4b01-95c0-a7dc8627c3e0",
-    "title": "Dulverton Trust Grants",
-    "why": "not_stated",
-    "quote": "To apply, complete our eligibility quiz (button below). If eligible, you will be provided with a link to our online Expression of Interest form.",
-    "url": "https://www.dulverton.org/",
-    "note": "An always-available eligibility quiz and EOI form, no window stated. The board meets (a February meeting is mentioned in a news item) but the page never ties an application date to it. One funding category is invitation only."
-   },
-   {
-    "id": "a7b1e535-b639-471c-9231-1d87cff07489",
-    "title": "DWF Foundation",
-    "why": "not_stated",
-    "quote": "The Foundation team have compiled a list of FAQs to assist the application process. We would encourage you to take a look at these before you apply online.",
-    "url": "https://dwfgroup.com/en/about-us/dwf-foundation",
-    "note": "Neither the foundation page nor its Grant Giving page carries a date, a round or a meeting schedule. Every date on both is a past award."
-   },
-   {
-    "id": "0d90187a-15da-4625-8739-34ae7134aecd",
-    "title": "East End Community Foundation — Grants",
-    "why": "index_over_programmes",
-    "quote": "All funds are administered through our grant programmes, and we also manage and administer grants programmes on behalf of our corporate and statutory partners, and individuals.",
-    "url": "https://eastendcf.org/grants/",
-    "note": "Funder-level page over the foundation's own funds and the programmes it runs for partners. No date for any of them, and the only next step offered is the newsletter."
-   },
-   {
-    "id": "dab46d8f-9841-408e-a862-489dd45493d4",
-    "title": "Edgbaston & Northfield NNS Fund for Older Adults (50+)",
-    "why": "not_stated",
-    "quote": "Please read the Fund Factsheet for Edgbaston before applying.",
-    "url": "https://www.heartofenglandcf.org/nns/",
-    "note": "Third and fourth Heart of England Community Foundation rows with this shape, after Alan Higgs and Coventry Solihull & Warwickshire: criteria on the page, dates only in the linked factsheet. Worth handling as one job rather than row by row."
-   },
-   {
-    "id": "8cdb1c33-750e-4c9c-8bb4-77c997ceeefd",
-    "title": "Edgbaston & Northfield NNS Fund for Younger Adults",
-    "why": "not_stated",
-    "quote": "Please read the Fund Factsheet for Edgbaston before applying.",
-    "url": "https://www.heartofenglandcf.org/nns-younger-adults/",
-    "note": "Same page shape and same factsheet pattern as the 50+ row above."
-   },
-   {
-    "id": "c67c1e54-64e2-4b82-b651-952aecfa434d",
-    "title": "Employer Partnership (sports coaching apprenticeships)",
-    "why": "not_stated",
-    "quote": "Get in touch to let us know if you are thinking about becoming an employer, or would like some information, advice or guidance about apprenticeships.",
-    "url": "https://coachcore.org.uk/become-an-employer/",
-    "note": "A register-interest form for employers, with no cohort or intake date on the page."
-   },
-   {
-    "id": "8f5a1cfb-e408-4dfb-a0da-ad4d632a0d4c",
-    "title": "Energy Industry Voluntary Redress Scheme",
-    "why": "not_stated",
-    "quote": "The amount of funding available through the scheme varies throughout the year and will be reviewed on a quarterly basis in January, April, July and October.",
-    "url": "https://energyredress.org.uk/apply-funding",
-    "note": "Rounds exist and are referred to throughout (\"the forthcoming funding window\", \"two weeks prior to the application deadline\") but none is dated. Applicants register once and are notified when funds become available, so the page cannot tell a newcomer whether they can apply today."
-   },
-   {
-    "id": "21f84400-4330-4267-9a62-4540617a573d",
-    "title": "Eranda Rothschild Foundation",
-    "why": "not_stated",
-    "quote": "We consider applications from universities and other charities to support young professionals in fields including medicine, science and business.",
-    "url": "https://erandarothschild.org/",
-    "note": "A four-page site with no how-to-apply section and no date of any kind."
-   },
-   {
-    "id": "7e5b73df-1210-42a9-9c24-fafeb8357cef",
-    "title": "Family Fund — Grants for Families with Disabled Children",
-    "why": "not_stated",
-    "quote": "To decide if your family is eligible for a grant, Family Fund looks at your income and the impact of disability on your child and young person.",
-    "url": "https://www.familyfund.org.uk/grants/",
-    "note": "There is a \"Check when I can next apply\" tool, but it answers a per-family cooldown rather than a round, and the grants page states no window."
-   },
-   {
-    "id": "2172377c-724f-4261-ae35-389af8de6867",
-    "title": "Forces in Mind Trust — Veterans Mental Health Programme",
-    "why": "not_stated",
-    "quote": "If, having read the eligibility criteria for applicants, you would like to apply for a grant, the first stage is to submit an initial application, which enables you to share an overview of your project with us.",
-    "url": "https://www.fim-trust.org/apply/how-to-apply/",
-    "note": "A two-stage process described in full across four pages, none of which names a deadline or says applications are open continuously."
-   },
-   {
-    "id": "bfaa140a-ed84-4862-a455-6e48ca22e906",
-    "title": "Fine & Country Foundation — Homelessness Grants",
-    "why": "pinned",
-    "quote": "applications open in October, assessed in November and funds for successful applications are distributed in December",
-    "url": "https://www.fineandcountryfoundation.com/grants/",
-    "note": "mergeGrantUpdate refused next_open_date (pinned, held by admin:paulkilty1@gmail.com). Left as the admin decision set it."
-   },
-   {
-    "id": "3b8727a4-faa4-49b7-a162-c46212af731b",
-    "title": "Fishmongers' Company — Charitable Grants",
-    "why": "pinned",
-    "quote": "We are closed for applications and do not anticipate re-opening for new applications until late November/early December",
-    "url": "https://fishmongers.org.uk/grants/",
-    "note": "mergeGrantUpdate refused next_open_date (pinned, held by admin:paulkilty1@gmail.com). Left as the admin decision set it."
-   }
-  ]
- },
- {
-  "batch": 5,
-  "written": [
-   {
-    "id": "58982bd3-de15-4000-9c4b-a4f7a767a64d",
-    "state": "rolling",
-    "fields": {
-     "is_rolling": true,
-     "deadline": null,
-     "deadline_cycle": [
-      {
-       "day": 31,
-       "month": 3,
-       "label": "Quarterly donor consideration"
-      },
-      {
-       "day": 30,
-       "month": 6,
-       "label": "Quarterly donor consideration"
-      },
-      {
-       "day": 30,
-       "month": 9,
-       "label": "Quarterly donor consideration"
-      },
-      {
-       "day": 31,
-       "month": 12,
-       "label": "Quarterly donor consideration"
+    {
+     "id": "81c50185-6ad9-4b77-b10f-c0677d14f03a",
+     "state": "cycle",
+     "fields": {
+      "deadline": "2026-09-15",
+      "is_rolling": false,
+      "deadline_cycle": [
+       {
+        "day": 15,
+        "month": 3,
+        "label": "Quarterly panel"
+       },
+       {
+        "day": 15,
+        "month": 6,
+        "label": "Quarterly panel"
+       },
+       {
+        "day": 15,
+        "month": 9,
+        "label": "Quarterly panel"
+       },
+       {
+        "day": 15,
+        "month": 12,
+        "label": "Quarterly panel"
+       }
+      ]
+     },
+     "citations": {
+      "deadline": {
+       "snippet": "15th March, 15th June, 15th September, 15th December",
+       "confidence": "high",
+       "source_url": "https://foundationscotland.org.uk/apply-for-funding/funding-available/achlachan"
       }
-     ]
-    },
-    "citations": {
-     "is_rolling": {
-      "snippet": "The funding call will remain rolling until an as-yet unspecified future date.",
-      "confidence": "high",
-      "source_url": "https://www.communityfoundation.org.uk/grants/funding-for-stem-activities-in-the-north-east/"
      }
-    }
-   },
-   {
-    "id": "5dca172c-1c80-4f3e-9f89-0ba7f574e9a1",
-    "state": "rolling",
-    "fields": {
-     "is_rolling": true,
-     "deadline": null
     },
-    "citations": {
-     "is_rolling": {
-      "snippet": "You can submit an application at any time, there are no deadlines.",
-      "confidence": "high",
-      "source_url": "https://29may1961charity.org.uk/how-to-apply"
-     }
-    }
-   },
-   {
-    "id": "c80591fa-fdf6-4e2d-97a5-c14020cff1bb",
-    "state": "rolling",
-    "fields": {
-     "is_rolling": true,
-     "deadline": null,
-     "deadline_cycle": [
-      {
-       "day": 15,
-       "month": 3,
-       "label": "Application window closes"
-      },
-      {
-       "day": 15,
-       "month": 6,
-       "label": "Application window closes"
-      },
-      {
-       "day": 15,
-       "month": 9,
-       "label": "Application window closes"
-      },
-      {
-       "day": 15,
-       "month": 12,
-       "label": "Application window closes"
+    {
+     "id": "32e9cb1d-4e0d-4554-a4c3-569bc4e0b9fb",
+     "state": "rolling",
+     "fields": {
+      "is_rolling": true,
+      "deadline": null
+     },
+     "citations": {
+      "is_rolling": {
+       "snippet": "You can submit an EOI at any time throughout the year.",
+       "confidence": "high",
+       "source_url": "https://www.londonmarathonfoundation.org/active-spaces-fund"
       }
-     ]
-    },
-    "citations": {
-     "is_rolling": {
-      "snippet": "You can apply all year round. Your application will be considered in the next available funding round.",
-      "confidence": "high",
-      "source_url": "https://www.matthewgoodfoundation.org/amplify-fund-grants-for-good/"
      }
-    }
-   },
-   {
-    "id": "0266d366-dec6-4bd1-8a2f-76386846dfba",
-    "state": "rolling",
-    "fields": {
-     "is_rolling": true,
-     "deadline": null
     },
-    "citations": {
-     "is_rolling": {
-      "snippet": "The Trustees meet regularly to discuss applications and to make decisions on grants.",
-      "confidence": "med",
-      "source_url": "https://www.hedleyfoundation.org.uk/apply-now"
-     }
-    }
-   },
-   {
-    "id": "ce059535-b345-4642-b6d7-59fe37581025",
-    "state": "cycle",
-    "fields": {
-     "deadline": "2026-09-20",
-     "is_rolling": false,
-     "deadline_cycle": [
-      {
-       "day": 20,
-       "month": 3,
-       "label": "Quarterly deadline, 5pm"
-      },
-      {
-       "day": 20,
-       "month": 6,
-       "label": "Quarterly deadline, 5pm"
-      },
-      {
-       "day": 20,
-       "month": 9,
-       "label": "Quarterly deadline, 5pm"
-      },
-      {
-       "day": 20,
-       "month": 12,
-       "label": "Quarterly deadline, 5pm"
+    {
+     "id": "86380b2e-1c74-4cd3-b560-663a021bc097",
+     "state": "rolling",
+     "fields": {
+      "is_rolling": true,
+      "deadline": null
+     },
+     "citations": {
+      "is_rolling": {
+       "snippet": "Applications are considered at the regular meetings of the trustees and grants are awarded throughout the year.",
+       "confidence": "med",
+       "source_url": "https://youngcamdenfoundation.org.uk/funding/adint-charitable-trust"
       }
-     ]
+     }
     },
-    "citations": {
-     "deadline": {
-      "snippet": "The quarterly deadlines for applications for funding each year are: 5pm on 20th March/20th June/20th September/20th December.",
-      "confidence": "high",
-      "source_url": "https://www.help-the-homeless.org.uk/applying-for-funding"
+    {
+     "id": "da45f5fc-31ff-4a5d-9fd9-9821c65b46d7",
+     "state": "rolling",
+     "fields": {
+      "is_rolling": true,
+      "deadline": null
+     },
+     "citations": {
+      "is_rolling": {
+       "snippet": "we process applications all through the year, and will come back to you within a couple of weeks with our initial thoughts.",
+       "confidence": "high",
+       "source_url": "https://allenlane.org.uk/applying-for-funding/"
+      }
+     }
+    },
+    {
+     "id": "bcd035bf-e0e7-462d-8895-84c1aee05953",
+     "state": "dated",
+     "fields": {
+      "deadline": "2026-09-23",
+      "is_rolling": false
+     },
+     "citations": {
+      "deadline": {
+       "snippet": "The current funding round is now open for applications and will close at 1pm on Wednesday 23 September 2026",
+       "confidence": "high",
+       "source_url": "https://arts.wales/funding/organisations/arts-health-and-wellbeing"
+      }
+     }
+    },
+    {
+     "id": "033b3ddf-fd0c-4aea-b440-7cb4c12be8d7",
+     "state": "dated",
+     "fields": {
+      "deadline": "2026-09-30",
+      "is_rolling": false
+     },
+     "citations": {
+      "deadline": {
+       "snippet": "Wednesday 30 September 2026",
+       "confidence": "high",
+       "source_url": "https://arts.wales/funding/individuals/create-and-engage"
+      }
+     }
+    },
+    {
+     "id": "040888ac-bdd1-4a22-9f33-cc841f9b5cbb",
+     "state": "rolling",
+     "fields": {
+      "is_rolling": true,
+      "deadline": null
+     },
+     "citations": {
+      "is_rolling": {
+       "snippet": "Deadline: Ongoing",
+       "confidence": "high",
+       "source_url": "https://fundingforall.org.uk/funds/backstage-trust/"
+      }
+     }
+    },
+    {
+     "id": "7e2f1cd7-bc26-4028-afbd-5a42d5438322",
+     "state": "rolling",
+     "fields": {
+      "is_rolling": true,
+      "deadline": null
+     },
+     "citations": {
+      "is_rolling": {
+       "snippet": "You can apply at any time. We do not have set grant-making deadlines.",
+       "confidence": "high",
+       "source_url": "https://barrowcadbury.org.uk/our-work/applying-for-funding/"
+      }
      }
     }
-   },
-   {
-    "id": "356e9de1-76ae-43bd-999c-134b1567841c",
-    "state": "rolling",
-    "fields": {
-     "is_rolling": true,
-     "deadline": null
+   ],
+   "report": [
+    {
+     "id": "5ed056e6-d5dd-4a82-b845-65c27a9a9eb5",
+     "title": "Accelerate",
+     "why": "not_stated",
+     "quote": "If you would like to apply for support through our Accelerate programme, please fill out our simple online expression of interest form.",
+     "url": "https://communityenterprise.co.uk/accelerate",
+     "note": "Programme page and the get-support page both carry an always-available EOI form and no dates anywhere. An open form is not a statement that applications are accepted at any time."
     },
-    "citations": {
-     "is_rolling": {
-      "snippet": "Grant applications are assessed and need to be approved by the Board which meets three times a year.",
-      "confidence": "med",
-      "source_url": "https://www.heritageoflondon.org/grant-scheme"
+    {
+     "id": "1694669a-605f-44ea-9775-c6a492f0362e",
+     "title": "Achievement Award Scheme",
+     "why": "not_stated",
+     "quote": "Each year, we recognise circa 12,000 Achievement Award winners and invest £3.5m through the Achievement Award scheme.",
+     "url": "https://www.jackpetcheyfoundation.org.uk/opportunities/grant-programmes/achievement-awards/",
+     "note": "Organisations join the scheme rather than apply to a round. Closest the page comes to timing is the annual volume."
+    },
+    {
+     "id": "df926186-9453-40d9-ab0a-33bbbba6bcb1",
+     "title": "Alan Higgs Community Grants",
+     "why": "not_stated",
+     "quote": "Please read the Fund Factsheet and our Essential Information before applying.",
+     "url": "https://www.heartofenglandcf.org/alan-higgs-community-grants/",
+     "note": "The fund page has no dates and no rounds. Any timing is in the linked factsheet."
+    },
+    {
+     "id": "9d1b13f1-607d-48b1-80df-80e127cd8933",
+     "title": "Annandale and Nithsdale Community Benefit Company",
+     "why": "closed_no_date",
+     "quote": "Application deadline: 03/09/26",
+     "url": "https://foundationscotland.org.uk/ancbc",
+     "note": "Three rounds listed for 2026 (05/01, 02/04, 03/09); the last passed three days ago and no 2027 date is published. The dates move year to year, so there is no cycle to roll forward."
+    },
+    {
+     "id": "0704b87e-ea54-4ae3-87d3-7a95559d36a9",
+     "title": "Arts Council of Northern Ireland — Lottery Grants",
+     "why": "index_over_programmes",
+     "quote": "Our Funding Programmes are open to individuals and to organisations. Each funding programme is different, and each programme has useful guidance notes on who can apply, and what you can apply for.",
+     "url": "https://artscouncil-ni.org/funding",
+     "note": "apply_url is the funding index. It states no dates and does not name a single scheme this row could be, so nothing is followed."
+    },
+    {
+     "id": "b774d28f-4f07-4ebd-8702-8f3c3e0cfe5a",
+     "title": "Arts Council of Wales — Have a Go",
+     "why": "not_stated",
+     "quote": "We recommend that you register at least 5 working days before you wish to start your application.",
+     "url": "https://arts.wales/funding/creative-learning/have-a-go",
+     "note": "Unlike its sibling funds, this page states neither a deadline nor that there is none. The registration lead time is the only timing on it."
+    },
+    {
+     "id": "edaed6a2-448f-4209-b763-5006d6874cf2",
+     "title": "ASTOP — Rent-Free Property for Charities",
+     "why": "not_stated",
+     "quote": "Whether you’re a landlord with empty space or a charitable organization seeking a home, we invite you to explore how ASTOP can help you make a positive impact on your community.",
+     "url": "https://astop.org.uk/",
+     "note": "A matching service with a contact form, no application window stated."
+    },
+    {
+     "id": "e2b9494b-b4af-4e29-9843-df8a3980aa3c",
+     "title": "Aurora Trust",
+     "why": "invite_only",
+     "quote": "The Aurora Trust does not generally accept unsolicited applications.",
+     "url": "https://auroratrust.org.uk/",
+     "note": "Reported rather than written: whether the row belongs live is a separate question from timing."
+    },
+    {
+     "id": "cb9780e6-9898-4913-9f41-aa7034908269",
+     "title": "B&Q Foundation — Home Improvement & Home-Starter Kits Funds",
+     "why": "not_stated",
+     "quote": "Please note that due to the high volume of applications, it may take up to 12 weeks after the deadline to hear the outcome.",
+     "url": "https://bqfoundation.org.uk/apply-for-a-grant/",
+     "note": "The page implies a deadline without stating one. Both application links go to Neighbourly campaign pages (HomeImprovementGrants2026, BQHomeStarterKits26) which render nothing without JavaScript."
+    },
+    {
+     "id": "614ffed1-b5c4-44d0-9ad4-34c4496f3137",
+     "title": "Bairdwatson Charitable Trust",
+     "why": "closed_no_date",
+     "quote": "Applications close: 07/08/26",
+     "url": "https://foundationscotland.org.uk/apply-for-funding/funding-available/bairdwatson-charitable-trust",
+     "note": "Opened 03/07/26, closed 07/08/26, decisions end of December 2026. No next round published."
+    }
+   ]
+  },
+  {
+   "batch": 2,
+   "written": [
+    {
+     "id": "d83e1ad9-b8d5-4367-8a26-0fed8b5698f4",
+     "state": "dated",
+     "fields": {
+      "deadline": "2026-11-09",
+      "is_rolling": false
+     },
+     "citations": {
+      "deadline": {
+       "snippet": "9th Nov 2026",
+       "confidence": "high",
+       "source_url": "https://foundationscotland.org.uk/beinneun-community"
+      }
+     }
+    },
+    {
+     "id": "c51eaae1-2007-4930-a45a-4da9f7542c1c",
+     "state": "rolling",
+     "fields": {
+      "is_rolling": true,
+      "deadline": null
+     },
+     "citations": {
+      "is_rolling": {
+       "snippet": "We accept grant applications all year round.",
+       "confidence": "high",
+       "source_url": "https://bernardsunley.org/our-grant-giving/"
+      }
+     }
+    },
+    {
+     "id": "a9364402-f2a3-45b0-bf80-d33d9e5efdf5",
+     "state": "reopens",
+     "fields": {
+      "is_rolling": false,
+      "deadline": null,
+      "next_open_date": "Expected to be open to application in the autumn of 2026"
+     },
+     "citations": {
+      "next_open_date": {
+       "snippet": "The Community Catalyst Fund 2027 to 2029 is expected to be open to application in the autumn of 2026.",
+       "confidence": "high",
+       "source_url": "https://www.brighton-hove.gov.uk/people-and-communities/community-support-and-grants/community-catalyst-fund"
+      }
+     }
+    },
+    {
+     "id": "0346c786-fb9c-4df9-9307-205a4337acab",
+     "state": "dated",
+     "fields": {
+      "deadline": "2026-09-16",
+      "is_rolling": false
+     },
+     "citations": {
+      "deadline": {
+       "snippet": "Please submit your application before 12pm (midday) on Wednesday 16th September 2026 for consideration in this grant round.",
+       "confidence": "high",
+       "source_url": "http://www.cbandhhtaylortrust.com/applications-for-autumn-2026"
+      }
+     }
+    },
+    {
+     "id": "ff1e6699-e169-4f34-89f6-3742137b2394",
+     "state": "dated",
+     "fields": {
+      "deadline": "2026-10-23",
+      "is_rolling": false
+     },
+     "citations": {
+      "deadline": {
+       "snippet": "Friday 23rd October 2026",
+       "confidence": "high",
+       "source_url": "https://www.turnertrust.co.uk/grant-deadlines/"
+      }
+     }
+    },
+    {
+     "id": "94b70915-331b-48ef-8d4e-094881d3812a",
+     "state": "dated",
+     "fields": {
+      "deadline": "2026-09-18",
+      "is_rolling": false
+     },
+     "citations": {
+      "deadline": {
+       "snippet": "18 September 2026",
+       "confidence": "high",
+       "source_url": "https://charleshaywardfoundation.org.uk/our-process-when-to-apply/"
+      }
+     }
+    },
+    {
+     "id": "d29103be-5800-4beb-920f-205b48a78e78",
+     "state": "dated",
+     "fields": {
+      "deadline": "2026-09-08",
+      "is_rolling": false
+     },
+     "citations": {
+      "deadline": {
+       "snippet": "12 noon on Tuesday, 8 September 2026",
+       "confidence": "high",
+       "source_url": "https://www.citybridgefoundation.org.uk/funding"
+      }
+     }
+    },
+    {
+     "id": "32e9cb1d-4e0d-4554-a4c3-569bc4e0b9fb",
+     "state": "rolling",
+     "fields": {
+      "is_rolling": true,
+      "deadline_cycle": [
+       {
+        "day": 23,
+        "month": 9,
+        "label": "Stage two round (full application)"
+       },
+       {
+        "day": 6,
+        "month": 1,
+        "label": "Stage two round (full application)"
+       },
+       {
+        "day": 24,
+        "month": 3,
+        "label": "Stage two round (full application)"
+       },
+       {
+        "day": 7,
+        "month": 7,
+        "label": "Stage two round (full application)"
+       }
+      ]
+     },
+     "citations": {
+      "is_rolling": {
+       "snippet": "You can submit an EOI at any time throughout the year.",
+       "confidence": "high",
+       "source_url": "https://www.londonmarathonfoundation.org/active-spaces-fund"
+      }
      }
     }
-   },
-   {
-    "id": "4f67eb88-7752-44bf-9c74-047046a80ed9",
-    "state": "rolling",
-    "fields": {
-     "is_rolling": true,
-     "deadline": null
+   ],
+   "report": [
+    {
+     "id": "9891bd8a-798b-4c2c-98d5-f25ba9b10faf",
+     "title": "BE:IMPACT Prize 2026",
+     "why": "unreadable",
+     "quote": "Loading content...",
+     "url": "https://blueearthsummit.com/impact-prize",
+     "note": "300KB of JavaScript and two \"Loading content...\" placeholders. Nothing about the prize renders without a browser."
     },
-    "citations": {
-     "is_rolling": {
-      "snippet": "There is no deadline, and all applications will be considered and notified of a decision within 21 days of receipt.",
-      "confidence": "high",
-      "source_url": "https://islingtongiving.org.uk/disability-fund/"
+    {
+     "id": "5373485f-109c-4ef7-9af1-c59312bbc63f",
+     "title": "Bedfordshire & Luton Community Foundation — Community Grants",
+     "why": "index_over_programmes",
+     "quote": "You can find all our funds in the grants section on our website. Each has its own criteria document and application form.",
+     "url": "https://blcf.org.uk/apply-for-a-grant/",
+     "note": "Funder-level row over roughly a dozen named funds on separate timetables. The apply page states no date for any of them."
+    },
+    {
+     "id": "9e714a60-a849-409f-8f52-0394b8c2fbb4",
+     "title": "Black Founders Programme",
+     "why": "not_stated",
+     "quote": "If you are interested in updates and news about the Black Founders Programme, fill out the short form below.",
+     "url": "https://www.digicatapult.org.uk/programmes/programme/black-founders-programme/",
+     "note": "An accelerator that runs in cohorts; the page describes the 2025 cohort and offers a mailing list, and names no application window."
+    },
+    {
+     "id": "87805cc2-c24b-4562-9a2b-129559fcdf9f",
+     "title": "Buttle UK — Chances for Children Grants",
+     "why": "not_stated",
+     "quote": "Make sure to submit your application only when you have time to speak with us.",
+     "url": "https://buttleuk.org/grants/faqs/",
+     "note": "Criteria page, grants page and FAQs all say when in a child's circumstances to apply and never when in the year."
+    },
+    {
+     "id": "b12c394d-346d-4246-a254-06ca5bbadd08",
+     "title": "Calouste Gulbenkian Foundation UK Branch — Grants",
+     "why": "not_stated",
+     "quote": "The UK Branch aims to strengthen arts and civil society ecosystems by supporting transnational exchange, reciprocal capacity development and knowledge sharing between Portugal and the UK.",
+     "url": "https://gulbenkian.pt/uk-branch/our-work/our-grant-making/",
+     "note": "The page carries no sentence about timing at all, so the quote is the closest thing to one: what the branch funds, with no word on when. Last updated 18 December 2025."
+    },
+    {
+     "id": "856cbdaf-7e60-4c78-8ad2-e7c0b6fddbd8",
+     "title": "Camden Climate Fund",
+     "why": "unreadable",
+     "quote": "Just a moment...",
+     "url": "https://www.camden.gov.uk/camden-climate-fund",
+     "note": "HTTP 403 behind a Cloudflare interstitial."
+    },
+    {
+     "id": "88259250-6936-41d6-b60d-83aa880917ba",
+     "title": "Camden Council - Family-Friendly and Inclusive Evenings Grant Scheme",
+     "why": "unreadable",
+     "quote": "Just a moment...",
+     "url": "https://www.camden.gov.uk/family-friendly-evenings",
+     "note": "HTTP 403 behind a Cloudflare interstitial. Same host as the Camden Climate Fund row; both need a browser."
+    },
+    {
+     "id": "91737208-0bd3-45c4-8866-ec6256e85a58",
+     "title": "Cash for Kids - Cost of Living Grants",
+     "why": "index_over_programmes",
+     "quote": "As our ability to grant depends on the donations we receive, application forms will close when we reach capacity – so may not be available for all areas at all times.",
+     "url": "https://cashforkids.org.uk/grants/",
+     "note": "Neither dated nor rolling: forms open and shut by area as money allows, and the page will not say when for any of them."
+    },
+    {
+     "id": "571f93e2-d0b5-41d7-adf1-d36b3a039ec6",
+     "title": "Charity Digital Exchange — Software Donations",
+     "why": "not_stated",
+     "quote": "Please log in or Register to access these exclusive discounts.",
+     "url": "https://charitydigital.org.uk/products",
+     "note": "A login-walled catalogue of donated software rather than a round. No window stated on the public side."
+    },
+    {
+     "id": "99a71fd2-fccc-4947-a4fd-4fdd81b58bd0",
+     "title": "Charity Digital Skills Programme",
+     "why": "not_stated",
+     "quote": "Your destination for trusted technology, exclusive discounts and great deals. Keep up with our latest offers by signing up here.",
+     "url": "https://charitydigital.org.uk/",
+     "note": "apply_url is the site home page. It carries webinar and event dates, none of which is an application window for this row."
+    },
+    {
+     "id": "75990799-a1a4-490e-a651-90f3147ec669",
+     "title": "Charity IT Association (CITA) — Tech Volunteers",
+     "why": "not_stated",
+     "quote": "CITA provides charities with access to affordable, trustworthy, and independent technology professionals to enable their strategic mission through technology.",
+     "url": "https://www.cita.org.uk/",
+     "note": "A volunteer-matching service with no round and no stated window."
+    },
+    {
+     "id": "c6800212-145e-47f7-9879-42f8a891f057",
+     "title": "City & Guilds Foundation — Local Community Skills Fund",
+     "why": "closed_no_date",
+     "quote": "Expressions of Interest are currently closed. Sign up to our newsletter to hear about future rounds.",
+     "url": "https://cityandguildsfoundation.org/what-we-offer/funding/local-community-skills-fund/",
+     "note": "The page also says \"We aim to open our community grants programme at regular intervals throughout the year\", which is an intention rather than a date, so nothing is written."
+    },
+    {
+     "id": "014ccbcd-cd35-4447-8467-d25fb34db0d2",
+     "title": "Civitates — Pooled Fund for European Democracy",
+     "why": "not_stated",
+     "quote": "Sign up for news, updates from our grantee partners and calls for proposals.",
+     "url": "https://civitates-eu.org/",
+     "note": "Grants go out in calls for proposals; no call is open on the site and no next one is dated."
+    }
+   ]
+  },
+  {
+   "batch": 3,
+   "written": [
+    {
+     "id": "c32ecdba-2fab-4131-a430-69bf1e6a1cae",
+     "state": "dated",
+     "fields": {
+      "deadline": "2026-10-01",
+      "is_rolling": false
+     },
+     "citations": {
+      "deadline": {
+       "snippet": "01 October 2026",
+       "confidence": "high",
+       "source_url": "https://www.veoliatrust.org/when-to-apply/"
+      }
+     }
+    },
+    {
+     "id": "12269ada-77e7-4e89-9db0-0d95414bb483",
+     "state": "dated",
+     "fields": {
+      "deadline": "2026-09-17",
+      "is_rolling": false
+     },
+     "citations": {
+      "deadline": {
+       "snippet": "Closing Date: Sep 17, 2026 13:00",
+       "confidence": "high",
+       "source_url": "https://communityfoundationni.org/achieving-impact/available-grants/"
+      }
+     }
+    },
+    {
+     "id": "f375d0d1-f7e5-4393-a078-8b3ab3cec3b4",
+     "state": "rolling",
+     "fields": {
+      "is_rolling": true,
+      "deadline": null
+     },
+     "citations": {
+      "is_rolling": {
+       "snippet": "As long as your organisation is in Tyne and Wear or Northumberland, you can do so at any time of year.",
+       "confidence": "high",
+       "source_url": "https://www.communityfoundation.org.uk/apply/"
+      }
+     }
+    },
+    {
+     "id": "a8a34a8e-4570-4fbd-9260-cbbcc8926637",
+     "state": "rolling",
+     "fields": {
+      "is_rolling": true,
+      "deadline": null
+     },
+     "citations": {
+      "is_rolling": {
+       "snippet": "Grant decisions are taken on a quarterly basis by the fifteen Trustees",
+       "confidence": "high",
+       "source_url": "https://thetrustenfield.org.uk/grants/"
+      }
+     }
+    },
+    {
+     "id": "bfdbf2a8-09b7-4df5-a994-4361ba2fbe3a",
+     "state": "rolling",
+     "fields": {
+      "is_rolling": true,
+      "deadline": null
+     },
+     "citations": {
+      "is_rolling": {
+       "snippet": "The fund is open all year round",
+       "confidence": "high",
+       "source_url": "https://www.creativescotland.com/funding/funding-programmes/open-funding/national-lottery-open-fund-for-organisations"
+      }
      }
     }
-   },
-   {
-    "id": "328baf9b-67e8-4241-a641-d01263a582ad",
-    "state": "rolling",
-    "fields": {
-     "is_rolling": true,
-     "deadline": null
+   ],
+   "report": [
+    {
+     "id": "ed047490-107e-4805-8ea2-6cd85520b3ae",
+     "title": "Clore Social Leadership Programme",
+     "why": "index_over_programmes",
+     "quote": "Applications open",
+     "url": "https://cloresocialleadership.org.uk/",
+     "note": "Three programmes with their own states: Emerging Leader closed (runs Oct 2026 to May 2027), Experienced Leader open (Sep 2026 to Mar 2027), Leading Social Impact open (Sep 2026 to Dec 2026). Those are course run dates, not application windows, and no closing date is given for either open programme."
     },
-    "citations": {
-     "is_rolling": {
-      "snippet": "we are open to applications year round, and you are very welcome to simply apply via our online portal at any point",
-      "confidence": "high",
-      "source_url": "https://ellerman.org.uk/apply-for-funding"
+    {
+     "id": "15c7fa72-3e20-47e6-a211-a478ffc364af",
+     "title": "Coalfields Regeneration Trust",
+     "why": "index_over_programmes",
+     "quote": "Applications for 2026/27 are currently paused due to high demand.",
+     "url": "https://www.coalfields-regen.org.uk/grants",
+     "note": "The row covers England, Scotland and Wales. The grants page lists Wales programmes in three different states: Breaking Barriers \"Rolling programme\", Game On Kit Grant paused, Surveys and Professional Fees described as rolling but with \"Applications are currently paused\" under How To Apply. Nothing on the page is true of the row as a whole."
+    },
+    {
+     "id": "aec5dee3-6c6b-43b4-abe7-92ece9c390c0",
+     "title": "Comic Relief — International Development",
+     "why": "index_over_programmes",
+     "quote": "We have open and confidential feedback forms available for every funding call we release.",
+     "url": "https://www.comicrelief.com/grants/",
+     "note": "Grants go out in named funding calls under six themes, each with its own page. The grants index dates none of them and no call is shown as open."
+    },
+    {
+     "id": "fafa223d-1008-46c6-8019-585afd5014b7",
+     "title": "Community Energy GO!",
+     "why": "not_stated",
+     "quote": "Launching in October 2025, we'll be working with eligible groups who are in the early stages of developing a low-carbon or renewable energy initiative.",
+     "url": "https://www.cse.org.uk/my-community/community-energy-go/",
+     "note": "Free advisory support rather than a round. The launch date is the only date on the page and it has passed."
+    },
+    {
+     "id": "cc5f93d2-aa9e-4873-aaa9-2a425b8868e1",
+     "title": "Community Foundation Wales — Grants Hub",
+     "why": "index_over_programmes",
+     "quote": "Come learn about our new application form and our open funds!",
+     "url": "https://communityfoundationwales.org.uk/grants-overview/",
+     "note": "The grants overview is a fund-finder widget (who are you, where are you) over the foundation's open funds. It states no date for any of them and, unlike the North East, offers no general application route."
+    },
+    {
+     "id": "057225d1-6b86-4341-b2df-766f3851ee62",
+     "title": "Community Grant Programme",
+     "why": "unreadable",
+     "quote": "Just a moment...",
+     "url": "https://www.nationalgrid.com/responsibility/community/community-grant-programme",
+     "note": "HTTP 403 behind a Cloudflare interstitial."
+    },
+    {
+     "id": "3665afff-c092-41c1-83e9-fb67b8d4d563",
+     "title": "Community Grants (Hampton Fund)",
+     "why": "not_stated",
+     "quote": "Application submission deadlines are usually 6-8 weeks before the meetings and the dates are available on request.",
+     "url": "https://www.hamptonfund.co.uk/community-grants/",
+     "note": "Trustees meet in March, June, September and December, so there are four deadlines a year and the fund will not publish them. \"Usually 6-8 weeks before\" is not a date and the meeting months are not deadlines, so neither a deadline nor a cycle can be written."
+    },
+    {
+     "id": "49a1fffd-2412-4105-8897-8a5af286b797",
+     "title": "Continuo Foundation Project Grants",
+     "why": "not_stated",
+     "quote": "By offering project grants on a competitive basis, twice annually, we ensure that there will be a steady flow of high calibre chamber performances across the year.",
+     "url": "https://www.continuofoundation.co.uk/our-grants",
+     "note": "Eleven rounds since 2021, announced each March and September, but the page dates only the announcements and never the application window."
+    },
+    {
+     "id": "21812fb7-2496-4dba-a2a0-3fca9ba64b14",
+     "title": "Coventry, Solihull & Warwickshire Communities Fund",
+     "why": "not_stated",
+     "quote": "Before applying for a grant, please read the Fund Factsheet .",
+     "url": "https://www.heartofenglandcf.org/coventry-solihull-warwickshire-fund/",
+     "note": "Second Heart of England Community Foundation row with this shape, after Alan Higgs in batch 1: the fund page carries criteria and no dates, and any timing is in the linked factsheet."
+    },
+    {
+     "id": "aa1e8f3f-e938-4852-9bda-3294ab4c1380",
+     "title": "Crowdfunder — Match Funding",
+     "why": "unreadable",
+     "quote": "Just a moment...",
+     "url": "https://www.crowdfunder.co.uk/funds",
+     "note": "HTTP 403 behind a Cloudflare interstitial."
+    },
+    {
+     "id": "094397c0-1d2c-47dc-b112-c15d3d14bfd4",
+     "title": "Cumbria Community Foundation — Community Grants",
+     "why": "index_over_programmes",
+     "quote": "Completed applications and all supporting documents must be submitted by the relevant application deadline. Please check application deadline dates carefully before starting your application.",
+     "url": "https://www.cumbriafoundation.org/apply-for-a-grant/",
+     "note": "Says plainly that deadlines exist and that they belong to each fund, and gives none."
+    },
+    {
+     "id": "c34f6859-efee-491f-98e8-aa560f2c0b35",
+     "title": "Devon Community Foundation — Community Grants",
+     "why": "invite_only",
+     "quote": "Invitation to apply; we will invite the number of organisations we are able to fund",
+     "url": "https://devoncf.com/current-funds/",
+     "note": "Every current fund on the page is awarded by longlist, randomised shortlist and invitation, with the number of groups to be invited stated up front. There is a Getting to Know You form but no open application. Worth a look beyond timing: a fundraiser cannot apply here at all."
+    },
+    {
+     "id": "4075bfa0-5ca1-4732-bac4-2b050c542015",
+     "title": "Digital Candle — Free Digital Advice",
+     "why": "not_stated",
+     "quote": "Ask us a question, and we'll connect you with a volunteer expert. No question is too broad or too niche.",
+     "url": "https://digitalcandle.org.uk/",
+     "note": "A question form matched to volunteer experts. No round, and the page never says the form is always open."
+    },
+    {
+     "id": "056ad3b9-2bb0-4d09-be11-672e6c6c23e5",
+     "title": "Community Capacity Fund",
+     "why": "pinned",
+     "quote": "Closing date: Coming autumn 2026",
+     "url": "https://oxfordshire.org/ocf_grants/community-capacity-2/",
+     "note": "mergeGrantUpdate refused next_open_date (pinned, held by admin:paulkilty1@gmail.com). Left as the admin decision set it."
+    },
+    {
+     "id": "08bdec62-f80f-43dd-ad82-43f80787494c",
+     "title": "Corra Foundation — Alcohol and Drugs Fund: Local Support Micro Grants",
+     "why": "pinned",
+     "quote": "It is a rolling fund, so there is no fixed closing date.",
+     "url": "https://www.corra.scot/grants/alcohol-and-drugs-fund-local-support-fund-micro-grants/",
+     "note": "mergeGrantUpdate refused is_rolling (lower_trust, held by admin:rolling-ruling-2026-08-21). Left as the admin decision set it."
+    }
+   ]
+  },
+  {
+   "batch": 4,
+   "written": [
+    {
+     "id": "39d92511-a517-4afe-8ff4-f3c8c5ce68b0",
+     "state": "rolling",
+     "fields": {
+      "is_rolling": true,
+      "deadline": null
+     },
+     "citations": {
+      "is_rolling": {
+       "snippet": "We award grants twice a year, and will notify successful applicants shortly after our trustee meetings which take place in April and October.",
+       "confidence": "med",
+       "source_url": "https://www.fatbeehivefoundation.org.uk/"
+      }
+     }
+    },
+    {
+     "id": "ca53ae09-15ca-41a3-bd09-70d97d1b068f",
+     "state": "rolling",
+     "fields": {
+      "is_rolling": true,
+      "deadline": null
+     },
+     "citations": {
+      "is_rolling": {
+       "snippet": "Applications may be submitted at any time and must be made in writing.",
+       "confidence": "med",
+       "source_url": "https://youngcamdenfoundation.org.uk/funding/dixie-rose-findlay-charitable-trust"
+      }
+     }
+    },
+    {
+     "id": "a7e93d28-fc29-48ff-91fa-b06b1f30eafe",
+     "state": "dated",
+     "fields": {
+      "deadline": "2026-10-05",
+      "is_rolling": false
+     },
+     "citations": {
+      "deadline": {
+       "snippet": "05 October 2026",
+       "confidence": "high",
+       "source_url": "https://www.eastmidlandsairport.com/community/supporting-the-local-community/"
+      }
+     }
+    },
+    {
+     "id": "af98107b-eda0-4294-9fcb-0e125e2733ff",
+     "state": "rolling",
+     "fields": {
+      "is_rolling": true,
+      "deadline": null
+     },
+     "citations": {
+      "is_rolling": {
+       "snippet": "Unless specified otherwise, we accept applications on a rolling basis with no deadlines.",
+       "confidence": "high",
+       "source_url": "https://esmeefairbairn.org.uk/apply-for-a-grant/submit-an-application/"
+      }
+     }
+    },
+    {
+     "id": "732a41ad-8df9-405f-a74f-cd25be2b64c2",
+     "state": "rolling",
+     "fields": {
+      "is_rolling": true,
+      "deadline": null
+     },
+     "citations": {
+      "is_rolling": {
+       "snippet": "Unless specified otherwise, we accept applications on a rolling basis with no deadlines.",
+       "confidence": "high",
+       "source_url": "https://esmeefairbairn.org.uk/apply-for-a-grant/submit-an-application/"
+      }
+     }
+    },
+    {
+     "id": "6bee86de-f50a-4c01-b409-d72a6f4ed686",
+     "state": "rolling",
+     "fields": {
+      "is_rolling": true,
+      "deadline": null
+     },
+     "citations": {
+      "is_rolling": {
+       "snippet": "Unless specified otherwise, we accept applications on a rolling basis with no deadlines.",
+       "confidence": "high",
+       "source_url": "https://esmeefairbairn.org.uk/apply-for-a-grant/submit-an-application/"
+      }
+     }
+    },
+    {
+     "id": "595ccabb-817c-48a1-9f3d-de394d09a458",
+     "state": "rolling",
+     "fields": {
+      "is_rolling": true,
+      "deadline": null
+     },
+     "citations": {
+      "is_rolling": {
+       "snippet": "you can make applications at any time of the year",
+       "confidence": "high",
+       "source_url": "https://www.fortecharitablefoundation.org.uk/our-grants"
+      }
      }
     }
-   },
-   {
-    "id": "af3eed37-f766-4e08-8880-541c4c36f28b",
-    "state": "rolling",
-    "fields": {
-     "is_rolling": true,
-     "deadline": null
+   ],
+   "report": [
+    {
+     "id": "b3dac130-3d54-4bb6-8714-034016f18611",
+     "title": "Doc Society — Documentary Film Funds",
+     "why": "index_over_programmes",
+     "quote": "BFI Doc Society Development Fund Fund CLOSED",
+     "url": "https://docsociety.org/more/",
+     "note": "apply_url /funds/ redirects to /more/, which lists five funds: Development, Made of Truth, Expanded Screen and RAD all marked CLOSED, and the Talent Development Programme marked OPEN, which is year-round activity rather than a grant. No reopening date for any of them."
     },
-    "citations": {
-     "is_rolling": {
-      "snippet": "Small grants, of up to £10,000, can be applied for at any time.",
-      "confidence": "high",
-      "source_url": "https://www.jrrt.org.uk/apply-for-a-grant/"
+    {
+     "id": "574fc073-bca6-4b01-95c0-a7dc8627c3e0",
+     "title": "Dulverton Trust Grants",
+     "why": "not_stated",
+     "quote": "To apply, complete our eligibility quiz (button below). If eligible, you will be provided with a link to our online Expression of Interest form.",
+     "url": "https://www.dulverton.org/",
+     "note": "An always-available eligibility quiz and EOI form, no window stated. The board meets (a February meeting is mentioned in a news item) but the page never ties an application date to it. One funding category is invitation only."
+    },
+    {
+     "id": "a7b1e535-b639-471c-9231-1d87cff07489",
+     "title": "DWF Foundation",
+     "why": "not_stated",
+     "quote": "The Foundation team have compiled a list of FAQs to assist the application process. We would encourage you to take a look at these before you apply online.",
+     "url": "https://dwfgroup.com/en/about-us/dwf-foundation",
+     "note": "Neither the foundation page nor its Grant Giving page carries a date, a round or a meeting schedule. Every date on both is a past award."
+    },
+    {
+     "id": "0d90187a-15da-4625-8739-34ae7134aecd",
+     "title": "East End Community Foundation — Grants",
+     "why": "index_over_programmes",
+     "quote": "All funds are administered through our grant programmes, and we also manage and administer grants programmes on behalf of our corporate and statutory partners, and individuals.",
+     "url": "https://eastendcf.org/grants/",
+     "note": "Funder-level page over the foundation's own funds and the programmes it runs for partners. No date for any of them, and the only next step offered is the newsletter."
+    },
+    {
+     "id": "dab46d8f-9841-408e-a862-489dd45493d4",
+     "title": "Edgbaston & Northfield NNS Fund for Older Adults (50+)",
+     "why": "not_stated",
+     "quote": "Please read the Fund Factsheet for Edgbaston before applying.",
+     "url": "https://www.heartofenglandcf.org/nns/",
+     "note": "Third and fourth Heart of England Community Foundation rows with this shape, after Alan Higgs and Coventry Solihull & Warwickshire: criteria on the page, dates only in the linked factsheet. Worth handling as one job rather than row by row."
+    },
+    {
+     "id": "8cdb1c33-750e-4c9c-8bb4-77c997ceeefd",
+     "title": "Edgbaston & Northfield NNS Fund for Younger Adults",
+     "why": "not_stated",
+     "quote": "Please read the Fund Factsheet for Edgbaston before applying.",
+     "url": "https://www.heartofenglandcf.org/nns-younger-adults/",
+     "note": "Same page shape and same factsheet pattern as the 50+ row above."
+    },
+    {
+     "id": "c67c1e54-64e2-4b82-b651-952aecfa434d",
+     "title": "Employer Partnership (sports coaching apprenticeships)",
+     "why": "not_stated",
+     "quote": "Get in touch to let us know if you are thinking about becoming an employer, or would like some information, advice or guidance about apprenticeships.",
+     "url": "https://coachcore.org.uk/become-an-employer/",
+     "note": "A register-interest form for employers, with no cohort or intake date on the page."
+    },
+    {
+     "id": "8f5a1cfb-e408-4dfb-a0da-ad4d632a0d4c",
+     "title": "Energy Industry Voluntary Redress Scheme",
+     "why": "not_stated",
+     "quote": "The amount of funding available through the scheme varies throughout the year and will be reviewed on a quarterly basis in January, April, July and October.",
+     "url": "https://energyredress.org.uk/apply-funding",
+     "note": "Rounds exist and are referred to throughout (\"the forthcoming funding window\", \"two weeks prior to the application deadline\") but none is dated. Applicants register once and are notified when funds become available, so the page cannot tell a newcomer whether they can apply today."
+    },
+    {
+     "id": "21f84400-4330-4267-9a62-4540617a573d",
+     "title": "Eranda Rothschild Foundation",
+     "why": "not_stated",
+     "quote": "We consider applications from universities and other charities to support young professionals in fields including medicine, science and business.",
+     "url": "https://erandarothschild.org/",
+     "note": "A four-page site with no how-to-apply section and no date of any kind."
+    },
+    {
+     "id": "7e5b73df-1210-42a9-9c24-fafeb8357cef",
+     "title": "Family Fund — Grants for Families with Disabled Children",
+     "why": "not_stated",
+     "quote": "To decide if your family is eligible for a grant, Family Fund looks at your income and the impact of disability on your child and young person.",
+     "url": "https://www.familyfund.org.uk/grants/",
+     "note": "There is a \"Check when I can next apply\" tool, but it answers a per-family cooldown rather than a round, and the grants page states no window."
+    },
+    {
+     "id": "2172377c-724f-4261-ae35-389af8de6867",
+     "title": "Forces in Mind Trust — Veterans Mental Health Programme",
+     "why": "not_stated",
+     "quote": "If, having read the eligibility criteria for applicants, you would like to apply for a grant, the first stage is to submit an initial application, which enables you to share an overview of your project with us.",
+     "url": "https://www.fim-trust.org/apply/how-to-apply/",
+     "note": "A two-stage process described in full across four pages, none of which names a deadline or says applications are open continuously."
+    },
+    {
+     "id": "bfaa140a-ed84-4862-a455-6e48ca22e906",
+     "title": "Fine & Country Foundation — Homelessness Grants",
+     "why": "pinned",
+     "quote": "applications open in October, assessed in November and funds for successful applications are distributed in December",
+     "url": "https://www.fineandcountryfoundation.com/grants/",
+     "note": "mergeGrantUpdate refused next_open_date (pinned, held by admin:paulkilty1@gmail.com). Left as the admin decision set it."
+    },
+    {
+     "id": "3b8727a4-faa4-49b7-a162-c46212af731b",
+     "title": "Fishmongers' Company — Charitable Grants",
+     "why": "pinned",
+     "quote": "We are closed for applications and do not anticipate re-opening for new applications until late November/early December",
+     "url": "https://fishmongers.org.uk/grants/",
+     "note": "mergeGrantUpdate refused next_open_date (pinned, held by admin:paulkilty1@gmail.com). Left as the admin decision set it."
+    }
+   ]
+  },
+  {
+   "batch": 5,
+   "written": [
+    {
+     "id": "58982bd3-de15-4000-9c4b-a4f7a767a64d",
+     "state": "rolling",
+     "fields": {
+      "is_rolling": true,
+      "deadline": null,
+      "deadline_cycle": [
+       {
+        "day": 31,
+        "month": 3,
+        "label": "Quarterly donor consideration"
+       },
+       {
+        "day": 30,
+        "month": 6,
+        "label": "Quarterly donor consideration"
+       },
+       {
+        "day": 30,
+        "month": 9,
+        "label": "Quarterly donor consideration"
+       },
+       {
+        "day": 31,
+        "month": 12,
+        "label": "Quarterly donor consideration"
+       }
+      ]
+     },
+     "citations": {
+      "is_rolling": {
+       "snippet": "The funding call will remain rolling until an as-yet unspecified future date.",
+       "confidence": "high",
+       "source_url": "https://www.communityfoundation.org.uk/grants/funding-for-stem-activities-in-the-north-east/"
+      }
+     }
+    },
+    {
+     "id": "5dca172c-1c80-4f3e-9f89-0ba7f574e9a1",
+     "state": "rolling",
+     "fields": {
+      "is_rolling": true,
+      "deadline": null
+     },
+     "citations": {
+      "is_rolling": {
+       "snippet": "You can submit an application at any time, there are no deadlines.",
+       "confidence": "high",
+       "source_url": "https://29may1961charity.org.uk/how-to-apply"
+      }
+     }
+    },
+    {
+     "id": "c80591fa-fdf6-4e2d-97a5-c14020cff1bb",
+     "state": "rolling",
+     "fields": {
+      "is_rolling": true,
+      "deadline": null,
+      "deadline_cycle": [
+       {
+        "day": 15,
+        "month": 3,
+        "label": "Application window closes"
+       },
+       {
+        "day": 15,
+        "month": 6,
+        "label": "Application window closes"
+       },
+       {
+        "day": 15,
+        "month": 9,
+        "label": "Application window closes"
+       },
+       {
+        "day": 15,
+        "month": 12,
+        "label": "Application window closes"
+       }
+      ]
+     },
+     "citations": {
+      "is_rolling": {
+       "snippet": "You can apply all year round. Your application will be considered in the next available funding round.",
+       "confidence": "high",
+       "source_url": "https://www.matthewgoodfoundation.org/amplify-fund-grants-for-good/"
+      }
+     }
+    },
+    {
+     "id": "0266d366-dec6-4bd1-8a2f-76386846dfba",
+     "state": "rolling",
+     "fields": {
+      "is_rolling": true,
+      "deadline": null
+     },
+     "citations": {
+      "is_rolling": {
+       "snippet": "The Trustees meet regularly to discuss applications and to make decisions on grants.",
+       "confidence": "med",
+       "source_url": "https://www.hedleyfoundation.org.uk/apply-now"
+      }
+     }
+    },
+    {
+     "id": "ce059535-b345-4642-b6d7-59fe37581025",
+     "state": "cycle",
+     "fields": {
+      "deadline": "2026-09-20",
+      "is_rolling": false,
+      "deadline_cycle": [
+       {
+        "day": 20,
+        "month": 3,
+        "label": "Quarterly deadline, 5pm"
+       },
+       {
+        "day": 20,
+        "month": 6,
+        "label": "Quarterly deadline, 5pm"
+       },
+       {
+        "day": 20,
+        "month": 9,
+        "label": "Quarterly deadline, 5pm"
+       },
+       {
+        "day": 20,
+        "month": 12,
+        "label": "Quarterly deadline, 5pm"
+       }
+      ]
+     },
+     "citations": {
+      "deadline": {
+       "snippet": "The quarterly deadlines for applications for funding each year are: 5pm on 20th March/20th June/20th September/20th December.",
+       "confidence": "high",
+       "source_url": "https://www.help-the-homeless.org.uk/applying-for-funding"
+      }
+     }
+    },
+    {
+     "id": "356e9de1-76ae-43bd-999c-134b1567841c",
+     "state": "rolling",
+     "fields": {
+      "is_rolling": true,
+      "deadline": null
+     },
+     "citations": {
+      "is_rolling": {
+       "snippet": "Grant applications are assessed and need to be approved by the Board which meets three times a year.",
+       "confidence": "med",
+       "source_url": "https://www.heritageoflondon.org/grant-scheme"
+      }
+     }
+    },
+    {
+     "id": "4f67eb88-7752-44bf-9c74-047046a80ed9",
+     "state": "rolling",
+     "fields": {
+      "is_rolling": true,
+      "deadline": null
+     },
+     "citations": {
+      "is_rolling": {
+       "snippet": "There is no deadline, and all applications will be considered and notified of a decision within 21 days of receipt.",
+       "confidence": "high",
+       "source_url": "https://islingtongiving.org.uk/disability-fund/"
+      }
+     }
+    },
+    {
+     "id": "328baf9b-67e8-4241-a641-d01263a582ad",
+     "state": "rolling",
+     "fields": {
+      "is_rolling": true,
+      "deadline": null
+     },
+     "citations": {
+      "is_rolling": {
+       "snippet": "we are open to applications year round, and you are very welcome to simply apply via our online portal at any point",
+       "confidence": "high",
+       "source_url": "https://ellerman.org.uk/apply-for-funding"
+      }
+     }
+    },
+    {
+     "id": "af3eed37-f766-4e08-8880-541c4c36f28b",
+     "state": "rolling",
+     "fields": {
+      "is_rolling": true,
+      "deadline": null
+     },
+     "citations": {
+      "is_rolling": {
+       "snippet": "Small grants, of up to £10,000, can be applied for at any time.",
+       "confidence": "high",
+       "source_url": "https://www.jrrt.org.uk/apply-for-a-grant/"
+      }
      }
     }
-   }
-  ],
-  "report": [
-   {
-    "id": "c3718c76-0cb3-405b-901d-6c8ae11e93eb",
-    "title": "Foundation Scotland — Community Fund",
-    "why": "index_over_programmes",
-    "quote": "Also, every fund lists a deadline for applications, and there may be more than one deadline a year.",
-    "url": "https://www.foundationscotland.org.uk/apply-for-funding",
-    "note": "The foundation-level row. It says in terms that the dates belong to the individual funds, several of which are separate rows in this same job (Achlachan, Beinneun, Bairdwatson, ANCBC) and have been dated from their own pages."
-   },
-   {
-    "id": "3b836a87-fd0e-4d5c-bfdc-b44f7c793eb1",
-    "title": "Gatsby Charitable Foundation",
-    "why": "not_stated",
-    "quote": "We identify areas of need across our six focus areas. Typically, we commission research and design interventions in partnership with sector experts.",
-    "url": "https://www.gatsby.org.uk/",
-    "note": "No application route of any kind on the site, let alone a date. The quote suggests the foundation commissions rather than receives applications, which if so is a scope question rather than a timing one and is left alone here."
-   },
-   {
-    "id": "acbff6c1-4f2f-47a7-8f98-58d0f2072410",
-    "title": "Hatch Enterprise Business Support Programme",
-    "why": "index_over_programmes",
-    "quote": "We offer support for businesses at all levels throughout the year. If there aren't any programmes available that support your needs, join our waiting list to be the first to hear when our programmes launch.",
-    "url": "https://hatchenterprise.org/our-programmes/",
-    "note": "Launchpad, Incubator, Accelerator, Greener Southwark Accelerator and the Southwark Pioneers Fund, each with its own intake. \"Applications are now open!\" appears on the index without saying which programme it belongs to."
-   },
-   {
-    "id": "71a96f39-3506-493f-8e48-b56206b175f8",
-    "title": "Heritage and Nature Grants",
-    "why": "invite_only",
-    "quote": "The programme is not open to unsolicited applications.",
-    "url": "https://www.wscf.org.uk/grants-and-support/groups/heritage-and-nature-grants/",
-    "note": "An expressions-of-interest process is open now for grants to be awarded in 2026/27, but applications themselves are by invitation. Reported rather than written: the EOI is not an application and the row would read as open."
-   },
-   {
-    "id": "fc678f81-2c43-46f9-83e8-fe962c65b730",
-    "title": "Historic England — Grants for Heritage",
-    "why": "unreadable",
-    "quote": "Just a moment...",
-    "url": "https://historicengland.org.uk/services-skills/grants/",
-    "note": "HTTP 403 behind a Cloudflare interstitial."
-   },
-   {
-    "id": "af59412f-f54b-4909-a113-7cc5ae92657f",
-    "title": "Horizon Europe — Cluster 2: Culture, Creativity and Inclusive Society",
-    "why": "index_over_programmes",
-    "quote": "All funding information and details on how to apply are on the Funding and Tenders portal",
-    "url": "https://research-and-innovation.ec.europa.eu/funding/funding-opportunities/funding-programmes-and-open-calls/horizon-europe/cluster-2-culture-creativity-and-inclusive-society_en",
-    "note": "A cluster is a work programme covering dozens of calls, each with its own deadline on a different site. The only dates on this page are the publication dates of the work programme PDFs."
-   },
-   {
-    "id": "550e7273-d37c-4307-8afe-dcf45b2ec5ba",
-    "title": "Horizon Europe — Cluster 3: Civil Security for Society",
-    "why": "index_over_programmes",
-    "quote": "All funding information and details on how to apply are on the Funding and Tenders portal",
-    "url": "https://research-and-innovation.ec.europa.eu/funding/funding-opportunities/funding-programmes-and-open-calls/horizon-europe/cluster-3-civil-security-society_en",
-    "note": "Same page shape and same problem as Cluster 2 above."
-   },
-   {
-    "id": "a7540da6-3414-4feb-8a45-c0c6cbcbd0c8",
-    "title": "Hyde Foundation Community Investment",
-    "why": "not_stated",
-    "quote": "HCT's annual report 2024-25 and charitable objective",
-    "url": "https://www.hyde-housing.co.uk/the-hyde-group/our-social-purpose/hyde-foundation/hyde-charitable-trust/",
-    "note": "Neither the foundation page nor the Hyde Charitable Trust page beneath it carries an application route or a date. Every date on both is a report or a strategy period."
-   },
-   {
-    "id": "843e2992-bed2-4525-b29f-b48d98be2364",
-    "title": "John Lyon's Charity Grants",
-    "why": "unreadable",
-    "quote": "Just a moment...",
-    "url": "https://www.jlc.london/grants/",
-    "note": "HTTP 403 behind a Cloudflare interstitial."
-   },
-   {
-    "id": "ca27a805-4ee8-437d-9ae6-a90cc9e66739",
-    "title": "Glasspool — Flexible Frontline Fund",
-    "why": "pinned",
-    "quote": "We do not anticipate entering into a new recruitment round before 2027.",
-    "url": "https://www.glasspool.org.uk/",
-    "note": "mergeGrantUpdate refused next_open_date (pinned, held by admin:paulkilty1@gmail.com). Left as the admin decision set it."
-   },
-   {
-    "id": "bec586cc-4172-4d15-bb05-5fd5f24c7bb9",
-    "title": "Innovate UK Innovation Loans",
-    "why": "pinned",
-    "quote": "There is no submission deadline",
-    "url": "https://iuk-business-connect.org.uk/programme/innovation-loans/",
-    "note": "mergeGrantUpdate refused is_rolling (pinned, held by admin:innovate-uk-batch-2026-06-01). Left as the admin decision set it."
-   }
-  ]
- }
-]
+   ],
+   "report": [
+    {
+     "id": "c3718c76-0cb3-405b-901d-6c8ae11e93eb",
+     "title": "Foundation Scotland — Community Fund",
+     "why": "index_over_programmes",
+     "quote": "Also, every fund lists a deadline for applications, and there may be more than one deadline a year.",
+     "url": "https://www.foundationscotland.org.uk/apply-for-funding",
+     "note": "The foundation-level row. It says in terms that the dates belong to the individual funds, several of which are separate rows in this same job (Achlachan, Beinneun, Bairdwatson, ANCBC) and have been dated from their own pages."
+    },
+    {
+     "id": "3b836a87-fd0e-4d5c-bfdc-b44f7c793eb1",
+     "title": "Gatsby Charitable Foundation",
+     "why": "not_stated",
+     "quote": "We identify areas of need across our six focus areas. Typically, we commission research and design interventions in partnership with sector experts.",
+     "url": "https://www.gatsby.org.uk/",
+     "note": "No application route of any kind on the site, let alone a date. The quote suggests the foundation commissions rather than receives applications, which if so is a scope question rather than a timing one and is left alone here."
+    },
+    {
+     "id": "acbff6c1-4f2f-47a7-8f98-58d0f2072410",
+     "title": "Hatch Enterprise Business Support Programme",
+     "why": "index_over_programmes",
+     "quote": "We offer support for businesses at all levels throughout the year. If there aren't any programmes available that support your needs, join our waiting list to be the first to hear when our programmes launch.",
+     "url": "https://hatchenterprise.org/our-programmes/",
+     "note": "Launchpad, Incubator, Accelerator, Greener Southwark Accelerator and the Southwark Pioneers Fund, each with its own intake. \"Applications are now open!\" appears on the index without saying which programme it belongs to."
+    },
+    {
+     "id": "71a96f39-3506-493f-8e48-b56206b175f8",
+     "title": "Heritage and Nature Grants",
+     "why": "invite_only",
+     "quote": "The programme is not open to unsolicited applications.",
+     "url": "https://www.wscf.org.uk/grants-and-support/groups/heritage-and-nature-grants/",
+     "note": "An expressions-of-interest process is open now for grants to be awarded in 2026/27, but applications themselves are by invitation. Reported rather than written: the EOI is not an application and the row would read as open."
+    },
+    {
+     "id": "fc678f81-2c43-46f9-83e8-fe962c65b730",
+     "title": "Historic England — Grants for Heritage",
+     "why": "unreadable",
+     "quote": "Just a moment...",
+     "url": "https://historicengland.org.uk/services-skills/grants/",
+     "note": "HTTP 403 behind a Cloudflare interstitial."
+    },
+    {
+     "id": "af59412f-f54b-4909-a113-7cc5ae92657f",
+     "title": "Horizon Europe — Cluster 2: Culture, Creativity and Inclusive Society",
+     "why": "index_over_programmes",
+     "quote": "All funding information and details on how to apply are on the Funding and Tenders portal",
+     "url": "https://research-and-innovation.ec.europa.eu/funding/funding-opportunities/funding-programmes-and-open-calls/horizon-europe/cluster-2-culture-creativity-and-inclusive-society_en",
+     "note": "A cluster is a work programme covering dozens of calls, each with its own deadline on a different site. The only dates on this page are the publication dates of the work programme PDFs."
+    },
+    {
+     "id": "550e7273-d37c-4307-8afe-dcf45b2ec5ba",
+     "title": "Horizon Europe — Cluster 3: Civil Security for Society",
+     "why": "index_over_programmes",
+     "quote": "All funding information and details on how to apply are on the Funding and Tenders portal",
+     "url": "https://research-and-innovation.ec.europa.eu/funding/funding-opportunities/funding-programmes-and-open-calls/horizon-europe/cluster-3-civil-security-society_en",
+     "note": "Same page shape and same problem as Cluster 2 above."
+    },
+    {
+     "id": "a7540da6-3414-4feb-8a45-c0c6cbcbd0c8",
+     "title": "Hyde Foundation Community Investment",
+     "why": "not_stated",
+     "quote": "HCT's annual report 2024-25 and charitable objective",
+     "url": "https://www.hyde-housing.co.uk/the-hyde-group/our-social-purpose/hyde-foundation/hyde-charitable-trust/",
+     "note": "Neither the foundation page nor the Hyde Charitable Trust page beneath it carries an application route or a date. Every date on both is a report or a strategy period."
+    },
+    {
+     "id": "843e2992-bed2-4525-b29f-b48d98be2364",
+     "title": "John Lyon's Charity Grants",
+     "why": "unreadable",
+     "quote": "Just a moment...",
+     "url": "https://www.jlc.london/grants/",
+     "note": "HTTP 403 behind a Cloudflare interstitial."
+    },
+    {
+     "id": "ca27a805-4ee8-437d-9ae6-a90cc9e66739",
+     "title": "Glasspool — Flexible Frontline Fund",
+     "why": "pinned",
+     "quote": "We do not anticipate entering into a new recruitment round before 2027.",
+     "url": "https://www.glasspool.org.uk/",
+     "note": "mergeGrantUpdate refused next_open_date (pinned, held by admin:paulkilty1@gmail.com). Left as the admin decision set it."
+    },
+    {
+     "id": "bec586cc-4172-4d15-bb05-5fd5f24c7bb9",
+     "title": "Innovate UK Innovation Loans",
+     "why": "pinned",
+     "quote": "There is no submission deadline",
+     "url": "https://iuk-business-connect.org.uk/programme/innovation-loans/",
+     "note": "mergeGrantUpdate refused is_rolling (pinned, held by admin:innovate-uk-batch-2026-06-01). Left as the admin decision set it."
+    }
+   ]
+  },
+  {
+   "batch": 6,
+   "written": [
+    {
+     "id": "6344f1bf-cc8a-4410-a4b6-f15e200559f5",
+     "state": "reopens",
+     "fields": {
+      "is_rolling": false,
+      "deadline": null,
+      "next_open_date": "December 2026"
+     },
+     "citations": {
+      "next_open_date": {
+       "snippet": "We will be happy to take enquiries about the 2027 grant rounds from December 2026 onwards.",
+       "confidence": "high",
+       "source_url": "https://www.jrct.org.uk/power-and-accountability"
+      }
+     }
+    },
+    {
+     "id": "6d8568db-e597-476b-9075-d856e94229ff",
+     "state": "dated",
+     "fields": {
+      "deadline": "2026-10-16",
+      "is_rolling": false
+     },
+     "citations": {
+      "deadline": {
+       "snippet": "16th October 2026",
+       "confidence": "med",
+       "source_url": "https://lincolnshirecf.co.uk/grants/mccgp/"
+      }
+     }
+    },
+    {
+     "id": "2eb128b6-e14f-4f6f-a4da-8b7da56c48ca",
+     "state": "rolling",
+     "fields": {
+      "is_rolling": true,
+      "deadline": null
+     },
+     "citations": {
+      "is_rolling": {
+       "snippet": "For grants of less than £250,000, decisions are made on a monthly basis by the staff in your nation or area.",
+       "confidence": "med",
+       "source_url": "https://www.heritagefund.org.uk/funding/strategic-initiatives/heritage-places"
+      }
+     }
+    },
+    {
+     "id": "758d3705-6589-43c8-b87f-f01cca2e5ddc",
+     "state": "rolling",
+     "fields": {
+      "is_rolling": true,
+      "deadline": null
+     },
+     "citations": {
+      "is_rolling": {
+       "snippet": "For this strategic initiative, for grants of less than £250,000 decisions will be made on a monthly basis by the senior investment or engagement staff of your nation or area.",
+       "confidence": "med",
+       "source_url": "https://www.heritagefund.org.uk/funding/strategic-initiatives/landscape-connections"
+      }
+     }
+    },
+    {
+     "id": "72fc0c20-8491-49e4-bdc8-ad909b13cf50",
+     "state": "rolling",
+     "fields": {
+      "is_rolling": true,
+      "deadline": null
+     },
+     "citations": {
+      "is_rolling": {
+       "snippet": "There is no deadline for applications.",
+       "confidence": "high",
+       "source_url": "https://www.heritagefund.org.uk/funding/national-lottery-heritage-grants-10k-250k-0"
+      }
+     }
+    },
+    {
+     "id": "4b989eab-79b0-4981-987d-f308f0843fdc",
+     "state": "cycle",
+     "fields": {
+      "deadline": "2026-11-12",
+      "is_rolling": false,
+      "deadline_cycle": [
+       {
+        "day": 26,
+        "month": 2,
+        "label": "Quarterly deadline, 12 noon"
+       },
+       {
+        "day": 28,
+        "month": 5,
+        "label": "Quarterly deadline, 12 noon"
+       },
+       {
+        "day": 6,
+        "month": 8,
+        "label": "Quarterly deadline, 12 noon"
+       },
+       {
+        "day": 12,
+        "month": 11,
+        "label": "Quarterly deadline, 12 noon"
+       }
+      ]
+     },
+     "citations": {
+      "deadline": {
+       "snippet": "12noon, 12 November 2026, to receive a decision by end of March 2027",
+       "confidence": "high",
+       "source_url": "https://www.heritagefund.org.uk/funding/national-lottery-heritage-grants-250k-10m/deadlines"
+      }
+     }
+    },
+    {
+     "id": "e3c90440-3ea2-4bb9-a98c-07cd5d32a2e2",
+     "state": "rolling",
+     "fields": {
+      "is_rolling": true,
+      "deadline": null
+     },
+     "citations": {
+      "is_rolling": {
+       "snippet": "Rolling grant fund",
+       "confidence": "high",
+       "source_url": "https://www.communityfoundation.org.uk/grants/supporting-newcastle-based-organisations-to-engage-residents-in-culture/"
+      }
+     }
+    }
+   ],
+   "report": [
+    {
+     "id": "8f8bc717-1cbb-44de-abc1-fe04e0efcce2",
+     "title": "JRCT — Rights & Justice Programme",
+     "why": "closed_no_date",
+     "quote": "New applicants need to complete the expression of interest form below by Monday 13 July (10am).",
+     "url": "https://www.jrct.org.uk/rights-and-justice",
+     "note": "Round two closed 2 September 2026 and the EOI gating it closed 13 July. JRCT's shared when-to-apply page lists 2026 dates only. The sibling Power & Accountability page says enquiries about 2027 open in December; this page does not, and one programme's sentence is not evidence about another."
+    },
+    {
+     "id": "0a0158ee-9fbb-44d3-b991-6a39656e90a2",
+     "title": "Kelly Family Charitable Trust",
+     "why": "not_stated",
+     "quote": "Unsuccessful applicants must wait for 1 year before resubmitting an application.",
+     "url": "https://kfct.org.uk/application-criteria/",
+     "note": "A full criteria and exclusions page with no application window, no round and no meeting schedule. The reapplication wait is the only period on it."
+    },
+    {
+     "id": "5772cd18-ed5f-4b2e-a3cc-5325ac8689bb",
+     "title": "Kent Community Foundation Grants",
+     "why": "index_over_programmes",
+     "quote": "Explore funding opportunities for charities and community groups, learn how to apply, and see how we can support your work.",
+     "url": "https://www.kentcf.org.uk/funding/",
+     "note": "Funder-level page over the foundation's open funds, with no date at this level."
+    },
+    {
+     "id": "b7d19a10-753c-4294-95ad-ec43ac71595d",
+     "title": "Kusuma Trust UK — Education, Communities & Environment",
+     "why": "not_stated",
+     "quote": "The application process will open on A-level results day, with a closing date for applications of Friday 18th September.",
+     "url": "https://www.kusumatrust.org/",
+     "note": "The quote is the only application window anywhere on the site and it is NOT this row: it belongs to Kusuma Trust Gibraltar's 2026 Excellence Prize, a separate entity and a prize for students. The UK trust's site is a grantee showcase with no application route at all. Left unwritten precisely because the date that is there is the wrong one."
+    },
+    {
+     "id": "5a368644-3211-4a40-9447-d5594938a519",
+     "title": "Lambeth Community Connections Fund",
+     "why": "unreadable",
+     "quote": "Apply now. Access the application form and get support to apply.",
+     "url": "https://www.lambeth.gov.uk/community-connections-fund",
+     "note": "HTTP 200, but the fund content sits in accordions that render only in a browser. The fetched HTML has the section headings (\"Who can apply?\", \"Latest updates\") and nothing under them."
+    },
+    {
+     "id": "a5da4678-2d9e-49ce-9c9a-599c155046ef",
+     "title": "LawWorks — Free Legal Advice for Charities",
+     "why": "not_stated",
+     "quote": "You should browse the above Free Talks and resources before applying to our service on behalf of your not-for-profit organisation (see below).",
+     "url": "https://www.lawworks.org.uk/legal-advice-not-profits",
+     "note": "A referral service to pro bono solicitors rather than a round. No window stated on either the home page or the not-for-profits page."
+    },
+    {
+     "id": "9f2bbfca-91ed-4f0e-a3d2-cf9e1486ce8d",
+     "title": "Lush Charity Pot — Grants",
+     "why": "not_stated",
+     "quote": "Grants of up to £10,000 are available with the average grant being in the region of £2,000 to £4,000.",
+     "url": "https://connectedvoice.org.uk/services/support-and-development/funding/lush-charity-pot-animal-protection-environment-and-human",
+     "note": "apply_url is a Connected Voice directory listing that states no timing. It links to lush.com/uk/en/a/charity-pot-funding-guidelines, which returns HTTP 403, so the funder's own guidelines could not be read."
+    },
+    {
+     "id": "83377536-631c-4d17-9554-58516596b6d4",
+     "title": "Maudsley Charity - Building Brighter Futures",
+     "why": "closed_no_date",
+     "quote": "Key dates: Expressions of Interest: September 2024, Full applications: April 2025, Decisions made: July 2025.",
+     "url": "https://maudsleycharity.org/grants/building-brighter-futures/",
+     "note": "The round ran and was awarded; the page is now a record of the funded projects. No further round announced."
+    },
+    {
+     "id": "2828f266-4dae-4933-a041-b3d1d56c17a4",
+     "title": "National Lottery Heritage Fund — Heritage in Need: Places of Worship",
+     "why": "not_stated",
+     "quote": "For grants over £250,000 you must first submit an Expression of Interest before applying. Start your project title with #PW.",
+     "url": "https://www.heritagefund.org.uk/funding/strategic-initiatives/heritage-need-places-worship",
+     "note": "The only NLHF strategic initiative in this batch whose page carries no sentence about timing at all, not even the monthly-decisions line that Heritage Places and Landscape Connections use. Left unwritten rather than inheriting a sibling page's wording."
+    },
+    {
+     "id": "3745ad11-a75d-4152-b604-9c95bc21915d",
+     "title": "Network for Social Change — Grants",
+     "why": "not_stated",
+     "quote": "All project applications are reviewed and carefully assessed by members, and then a specialised sub-group checks to ensure that charitable grants comply with charitable law and applicable tax regulations.",
+     "url": "https://www.thenetworkforsocialchange.org.uk/how-we-fund/",
+     "note": "Three funding streams described (Fast Track, Pools, Major Projects) with no date, round or window for any of them."
+    },
+    {
+     "id": "fc84cf7f-1b48-4f28-86dd-71de69cd3354",
+     "title": "NHS Charities Together — Community Grants",
+     "why": "index_over_programmes",
+     "quote": "This programme aims to unlock the power of people and communities to prevent and/or respond to crises and emergencies, and in doing so reduce pressures facing NHS services.",
+     "url": "https://nhscharitiestogether.co.uk/about-us/our-programmes/",
+     "note": "A page of programme descriptions; every date on it is a past award. Grants reach charities through member NHS charities rather than an open call here."
+    },
+    {
+     "id": "c90fec54-7a88-486a-bb7f-d711784dc498",
+     "title": "Norfolk Community Foundation — Grants for Groups",
+     "why": "index_over_programmes",
+     "quote": "Browse the Funds currently open for applications below – you can use the filters to help identify a match for your project. Opportunities will change throughout the year – if you don't see a current Fund that suits your project, contact us for advice.",
+     "url": "https://www.norfolkfoundation.com/funding-support/grants/groups/",
+     "note": "A live list of open funds each with its own deadline (14, 21 and 23 September, 12 and 15 October among them). None belongs to this funder-level row."
+    },
+    {
+     "id": "497400aa-4785-41b3-ae15-88e35fe38845",
+     "title": "Morrisons Foundation",
+     "why": "pinned",
+     "quote": "There is no fixed deadline to apply for a Connecting Communities grant, we process applications monthly.",
+     "url": "https://www.morrisonsfoundation.com/connecting-communities-grant-request",
+     "note": "mergeGrantUpdate refused is_rolling (pinned, held by admin:paulkilty1@gmail.com). Left as the admin decision set it."
+    }
+   ]
+  }
+ ],
+ "pins_outlived": [
+  {
+   "id": "497400aa-4785-41b3-ae15-88e35fe38845",
+   "title": "Morrisons Foundation",
+   "field": "is_rolling",
+   "reason": "pinned",
+   "held_by": "admin:paulkilty1@gmail.com",
+   "held_since": "2026-06-01T10:38:58.971Z",
+   "row_holds": false,
+   "page_says": "There is no fixed deadline to apply for a Connecting Communities grant, we process applications monthly.",
+   "url": "https://www.morrisonsfoundation.com/connecting-communities-grant-request"
+  },
+  {
+   "id": "056ad3b9-2bb0-4d09-be11-672e6c6c23e5",
+   "field": "next_open_date",
+   "reason": "pinned",
+   "held_by": "admin:paulkilty1@gmail.com",
+   "held_since": "2026-07-29T22:50:33.046Z",
+   "page_says": "Closing date: Coming autumn 2026",
+   "url": "https://oxfordshire.org/ocf_grants/community-capacity-2/",
+   "title": "Community Capacity Fund",
+   "row_holds": "TBC — between rounds"
+  },
+  {
+   "id": "ca27a805-4ee8-437d-9ae6-a90cc9e66739",
+   "field": "next_open_date",
+   "reason": "pinned",
+   "held_by": "admin:paulkilty1@gmail.com",
+   "held_since": "2026-07-29T22:55:39.089Z",
+   "page_says": "We do not anticipate entering into a new recruitment round before 2027.",
+   "url": "https://www.glasspool.org.uk/",
+   "title": "Glasspool — Flexible Frontline Fund",
+   "row_holds": "TBC — fund currently closed"
+  },
+  {
+   "id": "bec586cc-4172-4d15-bb05-5fd5f24c7bb9",
+   "field": "is_rolling",
+   "reason": "pinned",
+   "held_by": "admin:innovate-uk-batch-2026-06-01",
+   "held_since": "2026-06-01T20:45:48.854Z",
+   "page_says": "There is no submission deadline",
+   "url": "https://iuk-business-connect.org.uk/programme/innovation-loans/",
+   "title": "Innovate UK Innovation Loans",
+   "row_holds": false
+  }
+ ]
+}
