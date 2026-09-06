@@ -2282,8 +2282,8 @@
   "pins_outlived": 4,
   "at_close": {
    "untimed": 116,
-   "timed": 66,
-   "no_longer_live_and_published": 5,
+   "timed": 65,
+   "no_longer_live_and_published": 6,
    "reconciles": true
   },
   "invariants_worth_keeping": [
