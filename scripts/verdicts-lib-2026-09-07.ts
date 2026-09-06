@@ -28,10 +28,19 @@ import { mergeGrantUpdate } from '../src/lib/grant-merge'
 
 export const RESULTS = join(__dirname, '..', 'docs', 'handoffs', 'verdict-results-2026-09-07.json')
 
-/** Pile A rows have never been reviewed, so a Re-enrich must still beat them. */
-export const SOURCE_A = 'system:verdicts-2026-09-07'
-/** Pile B rows were live once; a read off the page today stands as the timing and amounts jobs did. */
-export const SOURCE_B = 'user_verified:verdicts-2026-09-07'
+// Rule 2, rewritten 7 Sept after batch 1. Anything READ off the page today,
+// with the sentence as its citation, is written at user_verified in both piles
+// — the brief included. That outranks the ai_enrich:v2 briefs 57 of the 67
+// pile A rows carry, which is the point of the depth rule: those briefs are
+// what "not enriched" means, and a cited brief from today's page replaces them.
+//
+// The original rule had pile A at system: trust so a Re-enrich could still win.
+// It could not: a system write is trust 50 and ai_enrich:v2 is 60, so the brief
+// was refused on 57 of 67 rows and every pile A publish was blocked.
+export const SOURCE = 'user_verified:verdicts-2026-09-07'
+/** For a value inferred rather than read — a location tag from an address, a
+ *  sector from the prose. Nothing in this job has needed it yet. */
+export const SOURCE_INFERRED = 'system:verdicts-2026-09-07'
 
 export type Cit = Record<string, { snippet: string; confidence: 'high' | 'med' | 'low'; source_url?: string }>
 
@@ -212,7 +221,7 @@ export async function runBatch(opts: {
   db: SupabaseClient
 }) {
   const { batch, pile, rows, apply, db } = opts
-  const source = pile === 'A' ? SOURCE_A : SOURCE_B
+  const source = SOURCE
   const tally = ORDER.map(k => `${k} ${rows.filter(v => v.verdict === k).length}`).join(', ')
   console.log(`pile ${pile} batch ${batch} — ${apply ? 'APPLY' : 'DRY RUN'} — ${rows.length} rows: ${tally}`)
   console.log(`  source for tidy writes: ${source}`)
@@ -275,7 +284,14 @@ export async function runBatch(opts: {
           throw new Error(`${title}: admin-held field refused the tidy — this row should have been a hold, not a ${r.verdict}`)
         }
         tidied.push(...res.applied.filter(f => f !== 'grant_sources'))
-        columnsOk = res.applied.length > 0 || Object.keys(r.fields).length === 0
+        // Reaching here means nothing was refused: a refusal throws above. An
+        // EMPTY applied list is the idempotent case — the row already holds the
+        // value — and the brief may still describe it. Treating "applied
+        // nothing" as failure blocked the Co-op brief on a re-run, because the
+        // amount correction had landed in an earlier apply and was a no-op the
+        // second time. The derivative rule is "do not describe a value the row
+        // does not hold", and after an idempotent write it does hold it.
+        columnsOk = true
       }
       if (r.brief && columnsOk) {
         const existing = (data.funder_brief as Record<string, unknown> | null) ?? {}

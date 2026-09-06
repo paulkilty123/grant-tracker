@@ -92,25 +92,16 @@ const ROWS: Row[] = [
   // the tidy is a real correction: amount_max held £30m, which is the total the
   // bank committed to lend across the whole fund in 2024, not what one borrower
   // can have. The amounts job met this exact confusion a dozen times.
-  //
-  // DEMOTED TO HOLD AFTER THE FIRST APPLY. The seven fields are written below
-  // and every one is quoted, but mergeGrantUpdate refused funder_brief:
-  // `system:verdicts-2026-09-07` is trust 50 and this row's brief is held by
-  // `ai_enrich:v2` at 60. That is not this row's problem — 57 of the 67 pile A
-  // rows carry an ai_enrich or user_verified brief, so the depth rule and rule
-  // 2's trust floor cannot both hold. Put to the orchestrating session; the
-  // amount_max correction below stands either way, and the brief text is kept
-  // here so the row can be promoted in one line once the source is settled.
-  { id: 'e1ae0341-15ae-4c05-98b5-18fed2989a88', re: /Charity and Co-operative Lending Fund/, pile: 'A', verdict: 'hold',
+  // Held as a hold through two applies while the source question was open, then
+  // promoted once rule 2 was rewritten. Its amount_max held £30,000,000, which
+  // is the total the bank committed to lend across the whole fund in 2024 and
+  // not what one borrower can have; corrected to the stated £10 million ceiling.
+  { id: 'e1ae0341-15ae-4c05-98b5-18fed2989a88', re: /Charity and Co-operative Lending Fund/, pile: 'A', verdict: 'publish',
     quote: 'For registered charities, co-operatives, credit unions and community-interest companies only.',
     url: COOP,
-    for_paul: 'Ready to publish on the page: open, lends to charities, co-operatives, credit unions and CICs, £25,020 to £10 million. Two things first. Its amount_max held £30 million, which is the total the bank committed to lend across the whole fund in 2024 rather than what one borrower can have; that is corrected to £10 million. And the full brief could not be written because a system-trust write cannot overwrite the existing ai_enrich brief.',
-    // amount_max was corrected from £30,000,000 to £10,000,000 in this batch's
-    // first apply, while the verdict was still a publish. It is left in place
-    // rather than reverted: £30m is the total the bank committed to lend across
-    // the fund and putting it back would restore a wrong number to a hidden row.
-    // The script no longer carries the field, so re-running writes nothing.
-    heldBrief: {
+    fields: { amount_max: 10000000 },
+    cits: { amount_max: { snippet: 'The maximum funding limit is £10m.', confidence: 'high', source_url: COOP } },
+    brief: {
       who_can_apply: 'Registered charities, co-operatives, credit unions and community interest companies. You need a Co-operative Bank business bank account before you can apply for lending, and all lending is subject to a credit assessment of the organisation and of its directors and trustees.',
       what_they_fund: 'Secured and unsecured business lending for charities, co-operatives and social enterprises to grow and invest. Fixed and variable rate terms; the bank will fund up to 70% of a property\'s market value, or 80% where the property is vacant.',
       how_to_apply: 'For loans under £250,000, gather your account details, six months of bank statements and supporting documents and email them as PDFs. For £250,000 or more, contact a Relationship Manager, who will tell you what to send.',
@@ -119,7 +110,7 @@ const ROWS: Row[] = [
       typical_award: 'From £25,020, with a maximum funding limit of £10 million. The £30 million on the page is the total the bank committed to lend across the whole fund, not a figure for one borrower.',
       open_status: 'open',
     },
-    heldBriefCits: {
+    briefCits: {
       who_can_apply: { snippet: 'For registered charities, co-operatives, credit unions and community-interest companies only.', confidence: 'high', source_url: COOP },
       what_they_fund: { snippet: 'The Co-operative Bank has committed to providing £30m of loan funding to help charities, co-operatives and social enterprises grow and invest in their organisations', confidence: 'high', source_url: COOP },
       how_to_apply: { snippet: 'If you would like to apply for a loan of £250,000 or more, please get in touch with one of our Relationship Managers.', confidence: 'high', source_url: COOP },

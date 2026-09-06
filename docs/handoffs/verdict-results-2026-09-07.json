@@ -104,11 +104,18 @@
      "id": "e1ae0341-15ae-4c05-98b5-18fed2989a88",
      "title": "Charity and Co-operative Lending Fund",
      "pile": "A",
-     "verdict": "hold",
+     "verdict": "publish",
      "quote": "For registered charities, co-operatives, credit unions and community-interest companies only.",
      "url": "https://www.co-operativebank.co.uk/business/products/lending/Charity-and-Co-operative-lending-fund/",
-     "tidied": [],
-     "for_paul": "Ready to publish on the page: open, lends to charities, co-operatives, credit unions and CICs, £25,020 to £10 million. Two things first. Its amount_max held £30 million, which is the total the bank committed to lend across the whole fund in 2024 rather than what one borrower can have; that is corrected to £10 million. And the full brief could not be written because a system-trust write cannot overwrite the existing ai_enrich brief."
+     "tidied": [
+      "funder_brief.who_can_apply",
+      "funder_brief.what_they_fund",
+      "funder_brief.how_to_apply",
+      "funder_brief.exclusions",
+      "funder_brief.decision_timeline",
+      "funder_brief.typical_award",
+      "funder_brief.open_status"
+     ]
     },
     {
      "id": "be85b0fc-7d63-4741-97ce-1ce6f37113b5",
@@ -162,6 +169,7 @@
     }
    ],
    "paul_list": [
+    "PUBLISH Charity and Co-operative Lending Fund",
     "PARK    CLA Charitable Trust",
     "REJECT  Apply for Investment (Fund Manager Route) (out_of_scope) — Better Society Capital lends to fund managers, not to charities. Nothing here for a fundraiser to apply to.",
     "REJECT  B&Q Foundation Community Grants (duplicate) — Duplicate of the live row cb9780e6, B&Q Foundation Home Improvement & Home-Starter Kits Funds, which points at bqfoundation.org.uk. This row points at the diy.com retail site, where the foundation gets one line and no application route.",
@@ -173,7 +181,6 @@
     "HOLD    Angels' Den 2026 — An annual event in its fourth year; the 2026 round has closed, the event is on 9 September, and the page names no 2027 date. Keep the row waiting for next year's page, or reject it as historic and re-add a fresh one?",
     "HOLD    Ashoka Fellowship — HTTP 403 behind a Cloudflare interstitial, so the page could not be read today. The row's stored brief says fellows are identified and nominated rather than applying directly; if that holds it is a reject, but it needs a browser read to confirm.",
     "HOLD    Brighton & Hove — Fairness Fund for Communities 2025/26 — The 2025/26 round has closed and the page gives no 2026/27 date. The council runs it annually and the row is year-stamped in its title, so the choice is between holding this row for next year's page and rejecting it in favour of a fresh row when the next round opens.",
-    "HOLD    Charity and Co-operative Lending Fund — Ready to publish on the page: open, lends to charities, co-operatives, credit unions and CICs, £25,020 to £10 million. Two things first. Its amount_max held £30 million, which is the total the bank committed to lend across the whole fund in 2024 rather than what one borrower can have; that is corrected to £10 million. And the full brief could not be written because a system-trust write cannot overwrite the existing ai_enrich brief.",
     "HOLD    Charity Bank — Green Loans — A good row blocked by one gap. The page supports six of the seven brief fields and says nothing about how long a decision takes, so it cannot pass the depth bar. Charity Bank also has a live general lending row (72739682), so folding Green Loans into that as a product may be better than a second row.",
     "HOLD    Commonweal Housing — Call for New Ideas — Open until 16 October, which matches the row's deadline, and the fund is real. The row carries £5,000 to £10,000 and the page states no figure anywhere — it is in the downloadable Application Guide. Confirm the range from the guide or clear it, and this becomes a publish.",
     "HOLD    Community Housing Fund — Two problems. apply_url points at the GLA's funding-programmes index, where the fund is a bare link; its own page (quoted here) describes the route but gives no dates, no amounts and no exclusions, so it cannot carry a full brief. Its published allocations also stop at Q4 2024-25. Relink and confirm the programme is still running, or reject it as ended."
