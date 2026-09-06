@@ -205,3 +205,16 @@ what they get, deduplicated in SQL against the catalogue first, then staged
 hidden through the Needs Review gate. Watch the audience rule: a programme
 for individual founders with no route for a charity, CIC or social enterprise
 is out of scope (SWEF, 6 Sept).
+
+### The verifier gates the landing page before it hops to a banked source
+
+Found 7 Sept checking the amounts job. Fredericks Foundation (apply_url is the
+homepage) and HDH Wills (apply_url is the grants index) both came back
+`fixable_link` with zero evidence: the name and funding-detail gates failed on
+the landing page and the run ended there, so the banked page that states the
+figure was never read. `bankedSourceTargets` only fires from `decideHop` after
+a passed gate. When the gate fails and the row has banked sources, the checker
+should try the banked page before giving up. Small change in
+`verify-row.ts`; do it with a fixture that has a homepage apply_url and a
+banked fund page. Until then, figures on rows with an index or homepage link
+are confirmed by hand, not by the checker.
