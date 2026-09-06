@@ -76,6 +76,14 @@ export type ProvenanceEntry = {
     snippet_offset?: number                  // byte offset in fetched page text
     confidence:      'high' | 'med' | 'low'
     reason?:         string                  // required when confidence='low'
+    // The page the snippet was read from, when that is not the row's apply_url
+    // — a funder's timing or eligibility often lives one link away. The merger
+    // has always persisted this (the citation object is spread into
+    // field_provenance whole), but the type did not admit it, so an inline
+    // citation literal carrying source_url failed the excess-property check
+    // while the same object stored in a variable compiled and wrote it. Added
+    // 2026-09-06 so the type says what the column already holds.
+    source_url?:     string
   }
 }
 
