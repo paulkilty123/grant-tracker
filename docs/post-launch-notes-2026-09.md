@@ -191,3 +191,17 @@ look at first, since neither may be a fund for this audience at all.
 ## Dashboard "See all N" opens a page that shows a different N (3 Sep)
 
 Dashboard says 70 you can apply for; the `?actionable=1` Find Funding view it opens shows tab badges adding to 35. The two pages filter the same rows differently (see memory project_dashboard_vs_findfunding_count). Fix in two parts: reconcile the two counts so the link delivers the number it promises, then add a strip at the top of the filtered view: "Showing your 70 best matches. Show all 191 you can apply for", whose button clears the filter. Paul agreed the shape on 3 Sep. For the launch video, open Find Funding from the sidebar instead.
+
+## Added 6 September
+
+### Programmes: find more to add
+
+Paul, 6 Sept: explore other programmes (training, accelerators, incubators,
+cohort schemes with a grant or investment attached, like Visa CatalyseHer) as
+part of filling the catalogue's gaps. Non-grant breadth is the differentiator
+(147 non-grant rows in July; 114 live now). Shape of the job: a research pass
+that lists candidate programmes with the page that describes who can apply and
+what they get, deduplicated in SQL against the catalogue first, then staged
+hidden through the Needs Review gate. Watch the audience rule: a programme
+for individual founders with no route for a charity, CIC or social enterprise
+is out of scope (SWEF, 6 Sept).
