@@ -33,7 +33,7 @@ export default function TermsPage() {
           Terms of service
         </h1>
         <p style={{ marginTop: 12, marginBottom: 40, fontSize: 14, color: '#5F5E5A' }}>
-          <strong style={{ color: '#2C2C2A' }}>Last updated:</strong> 12 August 2026
+          <strong style={{ color: '#2C2C2A' }}>Last updated:</strong> 10 September 2026
         </p>
         <p style={{ marginTop: -28, marginBottom: 40, fontSize: 14, color: '#5F5E5A' }}>
           In August 2026 Grant Tracker became Shoots. This is a change of name only;
@@ -55,19 +55,23 @@ export default function TermsPage() {
 
           <Heading>What Shoots is</Heading>
           <p>
-            Shoots is a service that helps UK charities, community interest companies, social enterprises, co-operatives, and impact-focused organisations discover and manage funding opportunities. The service includes a database of funding opportunities, matching tools, a pipeline manager, deadline alerts, and related features.
+            Shoots is a service that helps UK charities, community interest companies, social enterprises, co-operatives, and impact-focused organisations discover and manage funding opportunities. The service includes a catalogue of funding opportunities, eligibility matching, saved opportunities and deadlines, a pipeline manager, application tools, and related features. Which features you can use depends on your plan, as set out on our pricing page.
           </p>
+
+          <Heading>Free trial</Heading>
+          <p>Every new organisation starts with a free trial of the Apply plan, currently 14 days, with full access to the catalogue and no payment details required. At the end of the trial you choose a plan. If you do not subscribe, your account moves to a limited state: search is closed, your saved opportunities are listed by name but cannot be opened, and your organisation profile and pipeline are kept intact for you to return to. Nothing is deleted when a trial ends.</p>
+          <p>One free trial is available per organisation. We may decline a further trial for an organisation that has already had one, and we may end a trial early where we believe the service is being used outside its intended purpose.</p>
 
           <Heading>Founding cohort</Heading>
           <p>
-            During the founding cohort phase, the service is offered free of charge to invited members. Founding cohort terms are set out on the application page at <Link href="/apply" style={{ color: '#3B6D11', fontWeight: 600 }}>shootsfunding.co.uk/apply</Link> and form part of these terms for cohort members. In summary:
+            Before public launch, a small founding cohort of invited organisations helped shape the service. The terms offered to them are set out on the application page at <Link href="/apply" style={{ color: '#3B6D11', fontWeight: 600 }}>shootsfunding.co.uk/apply</Link> and form part of these terms for cohort members. In summary:
           </p>
           <ul style={{ paddingLeft: 22, margin: '8px 0 16px' }}>
-            <li style={{ marginBottom: 8 }}>Founding cohort members get free access during beta and for six months after paid signups open.</li>
-            <li style={{ marginBottom: 8 }}>Cohort members who remain active receive a permanent founding rate, set lower than the standard subscription, for as long as they stay with Shoots.</li>
+            <li style={{ marginBottom: 8 }}>Founding cohort members have free access until 10 March 2027.</li>
+            <li style={{ marginBottom: 8 }}>Cohort members who remain active receive a founding rate, set lower than the standard subscription, on the terms set out on the application page.</li>
             <li>Cohort benefits depend on staying active and engaged. If you go quiet for six months, cohort status lapses and standard pricing applies.</li>
           </ul>
-          <p>These cohort-specific terms sit alongside the general terms below.</p>
+          <p>The founding cohort is closed to new members. These cohort-specific terms sit alongside the general terms below.</p>
 
           <Heading>Your account</Heading>
           <p>To use the service you must create an account. You must provide accurate information, keep your password secure, and not share your account with others. You are responsible for activity that happens under your account.</p>
@@ -110,11 +114,23 @@ export default function TermsPage() {
 
           <Heading>Service availability</Heading>
           <p>We aim to keep the service running reliably, but we cannot guarantee uninterrupted access. The service may be unavailable from time to time for maintenance, updates, or due to circumstances outside our control. We will try to give advance notice of planned downtime where reasonable.</p>
-          <p>We may change, add, or remove features as the product develops. During the founding cohort phase in particular, you should expect the service to evolve based on cohort feedback.</p>
+          <p>We may change, add, or remove features as the product develops. If we remove a feature that is central to the plan you pay for, we will tell you in advance, and you may cancel before the change takes effect.</p>
 
-          <Heading>Pricing and payment</Heading>
-          <p>During the founding cohort phase, the service is free for invited members. Pricing for paid signups will be confirmed before paid plans open. Founding cohort members will be notified in advance of any changes to their access terms, and will receive the founding rate set out on the application page.</p>
-          <p>If you are on a paid plan in future, full payment terms will be set out at the point of subscription.</p>
+          <Heading>Plans and pricing</Heading>
+          <p>Shoots is offered on subscription plans. The plans, what each includes, and the current prices are set out on our <Link href="/#pricing" style={{ color: '#3B6D11', fontWeight: 600 }}>pricing page</Link>. The price you pay is the price shown when you subscribe. Plans are billed monthly or annually, in advance, in pounds sterling.</p>
+          <p>Where we offer a launch or introductory price, the period it lasts and the price that applies afterwards are stated alongside it when you subscribe. When that period ends, your subscription continues at the standard price for your plan unless you cancel.</p>
+          <p>The Team plan is priced for each organisation by agreement. Where a Team plan is agreed, any written terms specific to that agreement sit alongside these terms.</p>
+          <p>We may change our prices. If a change affects a subscription you already hold, we will give you at least 30 days&apos; notice by email before it takes effect, and you may cancel before then.</p>
+
+          <Heading>Payment</Heading>
+          <p>Payments are taken by card through Stripe, our payment provider. By subscribing you authorise us to charge your card at the start of each billing period until you cancel. We do not see or store your full card details; Stripe holds them under its own security standards.</p>
+          <p>If a payment fails, we will let you know and retry it. If it continues to fail, your subscription ends and your account moves to the limited state described under &ldquo;Free trial&rdquo;. Your data is kept, and you can subscribe again at any time.</p>
+          <p>Receipts for each payment are sent to your account email address.</p>
+
+          <Heading>Cancellation and refunds</Heading>
+          <p>You can cancel your subscription at any time from your account page. Your plan stays active until the end of the period you have paid for, and you are not charged again after that. We do not give partial refunds for the unused part of a billing period.</p>
+          <p>There is one exception. If you ask within the first month of your first paid subscription, we will refund that payment in full, no questions asked. Email <a href="mailto:hello@shootsfunding.co.uk" style={{ color: '#3B6D11', fontWeight: 600 }}>hello@shootsfunding.co.uk</a> and we will do the rest.</p>
+          <p>When a subscription ends, your account moves to the limited state described under &ldquo;Free trial&rdquo;. Your organisation profile, saved opportunities, pipeline and applications are kept, and you can export your data from your account page at any time. If an account stays without a subscription for 12 months, we may close it after giving you notice by email.</p>
 
           <Heading>Liability</Heading>
           <p>We do our best to provide a useful, reliable service, but to the maximum extent permitted by UK law:</p>
