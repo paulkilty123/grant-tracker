@@ -128,7 +128,7 @@ describe('"New this week" is present only when it has rows', () => {
     expect(html).not.toMatch(/no new (funding|opportunities)/i)
   })
 
-  it('renders with its qualifying line when it has rows', () => {
+  it('is switched off for now even when it has rows: the matcher over-admits (7 Sept 2026)', () => {
     const withNew = renderDigest({
       ...model,
       newThisWeek: [{
@@ -136,15 +136,9 @@ describe('"New this week" is present only when it has rows', () => {
         type: 'grant', meta: 'New Funder · closes 30 Sep', days: 30,
         url: 'https://www.shootsfunding.co.uk/dashboard/search?grant=new-1', key: 'n1',
       }],
-    }, {
-      origin: 'https://www.shootsfunding.co.uk',
-      unsubscribeUrl: 'https://www.shootsfunding.co.uk/api/alerts/unsubscribe?t=tok',
-      now: new Date('2026-09-01T09:00:00Z'),
-    })
-    expect(withNew).toContain('New this week')
-    // The qualifying half matters: these are new AND theirs, not new full stop.
-    expect(withNew).toContain('Added to the catalogue in the last seven days, and matched to you.')
-    expect(withNew).toContain('href="https://www.shootsfunding.co.uk/dashboard/search?grant=new-1"')
+    }, { origin: 'https://www.shootsfunding.co.uk', unsubscribeUrl: 'https://www.shootsfunding.co.uk/u', now: new Date('2026-09-07') })
+    expect(withNew).not.toContain('New this week')
+    expect(withNew).not.toContain('A Brand New Fund')
   })
 })
 
@@ -195,14 +189,16 @@ describe('the feedback ask is not footer boilerplate', () => {
 describe('section labels are structure, not furniture', () => {
   it('uses one definition for every label', () => {
     // Three copies of the same declaration is how three labels drift apart.
-    const decls = html.match(/letter-spacing:1\.6px/g) ?? []
-    const deep = html.match(/letter-spacing:1\.6px;text-transform:uppercase;color:#1D3C3E/g) ?? []
+    // 20px sentence-case headings since the 7 Sept 2026 design review.
+    const decls = html.match(/font-size:20px;font-weight:600;letter-spacing:-\.4px/g) ?? []
+    const deep = html.match(/font-size:20px;font-weight:600;letter-spacing:-\.4px;color:#1D3C3E/g) ?? []
     expect(decls.length).toBeGreaterThan(0)
     expect(deep.length).toBe(decls.length)
   })
 
   it('never renders a label in the muted caption colour', () => {
-    expect(html).not.toMatch(/letter-spacing:1\.6px;text-transform:uppercase;color:#73726F/)
+    expect(html).not.toMatch(/font-size:20px;font-weight:600;letter-spacing:-\.4px;color:#6C6B67/)
+    expect(html).not.toMatch(/letter-spacing:1\.6px;text-transform:uppercase/)
   })
 })
 
@@ -242,5 +238,11 @@ describe('the promised send day matches the schedule', () => {
     })
     expect(weekOne).toContain('Next Tuesday this email leads with your deadlines')
     expect(weekOne).not.toContain('Next Monday')
+  })
+})
+
+describe('a row with no deadline', () => {
+  it('never renders the 999 sort sentinel as a number of days', () => {
+    expect(html).not.toMatch(/>999</)
   })
 })

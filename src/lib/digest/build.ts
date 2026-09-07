@@ -29,7 +29,7 @@ export const MATCH_FLOOR = 65
 export const NEW_THIS_WEEK_DAYS = 7
 
 /** Caps are a safety valve for a pathological week, not an editing device. */
-export const CAPS = { closing: 5, inProgress: 3, newMatches: 10, nearMisses: 2, newThisWeek: 5 } as const
+export const CAPS = { closing: 5, inProgress: 3, newMatches: 5, nearMisses: 2, newThisWeek: 5 } as const
 /** Week one is the exception: three, closing soonest, with the real total named. */
 export const WEEK_ONE_MATCHES = 3
 
@@ -533,8 +533,10 @@ export async function buildDigest(
       url: pipelineHref(p, `${origin}/dashboard/pipeline`),
       // Only said when true. A digest that notices you have stalled is a tool;
       // one that says it every week is noise.
+      // The date, not a count of weeks: three rows all reading "No movement
+      // in 11 weeks" looked like a rendering fault (design review, 7 Sept).
       stageLabel: stalled
-        ? `No movement in ${plural(weeks, 'week')}`
+        ? (updated ? `No movement since ${shortDate(updated.toISOString())}` : `No movement in ${plural(weeks, 'week')}`)
         : stage.charAt(0).toUpperCase() + stage.slice(1),
       stalled,
       key: String(p.id),

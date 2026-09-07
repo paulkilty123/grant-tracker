@@ -24,9 +24,9 @@ export const C = {
   deep:   '#1D3C3E',
   onDeep: '#F6F1E7',
   body:   '#5F5E5A',
-  muted:  '#73726F',
+  muted:  '#6C6B67',   // clears 4.5:1 on white, cream and page (was #73726F)
   rule:   'rgba(29,60,62,.10)',
-  danger: '#B94040',
+  danger: '#B4472A',   // the palette --danger; #B94040 was in no token set
 }
 
 /**
