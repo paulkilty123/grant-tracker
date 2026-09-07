@@ -68,6 +68,17 @@ const ACKNOWLEDGED: Record<string, string> = {
   // successor funds and all three are live rows. Batch 4 rejected the row that
   // points at SIB's homepage on the same reasoning.
   '583f0378-26e6-4abe-886c-0686bd8b9d2b': 'Social Investment Business Resilience Fund: rejected closed_for_good by grant-tracker-be on 7 Sept, outside this job\'s row set',
+  // Paul's own action again, this time on two of this job's own pin-outlived
+  // holds from batch 1 (Alec Dickson Trust Grant, Andrew Wainwright Reform
+  // Trust): grant-tracker-be reported these published with new deadlines (4
+  // October and 14 September) written over the admin pins at admin source.
+  'b1a9dbcd-dce0-45d7-bcd9-9dcaa6a55023': 'Alec Dickson Trust Grant: reopened and published at Paul\'s word on 7 Sept, new deadline written over the pin at admin source (reported by grant-tracker-be)',
+  '9f87e023-012b-4b82-9b36-629d76fd816e': 'Andrew Wainwright Reform Trust: reopened and published at Paul\'s word on 7 Sept, new deadline written over the pin at admin source (reported by grant-tracker-be)',
+  // grant-tracker-be re-verified this batch\'s two Severn Trent rows and
+  // rejected the one this job held (f4225849) as a duplicate of the one this
+  // job published (1ef69197-b551-4da9-860c-645c97acfb09) — exactly the merge
+  // this job\'s own hold note recommended.
+  'f4225849-0663-4532-b73e-b8720dd67fb2': 'Severn Trent Community Fund New Project Funding: rejected duplicate by grant-tracker-be on 7 Sept, of the row this job published in batch 6 (1ef69197)',
 }
 const LIST = join(__dirname, '..', 'docs', 'handoffs', 'verdict-rows-2026-09-07.json')
 const BASELINE = join(__dirname, '..', 'docs', 'handoffs', 'verdict-state-baseline-2026-09-07.json')
