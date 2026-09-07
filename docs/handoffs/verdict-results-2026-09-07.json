@@ -2416,6 +2416,319 @@
     "HOLD    Neighbourhood Fund 2026 — Closed, being assessed; no next window date given.",
     "HOLD    New Albion Community Wind Farm Fund — This fund's own entry on Northamptonshire CF's central deadlines table still shows 4 September 2026, the same date already on the row and now three days past — while sibling wind farm funds on the same table (Winwick, Yelvertoft, The Compton Fund) have all moved on to 2 October 2026. Worth a direct check with the foundation rather than assuming either way."
    ]
+  },
+  {
+   "batch": 6,
+   "pile": "B",
+   "verdicts": [
+    {
+     "id": "5b3b9ba1-88ca-4aa4-85de-0f62f04e49b8",
+     "title": "Newcastle Fund",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "10:00am on Thursday 23 July 2026",
+     "url": "https://new.newcastle.gov.uk/communities/grants-funding/funding-voluntary-community-organisations/newcastle-fund",
+     "tidied": [],
+     "for_paul": "Closed, no next round stated. Every relevant field is admin-pinned."
+    },
+    {
+     "id": "0b009875-2b19-4b2d-bd66-965cbe3f43d4",
+     "title": "Noël Coward Foundation — Performing Arts Educational & Development Grants",
+     "pile": "B",
+     "verdict": "publish",
+     "quote": "10am, Monday 31st August 2026 to 5pm, Friday 9th October 2026.",
+     "url": "https://www.noelcoward.com/ncf-apply",
+     "tidied": [
+      "deadline",
+      "is_rolling",
+      "funder_brief.who_can_apply",
+      "funder_brief.what_they_fund",
+      "funder_brief.how_to_apply",
+      "funder_brief.exclusions",
+      "funder_brief.decision_timeline",
+      "funder_brief.typical_award",
+      "funder_brief.open_status"
+     ]
+    },
+    {
+     "id": "09b3d42a-e698-4194-9a61-f41062fb46e2",
+     "title": "Open Application Programme",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Applications for our second funding round are now closed and we will announce the successful updates in September. Please look out for further updates on this page.",
+     "url": "https://www.persimmonhomes.com/corporate/foundation/open-application-programme/",
+     "tidied": [],
+     "for_paul": "Closed, outcome due this month; no third round date given."
+    },
+    {
+     "id": "de5286bb-765c-4fcf-8d76-b19a6a657a4d",
+     "title": "Peter Harrison Foundation — Active Lives",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "",
+     "url": "https://peterharrisonfoundation.org/active-lives-positive-futures/small-grants-within-surrey/",
+     "tidied": [],
+     "for_paul": "apply_url 404s, but the foundation is alive with an Active Lives & Positive Futures programme at a different path — a relink candidate rather than a dead fund."
+    },
+    {
+     "id": "5c4dccbf-0fe9-4587-a49d-530053bc45fc",
+     "title": "Postcode Local Trust Grants",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Our funding rounds for 2026 are now closed. Funding rounds for 2027 will be published in the new year.",
+     "url": "https://www.postcodelocaltrust.org.uk/apply-for-a-grant",
+     "tidied": [],
+     "for_paul": "Closed, no 2027 dates yet — the page says they will be published in the new year."
+    },
+    {
+     "id": "2de07a97-2272-45e6-a759-c602a607041d",
+     "title": "Postcode Lottery Dream Fund 2026/27",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "The Dream Fund supports charities to develop innovative solutions to society's most challenging problems and was open for formal expressions of interest from March 25th",
+     "url": "https://www.postcodedreamfund.org.uk/",
+     "tidied": [],
+     "for_paul": "Closed; every relevant column is admin-pinned."
+    },
+    {
+     "id": "792c4cce-e971-4544-8f5c-3e4d098bf087",
+     "title": "Pre-announcement: Gambling harms research grants",
+     "pile": "B",
+     "verdict": "park",
+     "quote": "The funding opportunity will open on 21 September 2026 when more information will be available on this page.",
+     "url": "https://www.ukri.org/opportunity/gambling-harms-research-grants/",
+     "tidied": [
+      "next_open_date",
+      "next_open_date_parsed",
+      "deadline",
+      "is_rolling"
+     ]
+    },
+    {
+     "id": "f2a29bb1-d0e6-43b7-864b-1ebd6aadde9d",
+     "title": "R&D MAP Creative Content Exchange pilot: Early Adopters fund (Grant)",
+     "pile": "B",
+     "verdict": "reject",
+     "code": "dead_url",
+     "quote": "Page not found. If you typed the web address, check it is correct.",
+     "url": "https://www.find-government-grants.service.gov.uk/grants/rd-map-creative-content-exchange-pilot-early-adopters-fund-grant-1",
+     "tidied": []
+    },
+    {
+     "id": "debe4866-33ef-423e-b456-344af55a7367",
+     "title": "Reducing Veteran Homelessness programme",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Home > Find funding > Closed Programmes > Reducing Veteran Homelessness programme",
+     "url": "https://covenantfund.org.uk/programme/reducing-veteran-homelessness-programme/",
+     "tidied": [],
+     "for_paul": "Listed under the funder's own \"Closed Programmes\" heading; a news item further down the page about a past reopening is not current status. No next round given."
+    },
+    {
+     "id": "2402fd26-f087-4265-a0c6-4170cebea981",
+     "title": "Resilience Fund",
+     "pile": "B",
+     "verdict": "park",
+     "quote": "please note interim reporting must be provided by mid March 2027 to ensure eligibility for next round of funding from June 2027",
+     "url": "https://cornwallcommunityfoundation.com/grants/resilience-fund/",
+     "tidied": [
+      "next_open_date",
+      "next_open_date_parsed",
+      "deadline",
+      "is_rolling"
+     ]
+    },
+    {
+     "id": "6ab7b061-bd05-4a44-a7c7-8f3ea331627e",
+     "title": "Richard and Siobhán Coward Foundation — Community Photography Grants",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "",
+     "url": "https://www.cowardphotography.org/",
+     "tidied": [],
+     "for_paul": "apply_url 404s; the foundation's main site loads but no equivalent grants page could be located from it."
+    },
+    {
+     "id": "b5c373ef-b3a5-41ff-8a1f-8398f837642c",
+     "title": "Rosa — Stand With Us Fund",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Applications to the Rosa's Stand With Us Fund Fund are currently closed.",
+     "url": "https://rosauk.org/our-programmes/stand-with-us/",
+     "tidied": [],
+     "for_paul": "Closed, no reopening date; every relevant field is admin-pinned."
+    },
+    {
+     "id": "14469b5f-f30c-44cd-90f4-8414a4f41dff",
+     "title": "Rusholme Wind Farm Fund",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Microgrants are currently closed and will be reopen towards the end of the summer.",
+     "url": "https://tworidingscf.org.uk/fund/rusholme-wind-farm-fund/",
+     "tidied": [],
+     "for_paul": "\"End of the summer\" is not specific enough to park on and today (7 September) may already be past it; the standard/larger grant deadline (7 August) has passed with no next round named."
+    },
+    {
+     "id": "b6d72fd6-3fd3-4bc6-971e-624f9cd2f716",
+     "title": "Safer in Sussex Community Fund",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Applications for the current round of Safer in Sussex Funding are closed.",
+     "url": "https://www.sussex-pcc.gov.uk/get-involved/apply-for-funding/safer-in-sussex-community-fund/",
+     "tidied": [],
+     "for_paul": "Closed, no reopening date given."
+    },
+    {
+     "id": "b4dd4488-867a-48c2-9853-1250c43865f6",
+     "title": "Schroder Charity Trust Grant Programmes",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "",
+     "url": "https://schrodercharitytrust.org/",
+     "tidied": [],
+     "for_paul": "apply_url is the homepage; no application status or dates could be found on it, and several fields are admin-sourced."
+    },
+    {
+     "id": "482cfc54-f0a5-4529-8571-2614a9cd3dac",
+     "title": "Seed Funding for Social Entrepreneurs",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "November 2, 2026, 5 p.m.",
+     "url": "https://www.shackletonfoundation.org/who-we-fund/#how-to-apply",
+     "tidied": [],
+     "for_paul": "A genuine future deadline, 2 November 2026, but nearly every column is admin-held."
+    },
+    {
+     "id": "1ef69197-b551-4da9-860c-645c97acfb09",
+     "title": "Severn Trent Community Fund — New Project Funding",
+     "pile": "B",
+     "verdict": "publish",
+     "quote": "Our Community Fund is always open for applications and our Customer Panel who ultimately make the decision on which projects are funded, review applications for new projects every 6 months.",
+     "url": "https://www.stwater.co.uk/about-us/severn-trent-community-fund/new-project-funding/",
+     "tidied": [
+      "deadline",
+      "is_rolling",
+      "funder_brief.who_can_apply",
+      "funder_brief.what_they_fund",
+      "funder_brief.how_to_apply",
+      "funder_brief.exclusions",
+      "funder_brief.decision_timeline",
+      "funder_brief.typical_award",
+      "funder_brief.open_status"
+     ]
+    },
+    {
+     "id": "f4225849-0663-4532-b73e-b8720dd67fb2",
+     "title": "Severn Trent Community Fund New Project Funding",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "",
+     "url": "https://www.stwater.co.uk/about-us/severn-trent-community-fund/new-project-funding/",
+     "tidied": [],
+     "for_paul": "Same apply_url and near-identical title as the row just published in this batch (1ef69197). Likely a duplicate ingestion of the same fund rather than a second, distinct tier — recommend rejecting this one once the other is live, unless there is a reason to keep both."
+    },
+    {
+     "id": "b49ef70d-9aaa-43bc-b5fd-bd37abcd7049",
+     "title": "Sir Halley Stewart Trust — Innovative Project Funding",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Next Application Closing Date 26th February 2027 or earlier once the meeting capacity is reached.",
+     "url": "https://www.sirhalleystewart.org.uk/",
+     "tidied": [],
+     "for_paul": "A genuine future deadline, 26 February 2027 (or earlier if capacity is reached), but nearly every column is admin-held."
+    },
+    {
+     "id": "b2d727c6-ffe5-4cbf-bcf8-91a22dd48db5",
+     "title": "Sir John Fisher Foundation — Main Grants",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Not at present, these grants are on hold.",
+     "url": "https://sirjohnfisherfoundation.org.uk/our-funding/",
+     "tidied": [],
+     "for_paul": "The foundation's own words: grants are \"on hold\" for now, with new criteria released for 2026 but no application route open yet. Every relevant field is admin-pinned regardless."
+    },
+    {
+     "id": "2d515d44-595b-421a-8d7d-90b2b32b50e8",
+     "title": "Skinners' Company Charity Programme",
+     "pile": "B",
+     "verdict": "park",
+     "quote": "This programme is currently closed and will reopen to new expressions of interest on 30 November.",
+     "url": "https://skinners.org.uk/young-peoples-vocational-development-charities",
+     "tidied": [
+      "next_open_date",
+      "next_open_date_parsed",
+      "deadline",
+      "is_rolling"
+     ]
+    },
+    {
+     "id": "d6c9730d-022b-4ad2-b57b-0e28e2131741",
+     "title": "Small Grants for Charities",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "© 2026 Masonic Charitable Foundation",
+     "url": "https://freemasonscharity.org.uk/get-support/grants-to-charities/",
+     "tidied": [],
+     "for_paul": "The row's own rolling, no-deadline timing already matches the page — the same shape as Large Grants for Charities from the same funder in batch 5 — and nothing here explains why it is still hidden."
+    },
+    {
+     "id": "d360f51b-e3dc-4789-92bc-128092b83e5e",
+     "title": "Small Grants to Support People with Disabilities to Play Tennis",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "2026 application deadlines:",
+     "url": "https://www.danmaskelltennistrust.org.uk/apply-for-a-grant/",
+     "tidied": [],
+     "for_paul": "Every relevant field is admin-pinned; the page's 2026 deadline list did not yield a clear future date beyond what the row already holds."
+    },
+    {
+     "id": "4fa14077-7904-4fd9-ba4f-d8ad7a501bff",
+     "title": "Social Enterprise Growth Accelerator (SEGA)",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Applications are now open for the third iteration of the Social Enterprise Growth Accelerator. Sheffield-based social enterprises and people developing a new social enterprise idea can now apply for fully funded, specialist support.",
+     "url": "https://www.ssen.org.uk/sega",
+     "tidied": [],
+     "for_paul": "Reads as open now, but this is advisory and workshop support rather than money, and it is explicitly open to \"people developing a new social enterprise idea\" as well as existing organisations — an audience question. No deadline is stated either way, and deadline and next_open_date are admin-held."
+    },
+    {
+     "id": "474dd39e-81f2-4613-bec3-2da7bcae6c11",
+     "title": "Social Justice Small Grants Programme",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "",
+     "url": "https://communityfoundationni.org/grants/social-justice-small-grants-programme/",
+     "tidied": [],
+     "for_paul": "The specific page 404s; no equivalent could be found in Community Foundation NI's current grants listing."
+    }
+   ],
+   "paul_list": [
+    "PUBLISH Noël Coward Foundation — Performing Arts Educational & Development Grants",
+    "PUBLISH Severn Trent Community Fund — New Project Funding",
+    "PARK    Pre-announcement: Gambling harms research grants",
+    "PARK    Resilience Fund",
+    "PARK    Skinners' Company Charity Programme",
+    "REJECT  R&D MAP Creative Content Exchange pilot: Early Adopters fund (Grant) (dead_url)",
+    "HOLD    Newcastle Fund — Closed, no next round stated. Every relevant field is admin-pinned.",
+    "HOLD    Open Application Programme — Closed, outcome due this month; no third round date given.",
+    "HOLD    Peter Harrison Foundation — Active Lives — apply_url 404s, but the foundation is alive with an Active Lives & Positive Futures programme at a different path — a relink candidate rather than a dead fund.",
+    "HOLD    Postcode Local Trust Grants — Closed, no 2027 dates yet — the page says they will be published in the new year.",
+    "HOLD    Postcode Lottery Dream Fund 2026/27 — Closed; every relevant column is admin-pinned.",
+    "HOLD    Reducing Veteran Homelessness programme — Listed under the funder's own \"Closed Programmes\" heading; a news item further down the page about a past reopening is not current status. No next round given.",
+    "HOLD    Richard and Siobhán Coward Foundation — Community Photography Grants — apply_url 404s; the foundation's main site loads but no equivalent grants page could be located from it.",
+    "HOLD    Rosa — Stand With Us Fund — Closed, no reopening date; every relevant field is admin-pinned.",
+    "HOLD    Rusholme Wind Farm Fund — \"End of the summer\" is not specific enough to park on and today (7 September) may already be past it; the standard/larger grant deadline (7 August) has passed with no next round named.",
+    "HOLD    Safer in Sussex Community Fund — Closed, no reopening date given.",
+    "HOLD    Schroder Charity Trust Grant Programmes — apply_url is the homepage; no application status or dates could be found on it, and several fields are admin-sourced.",
+    "HOLD    Seed Funding for Social Entrepreneurs — A genuine future deadline, 2 November 2026, but nearly every column is admin-held.",
+    "HOLD    Severn Trent Community Fund New Project Funding — Same apply_url and near-identical title as the row just published in this batch (1ef69197). Likely a duplicate ingestion of the same fund rather than a second, distinct tier — recommend rejecting this one once the other is live, unless there is a reason to keep both.",
+    "HOLD    Sir Halley Stewart Trust — Innovative Project Funding — A genuine future deadline, 26 February 2027 (or earlier if capacity is reached), but nearly every column is admin-held.",
+    "HOLD    Sir John Fisher Foundation — Main Grants — The foundation's own words: grants are \"on hold\" for now, with new criteria released for 2026 but no application route open yet. Every relevant field is admin-pinned regardless.",
+    "HOLD    Small Grants for Charities — The row's own rolling, no-deadline timing already matches the page — the same shape as Large Grants for Charities from the same funder in batch 5 — and nothing here explains why it is still hidden.",
+    "HOLD    Small Grants to Support People with Disabilities to Play Tennis — Every relevant field is admin-pinned; the page's 2026 deadline list did not yield a clear future date beyond what the row already holds.",
+    "HOLD    Social Enterprise Growth Accelerator (SEGA) — Reads as open now, but this is advisory and workshop support rather than money, and it is explicitly open to \"people developing a new social enterprise idea\" as well as existing organisations — an audience question. No deadline is stated either way, and deadline and next_open_date are admin-held.",
+    "HOLD    Social Justice Small Grants Programme — The specific page 404s; no equivalent could be found in Community Foundation NI's current grants listing."
+   ]
   }
  ],
  "summary": {
