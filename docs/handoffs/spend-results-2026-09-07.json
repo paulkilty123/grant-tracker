@@ -1,0 +1,163 @@
+{
+ "batches": [
+  {
+   "batch": 1,
+   "written": [
+    {
+     "id": "1d6af16c-0060-45b4-8f1e-051888785890",
+     "spendTypes": [
+      "capital",
+      "revenue"
+     ],
+     "subtypes": [
+      "capital"
+     ]
+    },
+    {
+     "id": "5eff1abd-978d-442e-8f7c-01d59b541f42",
+     "spendTypes": [
+      "capital",
+      "revenue"
+     ],
+     "subtypes": [
+      "capital"
+     ]
+    },
+    {
+     "id": "f8a83056-ccaf-4b10-8b45-aa7b7b01a080",
+     "restriction": "restricted",
+     "subtypes": [
+      "restricted"
+     ]
+    },
+    {
+     "id": "2fc1c173-7762-437e-b9cd-b8cccf7b4a79",
+     "restriction": "unrestricted",
+     "spendTypes": [
+      "revenue"
+     ],
+     "subtypes": [
+      "unrestricted"
+     ]
+    },
+    {
+     "id": "13837671-a3eb-4045-a5e7-2a7bf2951f4d",
+     "restriction": "restricted",
+     "subtypes": [
+      "restricted"
+     ]
+    },
+    {
+     "id": "df623476-199d-402d-8782-1837fb1d4692",
+     "restriction": "restricted",
+     "spendTypes": [
+      "revenue"
+     ],
+     "subtypes": [
+      "restricted"
+     ]
+    },
+    {
+     "id": "fb9e0451-cae6-4bfc-92dc-962afffbae9f",
+     "restriction": "restricted",
+     "subtypes": [
+      "restricted"
+     ]
+    }
+   ],
+   "report": [
+    {
+     "id": "86380b2e-1c74-4cd3-b560-663a021bc097",
+     "title": "Adint Charitable Trust",
+     "why": "not_stated",
+     "quote": "The grants are to be used for general charitable work.",
+     "url": "https://youngcamdenfoundation.org.uk/funding/adint-charitable-trust"
+    },
+    {
+     "id": "475e745e-25cb-49c4-b397-fcdfee970df1",
+     "title": "AF3: Supporting Partners programme",
+     "why": "not_stated",
+     "quote": "The Supporting Partners programme aims to strengthen support for partners of serving military personnel, including reservists, by improving access to services, building on skills and experience, enabling informal support networks and promoting mental health and wellbeing.",
+     "url": "https://covenantfund.org.uk/programme/af3-supporting-partners-programme/"
+    },
+    {
+     "id": "c40dc901-c460-4358-9a86-bd5a13878966",
+     "title": "AI For All",
+     "why": "not_stated",
+     "quote": "Each participating organisation is matched with a mentor whose expertise aligns with its goals and challenges.",
+     "url": "https://www.thedifferent.foundation/ai-for-all"
+    },
+    {
+     "id": "9d9da328-3680-4c33-9da2-4e7cdcbaca8c",
+     "title": "Albert Gubay Charitable Foundation Grants",
+     "why": "not_stated",
+     "quote": "Since 2016, the Albert Gubay Charitable Foundation has awarded over £100 million to registered charities in England, the Isle of Man, Republic of Ireland, and Wales.",
+     "url": "https://www.albertgubayfoundation.org/"
+    },
+    {
+     "id": "8c168203-e428-44f5-a1f7-e1c8268a83c5",
+     "title": "An Official Oral History of Women Veterans in the UK",
+     "why": "not_stated",
+     "quote": "An official oral history project documenting the lived experiences of women veterans in the UK.",
+     "url": "https://www.find-government-grants.service.gov.uk/grants/an-official-oral-history-of-women-veterans-in-the-uk-1"
+    },
+    {
+     "id": "b774d28f-4f07-4ebd-8702-8f3c3e0cfe5a",
+     "title": "Arts Council of Wales — Have a Go",
+     "why": "not_stated",
+     "quote": "We recommend reading the full guidelines before submitting your application.",
+     "url": "https://arts.wales/funding/creative-learning/have-a-go"
+    },
+    {
+     "id": "0f6795e2-bdd9-4746-b1d8-88a6ea469824",
+     "title": "Barbara Ward Children's Foundation",
+     "why": "not_stated",
+     "quote": "Since then the Trustees have reviewed more than 7600 grant requests and authorised grants of over £12 million to more than 465 organisations (see Grant List).",
+     "url": "https://www.bwcf.org.uk/"
+    },
+    {
+     "id": "2b0fb0f0-6bb6-4803-baf7-8a289b115976",
+     "title": "Baring Foundation — Strengthening Civil Society Programme",
+     "why": "not_stated",
+     "quote": "This programme is currently closed. Future open round opportunities will be posted on this website, as well as in our e-newsletter and on our social media.",
+     "url": "https://baringfoundation.org.uk/programme/strengthening-civil-society/"
+    },
+    {
+     "id": "9891bd8a-798b-4c2c-98d5-f25ba9b10faf",
+     "title": "BE:IMPACT Prize 2026",
+     "why": "unreadable",
+     "quote": "Loading content...",
+     "url": "https://blueearthsummit.com/impact-prize"
+    },
+    {
+     "id": "d83e1ad9-b8d5-4367-8a26-0fed8b5698f4",
+     "title": "Beinneun Community Fund",
+     "why": "not_stated",
+     "quote": "Foundation Scotland maintains a standard list of exclusions which cannot be funded.",
+     "url": "https://foundationscotland.org.uk/beinneun-community"
+    },
+    {
+     "id": "c51eaae1-2007-4930-a45a-4da9f7542c1c",
+     "title": "Bernard Sunley Foundation — Social Welfare Grants",
+     "why": "unreadable",
+     "quote": "(client-rendered category table; no prose survives a text read)",
+     "url": "https://bernardsunley.org/our-grant-giving/social-welfare/"
+    },
+    {
+     "id": "ef68a7d7-4448-4a2e-8f44-341ef2c3148b",
+     "title": "Bolton Housing Partnership — Community Investment Grants",
+     "why": "not_stated",
+     "quote": "Find examples of projects that have previously been funded through Bolton CVS managed grants here.",
+     "url": "https://www.boltoncvs.org.uk/funding/bolton-housing-partnership-grants/"
+    },
+    {
+     "id": "0346c786-fb9c-4df9-9307-205a4337acab",
+     "title": "C B & H H Taylor 1984 Trust — Grants",
+     "why": "not_stated",
+     "quote": "The CB & HH Taylor Trust provides support to charitable organisations serving the West Midlands county (Birmingham, Coventry, Wolverhampton, Dudley, Sandwell, Solihull & Walsall).",
+     "url": "http://www.cbandhhtaylortrust.com/guidelines-for-grant-programmes"
+    }
+   ]
+  }
+ ]
+}
