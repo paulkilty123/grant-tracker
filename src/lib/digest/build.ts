@@ -378,10 +378,24 @@ function buildBlurb(brief: unknown): string | null {
   // An exclusions field that says there are none is not a caveat, and pasting
   // "No explicit exclusions stated" onto the end of every blurb is noise that
   // makes the real exclusions easier to skim past.
-  const rawExcl = typeof b.exclusions === 'string' ? b.exclusions : ''
+  const rawExcl = typeof b.exclusions === 'string' ? stripPlaceholderLead(b.exclusions) : ''
   const saysNone = /^\s*(no(ne)?\b[^.]{0,40}(exclusion|stated|specified|listed)|not stated|n\/a)/i.test(rawExcl)
   const excl = rawExcl && !saysNone ? firstSentence(rawExcl, 95) : null
   return excl ? `${what} ${excl}` : what
+}
+
+/**
+ * "Not explicitly stated. However, applicants must be based in England."
+ * The enricher writes that shape on about twenty live rows: a placeholder
+ * first sentence, then the real caveat. `firstSentence` took the placeholder
+ * and the digest printed "Not explicitly stated." after a loan fund's blurb
+ * (seen in the 7 Sept dry run). Drop the placeholder and keep what follows;
+ * if nothing follows, the saysNone test above still drops the whole thing.
+ */
+export function stripPlaceholderLead(text: string): string {
+  return text
+    .replace(/^\s*(not|none|no)\s+(explicitly\s+|specifically\s+)?(stated|specified|listed|mentioned|given)[^.]*\.\s*(however,?\s*)?/i, '')
+    .replace(/^[a-z]/, c => c.toUpperCase())
 }
 
 export interface BuildOptions {
@@ -762,7 +776,18 @@ export async function buildDigest(
 
   let lead: string
   let subject: string
-  if (mode === 'week_one') {
+  if (mode === 'week_one' && matchTotal === 0) {
+    // Nothing matched, and the floor above let the send through because a
+    // profile prompt exists. "Zero opportunities are open to you. Here are the
+    // zero closing soonest" is what the general wording produces here, and it
+    // reads as a broken product. Name the gap and the fix instead.
+    lead = prompt
+      ? 'Nothing is matching yet, and that is a profile gap rather than a funding gap. One detail below unlocks it.'
+      : 'Nothing is matching yet. Finish your profile and next week this email leads with what is open to you.'
+    subject = prompt
+      ? `One detail unlocks your matches for ${org.name}`
+      : `Finish your profile to see what is open to ${org.name}`
+  } else if (mode === 'week_one') {
     lead = `${spellCap(matchTotal)} ${matchTotal === 1 ? 'opportunity is' : 'opportunities are'} open to you right now. Here ${matches.length === 1 ? 'is the one' : `are the ${spell(matches.length)}`} closing soonest.`
     subject = `${plural(matchTotal, 'funding opportunity is', 'funding opportunities are')} open to ${org.name}`
   } else if (mode === 'thin') {
@@ -787,7 +812,9 @@ export async function buildDigest(
      data the body renders — otherwise the inbox promises something the email
      does not contain. */
   let preheader: string
-  if (mode === 'week_one') {
+  if (mode === 'week_one' && matchTotal === 0) {
+    preheader = prompt ? prompt.title : 'Finish your profile to see what is open to you.'
+  } else if (mode === 'week_one') {
     preheader = `The ${spell(matches.length)} closing soonest${nearMisses.length ? `, and ${spell(nearMisses.length)} that fell just outside with the reason why` : ''}.`
   } else {
     const bits: string[] = []

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { plainRule, shortDate } from './build'
+import { plainRule, shortDate, stripPlaceholderLead } from './build'
 import { daysUntil } from './text'
 import { nearMissMeta } from './near-miss'
 
@@ -70,3 +70,17 @@ describe('the year appears once it stops being obvious', () => {
   })
 })
 
+
+describe('placeholder lead on exclusions', () => {
+  it('drops "Not explicitly stated. However, ..." and keeps the caveat', () => {
+    expect(stripPlaceholderLead('Not explicitly stated. However, applicants must be based in England.'))
+      .toBe('Applicants must be based in England.')
+  })
+  it('leaves a bare placeholder for the saysNone test to drop', () => {
+    expect(stripPlaceholderLead('Not explicitly stated.')).toBe('')
+  })
+  it('leaves a real exclusion alone', () => {
+    expect(stripPlaceholderLead('No funding for individuals or statutory bodies.'))
+      .toBe('No funding for individuals or statutory bodies.')
+  })
+})
