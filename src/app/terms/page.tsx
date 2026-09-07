@@ -129,7 +129,7 @@ export default function TermsPage() {
 
           <Heading>Cancellation and refunds</Heading>
           <p>You can cancel your subscription at any time from your account page. Your plan stays active until the end of the period you have paid for, and you are not charged again after that. We do not give partial refunds for the unused part of a billing period.</p>
-          <p>There is one exception. If you ask within the first month of your first paid subscription, we will refund that payment in full, no questions asked. Email <a href="mailto:hello@shootsfunding.co.uk" style={{ color: '#3B6D11', fontWeight: 600 }}>hello@shootsfunding.co.uk</a> and we will do the rest.</p>
+          <p>There is one exception. If you ask within 30 days of your first payment, we will refund that payment in full, no questions asked. Email <a href="mailto:hello@shootsfunding.co.uk" style={{ color: '#3B6D11', fontWeight: 600 }}>hello@shootsfunding.co.uk</a> and we will do the rest. The guarantee applies once per organisation, to the first paid subscription, and we may decline a refund where we believe it is being abused.</p>
           <p>When a subscription ends, your account moves to the limited state described under &ldquo;Free trial&rdquo;. Your organisation profile, saved opportunities, pipeline and applications are kept, and you can export your data from your account page at any time. If an account stays without a subscription for 12 months, we may close it after giving you notice by email.</p>
 
           <Heading>Liability</Heading>
