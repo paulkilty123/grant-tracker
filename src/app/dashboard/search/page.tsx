@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Search, ChevronDown, Layers, DollarSign, Rocket, Building2, SlidersHorizontal, MapPin, Users, GraduationCap, TrendingUp, GitMerge, Gift, Landmark, CalendarDays, RefreshCw, Bookmark, PlusCircle, Activity, Target, Star, CheckCircle2, XCircle, Lightbulb, AlertTriangle, Sparkles, ExternalLink, ClipboardList, EyeOff } from 'lucide-react'
 import { SEED_GRANTS } from '@/lib/grants'
-import { formatRange, formatNextOpen } from '@/lib/utils'
+import { formatRange, formatNextOpen, betweenRoundsChip, betweenRoundsDeadlineText } from '@/lib/utils'
 import { SHOW_RECENTLY_ADDED_BADGE, RECENTLY_ADDED_DAYS } from '@/lib/ui-flags'
 import { createClient } from '@/lib/supabase/client'
 import { createPipelineItem, deletePipelineItem, updatePipelineStage } from '@/lib/pipeline'
@@ -498,8 +498,9 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
   // in the rendering layer, which is why reading pages to fix the data changed
   // nothing here. The detail modal and the programmes page already get this
   // right; this card was the outlier, and the one users scan.
-  const deadlineDisplay = (!grant.isRolling && !grant.deadline && grant.nextOpenDate)
-    ? (formatNextOpen(grant.nextOpenDate) ?? 'Check funder')
+  const roundsChip = betweenRoundsChip(grant)
+  const deadlineDisplay = roundsChip
+    ? (betweenRoundsDeadlineText(grant) ?? 'Check funder')
     : grant.isRolling
       ? 'Rolling'
       : !grant.deadline
@@ -574,6 +575,11 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
 
             {/* Pill row: sectors + funder-type + location */}
             <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+              {roundsChip && (
+                <span title="This fund is closed today and expected to reopen" style={{ fontSize: 10, padding: '3px 9px', borderRadius: 9999, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', whiteSpace: 'nowrap', background: '#FAEEDA', color: '#854F0B', fontFamily: 'var(--font-space-grotesk)' }}>
+                  {roundsChip}
+                </span>
+              )}
               {visibleSectors.map(s => {
                 const raw = IMPACT_SECTOR_FILTERS.find(f => f.id === s)?.label
                   ?? s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
