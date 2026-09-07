@@ -210,6 +210,28 @@ export function formatNextOpen(nextOpenDate: string | null | undefined): string 
   return 'Closed — check funder'
 }
 
+/**
+ * The one line a card shows for a fund that is between rounds: closed today,
+ * expected back. Null for anything else, so the ABSENCE of the chip means
+ * "open or rolling". Paul, 2026-09-07: a user scanning cards must be able to
+ * spot a fund that is not live yet but will open, without reading the
+ * deadline slot.
+ */
+export function betweenRoundsChip(g: { isRolling?: boolean | null; deadline?: string | null; nextOpenDate?: string | null }): string | null {
+  if (g.isRolling || g.deadline || !g.nextOpenDate) return null
+  const phrase = formatNextOpen(g.nextOpenDate)
+  if (!phrase) return null
+  // formatNextOpen's undatable case carries a dash; house copy has none.
+  return phrase.startsWith('Closed') ? 'Closed for now' : phrase
+}
+
+/** The deadline slot's wording for the same state: both words a scanner needs. */
+export function betweenRoundsDeadlineText(g: { isRolling?: boolean | null; deadline?: string | null; nextOpenDate?: string | null }): string | null {
+  const chip = betweenRoundsChip(g)
+  if (!chip) return null
+  return chip === 'Closed for now' ? 'Closed, check funder' : chip.replace(/^Opens\b/, 'Closed, reopens')
+}
+
 export function getDeadlineAlerts(items: PipelineItem[]): DeadlineAlert[] {
   const activeStages: PipelineStage[] = ['identified', 'applying', 'submitted']
   return items

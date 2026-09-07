@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Search, ChevronDown, Layers, DollarSign, Rocket, Building2, SlidersHorizontal, MapPin, Users, GraduationCap, TrendingUp, GitMerge, Gift, Landmark, CalendarDays, RefreshCw, Bookmark, PlusCircle, Activity, Target, Star, CheckCircle2, XCircle, Lightbulb, AlertTriangle, Sparkles, ExternalLink, ClipboardList, EyeOff } from 'lucide-react'
 import { SEED_GRANTS } from '@/lib/grants'
-import { formatRange, formatNextOpen } from '@/lib/utils'
+import { formatRange, formatNextOpen, betweenRoundsChip, betweenRoundsDeadlineText } from '@/lib/utils'
 import { SHOW_RECENTLY_ADDED_BADGE, RECENTLY_ADDED_DAYS } from '@/lib/ui-flags'
 import { createClient } from '@/lib/supabase/client'
 import { createPipelineItem, deletePipelineItem, updatePipelineStage } from '@/lib/pipeline'
@@ -498,8 +498,9 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
   // in the rendering layer, which is why reading pages to fix the data changed
   // nothing here. The detail modal and the programmes page already get this
   // right; this card was the outlier, and the one users scan.
-  const deadlineDisplay = (!grant.isRolling && !grant.deadline && grant.nextOpenDate)
-    ? (formatNextOpen(grant.nextOpenDate) ?? 'Check funder')
+  const roundsChip = betweenRoundsChip(grant)
+  const deadlineDisplay = roundsChip
+    ? (betweenRoundsDeadlineText(grant) ?? 'Check funder')
     : grant.isRolling
       ? 'Rolling'
       : !grant.deadline
@@ -676,7 +677,12 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
               <div>
                 <div style={{ fontSize: 10, color: '#8A8986', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3, fontFamily: 'var(--font-dm-sans)' }}>Deadline</div>
                 <div style={{ fontSize: 13, color: '#2C2C2A', fontFamily: 'var(--font-dm-sans)', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                  <span>{deadlineDisplay}</span>
+                  {roundsChip
+                    // Closed today, expected back: the one state a scanner must
+                    // not miss, so it is a pill here where the row is quiet,
+                    // rather than a badge in the busy pill row. Paul, 7 Sept.
+                    ? <span title="This fund is closed today and expected to reopen" style={{ padding: '3px 10px', borderRadius: 9999, fontWeight: 600, background: '#FAEEDA', color: '#854F0B', whiteSpace: 'nowrap' }}>{deadlineDisplay}</span>
+                    : <span>{deadlineDisplay}</span>}
                   {grant.isMultiRound && (
                     <span title="Multiple application rounds per year — check the brief for the full schedule" style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', padding: '2px 7px', borderRadius: 9999, background: '#F1EDE3', color: '#5F5E5A', fontFamily: 'var(--font-space-grotesk)' }}>
                       Multi-round
