@@ -2768,25 +2768,30 @@
      "id": "be7faf98-fdd3-48ad-ac98-bf05fafe26c3",
      "title": "Souter Charitable Trust — General Grants",
      "pile": "B",
-     "verdict": "park",
+     "verdict": "publish",
      "quote": "Grant applications must be submitted by close of business on Wednesday 23rd September 2026 to be considered at the next Trustees' meeting which is scheduled for Wednesday 30th September 2026.",
      "url": "https://www.soutercharitabletrust.org.uk/how-to-apply/",
      "tidied": [
       "deadline",
-      "is_rolling"
+      "is_rolling",
+      "funder_brief.who_can_apply",
+      "funder_brief.what_they_fund",
+      "funder_brief.how_to_apply",
+      "funder_brief.exclusions",
+      "funder_brief.decision_timeline",
+      "funder_brief.typical_award",
+      "funder_brief.open_status"
      ]
     },
     {
      "id": "f1fdcd6e-152a-403f-a1ac-f7838fbe9ebc",
      "title": "sportscotland — Facilities Investment",
      "pile": "B",
-     "verdict": "park",
+     "verdict": "hold",
      "quote": "Deadlines for submission of Sport Facilities Fund applications are 5pm on the 1st April and 1st September each year.",
      "url": "https://sportscotland.org.uk/funding/sport-facilities-fund",
-     "tidied": [
-      "deadline",
-      "is_rolling"
-     ]
+     "tidied": [],
+     "for_paul": "Next deadline 1 April 2027, nothing pinned, but the eligibility/exclusion detail is in a Guidelines PDF this pass couldn't open — worth a publish once that's read."
     },
     {
      "id": "5b3ee9d2-efea-43ca-b4e6-94005e070a09",
@@ -2836,12 +2841,19 @@
      "id": "a3107c21-e079-4291-95f4-fd4c45c77108",
      "title": "The Awesome Foundation — Glasgow Chapter",
      "pile": "B",
-     "verdict": "park",
+     "verdict": "publish",
      "quote": "NEXT DEADLINE: 9th September 2026",
      "url": "https://www.awesomefoundation.org/en/chapters/glasgow",
      "tidied": [
       "deadline",
-      "is_rolling"
+      "is_rolling",
+      "funder_brief.who_can_apply",
+      "funder_brief.what_they_fund",
+      "funder_brief.how_to_apply",
+      "funder_brief.exclusions",
+      "funder_brief.decision_timeline",
+      "funder_brief.typical_award",
+      "funder_brief.open_status"
      ]
     },
     {
@@ -2882,12 +2894,19 @@
      "id": "f47db5b5-af42-49c5-b807-ce993c3bd9fc",
      "title": "The Homity Trust",
      "pile": "B",
-     "verdict": "park",
+     "verdict": "publish",
      "quote": "Our next funding round is the Winter one, with a strict application deadline of 10th December 2026.",
      "url": "https://www.homity.co.uk/",
      "tidied": [
       "deadline",
-      "is_rolling"
+      "is_rolling",
+      "funder_brief.who_can_apply",
+      "funder_brief.what_they_fund",
+      "funder_brief.how_to_apply",
+      "funder_brief.exclusions",
+      "funder_brief.decision_timeline",
+      "funder_brief.typical_award",
+      "funder_brief.open_status"
      ]
     },
     {
@@ -2924,12 +2943,19 @@
      "id": "8599b462-b313-468f-b2c6-72fc0f6c144b",
      "title": "The Maypole Fund — Feminist Peace & Anti-Militarism Grants",
      "pile": "B",
-     "verdict": "park",
+     "verdict": "publish",
      "quote": "The Maypole Fund has two funding sessions each year. The submission deadlines for each of these sessions are at the end of January and June of each year, and we accept applications in the month leading up to the submission deadline.",
      "url": "https://www.maypolefund.org/deadlines/",
      "tidied": [
       "deadline",
-      "is_rolling"
+      "is_rolling",
+      "funder_brief.who_can_apply",
+      "funder_brief.what_they_fund",
+      "funder_brief.how_to_apply",
+      "funder_brief.exclusions",
+      "funder_brief.decision_timeline",
+      "funder_brief.typical_award",
+      "funder_brief.open_status"
      ]
     },
     {
@@ -3006,20 +3032,20 @@
     }
    ],
    "paul_list": [
-    "PARK    Souter Charitable Trust — General Grants",
-    "PARK    sportscotland — Facilities Investment",
+    "PUBLISH Souter Charitable Trust — General Grants",
+    "PUBLISH The Awesome Foundation — Glasgow Chapter",
+    "PUBLISH The Homity Trust",
+    "PUBLISH The Maypole Fund — Feminist Peace & Anti-Militarism Grants",
     "PARK    Supporting Change - Carers",
-    "PARK    The Awesome Foundation — Glasgow Chapter",
     "PARK    The Charity Service — Greater Manchester Grants",
     "PARK    The Elephant Trust",
-    "PARK    The Homity Trust",
-    "PARK    The Maypole Fund — Feminist Peace & Anti-Militarism Grants",
     "PARK    Theatres Trust Small Grants Programme (Linbury-backed)",
     "REJECT  The Democratic Engagement Fund (dead_url)",
     "REJECT  Tobacco and Vapes Implementation Grant (dead_url)",
     "HOLD    Somerset Crisis and Resilience Alliance — EOI window closed 4 September; reopening is conditional on unmet partner numbers, not a stated date.",
     "HOLD    Somerset Older People's Fund — Closed, own page states no reopening date at all.",
     "HOLD    Somerset Social Investment Programme — Stated deadline has passed with no closed banner or next round named.",
+    "HOLD    sportscotland — Facilities Investment — Next deadline 1 April 2027, nothing pinned, but the eligibility/exclusion detail is in a Guidelines PDF this pass couldn't open — worth a publish once that's read.",
     "HOLD    SSE Social Investment Gateway Programme — Genuinely reopened, round 2 deadline 6 November 2026, but eighteen of the row's fields are admin-held, so nothing here can actually be written — a live opportunity a pin is hiding.",
     "HOLD    Sterry Family Foundation — The fund's own info box says \"no deadline,\" but the page itself is marked \"last updated on 1 Sept 2025\" — a year-stale self-report on the same sibling-template site flagged in earlier batches, not trusted at face value here.",
     "HOLD    Strathnairn Community Benefit Fund — General Grants — Genuinely rolling, monthly board cycle, but neither this page nor the Grants Strategy page states an award amount or exclusions for the General Grant specifically — not enough for the full brief a publish needs.",
