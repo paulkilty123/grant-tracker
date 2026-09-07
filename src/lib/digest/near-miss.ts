@@ -1,4 +1,5 @@
 import type { Organisation, GrantOpportunity, LegalStructure } from '@/types'
+import { normalizeStructureTokens } from '@/lib/matching'
 import { INCOME_MIDPOINTS } from '@/lib/matching'
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -145,7 +146,17 @@ export function findNearMiss({ grant, org, readOn, otherwiseFits }: NearMissInpu
      is exactly the thing the reader can raise and we cannot. */
   const allowed = grant.eligibleStructures ?? []
   const mine = org.legal_structure
-  if (mine && allowed.length && !allowed.includes(mine)) {
+  // Containment first, the same way the matcher decides eligibility. A CIO IS
+  // a registered charity, so a fund listing "registered charities" accepts it
+  // outright, and the matcher says so. This check used a raw `includes` and
+  // told Tinderbox Collective (a CIO) that a fund open to registered
+  // charities had ruled them out on structure, when the matcher had scored
+  // them eligible and the real shortfall was thematic. Wrong dimension, wrong
+  // advice. Normalise both sides exactly as matching.ts does before deciding
+  // there is any structure gap to be near.
+  const mineTokens = new Set(mine ? normalizeStructureTokens(mine) : [])
+  const accepted = allowed.some(a => normalizeStructureTokens(a).some(t => mineTokens.has(t)))
+  if (mine && allowed.length && !accepted) {
     const near = allowed.filter(a => isAdjacent(mine, a))
     if (near.length) {
       const theyFund = list(near.map(a => PLURAL[a] ?? a))
