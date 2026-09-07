@@ -457,6 +457,16 @@ function structureTokens(s: string): string[] {
 const STRUCTURE_SATISFIES: Partial<Record<LegalStructure, LegalStructure[]>> = {
   cic_guarantee: ['ltd_guarantee'],
   cic_shares:    ['ltd_shares'],
+  // An unregistered group IS an unincorporated group: a set of people acting
+  // together with no legal form, which is exactly what a fund open to
+  // "unincorporated groups" means. matching.ts's normaliser already treated
+  // the two as one; this file did not, so the blocker here overrode the
+  // matcher and every unregistered group was ruled out of all 313 live funds
+  // that list unincorporated (ASP Belong against Chalk Cliff Trust, 7 Sept
+  // 2026: "Not registered is not in the eligible structures list
+  // (... Unincorporated ...)"). One way only: a fund that names only
+  // "not registered" does not open to formal unincorporated associations.
+  not_registered: ['unincorporated'],
 }
 
 function structureMatches(orgStructure: LegalStructure, allowed: LegalStructure[]): boolean {
