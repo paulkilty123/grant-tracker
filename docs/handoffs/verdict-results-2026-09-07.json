@@ -1209,6 +1209,294 @@
     "HOLD    Calisen Impact Charitable Trust — The trust says it is changing its process and will publish updated details \"in due course\" — no date to park on yet.",
     "HOLD    Cambridge 2030 Fund — Names 2027 but marks the date TBC — too vague to park on; worth a re-check nearer the time."
    ]
+  },
+  {
+   "batch": 2,
+   "pile": "B",
+   "verdicts": [
+    {
+     "id": "8230b7a2-1212-433d-93e9-59d3cfd11b52",
+     "title": "Cambridgeshire Community Foundation — Warwick & Dominey (General Grants)",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Warwick and Dominey Fund – General ... Application deadlines: 1 February, 1 August",
+     "url": "https://www.cambscf.org.uk/funds/",
+     "tidied": [],
+     "for_paul": "Runs an ongoing twice-yearly cycle rather than a single closure; the next date would be 1 February 2027. deadline, is_rolling and deadline_cycle are all admin-pinned, so nothing here could be written even confirmed."
+    },
+    {
+     "id": "d5e32f3e-cc11-4f66-a7f1-320f48f2971a",
+     "title": "cardfactory Foundation Community Fund",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "2026 Community Fund Applications Closed. The application period has now closed. We are currently reviewing all submissions and will contact applicants in September with the outcome of their application.",
+     "url": "https://cardfactoryfoundation.org.uk/our-funds/the-local-community-fund/",
+     "tidied": [],
+     "for_paul": "Annual round, closed, outcome due this month; no 2027 date yet. Every relevant column is admin-pinned regardless."
+    },
+    {
+     "id": "0b3d2a8b-3d24-462e-8059-1cb5c5c0d445",
+     "title": "Caremark - Community Care Fund",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "The deadline for entries is 31st May 2026. No entries received after this time will be considered. Voting will open shortly after the shortlist announcement and close at 9am on 1 st September 2026.",
+     "url": "https://www.caremark.co.uk/community-care-fund/",
+     "tidied": [],
+     "for_paul": "This year's round is in its voting phase (closes today); no next entry-round date is given."
+    },
+    {
+     "id": "ef11edf5-15dd-4a03-9d73-9d59dbf81595",
+     "title": "Cartier Women's Initiative",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Our 2026 fellows were announced on March 26, 2026.",
+     "url": "https://www.cartierwomensinitiative.com/",
+     "tidied": [],
+     "for_paul": "Annual programme with no 2027 dates published yet; also worth an audience check, since it selects individual entrepreneurs' businesses rather than a fixed organisational structure."
+    },
+    {
+     "id": "a789db28-6332-42a2-ada2-db51a9bee328",
+     "title": "Central District Alliance Social and Community Fund 2026",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Central District Alliance Social and Community Fund 2026 | Closed",
+     "url": "https://app.actionfunder.org/fund/979",
+     "tidied": [],
+     "for_paul": "Closed, no 2027 round published yet."
+    },
+    {
+     "id": "fa668359-889b-437e-b3a4-e80d24ab5115",
+     "title": "CfI Improving Outcomes for Children Experiencing Homelessness",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "8 July 2026 11:00am UK time",
+     "url": "https://www.ukri.org/opportunity/cfi-improving-outcomes-for-children-experiencing-homelessness/",
+     "tidied": [],
+     "for_paul": "UKRI's own page for this call shows the same passed deadline the row holds, and every relevant field is admin-pinned. A duplicate gov.uk listing for the same call is rejected dead_url in this batch."
+    },
+    {
+     "id": "b5d02e56-00e8-4119-a60f-9d79a4da247a",
+     "title": "CfI Improving Outcomes for Children Experiencing Homelessness",
+     "pile": "B",
+     "verdict": "reject",
+     "code": "dead_url",
+     "quote": "Page not found. If you typed the web address, check it is correct.",
+     "url": "https://www.find-government-grants.service.gov.uk/grants/cfi-improving-outcomes-for-children-experiencing-homelessness-1",
+     "tidied": [],
+     "for_paul": "gov.uk's Find a Grant has removed this listing; the funder's own UKRI page for the same call is held separately in this batch."
+    },
+    {
+     "id": "4e7f6bd7-6343-499b-8441-51520f259353",
+     "title": "CfI: Boosting fathers’ engagement to improve child outcomes",
+     "pile": "B",
+     "verdict": "reject",
+     "code": "dead_url",
+     "quote": "Page not found. If you typed the web address, check it is correct.",
+     "url": "https://www.find-government-grants.service.gov.uk/grants/cfi-boosting-fathers-engagement-to-improve-child-outcomes-1",
+     "tidied": []
+    },
+    {
+     "id": "295ea646-11c0-49cf-8ec4-cf4ff025baba",
+     "title": "CfI: Earlier identification of UK children with SEN",
+     "pile": "B",
+     "verdict": "reject",
+     "code": "dead_url",
+     "quote": "Page not found. If you typed the web address, check it is correct.",
+     "url": "https://www.find-government-grants.service.gov.uk/grants/cfi-earlier-identification-of-uk-children-with-sen-1",
+     "tidied": []
+    },
+    {
+     "id": "d7c556c0-18a6-48e1-b881-46444b7723bd",
+     "title": "Change Makers Partnership",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Closed to applications. The Change makers fund is now closed to new applications.",
+     "url": "https://www.tnlcommunityfund.org.uk/funding/funding-programmes/change-makers",
+     "tidied": [],
+     "for_paul": "Closed, no reopening date on the page."
+    },
+    {
+     "id": "a0dd3472-4d4f-4987-84c2-fbf919da3c4f",
+     "title": "Chapman Charitable Trust Grants",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Use the form below to submit an application for the Autumn 2026 meeting. Deadline for applications is 31st August 2026 (midnight GMT).",
+     "url": "https://www.chapmancharitabletrust.org.uk/apply",
+     "tidied": [],
+     "for_paul": "Runs Spring and Autumn meetings each year; Autumn 2026's deadline has passed and no Spring 2027 date is up yet. Every relevant field is admin-pinned regardless."
+    },
+    {
+     "id": "30706aff-5124-4dba-8776-1e15561c6a78",
+     "title": "Charity Entrepreneurship Incubation Program",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Applications are now open till September 13th.",
+     "url": "https://www.charityentrepreneurship.com/incubation-program",
+     "tidied": [],
+     "for_paul": "Reads as open until 13 September (six days out), but deadline is admin-held so nothing here could be written; and the programme trains and funds individual future charity founders, not an organisation applying, which is an audience question before anything else."
+    },
+    {
+     "id": "2f8b8ab2-582a-47d9-a034-ba78a9bc7a9f",
+     "title": "Cheshire Community Foundation — Open Grants Programme",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Grants & Programmes Open Grants Programmes Theme: Tackling disadvantage in Cheshire and Warrington's most deprived wards",
+     "url": "https://cheshirecommunityfoundation.org.uk/grants-programmes/",
+     "tidied": [],
+     "for_paul": "apply_url is an index over several named programmes with no single date visible for the Open Grants Programme specifically; deadline is admin-pinned regardless."
+    },
+    {
+     "id": "ca11a595-5a4b-4e00-a926-fadcf4b8c218",
+     "title": "Child Focused Court IDVA- Cheshire & Merseyside",
+     "pile": "B",
+     "verdict": "reject",
+     "code": "dead_url",
+     "quote": "Page not found. If you typed the web address, check it is correct.",
+     "url": "https://www.find-government-grants.service.gov.uk/grants/child-focused-courts-idva--cheshire--merseyside-1",
+     "tidied": []
+    },
+    {
+     "id": "e3cdafc8-497c-4ec4-a6e5-916eb2f66bf2",
+     "title": "Childcare Support Fund",
+     "pile": "B",
+     "verdict": "reject",
+     "code": "dead_url",
+     "quote": "Page not found. If you typed the web address, check it is correct.",
+     "url": "https://www.find-government-grants.service.gov.uk/grants/childcare-support-grant-1",
+     "tidied": []
+    },
+    {
+     "id": "c5e41501-c19d-4184-a701-1eecd4871c5e",
+     "title": "Chrysalis Programme",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Anyone who is 18 or over and lives, works or studies in Hillingdon can propose an improvement.",
+     "url": "https://www.hillingdon.gov.uk/article/1823/Chrysalis-projects",
+     "tidied": [],
+     "for_paul": "An individual resident proposes the improvement to council-owned assets; an audience question rather than a timing one. Rolling with no deadline already matches what the page describes."
+    },
+    {
+     "id": "34c24b63-de1c-480f-93f7-0f0fb4b62403",
+     "title": "Civil Society Resilience Fund",
+     "pile": "B",
+     "verdict": "reject",
+     "code": "dead_url",
+     "quote": "Page not found. If you typed the web address, check it is correct.",
+     "url": "https://www.find-government-grants.service.gov.uk/grants/civil-society-resilience-infrastructure-fund-1",
+     "tidied": []
+    },
+    {
+     "id": "963baf0d-5303-43d2-8ab2-31927e558e25",
+     "title": "Clean Air Solar Farm Community Benefit Fund",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "We will be open for applications on the 8th of June 2026. Then, the deadline is noon on the 7th August 2026.",
+     "url": "https://tworidingscf.org.uk/fund/clean-air-solar-farm-community-benefit-fund/",
+     "tidied": [],
+     "for_paul": "This year's window has closed; no next round stated. deadline and next_open_date are both admin-pinned regardless."
+    },
+    {
+     "id": "ee7b5fc6-f705-4852-b411-a1ec89a5c222",
+     "title": "Commercial Climate Services Call ",
+     "pile": "B",
+     "verdict": "reject",
+     "code": "dead_url",
+     "quote": "Page not found. If you typed the web address, check it is correct.",
+     "url": "https://www.find-government-grants.service.gov.uk/grants/commercial-climate-services-call-1",
+     "tidied": []
+    },
+    {
+     "id": "cfb56fe7-0ddb-4ac4-ab6f-c04102b8009d",
+     "title": "Community Action Fund",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "The Community Action Fund is currently closed for applications.",
+     "url": "https://www.greggsfoundation.org.uk/grants/community-funding",
+     "tidied": [],
+     "for_paul": "Closed, no reopening date stated; several fields are admin-sourced regardless."
+    },
+    {
+     "id": "6e32f1bc-2acd-4e86-bbeb-b73980d141dc",
+     "title": "Community Grants Programme",
+     "pile": "B",
+     "verdict": "park",
+     "quote": "We will open the application process again on 1st October 2026.",
+     "url": "https://www.thegivingmachine.co.uk/solutions/for-causes/community-grants/",
+     "tidied": [
+      "next_open_date",
+      "next_open_date_parsed",
+      "deadline",
+      "is_rolling"
+     ]
+    },
+    {
+     "id": "6aec6f51-67e6-4534-a34e-0070d1f2d969",
+     "title": "Community Hub Project Grants",
+     "pile": "B",
+     "verdict": "reject",
+     "code": "dead_url",
+     "quote": "Page not found. If you typed the web address, check it is correct.",
+     "url": "https://www.find-government-grants.service.gov.uk/grants/community-hub-project-grants-1",
+     "tidied": []
+    },
+    {
+     "id": "14bd601a-0921-41b1-ad4c-3f1ec64b370a",
+     "title": "Community Wellbeing and Mental Health Fund",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "This Fund is now CLOSED. The deadline to apply was midday on August 6, 2026.",
+     "url": "https://www.dorsetcommunityfoundation.org/funds/community-wellbeing-and-mental-health-fund/",
+     "tidied": [],
+     "for_paul": "This year's window has closed; no next round stated. deadline_cycle is admin-pinned regardless."
+    },
+    {
+     "id": "0d07f6e5-8619-4ccc-9434-307e5644612d",
+     "title": "Company of Actuaries Charitable Trust",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Our principal sources of funding are donations and legacies from our members.",
+     "url": "https://www.actuariescompany.co.uk/charity/",
+     "tidied": [],
+     "for_paul": "No application route, deadline or reopening information found on the page."
+    },
+    {
+     "id": "c2f62efc-64e7-4635-8a2c-9802e2ea089d",
+     "title": "Computers 4 Charity — Refurbished Hardware",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Donate Your Old Laptops and Computers for Charity",
+     "url": "https://computers4good.com/",
+     "tidied": [],
+     "for_paul": "apply_url now redirects to computers4good.com, a rebrand of the same organisation, still offering refurbished equipment to charities. A relink candidate; nearly every column is admin-held regardless."
+    }
+   ],
+   "paul_list": [
+    "PARK    Community Grants Programme",
+    "REJECT  CfI Improving Outcomes for Children Experiencing Homelessness (dead_url) — gov.uk's Find a Grant has removed this listing; the funder's own UKRI page for the same call is held separately in this batch.",
+    "REJECT  CfI: Boosting fathers’ engagement to improve child outcomes (dead_url)",
+    "REJECT  CfI: Earlier identification of UK children with SEN (dead_url)",
+    "REJECT  Child Focused Court IDVA- Cheshire & Merseyside (dead_url)",
+    "REJECT  Childcare Support Fund (dead_url)",
+    "REJECT  Civil Society Resilience Fund (dead_url)",
+    "REJECT  Commercial Climate Services Call  (dead_url)",
+    "REJECT  Community Hub Project Grants (dead_url)",
+    "HOLD    Cambridgeshire Community Foundation — Warwick & Dominey (General Grants) — Runs an ongoing twice-yearly cycle rather than a single closure; the next date would be 1 February 2027. deadline, is_rolling and deadline_cycle are all admin-pinned, so nothing here could be written even confirmed.",
+    "HOLD    cardfactory Foundation Community Fund — Annual round, closed, outcome due this month; no 2027 date yet. Every relevant column is admin-pinned regardless.",
+    "HOLD    Caremark - Community Care Fund — This year's round is in its voting phase (closes today); no next entry-round date is given.",
+    "HOLD    Cartier Women's Initiative — Annual programme with no 2027 dates published yet; also worth an audience check, since it selects individual entrepreneurs' businesses rather than a fixed organisational structure.",
+    "HOLD    Central District Alliance Social and Community Fund 2026 — Closed, no 2027 round published yet.",
+    "HOLD    CfI Improving Outcomes for Children Experiencing Homelessness — UKRI's own page for this call shows the same passed deadline the row holds, and every relevant field is admin-pinned. A duplicate gov.uk listing for the same call is rejected dead_url in this batch.",
+    "HOLD    Change Makers Partnership — Closed, no reopening date on the page.",
+    "HOLD    Chapman Charitable Trust Grants — Runs Spring and Autumn meetings each year; Autumn 2026's deadline has passed and no Spring 2027 date is up yet. Every relevant field is admin-pinned regardless.",
+    "HOLD    Charity Entrepreneurship Incubation Program — Reads as open until 13 September (six days out), but deadline is admin-held so nothing here could be written; and the programme trains and funds individual future charity founders, not an organisation applying, which is an audience question before anything else.",
+    "HOLD    Cheshire Community Foundation — Open Grants Programme — apply_url is an index over several named programmes with no single date visible for the Open Grants Programme specifically; deadline is admin-pinned regardless.",
+    "HOLD    Chrysalis Programme — An individual resident proposes the improvement to council-owned assets; an audience question rather than a timing one. Rolling with no deadline already matches what the page describes.",
+    "HOLD    Clean Air Solar Farm Community Benefit Fund — This year's window has closed; no next round stated. deadline and next_open_date are both admin-pinned regardless.",
+    "HOLD    Community Action Fund — Closed, no reopening date stated; several fields are admin-sourced regardless.",
+    "HOLD    Community Wellbeing and Mental Health Fund — This year's window has closed; no next round stated. deadline_cycle is admin-pinned regardless.",
+    "HOLD    Company of Actuaries Charitable Trust — No application route, deadline or reopening information found on the page.",
+    "HOLD    Computers 4 Charity — Refurbished Hardware — apply_url now redirects to computers4good.com, a rebrand of the same organisation, still offering refurbished equipment to charities. A relink candidate; nearly every column is admin-held regardless."
+   ]
   }
  ],
  "summary": {
