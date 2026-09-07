@@ -245,7 +245,7 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
       ${typedMeta(r.type, r.meta)}
       <p style="margin:0 0 16px;font-family:${BODY};font-size:13.5px;line-height:1.55;color:${C.body};">${esc(r.blurb)}</p>`).join('')
     rows.push(ruledSection(`${sectionLabel('New this week')}
-      <p style="margin:0 0 16px;font-family:${BODY};font-size:14px;line-height:1.55;color:${C.body};">Added to the catalogue in the last seven days, and open to you.</p>
+      <p style="margin:0 0 16px;font-family:${BODY};font-size:14px;line-height:1.55;color:${C.body};">Added to the catalogue in the last seven days, and matched to you.</p>
       ${body}`))
   }
 

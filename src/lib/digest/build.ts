@@ -560,14 +560,21 @@ export async function buildDigest(
 
     const blurb = buildBlurb(g.funder_brief)
 
-    // New this week and open to them. Score is deliberately ignored: the claim
-    // is "this arrived and you can apply for it", not "this is a good match".
-    // Eligibility is what stops it becoming a feed of things they cannot use.
+    // New this week AND matched to them, at the same floor as the ranked list.
+    // The first version ignored score and filtered on eligibility alone, on the
+    // theory that "this arrived and you can apply" was a claim worth making.
+    // In practice it put castle archaeology, marine conservation and an Army
+    // benevolent fund in front of an education charity (Devi's 7 Sept dry run),
+    // because eligibility says nothing about relevance. Paul: "these matches
+    // don't look very relevant at all". The section now clears the same bar
+    // as everything else in the email, and simply disappears in a week when
+    // nothing new clears it.
     if (
       blurb &&
       firstSeen &&
       (now.getTime() - firstSeen.getTime()) / 86_400_000 <= NEW_THIS_WEEK_DAYS &&
       result.eligibilityStatus !== 'ineligible' &&
+      result.score >= MATCH_FLOOR &&
       !seen.has(`new_match:${String(g.id)}`)
     ) {
       newThisWeekAll.push({ row: g, score: result.score })
@@ -791,9 +798,15 @@ export async function buildDigest(
     lead = `${spellCap(matchTotal)} ${matchTotal === 1 ? 'opportunity is' : 'opportunities are'} open to you right now. Here ${matches.length === 1 ? 'is the one' : `are the ${spell(matches.length)}`} closing soonest.`
     subject = `${plural(matchTotal, 'funding opportunity is', 'funding opportunities are')} open to ${org.name}`
   } else if (mode === 'thin') {
-    lead = nextIso
+    // Paul, 7 Sept: a line that only reports an absence is the one thing this
+    // email must not do. When there are matches, point at them, in the same
+    // terms the week-one state uses.
+    const clear = nextIso
       ? `A clear month. Nothing closes before ${humanDate(nextIso)}.`
       : 'A clear month. Nothing in your pipeline or saved list is closing.'
+    lead = matches.length
+      ? `${clear} Your next deadline is in the ${spell(matches.length)} matches below. Add one to your pipeline and this email will track it.`
+      : clear
     const stalledRow = inProgress.find(r => r.stalled)
     subject = stalledRow
       ? `${stalledRow.name} has not moved in three weeks`
