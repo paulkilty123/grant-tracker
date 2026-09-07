@@ -2109,6 +2109,313 @@
     "HOLD    Ignite Social Impact Competition — Reads as open now, ahead of the row's stale deadline, but this pairs a national competition with a six-week accelerator for early-stage ventures rather than an established organisation applying, which is an audience question; deadline, amounts, is_rolling, location_tag and eligible_structures are pinned regardless.",
     "HOLD    IM Properties Stratford 46 Community Fund — Names panel months (next: October 2026) rather than an application deadline; deadline_cycle is admin-pinned regardless."
    ]
+  },
+  {
+   "batch": 5,
+   "pile": "B",
+   "verdicts": [
+    {
+     "id": "077f7cf0-20e7-4199-896c-693c3f049c8a",
+     "title": "Independent Legal Advisors Service",
+     "pile": "B",
+     "verdict": "reject",
+     "code": "dead_url",
+     "quote": "Page not found. If you typed the web address, check it is correct.",
+     "url": "https://www.find-government-grants.service.gov.uk/grants/independent-legal-advisors-service-1",
+     "tidied": []
+    },
+    {
+     "id": "e95c39ec-da7e-4fdc-b111-9fc219fee6e9",
+     "title": "Innovate 2026",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Deadline for applications – Monday 29 June 2026 at 9am.",
+     "url": "https://www.sound-connections.org.uk/what-we-do/innovate/",
+     "tidied": [],
+     "for_paul": "Deadline has passed; no next round stated. Every relevant field is admin-pinned."
+    },
+    {
+     "id": "334ea9cf-ae9c-4df9-ae2d-3c36bff9b8f5",
+     "title": "Inspiring Lewisham Communities Fund 2026",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "In delivery",
+     "url": "https://app.actionfunder.org/fund/955",
+     "tidied": [],
+     "for_paul": "Status reads \"In delivery\" — this round has closed and is funding its recipients. No next round date given."
+    },
+    {
+     "id": "c740bb33-f49e-4c9f-b8db-110b767e985f",
+     "title": "J N Derbyshire Trust",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Opening: 01/09/2026 Deadline: 31/01/2027",
+     "url": "https://www.forevernotts.com/grant/j-n-derbyshire-trust/",
+     "tidied": [],
+     "for_paul": "A genuine new round, opened 1 September 2026, closing 31 January 2027, but deadline is admin-held."
+    },
+    {
+     "id": "415b3809-c15b-4bd7-9fc3-0a962fee9b67",
+     "title": "Jack Petchey Foundation - Places & Spaces Fund",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "The Expression of Interest stage has now closed. Successful applicants will be invited to submit a Full Application during August and September 2026.",
+     "url": "https://www.jackpetcheyfoundation.org.uk/jack-petchey-places-spaces-fund/",
+     "tidied": [],
+     "for_paul": "EOI stage closed; the next stage is invitation-only. Every relevant field is admin-pinned."
+    },
+    {
+     "id": "270eddd0-674c-4d18-9f96-80f7a6b46b27",
+     "title": "James Tudor Foundation — Physical Health Grant",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Full Application submission deadline: 31/07/2026 (17:00hrs)",
+     "url": "https://www.jamestudor.org.uk/physical-health",
+     "tidied": [],
+     "for_paul": "This year's invite round has run its course (deadline 31 July); the next board meeting is named for October 2026 but no new application window is stated."
+    },
+    {
+     "id": "8bb0acde-a49f-4a86-995a-9f19b23115f0",
+     "title": "JRCT — Sustainable Future Programme",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "The next open round for the Sustainable Future programme closes on September 2, 2026.",
+     "url": "https://www.jrct.org.uk/sustainable-future",
+     "tidied": [],
+     "for_paul": "The stated round closed 2 September 2026, five days before this read; no further round is named."
+    },
+    {
+     "id": "1fc7173e-a9af-4efc-bc1d-92c592fd6b2c",
+     "title": "King Charles III Charitable Fund — Small Grants",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "In 2026/27, applications will open as follows: May – Environment and Countryside funding themes (applications now closed)",
+     "url": "https://www.kccf.org.uk/small-grants/",
+     "tidied": [],
+     "for_paul": "Runs a themed rolling plan through the year; the only window named so far has closed and no later window's date has been published yet."
+    },
+    {
+     "id": "6566a492-f6e9-4146-99eb-887aedb4f0a1",
+     "title": "Large Grants for Charities",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "© 2026 Masonic Charitable Foundation",
+     "url": "https://freemasonscharity.org.uk/get-support/grants-to-charities/",
+     "tidied": [],
+     "for_paul": "The row's own rolling, no-deadline timing already matches the page; nothing here explains why it is still hidden."
+    },
+    {
+     "id": "e04145cc-d57d-445c-8c92-bb77da0fc4f4",
+     "title": "Leicestershire & Rutland Community Foundation — Making Local Life Better Fund",
+     "pile": "B",
+     "verdict": "publish",
+     "quote": "Deadline: No deadlines, the grant programme is open all year round.",
+     "url": "https://www.llrcommunityfoundation.org.uk/making-local-life-better-fund/",
+     "tidied": [
+      "deadline",
+      "is_rolling",
+      "funder_brief.who_can_apply",
+      "funder_brief.what_they_fund",
+      "funder_brief.how_to_apply",
+      "funder_brief.exclusions",
+      "funder_brief.decision_timeline",
+      "funder_brief.typical_award",
+      "funder_brief.open_status"
+     ]
+    },
+    {
+     "id": "67184349-6518-4ccd-9bd9-1f41704d85f5",
+     "title": "Lewes Town Council — Community Grants",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "The grant cycle for July 2026 has now closed. Outcomes for this round will be shared mid-September 2026.",
+     "url": "https://www.lewes-tc.gov.uk/your-council/grants/",
+     "tidied": [],
+     "for_paul": "The row already holds \"Autumn 2026\" as its next_open_date, which still fits; no more specific date has appeared."
+    },
+    {
+     "id": "f5691225-69b9-491b-a33d-3d5f3346fffd",
+     "title": "Living Essentials Fund",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Closing date: Coming winter 2026",
+     "url": "https://oxfordshire.org/ocf_grants/living-essentials-fund/",
+     "tidied": [],
+     "for_paul": "The row already holds \"Winter 2026\", which the page still says. deadline is admin-pinned."
+    },
+    {
+     "id": "65dd568c-30c8-4e47-ac04-cb779c76a78f",
+     "title": "Lloyds Bank Foundation — Mental Health Pillar",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Open Programmes Good Place to Live: New Beginnings Fund",
+     "url": "https://www.lloydsbankfoundation.org.uk/funding/",
+     "tidied": [],
+     "for_paul": "The foundation's current open programme is a homelessness-prevention fund, not a Mental Health Pillar by that name; every field on this row is admin-pinned regardless."
+    },
+    {
+     "id": "b3794a4d-7951-4d66-8f16-2b78cbca651e",
+     "title": "Lloyds Bank Foundation Funding Programmes",
+     "pile": "B",
+     "verdict": "reject",
+     "code": "duplicate",
+     "quote": "Our first funding programme of 2026 is now open for applications. The Good Place to Live: New Beginnings Fund will back local organisations working to prevent homelessness before it happens by focusing on the times in people's lives when they are most at risk.",
+     "url": "https://www.lloydsbankfoundation.org.uk/funding/",
+     "tidied": [],
+     "for_paul": "Duplicate of the live row 2f87181a, Good Place to Live: New Beginnings Fund, which already has its own dedicated page (lloydsbankfoundation.org.uk/funding/good-place-to-live-new-beginnings/). This row is the generic funding index describing the same programme.",
+     "dupe_of": [
+      "2f87181a"
+     ]
+    },
+    {
+     "id": "a14b6359-b0c8-45f6-a41d-8f4a0160017c",
+     "title": "LNER Customer & Community Investment Fund",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "",
+     "url": "https://www.lner.co.uk/about-us/customer-and-community-investment-fund/",
+     "tidied": [],
+     "for_paul": "HTTP 403, unreadable today."
+    },
+    {
+     "id": "1c9c502a-99a0-4637-9cbf-6d9f0b96712e",
+     "title": "Local News Fund ",
+     "pile": "B",
+     "verdict": "reject",
+     "code": "dead_url",
+     "quote": "Page not found. If you typed the web address, check it is correct.",
+     "url": "https://www.find-government-grants.service.gov.uk/grants/local-news-fund-1",
+     "tidied": []
+    },
+    {
+     "id": "999ec426-0dcc-4929-ae8e-013411ab41d5",
+     "title": "Medworth Community Fund",
+     "pile": "B",
+     "verdict": "park",
+     "quote": "Please note deadline 11:59am on 1st May is for both large (up to £50k) and small (up to £5k) applications. Deadline 11:59am on 1st August is for small (up to £5k) applications only.",
+     "url": "https://www.cambscf.org.uk/funds/medworth/",
+     "tidied": [
+      "deadline",
+      "is_rolling"
+     ]
+    },
+    {
+     "id": "9605bf45-9c22-467f-92fc-a3a5ba04b6fe",
+     "title": "Men’s Health Community Fund",
+     "pile": "B",
+     "verdict": "reject",
+     "code": "dead_url",
+     "quote": "Page not found. If you typed the web address, check it is correct.",
+     "url": "https://www.find-government-grants.service.gov.uk/grants/mens-health-community-fund-1",
+     "tidied": []
+    },
+    {
+     "id": "3ce5848d-9703-4e93-842f-7c80a74ab1c1",
+     "title": "Mid Sussex District Council — Community Grants",
+     "pile": "B",
+     "verdict": "publish",
+     "quote": "We are currently accepting Community Grant Applications.",
+     "url": "https://www.midsussex.gov.uk/business-licensing/community-grants/",
+     "tidied": [
+      "deadline",
+      "is_rolling",
+      "funder_brief.who_can_apply",
+      "funder_brief.what_they_fund",
+      "funder_brief.how_to_apply",
+      "funder_brief.exclusions",
+      "funder_brief.decision_timeline",
+      "funder_brief.typical_award",
+      "funder_brief.open_status"
+     ]
+    },
+    {
+     "id": "1f0b2bab-83e0-45b9-a746-fa621e21be8a",
+     "title": "Mortgage Advice Bureau Foundation Grant",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "",
+     "url": "https://www.mortgageadvicebureaufoundation.org/apply",
+     "tidied": [],
+     "for_paul": "Every relevant field is admin-pinned; no new information found on the page beyond what the row already holds."
+    },
+    {
+     "id": "dd93bbdd-fe6c-497b-b781-b378a87f2cb3",
+     "title": "Museum Fundamentals",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Closing date for expressions of interest 5pm Friday 7 August 2026. Full application 5pm Friday 25 September 2026.",
+     "url": "https://aim-museums.co.uk/grants/museum-fundamentals/",
+     "tidied": [],
+     "for_paul": "The Autumn round's Expression of Interest stage, the entry point for a new applicant, closed 7 August 2026; the 25 September full-application deadline is only for those already through EOI."
+    },
+    {
+     "id": "959a853b-a16f-4c46-a18d-d841a5fe55fa",
+     "title": "Music for All — Community Project Funding",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Applications for Round 3 have closed. Please check back for details of Round 4 in the coming weeks.",
+     "url": "https://www.musicforall.org.uk/schools-and-community-groups-awards/",
+     "tidied": [],
+     "for_paul": "Round 4 is promised \"in the coming weeks\" rather than dated."
+    },
+    {
+     "id": "10a2f396-3562-43d6-8841-7d9608ac08e7",
+     "title": "Nature Networks Fund (round six)",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Application deadline: 12noon on 3 November 2026",
+     "url": "https://www.heritagefund.org.uk/funding/nature-networks-fund-round-six",
+     "tidied": [],
+     "for_paul": "A genuine future deadline, 3 November 2026, but deadline, amounts, is_rolling, location_tag and next_open_date are all admin-pinned."
+    },
+    {
+     "id": "3d26a26e-b73e-47f2-8c0d-5b68e6913b92",
+     "title": "Neighbourhood Fund 2026",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "The Neighbourhood Fund 2026 project submission window is now closed for this year, many thanks to all of those who have submitted project ideas.",
+     "url": "https://www.sutton.gov.uk/planning-and-building/planning/community-infrastructure-levy-cil/neighbourhood-fund",
+     "tidied": [],
+     "for_paul": "Closed, being assessed; no next window date given."
+    },
+    {
+     "id": "277bbe32-d3e9-48a8-b826-ebc8fa354395",
+     "title": "New Albion Community Wind Farm Fund",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "New Albion Wind Farm Fund Friday 4th September 2026",
+     "url": "https://www.ncf.uk.com/grants/grant-deadlines",
+     "tidied": [],
+     "for_paul": "This fund's own entry on Northamptonshire CF's central deadlines table still shows 4 September 2026, the same date already on the row and now three days past — while sibling wind farm funds on the same table (Winwick, Yelvertoft, The Compton Fund) have all moved on to 2 October 2026. Worth a direct check with the foundation rather than assuming either way."
+    }
+   ],
+   "paul_list": [
+    "PUBLISH Leicestershire & Rutland Community Foundation — Making Local Life Better Fund",
+    "PUBLISH Mid Sussex District Council — Community Grants",
+    "PARK    Medworth Community Fund",
+    "REJECT  Independent Legal Advisors Service (dead_url)",
+    "REJECT  Lloyds Bank Foundation Funding Programmes (duplicate) — Duplicate of the live row 2f87181a, Good Place to Live: New Beginnings Fund, which already has its own dedicated page (lloydsbankfoundation.org.uk/funding/good-place-to-live-new-beginnings/). This row is the generic funding index describing the same programme.",
+    "REJECT  Local News Fund  (dead_url)",
+    "REJECT  Men’s Health Community Fund (dead_url)",
+    "HOLD    Innovate 2026 — Deadline has passed; no next round stated. Every relevant field is admin-pinned.",
+    "HOLD    Inspiring Lewisham Communities Fund 2026 — Status reads \"In delivery\" — this round has closed and is funding its recipients. No next round date given.",
+    "HOLD    J N Derbyshire Trust — A genuine new round, opened 1 September 2026, closing 31 January 2027, but deadline is admin-held.",
+    "HOLD    Jack Petchey Foundation - Places & Spaces Fund — EOI stage closed; the next stage is invitation-only. Every relevant field is admin-pinned.",
+    "HOLD    James Tudor Foundation — Physical Health Grant — This year's invite round has run its course (deadline 31 July); the next board meeting is named for October 2026 but no new application window is stated.",
+    "HOLD    JRCT — Sustainable Future Programme — The stated round closed 2 September 2026, five days before this read; no further round is named.",
+    "HOLD    King Charles III Charitable Fund — Small Grants — Runs a themed rolling plan through the year; the only window named so far has closed and no later window's date has been published yet.",
+    "HOLD    Large Grants for Charities — The row's own rolling, no-deadline timing already matches the page; nothing here explains why it is still hidden.",
+    "HOLD    Lewes Town Council — Community Grants — The row already holds \"Autumn 2026\" as its next_open_date, which still fits; no more specific date has appeared.",
+    "HOLD    Living Essentials Fund — The row already holds \"Winter 2026\", which the page still says. deadline is admin-pinned.",
+    "HOLD    Lloyds Bank Foundation — Mental Health Pillar — The foundation's current open programme is a homelessness-prevention fund, not a Mental Health Pillar by that name; every field on this row is admin-pinned regardless.",
+    "HOLD    LNER Customer & Community Investment Fund — HTTP 403, unreadable today.",
+    "HOLD    Mortgage Advice Bureau Foundation Grant — Every relevant field is admin-pinned; no new information found on the page beyond what the row already holds.",
+    "HOLD    Museum Fundamentals — The Autumn round's Expression of Interest stage, the entry point for a new applicant, closed 7 August 2026; the 25 September full-application deadline is only for those already through EOI.",
+    "HOLD    Music for All — Community Project Funding — Round 4 is promised \"in the coming weeks\" rather than dated.",
+    "HOLD    Nature Networks Fund (round six) — A genuine future deadline, 3 November 2026, but deadline, amounts, is_rolling, location_tag and next_open_date are all admin-pinned.",
+    "HOLD    Neighbourhood Fund 2026 — Closed, being assessed; no next window date given.",
+    "HOLD    New Albion Community Wind Farm Fund — This fund's own entry on Northamptonshire CF's central deadlines table still shows 4 September 2026, the same date already on the row and now three days past — while sibling wind farm funds on the same table (Winwick, Yelvertoft, The Compton Fund) have all moved on to 2 October 2026. Worth a direct check with the foundation rather than assuming either way."
+   ]
   }
  ],
  "summary": {
