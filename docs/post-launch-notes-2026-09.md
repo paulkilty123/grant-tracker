@@ -231,3 +231,18 @@ it reads, but the URL checker does not, and a live row is only re-read on the
 verifier's cadence. Post-launch: give the URL checker a name test (funder or
 title word present in the page), and treat a 200 that fails it as
 `page_unreadable`, not `ok`.
+
+### expire-grants skips rolling rows, so a rolling row with a deadline never rolls
+
+Found 7 Sept on St Giles & St George (rolling small grants plus quarterly
+Project Grant deadlines). The cron's candidate query excludes
+`is_rolling = true`, so a mixed row's dated deadline sits stale after it
+passes. Today no live row has that shape, and the mixed rows from the timing
+job carry their dates in `deadline_cycle` with `deadline` null, which is why
+none shows the problem. Fix: drop the `is_rolling` exclusion and, for a
+rolling row whose deadline has passed with no next date, clear the deadline
+rather than hide the row. Fixture: one rolling row with a past deadline and a
+cycle, one without. Related: when a cycle's last published date passes
+(St Giles has no 2027 dates yet), the row goes to between_rounds with no
+reopen date and waits for a human; a "re-read the page when the last known
+date passes" trigger would catch the new dates the funder posts.
