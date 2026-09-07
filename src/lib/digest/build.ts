@@ -378,10 +378,24 @@ function buildBlurb(brief: unknown): string | null {
   // An exclusions field that says there are none is not a caveat, and pasting
   // "No explicit exclusions stated" onto the end of every blurb is noise that
   // makes the real exclusions easier to skim past.
-  const rawExcl = typeof b.exclusions === 'string' ? b.exclusions : ''
+  const rawExcl = typeof b.exclusions === 'string' ? stripPlaceholderLead(b.exclusions) : ''
   const saysNone = /^\s*(no(ne)?\b[^.]{0,40}(exclusion|stated|specified|listed)|not stated|n\/a)/i.test(rawExcl)
   const excl = rawExcl && !saysNone ? firstSentence(rawExcl, 95) : null
   return excl ? `${what} ${excl}` : what
+}
+
+/**
+ * "Not explicitly stated. However, applicants must be based in England."
+ * The enricher writes that shape on about twenty live rows: a placeholder
+ * first sentence, then the real caveat. `firstSentence` took the placeholder
+ * and the digest printed "Not explicitly stated." after a loan fund's blurb
+ * (seen in the 7 Sept dry run). Drop the placeholder and keep what follows;
+ * if nothing follows, the saysNone test above still drops the whole thing.
+ */
+export function stripPlaceholderLead(text: string): string {
+  return text
+    .replace(/^\s*(not|none|no)\s+(explicitly\s+|specifically\s+)?(stated|specified|listed|mentioned|given)[^.]*\.\s*(however,?\s*)?/i, '')
+    .replace(/^[a-z]/, c => c.toUpperCase())
 }
 
 export interface BuildOptions {
