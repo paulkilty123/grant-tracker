@@ -93,7 +93,7 @@ const ROWS: Row[] = [
 ]
 
 const REPORT: Report[] = [
-  { id: '3b836a87-fd0e-4d5c-bfdc-b44f7c793eb1', title: 'Gatsby Charitable Foundation', why: 'not_stated',
+  { id: '3b836a87-fd0e-4d5c-bfdc-b44f7c793eb1', title: 'Gatsby Charitable Foundation', why: 'homepage_only',
     quote: 'The Gatsby Charitable Foundation was set up by David Sainsbury to realise his charitable objectives.',
     url: 'https://www.gatsby.org.uk/' },
 
@@ -129,7 +129,7 @@ const REPORT: Report[] = [
     quote: 'Grants: we award small grants to young people, to help them pursue their passion in life.',
     url: 'https://www.jamesahernfoundation.org/' },
 
-  { id: 'b7d19a10-753c-4294-95ad-ec43ac71595d', title: 'Kusuma Trust UK — Education, Communities & Environment', why: 'not_stated',
+  { id: 'b7d19a10-753c-4294-95ad-ec43ac71595d', title: 'Kusuma Trust UK — Education, Communities & Environment', why: 'homepage_only',
     quote: 'We\'re making sure disadvantaged young people from former coal mining areas have the confidence they need to apply for top universities.',
     url: 'https://www.kusumatrust.org/' },
 
