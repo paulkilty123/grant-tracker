@@ -28,6 +28,7 @@
 // to 'tagged_awaiting_review' explicitly instead. Bug 2 stays fixed, since
 // next_open_date still goes through the trust ladder.
 
+import { leadCutoff } from '@/lib/reopening-lead'
 import { NextRequest, NextResponse } from 'next/server'
 import { getAdminDb } from '@/lib/admin/admin-db'
 import { mergeGrantUpdate } from '@/lib/grant-merge'
@@ -61,7 +62,9 @@ export async function GET(req: NextRequest) {
       .select('id, title, funder, next_open_date')
       .not('next_open_date', 'is', null)
       .not('next_open_date_parsed', 'is', null)
-      .lte('next_open_date_parsed', today)
+      // A month's lead: the row surfaces for a look before the fund opens, so
+      // it is live when the round starts, not a week into it. Paul, 2026-09-07.
+      .lte('next_open_date_parsed', leadCutoff(today))
 
     if (fetchErr) {
       console.error('check-coming-soon fetch error:', fetchErr)
