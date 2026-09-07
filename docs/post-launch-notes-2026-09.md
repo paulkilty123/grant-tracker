@@ -260,3 +260,14 @@ carries a quote grounded on the funder's own page, apply it (at
 in the queue like any other. A grounded quote beats an ungrounded scrape;
 that is the trust ladder's own logic. Fixture: a scraper-held amount with a
 grounded proposal (applies), an admin-held one (still proposes).
+
+### The review queue has no tab for a hidden row that was once live
+
+Found 7 Sept: eleven rows the verdicts job marked ready to publish could not
+be published from the queue, because a row with `pipeline_state='published'`
+and `is_active=false` (expired, then found reopened) appears in no tab. The
+queue shows review states and live rows only; `between_rounds_scheduled` has
+its own tab but plain hidden-published does not. Paul had to say the word
+and a script did it. Add a "Hidden, was live" tab, or route a reopened
+hidden row into `tagged_awaiting_review` when a read finds it open, so the
+existing Ready section carries it.
