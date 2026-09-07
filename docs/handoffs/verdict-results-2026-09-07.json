@@ -1497,6 +1497,314 @@
     "HOLD    Company of Actuaries Charitable Trust — No application route, deadline or reopening information found on the page.",
     "HOLD    Computers 4 Charity — Refurbished Hardware — apply_url now redirects to computers4good.com, a rebrand of the same organisation, still offering refurbished equipment to charities. A relink candidate; nearly every column is admin-held regardless."
    ]
+  },
+  {
+   "batch": 3,
+   "pile": "B",
+   "verdicts": [
+    {
+     "id": "c9692361-16c7-48e7-825b-8a1d94d9e034",
+     "title": "Constance Travis Community Endowment Fund",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "This fund is currently closed.",
+     "url": "https://www.ncf.uk.com/constance-travis-community-fund",
+     "tidied": [],
+     "for_paul": "The fund's own page says it is closed; Northamptonshire CF's central grant-deadlines table says the same fund \"is a rolling programme; you can apply at any time.\" The two pages disagree with each other, not just with the row."
+    },
+    {
+     "id": "60dcab53-8d08-4c2d-b5e5-a37fa8c29f10",
+     "title": "Consumer Led Flexibility for the Clean Energy Superpower Mission",
+     "pile": "B",
+     "verdict": "reject",
+     "code": "dead_url",
+     "quote": "Page not found. If you typed the web address, check it is correct.",
+     "url": "https://www.find-government-grants.service.gov.uk/grants/consumer-led-flexibility-for-the-clean-energy-superpower-mission-1",
+     "tidied": []
+    },
+    {
+     "id": "1d704e7d-adb2-48fc-a851-12a8e9ab471b",
+     "title": "Corra Foundation — Alcohol and Drugs Fund: Children, Young People and Families Grants",
+     "pile": "B",
+     "verdict": "reject",
+     "code": "dead_url",
+     "quote": "Available now: Boost Fund, Alcohol and Drugs Fund – Local Support Grants, Alcohol and Drugs Fund - Local Support Micro Grants, Corra Racial Equity Fund.",
+     "url": "https://www.corra.scot/grants/",
+     "tidied": [],
+     "for_paul": "The Children, Young People, Families strand's own page 404s, and it is no longer among Corra's currently available funds."
+    },
+    {
+     "id": "48c29df0-33d3-47dd-8a24-1094ef8445d3",
+     "title": "Corra Foundation — Alcohol and Drugs Fund: Local Support Grants",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Funding rounds will be conducted on a rolling basis. Applications for projects delivering work up to April 2029 are welcomed.",
+     "url": "https://www.corra.scot/grants/alcohol-and-drugs-fund-local-support-grants/",
+     "tidied": [],
+     "for_paul": "Genuinely rolling, with panels meeting July, September and November 2026 then every two months. deadline, amount_max and is_rolling are all admin-held."
+    },
+    {
+     "id": "c78ff76b-a8d7-4dc4-98c5-955c6e9add24",
+     "title": "Corra Foundation — Alcohol and Drugs Fund: Partnership and Delivery Grants",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "This fund closed to applications on 18 th August 2026 . We expect applicants to be notified of decisions by 31 st October 2026.",
+     "url": "https://www.corra.scot/grants/alcohol-and-drugs-fund-partnership-and-delivery-grants/",
+     "tidied": [],
+     "for_paul": "Closed, outcome due 31 October 2026; no next round stated."
+    },
+    {
+     "id": "e17e2817-eeb9-4c89-87e0-e867f3e3b2d2",
+     "title": "Corra Foundation — Henry Duncan Grants 2026",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Stage One of the Henry Duncan Grants Programme 2026 closed to applications on Thursday 23 July at 12 noon.",
+     "url": "https://www.corra.scot/grants/henry-duncan-grants/",
+     "tidied": [],
+     "for_paul": "Closed, outcome due week of 19 October 2026; no 2027 round stated."
+    },
+    {
+     "id": "2612d2af-5d84-41d1-87a2-a0d84a2da367",
+     "title": "Corra Foundation — YoYo Fund",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "The closing date for this round of applications to the YOYO Fund will be 12pm on Tuesday 1st September.",
+     "url": "https://www.corra.scot/grants/yoyo/",
+     "tidied": [],
+     "for_paul": "Closes today (1 September 2026); outcome due November 2026; no next round stated."
+    },
+    {
+     "id": "d1d21112-7d49-4578-8922-4aff419e5060",
+     "title": "Creative Foundations Fund",
+     "pile": "B",
+     "verdict": "reject",
+     "code": "dead_url",
+     "quote": "Page not found. If you typed the web address, check it is correct.",
+     "url": "https://www.find-government-grants.service.gov.uk/grants/creative-foundations-fund-1",
+     "tidied": []
+    },
+    {
+     "id": "26945401-f658-477f-913a-a0e74baae548",
+     "title": "CultureStep",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Deadline: Thursday 1 October 2026 ... Deadline: Thursday 26 November 2026 ... Deadline: Thursday 4 March 2027",
+     "url": "https://aandb.cymru/culturestep/",
+     "tidied": [],
+     "for_paul": "Three concrete future deadlines (1 October, 26 November 2026, 4 March 2027), but deadline, amounts, is_rolling and location_tag are all admin-pinned."
+    },
+    {
+     "id": "6add973c-430a-482b-98e9-366ecd2e6a7a",
+     "title": "D'Oyly Carte Charitable Trust",
+     "pile": "B",
+     "verdict": "publish",
+     "quote": "Small Charity applicants and second-stage Large Charity applicants must complete by 5pm on 2nd October 2026.",
+     "url": "https://doylycartecharitabletrust.org/apply-for-funding/",
+     "tidied": [
+      "deadline",
+      "is_rolling",
+      "funder_brief.who_can_apply",
+      "funder_brief.what_they_fund",
+      "funder_brief.how_to_apply",
+      "funder_brief.exclusions",
+      "funder_brief.decision_timeline",
+      "funder_brief.typical_award",
+      "funder_brief.open_status"
+     ]
+    },
+    {
+     "id": "16cda59c-ec63-47b1-b03e-58699d61782a",
+     "title": "Delamere Dairy Foundation",
+     "pile": "B",
+     "verdict": "park",
+     "quote": "The application window is now closed. If you have not heard from us by 30th September 2026 then you have not been successful. We re-open for applications on 1 st January 2027",
+     "url": "https://delameredairyfoundation.org.uk/",
+     "tidied": [
+      "next_open_date",
+      "next_open_date_parsed",
+      "deadline",
+      "is_rolling"
+     ]
+    },
+    {
+     "id": "1e255db9-6e40-41d9-bb1a-01532ac20b2c",
+     "title": "Democratic Engagement Fund",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "The Democratic Engagement Fund closed to applications on 31 August 2026 at 11:59pm. No further applications are being accepted.",
+     "url": "https://www.gov.uk/government/publications/democratic-engagement-fund-prospectus",
+     "tidied": [],
+     "for_paul": "Closed, outcomes due January 2027; no next round stated. deadline is admin-held."
+    },
+    {
+     "id": "60d8819c-14c1-47f7-8d65-451624296629",
+     "title": "Development Fund",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Deadline: 12pm, 20th July 2026",
+     "url": "https://harrowgiving.org.uk/development-fund/",
+     "tidied": [],
+     "for_paul": "Deadline has passed; no next round given. Every relevant field is admin-pinned regardless."
+    },
+    {
+     "id": "2553fb39-c2ec-46e3-b344-e442ba4840d8",
+     "title": "Didcot Powerhouse Fund",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Closing date: Coming winter 2026",
+     "url": "https://oxfordshire.org/ocf_grants/the-didcot-powerhouse-fund/",
+     "tidied": [],
+     "for_paul": "The row already holds \"Winter 2026\" as its next_open_date, which still matches the page; no more specific date has appeared yet."
+    },
+    {
+     "id": "03d377e7-2196-4fd7-807b-36c47932705d",
+     "title": "Domestic Abuse Community Innovation Fund",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Closing date: Now closed to expressions of interest",
+     "url": "https://oxfordshire.org/ocf_grants/domestic-abuse/",
+     "tidied": [],
+     "for_paul": "The row already holds \"Closed — next round TBC\", which still matches the page."
+    },
+    {
+     "id": "e68c5f52-de13-48fd-88bc-347f749d3035",
+     "title": "Dynamo Digital Inclusion Fund",
+     "pile": "B",
+     "verdict": "reject",
+     "code": "dead_url",
+     "quote": "Page not found.",
+     "url": "https://www.communityfoundation.org.uk/grants/dynamo-digital-inclusion-fund/",
+     "tidied": [],
+     "for_paul": "The page 404s and Dynamo is absent from CFNE's current list of 18 apply-now funds."
+    },
+    {
+     "id": "94447c6d-5fe2-4148-9578-f15c36e97550",
+     "title": "Energy Resilience Fund — Key Fund",
+     "pile": "B",
+     "verdict": "reject",
+     "code": "dead_url",
+     "quote": "We can provide investments from £5k to £300k to community and social enterprises.",
+     "url": "https://thekeyfund.co.uk/funding/",
+     "tidied": [],
+     "for_paul": "This product's own page 404s, and Key Fund's current funding page offers one unified investment product rather than named ones. Same shape as the Key Fund duplicates the pile A verdicts job named."
+    },
+    {
+     "id": "33bac7f6-8b8f-44f5-8ab6-55141aac452c",
+     "title": "Environment & Sustainability Grants",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "This funding programme has two rounds in 2026.",
+     "url": "https://www.heathrowcommunitytrust.org/grants-for-environment-and-sustainability-projects",
+     "tidied": [],
+     "for_paul": "The page confirms a second 2026 round exists but does not give its dates."
+    },
+    {
+     "id": "67025b88-4512-44ec-ae3b-d5c9329038b4",
+     "title": "Focus Foundation",
+     "pile": "B",
+     "verdict": "publish",
+     "quote": "Our portal is now open for applications",
+     "url": "https://www.focusfoundation.org.uk/apply-for-a-grant",
+     "tidied": [
+      "deadline",
+      "is_rolling",
+      "funder_brief.who_can_apply",
+      "funder_brief.what_they_fund",
+      "funder_brief.how_to_apply",
+      "funder_brief.exclusions",
+      "funder_brief.decision_timeline",
+      "funder_brief.typical_award",
+      "funder_brief.open_status"
+     ]
+    },
+    {
+     "id": "fa1cc1d5-75fa-4a7e-aa6f-178cc3931770",
+     "title": "Funding Futures Programme",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Next round on 1 October 2026 at 10:00 (23 days)",
+     "url": "https://unltd.org.uk/awards/funding-futures-programme/",
+     "tidied": [],
+     "for_paul": "A live countdown to 1 October 2026, but nearly every column is admin-held, and UnLtd's award goes to an individual social entrepreneur rather than an organisation, which is the more basic question here."
+    },
+    {
+     "id": "35dd731c-d8c2-4715-8439-e39a8d9b8c87",
+     "title": "Funding opportunity: London LGBT+ Fund",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Please note that this fund is now closed to applications.",
+     "url": "https://lgbtfund.org.uk/live-funds/london-fund/",
+     "tidied": [],
+     "for_paul": "Closed, no next round stated."
+    },
+    {
+     "id": "5cec571b-26c2-4a22-b200-f2f7c60cad75",
+     "title": "Gannochy Trust — Scotland Youth Development Grants",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "2nd October 2026 at 12 noon, for consideration at the grant-making meeting on 2nd December 2026 *Application portal opens on 3rd August 2026*",
+     "url": "https://www.gannochytrust.org.uk/our-grants/applying-for-grant-funding/",
+     "tidied": [],
+     "for_paul": "A genuine future deadline, 2 October 2026, but deadline, amount_max, is_rolling and location_tag are all admin-pinned."
+    },
+    {
+     "id": "f06351b9-42a7-460c-a9fa-3af50bffb9c2",
+     "title": "General and Small Grants (Learning Disability)",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "31 August for consideration at the meeting to be held in November.",
+     "url": "https://www.bailythomas.org.uk/grants/general-programme",
+     "tidied": [],
+     "for_paul": "A recurring quarterly cycle (31 December, 31 March, 31 August, each for the following meeting); the row's deadline is the current, already-passed one. Next in the cycle is 31 December 2026. deadline is admin-pinned."
+    },
+    {
+     "id": "eb46e253-9835-467c-ae2f-867f6c871e0b",
+     "title": "Good Finance",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "",
+     "url": "https://www.goodfinance.org.uk/",
+     "tidied": [],
+     "for_paul": "A directory of social investors rather than a single fund with a date; nearly every column is admin-held regardless."
+    },
+    {
+     "id": "961ce424-4a7d-4dd5-a73f-d3a3a6d37a5f",
+     "title": "Grants for Animal Rescue, Rehabilitation, Release and Rehoming",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "1st December (for our Spring meeting) 1st April (for our Summer meeting) 1st August (for our Winter meeting)",
+     "url": "https://www.jeansainsburyanimalwelfare.org.uk/grants",
+     "tidied": [],
+     "for_paul": "A recurring cycle, three deadlines a year; the row's deadline (1 August) is the current, already-passed one. Next in the cycle is 1 December 2026."
+    }
+   ],
+   "paul_list": [
+    "PUBLISH D'Oyly Carte Charitable Trust",
+    "PUBLISH Focus Foundation",
+    "PARK    Delamere Dairy Foundation",
+    "REJECT  Consumer Led Flexibility for the Clean Energy Superpower Mission (dead_url)",
+    "REJECT  Corra Foundation — Alcohol and Drugs Fund: Children, Young People and Families Grants (dead_url) — The Children, Young People, Families strand's own page 404s, and it is no longer among Corra's currently available funds.",
+    "REJECT  Creative Foundations Fund (dead_url)",
+    "REJECT  Dynamo Digital Inclusion Fund (dead_url) — The page 404s and Dynamo is absent from CFNE's current list of 18 apply-now funds.",
+    "REJECT  Energy Resilience Fund — Key Fund (dead_url) — This product's own page 404s, and Key Fund's current funding page offers one unified investment product rather than named ones. Same shape as the Key Fund duplicates the pile A verdicts job named.",
+    "HOLD    Constance Travis Community Endowment Fund — The fund's own page says it is closed; Northamptonshire CF's central grant-deadlines table says the same fund \"is a rolling programme; you can apply at any time.\" The two pages disagree with each other, not just with the row.",
+    "HOLD    Corra Foundation — Alcohol and Drugs Fund: Local Support Grants — Genuinely rolling, with panels meeting July, September and November 2026 then every two months. deadline, amount_max and is_rolling are all admin-held.",
+    "HOLD    Corra Foundation — Alcohol and Drugs Fund: Partnership and Delivery Grants — Closed, outcome due 31 October 2026; no next round stated.",
+    "HOLD    Corra Foundation — Henry Duncan Grants 2026 — Closed, outcome due week of 19 October 2026; no 2027 round stated.",
+    "HOLD    Corra Foundation — YoYo Fund — Closes today (1 September 2026); outcome due November 2026; no next round stated.",
+    "HOLD    CultureStep — Three concrete future deadlines (1 October, 26 November 2026, 4 March 2027), but deadline, amounts, is_rolling and location_tag are all admin-pinned.",
+    "HOLD    Democratic Engagement Fund — Closed, outcomes due January 2027; no next round stated. deadline is admin-held.",
+    "HOLD    Development Fund — Deadline has passed; no next round given. Every relevant field is admin-pinned regardless.",
+    "HOLD    Didcot Powerhouse Fund — The row already holds \"Winter 2026\" as its next_open_date, which still matches the page; no more specific date has appeared yet.",
+    "HOLD    Domestic Abuse Community Innovation Fund — The row already holds \"Closed — next round TBC\", which still matches the page.",
+    "HOLD    Environment & Sustainability Grants — The page confirms a second 2026 round exists but does not give its dates.",
+    "HOLD    Funding Futures Programme — A live countdown to 1 October 2026, but nearly every column is admin-held, and UnLtd's award goes to an individual social entrepreneur rather than an organisation, which is the more basic question here.",
+    "HOLD    Funding opportunity: London LGBT+ Fund — Closed, no next round stated.",
+    "HOLD    Gannochy Trust — Scotland Youth Development Grants — A genuine future deadline, 2 October 2026, but deadline, amount_max, is_rolling and location_tag are all admin-pinned.",
+    "HOLD    General and Small Grants (Learning Disability) — A recurring quarterly cycle (31 December, 31 March, 31 August, each for the following meeting); the row's deadline is the current, already-passed one. Next in the cycle is 31 December 2026. deadline is admin-pinned.",
+    "HOLD    Good Finance — A directory of social investors rather than a single fund with a date; nearly every column is admin-held regardless.",
+    "HOLD    Grants for Animal Rescue, Rehabilitation, Release and Rehoming — A recurring cycle, three deadlines a year; the row's deadline (1 August) is the current, already-passed one. Next in the cycle is 1 December 2026."
+   ]
   }
  ],
  "summary": {
