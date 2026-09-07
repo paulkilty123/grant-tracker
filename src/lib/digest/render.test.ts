@@ -143,7 +143,7 @@ describe('"New this week" is present only when it has rows', () => {
     })
     expect(withNew).toContain('New this week')
     // The qualifying half matters: these are new AND theirs, not new full stop.
-    expect(withNew).toContain('Added to the catalogue in the last seven days, and open to you.')
+    expect(withNew).toContain('Added to the catalogue in the last seven days, and matched to you.')
     expect(withNew).toContain('href="https://www.shootsfunding.co.uk/dashboard/search?grant=new-1"')
   })
 })

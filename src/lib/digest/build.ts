@@ -333,6 +333,20 @@ function grantUrl(origin: string, row: Record<string, unknown>): string {
 }
 
 /**
+ * Order for the ranked match list: not-yet-shown first, then fresh, then score.
+ * `seen` holds `section:item_key` pairs from digest_sent_items for the history
+ * window. Exported so the rotation can be tested without a database.
+ */
+export function matchOrder(seen: Set<string>) {
+  type S = { row: Record<string, unknown>; score: number; fresh: boolean }
+  const shownBefore = (s: S) => seen.has(`new_match:${String(s.row.id)}`)
+  return (a: S, b: S) =>
+    Number(shownBefore(a)) - Number(shownBefore(b)) ||
+    Number(b.fresh) - Number(a.fresh) ||
+    b.score - a.score
+}
+
+/**
  * The match blurb — the product, not decoration.
  *
  * Built from the funder's OWN words (`funder_brief.what_they_fund` and
@@ -560,14 +574,21 @@ export async function buildDigest(
 
     const blurb = buildBlurb(g.funder_brief)
 
-    // New this week and open to them. Score is deliberately ignored: the claim
-    // is "this arrived and you can apply for it", not "this is a good match".
-    // Eligibility is what stops it becoming a feed of things they cannot use.
+    // New this week AND matched to them, at the same floor as the ranked list.
+    // The first version ignored score and filtered on eligibility alone, on the
+    // theory that "this arrived and you can apply" was a claim worth making.
+    // In practice it put castle archaeology, marine conservation and an Army
+    // benevolent fund in front of an education charity (Devi's 7 Sept dry run),
+    // because eligibility says nothing about relevance. Paul: "these matches
+    // don't look very relevant at all". The section now clears the same bar
+    // as everything else in the email, and simply disappears in a week when
+    // nothing new clears it.
     if (
       blurb &&
       firstSeen &&
       (now.getTime() - firstSeen.getTime()) / 86_400_000 <= NEW_THIS_WEEK_DAYS &&
       result.eligibilityStatus !== 'ineligible' &&
+      result.score >= MATCH_FLOOR &&
       !seen.has(`new_match:${String(g.id)}`)
     ) {
       newThisWeekAll.push({ row: g, score: result.score })
@@ -648,20 +669,28 @@ export async function buildDigest(
   // empty and disappeared, and the whole list returned a month later when the
   // suppression window expired. Feast, a month of nothing, feast.
   //
-  // The no-repeat rule in the spec is about the OPTIONAL sections — near
-  // misses, the profile prompt, rounds opening. Matches are rung 3 and are not
-  // optional. For a profile that has not changed, the right behaviour is that
-  // this section does not change either: these are still their best matches,
-  // and rotating down to the eleventh-to-twentieth best to manufacture novelty
-  // makes the email worse every week.
+  // ROTATION, not suppression (Paul, 7 Sept 2026). The first version
+  // suppressed shown matches outright and the list emptied, hence the feast
+  // and famine above. The second version never rotated, on the argument that
+  // the best matches are the best matches, and left novelty to "New this
+  // week". Then "New this week" acquired the match floor (it had been showing
+  // castles to an education charity), and with a dozen new rows a week across
+  // the catalogue it is usually empty, so a weekly email for an unchanged
+  // profile was the same ten rows every week.
   //
-  // "New this week" carries the novelty now, and it is honest about it because
-  // it filters on recency rather than on whatever we happened to show somebody.
+  // So: anything shown as a match in the last 31 days (the route's history
+  // window) sorts BELOW anything not yet shown, and within each band fresh
+  // first, then score. Ten unshown matches exist: ten unseen rows go out.
+  // Three exist: three unseen and then the seven best repeats. The pool never
+  // empties and the floor never moves; only the order does. Someone with forty
+  // matches sees all forty across four sends before anything comes round again.
   //
-  // Still deduped against that section, so one fund cannot appear twice in one
-  // email under two headings.
+  // Week one below replaces this sort with deadline order, unchanged.
+  //
+  // Still deduped against "New this week", so one fund cannot appear twice in
+  // one email under two headings.
   const unshown = withBlurb.filter(s => !newThisWeekKeys.has(String(s.row.id)))
-  unshown.sort((a, b) => Number(b.fresh) - Number(a.fresh) || b.score - a.score)
+  unshown.sort(matchOrder(seen))
 
   // Week one names its sort out loud — "here are the three closing soonest" —
   // so week one must actually sort by deadline. The first version claimed that
@@ -791,9 +820,15 @@ export async function buildDigest(
     lead = `${spellCap(matchTotal)} ${matchTotal === 1 ? 'opportunity is' : 'opportunities are'} open to you right now. Here ${matches.length === 1 ? 'is the one' : `are the ${spell(matches.length)}`} closing soonest.`
     subject = `${plural(matchTotal, 'funding opportunity is', 'funding opportunities are')} open to ${org.name}`
   } else if (mode === 'thin') {
-    lead = nextIso
+    // Paul, 7 Sept: a line that only reports an absence is the one thing this
+    // email must not do. When there are matches, point at them, in the same
+    // terms the week-one state uses.
+    const clear = nextIso
       ? `A clear month. Nothing closes before ${humanDate(nextIso)}.`
       : 'A clear month. Nothing in your pipeline or saved list is closing.'
+    lead = matches.length
+      ? `${clear} Your next deadline is in the ${spell(matches.length)} matches below. Add one to your pipeline and this email will track it.`
+      : clear
     const stalledRow = inProgress.find(r => r.stalled)
     subject = stalledRow
       ? `${stalledRow.name} has not moved in three weeks`
