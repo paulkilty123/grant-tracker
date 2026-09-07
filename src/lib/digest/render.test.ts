@@ -128,7 +128,7 @@ describe('"New this week" is present only when it has rows', () => {
     expect(html).not.toMatch(/no new (funding|opportunities)/i)
   })
 
-  it('renders with its qualifying line when it has rows', () => {
+  it('is switched off for now even when it has rows: the matcher over-admits (7 Sept 2026)', () => {
     const withNew = renderDigest({
       ...model,
       newThisWeek: [{
@@ -136,15 +136,9 @@ describe('"New this week" is present only when it has rows', () => {
         type: 'grant', meta: 'New Funder · closes 30 Sep', days: 30,
         url: 'https://www.shootsfunding.co.uk/dashboard/search?grant=new-1', key: 'n1',
       }],
-    }, {
-      origin: 'https://www.shootsfunding.co.uk',
-      unsubscribeUrl: 'https://www.shootsfunding.co.uk/api/alerts/unsubscribe?t=tok',
-      now: new Date('2026-09-01T09:00:00Z'),
-    })
-    expect(withNew).toContain('New this week')
-    // The qualifying half matters: these are new AND theirs, not new full stop.
-    expect(withNew).toContain('Added to the catalogue in the last seven days, and matched to you.')
-    expect(withNew).toContain('href="https://www.shootsfunding.co.uk/dashboard/search?grant=new-1"')
+    }, { origin: 'https://www.shootsfunding.co.uk', unsubscribeUrl: 'https://www.shootsfunding.co.uk/u', now: new Date('2026-09-07') })
+    expect(withNew).not.toContain('New this week')
+    expect(withNew).not.toContain('A Brand New Fund')
   })
 })
 

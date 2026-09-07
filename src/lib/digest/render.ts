@@ -261,21 +261,40 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
 
   /* ── 2. Also in progress. One line each: name left, stage right. ─────── */
   if (m.inProgress.length) {
-    // Stacked, title then flag, rather than a two-column table with a nowrap
-    // flag: at 375px a long grant name wrapped to four lines against one.
+    // Paul's section mockup, 7 Sept: a hairline-ruled list, title over flag,
+    // the flag in grey with only the variable part in the danger colour. The
+    // last row carries the closing rule, whatever the row count.
+    const last = m.inProgress.length - 1
+    const flag = (r: { stalled: boolean; stageLabel: string }) => {
+      const m2 = r.stalled ? r.stageLabel.match(/^(No movement (?:since|in) )(.+)$/) : null
+      return m2
+        ? `${esc(m2[1])}<span style="color:${C.danger};">${esc(m2[2])}</span>`
+        : esc(r.stageLabel)
+    }
     const lines = m.inProgress.map((r, i) => `
-      <p style="margin:0 0 2px;">${nameLink(r.url, r.name, 15)}</p>
-      <p style="margin:0 0 ${i === m.inProgress.length - 1 ? '0' : '14px'};font-family:${BODY};font-size:12.5px;line-height:1.5;color:${r.stalled ? C.danger : C.body};">${esc(r.stageLabel)}</p>`).join('')
+        <tr><td style="border-top:1px solid ${C.rule};${i === last ? `border-bottom:1px solid ${C.rule};` : ''}padding:12px 0;">
+          <p style="margin:0 0 3px;">${nameLink(r.url, r.name, 15)}</p>
+          <p style="margin:0;font-family:${BODY};font-size:12.5px;line-height:1.5;color:${C.body};">${flag(r)}</p>
+        </td></tr>`).join('')
     // "Also" only when something came before it.
-    rows.push(ruledSection(`${sectionLabel(m.closing.length ? 'Also in progress' : 'In progress')}${lines}
-      ${m.inProgressOverflow > 0 ? `<div style="margin-top:12px;">${textLink(`${origin}/dashboard/pipeline`, `and ${m.inProgressOverflow} more in progress`)}</div>` : ''}`))
+    rows.push(ruledSection(`${sectionLabel(m.closing.length ? 'Also in progress' : 'In progress', 10)}
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${lines}
+      </table>
+      ${m.inProgressOverflow > 0 ? `<p style="margin:12px 0 0;font-family:${BODY};font-size:13px;line-height:1.6;color:${C.body};"><a href="${origin}/dashboard/pipeline" style="color:${C.deep};text-decoration:underline;">${m.inProgressOverflow} more in progress</a></p>` : ''}`))
   }
 
   /* ── New this week. Present ONLY when it has rows: an empty section that
         announces there is nothing new teaches the reader to skip it, and the
         catalogue publishes nothing at all in a normal week more often than
         not. Nothing here says "no new funding" — it simply is not there. ── */
-  if (m.newThisWeek.length) {
+  // OFF for the 8 September send (Paul, 7 Sept). At the 65 floor the section
+  // still surfaced the Army Benevolent Fund for three arts charities and
+  // castles for Tibet Watch, because the matcher treats a funder's named
+  // beneficiary group as a warning rather than a cap. The builder still
+  // computes the rows so they stay deduped out of the ranked list; the
+  // renderer simply does not draw them until the matcher is fixed.
+  const SHOW_NEW_THIS_WEEK = false
+  if (SHOW_NEW_THIS_WEEK && m.newThisWeek.length) {
     const body = m.newThisWeek.map(r => `
       <p style="margin:0 0 3px;">${nameLink(r.url, r.title, 16)}</p>
       ${typedMeta(r.type, r.meta, true)}
