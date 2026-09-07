@@ -195,14 +195,16 @@ describe('the feedback ask is not footer boilerplate', () => {
 describe('section labels are structure, not furniture', () => {
   it('uses one definition for every label', () => {
     // Three copies of the same declaration is how three labels drift apart.
-    const decls = html.match(/letter-spacing:1\.6px/g) ?? []
-    const deep = html.match(/letter-spacing:1\.6px;text-transform:uppercase;color:#1D3C3E/g) ?? []
+    // 20px sentence-case headings since the 7 Sept 2026 design review.
+    const decls = html.match(/font-size:20px;font-weight:600;letter-spacing:-\.4px/g) ?? []
+    const deep = html.match(/font-size:20px;font-weight:600;letter-spacing:-\.4px;color:#1D3C3E/g) ?? []
     expect(decls.length).toBeGreaterThan(0)
     expect(deep.length).toBe(decls.length)
   })
 
   it('never renders a label in the muted caption colour', () => {
-    expect(html).not.toMatch(/letter-spacing:1\.6px;text-transform:uppercase;color:#73726F/)
+    expect(html).not.toMatch(/font-size:20px;font-weight:600;letter-spacing:-\.4px;color:#6C6B67/)
+    expect(html).not.toMatch(/letter-spacing:1\.6px;text-transform:uppercase/)
   })
 })
 

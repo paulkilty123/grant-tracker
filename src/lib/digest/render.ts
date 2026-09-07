@@ -39,8 +39,8 @@ function tile(days: number): { bg: string; today: boolean } {
   return { bg: '#9BCA9D', today: false }
 }
 
-function tileCell(days: number): string {
-  const t = tile(days)
+function tileCell(days: number, bg?: string): string {
+  const t = bg ? { ...tile(days), bg } : tile(days)
   if (t.today) {
     // Anything closing today is called out, never shown as an equal to one 80
     // days away. The word replaces the numeral rather than sitting under a "0".
@@ -49,18 +49,36 @@ function tileCell(days: number): string {
     </table>`
   }
   return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:${t.bg};border-radius:10px;">
-    <tr><td align="center" style="padding:10px 13px 2px;font-family:${UI};font-size:22px;font-weight:700;color:${C.deep};line-height:1;">${days}</td></tr>
-    <tr><td align="center" style="padding:0 13px 10px;font-family:${UI};font-size:9.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:${C.deep};">${days === 1 ? 'day' : 'days'}</td></tr>
+    <tr><td align="center" style="padding:11px 14px 2px;font-family:${UI};font-size:24px;font-weight:700;color:${C.deep};line-height:1;">${days}</td></tr>
+    <tr><td align="center" style="padding:0 14px 11px;font-family:${UI};font-size:9.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:${C.deep};">${days === 1 ? 'day' : 'days'}</td></tr>
   </table>`
 }
 
-/** Bulletproof primary button: a table cell carrying the background. */
-function button(href: string, label: string): string {
-  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
-    <td style="background:${C.deep};border-radius:999px;">
-      <a href="${esc(href)}" style="display:inline-block;padding:9px 18px;font-family:${UI};font-size:13px;font-weight:600;color:${C.onDeep};text-decoration:none;">${esc(label)}</a>
+/**
+ * Bulletproof primary button: a table cell carrying the background, plus a
+ * VML roundrect for Outlook's Word engine, which ignores border-radius and was
+ * drawing the pill as a rectangle. The VML width is an estimate from the
+ * label length; Outlook ignores the table version entirely via the
+ * conditional, so the two never both render. `inverse` is the pale-on-deep
+ * variant used inside the deep week-one card.
+ */
+function button(href: string, label: string, inverse = false): string {
+  const fill = inverse ? C.onDeep : C.deep
+  const text = inverse ? C.deep : C.onDeep
+  const vmlWidth = Math.round(36 + label.length * 7.4)
+  return `<!--[if mso]>
+    <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${esc(href)}" style="height:36px;v-text-anchor:middle;width:${vmlWidth}px;" arcsize="50%" stroke="f" fillcolor="${fill}">
+      <w:anchorlock/>
+      <center style="color:${text};font-family:Arial,sans-serif;font-size:13px;font-weight:bold;">${esc(label)}</center>
+    </v:roundrect>
+    <![endif]-->
+    <!--[if !mso]><!-->
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+    <td style="background:${fill};border-radius:999px;">
+      <a href="${esc(href)}" style="display:inline-block;padding:9px 18px;font-family:${UI};font-size:13px;font-weight:600;color:${text};text-decoration:none;">${esc(label)}</a>
     </td>
-  </tr></table>`
+  </tr></table>
+    <!--<![endif]-->`
 }
 
 /** Outline button. The profile prompt is quieter than a deadline. */
@@ -99,8 +117,12 @@ function nameLink(href: string | null, text: string, size: number): string {
  * 15 to 17px, sentence case and underlined. Uppercase at 11.5 with 1.6px
  * tracking stays subordinate on shape alone.
  */
-function sectionLabel(text: string, gap = 12): string {
-  return `<p style="margin:0 0 ${gap}px;font-family:${UI};font-size:11.5px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:${C.deep};">${esc(text)}</p>`
+function sectionLabel(text: string, gap = 16): string {
+  // 20px sentence case (design review, 7 Sept 2026). The 11.5px uppercase
+  // label was smaller than the item titles it introduced, so sections did not
+  // read as sections. 8px under it where a supporting line follows, 16 where
+  // items follow directly.
+  return `<p style="margin:0 0 ${gap}px;font-family:${UI};font-size:20px;font-weight:600;letter-spacing:-.4px;color:${C.deep};">${esc(text)}</p>`
 }
 
 /** A section opens with one hairline rule above its label. One value, always. */
@@ -113,12 +135,12 @@ function ruledSection(inner: string): string {
 }
 
 /** The mint card, used by closing rows and — in week one — by match rows. */
-function tileCard(days: number, inner: string, first: boolean): string {
+function tileCard(days: number, inner: string, first: boolean, tileBg?: string): string {
   return `<tr><td class="gutter" style="background:${C.page};padding:${first ? '0' : '10px'} 30px 0;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.card};border-radius:14px;">
       <tr>
-        <td class="tile" width="70" valign="top" style="padding:16px 0 16px 16px;">${tileCell(days)}</td>
-        <td valign="top" style="padding:16px 16px 16px 14px;">${inner}</td>
+        <td class="tile" width="78" valign="top" style="padding:18px 0 18px 18px;">${tileCell(days, tileBg)}</td>
+        <td valign="top" style="padding:18px 18px 18px 14px;">${inner}</td>
       </tr>
     </table>
   </td></tr>`
@@ -147,16 +169,20 @@ function typePill(type: FundingTypeKey): string {
   return `<span style="display:inline-block;padding:3px 9px;border-radius:999px;background:${c.tint};color:${c.fg};font-family:${UI};font-size:11px;font-weight:700;letter-spacing:.3px;white-space:nowrap;">${esc(c.label)}</span>`
 }
 
+/** Gold "New" chip, in front of the type pill on "New this week" rows only. */
+const newChip = () =>
+  `<span style="display:inline-block;padding:3px 9px;border-radius:999px;background:#EBCE78;color:${C.deep};font-family:${UI};font-size:11px;font-weight:700;letter-spacing:.3px;white-space:nowrap;">New</span>&nbsp;`
+
 /** The type pill followed by the rest of the meta line. */
-const typedMeta = (type: FundingTypeKey, t: string) =>
-  `<p style="margin:0 0 6px;font-family:${BODY};font-size:13px;line-height:1.9;color:${C.body};">${typePill(type)}${t ? `&nbsp;&nbsp;${esc(t)}` : ''}</p>`
+const typedMeta = (type: FundingTypeKey, t: string, isNew = false) =>
+  `<p style="margin:0 0 6px;font-family:${BODY};font-size:13px;line-height:1.9;color:${C.body};">${isNew ? newChip() : ''}${typePill(type)}${t ? `&nbsp;&nbsp;${esc(t)}` : ''}</p>`
 
 const metaLine = (t: string) =>
   t ? `<p style="margin:0 0 6px;font-family:${BODY};font-size:13px;line-height:1.5;color:${C.body};">${esc(t)}</p>` : ''
 
 const textLink = (href: string, label: string) =>
   `<p style="margin:0;font-family:${UI};font-size:13.5px;font-weight:600;">
-     <a href="${esc(href)}" style="color:${C.deep};text-decoration:underline;">${esc(label)} &rarr;</a>
+     <a href="${esc(href)}" style="color:${C.deep};text-decoration:underline;">${esc(label)}</a>
    </p>`
 
 export interface RenderOptions {
@@ -191,25 +217,29 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
   /* ── Lead. The label is the identity, same place every week. No hero
         headline — the subject already named the consequential item, and a
         variable hero means the email is re-learned every send. ── */
-  rows.push(`<tr><td class="gutter" style="background:${C.page};border-radius:16px 16px 0 0;padding:30px 30px 0;">
-    ${sectionLabel(m.mode === 'week_one' ? (m.matches.length ? 'Your first matches' : 'Getting started') : 'Upcoming deadlines', 6)}
+  rows.push(`<tr><td class="gutter" style="background:${C.page};padding:30px 30px 0;">
+    ${sectionLabel(m.mode === 'week_one' ? (m.matches.length ? 'Your first matches' : 'Getting started') : 'Upcoming deadlines', 8)}
     <p style="margin:0 0 16px;font-family:${BODY};font-size:16px;line-height:1.55;color:${C.deep};">${esc(m.lead)}</p>
   </td></tr>`)
 
   /* ── 1. Closing soon ─────────────────────────────────────────────────── */
   m.closing.forEach((r, i) => {
     const href = r.url ?? `${origin}/dashboard/deadlines`
+    // Meta on one line: funder, close date, the status prefix and the bold
+    // status word (design review, 7 Sept). The prefix loses its own trailing
+    // separator and capital so it reads as one sentence of fragments.
+    const prefix = r.statusPrefix.replace(/[\s·]+$/, '').replace(/^Added/, 'added')
+    const bits = [r.funder, `closes ${r.deadlineLabel}`, prefix].filter((x): x is string => !!x).map(esc).join(' &middot; ')
     rows.push(tileCard(r.days, `
-      <p style="margin:0 0 4px;">${nameLink(href, r.name, 17)}</p>
-      ${metaLine([r.funder, `closes ${r.deadlineLabel}`].filter(Boolean).join(' · '))}
-      <p style="margin:0 0 12px;font-family:${BODY};font-size:13.5px;line-height:1.5;color:${C.body};">${esc(r.statusPrefix)}${r.statusStrong ? `<b style="color:${C.deep};">${esc(r.statusStrong)}</b>` : ''}</p>
+      <p style="margin:0 0 4px;">${nameLink(href, r.name, 18)}</p>
+      <p style="margin:0 0 12px;font-family:${BODY};font-size:13px;line-height:1.5;color:${C.body};">${bits}${r.statusStrong ? ` &middot; <b style="color:${C.deep};">${esc(r.statusStrong)}</b>` : ''}</p>
       ${button(href, r.kind === 'saved' ? 'Decide on this' : 'Open in Shoots')}
     `, i === 0))
   })
 
   if (m.closingOverflow > 0) {
     rows.push(`<tr><td class="gutter" style="background:${C.page};padding:12px 30px 0;">
-      ${textLink(`${origin}/dashboard/deadlines`, `and ${plural(m.closingOverflow, 'more')} closing this month`)}
+      ${textLink(`${origin}/dashboard/deadlines`, `and ${m.closingOverflow} more closing this month`)}
     </td></tr>`)
   }
 
@@ -223,16 +253,14 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
 
   /* ── 2. Also in progress. One line each: name left, stage right. ─────── */
   if (m.inProgress.length) {
-    const lines = m.inProgress.map((r, i) => {
-      const gap = i === m.inProgress.length - 1 ? '0' : '7px'
-      return `<tr>
-        <td valign="top" style="padding:0 10px ${gap} 0;">${nameLink(r.url, r.name, 15)}</td>
-        <td align="right" valign="top" style="padding:0 0 ${gap};font-family:${BODY};font-size:13px;line-height:1.6;color:${r.stalled ? C.danger : C.body};white-space:nowrap;">${esc(r.stageLabel)}</td>
-      </tr>`
-    }).join('')
-    rows.push(ruledSection(`${sectionLabel('Also in progress')}
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${lines}</table>
-      ${m.inProgressOverflow > 0 ? `<div style="margin-top:12px;">${textLink(`${origin}/dashboard/pipeline`, `and ${plural(m.inProgressOverflow, 'more')} in progress`)}</div>` : ''}`))
+    // Stacked, title then flag, rather than a two-column table with a nowrap
+    // flag: at 375px a long grant name wrapped to four lines against one.
+    const lines = m.inProgress.map((r, i) => `
+      <p style="margin:0 0 2px;">${nameLink(r.url, r.name, 15)}</p>
+      <p style="margin:0 0 ${i === m.inProgress.length - 1 ? '0' : '14px'};font-family:${BODY};font-size:12.5px;line-height:1.5;color:${r.stalled ? C.danger : C.body};">${esc(r.stageLabel)}</p>`).join('')
+    // "Also" only when something came before it.
+    rows.push(ruledSection(`${sectionLabel(m.closing.length ? 'Also in progress' : 'In progress')}${lines}
+      ${m.inProgressOverflow > 0 ? `<div style="margin-top:12px;">${textLink(`${origin}/dashboard/pipeline`, `and ${m.inProgressOverflow} more in progress`)}</div>` : ''}`))
   }
 
   /* ── New this week. Present ONLY when it has rows: an empty section that
@@ -242,9 +270,9 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
   if (m.newThisWeek.length) {
     const body = m.newThisWeek.map(r => `
       <p style="margin:0 0 3px;">${nameLink(r.url, r.title, 16)}</p>
-      ${typedMeta(r.type, r.meta)}
+      ${typedMeta(r.type, r.meta, true)}
       <p style="margin:0 0 16px;font-family:${BODY};font-size:13.5px;line-height:1.55;color:${C.body};">${esc(r.blurb)}</p>`).join('')
-    rows.push(ruledSection(`${sectionLabel('New this week')}
+    rows.push(ruledSection(`${sectionLabel('New this week', 8)}
       <p style="margin:0 0 16px;font-family:${BODY};font-size:14px;line-height:1.55;color:${C.body};">Added to the catalogue in the last seven days, and matched to you.</p>
       ${body}`))
   }
@@ -257,13 +285,29 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
       // Week one is deadline-sorted, so its rows carry countdown tiles like the
       // closing section does. It is the only state where matches lead, and
       // showing them without the dates would hide the reason for the order.
+      // Gold tiles throughout week one: same component as the full state's
+      // tiles, so one colour, and the terracotta urgency tier is not invoked
+      // on a list the reader has not yet committed to.
       m.matches.forEach((r, i) => {
         rows.push(tileCard(r.days ?? 999, `
           <p style="margin:0 0 4px;">${nameLink(r.url, r.title, 16.5)}</p>
           ${typedMeta(r.type, r.meta)}
           <p style="margin:0;font-family:${BODY};font-size:13.5px;line-height:1.55;color:${C.body};">${esc(r.blurb)}</p>
-        `, i === 0))
+        `, i === 0, '#EBCE78'))
       })
+      // The point of this email, as a deep card directly under the matches,
+      // with "See all" beneath it. It was sitting mid-scroll behind the
+      // near-miss section.
+      rows.push(`<tr><td class="gutter" style="background:${C.page};padding:20px 30px 0;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.deep};border-radius:14px;">
+          <tr><td style="padding:20px 22px;">
+            <p style="margin:0 0 14px;font-family:${BODY};font-size:15px;line-height:1.6;color:${C.onDeep};">
+              Add one of these to your pipeline. Next Tuesday this email leads with your deadlines instead of your matches, and that is the version worth having.
+            </p>
+            ${button(`${origin}/dashboard/search`, 'Add your first grant', true)}
+          </td></tr>
+        </table>
+      </td></tr>`)
       rows.push(`<tr><td class="gutter" style="background:${C.page};padding:16px 30px 0;">
         ${textLink(`${origin}/dashboard/search`, seeAll)}
       </td></tr>`)
@@ -275,15 +319,6 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
         <p style="margin:0 0 16px;font-family:${BODY};font-size:13.5px;line-height:1.55;color:${C.body};">${esc(r.blurb)}</p>`).join('')
       rows.push(ruledSection(`${sectionLabel(label)}${body}${textLink(`${origin}/dashboard/search`, seeAll)}`))
     }
-  }
-
-  /* ── Week one: say what changes, and give it a button. ────────────────── */
-  if (m.mode === 'week_one' && m.matches.length) {
-    rows.push(ruledSection(`
-      <p style="margin:0 0 16px;font-family:${BODY};font-size:14px;line-height:1.6;color:${C.deep};">
-        Add one of these to your pipeline. Next Tuesday this email leads with your deadlines instead of your matches &mdash; that is the version worth having.
-      </p>
-      ${button(`${origin}/dashboard/search`, 'Add your first grant')}`))
   }
 
   /* ── 4. Just outside your profile ────────────────────────────────────── */
@@ -299,21 +334,37 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
         <p style="margin:0 0 5px;font-family:${BODY};font-size:13.5px;line-height:1.55;color:${C.body};"><b style="color:${C.deep};">${esc(r.verdict)}</b> ${esc(r.rule)}</p>
         <p style="margin:0 0 ${i === n - 1 ? '0' : '16px'};font-family:${BODY};font-size:13px;line-height:1.55;color:${C.body};">${esc(r.condition)}</p>`).join('')
     rows.push(ruledSection(`
-      ${sectionLabel('Just outside your profile', 6)}
+      ${sectionLabel('Just outside your profile', 8)}
       <p style="margin:0 0 16px;font-family:${BODY};font-size:14px;line-height:1.55;color:${C.body};">${esc(intro)}</p>
       ${body}`))
   }
 
   /* ── 5. Profile prompt. Mint card, outline button — quieter than a deadline. */
+  const profileGap = m.mode === 'week_one' && !m.matches.length
   if (m.prompt) {
+    // In the profile-gap state the prompt is the only action, so it gets the
+    // filled primary. Everywhere else it stays quieter than a deadline.
     rows.push(ruledSection(`
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.card};border-radius:14px;">
         <tr><td style="padding:18px 20px;">
           <p style="margin:0 0 6px;font-family:${UI};font-size:15.5px;font-weight:600;letter-spacing:-.2px;color:${C.deep};">${esc(m.prompt.title)}</p>
           <p style="margin:0 0 14px;font-family:${BODY};font-size:13.5px;line-height:1.6;color:${C.body};">${esc(m.prompt.body)}</p>
-          ${ghostButton(m.prompt.href, m.prompt.cta)}
+          ${profileGap ? button(m.prompt.href, m.prompt.cta) : ghostButton(m.prompt.href, m.prompt.cta)}
         </td></tr>
       </table>`))
+  }
+
+  /* ── Profile gap: what is waiting. Without this the only evidence a
+        catalogue existed was 12.5px grey in the footer, and the state read as
+        a dead end. The count is the same provenance link the footer carries. */
+  const freshLine = m.catalogue.addedRecently >= 10 ? `, and ${m.catalogue.addedRecently} were added in the last two weeks` : ''
+  if (profileGap) {
+    rows.push(ruledSection(`
+      ${sectionLabel('What is waiting', 8)}
+      <p style="margin:0 0 14px;font-family:${BODY};font-size:15px;line-height:1.6;color:${C.deep};">
+        <a href="${origin}/dashboard/search?entry=live" style="color:${C.deep};font-weight:600;text-decoration:underline;">${m.catalogue.live.toLocaleString()} opportunities are live</a> across grants, programmes, investment and in-kind support${freshLine}. You can search all of them now, with or without a full profile.
+      </p>
+      ${ghostButton(`${origin}/dashboard/search?entry=live`, 'Browse the catalogue')}`))
   }
 
   /* ── 6. Feedback.
@@ -323,28 +374,32 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
         two cheapest sources of catalogue and scorer improvement there are. The
         mint card is the same one the profile prompt uses, so it reads as
         something addressed to the reader rather than a legal footer. ── */
-  rows.push(`<tr><td class="gutter" style="background:${C.page};border-radius:0 0 16px 16px;padding:26px 30px 30px;">
+  // Not in the profile-gap state: asking someone with no matches to report a
+  // bad match is an odd second ask, and two mint cards with identical outlined
+  // pills gave the prompt and this equal weight.
+  if (!profileGap) {
+    rows.push(`<tr><td class="gutter" style="background:${C.page};padding:26px 30px 30px;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.card};border-radius:14px;">
       <tr><td style="padding:18px 20px;">
-        <p style="margin:0 0 6px;font-family:${UI};font-size:15px;font-weight:600;letter-spacing:-.2px;color:${C.deep};">Seen a funder we are missing, or a match that made no sense?</p>
+        <p style="margin:0 0 6px;font-family:${UI};font-size:15px;font-weight:600;letter-spacing:-.2px;color:${C.deep};">Seen a funder we are missing, or something that looks wrong?</p>
         <p style="margin:0 0 14px;font-family:${BODY};font-size:13.5px;line-height:1.6;color:${C.body};">
-          Funder suggestions go into the catalogue for everyone, and bad matches change how yours are picked.
+          Funders you send us get checked and added. Matches you flag help us pick better ones for you.
         </p>
         ${ghostButton(`${origin}/dashboard/feedback`, 'Tell us')}
       </td></tr>
     </table>
   </td></tr>`)
+  }
 
   /* ── Footer. Catalogue growth is reassurance, not news, so it never leads. */
-  rows.push(`<tr><td class="gutter" style="padding:22px 30px 0;">
-    <!-- The count is a link. The line already asserts the catalogue is alive;
-         this is what lets somebody go and look, which is the only reason the
-         assertion is interesting. ?entry=live opens Latest Grants — everything
-         added in the last 60 days, newest first. -->
-    <p style="margin:0 0 10px;font-family:${BODY};font-size:12.5px;line-height:1.6;color:${C.muted};">
-      <a href="${origin}/dashboard/search?entry=live" style="color:${C.deep};font-weight:600;text-decoration:underline;">${m.catalogue.live.toLocaleString()} opportunities live</a>
-      &mdash; ${m.catalogue.addedRecently} added in the last two weeks.
-    </p>
+  // The count is a link: it lets somebody go and look. The "added" clause is
+  // suppressed below ten and never rendered at zero; "2 added in the last two
+  // weeks" is worse than silence. The profile-gap state already carries the
+  // count in its body, so its footer is the two links only.
+  rows.push(`<tr><td class="gutter" style="padding:${profileGap ? '30px' : '22px'} 30px 0;">
+    ${profileGap ? '' : `<p style="margin:0 0 10px;font-family:${BODY};font-size:12.5px;line-height:1.6;color:${C.muted};">
+      <a href="${origin}/dashboard/search?entry=live" style="color:${C.deep};font-weight:600;text-decoration:underline;">${m.catalogue.live.toLocaleString()} opportunities live</a>${m.catalogue.addedRecently >= 10 ? ` &mdash; ${m.catalogue.addedRecently} added in the last two weeks.` : '.'}
+    </p>`}
     <p style="margin:0;font-family:${BODY};font-size:12.5px;line-height:1.6;color:${C.muted};">
       <a href="${origin}/dashboard/profile#card-alerts" style="color:${C.deep};font-weight:600;text-decoration:underline;">Email preferences</a> &nbsp;&middot;&nbsp;
       <a href="${esc(unsubscribeUrl)}" style="color:${C.deep};font-weight:600;text-decoration:underline;">Unsubscribe</a>
@@ -358,6 +413,7 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="x-apple-disable-message-reformatting">
 <title>${esc(m.subject)}</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <!--[if mso]><style>* { font-family: Arial, sans-serif !important; }</style><![endif]-->
 <style>
   /* The email was rendering at a fixed 600px, so a 375px phone zoomed out to
@@ -365,7 +421,7 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
      buys back the gutters, which were taking 60px of a 375px screen. */
   @media only screen and (max-width: 600px) {
     .gutter { padding-left: 18px !important; padding-right: 18px !important; }
-    .tile   { width: 58px !important; }
+    .tile   { width: 66px !important; }
   }
 </style>
 </head>
