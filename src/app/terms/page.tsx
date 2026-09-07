@@ -136,7 +136,7 @@ export default function TermsPage() {
           <p>We do our best to provide a useful, reliable service, but to the maximum extent permitted by UK law:</p>
           <p>The service is provided &ldquo;as is&rdquo; and &ldquo;as available&rdquo;. We do not guarantee that it will be uninterrupted, error-free, or that it will meet your specific needs.</p>
           <p>We are not liable for indirect, consequential, or special losses, including loss of funding opportunities, loss of profit, or loss of goodwill.</p>
-          <p>Our total liability to you for any claim arising out of or in connection with the service is limited to either £100 or the amount you have paid us in the 12 months before the claim, whichever is greater.</p>
+          <p>Our total liability to you for any claim arising out of or in connection with the service is limited to either £100 or the amount you have paid us in the 6 months before the claim, whichever is greater.</p>
           <p>Nothing in these terms limits or excludes liability that cannot be limited or excluded under UK law, including liability for death or personal injury caused by negligence, or for fraud.</p>
 
           <Heading>Indemnity</Heading>
