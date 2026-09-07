@@ -43,7 +43,7 @@ export type Row = {
 export type Report = {
   id: string
   title: string
-  why: 'not_stated' | 'unreadable' | 'pinned'
+  why: 'not_stated' | 'unreadable' | 'pinned' | 'index_over_programmes'
   quote: string
   url: string
   note?: string
