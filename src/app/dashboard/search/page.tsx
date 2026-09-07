@@ -575,11 +575,6 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
 
             {/* Pill row: sectors + funder-type + location */}
             <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-              {roundsChip && (
-                <span title="This fund is closed today and expected to reopen" style={{ fontSize: 10, padding: '3px 9px', borderRadius: 9999, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', whiteSpace: 'nowrap', background: '#FAEEDA', color: '#854F0B', fontFamily: 'var(--font-space-grotesk)' }}>
-                  {roundsChip}
-                </span>
-              )}
               {visibleSectors.map(s => {
                 const raw = IMPACT_SECTOR_FILTERS.find(f => f.id === s)?.label
                   ?? s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
@@ -682,7 +677,12 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
               <div>
                 <div style={{ fontSize: 10, color: '#8A8986', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3, fontFamily: 'var(--font-dm-sans)' }}>Deadline</div>
                 <div style={{ fontSize: 13, color: '#2C2C2A', fontFamily: 'var(--font-dm-sans)', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                  <span>{deadlineDisplay}</span>
+                  {roundsChip
+                    // Closed today, expected back: the one state a scanner must
+                    // not miss, so it is a pill here where the row is quiet,
+                    // rather than a badge in the busy pill row. Paul, 7 Sept.
+                    ? <span title="This fund is closed today and expected to reopen" style={{ padding: '3px 10px', borderRadius: 9999, fontWeight: 600, background: '#FAEEDA', color: '#854F0B', whiteSpace: 'nowrap' }}>{deadlineDisplay}</span>
+                    : <span>{deadlineDisplay}</span>}
                   {grant.isMultiRound && (
                     <span title="Multiple application rounds per year — check the brief for the full schedule" style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', padding: '2px 7px', borderRadius: 9999, background: '#F1EDE3', color: '#5F5E5A', fontFamily: 'var(--font-space-grotesk)' }}>
                       Multi-round
