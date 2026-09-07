@@ -260,6 +260,20 @@
   .values{background:var(--cream);}
   .val-grid{grid-template-columns:repeat(3,1fr);margin-top:44px;}
   .val-card{background:#fff;border-radius:16px;border:0.5px solid rgba(29,60,62,0.1);padding:34px;}
+  .plan-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;margin-top:32px;}
+  .plan{background:#fff;border-radius:16px;border:0.5px solid rgba(29,60,62,0.12);padding:30px 28px;display:flex;flex-direction:column;}
+  .plan-featured{border:1.5px solid var(--deep);}
+  .plan-name{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:15px;letter-spacing:0.12em;text-transform:uppercase;color:var(--deep);margin:0 0 14px;}
+  .plan-price{font-family:'Space Grotesk',sans-serif;color:var(--deep);margin:0;line-height:1.1;}
+  .plan-launch{font-weight:700;font-size:34px;}
+  .plan-price s{font-weight:500;font-size:18px;color:#7a8580;margin-left:4px;}
+  .plan-per{font-size:15px;font-weight:500;color:#5f6b64;margin-left:4px;}
+  .plan-annual{font-size:14px;color:#5f6b64;margin:6px 0 20px;}
+  .plan-list{list-style:none;padding:0;margin:0 0 8px;display:flex;flex-direction:column;gap:10px;font-size:15px;line-height:1.5;color:#3a4441;}
+  .plan-list li{padding-left:22px;position:relative;}
+  .plan-list li::before{content:"";position:absolute;left:0;top:9px;width:9px;height:9px;border-radius:999px;background:var(--sage);}
+  .plan-cta{margin-top:auto;align-self:flex-start;}
+  .plan-note{font-size:15px;line-height:1.6;color:#3a4441;max-width:64ch;margin:18px 0 0;}
   .val-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
   .dot{width:12px;height:12px;border-radius:50%;}
   .val-card h3{font-size:24px;margin:0;}
@@ -911,8 +925,46 @@
   <section class="sec pricing" id="pricing">
     <div class="wrap">
       <p class="eyb">Pricing for charities, CICs and community groups</p>
-      <h2>Pricing coming soon</h2>
-      <p class="lead" style="color:#5f6b64;max-width:56ch;">Simple plans priced for smaller organisations, whilst catering for bigger teams. Join the waitlist to see launch pricing first.</p>
+      <h2>Simple plans, priced for smaller organisations</h2>
+      <p class="lead" style="color:#5f6b64;max-width:56ch;">Every new organisation starts with 14 days on Apply. No card, full catalogue, and you choose a plan at the end.</p>
+      <div class="plan-grid">
+        <div class="plan">
+          <p class="plan-name">Match</p>
+          <p class="plan-price"><span class="plan-launch">&pound;15</span> <s>&pound;19</s> <span class="plan-per">a month</span></p>
+          <p class="plan-annual">or &pound;150 a year</p>
+          <ul class="plan-list">
+            <li>Full catalogue search across grants, programmes, social investment and in-kind support</li>
+            <li>Eligibility matching against your structure, sector, size and location</li>
+            <li>Saved opportunities with deadlines in view</li>
+            <li>Claude connector, search only</li>
+          </ul>
+        </div>
+        <div class="plan plan-featured">
+          <p class="plan-name">Apply</p>
+          <p class="plan-price"><span class="plan-launch">&pound;25</span> <s>&pound;35</s> <span class="plan-per">a month</span></p>
+          <p class="plan-annual">or &pound;250 a year</p>
+          <ul class="plan-list">
+            <li>Everything in Match</li>
+            <li>Pipeline: track opportunities from identified to secured</li>
+            <li>Application management</li>
+            <li>Data export</li>
+            <li>Claude connector, including pipeline tools</li>
+          </ul>
+        </div>
+        <div class="plan">
+          <p class="plan-name">Team</p>
+          <p class="plan-price"><span class="plan-launch">Get in touch</span></p>
+          <p class="plan-annual">Quoted for your organisation</p>
+          <ul class="plan-list">
+            <li>Everything in Apply</li>
+            <li>Up to 5 people in one organisation</li>
+            <li>Or up to 5 organisation profiles for consultants and freelancers, each with its own pipeline</li>
+          </ul>
+          <a class="btn btn-ghost plan-cta" href="#contact">Ask about Team</a>
+        </div>
+      </div>
+      <p class="plan-note"><strong>Launch price.</strong> Sign up before 31 October and pay &pound;15 for Match or &pound;25 for Apply, a month, for your first 12 months. After that the standard price applies: &pound;19 and &pound;35.</p>
+      <p class="plan-note">Cancel any time. If you ask in your first month, we refund you in full, no questions asked.</p>
       <div class="waitlist-card" style="background:var(--deep);border-radius:16px;padding:clamp(28px,4vw,44px);margin-top:28px;">
         <h3 style="color:var(--cream);margin:0 0 6px;">Join the waitlist</h3>
         <p style="color:rgba(246,241,231,.75);margin:0 0 18px;font-size:.95rem;">Be first in when we launch.</p>

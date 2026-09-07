@@ -69,7 +69,7 @@ export default function MCPLandingPage() {
               same connection. Wording kept identical to the consent screen and
               the privacy policy: three surfaces describing one grant in three
               different ways is how the original inaccuracy survived. */}
-          <p style={{ fontSize: 13, color: '#8A8986', lineHeight: 1.6 }}>Transport: Streamable HTTP (JSON-RPC). Authentication is OAuth 2.0. On the free plan the connection reads only. On the Apply and Adviser plans it can also write to your own pipeline and goals, and never to another organisation&apos;s data.</p>
+          <p style={{ fontSize: 13, color: '#8A8986', lineHeight: 1.6 }}>Transport: Streamable HTTP (JSON-RPC). Authentication is OAuth 2.0. On the Match plan the connection reads only. On the Apply and Adviser plans it can also write to your own pipeline and goals, and never to another organisation&apos;s data.</p>
         </section>
 
         {/* ── Disconnecting ─────────────────────────────────────────────────
@@ -103,11 +103,11 @@ export default function MCPLandingPage() {
         <section style={{ marginBottom: 36 }}>
           <h2 style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, fontSize: 22, letterSpacing: '-0.02em', color: '#2C2C2A', marginBottom: 6 }}>Tools</h2>
           <p style={{ fontSize: 14, lineHeight: 1.6, color: '#5F5E5A', marginBottom: 18 }}>
-            Fifteen tools. Which ones a connection sees depends on the plan behind it: five on the free plan, eight on Apply, all fifteen on Adviser. The server advertises only the tools your plan includes, so an agent is never offered something it cannot call.
+            Fifteen tools. Which ones a connection sees depends on the plan behind it: five on Match, eight on Apply, all fifteen on Adviser. The server advertises only the tools your plan includes, so an agent is never offered something it cannot call.
           </p>
           {[
             {
-              plan: 'Every plan, including free',
+              plan: 'Every plan',
               note: 'Read-only. Complete eligibility criteria and exclusions on every result, on every plan.',
               tools: [
                 ['search_funding_and_support', `Search the catalogue by sector, region, beneficiary group, organisation structure, amount, deadline and funding type. Returns ranked opportunities, each with the funder’s own application link plus a ${MCP_BRAND_NAME} link for full details and eligibility.`],
@@ -158,7 +158,7 @@ export default function MCPLandingPage() {
         {/* ── Example prompts ───────────────────────────────────────────────
             Required by the directory submission form. Each exercises a
             different tool group, and each names the plan it needs so a reviewer
-            on the free plan is not left wondering why the third one does
+            on Match is not left wondering why the third one does
             nothing. Written as a user would actually type them. */}
         <section style={{ borderTop: '0.5px solid rgba(23,52,4,0.08)', paddingTop: 32, marginBottom: 36 }}>
           <h2 style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, fontSize: 22, letterSpacing: '-0.02em', color: '#2C2C2A', marginBottom: 14 }}>Example prompts</h2>
