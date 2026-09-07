@@ -23,6 +23,42 @@ const SNAPSHOT = process.argv.includes('--snapshot')
 // outcome, and silencing it wholesale would retire the alarm. So each one is
 // named here with who did it and why, and anything not on the list still fails.
 const ACKNOWLEDGED: Record<string, string> = {
+  // The 30 entries below are Paul's own actions, not another session's: he
+  // worked through pile A's paul_list in the review queue on 7 Sept and the
+  // review UI stamped every rejection_reason with "applied at Paul's word".
+  // First seen when pile B batch 1's check ran — the pile A verdicts job had
+  // finished and the review queue had already been acted on by the time this
+  // job started reading pages.
+  '83f700c0-0081-4609-bb1f-cb35b5346fa1': 'Pile A verdict actioned by Paul from the review queue (Apply for Investment / Fund Manager Route), stamped by the review UI itself',
+  '1e50dd77-8cd0-46dc-9c53-04065ff01f2a': 'Pile A verdict actioned by Paul from the review queue (B&Q Foundation Community Grants), stamped by the review UI itself',
+  'a71a1786-dc06-4e11-b04d-def0b9538f96': 'Pile A verdict actioned by Paul from the review queue (Barclays 100x100 UK Community Relief Programme), stamped by the review UI itself',
+  '5d883343-70fd-4f10-b28b-5b21324cbca5': 'Pile A verdict actioned by Paul from the review queue (Baring Foundation International Development Programme), stamped by the review UI itself',
+  '324b95d5-650f-4350-88d0-45f517d15692': 'Pile A verdict actioned by Paul from the review queue (Big Society Capital Social Investment Wholesale Funding), stamped by the review UI itself',
+  'f57c3373-26f6-4f44-a766-761aec387dcd': 'Pile A verdict actioned by Paul from the review queue (Charities and Social Enterprises Lending), stamped by the review UI itself',
+  'be85b0fc-7d63-4741-97ce-1ce6f37113b5': 'Pile A verdict actioned by Paul from the review queue (Charity Bank Green Loans, published), stamped by the review UI itself',
+  'fdcc973a-c87c-48cf-819c-e921c23fbc73': 'Pile A verdict actioned by Paul from the review queue (Charity Bank Loans), stamped by the review UI itself',
+  '085f3c7e-9021-41cb-a66b-1342830ed886': 'Pile A verdict actioned by Paul from the review queue (Community Investment Enterprise Facility), stamped by the review UI itself',
+  'cbe84427-1a04-4fbc-8f8c-b09f7af4385d': 'Pile A verdict actioned by Paul from the review queue (CPCA Social Impact Investment Fund), stamped by the review UI itself',
+  '0a9e6108-c367-4a93-8df5-d5268d03b7b2': 'Pile A verdict actioned by Paul from the review queue (Desk Space and Meeting Room Hire for Charities), stamped by the review UI itself',
+  '9de97466-69b9-4c0e-a182-83c821b109b8': 'Pile A verdict actioned by Paul from the review queue (Edward Gostling Foundation Grants), stamped by the review UI itself',
+  'ba76fee4-7d8e-48e5-acac-f9df576c320c': 'Pile A verdict actioned by Paul from the review queue (Energy Resilience Fund), stamped by the review UI itself',
+  '6f3892eb-3e7f-4976-b60b-8d46ca476573': 'Pile A verdict actioned by Paul from the review queue (Key Fund Social Investment Loans), stamped by the review UI itself',
+  '27f913f2-d5d1-4773-a410-35ceb8eeba18': 'Pile A verdict actioned by Paul from the review queue (LawWorks Clinics Network), stamped by the review UI itself',
+  'f44a6141-5b8f-43b8-81b0-f1d5ba0930da': 'Pile A verdict actioned by Paul from the review queue (LawWorks Not-for-Profits Programme), stamped by the review UI itself',
+  '56a8cc5f-a0a2-4d6b-af11-fa60b7f0e453': 'Pile A verdict actioned by Paul from the review queue (Microsoft 365 Nonprofit Cloud Subscription via Charity Digital), stamped by the review UI itself',
+  'f6b2ac5d-3004-452c-81e6-2d2fa32ccae3': 'Pile A verdict actioned by Paul from the review queue (Microsoft Nonprofit Software Donations Programme), stamped by the review UI itself',
+  '5afd77c4-190b-4387-9be1-46a05d8bfe7d': 'Pile A verdict actioned by Paul from the review queue (National Grid Community Grants), stamped by the review UI itself',
+  '08819057-94cd-4b9c-879f-af3652675886': 'Pile A verdict actioned by Paul from the review queue (Salesforce Nonprofit Cloud Power of Us Programme), stamped by the review UI itself',
+  '8e5f63e4-85d9-47db-b278-56263c8ab4f7': 'Pile A verdict actioned by Paul from the review queue (Severn Trent Community Fund), stamped by the review UI itself',
+  '26029120-6cfa-4346-8834-36f77b0af3b2': 'Pile A verdict actioned by Paul from the review queue (Social Investment Business Loan and Grant Funds), stamped by the review UI itself',
+  '01aa47c7-4db6-4f51-a129-66ab25e3b548': 'Pile A verdict actioned by Paul from the review queue (St Giles and St George Education Charity, published), stamped by the review UI itself',
+  'f5c454d7-728e-4f11-b7f1-1dc139393d3e': 'Pile A verdict actioned by Paul from the review queue (Green Rigg Wind Farm fund, published), stamped by the review UI itself',
+  'db97dbb6-63b5-4604-8ccb-10a4722ea2b1': 'Pile A verdict actioned by Paul from the review queue (Shotley Low Quarter fund, published), stamped by the review UI itself',
+  'a91f58e0-5572-4d9b-85ad-d67df0e72e0d': 'Pile A verdict actioned by Paul from the review queue (Time to Shine Fellowship), stamped by the review UI itself',
+  'ec70ac6e-bd4e-4891-b54a-f4cff376b797': 'Pile A verdict actioned by Paul from the review queue (Triodos Bank Business Banking and Loans), stamped by the review UI itself',
+  '6ce1fac3-9818-4f0c-bfde-7186f74320ae': 'Pile A verdict actioned by Paul from the review queue (Ufi VocTech Trust VocTech Ignite), stamped by the review UI itself',
+  '7b924e63-a2a6-42f2-9968-4786de21cb47': 'Pile A verdict actioned by Paul from the review queue (Virgin Media O2 Apprenticeship Talent Fund, published), stamped by the review UI itself',
+  'cfdaf194-6b06-4aab-81fd-2310d31197ba': 'Pile A verdict actioned by Paul from the review queue (Zoom for Nonprofits Discount Programme), stamped by the review UI itself',
   '29d000d3-e3fa-439e-89f8-e03109af0f44': 'Foundation East: rejected by grant-tracker-be on 7 Sept after batch 2 reported the domain takeover',
   'e31c28ad-10a0-4d7c-9076-33c8f8cf91e9': 'FSI: rejected by grant-tracker-be on 7 Sept after batch 2 reported the dead host',
   // Not in either pile — it was live when the baseline was taken, so this entry

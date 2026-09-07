@@ -893,6 +893,322 @@
     "HOLD    Ufi VocTech Trust — A funder-level index over four calls, and the admin-pinned £30,000 to £150,000 matches none of them: VocTech Together is up to £10,000, VocTech Activate £30,000 to £60,000, VocTech Challenge £200,000 to £250,000, and VocTech Ignite is invitation only. Today Challenge is closed and Activate says applications open in early 2027 with a stage one deadline of 2 February 2027. Splitting this into one row per call, starting with Activate, is the fix; a single date or figure is not.",
     "HOLD    Young Foundation Social Innovation Support Programmes — apply_url is the foundation's home page, which names no programme, no route and no figure. Its innovation and practice page does list funding programmes, including the Community Knowledge Fund and Community Research Networks, but mixes current and finished ones with no dates and no eligibility, so nothing there can carry a brief either. Relink to a named programme if one is open, or reject it as an intermediary that funds funders rather than applicants."
    ]
+  },
+  {
+   "batch": 1,
+   "pile": "B",
+   "verdicts": [
+    {
+     "id": "81a25490-24a7-451d-95f8-2f2e00f973ae",
+     "title": "2026 Grant Applications GB & NI",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Grant applications for 2026 are now closed. The closing date for application submissions was Friday 31st July.",
+     "url": "https://www.iyf.org.uk/2026grants/",
+     "tidied": [],
+     "for_paul": "Runs every year but no 2027 dates are up yet (\"Every year we invite applications from welfare organisations...\"). Nothing to park until a date appears."
+    },
+    {
+     "id": "b4684d67-9022-4707-9dd6-516d280d3860",
+     "title": "2026 Grant Programme",
+     "pile": "B",
+     "verdict": "park",
+     "quote": "Our next grant window will be the Summer of 2027.",
+     "url": "https://www.hugoburgefoundation.org/grants",
+     "tidied": [
+      "next_open_date",
+      "next_open_date_parsed",
+      "deadline",
+      "is_rolling"
+     ]
+    },
+    {
+     "id": "32856768-7d40-446f-a45f-ab905ede96cb",
+     "title": "Access to Justice Foundation — Legal Support Grant 2026 (England & Wales)",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "We don't run regular grant rounds that open at the same time each year. We launch funding opportunities as soon as we've raised enough money to do this.",
+     "url": "https://atjf.org.uk/grants/apply-for-a-grant",
+     "tidied": [],
+     "for_paul": "The named Legal Support Grant 2026-2029 round is closed (outcome due September 2026); the funder is explicit it has no regular cycle, so there is no date to park on."
+    },
+    {
+     "id": "d6f36313-3238-4cc4-a5ea-cb59a5875132",
+     "title": "AI and Social Mobility Challenge Prize",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Applications are now closed. We will contact all applicants with an update during July and August 2026.",
+     "url": "https://www.socialtechtrust.org/ai-and-social-mobility-challenge-prize",
+     "tidied": [],
+     "for_paul": "A single cohort culminating at a Parliament event in October 2026; the page gives no indication whether this repeats. Historic or hold is a judgement call."
+    },
+    {
+     "id": "b1a9dbcd-dce0-45d7-bcd9-9dcaa6a55023",
+     "title": "Alec Dickson Trust Grant",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "The Alec Dickson Trust application window is now open and closes on 4th October 2026 at 5pm.",
+     "url": "https://www.alecdicksontrust.org.uk/",
+     "tidied": [],
+     "for_paul": "Reopened with a date the row cannot take: deadline and is_rolling are both admin-pinned. Page says open now, closing 4 October 2026 — move the pin and this becomes a publish."
+    },
+    {
+     "id": "75040abd-4796-479d-ba18-2f3596a3e7a8",
+     "title": "All About Business Entrepreneurs Fund",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Applicants must be aged 18–26 at point of application, a UK resident with the right to work in the UK, running an existing business that has been trading for a minimum of 6 months.",
+     "url": "https://www.reed.com/entrepreneurs",
+     "tidied": [],
+     "for_paul": "Two separate questions: nearly every column (title, deadline, is_rolling, apply_url, amounts, structures) is admin-pinned, so little here could be updated even if wanted; and the eligibility reads as an individual founder scheme rather than an organisation applying, which the audience test in the programmes brief would need settling first."
+    },
+    {
+     "id": "dc33bc71-60d1-4b7a-a88f-67fa9490852d",
+     "title": "Amazon Sustainability Accelerator",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Application Deadlines Consumer Product: 26th April 2026 Climate Tech: 10th July 2026",
+     "url": "https://sell.amazon.co.uk/programmes/sustainability-accelerator",
+     "tidied": [],
+     "for_paul": "Both listed deadlines have passed, yet \"Apply Now\" and \"Register your interest\" buttons remain live next to \"Our programmes for 2026\" — unclear whether this is a genuinely open evergreen page or one that has not been updated for a new round."
+    },
+    {
+     "id": "9f87e023-012b-4b82-9b36-629d76fd816e",
+     "title": "Andrew Wainwright Reform Trust — Grants",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Important notice: applications for the current funding round are now open and will close on 14 September 2026. Trustees will meet to allocate grants in November 2026.",
+     "url": "https://www.wainwrighttrusts.org.uk/awrt.html",
+     "tidied": [],
+     "for_paul": "Reopened with a date (closes 14 September 2026) but deadline and is_rolling are admin-pinned. Move the pin and this becomes a publish."
+    },
+    {
+     "id": "610f11c7-ba38-431b-ace0-a2613cdc0265",
+     "title": "Anglian Water Thriving Communities",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Applications of £10,000 – £50,000 can complete an application form using the link below. Deadline: 11:59am on 1 February 2026",
+     "url": "https://www.ncf.uk.com/grants/grants-available/anglian-water-thriving-communities",
+     "tidied": [],
+     "for_paul": "Both deadlines on the page (8 December 2025, 1 February 2026) are stale; nothing indicates a new round for the fund's remaining four years of committed funding."
+    },
+    {
+     "id": "321ed3d9-0619-4a5b-9a39-cae978857a03",
+     "title": "Argyll & Bute Council — Supporting Communities Fund",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "The Supporting Communities Fund 2026 / 27 is now CLOSED. Thank You for your interest.",
+     "url": "https://www.argyll-bute.gov.uk/my-community/communities-and-partnerships/supporting-communities-fund",
+     "tidied": [],
+     "for_paul": "Named as a 2026/27 fund, closed, with no reopening date stated."
+    },
+    {
+     "id": "d5bd53ee-b341-46b0-8ef1-bf24e2cc735d",
+     "title": "Autotrader Digital Inclusion Fund",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "The latest round of the Autotrader Digital Inclusion Fund, in partnership with Forever Manchester, is NOW CLOSED to applications.",
+     "url": "https://forevermanchester.com/fund/autotrader-community-fund/",
+     "tidied": [],
+     "for_paul": "Closed with an outcome date (late August 2026) but no reopening date."
+    },
+    {
+     "id": "42bf79de-416b-455e-822d-2c6478a31ec5",
+     "title": "Barnsley AI Upskilling Fund",
+     "pile": "B",
+     "verdict": "reject",
+     "code": "dead_url",
+     "quote": "Page not found. If you typed the web address, check it is correct.",
+     "url": "https://www.find-government-grants.service.gov.uk/grants/barnsley-ai-upskilling-fund-1",
+     "tidied": [],
+     "for_paul": "gov.uk's Find a Grant service has removed this listing now the round is closed; the site no longer lists it."
+    },
+    {
+     "id": "dff42471-e15e-4c23-930e-0adfe6f44aec",
+     "title": "Bellahouston Bequest Fund",
+     "pile": "B",
+     "verdict": "publish",
+     "quote": "Applications received will normally be considered by the trustees at the next quarterly meeting and applicants will be informed thereafter whether or not a grant has been awarded.",
+     "url": "https://bellahoustonbequestfund.org.uk/grant-application/",
+     "tidied": [
+      "deadline",
+      "is_rolling",
+      "funder_brief.who_can_apply",
+      "funder_brief.what_they_fund",
+      "funder_brief.how_to_apply",
+      "funder_brief.exclusions",
+      "funder_brief.decision_timeline",
+      "funder_brief.typical_award",
+      "funder_brief.open_status"
+     ]
+    },
+    {
+     "id": "64b1d9e1-5e5a-440c-9986-d2acf6ec1602",
+     "title": "Berkshire Community Foundation Grants",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Our Surviving Winter Funding Round will be open for applications from 28th September until 29th October.",
+     "url": "https://www.berkshirecf.org/available-funding/",
+     "tidied": [],
+     "for_paul": "A front door over several rounds through the year (Surviving Winter opens 28 September, Grassroots opens January 2027), not one fund with one date. Needs relinking to a named round rather than a single park date."
+    },
+    {
+     "id": "97949835-da9c-4100-8c98-55cf3e3d865d",
+     "title": "Better Commissioning Pathways ",
+     "pile": "B",
+     "verdict": "reject",
+     "code": "dead_url",
+     "quote": "Page not found. If you typed the web address, check it is correct.",
+     "url": "https://www.find-government-grants.service.gov.uk/grants/better-commissioning-pathways-1",
+     "tidied": [],
+     "for_paul": "gov.uk's Find a Grant service has removed this listing now the round is closed."
+    },
+    {
+     "id": "27c436ad-babd-45f4-9214-4de4000d234f",
+     "title": "Better Community Business Network Grant Initiative",
+     "pile": "B",
+     "verdict": "publish",
+     "quote": "Please note that BCBN Grant Initiative 2026 will conclude on 9 November 2026, and no further applications will be accepted beyond this date.",
+     "url": "https://bcbn.org.uk/grant-initiative/",
+     "tidied": [
+      "deadline",
+      "is_rolling",
+      "funder_brief.who_can_apply",
+      "funder_brief.what_they_fund",
+      "funder_brief.how_to_apply",
+      "funder_brief.exclusions",
+      "funder_brief.decision_timeline",
+      "funder_brief.typical_award",
+      "funder_brief.open_status"
+     ]
+    },
+    {
+     "id": "41d96aaf-6752-4fb3-98ab-a045ae22fdb5",
+     "title": "BFI National Lottery Innovation Challenge Fund",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "The deadline for applications is midnight on Thursday 9 April. Awards are expected to be made in August 2026.",
+     "url": "https://www.bfi.org.uk/get-funding-support/bfi-national-lottery-innovation-challenge-fund",
+     "tidied": [],
+     "for_paul": "Challenge Call 6's page still shows the row's existing 9 April deadline and an August 2026 award date, both already past — looks unrefreshed rather than newly reopened."
+    },
+    {
+     "id": "fb7d23b2-8848-4ace-becc-b28766bc9a7d",
+     "title": "Big Give - Women and Girls Match Fund",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "",
+     "url": "https://biggive.org/women-girls-match-fund/",
+     "tidied": [],
+     "for_paul": "HTTP 403, unreadable today."
+    },
+    {
+     "id": "4ecd6375-b06c-47af-b249-d1f1080f99f4",
+     "title": "Blackridge Community Fund",
+     "pile": "B",
+     "verdict": "publish",
+     "quote": "Application deadline (For decisions late Nov 2026): 25/09/26",
+     "url": "https://foundationscotland.org.uk/apply-for-funding/funding-available/blackridge",
+     "tidied": [
+      "deadline",
+      "is_rolling",
+      "funder_brief.who_can_apply",
+      "funder_brief.what_they_fund",
+      "funder_brief.how_to_apply",
+      "funder_brief.exclusions",
+      "funder_brief.decision_timeline",
+      "funder_brief.typical_award",
+      "funder_brief.open_status"
+     ]
+    },
+    {
+     "id": "5e097507-c0dc-4439-86fd-b54483c82494",
+     "title": "Borough Council of King's Lynn & West Norfolk Small Grants Scheme",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Funding decisions are expected to be announced by early November 2026.",
+     "url": "https://www.norfolkfoundation.com/funding-support/grants/groups/borough-council-of-kings-lynn-west-norfolk-small-grants-scheme/",
+     "tidied": [],
+     "for_paul": "Closed, outcome due early November 2026, no next round date given."
+    },
+    {
+     "id": "0c9aa487-7fe1-459a-802b-89447b3cc3a1",
+     "title": "Brave Futures",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "We are now recruiting for its next cohort of organisations to take part in the Brave Futures programme.",
+     "url": "https://artsfundraising.org.uk/programmes/brave-futures/",
+     "tidied": [],
+     "for_paul": "\"Applications Open! Apply by Monday 13th July\" is the same July deadline already on the row — the page has not been refreshed since it passed."
+    },
+    {
+     "id": "ef36f740-2f40-40e6-a561-8aa4c72a8a97",
+     "title": "Brewers Foundation",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "The Brewers Foundation is at the heart of Brewers. We want to make the world a brighter place by providing support to communities, organisations and charities up and down the country through sponsorship and donations of paint to transform vital spaces.",
+     "url": "https://www.brewers.co.uk/about/community",
+     "tidied": [],
+     "for_paul": "apply_url (info.brewers.co.uk) 404s, but the Foundation is live and rolling at brewers.co.uk/about/community, offering \"your share of this year's £50,000 pot\" with no deadline. A relink, not a dead fund — the row's own is_rolling was already true."
+    },
+    {
+     "id": "cdd31f5e-4fc4-4f98-be98-c452cf0c253f",
+     "title": "Brighton & Hove Buses Community Support Fund",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Please note: applications for the Community Support Fund are now closed.",
+     "url": "https://www.buses.co.uk/community-support-fund",
+     "tidied": [],
+     "for_paul": "Closed for the year, no reopening date on the page."
+    },
+    {
+     "id": "d7afb72d-ddf5-4ec5-a733-2ac876dd3837",
+     "title": "Calisen Impact Charitable Trust",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "We are making changes to our Grant Application process. Due to the substantial number of applications received relative to the level of funding available, we are unfortunately required to decline a greater proportion of submissions than we would otherwise wish. Updated details will be published in due course.",
+     "url": "https://www.calisenimpactcharitabletrust.com/about-funding",
+     "tidied": [],
+     "for_paul": "The trust says it is changing its process and will publish updated details \"in due course\" — no date to park on yet."
+    },
+    {
+     "id": "014db2eb-c6b5-4575-9e03-ac51822820f4",
+     "title": "Cambridge 2030 Fund",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Applications to re-open in 2027 TBC",
+     "url": "https://www.cambscf.org.uk/funds/cambridge2030/",
+     "tidied": [],
+     "for_paul": "Names 2027 but marks the date TBC — too vague to park on; worth a re-check nearer the time."
+    }
+   ],
+   "paul_list": [
+    "PUBLISH Bellahouston Bequest Fund",
+    "PUBLISH Better Community Business Network Grant Initiative",
+    "PUBLISH Blackridge Community Fund",
+    "PARK    2026 Grant Programme",
+    "REJECT  Barnsley AI Upskilling Fund (dead_url) — gov.uk's Find a Grant service has removed this listing now the round is closed; the site no longer lists it.",
+    "REJECT  Better Commissioning Pathways  (dead_url) — gov.uk's Find a Grant service has removed this listing now the round is closed.",
+    "HOLD    2026 Grant Applications GB & NI — Runs every year but no 2027 dates are up yet (\"Every year we invite applications from welfare organisations...\"). Nothing to park until a date appears.",
+    "HOLD    Access to Justice Foundation — Legal Support Grant 2026 (England & Wales) — The named Legal Support Grant 2026-2029 round is closed (outcome due September 2026); the funder is explicit it has no regular cycle, so there is no date to park on.",
+    "HOLD    AI and Social Mobility Challenge Prize — A single cohort culminating at a Parliament event in October 2026; the page gives no indication whether this repeats. Historic or hold is a judgement call.",
+    "HOLD    Alec Dickson Trust Grant — Reopened with a date the row cannot take: deadline and is_rolling are both admin-pinned. Page says open now, closing 4 October 2026 — move the pin and this becomes a publish.",
+    "HOLD    All About Business Entrepreneurs Fund — Two separate questions: nearly every column (title, deadline, is_rolling, apply_url, amounts, structures) is admin-pinned, so little here could be updated even if wanted; and the eligibility reads as an individual founder scheme rather than an organisation applying, which the audience test in the programmes brief would need settling first.",
+    "HOLD    Amazon Sustainability Accelerator — Both listed deadlines have passed, yet \"Apply Now\" and \"Register your interest\" buttons remain live next to \"Our programmes for 2026\" — unclear whether this is a genuinely open evergreen page or one that has not been updated for a new round.",
+    "HOLD    Andrew Wainwright Reform Trust — Grants — Reopened with a date (closes 14 September 2026) but deadline and is_rolling are admin-pinned. Move the pin and this becomes a publish.",
+    "HOLD    Anglian Water Thriving Communities — Both deadlines on the page (8 December 2025, 1 February 2026) are stale; nothing indicates a new round for the fund's remaining four years of committed funding.",
+    "HOLD    Argyll & Bute Council — Supporting Communities Fund — Named as a 2026/27 fund, closed, with no reopening date stated.",
+    "HOLD    Autotrader Digital Inclusion Fund — Closed with an outcome date (late August 2026) but no reopening date.",
+    "HOLD    Berkshire Community Foundation Grants — A front door over several rounds through the year (Surviving Winter opens 28 September, Grassroots opens January 2027), not one fund with one date. Needs relinking to a named round rather than a single park date.",
+    "HOLD    BFI National Lottery Innovation Challenge Fund — Challenge Call 6's page still shows the row's existing 9 April deadline and an August 2026 award date, both already past — looks unrefreshed rather than newly reopened.",
+    "HOLD    Big Give - Women and Girls Match Fund — HTTP 403, unreadable today.",
+    "HOLD    Borough Council of King's Lynn & West Norfolk Small Grants Scheme — Closed, outcome due early November 2026, no next round date given.",
+    "HOLD    Brave Futures — \"Applications Open! Apply by Monday 13th July\" is the same July deadline already on the row — the page has not been refreshed since it passed.",
+    "HOLD    Brewers Foundation — apply_url (info.brewers.co.uk) 404s, but the Foundation is live and rolling at brewers.co.uk/about/community, offering \"your share of this year's £50,000 pot\" with no deadline. A relink, not a dead fund — the row's own is_rolling was already true.",
+    "HOLD    Brighton & Hove Buses Community Support Fund — Closed for the year, no reopening date on the page.",
+    "HOLD    Calisen Impact Charitable Trust — The trust says it is changing its process and will publish updated details \"in due course\" — no date to park on yet.",
+    "HOLD    Cambridge 2030 Fund — Names 2027 but marks the date TBC — too vague to park on; worth a re-check nearer the time."
+   ]
   }
  ],
  "summary": {
