@@ -637,6 +637,183 @@
      "url": "https://www.shoosmiths.com/impact/responsible-business/shoosmiths-foundation"
     }
    ]
+  },
+  {
+   "batch": 5,
+   "written": [
+    {
+     "id": "59b7e30c-4018-4d22-9e7a-074a5f19ae24",
+     "spendTypes": [
+      "capital",
+      "revenue"
+     ],
+     "subtypes": [
+      "capital"
+     ]
+    },
+    {
+     "id": "ca66d932-e36c-43cb-8f11-629c0191eb04",
+     "spendTypes": [
+      "capital"
+     ],
+     "subtypes": [
+      "capital"
+     ]
+    },
+    {
+     "id": "f5c454d7-728e-4f11-b7f1-1dc139393d3e",
+     "restriction": "restricted",
+     "spendTypes": [
+      "capital"
+     ],
+     "subtypes": [
+      "restricted",
+      "capital"
+     ]
+    },
+    {
+     "id": "6c091760-ee77-4a23-b1dd-36a780751eb7",
+     "restriction": "unrestricted",
+     "spendTypes": [
+      "capital",
+      "revenue"
+     ],
+     "subtypes": [
+      "unrestricted",
+      "capital"
+     ]
+    },
+    {
+     "id": "db97dbb6-63b5-4604-8ccb-10a4722ea2b1",
+     "restriction": "unrestricted",
+     "spendTypes": [
+      "capital",
+      "revenue"
+     ],
+     "subtypes": [
+      "unrestricted",
+      "capital"
+     ]
+    },
+    {
+     "id": "c2cbe217-c515-4c4b-b7ad-e719621c598f",
+     "restriction": "unrestricted",
+     "spendTypes": [
+      "revenue"
+     ],
+     "subtypes": [
+      "unrestricted"
+     ]
+    },
+    {
+     "id": "e0055d56-8e59-49fb-bece-8cd38a91cea1",
+     "restriction": "unrestricted",
+     "subtypes": [
+      "unrestricted"
+     ]
+    },
+    {
+     "id": "d6f2fc61-1403-4f13-9d06-e3b47e6c4f4c",
+     "restriction": "restricted",
+     "spendTypes": [
+      "capital"
+     ],
+     "subtypes": [
+      "restricted",
+      "capital"
+     ]
+    },
+    {
+     "id": "da11a3e8-998c-464c-82f2-bf3983008847",
+     "restriction": "restricted",
+     "subtypes": [
+      "restricted"
+     ]
+    }
+   ],
+   "report": [
+    {
+     "id": "dd88b889-6926-42e8-9e8f-954b3b9e5af4",
+     "title": "Sigrid Rausing Trust — Grants",
+     "why": "not_stated",
+     "quote": "Our grant-making is organised into three main programmes: Human Rights and the Rule of Law, Open Societies, and the Environment.",
+     "url": "https://www.sigrid-rausing-trust.org/"
+    },
+    {
+     "id": "8ce6d37f-0c85-44aa-a8ff-faa71ed8ab2e",
+     "title": "South Yorkshire's Community Foundation — Grants",
+     "why": "not_stated",
+     "quote": "Use our Grants Wizard to find the funding you're looking for.",
+     "url": "https://www.sycf.org.uk/apply/search-our-grants",
+     "note": "A JS-driven \"Grants Wizard\" over an unstated number of programmes; no static filter or per-fund type data reaches the text."
+    },
+    {
+     "id": "aafb0cc7-0698-4659-97ee-659579042ec1",
+     "title": "Stobart Sustainability Fund",
+     "why": "not_stated",
+     "quote": "We will now lever that offering to become the most sustainable and prosperous haulier in the UK, protecting the environment, our people, our partners and the communities around us.",
+     "url": "https://eddiestobart.com/sustainability-projects/",
+     "note": "apply_url redirects to a general sustainability page about Stobart's own operations; no separate grants page could be found."
+    },
+    {
+     "id": "853a4569-c998-4f24-8450-5830a891efc6",
+     "title": "Stronger Communities Fund",
+     "why": "not_stated",
+     "quote": "We're always looking for new causes and groups to support in projects that fit the themes of our Stronger Communities Fund.",
+     "url": "https://www.welovemcrcharity.org/apply-for-funding"
+    },
+    {
+     "id": "24a624c6-27a3-413f-baa7-742d1cb02c60",
+     "title": "Sussex Crisis Fund — Sussex Community Foundation",
+     "why": "not_stated",
+     "quote": "Sussex Community Foundation is a registered charity that exists to make Sussex a fairer and more equal place.",
+     "url": "https://sussexcommunityfoundation.org/grants/"
+    },
+    {
+     "id": "1a99b534-f6f5-4792-937d-361f6a0ba067",
+     "title": "The Access Foundation",
+     "why": "not_stated",
+     "quote": "We're focused on making a real difference to people's lives by awarding grants to charities which make a valuable and measurable positive impact.",
+     "url": "https://theaccessgroupfoundation.com/"
+    },
+    {
+     "id": "8797b0c0-e49a-4b33-b82c-1dc0657254a3",
+     "title": "The Bothwell Charitable Trust",
+     "why": "not_stated",
+     "quote": "Costs associated with eligible projects.",
+     "url": "https://youngcamdenfoundation.org.uk/funding/the-bothwell-charitable-trust"
+    },
+    {
+     "id": "111ced72-612a-47c1-8043-c9b75455fc0b",
+     "title": "The Dodgson Foundation",
+     "why": "not_stated",
+     "quote": "We can be quite flexible where we perceive there is a need to be so.",
+     "url": "https://dodgson.org.uk/"
+    },
+    {
+     "id": "809e464b-0cdb-46cb-b844-8eca7d4644a9",
+     "title": "The Grocers' Charity — Small Grants",
+     "why": "not_stated",
+     "quote": "We do NOT fund the following activities ... Property purchase, building or refurbishment (except for Heritage charities) ... Senior leadership salary",
+     "url": "https://grocershall.co.uk/the-charity/the-charity-application",
+     "note": "Excludes one specific expense line each for capital and salary, not a general core-costs or project-costs statement, so no restriction call."
+    },
+    {
+     "id": "1dcfec77-f432-4bc6-8cf4-bf553ea73e4e",
+     "title": "The Indigo Trust",
+     "why": "not_stated",
+     "quote": "Submission of proposals is by invitation only. We are unlikely to fund anything outside our focus areas and we do not fund or sponsor individuals or events.",
+     "url": "https://www.sfct.org.uk/indigo-trust/"
+    },
+    {
+     "id": "e38c97ec-04dd-4809-8d51-a42522033adb",
+     "title": "The JJ Charitable Trust — Literacy Programme",
+     "why": "not_stated",
+     "quote": "We do not fund: Individuals, Capital costs, Literacy work outside the UK, Organisations registered outside the UK, English lessons for children learning English as an additional language, Schools - unless this is for additional provision outside of timetabled lessons",
+     "url": "https://sfct.powerappsportals.com/jjapplication/",
+     "note": "Capital is explicitly excluded; nothing on the page states restricted or unrestricted, so no restriction call."
+    }
+   ]
   }
  ]
 }
