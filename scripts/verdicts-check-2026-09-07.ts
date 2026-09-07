@@ -79,6 +79,15 @@ const ACKNOWLEDGED: Record<string, string> = {
   // job published (1ef69197-b551-4da9-860c-645c97acfb09) — exactly the merge
   // this job\'s own hold note recommended.
   'f4225849-0663-4532-b73e-b8720dd67fb2': 'Severn Trent Community Fund New Project Funding: rejected duplicate by grant-tracker-be on 7 Sept, of the row this job published in batch 6 (1ef69197)',
+  // Five batch 7 publishes went live on Paul's explicit word the same day,
+  // per the 7 Sept launch freeze (nothing user-visible goes live without his
+  // go, each time) — reported by grant-tracker-be, who also filled
+  // sportscotland's brief from its guidelines PDF before publishing it.
+  'be7faf98-fdd3-48ad-ac98-bf05fafe26c3': 'Souter Charitable Trust: published at Paul\'s word on 7 Sept (reported by grant-tracker-be)',
+  'f1fdcd6e-152a-403f-a1ac-f7838fbe9ebc': 'sportscotland Facilities Investment: brief filled from its guidelines PDF by grant-tracker-be, then published at Paul\'s word on 7 Sept',
+  'a3107c21-e079-4291-95f4-fd4c45c77108': 'The Awesome Foundation Glasgow Chapter: published at Paul\'s word on 7 Sept (reported by grant-tracker-be)',
+  'f47db5b5-af42-49c5-b807-ce993c3bd9fc': 'The Homity Trust: published at Paul\'s word on 7 Sept (reported by grant-tracker-be)',
+  '8599b462-b313-468f-b2c6-72fc0f6c144b': 'The Maypole Fund: published at Paul\'s word on 7 Sept (reported by grant-tracker-be)',
 }
 const LIST = join(__dirname, '..', 'docs', 'handoffs', 'verdict-rows-2026-09-07.json')
 const BASELINE = join(__dirname, '..', 'docs', 'handoffs', 'verdict-state-baseline-2026-09-07.json')

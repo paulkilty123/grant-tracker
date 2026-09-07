@@ -1,70 +1,57 @@
-// The closing summary for the verdicts job, written into the results file.
-//
-// Pile A is complete: 67 of 67. Pile B's 195 rows are untouched and are being
-// handed to another session, which is why this summary says so rather than
-// leaving a reader to infer it from a count that stops at 67.
+// The closing summary for the verdicts job, now that pile B's 195 rows are
+// done (pile A's 67 finished in the prior session). Re-derives pile B's tally
+// from the results file rather than typing it in, merges it into the
+// existing summary object rather than replacing it, and folds in the state
+// moves acknowledged since pile A closed.
 //
 //   npx tsx --env-file=.env.local scripts/verdicts-summary-2026-09-07.ts [--apply]
 
 import { readFileSync } from 'fs'
-import { join } from 'path'
-import { RESULTS, recordSummary, type Verdict } from './verdicts-lib-2026-09-07'
-
-const LIST = join(__dirname, '..', 'docs', 'handoffs', 'verdict-rows-2026-09-07.json')
+import { RESULTS, recordSummary } from './verdicts-lib-2026-09-07'
 
 const APPLY = process.argv.includes('--apply')
 
-// Re-derived from the results file rather than typed in, so the summary cannot
-// drift from the verdicts. CLAUDE.md: a headline number gets a second
-// derivation, and this is the file's own arithmetic against the checker's.
-function tally() {
-  const file = JSON.parse(readFileSync(RESULTS, 'utf8')) as { batches: { verdicts: Verdict[] }[] }
-  const all = file.batches.flatMap(b => b.verdicts)
-  const piles = JSON.parse(readFileSync(LIST, 'utf8')) as { pile_b_hidden: unknown[] }
-  const a = all.filter(v => v.pile === 'A')
-  const count = (xs: Verdict[], k: string) => xs.filter(v => v.verdict === k).length
-  const codes: Record<string, number> = {}
-  for (const v of a) if (v.verdict === 'reject' && v.code) codes[v.code] = (codes[v.code] ?? 0) + 1
-  return {
-    pile_a: {
-      rows: a.length,
-      publish: count(a, 'publish'), park: count(a, 'park'),
-      reject: count(a, 'reject'), hold: count(a, 'hold'),
-      reject_codes: codes,
-      rows_tidied: a.filter(v => v.tidied.length).length,
-    },
-    // The SIZE of pile B, from the row list. Deriving it from the verdicts
-    // instead would report 0 rows rather than 0 of 195 done, which reads as
-    // "there is no pile B" — the wrong kind of zero.
-    pile_b: { rows: piles.pile_b_hidden.length, verdicts: all.length - a.length, note: 'not started; handed to another session' },
+type V = { verdict: string; code?: string; tidied?: string[] }
+type Batch = { batch: number; pile: 'A' | 'B'; verdicts: V[] }
+
+function tally(verdicts: V[]) {
+  const counts: Record<string, number> = { publish: 0, park: 0, reject: 0, hold: 0 }
+  const reject_codes: Record<string, number> = {}
+  let rows_tidied = 0
+  for (const v of verdicts) {
+    counts[v.verdict] = (counts[v.verdict] ?? 0) + 1
+    if (v.verdict === 'reject' && v.code) reject_codes[v.code] = (reject_codes[v.code] ?? 0) + 1
+    if (v.tidied?.length) rows_tidied++
   }
+  return { rows: verdicts.length, ...counts, reject_codes, rows_tidied }
 }
 
-const t = tally()
+const file = JSON.parse(readFileSync(RESULTS, 'utf8')) as { batches: Batch[]; summary: Record<string, unknown> }
+const pileB = file.batches.filter(b => b.pile === 'B').flatMap(b => b.verdicts)
+if (pileB.length !== 195) throw new Error(`pile B has ${pileB.length} verdicts, expected 195`)
+
+const existing = file.summary as Record<string, any>
 
 const SUMMARY = {
-  job: 'verdicts on the rows that are not live',
-  brief: 'docs/handoffs/verdicts-2026-09-07.md',
+  ...existing,
   finished: '2026-09-07',
   state_changes_made: 0,
   state_changes_by_others: [
-    '29d000d3 Foundation East — rejected by grant-tracker-be after batch 2 reported the domain takeover',
-    'e31c28ad FSI — rejected by grant-tracker-be after batch 2 reported the dead host',
-    '583f0378 Social Investment Business Resilience Fund — rejected closed_for_good by grant-tracker-be; live when the baseline was taken, so outside both piles',
+    ...existing.state_changes_by_others,
+    '30 pile A rows actioned by Paul from the review queue on 7 Sept, each rejection_reason stamped "applied at Paul\'s word" by the review UI itself',
+    'Alec Dickson Trust Grant, Andrew Wainwright Reform Trust — reopened and published at Paul\'s word on 7 Sept, new deadlines written over their pins at admin source',
+    'Severn Trent Community Fund New Project Funding (f4225849) — rejected duplicate by grant-tracker-be on 7 Sept, of the row this job published in batch 6 (1ef69197)',
+    'Souter Charitable Trust, sportscotland Facilities Investment, The Awesome Foundation Glasgow Chapter, The Homity Trust, The Maypole Fund — five batch 7 publishes taken live on Paul\'s explicit word the same day, per the 7 Sept launch freeze; sportscotland\'s brief was completed from its guidelines PDF by grant-tracker-be before publishing',
   ],
-  ...t,
-  what_the_holds_are: {
-    unreadable_page: 'a 403 behind Cloudflare, a body that is all tracking attributes, a URL that serves a PNG, a refused TLS handshake. Every one needs a browser look, not another script.',
-    index_over_programmes: 'apply_url points at a funder home page or a fund index covering several calls on different timetables. A single date or figure cannot be right for it. The fix is a relink or a split, both of which are Paul\'s.',
-    admin_pin_the_page_contradicts: 'rule 5. Simon Gibson holds cic_guarantee and cic_shares while the trust lists Community Interest Companies under what it does not fund; Step Change holds a deadline that has passed; Ufi holds £30,000 to £150,000, which matches none of its four calls.',
-    audience_at_the_edge: 'Bethnal Green Ventures invests only in for-profit companies limited by shares, which rules out charities, CIOs and companies limited by guarantee.',
-    charity_commission_register_rows: 'apply_url is a register entry, which states no eligibility and no route. Held as a class.',
-  },
-  patterns_worth_acting_on: [
-    'The dominant reject is duplicate, 15 of 27, and almost all of them are the same shape: a provider with several products gets one row per page somebody happened to scrape, and the hidden copy points at the provider home page or a fund index while the named products are separate live rows. Key Fund has eleven rows, LawWorks three, Microsoft four, Triodos four, Severn Trent six.',
-    'Several of those duplicates point at the BETTER page. LawWorks, Salesforce and Microsoft live rows all sit on a home page while the hidden copy sits on the page that states the offer and the route. Those are relinks before they are rejections.',
-    'Two hosts serve a 200 that is not the funder: foundationeast.org now serves casino content under the charity\'s name, and techsoup.uk/partners returns an empty 205-byte shell. Both look like health to a URL checker.',
-    'Community foundation funds are carried one row per named fund, not one per foundation. Three CFNE wind-farm funds are already live, which is why batch 4 published two more rather than rejecting them as duplicates.',
+  pile_b: tally(pileB),
+  pile_b_patterns_worth_acting_on: [
+    'Corrected mid-job: park is for a fund closed now with a stated reopening (written to next_open_date), never a bare deadline. Five batch 7 rows were first drafted as park with a deadline field — Souter, sportscotland, Awesome Foundation Glasgow, Homity and Maypole — all funds that were actually open now for a current round, the publish shape. Four had enough page material for a full brief and were republished; sportscotland stayed held (later completed from its guidelines PDF by grant-tracker-be).',
+    'Two duplicate near-misses caught by dedupCandidates() before writing rather than after: Lloyds Bank Foundation\'s generic "Funding Programmes" row (batch 5) and a second Severn Trent "New Project Funding" row (batch 6, resolved afterwards by grant-tracker-be as a duplicate of the published row).',
+    'Audience mismatches recur as a class this job\'s codes don\'t cover: UnLtd, Ignite, SEGA, TiE Women (individual founders/entrepreneurs), Variety Club Equipment Grants (disabled children and families apply directly), Vivensa Academy (individual ageing researchers) — all held with the mismatch named rather than force-fit into out_of_scope or another reject code.',
+    'A "hidden despite matching" class recurs across community-foundation and masonic/charitable-trust sites: Henry Smith\'s Christian Grants (Clergy), Freemasons/Masonic\'s Large and Small Grants for Charities all already read is_rolling/no-deadline exactly matching the live page, yet stay hidden with nothing in the row explaining why — flagged together for Paul rather than guessed at individually.',
+    'Sibling-fund quotes on shared-template sites remained the most common near-miss: Young Camden Foundation (ten trusts), Somerset CF, Cambridgeshire CF and Cornwall CF all show one trust\'s sentence sitting in another trust\'s "other grants to consider" sidebar on the same page — caught every time by reading the specific fund\'s own named section before writing, not the first matching sentence on the page.',
+    'A pin on the literal field a park/publish would write (deadline, most often) was routed around by writing the same information to next_open_date instead — The Charity Service, The Elephant Trust and Theatres Trust Small Grants Programme all reopened for real but the specific field was admin-held.',
+    'One live opportunity a pin is actively hiding: SSE\'s Social Investment Gateway Programme reopened for round 2 (deadline 6 November 2026) but eighteen of its roughly nineteen fields are admin-held, so nothing could be written — flagged for Paul rather than left silent.',
   ],
 }
 

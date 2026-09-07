@@ -3058,6 +3058,261 @@
     "HOLD    TiE Women Program 2026 — A stale \"Now Accepting Applications\" banner sits alongside this closed badge on the same page; the 30 June 2026 deadline has passed, and the closed badge is the one that agrees with it. Also a pitch competition for individual women founders, not organisations — an audience question. Everything is admin-held regardless.",
     "HOLD    Together for Service: Families Place-Based Grants — Listed under the funder's own \"Closed Programmes\" heading, same shape as Reducing Veteran Homelessness in batch 6. No reopening mentioned; most fields pinned regardless."
    ]
+  },
+  {
+   "batch": 8,
+   "pile": "B",
+   "verdicts": [
+    {
+     "id": "a06424c3-643c-458c-8f97-a228cef657a6",
+     "title": "Trading for Good: Bury",
+     "pile": "B",
+     "verdict": "park",
+     "quote": "Applications closed - Applications will open again in Spring 2027",
+     "url": "https://www.the-sse.org/programme/trading-for-good-bury/",
+     "tidied": [
+      "next_open_date",
+      "next_open_date_parsed"
+     ]
+    },
+    {
+     "id": "15eaab1e-d531-403b-a4da-d7c75c3b113b",
+     "title": "Trading for Good: Milton Keynes",
+     "pile": "B",
+     "verdict": "park",
+     "quote": "Applications closed - Applications will open again in Spring 2027",
+     "url": "https://www.the-sse.org/programme/trading-for-good-milton-keynes/",
+     "tidied": [
+      "next_open_date",
+      "next_open_date_parsed"
+     ]
+    },
+    {
+     "id": "dc32afec-6ae0-4e3c-aca0-50792a6b9b40",
+     "title": "Trading for Good: Stockport",
+     "pile": "B",
+     "verdict": "park",
+     "quote": "Applications closed - Applications will open again in Spring 2027",
+     "url": "https://www.the-sse.org/programme/trading-for-good-stockport/",
+     "tidied": [
+      "next_open_date",
+      "next_open_date_parsed"
+     ]
+    },
+    {
+     "id": "8c23420c-99d3-49c9-b13e-f5062b3616a8",
+     "title": "Trailblazer Community Grants",
+     "pile": "B",
+     "verdict": "park",
+     "quote": "Partnership: Closed ... Deadline: March 2027",
+     "url": "https://betterconnect.org.uk/our-projects/trailblazer-community-grants/",
+     "tidied": [
+      "next_open_date",
+      "next_open_date_parsed"
+     ]
+    },
+    {
+     "id": "71fcd1d1-2bde-4513-ae91-c8c86d3cea49",
+     "title": "Trailblazer Fund",
+     "pile": "B",
+     "verdict": "park",
+     "quote": "Trailblazer Round 13 - closed. Trailblazer Round 14: Round Opens: 23 October 2026, Deadline: 28 August 2026, 5pm.",
+     "url": "https://www.youthmusic.org.uk/funding/i-need-funding/trailblazer-fund",
+     "tidied": [
+      "next_open_date",
+      "next_open_date_parsed"
+     ]
+    },
+    {
+     "id": "fb2df025-d6cc-46f9-b878-265a40214da7",
+     "title": "Trauma Responsive Greater Manchester Fund",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "This fund is closed to applications",
+     "url": "https://10gm.org.uk/10gms-work/trauma-responsive-greater-manchester-fund/",
+     "tidied": [],
+     "for_paul": "Closed, no next round stated."
+    },
+    {
+     "id": "c36678c2-0801-49a3-a1c0-f7fe6c59b784",
+     "title": "Triton Knoll Offshore Community Wind Farm Fund",
+     "pile": "B",
+     "verdict": "park",
+     "quote": "Closing date: 1st February and 1st August",
+     "url": "https://lincolnshirecf.co.uk/grants/triton-knoll/",
+     "tidied": [
+      "next_open_date",
+      "next_open_date_parsed"
+     ]
+    },
+    {
+     "id": "eef413f5-805b-4919-b54e-f3e5bd1e7e26",
+     "title": "UnLtd — Awards for Social Entrepreneurs",
+     "pile": "B",
+     "verdict": "park",
+     "quote": "Opening Soon | Next round on 1 October 2026 at 10:00",
+     "url": "https://unltd.org.uk/awards/",
+     "tidied": [
+      "next_open_date",
+      "next_open_date_parsed"
+     ]
+    },
+    {
+     "id": "23774850-f7bd-4f23-abdd-265d1c1b5690",
+     "title": "Valour Recognised: Centres Development Fund",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "This programme is now closed – the application resources below are provided for reference only.",
+     "url": "https://covenantfund.org.uk/programme/valour-recognised-centres-development-fund/",
+     "tidied": [],
+     "for_paul": "Listed under the funder's own \"Closed Programmes\" heading, same shape as Together for Service and Reducing Veteran Homelessness. No reopening mentioned."
+    },
+    {
+     "id": "d7358629-ddba-41f5-b8db-669e5b1dc23e",
+     "title": "Variety Club - Equipment Grants",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "You can submit an application at any time.",
+     "url": "https://www.variety.org.uk/how-can-we-help/equipment-grants-for-children/",
+     "tidied": [],
+     "for_paul": "Genuinely rolling, but disabled children and their families apply directly for equipment — not an organisation applying on their behalf. An audience mismatch, not resolved by any of this job's codes."
+    },
+    {
+     "id": "eb625734-ad25-42cf-b2f8-08f0cd6b0ca6",
+     "title": "Vivensa Academy",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Academy Ignition Fund: Now open – applications are accepted on a rolling basis with quarterly review deadlines.",
+     "url": "https://vivensafoundation.org.uk/apply-for-funding/",
+     "tidied": [],
+     "for_paul": "Open to individual ageing researchers who are Academy members, not organisations — another audience mismatch. Deadline, amounts, funding type and structure fields are admin-pinned regardless."
+    },
+    {
+     "id": "131181c3-caf3-43f0-b7e5-86e96cd50e00",
+     "title": "Voicescape Community Fund",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "The Voicescape Community Fund, in partnership with Forever Manchester, is NOW CLOSED to applications from Community Groups in Greater Manchester.",
+     "url": "https://forevermanchester.com/fund/voicescape-community-fund/",
+     "tidied": [],
+     "for_paul": "Closed, no next round stated."
+    },
+    {
+     "id": "5520dd51-755e-4695-a348-99463ccab9d6",
+     "title": "Warwick and Dominey Fund – General",
+     "pile": "B",
+     "verdict": "park",
+     "quote": "Applications re-open on 2 November 2026",
+     "url": "https://www.cambscf.org.uk/funds/warwick-dominey/",
+     "tidied": [
+      "next_open_date",
+      "next_open_date_parsed"
+     ]
+    },
+    {
+     "id": "dc4eb9d8-2cae-43e5-b9c6-870b60162446",
+     "title": "Welcome for Newcomers Fund",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "This grant is now closed ... Applications are now closed.",
+     "url": "https://henrysmith.foundation/grants/welcome-for-newcomers/",
+     "tidied": [],
+     "for_paul": "Closed, no next round stated."
+    },
+    {
+     "id": "4c400a67-e826-496b-978c-a20504df041d",
+     "title": "Westminster Climate Fund",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Applications to the fund are open until 6pm on Friday 13 March 2026.",
+     "url": "https://www.westminster.gov.uk/leisure-libraries-and-community/grant-funding-opportunities",
+     "tidied": [],
+     "for_paul": "Confirms the deadline the row already holds; this is a stale general funding index (it still lists programmes closed back in 2023 and 2024) with no next round for this fund."
+    },
+    {
+     "id": "1c558d41-a3b9-403d-b8ed-e0ffc6e176ae",
+     "title": "Westminster Community Contribution Fund",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Stage 2: If you receive the application form, applications must be submitted by 23:59 on Friday 3 April.",
+     "url": "https://www.westminster.gov.uk/community-contribution-fund-application-guidelines",
+     "tidied": [],
+     "for_paul": "Confirms round 7's already-known deadline; no round 8 dates stated."
+    },
+    {
+     "id": "31807e92-d843-484f-bd73-f6524af16e99",
+     "title": "Wise Music Foundation Grants",
+     "pile": "B",
+     "verdict": "park",
+     "quote": "The Wise Music Foundation trustees meet on a quarterly basis... End of November – for applications reviewed in December.",
+     "url": "https://wisemusicfoundation.com/apply/",
+     "tidied": [
+      "next_open_date",
+      "next_open_date_parsed"
+     ]
+    },
+    {
+     "id": "046fb170-b998-4d81-a20a-d768f40a13eb",
+     "title": "Worthing Community Chest — Grants for Growth",
+     "pile": "B",
+     "verdict": "publish",
+     "quote": "For Grants for Growth you can apply at any time during the year when you are ready.",
+     "url": "https://worthingcommunitychest.org/grants/grants-for-growth/",
+     "tidied": [
+      "deadline",
+      "is_rolling",
+      "funder_brief.who_can_apply",
+      "funder_brief.what_they_fund",
+      "funder_brief.how_to_apply",
+      "funder_brief.exclusions",
+      "funder_brief.decision_timeline",
+      "funder_brief.typical_award",
+      "funder_brief.open_status"
+     ]
+    },
+    {
+     "id": "fae1af9e-dd6c-4f8b-a0f8-5ee4c6fef64d",
+     "title": "Young Women in Mind 2026–2028",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "This grant programme has now closed for this year and we are no longer accepting applications. Please follow us on LinkedIn for updates on our grant programmes.",
+     "url": "https://www.thepilgrimtrust.org.uk/young-womens-mental-health-grants/",
+     "tidied": [],
+     "for_paul": "Closed for the year, no next round stated."
+    },
+    {
+     "id": "ac17f2a9-ae1c-44bc-b6ba-a2398bf957fd",
+     "title": "Youth Matters Fund",
+     "pile": "B",
+     "verdict": "reject",
+     "code": "dead_url",
+     "quote": "Page not found. If you typed the web address, check it is correct.",
+     "url": "https://www.find-government-grants.service.gov.uk/grants/youth-matters-fund-1",
+     "tidied": []
+    }
+   ],
+   "paul_list": [
+    "PUBLISH Worthing Community Chest — Grants for Growth",
+    "PARK    Trading for Good: Bury",
+    "PARK    Trading for Good: Milton Keynes",
+    "PARK    Trading for Good: Stockport",
+    "PARK    Trailblazer Community Grants",
+    "PARK    Trailblazer Fund",
+    "PARK    Triton Knoll Offshore Community Wind Farm Fund",
+    "PARK    UnLtd — Awards for Social Entrepreneurs",
+    "PARK    Warwick and Dominey Fund – General",
+    "PARK    Wise Music Foundation Grants",
+    "REJECT  Youth Matters Fund (dead_url)",
+    "HOLD    Trauma Responsive Greater Manchester Fund — Closed, no next round stated.",
+    "HOLD    Valour Recognised: Centres Development Fund — Listed under the funder's own \"Closed Programmes\" heading, same shape as Together for Service and Reducing Veteran Homelessness. No reopening mentioned.",
+    "HOLD    Variety Club - Equipment Grants — Genuinely rolling, but disabled children and their families apply directly for equipment — not an organisation applying on their behalf. An audience mismatch, not resolved by any of this job's codes.",
+    "HOLD    Vivensa Academy — Open to individual ageing researchers who are Academy members, not organisations — another audience mismatch. Deadline, amounts, funding type and structure fields are admin-pinned regardless.",
+    "HOLD    Voicescape Community Fund — Closed, no next round stated.",
+    "HOLD    Welcome for Newcomers Fund — Closed, no next round stated.",
+    "HOLD    Westminster Climate Fund — Confirms the deadline the row already holds; this is a stale general funding index (it still lists programmes closed back in 2023 and 2024) with no next round for this fund.",
+    "HOLD    Westminster Community Contribution Fund — Confirms round 7's already-known deadline; no round 8 dates stated.",
+    "HOLD    Young Women in Mind 2026–2028 — Closed for the year, no next round stated."
+   ]
   }
  ],
  "summary": {
@@ -3068,7 +3323,11 @@
   "state_changes_by_others": [
    "29d000d3 Foundation East — rejected by grant-tracker-be after batch 2 reported the domain takeover",
    "e31c28ad FSI — rejected by grant-tracker-be after batch 2 reported the dead host",
-   "583f0378 Social Investment Business Resilience Fund — rejected closed_for_good by grant-tracker-be; live when the baseline was taken, so outside both piles"
+   "583f0378 Social Investment Business Resilience Fund — rejected closed_for_good by grant-tracker-be; live when the baseline was taken, so outside both piles",
+   "30 pile A rows actioned by Paul from the review queue on 7 Sept, each rejection_reason stamped \"applied at Paul's word\" by the review UI itself",
+   "Alec Dickson Trust Grant, Andrew Wainwright Reform Trust — reopened and published at Paul's word on 7 Sept, new deadlines written over their pins at admin source",
+   "Severn Trent Community Fund New Project Funding (f4225849) — rejected duplicate by grant-tracker-be on 7 Sept, of the row this job published in batch 6 (1ef69197)",
+   "Souter Charitable Trust, sportscotland Facilities Investment, The Awesome Foundation Glasgow Chapter, The Homity Trust, The Maypole Fund — five batch 7 publishes taken live on Paul's explicit word the same day, per the 7 Sept launch freeze; sportscotland's brief was completed from its guidelines PDF by grant-tracker-be before publishing"
   ],
   "pile_a": {
    "rows": 67,
@@ -3087,8 +3346,15 @@
   },
   "pile_b": {
    "rows": 195,
-   "verdicts": 0,
-   "note": "not started; handed to another session"
+   "publish": 15,
+   "park": 22,
+   "reject": 25,
+   "hold": 133,
+   "reject_codes": {
+    "dead_url": 23,
+    "duplicate": 2
+   },
+   "rows_tidied": 37
   },
   "what_the_holds_are": {
    "unreadable_page": "a 403 behind Cloudflare, a body that is all tracking attributes, a URL that serves a PNG, a refused TLS handshake. Every one needs a browser look, not another script.",
@@ -3102,6 +3368,15 @@
    "Several of those duplicates point at the BETTER page. LawWorks, Salesforce and Microsoft live rows all sit on a home page while the hidden copy sits on the page that states the offer and the route. Those are relinks before they are rejections.",
    "Two hosts serve a 200 that is not the funder: foundationeast.org now serves casino content under the charity's name, and techsoup.uk/partners returns an empty 205-byte shell. Both look like health to a URL checker.",
    "Community foundation funds are carried one row per named fund, not one per foundation. Three CFNE wind-farm funds are already live, which is why batch 4 published two more rather than rejecting them as duplicates."
+  ],
+  "pile_b_patterns_worth_acting_on": [
+   "Corrected mid-job: park is for a fund closed now with a stated reopening (written to next_open_date), never a bare deadline. Five batch 7 rows were first drafted as park with a deadline field — Souter, sportscotland, Awesome Foundation Glasgow, Homity and Maypole — all funds that were actually open now for a current round, the publish shape. Four had enough page material for a full brief and were republished; sportscotland stayed held (later completed from its guidelines PDF by grant-tracker-be).",
+   "Two duplicate near-misses caught by dedupCandidates() before writing rather than after: Lloyds Bank Foundation's generic \"Funding Programmes\" row (batch 5) and a second Severn Trent \"New Project Funding\" row (batch 6, resolved afterwards by grant-tracker-be as a duplicate of the published row).",
+   "Audience mismatches recur as a class this job's codes don't cover: UnLtd, Ignite, SEGA, TiE Women (individual founders/entrepreneurs), Variety Club Equipment Grants (disabled children and families apply directly), Vivensa Academy (individual ageing researchers) — all held with the mismatch named rather than force-fit into out_of_scope or another reject code.",
+   "A \"hidden despite matching\" class recurs across community-foundation and masonic/charitable-trust sites: Henry Smith's Christian Grants (Clergy), Freemasons/Masonic's Large and Small Grants for Charities all already read is_rolling/no-deadline exactly matching the live page, yet stay hidden with nothing in the row explaining why — flagged together for Paul rather than guessed at individually.",
+   "Sibling-fund quotes on shared-template sites remained the most common near-miss: Young Camden Foundation (ten trusts), Somerset CF, Cambridgeshire CF and Cornwall CF all show one trust's sentence sitting in another trust's \"other grants to consider\" sidebar on the same page — caught every time by reading the specific fund's own named section before writing, not the first matching sentence on the page.",
+   "A pin on the literal field a park/publish would write (deadline, most often) was routed around by writing the same information to next_open_date instead — The Charity Service, The Elephant Trust and Theatres Trust Small Grants Programme all reopened for real but the specific field was admin-held.",
+   "One live opportunity a pin is actively hiding: SSE's Social Investment Gateway Programme reopened for round 2 (deadline 6 November 2026) but eighteen of its roughly nineteen fields are admin-held, so nothing could be written — flagged for Paul rather than left silent."
   ]
  }
 }
