@@ -312,6 +312,173 @@
      "url": "https://forevermanchester.com/funding/"
     }
    ]
+  },
+  {
+   "batch": 3,
+   "written": [
+    {
+     "id": "a9ebac9e-738f-4917-bf81-73e8cf0fc3ba",
+     "restriction": "unrestricted",
+     "spendTypes": [
+      "capital",
+      "revenue"
+     ],
+     "subtypes": [
+      "unrestricted",
+      "capital"
+     ]
+    },
+    {
+     "id": "738638ce-af2f-4052-b428-213248d9312a",
+     "spendTypes": [
+      "capital",
+      "revenue"
+     ],
+     "subtypes": [
+      "capital"
+     ]
+    },
+    {
+     "id": "3133f461-9fd4-4d13-a4eb-52f8bb7d69e3",
+     "restriction": "unrestricted",
+     "subtypes": [
+      "unrestricted"
+     ]
+    },
+    {
+     "id": "d38779a7-0873-4f2f-91e2-638739a2eb64",
+     "restriction": "unrestricted",
+     "subtypes": [
+      "unrestricted"
+     ]
+    },
+    {
+     "id": "5a368644-3211-4a40-9447-d5594938a519",
+     "spendTypes": [
+      "capital",
+      "revenue"
+     ],
+     "subtypes": [
+      "capital"
+     ]
+    },
+    {
+     "id": "06a3f5a0-e90d-451b-a829-0d3b895aac72",
+     "restriction": "unrestricted",
+     "spendTypes": [
+      "revenue"
+     ],
+     "subtypes": [
+      "unrestricted"
+     ]
+    },
+    {
+     "id": "f79aada3-721e-487c-9e97-35097aa87ee0",
+     "restriction": "unrestricted",
+     "spendTypes": [
+      "revenue"
+     ],
+     "subtypes": [
+      "unrestricted"
+     ]
+    },
+    {
+     "id": "0d4a2ffd-1aeb-43ca-b1e9-469c2066b968",
+     "spendTypes": [
+      "capital",
+      "revenue"
+     ],
+     "subtypes": [
+      "capital"
+     ]
+    }
+   ],
+   "report": [
+    {
+     "id": "3b836a87-fd0e-4d5c-bfdc-b44f7c793eb1",
+     "title": "Gatsby Charitable Foundation",
+     "why": "not_stated",
+     "quote": "The Gatsby Charitable Foundation was set up by David Sainsbury to realise his charitable objectives.",
+     "url": "https://www.gatsby.org.uk/"
+    },
+    {
+     "id": "3d6656f0-6f74-4635-8c87-0406ded69be2",
+     "title": "Gordon Fraser Charitable Trust",
+     "why": "not_stated",
+     "quote": "Applicants must be organisations which are registered either with the Charity Commission in England and Wales or with the Office of the Scottish Charity Regulator.",
+     "url": "https://www.gfct.org.uk/"
+    },
+    {
+     "id": "2b5a4026-5608-4b72-8849-137631789a90",
+     "title": "Grassroots Grants",
+     "why": "not_stated",
+     "quote": "This fund is designed to be flexible and accessible, supporting a wide range of local projects and activities.",
+     "url": "https://www.berkshirecf.org/available-funding/grassroots-grant-round/"
+    },
+    {
+     "id": "87dae8fd-4313-4dfa-a042-db71857d6105",
+     "title": "Green Community Grants Programme",
+     "why": "unreadable",
+     "quote": "Just a moment...",
+     "url": "https://www.wildlifetrusts.org/green-community-grants-programme"
+    },
+    {
+     "id": "e0dddc2b-3275-41cd-9daf-982aed9798b8",
+     "title": "Hampstead Wells and Camden Trust",
+     "why": "not_stated",
+     "quote": "HWCT currently provides organisational funding through the following organisational grant programmes.",
+     "url": "https://hwct.org.uk/grants-for-organisations/"
+    },
+    {
+     "id": "9732902b-9ddd-491e-bbf2-031afc83ba4d",
+     "title": "Henry Smith Foundation Domestic Abuse Counselling Fund",
+     "why": "not_stated",
+     "quote": "This grant is coming soon.",
+     "url": "https://henrysmith.foundation/grants/domestic-abuse-counselling"
+    },
+    {
+     "id": "8f57f2a0-685d-489f-9267-ac9f79b073a7",
+     "title": "Herefordshire Community Foundation — Community Grants (Community Chest)",
+     "why": "not_stated",
+     "quote": "Herefordshire Community Foundation aims to build stronger communities in the county by giving grants to worthy community and voluntary groups, charities and individuals.",
+     "url": "https://www.herefordshirecf.org/apply-for-a-grant/"
+    },
+    {
+     "id": "12bbaf28-20aa-445b-867b-1958ebcef1ef",
+     "title": "Hollick Family Charitable Trust",
+     "why": "not_stated",
+     "quote": "Costs associated with eligible projects with charitable objectives.",
+     "url": "https://youngcamdenfoundation.org.uk/funding/hollick-family-charitable-trust"
+    },
+    {
+     "id": "ec9f1ec9-426a-49aa-aaea-4a3e1a718afc",
+     "title": "Ian Askew Charitable Trust",
+     "why": "not_stated",
+     "quote": "Costs associated with eligible activities and projects.",
+     "url": "https://youngcamdenfoundation.org.uk/funding/ian-askew-charitable-trust"
+    },
+    {
+     "id": "ed3f6ba2-c76c-4b44-9bf4-5846f4ad4bed",
+     "title": "James Ahern Foundation",
+     "why": "not_stated",
+     "quote": "Grants: we award small grants to young people, to help them pursue their passion in life.",
+     "url": "https://www.jamesahernfoundation.org/"
+    },
+    {
+     "id": "b7d19a10-753c-4294-95ad-ec43ac71595d",
+     "title": "Kusuma Trust UK — Education, Communities & Environment",
+     "why": "not_stated",
+     "quote": "We're making sure disadvantaged young people from former coal mining areas have the confidence they need to apply for top universities.",
+     "url": "https://www.kusumatrust.org/"
+    },
+    {
+     "id": "97242e7b-33ec-4249-b46b-b54f039818d5",
+     "title": "Lambert Charitable Trust",
+     "why": "not_stated",
+     "quote": "Costs associated with eligible projects.",
+     "url": "https://youngcamdenfoundation.org.uk/funding/lambert-charitable-trust"
+    }
+   ]
   }
  ]
 }
