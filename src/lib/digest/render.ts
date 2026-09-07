@@ -41,6 +41,14 @@ function tile(days: number): { bg: string; today: boolean } {
 
 function tileCell(days: number, bg?: string): string {
   const t = bg ? { ...tile(days), bg } : tile(days)
+  if (days >= 999) {
+    // No deadline: rolling, or open until further notice. The sentinel the
+    // builder uses to sort these last was rendering as "999 days" (seen on a
+    // Digital Candle in-kind row, 7 Sept). Say the true thing instead.
+    return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background:${t.bg};border-radius:10px;">
+      <tr><td align="center" style="padding:11px 10px;font-family:${UI};font-size:12px;font-weight:700;letter-spacing:.6px;color:${C.deep};line-height:1;">OPEN</td></tr>
+    </table>`
+  }
   if (t.today) {
     // Anything closing today is called out, never shown as an equal to one 80
     // days away. The word replaces the numeral rather than sitting under a "0".

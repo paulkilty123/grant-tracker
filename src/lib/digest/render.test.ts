@@ -246,3 +246,9 @@ describe('the promised send day matches the schedule', () => {
     expect(weekOne).not.toContain('Next Monday')
   })
 })
+
+describe('a row with no deadline', () => {
+  it('never renders the 999 sort sentinel as a number of days', () => {
+    expect(html).not.toMatch(/>999</)
+  })
+})
