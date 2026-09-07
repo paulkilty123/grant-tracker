@@ -1805,6 +1805,310 @@
     "HOLD    Good Finance — A directory of social investors rather than a single fund with a date; nearly every column is admin-held regardless.",
     "HOLD    Grants for Animal Rescue, Rehabilitation, Release and Rehoming — A recurring cycle, three deadlines a year; the row's deadline (1 August) is the current, already-passed one. Next in the cycle is 1 December 2026."
    ]
+  },
+  {
+   "batch": 4,
+   "pile": "B",
+   "verdicts": [
+    {
+     "id": "52d4abe9-f60a-465e-8b42-c4b72b175d61",
+     "title": "Grants for Organisations",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "23 October for November meeting (cut-off date for starting an application is 5pm on 19 October)",
+     "url": "https://www.w-a-c.org.uk/grants-organisations",
+     "tidied": [],
+     "for_paul": "A genuine future deadline, 23 October 2026, for the November meeting. deadline, amounts, is_rolling, location_tag and eligible_structures are all admin-pinned."
+    },
+    {
+     "id": "b8494005-3edb-4f2a-bde5-83e5254a0ac8",
+     "title": "Grants for Wales",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "The next application deadline is 18th December 2026",
+     "url": "https://www.ashleyfamilyfoundation.org.uk/how-to-apply-for-a-grant-from-the-ashley-family-foundation",
+     "tidied": [],
+     "for_paul": "A genuine future deadline, 18 December 2026, but deadline, amount_max, is_rolling, location_tag and eligible_structures are all admin-pinned."
+    },
+    {
+     "id": "df6c6cf5-9747-4324-8bcd-cfd9c68bc53a",
+     "title": "Green Quarter Community Chest",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Applications are open until the 29th June, with a total of £10,000 available to projects that align with our priority areas",
+     "url": "https://thegreenquartercommunity.co.uk/community-chest-programmes/",
+     "tidied": [],
+     "for_paul": "This round has closed and matches the row; no next round announced."
+    },
+    {
+     "id": "38d502d6-a414-40f5-a72e-405039098abd",
+     "title": "Green Roots Fund",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "",
+     "url": "https://www.london.gov.uk/programmes-strategies/environment-and-climate-change/parks-green-spaces-and-biodiversity/green-space-funding/green-roots-fund",
+     "tidied": [],
+     "for_paul": "The fund's own content is client-rendered; only site navigation reaches a text read."
+    },
+    {
+     "id": "43b1a60d-270a-48da-9d59-774be5847a0f",
+     "title": "Green Spaces Fund",
+     "pile": "B",
+     "verdict": "park",
+     "quote": "The Green Spaces Fund is now closed for 2026! ... Keep your eyes peeled in early 2027 for news about the next round...",
+     "url": "https://gmet.org.uk/green-spaces-fund",
+     "tidied": [
+      "next_open_date",
+      "next_open_date_parsed",
+      "deadline",
+      "is_rolling"
+     ]
+    },
+    {
+     "id": "ab3b5833-5440-4acc-9d92-1694bc80e994",
+     "title": "GSK IMPACT Awards",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "",
+     "url": "https://www.kingsfund.org.uk/insight-and-analysis/projects/gsk/impact-awards",
+     "tidied": [],
+     "for_paul": "HTTP 403, unreadable today. The row already holds \"TBC — between rounds\", which nothing here disputes."
+    },
+    {
+     "id": "e73119cf-dfb8-493b-bf20-8da65285eca3",
+     "title": "Hackney — Project Innovation Fund",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Our Grants Management system is moving to a new portal. From 28 July 2026, you won't be able to access the current system anymore.",
+     "url": "https://www.hackney.gov.uk/community-safety-and-environment/community-partnerships/community-grants/what-grants-are-available",
+     "tidied": [],
+     "for_paul": "Closed and mid-migration to a new grants system; no reopening date given, subscribe-to-be-notified is the only next step offered."
+    },
+    {
+     "id": "e72200b0-f3df-44d2-85bc-a55b5d2aa0a4",
+     "title": "Harold Hyam Wingate Foundation — Music & Performing Arts",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Email your completed form to admin@wingate.org.uk – applications are currently closed. Please check back at the end of September 2026 for a new date.",
+     "url": "https://wingate.org.uk/apply/",
+     "tidied": [],
+     "for_paul": "Closed, with a promise to publish a new date at the end of September rather than a date itself."
+    },
+    {
+     "id": "5adeb924-3976-4836-a000-007c8e3361ef",
+     "title": "Havering Community Chest 2026/27",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "The Live Well Havering community chest funds local projects supporting health and wellbeing in Havering, it is open for applications each year from 1 May 2026 - 30 June 2026. This round of applications is now closed",
+     "url": "https://www.livewellhavering.org.uk/article/havering-community-chest/",
+     "tidied": [],
+     "for_paul": "Annual window (1 May-30 June) has closed for this year; no 2027 date yet. Every relevant field is admin-pinned."
+    },
+    {
+     "id": "e0a27a78-3cfd-44e3-aebf-59d41d576894",
+     "title": "HCF Grants",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "2027 Round: Open for applications from 1st September 2026. Deadline 5pm 11th January 2027. Decisions known March 2027.",
+     "url": "https://www.hertscf.org.uk/hcfgrants",
+     "tidied": [],
+     "for_paul": "This round is open now (opened 1 September, six days before this check), closing 11 January 2027. deadline is admin-held."
+    },
+    {
+     "id": "8f0e5171-379b-41c8-a17d-e0caa0867332",
+     "title": "Healthy Ageing Award",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Next round on 1 October 2026 at 10:00 (23 days)",
+     "url": "https://unltd.org.uk/awards/healthy-ageing/",
+     "tidied": [],
+     "for_paul": "A genuine future date, 1 October 2026, and nothing is admin-held — but UnLtd's award goes to an individual social entrepreneur, the same audience question as the Funding Futures Programme elsewhere in this pile."
+    },
+    {
+     "id": "48dcfee3-ece1-48e5-9b65-41c27cd40e54",
+     "title": "Heart of Yorkshire Fund for the Selby District",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "We are now closed for applications. We will be opening again in 2027 for this fund.",
+     "url": "https://tworidingscf.org.uk/fund/heart-of-yorkshire-fund/",
+     "tidied": [],
+     "for_paul": "Names only a year, not a date, for reopening; deadline, amount_max, is_rolling and location_tag are all admin-pinned regardless."
+    },
+    {
+     "id": "adb857d5-43ba-4012-a401-ae6ab5b6c89f",
+     "title": "Heart Research UK — Healthy Heart Grants",
+     "pile": "B",
+     "verdict": "reject",
+     "code": "duplicate",
+     "quote": "",
+     "url": "https://heartresearch.org.uk/grants/",
+     "tidied": [],
+     "for_paul": "Duplicate of the live row a9ebac9e, Heart Research UK Healthy Hearts Grants (Northern Ireland). This row's apply_url redirects to the charity's homepage; the live row already has the fund's working page.",
+     "dupe_of": [
+      "a9ebac9e"
+     ]
+    },
+    {
+     "id": "b5b74039-791e-47be-b283-4b03eff238ba",
+     "title": "Henry Smith Foundation — Christian Grants (Clergy)",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "This grant is now open",
+     "url": "https://henrysmith.foundation/grants/clergy/",
+     "tidied": [],
+     "for_paul": "Reads as open, and the row's own rolling, no-deadline timing already matches the page — but is_active is admin-pinned false, which looks like a deliberate decision to keep this out of the catalogue rather than a timing gap. Rule 1 means this job leaves is_active alone regardless; flagging so the pin's reasoning can be checked."
+    },
+    {
+     "id": "0333a9dc-551e-4cff-a27c-3ff8fff74141",
+     "title": "Henry Smith Foundation — Early Years Parenting",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "This grant is now closed",
+     "url": "https://henrysmith.foundation/grants/early-years-parenting/",
+     "tidied": [],
+     "for_paul": "Closed; the next stage (full application) is by invitation only, and no next open round is named. Nearly every column is admin-pinned."
+    },
+    {
+     "id": "4d1c0308-3198-4fa0-8a0f-309827065227",
+     "title": "Henry Smith Foundation — Equity in Justice",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "This grant is now closed",
+     "url": "https://henrysmith.foundation/grants/equity-in-justice/",
+     "tidied": [],
+     "for_paul": "The page says both \"now closed\" and, a few lines on, \"Applications are now open\" — worth a human look rather than a script picking one. The row's own next_open_date (24 June 2026) is already in the past regardless."
+    },
+    {
+     "id": "6fae7d85-2a40-481a-b192-de96f20593f5",
+     "title": "Henry Smith Foundation — Proud Homes",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Applications are now closed.",
+     "url": "https://henrysmith.foundation/grants/proud-homes/",
+     "tidied": [],
+     "for_paul": "Closed, no next round stated."
+    },
+    {
+     "id": "c9634fd4-6185-4aa1-9999-205dd589e9a5",
+     "title": "Henry Smith Foundation Grants",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Learn more about our 2025-2030 priorities",
+     "url": "https://henrysmith.foundation/grants/",
+     "tidied": [],
+     "for_paul": "An index over the named Henry Smith grants above; the row's existing \"TBC — between rounds\" already fits and nothing here contradicts it."
+    },
+    {
+     "id": "b351fcc8-a520-41ab-905f-ca746f9ae065",
+     "title": "Hilden Charitable Fund — Main Grants",
+     "pile": "B",
+     "verdict": "park",
+     "quote": "The UK Programmes are currently CLOSED and not scheduled to open again until summer 2027.",
+     "url": "https://hildencharitablefund.org/uk-funding/",
+     "tidied": [
+      "next_open_date",
+      "next_open_date_parsed",
+      "deadline",
+      "is_rolling"
+     ]
+    },
+    {
+     "id": "186c2817-4efa-48c5-827e-8a7ef9f92295",
+     "title": "HMRC Voluntary and Community Sector (VCS) Grant Funding 2027 to 30",
+     "pile": "B",
+     "verdict": "reject",
+     "code": "dead_url",
+     "quote": "Page not found. If you typed the web address, check it is correct.",
+     "url": "https://www.find-government-grants.service.gov.uk/grants/hmrc-grant-funding-programme-2027-30-1",
+     "tidied": []
+    },
+    {
+     "id": "9cf129d2-9e1c-43d0-9627-032cf46ba18a",
+     "title": "HPC Community Fund Small Grants",
+     "pile": "B",
+     "verdict": "publish",
+     "quote": "Open year-round. Next deadline is Monday 19 October, by 5pm",
+     "url": "https://www.somersetcf.org.uk/grants-funding/details/hpc-community-fund-small-grants/",
+     "tidied": [
+      "deadline",
+      "is_rolling",
+      "funder_brief.who_can_apply",
+      "funder_brief.what_they_fund",
+      "funder_brief.how_to_apply",
+      "funder_brief.exclusions",
+      "funder_brief.decision_timeline",
+      "funder_brief.typical_award",
+      "funder_brief.open_status"
+     ]
+    },
+    {
+     "id": "0d918b6b-84be-4224-88f8-8402394e7f7b",
+     "title": "Hugh Fraser Foundation — General Grants",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "The closing date for receipt of applications for the next meeting on 9th December 2026 will be Friday 30th October",
+     "url": "https://turcanconnell.com/the-hugh-fraser-foundation/",
+     "tidied": [],
+     "for_paul": "A genuine, newer cut-off: 30 October 2026 for the 9 December panel, superseding the row's own stale next_open_date text (which names 31 July for an 8 September panel). deadline, is_rolling and location_tag are admin-pinned."
+    },
+    {
+     "id": "fab5ab12-9098-4e07-8647-722374e2126e",
+     "title": "Idlewild Trust Conservation Grants",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Applications open Monday 7 December 2026",
+     "url": "https://www.idlewildtrust.org.uk/apply-grant",
+     "tidied": [],
+     "for_paul": "A genuine future opening date, 7 December 2026, but is_rolling and next_open_date are both admin-pinned."
+    },
+    {
+     "id": "d07619f8-3bfe-4f70-a95f-3db7d8ae6016",
+     "title": "Ignite Social Impact Competition",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Applications for IGNITE 2026 are open. Preview the full form, then apply when you're ready.",
+     "url": "https://ignitecomp.co.uk/more-info/",
+     "tidied": [],
+     "for_paul": "Reads as open now, ahead of the row's stale deadline, but this pairs a national competition with a six-week accelerator for early-stage ventures rather than an established organisation applying, which is an audience question; deadline, amounts, is_rolling, location_tag and eligible_structures are pinned regardless."
+    },
+    {
+     "id": "45f7e90d-4045-4abb-907c-165d82513c3b",
+     "title": "IM Properties Stratford 46 Community Fund",
+     "pile": "B",
+     "verdict": "hold",
+     "quote": "Panels for this fund will take place during: March 2026 October 2026 March 2027",
+     "url": "https://www.heartofenglandcf.org/im-properties-stratford-46-community-fund/",
+     "tidied": [],
+     "for_paul": "Names panel months (next: October 2026) rather than an application deadline; deadline_cycle is admin-pinned regardless."
+    }
+   ],
+   "paul_list": [
+    "PUBLISH HPC Community Fund Small Grants",
+    "PARK    Green Spaces Fund",
+    "PARK    Hilden Charitable Fund — Main Grants",
+    "REJECT  Heart Research UK — Healthy Heart Grants (duplicate) — Duplicate of the live row a9ebac9e, Heart Research UK Healthy Hearts Grants (Northern Ireland). This row's apply_url redirects to the charity's homepage; the live row already has the fund's working page.",
+    "REJECT  HMRC Voluntary and Community Sector (VCS) Grant Funding 2027 to 30 (dead_url)",
+    "HOLD    Grants for Organisations — A genuine future deadline, 23 October 2026, for the November meeting. deadline, amounts, is_rolling, location_tag and eligible_structures are all admin-pinned.",
+    "HOLD    Grants for Wales — A genuine future deadline, 18 December 2026, but deadline, amount_max, is_rolling, location_tag and eligible_structures are all admin-pinned.",
+    "HOLD    Green Quarter Community Chest — This round has closed and matches the row; no next round announced.",
+    "HOLD    Green Roots Fund — The fund's own content is client-rendered; only site navigation reaches a text read.",
+    "HOLD    GSK IMPACT Awards — HTTP 403, unreadable today. The row already holds \"TBC — between rounds\", which nothing here disputes.",
+    "HOLD    Hackney — Project Innovation Fund — Closed and mid-migration to a new grants system; no reopening date given, subscribe-to-be-notified is the only next step offered.",
+    "HOLD    Harold Hyam Wingate Foundation — Music & Performing Arts — Closed, with a promise to publish a new date at the end of September rather than a date itself.",
+    "HOLD    Havering Community Chest 2026/27 — Annual window (1 May-30 June) has closed for this year; no 2027 date yet. Every relevant field is admin-pinned.",
+    "HOLD    HCF Grants — This round is open now (opened 1 September, six days before this check), closing 11 January 2027. deadline is admin-held.",
+    "HOLD    Healthy Ageing Award — A genuine future date, 1 October 2026, and nothing is admin-held — but UnLtd's award goes to an individual social entrepreneur, the same audience question as the Funding Futures Programme elsewhere in this pile.",
+    "HOLD    Heart of Yorkshire Fund for the Selby District — Names only a year, not a date, for reopening; deadline, amount_max, is_rolling and location_tag are all admin-pinned regardless.",
+    "HOLD    Henry Smith Foundation — Christian Grants (Clergy) — Reads as open, and the row's own rolling, no-deadline timing already matches the page — but is_active is admin-pinned false, which looks like a deliberate decision to keep this out of the catalogue rather than a timing gap. Rule 1 means this job leaves is_active alone regardless; flagging so the pin's reasoning can be checked.",
+    "HOLD    Henry Smith Foundation — Early Years Parenting — Closed; the next stage (full application) is by invitation only, and no next open round is named. Nearly every column is admin-pinned.",
+    "HOLD    Henry Smith Foundation — Equity in Justice — The page says both \"now closed\" and, a few lines on, \"Applications are now open\" — worth a human look rather than a script picking one. The row's own next_open_date (24 June 2026) is already in the past regardless.",
+    "HOLD    Henry Smith Foundation — Proud Homes — Closed, no next round stated.",
+    "HOLD    Henry Smith Foundation Grants — An index over the named Henry Smith grants above; the row's existing \"TBC — between rounds\" already fits and nothing here contradicts it.",
+    "HOLD    Hugh Fraser Foundation — General Grants — A genuine, newer cut-off: 30 October 2026 for the 9 December panel, superseding the row's own stale next_open_date text (which names 31 July for an 8 September panel). deadline, is_rolling and location_tag are admin-pinned.",
+    "HOLD    Idlewild Trust Conservation Grants — A genuine future opening date, 7 December 2026, but is_rolling and next_open_date are both admin-pinned.",
+    "HOLD    Ignite Social Impact Competition — Reads as open now, ahead of the row's stale deadline, but this pairs a national competition with a six-week accelerator for early-stage ventures rather than an established organisation applying, which is an audience question; deadline, amounts, is_rolling, location_tag and eligible_structures are pinned regardless.",
+    "HOLD    IM Properties Stratford 46 Community Fund — Names panel months (next: October 2026) rather than an application deadline; deadline_cycle is admin-pinned regardless."
+   ]
   }
  ],
  "summary": {
