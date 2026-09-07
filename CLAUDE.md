@@ -77,6 +77,16 @@ Push auth is a personal-access token embedded in `remote.origin.url` (see `git r
 
 **Branch discipline for build work:** build work happens on the feature branch (e.g. `agent/v1-core`) — commits and pushes to that branch are Claude's to make freely, no need to check in first. `main` is the production branch Vercel deploys from — treat a push to it as the deploy trigger it is, not a routine save. **Every merge to `main` passes the standing deploy gate, with no exceptions: regression suites, accent check, free-surface fingerprint, named rollback.**
 
+**LAUNCH FREEZE, set by Paul 2026-09-07, in force until launch (Thursday
+10 September) and the days after it.** Nothing a user can see goes live
+without his explicit go, each time: copy, pricing, design, page changes,
+emails. He wants to see it first. Backend work, tests, refactors and anything
+invisible to users merge as normal under the split below. "Each time" means a
+go for one change does not carry to the next. This overrides the split below
+wherever the two disagree. Current holds: the pricing branch
+`launch/landing-pricing` (target Wednesday, after Paul has seen the design;
+signup stays closed when it goes, the flip is Thursday 8am).
+
 **Who decides the merge (revised 2026-08-17).** The gate is what protects production. Paul's approval adds something on top of it only where a judgement is involved that the checks cannot make. So:
 
 - **Merge without asking**, then say it is done and why: admin-only surfaces, docs, tests, tooling. Anything with no user-visible surface, where the gate is green.
