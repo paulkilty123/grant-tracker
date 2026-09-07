@@ -41,3 +41,15 @@ describe('containment runs one way only', () => {
     expect(blocked('sole_trader', ['registered_charity'])).toBe(true)
   })
 })
+
+describe('an unregistered group IS an unincorporated group', () => {
+  it('is not blocked by the real Chalk Cliff Trust list (ASP Belong, 7 Sept 2026)', () => {
+    expect(blocked('not_registered', ['cio', 'registered_charity', 'unincorporated', 'ltd_guarantee', 'cic_guarantee', 'cooperative'])).toBe(false)
+  })
+  it('is still blocked where unincorporated groups are not accepted', () => {
+    expect(blocked('not_registered', ['registered_charity', 'cio'])).toBe(true)
+  })
+  it('runs one way: a formal unincorporated association is not "not registered"', () => {
+    expect(blocked('unincorporated', ['not_registered'])).toBe(true)
+  })
+})
