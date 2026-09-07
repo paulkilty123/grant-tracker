@@ -246,3 +246,17 @@ cycle, one without. Related: when a cycle's last published date passes
 (St Giles has no 2027 dates yet), the row goes to between_rounds with no
 reopen date and waits for a human; a "re-read the page when the last known
 date passes" trigger would catch the new dates the funder posts.
+
+### A grounded proposal against a scraper value waits for a person
+
+Leathersellers, 7 Sept: the row held £20,000 to £20,000 from an April listing
+scrape (trust 40). The checker read the funder page, quoted "£20,000-£25,000
+per annum", and proposed £25,000. Nothing applied it: proposals on a row in
+review wait for a reviewer, and the reviewer saw the wrong figure on the card
+with the right one a click away in Details. Rule worth adding to the checker:
+when the held value's source is `scraper:` or a backstop and the proposal
+carries a quote grounded on the funder's own page, apply it (at
+`ai_verify`, trust 60) rather than propose it, and show the change as a diff
+in the queue like any other. A grounded quote beats an ungrounded scrape;
+that is the trust ladder's own logic. Fixture: a scraper-held amount with a
+grounded proposal (applies), an admin-held one (still proposes).
