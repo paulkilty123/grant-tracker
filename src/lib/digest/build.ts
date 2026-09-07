@@ -762,7 +762,18 @@ export async function buildDigest(
 
   let lead: string
   let subject: string
-  if (mode === 'week_one') {
+  if (mode === 'week_one' && matchTotal === 0) {
+    // Nothing matched, and the floor above let the send through because a
+    // profile prompt exists. "Zero opportunities are open to you. Here are the
+    // zero closing soonest" is what the general wording produces here, and it
+    // reads as a broken product. Name the gap and the fix instead.
+    lead = prompt
+      ? 'Nothing is matching yet, and that is a profile gap rather than a funding gap. One detail below unlocks it.'
+      : 'Nothing is matching yet. Finish your profile and next week this email leads with what is open to you.'
+    subject = prompt
+      ? `One detail unlocks your matches for ${org.name}`
+      : `Finish your profile to see what is open to ${org.name}`
+  } else if (mode === 'week_one') {
     lead = `${spellCap(matchTotal)} ${matchTotal === 1 ? 'opportunity is' : 'opportunities are'} open to you right now. Here ${matches.length === 1 ? 'is the one' : `are the ${spell(matches.length)}`} closing soonest.`
     subject = `${plural(matchTotal, 'funding opportunity is', 'funding opportunities are')} open to ${org.name}`
   } else if (mode === 'thin') {
@@ -787,7 +798,9 @@ export async function buildDigest(
      data the body renders — otherwise the inbox promises something the email
      does not contain. */
   let preheader: string
-  if (mode === 'week_one') {
+  if (mode === 'week_one' && matchTotal === 0) {
+    preheader = prompt ? prompt.title : 'Finish your profile to see what is open to you.'
+  } else if (mode === 'week_one') {
     preheader = `The ${spell(matches.length)} closing soonest${nearMisses.length ? `, and ${spell(nearMisses.length)} that fell just outside with the reason why` : ''}.`
   } else {
     const bits: string[] = []

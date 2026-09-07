@@ -192,7 +192,7 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
         headline — the subject already named the consequential item, and a
         variable hero means the email is re-learned every send. ── */
   rows.push(`<tr><td class="gutter" style="background:${C.page};border-radius:16px 16px 0 0;padding:30px 30px 0;">
-    ${sectionLabel(m.mode === 'week_one' ? 'Your first matches' : 'Upcoming deadlines', 6)}
+    ${sectionLabel(m.mode === 'week_one' ? (m.matches.length ? 'Your first matches' : 'Getting started') : 'Upcoming deadlines', 6)}
     <p style="margin:0 0 16px;font-family:${BODY};font-size:16px;line-height:1.55;color:${C.deep};">${esc(m.lead)}</p>
   </td></tr>`)
 
@@ -278,7 +278,7 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
   }
 
   /* ── Week one: say what changes, and give it a button. ────────────────── */
-  if (m.mode === 'week_one') {
+  if (m.mode === 'week_one' && m.matches.length) {
     rows.push(ruledSection(`
       <p style="margin:0 0 16px;font-family:${BODY};font-size:14px;line-height:1.6;color:${C.deep};">
         Add one of these to your pipeline. Next Tuesday this email leads with your deadlines instead of your matches &mdash; that is the version worth having.
