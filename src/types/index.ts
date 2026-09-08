@@ -275,6 +275,10 @@ export interface Organisation {
   granted_access_until?: string | null
   /** What the person said they were at signup. Recorded, not enforced. Migration 080. */
   signup_role?: 'organisation' | 'consultant' | 'network' | null
+  /** Browse path only (migration 082): roughly how many organisations they work with. */
+  client_count_band?: '1-2' | '3-5' | '6+' | null
+  /** Browse path only (migration 082): one organisation they work with. */
+  example_client?: string | null
   /** They chose to browse without a profile: no matches card, no digest, a banner on Find Funding. Migration 080. */
   profile_skipped?: boolean | null
   /** Minimum match score an opportunity must reach to be worth emailing. */
