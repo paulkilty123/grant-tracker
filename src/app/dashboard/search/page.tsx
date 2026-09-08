@@ -2683,7 +2683,7 @@ export default function SearchPage() {
       {org?.profile_skipped && !browseDismissed && (
         <div className="mb-5 p-4 flex items-start justify-between gap-4 rounded-xl" style={{ border: '1px solid rgba(29,60,62,0.18)', background: '#F5F1E8' }}>
           <div>
-            <p className="text-sm font-semibold" style={{ color: '#173404' }}>You are browsing the whole catalogue without a profile.</p>
+            <p className="text-sm font-semibold" style={{ color: '#173404' }}>You are browsing without a profile.</p>
             <p className="text-xs text-mid mt-0.5">Matches and the weekly update need an organisation profile. Client profiles come with Team, <a href="/#contact" className="underline">get in touch</a> and we&apos;ll set them up.</p>
           </div>
           <button onClick={() => setBrowseDismissed(true)} className="text-mid hover:text-charcoal text-lg leading-none flex-shrink-0" aria-label="Dismiss">×</button>
