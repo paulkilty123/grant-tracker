@@ -39,7 +39,7 @@ const {
   renderLaunchEmail, renderLaunchEmailText, LAUNCH_EMAIL_SUBJECT,
 } = require('../src/lib/email/launch-announcement')
 
-const LAUNCH_FROM = 'Paul Kilty, Shoots <paul@shootsfunding.co.uk>'
+const LAUNCH_FROM = 'Paul Kilty, Shoots Funding <paul@shootsfunding.co.uk>'
 const LAUNCH_REPLY_TO = 'paul@shootsfunding.co.uk'
 
 const argv = process.argv.slice(2)
