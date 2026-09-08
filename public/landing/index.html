@@ -27,6 +27,7 @@
   :root{
     --cream:#F6F1E7; --deep:#1D3C3E; --forest:#173404; --charcoal:#2E2E2E;
     --terra:#D67558; --gold:#EBCE78; --teal:#4EAAB4; --sage:#9BCA9D; --sky:#ABCBEE;
+    --ink:#4b574f; --ink-soft:#5f6b64; --ink-mute:#7a857e; --line:rgba(29,60,62,.14); --hair:rgba(29,60,62,.10);
   }
   *{margin:0;padding:0;box-sizing:border-box;}
   html{scroll-behavior:smooth;}
@@ -260,20 +261,6 @@
   .values{background:var(--cream);}
   .val-grid{grid-template-columns:repeat(3,1fr);margin-top:44px;}
   .val-card{background:#fff;border-radius:16px;border:0.5px solid rgba(29,60,62,0.1);padding:34px;}
-  .plan-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;margin-top:32px;}
-  .plan{background:#fff;border-radius:16px;border:0.5px solid rgba(29,60,62,0.12);padding:30px 28px;display:flex;flex-direction:column;}
-  .plan-featured{border:1.5px solid var(--deep);}
-  .plan-name{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:15px;letter-spacing:0.12em;text-transform:uppercase;color:var(--deep);margin:0 0 14px;}
-  .plan-price{font-family:'Space Grotesk',sans-serif;color:var(--deep);margin:0;line-height:1.1;}
-  .plan-launch{font-weight:700;font-size:34px;}
-  .plan-price s{font-weight:500;font-size:18px;color:#7a8580;margin-left:4px;}
-  .plan-per{font-size:15px;font-weight:500;color:#5f6b64;margin-left:4px;}
-  .plan-annual{font-size:14px;color:#5f6b64;margin:6px 0 20px;}
-  .plan-list{list-style:none;padding:0;margin:0 0 8px;display:flex;flex-direction:column;gap:10px;font-size:15px;line-height:1.5;color:#3a4441;}
-  .plan-list li{padding-left:22px;position:relative;}
-  .plan-list li::before{content:"";position:absolute;left:0;top:9px;width:9px;height:9px;border-radius:999px;background:var(--sage);}
-  .plan-cta{margin-top:auto;align-self:flex-start;}
-  .plan-note{font-size:15px;line-height:1.6;color:#3a4441;max-width:64ch;margin:18px 0 0;}
   .val-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
   .dot{width:12px;height:12px;border-radius:50%;}
   .val-card h3{font-size:24px;margin:0;}
@@ -485,6 +472,88 @@
   .faq-item summary::after{content:'+';font-size:22px;font-weight:400;color:var(--deep);flex:none;transition:transform .2s ease;}
   .faq-item[open] summary::after{transform:rotate(45deg);}
   .faq-item p{margin:0 0 18px;color:#5f6b64;font-size:16px;line-height:1.65;max-width:64ch;}
+
+  /* ── Pricing section, designed 8 Sept 2026, scoped to #pricing ── */
+
+  #pricing .sec{padding:clamp(64px,9vw,128px) 0}
+  #pricing{background:#fff;border-top:0.5px solid rgba(29,60,62,.07)}
+  #pricing .wrap{max-width:1280px;margin:0 auto;padding:0 clamp(24px,5vw,72px);width:100%}
+
+  #pricing .eyb{font-size:13px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;margin:0 0 16px;color:var(--deep)}
+  #pricing h2{font-family:'Space Grotesk',sans-serif;font-size:clamp(28px,3.6vw,44px);font-weight:600;letter-spacing:-1px;line-height:1.12;color:var(--deep);margin:0 0 14px;max-width:16em}
+  #pricing .lead{font-size:17px;line-height:1.6;color:var(--ink-soft);margin:0;max-width:34em}
+
+  #pricing .price-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:44px;align-items:start}
+  #pricing .price{background:#fff;border-radius:20px;border:0.5px solid var(--line);padding:32px 28px;position:relative}
+  #pricing .price.pop{border:2px solid var(--deep);box-shadow:0 14px 40px rgba(29,60,62,.1)}
+  /* Sits on the card's top border, so the card needs position:relative above.
+     Centred rather than left offset, which also separates it from the plan dot.
+     Charcoal, the palette's darkest neutral. Cream on it is 12.06:1. NOTE: it
+     is not the same dark as the card border (--deep), so the two sit close
+     without matching; swap to var(--deep) if that reads as a near miss. */
+  #pricing .trial-tag{position:absolute;top:-18px;left:50%;transform:translateX(-50%);background:var(--charcoal);color:var(--cream);font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;padding:8px 18px;border-radius:999px;white-space:nowrap}
+
+  #pricing .pname{display:flex;align-items:center;gap:10px;margin:0 0 6px}
+  #pricing .pdot{width:12px;height:12px;border-radius:50%;flex:none}
+  #pricing .pname h3{font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:600;color:var(--deep);margin:0}
+  #pricing .strap{font-size:14px;color:var(--ink-mute);margin:0 0 20px}
+
+  #pricing .amt{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:52px;color:var(--deep);margin:0;line-height:1;letter-spacing:-1.6px}
+  #pricing .amt small{font-size:18px;font-family:'Plus Jakarta Sans',sans-serif;color:var(--ink-mute);letter-spacing:0;font-weight:400}
+  #pricing .amt.words{font-size:31px;letter-spacing:-.7px;margin-top:8px}
+
+  #pricing .price-row{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+  /* Diagonal strike is a pseudo element, not text-decoration, so it is not
+     announced. The standard prices are stated in words in .price-small below,
+     which is what a screen reader gets. Angle is fixed at 12deg: it is tuned
+     for a two digit price and would need revisiting at three. */
+  #pricing .was{position:relative;display:inline-block;font-family:'Space Grotesk',sans-serif;font-weight:500;font-size:34px;color:var(--ink-mute);letter-spacing:-.7px;line-height:1}
+  #pricing .was::after{content:"";position:absolute;left:-9%;right:-9%;top:50%;height:2px;border-radius:2px;background:var(--ink-mute);transform:translateY(-50%) rotate(-12deg);transform-origin:center}
+  #pricing .amt-note{font-size:13.5px;color:var(--ink-mute);margin:12px 0 0;line-height:1.55}
+  #pricing .amt-note.solo{margin-top:10px}
+
+  #pricing .plist{font-size:15px;color:var(--ink);display:flex;flex-direction:column;gap:12px;border-top:1px solid var(--hair);margin-top:22px;padding-top:20px}
+  #pricing .plist span{display:flex;gap:9px;align-items:flex-start;line-height:1.5}
+  #pricing .plist svg{flex:none;margin-top:3px}
+
+  #pricing .btn{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:16px;padding:15px 32px;border-radius:999px;display:inline-block;cursor:pointer;border:none;text-decoration:none;transition:transform .12s,opacity .12s}
+  #pricing .btn:hover{opacity:.92}
+  #pricing .btn:active{transform:scale(.98)}
+  #pricing .btn-primary{background:var(--cream);color:var(--deep)}
+  #pricing .btn-ghost{background:transparent;border:1.5px solid var(--deep);color:var(--deep)}
+  #pricing .price .btn{margin-top:22px;width:100%;text-align:center;padding:13px 24px;font-size:15px}
+
+  #pricing .price-small{font-size:14px;color:var(--ink-mute);line-height:1.7;margin:26px 0 0;max-width:70em}
+  #pricing .price-small b{font-family:'Space Grotesk',sans-serif;color:var(--deep);font-weight:600}
+
+  #pricing .trial{background:var(--deep);border-radius:20px;padding:40px 44px;margin-top:34px;display:flex;align-items:center;justify-content:space-between;gap:28px;flex-wrap:wrap}
+  #pricing .trial-txt{flex:1;min-width:260px}
+  #pricing .trial h3{font-family:'Space Grotesk',sans-serif;font-size:30px;font-weight:600;letter-spacing:-.7px;color:var(--cream);margin:0 0 10px}
+  #pricing .trial p{font-size:16px;line-height:1.6;color:var(--cream);margin:0}
+  #pricing .trial .btn{white-space:nowrap}
+
+  #pricing .partner{display:flex;align-items:center;gap:22px;background:var(--cream);border:0.5px solid rgba(29,60,62,.13);border-radius:16px;padding:24px 28px;margin-top:16px;flex-wrap:wrap}
+  #pricing .partner-ic{width:48px;height:48px;border-radius:14px;background:rgba(155,202,157,.32);display:flex;align-items:center;justify-content:center;flex:none}
+  #pricing .partner-txt{flex:1;min-width:240px}
+  #pricing .partner-txt h3{font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:600;color:var(--deep);margin:0 0 4px}
+  #pricing .partner-txt p{font-size:15px;color:var(--ink-soft);margin:0;line-height:1.6}
+  #pricing .partner .btn{padding:12px 24px;font-size:15px;white-space:nowrap}
+
+  #pricing .founder{font-size:14px;color:var(--ink-mute);margin:22px 0 0;text-align:center}
+
+  @media (max-width:900px){
+  #pricing .price-grid{grid-template-columns:1fr;gap:14px;margin-top:34px}
+  #pricing .price{padding:26px 22px}
+  #pricing .price.pop{margin-top:16px}
+  #pricing .amt{font-size:46px}
+  #pricing .was{font-size:30px}
+  #pricing .trial{padding:30px 26px;text-align:left}
+  #pricing .trial h3{font-size:25px}
+  #pricing .trial .btn{width:100%;text-align:center}
+  #pricing .partner .btn{width:100%;text-align:center}
+  #pricing .founder{text-align:left}
+  }
+
 </style>
 </head>
 <body>
@@ -922,49 +991,68 @@
   </section>
 
   <!-- PRICING -->
-  <section class="sec pricing" id="pricing">
-    <div class="wrap">
-      <p class="eyb">Pricing for charities, CICs and community groups</p>
-      <h2>Simple plans, priced for smaller organisations</h2>
-      <p class="lead" style="color:#5f6b64;max-width:56ch;">Every new organisation starts with 14 days on Apply. No card, full catalogue, and you choose a plan at the end.</p>
-      <div class="plan-grid">
-        <div class="plan">
-          <p class="plan-name">Match</p>
-          <p class="plan-price"><span class="plan-launch">&pound;15</span> <s>&pound;19</s> <span class="plan-per">a month</span></p>
-          <p class="plan-annual">or &pound;150 a year</p>
-          <ul class="plan-list">
-            <li>Full catalogue search across grants, programmes, social investment and in-kind support</li>
-            <li>Eligibility matching against your structure, sector, size and location</li>
-            <li>Saved opportunities with deadlines in view</li>
-            <li>Claude connector, search only</li>
-          </ul>
+<section class="sec pricing" id="pricing">
+  <div class="wrap">
+
+    <p class="eyb">Pricing for charities, CICs and community groups</p>
+    <h2>Start free. Pay when you’re ready to apply.</h2>
+    <p class="lead">Every new organisation starts with 14 days on Apply. No card, and you choose a plan at the end.</p>
+
+    <div class="price-grid">
+
+      <div class="price">
+        <div class="pname"><span class="pdot" style="background:var(--sage)"></span><h3>Match</h3></div>
+        <p class="strap">Find the funding</p>
+        <div class="price-row">
+          <span class="was" aria-hidden="true">£19</span>
+          <p class="amt">£15<small> a month</small></p>
         </div>
-        <div class="plan plan-featured">
-          <p class="plan-name">Apply</p>
-          <p class="plan-price"><span class="plan-launch">&pound;25</span> <s>&pound;35</s> <span class="plan-per">a month</span></p>
-          <p class="plan-annual">or &pound;250 a year</p>
-          <ul class="plan-list">
-            <li>Everything in Match</li>
-            <li>Pipeline: track opportunities from identified to secured</li>
-            <li>Application management</li>
-            <li>Data export</li>
-            <li>Claude connector, including pipeline tools</li>
-          </ul>
-        </div>
-        <div class="plan">
-          <p class="plan-name">Team</p>
-          <p class="plan-price"><span class="plan-launch">Get in touch</span></p>
-          <p class="plan-annual">Quoted for your organisation</p>
-          <ul class="plan-list">
-            <li>Everything in Apply</li>
-            <li>Up to 5 people in one organisation</li>
-            <li>Or up to 5 organisation profiles for consultants and freelancers, each with its own pipeline</li>
-          </ul>
-          <a class="btn btn-ghost plan-cta" href="#contact">Ask about Team</a>
+        <!-- NEW copy --><p class="amt-note">Launch price until 31 October. Or £150 a year.</p>
+        <div class="plist">
+          <span><svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 10.5l4 4 8-9" stroke="#1D3C3E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Grants, programmes, investment and in-kind</span>
+          <span><svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 10.5l4 4 8-9" stroke="#1D3C3E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Eligibility matched to you</span>
+          <span><svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 10.5l4 4 8-9" stroke="#1D3C3E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Saved opportunities and deadlines</span>
+          <span><svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 10.5l4 4 8-9" stroke="#1D3C3E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Claude connector, search only</span>
         </div>
       </div>
-      <p class="plan-note"><strong>Launch price.</strong> Sign up before 31 October and pay &pound;15 for Match or &pound;25 for Apply, a month, for your first 12 months. After that the standard price applies: &pound;19 and &pound;35.</p>
-      <p class="plan-note">Cancel any time. If you ask in your first month, we refund you in full, no questions asked.</p>
+
+      <div class="price pop">
+        <!-- NEW copy --><span class="trial-tag">14 days free</span>
+        <div class="pname"><span class="pdot" style="background:var(--gold)"></span><h3>Apply</h3></div>
+        <p class="strap">The workspace</p>
+        <div class="price-row">
+          <span class="was" aria-hidden="true">£35</span>
+          <p class="amt">£25<small> a month</small></p>
+        </div>
+        <!-- NEW copy --><p class="amt-note">Launch price until 31 October. Or £250 a year.</p>
+        <div class="plist">
+          <span><svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 10.5l4 4 8-9" stroke="#1D3C3E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Everything in Match</span>
+          <span><svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 10.5l4 4 8-9" stroke="#1D3C3E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Pipeline from identified to secured</span>
+          <span><svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 10.5l4 4 8-9" stroke="#1D3C3E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Projects with funding search</span>
+          <span><svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 10.5l4 4 8-9" stroke="#1D3C3E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Application management</span>
+          <span><svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 10.5l4 4 8-9" stroke="#1D3C3E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Export your pipeline</span>
+          <span><svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 10.5l4 4 8-9" stroke="#1D3C3E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Claude connector with pipeline tools</span>
+        </div>
+      </div>
+
+      <div class="price">
+        <div class="pname"><span class="pdot" style="background:var(--sky)"></span><h3>Team</h3></div>
+        <!-- NEW copy --><p class="strap">For teams and consultants</p>
+        <p class="amt words">Get in touch</p>
+        <p class="amt-note solo">Quoted for your organisation</p>
+        <div class="plist">
+          <span><svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 10.5l4 4 8-9" stroke="#1D3C3E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Everything in Apply</span>
+          <span><svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 10.5l4 4 8-9" stroke="#1D3C3E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Up to 5 people in one organisation</span>
+          <span><svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 10.5l4 4 8-9" stroke="#1D3C3E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Or 5 organisation profiles, each with its own pipeline</span>
+        </div>
+        <a class="btn btn-ghost" href="#contact">Get a quote</a>
+      </div>
+
+    </div>
+
+    <!-- NEW copy: shortened, because the cards now carry the deadline and the follow on prices -->
+    <p class="price-small"><b>Launch price.</b> Take it before 31 October and it is yours for 12 months. After that, Match is £19 a month and Apply is £35. <b>Cancel any time.</b> If you ask in your first month, we refund you in full, no questions asked.</p>
+
       <div class="waitlist-card" style="background:var(--deep);border-radius:16px;padding:clamp(28px,4vw,44px);margin-top:28px;">
         <h3 style="color:var(--cream);margin:0 0 6px;">Join the waitlist</h3>
         <p style="color:rgba(246,241,231,.75);margin:0 0 18px;font-size:.95rem;">Be first in when we launch.</p>
@@ -977,18 +1065,26 @@
         <p id="wl-status" role="status" aria-live="polite" style="margin:14px 0 0;font-size:.9rem;min-height:1.25em;color:rgba(246,241,231,.75);"></p>
         <p style="color:rgba(246,241,231,.55);margin:8px 0 0;font-size:.85rem;">No card, no spam. Just launch news.</p>
       </div>
-      <div class="partner" style="margin-top:28px;">
-        <span class="partner-ic"><i class="ti ti-users-group" aria-hidden="true"></i></span>
-        <div class="partner-txt">
-          <h3>Partner plans for networks and membership bodies</h3>
-          <p>Member rates for networks supporting charities, CICs, social enterprises and community groups.</p>
-        </div>
-        <a class="btn btn-ghost" href="#contact">Get in touch</a>
+    <div class="partner">
+      <span class="partner-ic">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="9" cy="8" r="3.1" stroke="#1B6B3D" stroke-width="1.75"/>
+          <path d="M3.5 18.5c0-2.8 2.5-4.6 5.5-4.6s5.5 1.8 5.5 4.6" stroke="#1B6B3D" stroke-width="1.75" stroke-linecap="round"/>
+          <circle cx="16.9" cy="9.4" r="2.4" stroke="#1B6B3D" stroke-width="1.75"/>
+          <path d="M16 14.2c2.6.1 4.5 1.8 4.5 4.3" stroke="#1B6B3D" stroke-width="1.75" stroke-linecap="round"/>
+        </svg>
+      </span>
+      <div class="partner-txt">
+        <h3>Partner plans for networks and membership bodies</h3>
+        <p>Member rates for networks supporting charities, CICs, social enterprises and community groups.</p>
       </div>
-      <p class="price-small">Every plan will include direct email support from the founder, not a ticket queue.</p>
+      <a class="btn btn-ghost" href="#contact">Get in touch</a>
     </div>
-  </section>
 
+    <p class="founder">Every plan includes direct email support from the founder, not a ticket queue.</p>
+
+  </div>
+</section>
 
   <!-- CTA -->
   <section class="sec cta">
