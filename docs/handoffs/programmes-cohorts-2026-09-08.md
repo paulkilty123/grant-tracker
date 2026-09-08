@@ -83,10 +83,21 @@ page, read today, and report what fails with the sentence that failed it.
   Capital's investee programmes, Access Foundation, Fair4All Finance,
   Resonance, Key Fund, Social Investment Business, Esmée and similar
   foundations' capacity or investment-readiness cohorts.
-- **Scotland, already banked and worth starting with:** Firstport's Build It
-  (grants up to £40,000 for early-stage social enterprises) and its Community
-  Enterprise Fund. Both were verified in the cities job and failed only its
-  city-anchor test, which this brief drops. Stage them first.
+- **Firstport is a compound-funder split, not two new rows. Start here.**
+  Paul caught this on 8 September: we already hold `1e994bdb`, "Firstport Start
+  It Programme", live, and its `apply_url` is the funding index rather than any
+  fund's own page. That index lists five separately paged funds: Community
+  Enterprise Fund, Social Enterprise Boost Fund, Social Entrepreneurs Fund
+  Build It, Social Entrepreneurs Fund Start It, and the Social Innovation
+  Challenge. One row is standing in front of all five, which is precisely the
+  exception in the 17 August front-door ruling, so it is a defect rather than
+  an acceptable front door. Read all five pages, relink the existing row to
+  Start It's own page and correct its fields from that page, and stage the
+  other four as new rows with their own URLs, amounts and timing. Beware a name
+  collision: we already hold a different "Community Enterprise Fund" from
+  Social Investment Business (`18627ca4`), so Firstport's must carry the funder
+  in its title. This is the shape to look for in every other multi-fund
+  provider on the list.
 - **Universities and innovation hubs** with a social venture or charity track,
   in the six cities and elsewhere. SETsquared was checked and is commercial
   tech with no charity route, so do not re-check it.
