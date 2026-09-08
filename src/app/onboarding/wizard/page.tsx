@@ -1457,6 +1457,11 @@ function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual, role, s
 }) {
   const [hov, setHov] = useState(false)
   const several = role !== 'organisation'
+  // The fork for consultants and networks. Until they choose, the website box
+  // and its links stay hidden: four ways forward on one screen was confusing
+  // (Paul, 8 Sept). Picking "one organisation" brings the normal step back.
+  const [choice, setChoice] = useState<'profile' | 'browse' | null>(null)
+  const showProfileTools = !several || choice === 'profile'
   return (
     <>
       <h1 style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 40, fontWeight: 600, color: T.textPrimary, margin: '0 0 14px', lineHeight: 1.15, letterSpacing: '-0.02em' }}>
@@ -1478,12 +1483,21 @@ function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual, role, s
             </label>
           ))}
         </div>
-        {several && (
-          <p style={{ fontSize: 13.5, color: T.textSecondary, lineHeight: 1.55, margin: '12px 0 0', maxWidth: 480, fontFamily: 'var(--font-dm-sans)' }}>
-            Set up a profile for one of your organisations to get matches and the weekly update, or browse the whole catalogue without one. Client profiles come with Team.
-          </p>
-        )}
       </fieldset>
+
+      {several && choice !== 'profile' && (
+        <div style={{ maxWidth: 520 }}>
+          <p style={{ fontSize: 14, color: T.textSecondary, lineHeight: 1.55, margin: '0 0 14px', fontFamily: 'var(--font-dm-sans)' }}>
+            A profile gets you matches and the weekly update. Client profiles come with Team, so for now choose one organisation, or browse the whole catalogue without a profile.
+          </p>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <Button variant="primary" size="lg" onClick={() => setChoice('profile')}>Set up a profile for one organisation</Button>
+            <Button variant="secondary" size="lg" onClick={onBrowse}>Browse without a profile</Button>
+          </div>
+        </div>
+      )}
+
+      {showProfileTools && (<>
 
       {/* URL input + CTA */}
       <div style={{ display: 'flex', gap: 8, width: '100%', maxWidth: 520 }}>
@@ -1527,20 +1541,8 @@ function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual, role, s
         >
           No website? Fill in manually
         </button>
-        {several && (
-          <button
-            onClick={onBrowse}
-            style={{
-              background: 'transparent', border: 'none', color: T.textSecondary,
-              fontFamily: 'var(--font-dm-sans)', fontSize: 13, cursor: 'pointer',
-              textDecoration: 'underline', textDecorationColor: 'rgba(29,60,62,0.35)', textUnderlineOffset: 3,
-              padding: '8px 12px',
-            }}
-          >
-            Browse without a profile
-          </button>
-        )}
       </div>
+      </>)}
     </>
   )
 }
