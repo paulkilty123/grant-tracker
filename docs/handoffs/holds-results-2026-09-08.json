@@ -135,11 +135,11 @@
      "job": 2,
      "verdict": "reject",
      "code": "out_of_scope",
-     "quote": "Community innovators win funding and support: Twelve grassroots community organisations supported to ‘turn great ideas into action’ as Phase 2 of the Community Knowledge Fund delivers grants worth £50k to £100k.",
+     "quote": "The Community Knowledge Fund supports community groups and organisations around the UK with grants worth between £10k and £100k. It is an open fund, supporting ideas that use the knowledge in communities to address challenges that matter locally. This programme has now closed.",
      "url": "https://youngfoundation.org/community-knowledge-fund/",
      "read_via": "fetch",
      "tidied": [],
-     "for_paul": "Both programmes on the innovation-and-practice page are dead ends for a fundraiser today. Community Knowledge Fund's Phase 2 grants are already announced as delivered (past tense, no live application anywhere on its page). Community Research Networks (the other named programme) offers only a mailing-list sign-up \"to stay informed... as the programme progresses\" — no apply route, no eligibility criteria, no dates on that page either."
+     "for_paul": "Corrected 2026-09-08: the first quote here (Phase 2 \"delivers grants worth £50k to £100k\") read as evidence the fund was active, when the same page states plainly it has closed — grant-tracker-be caught it. Meaning intended: out_of_scope because the Young Foundation runs no open route for a fundraiser today, not that Community Knowledge Fund is closed for good — Community Research Networks (the other named programme) is an ongoing UKRI partnership, just sign-up-only, \"to stay informed... as the programme progresses,\" with no apply route, eligibility or dates on its own page."
     },
     {
      "id": "45d5140a-8536-4331-b4d3-57462e108a9f",
@@ -147,7 +147,7 @@
      "job": 2,
      "verdict": "reject",
      "code": "out_of_scope",
-     "quote": "The current phase of our strategy means that our work and funding will largely stay within existing partners or will be dedicated to building a deeper understanding of the changes required to fix the UK’s failing housing system. Unfortunately, this means that outside of the above project, we are currently unable to accept unsolicited applications for funding.",
+     "quote": "Unfortunately, this means that outside of the above project, we are currently unable to accept unsolicited applications for funding.",
      "url": "https://www.nationwidefoundation.org.uk/available-funding/",
      "read_via": "fetch",
      "tidied": [],
@@ -189,7 +189,7 @@
    ],
    "paul_list": [
     "REJECT  Social Investment Cymru Loan Fund (duplicate) — Was about to relink and publish this to Communities Investment Fund (£50k-£250k, read cleanly today) when the dedup query caught a LIVE duplicate: 279016ce, \"WCVA Social Investment Cymru — Communities Investment Fund\", published, same amounts, apply_url one path segment different (wcva.cymru/funding/social-investment-cymru/communities-investment-fund/ vs the wcva.cymru/communities-investment-fund/ just read — the site appears to serve the fund at both paths). Rejecting this row as the duplicate rather than touching the live one. Worth knowing: WCVA's Social Investment Cymru actually runs five separately paged products today (Bridge and Build Loans, Clean Energy Fund, Community Asset Loan Fund, Communities Investment Fund, Wales Micro Loan Fund), not the three the 7 Sept note counted — the three not already live are listed as candidates in case any is worth adding separately later.",
-    "REJECT  Young Foundation Social Innovation Support Programmes (out_of_scope) — Both programmes on the innovation-and-practice page are dead ends for a fundraiser today. Community Knowledge Fund's Phase 2 grants are already announced as delivered (past tense, no live application anywhere on its page). Community Research Networks (the other named programme) offers only a mailing-list sign-up \"to stay informed... as the programme progresses\" — no apply route, no eligibility criteria, no dates on that page either.",
+    "REJECT  Young Foundation Social Innovation Support Programmes (out_of_scope) — Corrected 2026-09-08: the first quote here (Phase 2 \"delivers grants worth £50k to £100k\") read as evidence the fund was active, when the same page states plainly it has closed — grant-tracker-be caught it. Meaning intended: out_of_scope because the Young Foundation runs no open route for a fundraiser today, not that Community Knowledge Fund is closed for good — Community Research Networks (the other named programme) is an ongoing UKRI partnership, just sign-up-only, \"to stay informed... as the programme progresses,\" with no apply route, eligibility or dates on its own page.",
     "REJECT  Nationwide Foundation Grants Programme (out_of_scope) — The foundation says plainly it isn't accepting new applications right now — funding stays within existing partners while it builds evidence on housing policy. Nothing here for a fundraiser to apply to today.",
     "HOLD    ROCB CDFI Loans — The stored apply_url (rocbf.org.uk) is dead — the live domain is rocbf.co.uk — but rocbf.co.uk is bot-walled on every path tried today (fetch, browser, a fresh tab): \"Please wait while your request is being verified...\" never clears. Could not confirm or relink to the Community Cashflow Fund page today. There's also an archived row (0362621b, Robert Owen Community Banking — Wales Social Enterprise Lending) that already carries rocbf.co.uk with every field pinned; not touched. Whether the two merge is your call, once the site is readable again.",
     "HOLD    Community Housing Fund — The fund's own page (found 7 Sept, and described there as giving no dates, amounts or exclusions) is bot-walled today on every path — \"Just a moment...\" never clears, on fetch or the browser. Also checked the Community-Led Housing London Hub's own site (communityledhousing.london): it describes advisory support for community-led housing groups but carries no GLA fund or application page. Nothing better found today; apply_url stays where it is.",

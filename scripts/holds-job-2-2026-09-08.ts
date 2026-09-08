@@ -80,16 +80,16 @@ const ROWS: Row[] = [
   {
     id: 'efb34147-a31c-4088-bd85-f8ab17980990', re: /Young Foundation Social Innovation Support Programmes/, job: 2,
     verdict: 'reject', code: 'out_of_scope', read_via: 'fetch',
-    quote: 'Community innovators win funding and support: Twelve grassroots community organisations supported to ‘turn great ideas into action’ as Phase 2 of the Community Knowledge Fund delivers grants worth £50k to £100k.',
+    quote: 'The Community Knowledge Fund supports community groups and organisations around the UK with grants worth between £10k and £100k. It is an open fund, supporting ideas that use the knowledge in communities to address challenges that matter locally. This programme has now closed.',
     url: 'https://youngfoundation.org/community-knowledge-fund/',
-    for_paul: 'Both programmes on the innovation-and-practice page are dead ends for a fundraiser today. Community Knowledge Fund\'s Phase 2 grants are already announced as delivered (past tense, no live application anywhere on its page). Community Research Networks (the other named programme) offers only a mailing-list sign-up "to stay informed... as the programme progresses" — no apply route, no eligibility criteria, no dates on that page either.',
+    for_paul: 'Corrected 2026-09-08: the first quote here (Phase 2 "delivers grants worth £50k to £100k") read as evidence the fund was active, when the same page states plainly it has closed — grant-tracker-be caught it. Meaning intended: out_of_scope because the Young Foundation runs no open route for a fundraiser today, not that Community Knowledge Fund is closed for good — Community Research Networks (the other named programme) is an ongoing UKRI partnership, just sign-up-only, "to stay informed... as the programme progresses," with no apply route, eligibility or dates on its own page.',
   },
 
   // 4. Says outright it isn't taking applications.
   {
     id: '45d5140a-8536-4331-b4d3-57462e108a9f', re: /Nationwide Foundation Grants Programme/, job: 2,
     verdict: 'reject', code: 'out_of_scope', read_via: 'fetch',
-    quote: 'The current phase of our strategy means that our work and funding will largely stay within existing partners or will be dedicated to building a deeper understanding of the changes required to fix the UK’s failing housing system. Unfortunately, this means that outside of the above project, we are currently unable to accept unsolicited applications for funding.',
+    quote: 'Unfortunately, this means that outside of the above project, we are currently unable to accept unsolicited applications for funding.',
     url: 'https://www.nationwidefoundation.org.uk/available-funding/',
     for_paul: 'The foundation says plainly it isn\'t accepting new applications right now — funding stays within existing partners while it builds evidence on housing policy. Nothing here for a fundraiser to apply to today.',
   },
