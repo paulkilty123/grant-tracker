@@ -2162,6 +2162,21 @@ export default function ProfilePage() {
     return () => { cancelled = true }
   }, [])
   const [loading, setLoading] = useState(true)
+
+  // Deep links such as /dashboard/profile#card-story (the "Your material"
+  // button on Applications). The cards render after the org loads, so the
+  // browser's own hash jump fires on an empty page and lands at the top.
+  // Scroll once the target exists.
+  useEffect(() => {
+    if (loading) return
+    const hash = typeof window !== 'undefined' ? window.location.hash.slice(1) : ''
+    if (!hash) return
+    const t = setTimeout(() => {
+      const el = document.getElementById(hash)
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 120)
+    return () => clearTimeout(t)
+  }, [loading])
   const [editingCard, setEditingCard] = useState<CardId | null>(null)
   const [jumpTarget, setJumpTarget] = useState<CardId | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
