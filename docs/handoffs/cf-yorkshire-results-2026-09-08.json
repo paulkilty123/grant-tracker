@@ -303,5 +303,56 @@
       }
     ],
     "follow_up": "The four wind farm funds are a natural second batch, three of them closing 18 September. SYCF Community Grants is the one to watch for the waitlist: it is the South Yorkshire fund for organisations too big for Small Grants, which is where The Suit Works sits."
+  },
+  "open_at_end_of_session": {
+    "note": "Written 8 September 2026 so none of this depends on the conversation that produced it.",
+    "items": [
+      {
+        "item": "Every row staged or published today carries never_verified and so sits under 'Needs reading', not 'Ready to publish'.",
+        "why": "The rule refuses to treat a hand-written brief as verified until the verification engine has independently read the funder page. Added after the Bridge Climate row. Working as designed.",
+        "action": "None required. Never-checked rows are at the front of the engine's queue and it clears on its next run. Paul can publish from Needs reading meanwhile. DO NOT write a synthetic field_evidence._page_read to move rows into Ready to publish: that forges the check the rule exists to make."
+      },
+      {
+        "item": "Four published Yorkshire rows carry beneficiaries_generic_only.",
+        "rows": [
+          "Crisis and Resilience Fund (Kirklees) Round Two",
+          "The Hannah Corne Green Futures Fund",
+          "The Leeds Fund Small Grants",
+          "The Leeds Fund Microgrants"
+        ],
+        "why": "target_beneficiaries is only ['general_public'], which trips the unspecific-tagging check. Sheffield Legacy Fund was already fixed the same way, to ['general_public','ethnic_minorities','mental_health'], sourced from its page.",
+        "action": "Offered to Paul, not done. Fixable free from page buffers already read; each fund page names who it is for."
+      },
+      {
+        "item": "Community Grants Programme (Kirklees) Round 11 is held in between_rounds_scheduled.",
+        "why": "Applications open 21 September. Published live with its 6 November deadline it would read as open.",
+        "action": "check-coming-soon routes it to tagged_awaiting_review on a 07:00 run because 21 Sept is inside the 30-day lead. It does NOT set is_active, so it still needs Paul's publish. The 6 November close is preserved in the brief's decision_timeline."
+      },
+      {
+        "item": "Three SYCF rows staged hidden and awaiting Paul.",
+        "rows": [
+          "SYCF Small Grants Programme",
+          "Sheffield Legacy Fund",
+          "Together we CAN Fund (Doncaster)"
+        ]
+      },
+      {
+        "item": "Second SYCF batch not staged.",
+        "action": "Four wind farm funds (Blackstone Edge, Loscar, Park Spring all closing 18 Sept; Tweenbridge cutoff 1 Oct). Watch SYCF Community Grants, currently closed: it is the South Yorkshire fund for organisations above the £10,000 Small Grants ceiling, which is where The Suit Works sits."
+      },
+      {
+        "item": "Two Ridings has nine rows never checked.",
+        "why": "It bot-walls scripted fetches but serves Chrome normally. Readable, just not by script.",
+        "action": "Its Small Grants row is live and correct. The other eight are unchecked."
+      },
+      {
+        "item": "Paul reported the review queue has no search, with 54 rows in it.",
+        "action": "Post-launch UI job, not started."
+      },
+      {
+        "item": "Sheffield still has no local employment funder.",
+        "why": "The Suit Works scores 58/44/15 against the three new SYCF rows; location scores full marks and themes score 4/35. The three new rows are health, wellbeing and very small groups."
+      }
+    ]
   }
 }
