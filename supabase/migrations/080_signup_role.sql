@@ -1,5 +1,7 @@
 -- 080: who is signing up, and whether they chose to browse without a profile.
 --
+-- APPLIED to production 2026-09-08.
+--
 -- Paul, 8 September 2026. Onboarding asks "what is your organisation?" and a
 -- consultant's honest answer is "which one?". Until Team seats exist the
 -- answer is: pick one, or browse the whole catalogue without a profile. Two
