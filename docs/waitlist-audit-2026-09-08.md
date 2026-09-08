@@ -119,6 +119,41 @@ commissioned.
    whether the homepage is the application page, which is a judgement per row
    and not urgent.
 
+## Worked, 8 September (see scripts/waitlist-audit-fixes-2026-09-08.ts)
+
+**Done:**
+
+- Arts Council duplicate merged. `79b3cc06` rejected, `8c8418fe` kept because it
+  carries the admin pins, the same rule as the Hull merge. Flagged for review
+  rather than acted on: the two rows disagreed on the floor, £3,000 on the
+  pinned keeper against £1,000 on the rejected one, and Arts Council's page
+  returns 403 so the pin was left rather than changed on a guess.
+- Four homepage rows relinked to their real application pages and enriched with
+  full briefs: John James Bristol Foundation, Heritage of London Trust, The
+  Homity Trust and Southover Manor Trust.
+- **A real amount error found on the way.** Heritage of London Trust held
+  £25,000 where its own grant-scheme page says "Grants of up to £15,000 are
+  available for the restoration of historic buildings and monuments". Corrected
+  to £15,000. That row serves IOI London and The Apex Project.
+
+**Three of the eight were NOT defects, and the detector was wrong rather than
+the data:**
+
+- `373ce8d3` Manchester Airport Community Trust Fund links to
+  `magcommunityfunds.smapply.org`, read as a bare homepage because it has no
+  path. It is an application portal, which is the right destination.
+- `16bfa48f` Commissioned Rehabilitative Services and `5700594e` HS2 CEF/BLEF
+  point at find-government-grants. Both are **government** schemes and Find a
+  Grant is the government's own official route for them, and both listings
+  return 200 today. That is the opposite of the Men's Health Community Fund
+  case, where the fund's real home is a charity partner and the listing had
+  died. Flagging them as third-party was the detector over-reaching.
+
+So of eight actionable items, five were real and three were my own false
+positives. Worth carrying into any future use of these detectors: an
+application portal has no path, and for a government scheme the government's
+listing is the funder's own page.
+
 ## Still outstanding from earlier, unchanged by this pass
 
 - 12 rows hidden with nothing on them explaining the hide.
