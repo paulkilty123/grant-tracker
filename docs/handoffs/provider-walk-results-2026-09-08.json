@@ -364,6 +364,210 @@
      "why_almost_nothing_live": "Not a data defect. The foundation itself is running one open programme: the page's 'Open Programmes' section lists only Good Place to Live: New Beginnings. It says so directly, quoted: 'Lloyds Bank Foundation is changing – scaling up to meet the moment in our society... So this year, we're taking a mixed approach to our investments: Our first funding programme of 2026 is now open for applications.' Ten historic rows behind one live one is the correct shape here."
     }
    ]
+  },
+  {
+   "batch": 2,
+   "tier": 1,
+   "providers_walked": 4,
+   "providers": [
+    {
+     "provider": "Power to Change",
+     "funding_page": "https://www.powertochange.org.uk/get-support/",
+     "funds_on_page": 0,
+     "rows_held": 6,
+     "rows_live": 0,
+     "outcomes": [
+      {
+       "fund": "(no open funds found)",
+       "url": "https://www.powertochange.org.uk/get-support/",
+       "action": "report",
+       "quote": "Our goal is to shape the conditions for community business to thrive. To do this, we need to know what works. As a think-do tank, we work alongside community businesses and partners to test new approaches to some of our biggest soc",
+       "note": "Power to Change now presents itself as a think-do tank working alongside community businesses and partners, not as an open grant-maker. Its /our-funds/ page 404s and /get-support/ redirects to 'Our projects'. So six rows and none live is the correct state rather than a defect, the same shape as Lloyds but for the opposite reason: Lloyds runs one fund, Power to Change appears to run none."
+      }
+     ],
+     "rows_with_no_fund": [
+      {
+       "id": "0ab57b5d-a2ae-4c44-879b-80fb1e4d06cf",
+       "title": "Power to Change Community Business Funding",
+       "why": "points at /our-funds/, which 404s today, though url_status says ok checked 2026-08-16. A checker result that has since gone stale."
+      },
+      {
+       "id": "72bc6f04-60c3-42b5-b20c-853103f9c7cd",
+       "title": "Power to Change Trust — Grants Programme",
+       "why": "homepage url, archived, url_status dead with no check date, so an admin hide"
+      },
+      {
+       "id": "f89bad1b-0fcd-48fc-9762-25e22adc48ea",
+       "title": "Power to Change — Trade Up Programme",
+       "why": "homepage url, archived, dead with no check date"
+      },
+      {
+       "id": "c262f653-f38c-4eb6-949c-beb6c7eaf724",
+       "title": "Power to Change — Community Business Fund",
+       "why": "programmes index url, archived, dead with no check date"
+      },
+      {
+       "id": "12cf1f69-c273-4ead-8e61-0a962afd7b88",
+       "title": "Community Business Funding Programmes",
+       "why": "index url, rejected"
+      },
+      {
+       "id": "f55718a8-449b-4973-a88e-faa405cd788f",
+       "title": "Community Business Programmes — Yorkshire & Humber",
+       "why": "homepage url, archived"
+      }
+     ]
+    },
+    {
+     "provider": "Rank Foundation",
+     "funding_page": "https://www.rankfoundation.com/grants/",
+     "funds_on_page": null,
+     "rows_held": 3,
+     "rows_live": 0,
+     "outcomes": [
+      {
+       "fund": "(whole provider)",
+       "url": "https://www.rankfoundation.com/grants/",
+       "action": "report",
+       "note": "UNREADABLE. Bot-walled on direct fetch at both /grants/ and /time-to-shine/, the same interstitial as Ufi. Not reconciled this pass. Worth noting one row (a91f58e0, Time to Shine Fellowship) has url_status ok checked 2026-09-06, so the checker reached it two days ago even though a plain fetch cannot today."
+      }
+     ],
+     "rows_with_no_fund": []
+    },
+    {
+     "provider": "Fredericks Foundation",
+     "funding_page": "https://www.fredericksfoundation.org/looking-for-funding/",
+     "funds_on_page": 1,
+     "rows_held": 3,
+     "rows_live": 2,
+     "outcomes": [
+      {
+       "fund": "Social Enterprise Funding through Revenue Share",
+       "url": "https://www.fredericksfoundation.org/looking-for-funding/",
+       "action": "already_correct",
+       "id": "011655cc-3391-43d4-8fdb-bbdfda4479ab",
+       "quote": "We offer funding between £20,000 – £50,000 through a flexible revenue share model to help social enterprises grow and scale their impact. You won't have to give away equity, take on shareholders or make personal guarantees.",
+       "note": "Row holds £20,000 to £50,000, matching the page, on the fund's own page. Correct."
+      },
+      {
+       "fund": "Social Enterprise Funding through Revenue Share (second row for the same offer)",
+       "url": "https://www.fredericksfoundation.org/",
+       "action": "report",
+       "id": "d33aa458-0eb8-473a-8b28-547cd8557a71",
+       "note": "LIVE AND DUPLICATED. 'Fredericks Foundation — Community Business Loans' carries the identical £20,000 to £50,000 and points at the homepage, while 011655cc carries the same figures on the fund's own page. The page describes one funding offer, revenue share, so two live rows are showing a fundraiser the same money twice, one of them through a front door. Paul's call which survives."
+      }
+     ],
+     "rows_with_no_fund": [
+      {
+       "id": "64247ee8-6da1-4020-8b91-aadebce7b2df",
+       "title": "Fredericks Foundation — Interest-Free Microloans",
+       "why": "points at /apply, archived, url_status dead with no check date, and no microloan product appears on the current funding page"
+      }
+     ]
+    },
+    {
+     "provider": "Bethnal Green Ventures",
+     "funding_page": "https://www.bethnalgreenventures.com/apply",
+     "funds_on_page": 1,
+     "rows_held": 3,
+     "rows_live": 1,
+     "outcomes": [
+      {
+       "fund": "The Tech For Good Programme",
+       "url": "https://www.bethnalgreenventures.com/apply",
+       "action": "relink",
+       "id": "0ce8470d-9557-40a3-a8d2-ef01daba3f09",
+       "quote": "Twice a year we select 10-15 companies investing £60,000 upfront and take them through our six-week programme. Applications for our Autumn 2026 are now closed. Sign up to get notified for when we open applications for our next programme in November.",
+       "note": "LIVE front-door row: it points at the homepage and carries no amount at all, while the page states £60,000 and a six-week programme taking 10-15 companies twice a year. Two corrections in one, the URL and the missing amount. Also note for the review gate that BGV describes itself as 'Europe's leading early-stage tech for good VC' investing in founders and companies, so the audience test needs a proper read before this is treated as a charity route. Timing: Autumn 2026 is closed, next applications open in November."
+      },
+      {
+       "fund": "The Tech For Good Programme (duplicate row on the right page)",
+       "url": "https://www.bethnalgreenventures.com/apply",
+       "action": "report",
+       "id": "3e386cdc-60ab-413e-a348-11f659d3e4fb",
+       "note": "Already points at the correct /apply page but sits in 'tagged'. If the live row is relinked to the same URL these two collide, so this is a merge decision for Paul rather than two independent fixes."
+      }
+     ],
+     "rows_with_no_fund": [
+      {
+       "id": "da74714c-28b1-4770-b1b6-902f646fb40f",
+       "title": "Tech for Good Accelerator",
+       "why": "apply_url is opportunitiesforyouth.org, a third-party listing site, for an Autumn 2025 round. Bad link and a spent round."
+      }
+     ],
+     "note_on_domain": "Worth recording: bgv.vc, the domain the brief and an earlier pass both guessed for BGV, is not theirs and does not resolve. The live site is bethnalgreenventures.com. Same class of error as bbrc.org.uk turning out to belong to the British Birds Rarities Committee."
+    }
+   ]
   }
- ]
+ ],
+ "tier_two_answer": {
+  "answered_by": "grant-tracker-be, by SQL, not by walking the twelve providers. Recorded here as theirs.",
+  "the_question": "Twelve providers hold rows and none are visible. UnLtd is the standout at seven rows, none live.",
+  "the_answer": "Not a blocked crawler, and not a detection failure. url_status is mostly 'ok' across the twelve, and the states are decisions: Ufi is 4 archived, 1 rejected, 1 between-rounds; UnLtd is 3 rejected, 3 published-and-hidden, 1 archived. A bot wall would leave rows live and stale, not archived.",
+  "the_better_finding": "Fourteen tier-two rows carry url_status 'dead'. Eight were fetched and SEVEN RETURN 200 TODAY: Better Society Capital, Bridges, Unity Trust, Power to Change, TERN, Social Finance and Rank Foundation are all alive and serving the exact page we stored. Only UnLtd's is a genuine 404. Six of the eight have url_last_checked NULL, so the checker never touched them, and per CLAUDE.md's dead-grant note 'dead' with no check date means an admin hide rather than a detection failure. So these are past decisions whose subjects have outlived them.",
+  "one_clear_relink": "Better Society Capital's row points at bigsocietycapital.com, the organisation's former name and domain. It renamed. The row is hidden under a domain that no longer represents it.",
+  "what_follows": "Tier two is a pile of past decisions, mostly about things still alive, and whether those decisions still hold is Paul's judgement rather than a mechanism hunt. Walking the twelve providers' pages would mostly re-derive 'someone hid these'. Recorded and left there on grant-tracker-be's instruction.",
+  "my_ufi_theory_was_wrong": "I proposed that the bot wall explained the hidden rows and that url_status would show it. It does not. Recorded because the wrong theory is what prompted the query that produced the right answer."
+ },
+ "summary": {
+  "mode": "Reconnaissance only. No database writes of any kind in either batch.",
+  "providers_walked": 9,
+  "of": 44,
+  "funds_found_on_provider_pages": 22,
+  "rows_held_for_those_providers": 68,
+  "outcomes": {
+   "already_correct": 12,
+   "relink": 3,
+   "stage": 1,
+   "report": 13
+  },
+  "rows_matching_no_current_fund": 34,
+  "live_and_wrong_name_these_first": [
+   {
+    "id": "57c4802f-2d34-4d89-969e-a21f9ef397db",
+    "title": "SSE — All Programmes",
+    "why": "LIVE, no deadline, no amount, apply_url is SSE's programmes index. It stands in front of the eight programmes that index lists, four of which we already hold separately. The Firstport shape on a live row. Confirmed independently by grant-tracker-be."
+   },
+   {
+    "id": "b818a116-3579-4eb3-8808-b40abc38e393",
+    "title": "Key Fund Flexible Finance",
+    "why": "LIVE with the funding index as its apply_url while the fund's own page returns 200. Same defect."
+   },
+   {
+    "id": "0ce8470d-9557-40a3-a8d2-ef01daba3f09",
+    "title": "Tech for Good Programme (Bethnal Green Ventures)",
+    "why": "LIVE on the homepage with no amount, while the page states £60,000 and a six-week programme."
+   },
+   {
+    "id": "d33aa458-0eb8-473a-8b28-547cd8557a71",
+    "title": "Fredericks Foundation — Community Business Loans",
+    "why": "LIVE duplicate of 011655cc, identical £20,000 to £50,000, pointing at the homepage. One offer shown twice."
+   },
+   {
+    "id": "18627ca4-7544-4719-93d8-1d7c80a10489",
+    "title": "Community Enterprise Fund (Social Investment Business)",
+    "why": "LIVE with a third-party directory as its apply_url, and not among the three funds SIB currently lists."
+   }
+  ],
+  "row_counts_are_not_a_quality_signal": "Read alongside the providers, not on their own. Lloyds Bank Foundation has 11 rows and 1 live and is the BEST-maintained provider in this walk: the foundation runs one open programme at a time and says so, and the single live row matches its page exactly on deadline, amount, structures and URL. Power to Change has 6 rows and 0 live and that is also correct: it now describes itself as a think-do tank rather than an open grant-maker, and its funds page 404s. A reader scanning row counts would mark both as failures.",
+  "unreadable_this_pass": [
+   "Ufi VocTech Trust (bot wall, fetch and browser)",
+   "Rank Foundation (bot wall, fetch, two URLs)"
+  ],
+  "name_collisions_found": [
+   "'Flexible Finance' at both Key Fund and Social Investment Business",
+   "'Community Enterprise Fund' at both Firstport and Social Investment Business"
+  ],
+  "name_variants_to_merge": {
+   "School for Social Entrepreneurs": "drop the '(SSE)' variant",
+   "Social Investment Business": "drop the '(SIB)' variant",
+   "Lloyds Bank Foundation": "keep 'Lloyds Bank Foundation for England and Wales'"
+  },
+  "domain_guessing_note": "bgv.vc is not Bethnal Green Ventures and does not resolve; the live site is bethnalgreenventures.com. Second time in two days a guessed domain has been wrong, after bbrc.org.uk. Take the domain from a row or a page, never from the shape of the name.",
+  "live_non_grant_count": {
+   "before": 112,
+   "after": 112,
+   "note": "Unchanged, as it must be: this pass wrote nothing."
+  }
+ }
 }
