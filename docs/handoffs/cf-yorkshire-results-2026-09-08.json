@@ -210,5 +210,98 @@
       }
     ],
     "evidence_caveat": "These three pages were read in Chrome, not fetched, so the quote-appears-in-a-fetched-buffer guard used elsewhere in this job could not run without checking a transcription against itself. It was not run and not faked. The check that holds is external: reopen the URLs in a browser."
+  },
+  "hull_sheffield_east_riding": {
+    "asked": "Paul, 8 September: can you fill the Hull, Sheffield and East Riding gaps?",
+    "correction_first": "My own earlier claim that these three areas had no live coverage was an artefact of my query, not a fact about the catalogue. I filtered location_tag with an exact-match IN list ('Hull','Sheffield','York'...), which missed every row tagged 'Hull and East Yorkshire', 'North Yorkshire and East Yorkshire', 'South Yorkshire' and 'Bridlington'. Re-scored against all 582 live rows, the picture is different.",
+    "actual_position": [
+      {
+        "area": "Hull",
+        "verdict": "not a gap",
+        "evidence": "Sir James Reckitt Charity General Grants scores 72 for Men in Sheds Hull and is tagged 'Hull and East Yorkshire'. Two Ridings Small Grants (£200-£2,500, open all year, income under £150,000) also covers Hull."
+      },
+      {
+        "area": "East Riding",
+        "verdict": "not a gap",
+        "evidence": "Bridlington Cricket has 2 local rows at Good, best Community First Prime Opportunities Fund at 71, plus Fraisthorpe Wind Farm tagged directly to Bridlington and strong national sport funders (Central Social and Recreational Trust 87, Football Foundation 77)."
+      },
+      {
+        "area": "Sheffield",
+        "verdict": "was a real gap, and it was a front door, not a discovery problem",
+        "evidence": "The only local row at Good was SYCF's own front-door row on /apply/search-our-grants, with no amounts and a null description. Behind it the index lists FOURTEEN funds, none of them held."
+      }
+    ],
+    "staged": [
+      {
+        "id": "686b45f7-98bc-44aa-a761-45b9c7ba215a",
+        "title": "SYCF Small Grants Programme",
+        "amount_max": 1000,
+        "rolling": true,
+        "note": "South Yorkshire wide, income cap £10,000"
+      },
+      {
+        "id": "2fd17499-40fd-4613-809c-99a53bf873cf",
+        "title": "Sheffield Legacy Fund",
+        "amount_max": 5000,
+        "rolling": true,
+        "note": "Three miles of Sheffield Olympic Legacy Park, health and wellbeing"
+      },
+      {
+        "id": "95bb80db-1312-41d2-a115-1598f87b200d",
+        "title": "Together we CAN Fund (Doncaster)",
+        "amount_max": 3500,
+        "deadline": "2026-10-12",
+        "note": "Doncaster only, and closed to non-members of the Community Advice Network until they register"
+      }
+    ],
+    "honest_effect": "These three do NOT solve The Suit Works. Scored against them, the Sheffield signup gets 58, 44 and 15; none reaches the Good band at 65, and the 58 is a fund whose £10,000 income cap probably excludes them anyway. The reason is visible in the breakdown: location scores 15/15 on both Sheffield rows, but themes score 4/35, because SYCF's currently open funds are about health, wellbeing and very small groups, not employment. Sheffield now has real local rows; it still has no local employment funder.",
+    "not_staged_from_the_same_index": [
+      {
+        "fund": "Blackstone Edge Windfarm",
+        "amount": "£1,000-£5,000",
+        "closes": "18 Sept 2026",
+        "why": "very tight geography, North West Barnsley"
+      },
+      {
+        "fund": "Loscar Wind Farm Community Funds",
+        "amount": "£0-£5,000",
+        "closes": "18 Sept 2026",
+        "why": "same"
+      },
+      {
+        "fund": "Park Spring Wind Farm",
+        "amount": "£500-£20,000",
+        "closes": "18 Sept 2026",
+        "why": "same, North East Barnsley, but the largest ceiling of the group"
+      },
+      {
+        "fund": "Tweenbridge Windfarm",
+        "amount": "£500-£15,000",
+        "closes": "next panel cutoff 1 Oct 2026",
+        "why": "within three miles of the windfarm"
+      },
+      {
+        "fund": "Sir Samuel Osborn's Deed of Gift Relief Fund",
+        "why": "individuals only, former employees and descendants, so out of scope"
+      },
+      {
+        "fund": "SWEF",
+        "why": "reads as grants to young people as individuals rather than to organisations; needs a read before staging"
+      },
+      {
+        "fund": "The Deakin and Withers Fund",
+        "why": "closed, reopens end of September 2026"
+      },
+      {
+        "fund": "SYCF Community Grants",
+        "amount": "£0-£5,000",
+        "why": "closed; this is the one that would suit organisations above the £10,000 Small Grants ceiling, so worth catching when it reopens"
+      },
+      {
+        "fund": "Moving on Up / QFutures / Lead the Change",
+        "why": "all closed"
+      }
+    ],
+    "follow_up": "The four wind farm funds are a natural second batch, three of them closing 18 September. SYCF Community Grants is the one to watch for the waitlist: it is the South Yorkshire fund for organisations too big for Small Grants, which is where The Suit Works sits."
   }
 }
