@@ -1,0 +1,214 @@
+{
+  "job": "Yorkshire community foundation coverage for the waitlist areas",
+  "date": "2026-09-08",
+  "brief": "Work the archived community foundation rows for the waitlist areas, starting with Yorkshire. Check which funds are currently open, bring back the ones that are.",
+  "method": "Provider-first dedup over all 1,991 rows, then each provider's own funding page read whole (no truncation) with the direct reader. Every quote below was checked verbatim against the fetched buffer by a guard in the staging script.",
+  "providers": [
+    {
+      "provider": "Leeds Community Foundation",
+      "funding_page": "https://www.leedscf.org.uk/open-grants/",
+      "funds_on_page": 4,
+      "rows_held": 5,
+      "outcomes": [
+        {
+          "fund": "The Hannah Corne Green Futures Fund",
+          "url": "https://www.leedscf.org.uk/the-hannah-corne-green-futures-fund",
+          "action": "stage",
+          "id": "8cd53a7b-7d53-48a2-9d88-4ffa26854d75",
+          "quote": "Grant size up to £2,000 Location Leeds Duration up to 1 year Deadline 28/09/2026 at 12 noon Decisions December 2026",
+          "note": "Closes in 20 days. Income cap £150,000. Requested amount must be at least 50% of total cost."
+        },
+        {
+          "fund": "Jimbo's Fund",
+          "url": "https://www.leedscf.org.uk/jimbos-fund",
+          "action": "stage",
+          "id": "7abf250b-8402-40cb-9440-ec751eb66437",
+          "quote": "Grant size £1,000 to £10,000 Location Leeds Duration 1 year (12 months fixed) Deadline 12/10/2026 at 12 noon Decisions February 2027",
+          "note": "Needs 2 years of operating history. LS8, LS9, LS14 and LS15 prioritised. 2025 three-year grant holders are excluded from this round."
+        },
+        {
+          "fund": "The Leeds Fund Small Grants",
+          "url": "https://www.leedscf.org.uk/the-leeds-fund-small-grants",
+          "action": "stage",
+          "id": "8929fb5b-ecde-4ddb-abf0-ec033058a749",
+          "quote": "Grant size Up to £5,000 Location Leeds Duration Up to 1 year Deadline 20/10/2026 at 12 noon Decisions February 2027",
+          "note": "Income band £75,000 to £150,000, stored in min_org_income / max_org_income so the eligibility check can use it."
+        },
+        {
+          "fund": "The Leeds Fund Microgrants",
+          "url": "https://www.leedscf.org.uk/the-leeds-fund-microgrants",
+          "action": "stage",
+          "id": "9f6a6389-1555-4166-8703-3bb504eb4430",
+          "quote": "Grant size Up to £2,500 | Up to £500 for unconstituted groups Location Leeds Duration Up to 1 year Deadline 20/10/2026 at 12 noon Decisions February 2027",
+          "note": "Income cap £75,000. The complement of Small Grants: the two funds partition Leeds organisations by income, which is why both bands are stored."
+        }
+      ],
+      "rows_reported_not_changed": [
+        {
+          "id": "4c9dbc46-e952-4491-9703-82cf5b2af56f",
+          "title": "Leeds Community Foundation Grants",
+          "state": "live, published",
+          "why": "Front door. Its apply_url is the /open-grants/ index that lists the four funds above, so its fields have to average them and are wrong for each. It carries deadline 2027-06-04 while the earliest real fund closes 2026-09-28, and amounts £500 to £20,000 against real ceilings of £2,000 to £10,000. Its deadline_cycle names 'Community Action Microgrants' and 'Pears Youth Fund', neither of which is on the page today.",
+          "consequence": "A Leeds applicant sees a deadline nine months later than the real one, so a fund closing in 20 days shows no urgency.",
+          "suggested": "Once the four staged rows are published, retire this row or reduce it to a provider landing entry. That is a state change, so it is Paul's."
+        },
+        {
+          "id": "39796254-3f16-4cca-85a9-f62888e75f87",
+          "title": "Leeds Community Foundation — Open Grants",
+          "state": "hidden, archived",
+          "why": "Exact duplicate of the live row: same funder, same apply_url. Its raw_data says 'Hardcoded fallback', so it came from the leeds_cf scraper seed rather than the page.",
+          "suggested": "Delete or leave archived. No user impact either way."
+        },
+        {
+          "id": null,
+          "title": "The Leeds Digital Inclusion Fund",
+          "state": "hidden, published",
+          "why": "Not listed on the open-grants page today. Either finished or renamed; the page does not say which, so nothing was concluded from its absence beyond that it is not currently open."
+        },
+        {
+          "id": null,
+          "title": "Addressing Mental Health Inequalities in Minority Ethnic Groups",
+          "state": "rejected, historical_deadline",
+          "why": "Already correctly rejected on 2026-08-18. Not on the page. No action."
+        }
+      ],
+      "rows_with_no_fund": []
+    },
+    {
+      "provider": "One Community Foundation (Kirklees)",
+      "funding_page": "https://one-community.org.uk/how-to-apply-for-funding-grants-available/",
+      "eligibility_page": "https://one-community.org.uk/how-to-apply-for-funding/",
+      "funds_on_page": 10,
+      "rows_held": 0,
+      "headline": "The catalogue held NOTHING for Kirklees. 'One Community', 'Kirklees' and 'Huddersfield' each return zero rows across all 1,991. Fresh Futures, a waitlist signup, had no local community foundation at all.",
+      "outcomes": [
+        {
+          "fund": "Crisis and Resilience Fund, Round Two",
+          "url": "https://one-community.org.uk/how-to-apply-for-funding-grants-available/",
+          "action": "stage",
+          "id": "9fdb356c-6b1a-46d8-823d-daf218d793c3",
+          "quote": "CRF 2026 Round Two: Applications open: Monday 24th August 2026 Applications close: Friday 2nd October 2026 Grant amount: £2,000 – £10,000",
+          "note": "Open now. Kirklees Council money administered by the foundation, for community coordination and referral pathways."
+        },
+        {
+          "fund": "Community Grants Programme, Round 11",
+          "url": "https://one-community.org.uk/how-to-apply-for-funding-grants-available/",
+          "action": "stage",
+          "id": "e149f565-e741-46f1-9f78-8fd155699a7e",
+          "quote": "Round 11: Opens: Monday 21st September 2026 Closes: Friday 6th November 2026",
+          "note": "Opens in 13 days, inside the 30-day reopening lead, so next_open_date is set. Pools ten named Kirklees funds under one panel and will consider core costs, which is unusual at this size."
+        }
+      ],
+      "known_but_not_staged": [
+        {
+          "fund": "The Environmental Programme",
+          "why": "Closed 10 July 2026",
+          "amount": "up to £2,000"
+        },
+        {
+          "fund": "Bright Green Community Trust Fund",
+          "why": "Closed 4 September 2026, four days ago",
+          "amount": "up to £3,000, Holme Valley only"
+        },
+        {
+          "fund": "The Dickinson Fund",
+          "why": "Opens 2 November 2026, outside the 30-day lead",
+          "amount": "up to £1,000, mental health"
+        },
+        {
+          "fund": "Longley Farm Fund",
+          "why": "Opens 2 November 2026",
+          "amount": "up to £1,000, arts and culture in named Holmfirth-area villages"
+        },
+        {
+          "fund": "The Davy Fund",
+          "why": "Opens 18 December 2026",
+          "amount": "up to £1,000, youth sport"
+        },
+        {
+          "fund": "The Thornton Family Fund",
+          "why": "Opens 18 December 2026",
+          "amount": "up to £5,000, HD postcodes, open to multi-year"
+        },
+        {
+          "fund": "QFUTURES Community Fund",
+          "why": "Opens 3 March 2027",
+          "amount": "up to £5,000, digital access and skills, potential three-year funding"
+        },
+        {
+          "fund": "Our Cultural Heart Fund",
+          "why": "Round 1 oversubscribed and fully committed; the page states there will be no second round in 2026",
+          "amount": "up to £10,000 or £25,000"
+        }
+      ],
+      "follow_up": "Seven of these eight are real dated funds that will open. They are worth staging as a second batch once Paul has seen the first two, rather than adding eight hidden rows to the review queue during launch week.",
+      "deliberate_exception_shared_apply_url": "Both Kirklees rows carry the same apply_url because One Community publishes no per-fund pages. This is NOT the front-door defect and must not be 'fixed' by merging them. The defect is ONE row standing in front of SEVERAL funds, which hides the funds behind it. Two rows behind one URL hide nothing. Merging them would force one row to average two deadlines (2 October and 6 November), two amounts (£2,000-£10,000 and up to £3,000) and two purposes (council-funded community coordination, and a general community grants pool), which is exactly the averaging that made the Firstport and Leeds front-door rows wrong. Same reasoning as Paul's 8 September one-row-per-programme ruling. Confirmed independently by grant-tracker-be."
+    }
+  ],
+  "blocked": [
+    {
+      "provider": "Two Ridings Community Foundation",
+      "rows": 9,
+      "state": "between_rounds_scheduled",
+      "why": "Bot-walled to both direct fetch and the Chrome browser. Its page cannot be read, so its nine rows cannot be checked.",
+      "correction": "This also corrects an earlier claim of mine. I reported that 11 of 12 archived community foundation URLs 'return 200'. Retesting five for CONTENT rather than status found two of them were bot walls returning 200 with a ~12KB challenge page: Two Ridings and Somerset. A 200 was not evidence the page was readable, and it was never evidence a fund was open.",
+      "matters_because": "Four Yorkshire waitlist signups sit in Two Ridings territory.",
+      "status": "Open. Raised with Paul as its own item, not folded into the correction."
+    }
+  ],
+  "summary": {
+    "providers_walked": 2,
+    "rows_staged": 6,
+    "rows_relinked": 0,
+    "rows_reported_not_changed": 4,
+    "state_changes_made": 0,
+    "kirklees_rows_before": 0,
+    "kirklees_rows_after": 2,
+    "open_now": 3,
+    "opening_within_30_days": 1,
+    "closing_within_30_days": 3
+  },
+  "commissioned_by": "Paul, directly in the session. He asked how address coverage would be covered and whether other grants that fit could be scoped, I proposed working the archived community foundation rows for the six waitlist areas starting with Yorkshire and checking which funds are currently open, and he said to do that. This is not part of the tier-one provider walk, which stopped where grant-tracker-be asked it to.",
+  "two_ridings_followup": {
+    "correction": "An earlier claim of mine in this job was wrong and is withdrawn. I reported Two Ridings as unreadable to both fetch and browser. It bot-walls scripted fetches only; Chrome loads it normally and get_page_text returns full content. 'Bot-walled' has to say walled to WHAT, because fetch-walled and browser-walled are different states and I collapsed them. The nine Two Ridings rows are checkable.",
+    "funds_read_in_chrome_2026_09_08": [
+      {
+        "fund": "Small Grants",
+        "url": "https://tworidingscf.org.uk/fund/small-grants-fund/",
+        "action": "already_correct",
+        "note": "LIVE and matching the page on every field checked: £200 to £2,500, income under £150,000, open all year round, covering East Yorkshire, Hull, North Yorkshire and York. This is the row that reaches all four Yorkshire waitlist signups. No change made."
+      },
+      {
+        "fund": "York Community Fund",
+        "url": "https://tworidingscf.org.uk/fund/york-community-fund/",
+        "action": "split",
+        "approved_by": "Paul, 8 September 2026",
+        "note": "One live row carried deadline 2026-10-12 and amount_max £13,500. Both true of the fund, but of DIFFERENT tiers. The £13,500 Connect and Grow tier gates on an expression of interest at noon on Monday 14 September 2026; 12 October is only the deadline for those already shortlisted. The EOI date was present and correct in the row's brief prose, so this was not a factual error in the row, it was a structural one: a date held in prose drives no alert, calendar marker or urgency colour. Split into two live rows.",
+        "result": [
+          {
+            "id": "88fd8569-c9e4-4973-b69f-b85a31425e0c",
+            "title": "York Community Fund: Connect and Grow Grants",
+            "amount_max": 13500,
+            "deadline": "2026-09-14",
+            "was": "the existing row, retitled and re-scoped"
+          },
+          {
+            "id": "42755b4a-6d38-4176-a5ae-177e80c053ca",
+            "title": "York Community Fund: Micro Grants",
+            "amount_max": 1000,
+            "deadline": "2026-10-12",
+            "was": "new sibling row"
+          }
+        ],
+        "both_live_because": "Splitting one visible row into two and hiding half would have removed the Micro Grants tier from York users entirely, which is the opposite of the point of the split."
+      },
+      {
+        "fund": "Hull Community Fund",
+        "url": "https://tworidingscf.org.uk/fund/hull-community-fund/",
+        "action": "report",
+        "note": "Closed. The deadline was noon on Monday 7 September 2026, the day before this read. The row is already hidden with deadline 2026-09-07, so the expire path worked correctly. A duplicate row on the same URL sits in rejected state and could be tidied. No change made."
+      }
+    ],
+    "evidence_caveat": "These three pages were read in Chrome, not fetched, so the quote-appears-in-a-fetched-buffer guard used elsewhere in this job could not run without checking a transcription against itself. It was not run and not faked. The check that holds is external: reopen the URLs in a browser."
+  }
+}
