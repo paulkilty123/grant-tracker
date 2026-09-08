@@ -2708,7 +2708,7 @@ export default function SearchPage() {
           {activeView === 'browse' && org && (
             <>
               <span className="w-2 h-2 flex-shrink-0 rounded-full" style={{ backgroundColor: '#22874C' }} />
-              <span>Matched for <strong className="text-charcoal">{org.name ?? 'your organisation'}</strong>{org.primary_location && <span className="text-mid"> · {org.primary_location}</span>}</span>
+              <span>{org.profile_skipped ? 'Browsing as' : 'Matched for'} <strong className="text-charcoal">{org.name ?? 'your organisation'}</strong>{org.primary_location && <span className="text-mid"> · {org.primary_location}</span>}</span>
             </>
           )}
           {activeView === 'browse' && grantsLoaded && !org && (
@@ -3094,7 +3094,7 @@ export default function SearchPage() {
       )}
 
       {/* ── Profile-off amber nudge ── */}
-      {activeView === 'browse' && org && !profileFilterOn && !aiResults && (
+      {activeView === 'browse' && org && !org.profile_skipped && !profileFilterOn && !aiResults && (
         <div className="mb-3 px-4 py-3.5 rounded-xl flex items-center justify-between gap-4" style={{ background: '#E3F0E4', border: '0.5px solid rgba(27,107,61,0.14)' }}>
           <div className="flex items-center gap-3 min-w-0">
             {/* Icon badge — search magnifier, green */}
@@ -3308,7 +3308,7 @@ export default function SearchPage() {
       )}
 
       {/* ── Profile completion nudge ── */}
-      {hasSearched && matchQuality && matchQuality.score < 80 && !bannerDismissed && (() => {
+      {hasSearched && matchQuality && matchQuality.score < 80 && !bannerDismissed && !org?.profile_skipped && (() => {
         // Build field list with medium-weight names
         const missingFields = matchQuality.missing.slice(0, 3)
         const extraCount    = matchQuality.missing.length - missingFields.length

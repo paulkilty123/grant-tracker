@@ -1055,7 +1055,15 @@ export default function OnboardingWizardPage() {
       }
       let currentOrgId = orgId
       if (orgId) {
-        await updateOrganisation(orgId, payload)
+        // An organisation already exists for this account. Browsing without a
+        // profile must not wipe it: Paul's own test on 8 Sept emptied a real
+        // row's sectors, beneficiaries, location and mission through this
+        // path. Only the flags change; the profile stays as it was.
+        await updateOrganisation(orgId, {
+          signup_role: state.signupRole,
+          profile_skipped: true,
+          alerts_enabled: false,
+        })
       } else {
         const created = await createOrganisation({ ...UNCOLLECTED_ON_CREATE, ...payload } as Parameters<typeof createOrganisation>[0])
         currentOrgId = created.id
