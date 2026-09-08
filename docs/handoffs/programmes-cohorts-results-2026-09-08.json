@@ -115,6 +115,73 @@
     "audience_wording": "who_can_apply on the Boost Fund and the Social Innovation Challenge now opens by saying both organisations and individuals can apply, so neither reads as individuals-only and gets skipped. Both remain in scope because the audience rule excludes individuals-ONLY."
    },
    "provider_first_dedup_finding": "The most useful thing in this batch, and it is a method change rather than a row. The first dedup asked whether the catalogue holds the FUND, and the answer was no in every case. Asking whether it holds the PROVIDER found three duplicate sets a fund-first query walks straight past: Key Fund has 13 rows, including 'Key Fund Flexible Finance' LIVE at the exact URL that was about to be staged; Pilotlight holds the Weston Charity Awards twice (73c320f7 archived and adc7ec22 between_rounds_scheduled) with Pilotlight 360 and Pro Bono Matching both live; and Big Issue Invest is held twice, both hidden, so wanting it live is an un-reject rather than a new row. The same question also exposed the Firstport defect this batch exists to fix, where one live row stood in front of five funds. Check the provider before the fund, every time."
+  },
+  {
+   "batch": 2,
+   "provider_seam": "Banks, corporates and tech, worked provider-first",
+   "staged": [],
+   "stopped_early": "Nothing stageable, so the batch stops under the brief's rule. The reason is not a dry seam, it is that the seam is already in the catalogue, and the sweep that established that cost zero page reads.",
+   "method_note": "Applying grant-tracker-be's provider-first ruling before spending any reads: 22 providers checked against the whole table by funder and host in one query. Every single one is already held. NatWest 2, Lloyds 11, Santander 3, Barclays 6, Virgin 3, Triodos 4, Charity Bank 4, Unity Trust 2, Co-operative Bank and Co-op 8, Google 2, Microsoft 4, AWS and Amazon 4, Salesforce 3, Vodafone 1, BT 1, Virgin Media O2 1. Fund-first would have meant reading dozens of pages to arrive at the same place.",
+   "report": [
+    {
+     "title": "NatWest Accelerator",
+     "city": "UK",
+     "url": "https://www.natwest.com/business/business-services/entrepreneur-accelerator.html",
+     "why": "support_service_class",
+     "quote": "NatWest Accelerator is our thriving community for entrepreneurs providing a range of support for you to grow your business. ... Any business can join our community",
+     "note": "The one apparent provider gap in the sweep, and it is not a cohort. You join a permanently open community with an app, 12 hubs, coaching and masterclasses; you do not apply to an intake. Fails the named-intake test, and the audience is any business rather than charities or social enterprises. NatWest's two held rows are a skills fund and Women In Business, neither of which is this."
+    }
+   ],
+   "the_finding": {
+    "headline": "The programme count is a review problem, not a discovery problem.",
+    "numbers": {
+     "programme_rows_total": 184,
+     "live_and_published": 18,
+     "not_live": 166,
+     "published_state_but_hidden": 18,
+     "between_rounds_scheduled": 11,
+     "archived": 90,
+     "rejected": 35,
+     "tagged_awaiting_review": 5,
+     "tagged": 6,
+     "captured": 1
+    },
+    "detail": "The brief says the 18 live programme rows are the number to move. The catalogue holds 184 programme rows and 166 of them are not live. 18 sit in pipeline_state 'published' with is_active false, which is the expire-grants desync already recorded in the project notes rather than a decision anyone made. 11 more are between_rounds_scheduled, which is the correct state for an annual cohort and means they come back when the round does. Two batches of discovery across two briefs added one programme row. Reviewing the 18 published-but-hidden and the 11 between-rounds would plausibly move the number by more than any amount of searching, and every one of those rows has already been through the review gate once.",
+    "named_examples_already_held_but_hidden": [
+     "Barclays Black Founder Accelerator — between_rounds_scheduled",
+     "Unreasonable Impact UK & Europe (Barclays and Unreasonable Group) — archived",
+     "Amazon Sustainability Accelerator — published state, is_active false",
+     "NatWest Women In Business — archived",
+     "Lloyds Bank Foundation Enhance, Invest and Specialist Programmes — archived or rejected",
+     "Impact Hub London Programmes — between_rounds_scheduled",
+     "Year Here Fellowship, On Purpose Associate Programme — archived"
+    ]
+   }
   }
- ]
+ ],
+ "summary": {
+  "finished": "2026-09-08",
+  "batches_run": 2,
+  "staged_total": 4,
+  "staged_by_type": {
+   "grant": 3,
+   "programme": 1
+  },
+  "programme_count": {
+   "before": 18,
+   "after_if_all_published": 19,
+   "note": "Discovery across both briefs added exactly one programme row, the Firstport Social Innovation Challenge. The other three Firstport rows are grants and belong in the Grants tab."
+  },
+  "city_spread": {
+   "Scotland": 3,
+   "Sunderland & South Tyneside": 1,
+   "note": "Cities were a coverage lens in this brief, not a gate. No row was staged to fill a city."
+  },
+  "nothing_went_live": "All four staged rows are is_active false, tagged_awaiting_review, source system:programmes-cohorts-2026-09-08 at trust 50. No live row was touched by this job.",
+  "for_paul": [
+   "Firstport Start It (1e994bdb) is LIVE and individuals-only, and its amount, eligible_structures and description all contradict its own page. It needs rejecting, not relinking. Detail under batch 1 for_paul_decision.",
+   "The programme count is a review problem: 166 of 184 programme rows are not live, including 18 in published state with is_active false. See batch 2's finding."
+  ],
+  "method_lesson": "Check the provider before the fund. Fund-first dedup returned 'not held' for candidates whose provider had 13 rows. Provider-first found three duplicate sets, the Firstport front-door defect, and then established a whole 22-provider seam as already covered for the cost of one query."
+ }
 }
