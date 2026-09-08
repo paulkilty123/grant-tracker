@@ -4,10 +4,17 @@
 // all, since nothing here cleared the bar for publish/park and reject/hold both
 // write nothing on the row (verdicts brief rule 1).
 //
-// Ashoka: readable today via the reader proxy (403 direct, same as 7 Sept), and
-// the fellowship and nominate pages both confirm the row's own brief — Ashoka
-// elects individual social entrepreneurs by nomination; there is no route for an
-// organisation to apply. reject/out_of_scope.
+// Ashoka: still 403 direct (same as 7 Sept), read in the browser instead. The
+// nominate link redirects to a "Recommend an Ashoka Fellow" page, confirming the
+// row's own brief — Ashoka Fellows are recommended by a third party, not
+// applicants themselves; there is no route for an organisation to apply.
+// reject/out_of_scope.
+//
+// Corrected 2026-09-08 after grant-tracker-be's check: the first read used the
+// reader proxy for the Cloudflare-blocked page, and its returned text did not
+// match what the browser renders at that URL. The brief's own rule (fetch, then
+// browser, never a third party) is followed from here on for every row, this one
+// included.
 //
 // Horsham: readable in the browser (bot wall on fetch). Two problems, so hold:
 // the round the pinned 30 June deadline belonged to has passed and the page
@@ -45,10 +52,10 @@ const APPLY = process.argv.includes('--apply')
 const ROWS: Row[] = [
   {
     id: '324d3776-917a-4498-9537-27888f142f2d', re: /Ashoka Fellowship/, job: 1,
-    verdict: 'reject', code: 'out_of_scope', read_via: 'fetch',
-    quote: 'Ashoka cannot elect someone to the Fellowship unless he or she is possessed by a new idea—a new solution or approach to a social problem—that will change the pattern in a field, be it human rights, the environment, or any other.',
-    url: 'https://www.ashoka.org/en-gb/nominate',
-    for_paul: 'Read today via the reader proxy (still 403 direct). Ashoka elects individual social entrepreneurs to the Fellowship by nomination — the fellowship page describes a stipend "for the Fellow" and this page is titled "Recommend an Ashoka Fellow". No route for an organisation to apply, confirming the row\'s own stored brief.',
+    verdict: 'reject', code: 'out_of_scope', read_via: 'browser',
+    quote: 'If you are interested in recommending a social entrepreneur to the Ashoka Fellowship, we welcome any information about a candidate and their work that you can provide.',
+    url: 'https://www.ashoka.org/en-gb/recommend-ashoka-fellow',
+    for_paul: 'Still 403 direct; read in the browser today (the /en-gb/nominate link redirects here). Ashoka Fellows are recommended by a third party, not applicants themselves — this page is the nomination form, and the five selection criteria sit behind a collapsed accordion rather than as visible page text. No route for an organisation to apply, confirming the row\'s own stored brief.',
   },
   {
     id: '9e3b71a8-1f2c-40ea-8d03-31bcb0c82e99', re: /Horsham District Council.*Community Grant/, job: 1,

@@ -9,11 +9,11 @@
      "job": 1,
      "verdict": "reject",
      "code": "out_of_scope",
-     "quote": "Ashoka cannot elect someone to the Fellowship unless he or she is possessed by a new idea—a new solution or approach to a social problem—that will change the pattern in a field, be it human rights, the environment, or any other.",
-     "url": "https://www.ashoka.org/en-gb/nominate",
-     "read_via": "fetch",
+     "quote": "If you are interested in recommending a social entrepreneur to the Ashoka Fellowship, we welcome any information about a candidate and their work that you can provide.",
+     "url": "https://www.ashoka.org/en-gb/recommend-ashoka-fellow",
+     "read_via": "browser",
      "tidied": [],
-     "for_paul": "Read today via the reader proxy (still 403 direct). Ashoka elects individual social entrepreneurs to the Fellowship by nomination — the fellowship page describes a stipend \"for the Fellow\" and this page is titled \"Recommend an Ashoka Fellow\". No route for an organisation to apply, confirming the row's own stored brief."
+     "for_paul": "Still 403 direct; read in the browser today (the /en-gb/nominate link redirects here). Ashoka Fellows are recommended by a third party, not applicants themselves — this page is the nomination form, and the five selection criteria sit behind a collapsed accordion rather than as visible page text. No route for an organisation to apply, confirming the row's own stored brief."
     },
     {
      "id": "9e3b71a8-1f2c-40ea-8d03-31bcb0c82e99",
@@ -72,7 +72,7 @@
     }
    ],
    "paul_list": [
-    "REJECT  Ashoka Fellowship (out_of_scope) — Read today via the reader proxy (still 403 direct). Ashoka elects individual social entrepreneurs to the Fellowship by nomination — the fellowship page describes a stipend \"for the Fellow\" and this page is titled \"Recommend an Ashoka Fellow\". No route for an organisation to apply, confirming the row's own stored brief.",
+    "REJECT  Ashoka Fellowship (out_of_scope) — Still 403 direct; read in the browser today (the /en-gb/nominate link redirects here). Ashoka Fellows are recommended by a third party, not applicants themselves — this page is the nomination form, and the five selection criteria sit behind a collapsed accordion rather than as visible page text. No route for an organisation to apply, confirming the row's own stored brief.",
     "HOLD    Horsham District Council — Community Grant — The round the pinned 30 June 2026 deadline belonged to has passed; the page runs four recurring rounds a year instead (next opens 1 Sept, closes 30 Sept, awarded by 31 Oct) — rolling, not a single date. The amount is pinned at £2,500-£5,000; the page shows two unlabelled grant sizes, up to £5,000 (most ~£3,000) and up to £15,000 (most ~£8,000), with nothing distinguishing which is which or whether they are two tiers of the same scheme. Worth a relook at both the pin and whether this should be rolling.",
     "HOLD    Macmillan Q Lab — Holistic Cancer Care — Deadline confirmed for the Team role: 14 September 2026, matching the row. The amount does not confirm: the page states one figure, £75,000 \"to support teams through the process\" across the whole cohort of teams in the lab, not a per-team ceiling, and never mentions £200,000 (the row's pinned range, unpinned in the DB, from an Idox feed). It is also part fellowship: individuals can take part as paid contributors (deadline 7 Oct) alongside organisation teams. Needs the guidance pack read, or your call, before it can carry a figure.",
     "HOLD    Peter Kershaw Trust — Ordinary Grants — Read cleanly today (7 Sept called this a 1MB unreadable page; today's direct fetch got 1.6KB of clean text — whatever broke it before isn't reproducing). Real, open to organisations, one window a year and applications close 30 September — three weeks off. But the brief the page supports is thin: no maximum award stated (defers to Annual Accounts, not fetchable), no exclusions on the page, and who_can_apply beyond \"organisations working in social welfare\" isn't detailed enough for the seven-field bar. Time-sensitive if you want this year's window.",
