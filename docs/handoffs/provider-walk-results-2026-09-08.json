@@ -1,0 +1,369 @@
+{
+ "mode": "RECONNAISSANCE ONLY. No database writes of any kind were made in this pass: no staging, no relinking, no field writes, not even at system trust. Every outcome below is what WOULD be done, recorded for Paul to decide after launch.",
+ "batches": [
+  {
+   "batch": 1,
+   "tier": 1,
+   "providers_walked": 5,
+   "providers": [
+    {
+     "provider": "Key Fund",
+     "funding_page": "https://www.thekeyfund.co.uk/funding/",
+     "funds_on_page": 8,
+     "rows_held": 13,
+     "rows_live": 6,
+     "outcomes": [
+      {
+       "fund": "Northern Impact Fund 2",
+       "url": "https://thekeyfund.co.uk/funding/northern-impact-fund-2/",
+       "action": "already_correct",
+       "id": "105cf22a-e502-436b-8806-b1f0c56b4df1"
+      },
+      {
+       "fund": "Property Fund",
+       "url": "https://thekeyfund.co.uk/funding/property-fund/",
+       "action": "already_correct",
+       "id": "cc0252b3-e362-401c-80b6-5407fed2dfc8"
+      },
+      {
+       "fund": "Community Business Fund",
+       "url": "https://thekeyfund.co.uk/funding/community-business-fund/",
+       "action": "already_correct",
+       "id": "266a1eac-562b-4a32-9d89-f5e42bfaeb4e"
+      },
+      {
+       "fund": "More than a Pub",
+       "url": "https://thekeyfund.co.uk/funding/more-than-a-pub/",
+       "action": "already_correct",
+       "id": "7eb61b99-36e4-4246-a7da-bc91a61e3e8e"
+      },
+      {
+       "fund": "Northern Cultural Regeneration Fund",
+       "url": "https://thekeyfund.co.uk/funding/northern-cultural-regeneration-fund/",
+       "action": "already_correct",
+       "id": "5e37d1c3-0cc8-4b9a-9459-086a0d3027cc"
+      },
+      {
+       "fund": "Flexible Finance",
+       "url": "https://thekeyfund.co.uk/funding/flexible-finance/",
+       "action": "relink",
+       "id": "b818a116-3579-4eb3-8808-b40abc38e393",
+       "quote": "Flexible Finance This fund is for established community and social enterprises, to complement our existing blended funds. Loans of up to £150k.",
+       "note": "The one front-door row here and it is LIVE: apply_url is the funding index. The fund's own page exists and returns 200. Note a name collision to watch: Social Investment Business also runs a 'Flexible Finance' (our row 9eb92571), so any title work must keep the funder attached."
+      },
+      {
+       "fund": "Regional Growth Fund",
+       "url": "https://thekeyfund.co.uk/funding/regional-growth-fund/",
+       "action": "stage",
+       "quote": "Regional Growth Fund The fund aims to support the development and growth of economic activity and employment in disadvantaged areas or for disadvantaged groups, by investing in enterprises, and is not restricted to social or community focussed organisations",
+       "note": "Not held in any state. Own page returns 200. Worth noting for the review gate that it is explicitly NOT restricted to social or community organisations, so the audience test needs a proper read before it goes anywhere."
+      },
+      {
+       "fund": "European Regional Development Fund (ERDF)",
+       "url": "https://www.thekeyfund.co.uk/funding/",
+       "action": "report",
+       "quote": "European Regional Development Fund - ERDF This fund aims to increase the number of social enterprises in the Yorkshire and Humber Region that can access the finance that they need to develop",
+       "note": "Listed on the page but ERDF is an EU structural fund that closed to new UK activity after Brexit. Do not stage on the strength of a listing; if anything this is a stale entry on Key Fund's own page."
+      }
+     ],
+     "rows_with_no_fund": [
+      {
+       "id": "963e340b-e3b7-4ce5-8477-96dfca7c9a95",
+       "title": "Key Fund — Social Investment Loans",
+       "why": "index row (/our-funding/), no such fund on the page, archived"
+      },
+      {
+       "id": "6f3892eb-3e7f-4976-b60b-8d46ca476573",
+       "title": "Key Fund Social Investment Loans",
+       "why": "points at /apply/, rejected"
+      },
+      {
+       "id": "d3b226dc-7c18-43e4-894b-d055c2e56d37",
+       "title": "Key Fund Social Enterprise Loans and Investment",
+       "why": "points at /apply/, rejected"
+      },
+      {
+       "id": "0185be29-2511-48a8-9195-f2943c557e70",
+       "title": "Northern Impact Fund",
+       "why": "superseded by Northern Impact Fund 2, which is live; index url, rejected"
+      },
+      {
+       "id": "d4ffd3c0-5feb-4649-a515-c03e27b67b30",
+       "title": "Key Fund — Social Enterprise Investment",
+       "why": "index url, archived"
+      },
+      {
+       "id": "c49bde44-2abb-4ff4-a3fa-76061d5cbad9",
+       "title": "Key Fund Flexible Finance",
+       "why": "archived duplicate of the live b818a116"
+      },
+      {
+       "id": "94447c6d-5fe2-4148-9578-f15c36e97550",
+       "title": "Energy Resilience Fund — Key Fund",
+       "why": "not on Key Fund's page; the Energy Resilience Fund is Social Investment Business's, held separately and live as 6e6e8050"
+      }
+     ]
+    },
+    {
+     "provider": "Social Investment Business",
+     "funding_page": "https://www.sibgroup.org.uk/funding",
+     "funds_on_page": 3,
+     "rows_held": 10,
+     "rows_live": 4,
+     "name_merged_to": "Social Investment Business (drop the '(SIB)' variant)",
+     "outcomes": [
+      {
+       "fund": "Community Builders Fund",
+       "url": "https://www.sibgroup.org.uk/fund/community-builders-fund/",
+       "action": "already_correct",
+       "id": "0adbc570-5d75-4d6e-af6d-3263559896a3"
+      },
+      {
+       "fund": "Energy Resilience Fund",
+       "url": "https://www.sibgroup.org.uk/fund/energy-resilience-fund/",
+       "action": "already_correct",
+       "id": "6e6e8050-27ca-456a-846c-91a1198681fd"
+      },
+      {
+       "fund": "Reach Fund",
+       "url": "https://www.sibgroup.org.uk/fund/reach-fund/",
+       "action": "already_correct",
+       "id": "007e7f00-876d-4a11-ab7f-79bd6e159bf0"
+      },
+      {
+       "fund": "Community Enterprise Fund",
+       "url": "https://fundingforall.org.uk/funds/social-investment-business-community-enterprise-fund/",
+       "action": "report",
+       "id": "18627ca4-7544-4719-93d8-1d7c80a10489",
+       "note": "LIVE and its apply_url is a third-party directory (fundingforall.org.uk), not SIB's own site, which is the front-door defect in its worst form. It is also NOT among the three funds SIB currently lists. Either it has moved to previous funds or it has its own page not linked from the index; the previous-funds page was not opened in this pass, so this is recorded as needing one more hop rather than resolved. Separately, its name collides with Firstport's Community Enterprise Fund."
+      }
+     ],
+     "rows_with_no_fund": [
+      {
+       "id": "9eb92571-387a-4742-9389-184205cadf6f",
+       "title": "Flexible Finance",
+       "why": "between_rounds_scheduled and not among the three current funds; also collides by name with Key Fund's Flexible Finance"
+      },
+      {
+       "id": "ba76fee4-7d8e-48e5-acac-f9df576c320c",
+       "title": "Energy Resilience Fund",
+       "why": "duplicate of the live 6e6e8050, and points at a Good Finance directory page, rejected"
+      },
+      {
+       "id": "583f0378-26e6-4abe-886c-0686bd8b9d2b",
+       "title": "SIB — Resilience Fund",
+       "why": "index url (/funding), rejected"
+      },
+      {
+       "id": "d5917227-c125-445c-bcac-5761392ed061",
+       "title": "SIB — Resilience & Recovery Loan",
+       "why": "index url (/finance/), archived"
+      },
+      {
+       "id": "26029120-6cfa-4346-8834-36f77b0af3b2",
+       "title": "SIB Loan & Grant Funds",
+       "why": "homepage url, rejected"
+      },
+      {
+       "id": "7d46d20f-6ce6-498b-a6f3-77758a2414d7",
+       "title": "SIB — Growth Fund",
+       "why": "index url (/funding/), archived"
+      }
+     ]
+    },
+    {
+     "provider": "Ufi VocTech Trust",
+     "funding_page": "https://ufi.co.uk/grant-funding/",
+     "funds_on_page": null,
+     "rows_held": 7,
+     "rows_live": 0,
+     "outcomes": [
+      {
+       "fund": "(whole provider)",
+       "url": "https://ufi.co.uk/grant-funding/",
+       "action": "report",
+       "note": "UNREADABLE. Bot-walled on direct fetch and again in the Chrome browser: 'Please wait while your request is being verified...' never clears. No reconciliation possible this pass. This is itself a candidate explanation for why all seven Ufi rows are hidden: if our crawler sees the same wall, url_status checks would read the site as unreachable. Worth testing that theory against url_status on the seven rows before anyone concludes the funds are gone."
+      }
+     ],
+     "rows_with_no_fund": []
+    },
+    {
+     "provider": "School for Social Entrepreneurs",
+     "funding_page": "https://www.the-sse.org/learning-support/explore-all-programmes-workshops/",
+     "funds_on_page": 8,
+     "rows_held": 15,
+     "rows_live": 4,
+     "name_merged_to": "School for Social Entrepreneurs (drop the '(SSE)' variant)",
+     "outcomes": [
+      {
+       "fund": "SSE — All Programmes (the front door itself)",
+       "url": "https://www.the-sse.org/learning-support/programmes/",
+       "action": "relink",
+       "id": "57c4802f-2d34-4d89-969e-a21f9ef397db",
+       "quote": "Programmes (8) Application-based, longer-term support up to a year",
+       "note": "THE FIRSTPORT SHAPE, and this one is LIVE. A single live row with no deadline standing in front of the eight programmes the page lists, four of which we already hold separately. Strongest tier-one candidate found so far: it should become a signpost or go, not stay as a fund."
+      },
+      {
+       "fund": "Social Investment Gateway Programme",
+       "url": "https://www.the-sse.org/programme/social-investment-gateway-programme/",
+       "action": "already_correct",
+       "id": "5b3ee9d2-efea-43ca-b4e6-94005e070a09",
+       "quote": "Deadline: November 6, 2026",
+       "note": "Row deadline 2026-11-06 matches the page exactly. Live and right."
+      },
+      {
+       "fund": "The DPS Social Commitment Programme: Activate",
+       "url": "https://www.the-sse.org/programme/the-dps-social-commitment-programme-activate/",
+       "action": "already_correct",
+       "id": "c55aff49-1965-408e-a7bb-52aa6d008b01",
+       "quote": "Deadline: November 16, 2026",
+       "note": "Row deadline 2026-11-16 matches. Live and right."
+      },
+      {
+       "fund": "The DPS Social Commitment Programme: Scale",
+       "url": "https://www.the-sse.org/programme/the-dps-social-commitment-programme-scale/",
+       "action": "report",
+       "id": "cd554f15-2fb5-4e82-9380-fb06b3537f4a",
+       "quote": "Deadline: November 16, 2026",
+       "note": "Held with the correct deadline and currently listed by the provider, but sitting in tagged_awaiting_review, so a fundraiser cannot see a programme that is open with a November deadline. Ready for Paul's review queue rather than any change here."
+      },
+      {
+       "fund": "Trading for Good",
+       "url": "https://www.the-sse.org/programme/trading-for-good/",
+       "action": "report",
+       "id": "b4b7b06a-3916-48eb-a633-5c21a0d563c1",
+       "quote": "Trading for Good Gain the knowledge, skills, and confidence to develop and grow projects that tackle social and environmental challenges through strong trading income streams. England November 30, 2026 August 30, 2027",
+       "note": "Discrepancy worth a look. Our row is hidden with next_open_date_parsed 2027-03-01; the provider's page shows the programme against November 30, 2026 to August 30, 2027. The page's two dates read as the programme's run window rather than an application deadline, and no 'Deadline:' is shown for it, so this is flagged rather than asserted. But a March 2027 reopening date does not obviously follow from what the page says."
+      },
+      {
+       "fund": "Trading for Good: Community Business",
+       "url": "https://www.the-sse.org/programme/trading-for-good-community-business/",
+       "action": "report",
+       "id": "8b5c4025-318d-4354-a766-228b361ffba3",
+       "note": "Held, currently listed by the provider, awaiting review."
+      },
+      {
+       "fund": "Trading for Good: Bury",
+       "url": "https://www.the-sse.org/programme/trading-for-good-bury/",
+       "action": "report",
+       "id": "a06424c3-643c-458c-8f97-a228cef657a6",
+       "note": "Held, currently listed, awaiting review."
+      },
+      {
+       "fund": "Trading for Good: Milton Keynes",
+       "url": "https://www.the-sse.org/programme/trading-for-good-milton-keynes/",
+       "action": "report",
+       "id": "15eaab1e-d531-403b-a4da-d7c75c3b113b",
+       "note": "Held, currently listed, between_rounds_scheduled."
+      },
+      {
+       "fund": "Trading for Good: Stockport",
+       "url": "https://www.the-sse.org/programme/trading-for-good-stockport/",
+       "action": "report",
+       "id": "dc32afec-6ae0-4e3c-aca0-50792a6b9b40",
+       "note": "Held, currently listed, between_rounds_scheduled."
+      }
+     ],
+     "rows_with_no_fund": [
+      {
+       "id": "6d512c2b-f3b9-43d2-9b9d-83399dc49d0c",
+       "title": "SSE Match Trading Grant",
+       "why": "LIVE, on a separate site (matchtrading.com), and not one of the eight programmes. Match Trading is the grant mechanism attached to several SSE programmes rather than a fund you apply to on its own. Worth Paul deciding whether it should be a row at all."
+      },
+      {
+       "id": "f46773fa-4719-49a9-887b-8ed8ab50add7",
+       "title": "SSE London Growth & Resilience Programme",
+       "why": "archived; both its URLs 404 and it is not on the index. Confirmed separately today."
+      },
+      {
+       "id": "ddc93bb0-b74d-42e7-86a7-172f9a39913c",
+       "title": "SSE Start Up Programme",
+       "why": "no such programme on the current page; index url, rejected"
+      },
+      {
+       "id": "6a73baa9-087b-454b-b06e-731a783e2f03",
+       "title": "SSE Fellowship Programme",
+       "why": "not on the current page, archived"
+      },
+      {
+       "id": "7ba9920b-5517-4ead-bff2-12c499c31180",
+       "title": "SSE Fellowship Programme (duplicate)",
+       "why": "second copy, on the old sse.org.uk domain, archived"
+      },
+      {
+       "id": "ed7d7251-fca7-46b3-9ba2-3873956e54a3",
+       "title": "SSE Fully Funded Learning Programmes",
+       "why": "index url (/courses/), rejected"
+      }
+     ]
+    },
+    {
+     "provider": "Lloyds Bank Foundation",
+     "funding_page": "https://www.lloydsbankfoundation.org.uk/funding/",
+     "funds_on_page": 1,
+     "rows_held": 11,
+     "rows_live": 1,
+     "name_merged_to": "Lloyds Bank Foundation for England and Wales",
+     "outcomes": [
+      {
+       "fund": "Good Place to Live: New Beginnings Fund",
+       "url": "https://www.lloydsbankfoundation.org.uk/funding/good-place-to-live-new-beginnings/",
+       "action": "already_correct",
+       "id": "2f87181a-b0f1-4a76-acec-519a8c35bb5c",
+       "quote": "Charities, CIOs and CICs that are working to prevent homelessness and supports early intervention in their communities before crisis hits, can apply for four year unrestricted funding. Funding amount up to £200,000 Length of grant Four Years Location England and Wales Organisations Charities, CIOs and CICs Deadline 9 September 2026",
+       "note": "Exact match on every field checked: deadline 2026-09-09, amount_max 200000, structures charity/CIO/CIC, own URL. The best-maintained row found in this batch. Note the deadline is TOMORROW, so it will expire this week and the expire cron will hide it correctly."
+      }
+     ],
+     "rows_with_no_fund": [
+      {
+       "id": "65dd568c-30c8-4e47-ac04-cb779c76a78f",
+       "title": "Lloyds Bank Foundation — Mental Health Pillar",
+       "why": "published-and-hidden with no deadline and no reopening date, index url; also one of the eleven unexplained hides recorded in the cohorts results"
+      },
+      {
+       "id": "7b77b0ed-5f57-4b7c-826e-6a4f6a39500e",
+       "title": "Invest Programme",
+       "why": "not on the current page, archived"
+      },
+      {
+       "id": "2d0123e4-fd03-4253-8687-d637e7c235e1",
+       "title": "Lloyds Bank Foundation — Invest Programme",
+       "why": "duplicate of the above under the other name variant, archived"
+      },
+      {
+       "id": "6fa4bec9-8827-4216-ba92-6e5b827ab38a",
+       "title": "Lloyds Bank Foundation Enhance Programme",
+       "why": "homepage url, archived"
+      },
+      {
+       "id": "8825cb0f-f53f-45d4-93ab-dc6fd8036f21",
+       "title": "Lloyds Bank Foundation — Specialist Programme",
+       "why": "index url, rejected"
+      },
+      {
+       "id": "299f9e7b-7cf6-4897-8634-d080c517b930",
+       "title": "Lloyds Bank Foundation — Enable Programme",
+       "why": "index url, archived"
+      },
+      {
+       "id": "b3794a4d-7951-4d66-8f16-2b78cbca651e",
+       "title": "Lloyds Bank Foundation Funding Programmes",
+       "why": "index url, rejected"
+      },
+      {
+       "id": "a10666fa-ef94-4d42-b09e-71a0c89aecbc",
+       "title": "Enable and Invest Grants",
+       "why": "index url, rejected"
+      },
+      {
+       "id": "56c37a1d-4904-4f8d-8711-d0c33c59719e",
+       "title": "Lloyds Bank Foundation Racial Equity Grants",
+       "why": "points at actiontogether.org.uk, a third-party site, between_rounds_scheduled"
+      }
+     ],
+     "why_almost_nothing_live": "Not a data defect. The foundation itself is running one open programme: the page's 'Open Programmes' section lists only Good Place to Live: New Beginnings. It says so directly, quoted: 'Lloyds Bank Foundation is changing – scaling up to meet the moment in our society... So this year, we're taking a mixed approach to our investments: Our first funding programme of 2026 is now open for applications.' Ten historic rows behind one live one is the correct shape here."
+    }
+   ]
+  }
+ ]
+}
