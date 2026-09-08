@@ -155,7 +155,98 @@
      "Lloyds Bank Foundation Enhance, Invest and Specialist Programmes — archived or rejected",
      "Impact Hub London Programmes — between_rounds_scheduled",
      "Year Here Fellowship, On Purpose Associate Programme — archived"
-    ]
+    ],
+    "CORRECTED": "My 'the programme count is a review problem' framing was overstated, and grant-tracker-be corrected it by opening the 29 rows rather than counting them. Of the 11 between-rounds programmes, five reopen in March 2027 (three Trading for Good variants and the Barclays Black Founder Accelerator) and are hidden deliberately under Paul's own one-month lead rule, and six carry no parseable date at all (Power Up London, Skills for Londoners, Impact Hub Programmes, Two Ridings Organisational Development Fund, Arts Council of Wales Extend, Weston). Of the 18 published-and-hidden programmes, fourteen have a deadline that has passed, which is the expire cron working correctly. So the genuinely reviewable set is around four rows, not 29, and a review pass over the rest would mostly re-confirm that closed funds are closed. Those per-row figures are grant-tracker-be's derivation, not mine. The counts I derived myself and re-verified are below.",
+    "what_is_actually_real": {
+     "summary": "Narrower than the headline count and more interesting. Across the WHOLE catalogue, not just programmes, 149 rows sit published-and-hidden. 126 of those have a deadline that has already passed, which is the expire cron doing its job. The residue is what matters: four rows have a reopening date inside the 30-day lead and are still hidden, and eleven have nothing on the row at all to explain why they are not visible. The mechanism is that check-coming-soon only sweeps pipeline_state='between_rounds_scheduled' and never touches is_active, so a row that is published-and-hidden with a future reopening date is picked up by neither cron. That is the expire-grants desync already recorded in the project notes, and this is a clean demonstrable instance of it.",
+     "verified_by": "Derived independently here on 2026-09-08 rather than copied, and 149 and the four match grant-tracker-be's numbers exactly.",
+     "reopening_inside_30_day_lead_still_hidden": [
+      {
+       "id": "792c4cce-e971-4544-8f5c-3e4d098bf087",
+       "reopens": "2026-09-21",
+       "title": "Pre-announcement: Gambling harms research grants",
+       "funder": "AHRC / ESRC / MRC / UKRI"
+      },
+      {
+       "id": "34c4a433-9149-4676-acad-7fe0585e96bf",
+       "reopens": "2026-09-18",
+       "title": "The Elephant Trust",
+       "funder": "The Elephant Trust"
+      },
+      {
+       "id": "6e32f1bc-2acd-4e86-bbeb-b73980d141dc",
+       "reopens": "2026-10-01",
+       "title": "Community Grants Programme",
+       "funder": "TheGivingMachine"
+      },
+      {
+       "id": "eef413f5-805b-4919-b54e-f3e5bd1e7e26",
+       "reopens": "2026-10-01",
+       "title": "UnLtd — Awards for Social Entrepreneurs",
+       "funder": "UnLtd"
+      }
+     ],
+     "eleven_with_nothing_explaining_the_hide": [
+      {
+       "id": "38d502d6-a414-40f5-a72e-405039098abd",
+       "title": "Green Roots Fund",
+       "funder": "Greater London Authority"
+      },
+      {
+       "id": "65dd568c-30c8-4e47-ac04-cb779c76a78f",
+       "title": "Lloyds Bank Foundation — Mental Health Pillar",
+       "funder": "Lloyds Bank Foundation for England and Wales"
+      },
+      {
+       "id": "321ed3d9-0619-4a5b-9a39-cae978857a03",
+       "title": "Argyll & Bute Council — Supporting Communities Fund",
+       "funder": "Argyll & Bute Council"
+      },
+      {
+       "id": "c2f62efc-64e7-4635-8a2c-9802e2ea089d",
+       "title": "Computers 4 Charity — Refurbished Hardware",
+       "funder": "Computers 4 Charity"
+      },
+      {
+       "id": "de5286bb-765c-4fcf-8d76-b19a6a657a4d",
+       "title": "Peter Harrison Foundation — Active Lives",
+       "funder": "Peter Harrison Foundation"
+      },
+      {
+       "id": "ef36f740-2f40-40e6-a561-8aa4c72a8a97",
+       "title": "Brewers Foundation",
+       "funder": "Brewers Foundation"
+      },
+      {
+       "id": "8f0e5171-379b-41c8-a17d-e0caa0867332",
+       "title": "Healthy Ageing Award",
+       "funder": "UnLtd"
+      },
+      {
+       "id": "fa1cc1d5-75fa-4a7e-aa6f-178cc3931770",
+       "title": "Funding Futures Programme",
+       "funder": "UnLtd"
+      },
+      {
+       "id": "c5e41501-c19d-4184-a701-1eecd4871c5e",
+       "title": "Chrysalis Programme",
+       "funder": "Hillingdon Council"
+      },
+      {
+       "id": "09b3d42a-e698-4194-9a61-f41062fb46e2",
+       "title": "Open Application Programme",
+       "funder": "Persimmon Charitable Foundation"
+      },
+      {
+       "id": "4fa14077-7904-4fd9-ba4f-d8ad7a501bff",
+       "title": "Social Enterprise Growth Accelerator (SEGA)",
+       "funder": "Sheffield Social Enterprise Network"
+      }
+     ],
+     "eleven_or_twelve": "grant-tracker-be counted twelve here and I derive eleven, and the difference is a distinction rather than an error. The twelfth is Henry Smith Foundation Grants, c9634fd4-6185-4aa1-9999-205dd589e9a5, which has no deadline and no parsed reopening date but DOES carry a prose next_open_date of \"TBC — between rounds\". So the row does explain why it is hidden, it just cannot be parsed into a date a cron can act on. That belongs with the known prose-parse family rather than with the eleven, where nothing on the row explains the hide at all. Counting it either way is defensible as long as the two kinds are not merged.",
+     "attribution_note": "The Gambling harms row was described in the check message as my example. It was not: I never cited it. The four-row finding is grant-tracker-be's. Confirmed here that 792c4cce is real and reopens on 21 September, thirteen days out.",
+     "do_not_fix": "Recorded only. Launch is Thursday, the standing constraint to the 11th is no new sweeps and no new defect classes, and this is a known class with a migration already attached. Post-launch work."
+    }
    }
   }
  ],
@@ -180,8 +271,8 @@
   "nothing_went_live": "All four staged rows are is_active false, tagged_awaiting_review, source system:programmes-cohorts-2026-09-08 at trust 50. No live row was touched by this job.",
   "for_paul": [
    "Firstport Start It (1e994bdb) is LIVE and individuals-only, and its amount, eligible_structures and description all contradict its own page. It needs rejecting, not relinking. Detail under batch 1 for_paul_decision.",
-   "The programme count is a review problem: 166 of 184 programme rows are not live, including 18 in published state with is_active false. See batch 2's finding."
+   "Four published-and-hidden rows reopen within the 30-day lead and are visible to neither cron, the nearest on 18 and 21 September. Ids in batch 2. Recorded, not fixed: post-launch."
   ],
-  "method_lesson": "Check the provider before the fund. Fund-first dedup returned 'not held' for candidates whose provider had 13 rows. Provider-first found three duplicate sets, the Firstport front-door defect, and then established a whole 22-provider seam as already covered for the cost of one query."
+  "method_lesson": "Check the provider before the fund. Fund-first dedup returned 'not held' for candidates whose provider had 13 rows; provider-first found three duplicate sets, the Firstport front-door defect, and then established a whole 22-provider seam as already covered for the cost of one query. The corollary, from grant-tracker-be: 22 of 22 providers held, and 18 live out of 184 programme rows, says the provider layer is close to exhausted rather than under-explored. Programmes run in rounds, so most are legitimately shut at any moment, and the lever on that number is the reopening detector rather than more searching."
  }
 }
