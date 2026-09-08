@@ -655,10 +655,9 @@ function PickerChip({
 
 /** Card wrapper for steps 2–5 */
 function CardShell({
-  step, showSkip = true, children,
+  step, children,
 }: {
   step: number
-  showSkip?: boolean
   children: React.ReactNode
 }) {
   const isMobile = useIsMobile()
@@ -693,18 +692,9 @@ function CardShell({
             {children}
           </div>
         </div>
-        {showSkip && (
-          <div style={{ textAlign: 'center', marginTop: 4 }}>
-            <Link
-              href="/dashboard/profile"
-              style={{ fontSize: 13, color: T.textTertiary, fontFamily: 'var(--font-space-grotesk)', padding: '12px 16px', display: 'inline-block', textDecoration: 'none' }}
-              onMouseEnter={e => (e.currentTarget.style.color = T.textSecondary)}
-              onMouseLeave={e => (e.currentTarget.style.color = T.textTertiary)}
-            >
-              Set up later
-            </Link>
-          </div>
-        )}
+        {/* "Set up later" removed (Paul, 8 Sept 2026): a profile is the
+            product, and the browse-without-a-profile path now exists for the
+            people who genuinely cannot fill one in. */}
       </div>
     </div>
   )
@@ -1352,7 +1342,7 @@ export default function OnboardingWizardPage() {
   const cardStep = STEP_DOT_POS[step]
 
   return (
-    <CardShell step={cardStep} showSkip={step !== 'reveal'}>
+    <CardShell step={cardStep}>
 
       {step === 'review' && extracted && (
         <StepReview
