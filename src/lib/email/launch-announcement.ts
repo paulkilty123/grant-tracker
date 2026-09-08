@@ -30,8 +30,8 @@ export function renderLaunchEmailText(opts: LaunchEmailOptions): string {
     '',
     'Hi there,',
     '',
-    'The Shoots Funding platform is now open, and you are one of the first',
-    'people to use it. Thank you for your interest.',
+    'The Shoots Funding platform is now open, and you are in a day before',
+    'public launch. Thank you for your interest.',
     '',
     'As a fundraiser and social entrepreneur for over 20 years, finding and',
     'managing good-fit funding has always been a challenge. I built Shoots to',
@@ -97,7 +97,7 @@ export function renderLaunchEmail(opts: LaunchEmailOptions): string {
 <tr><td class="gutter" style="background:${C.page};padding:30px 30px 0;">
   <p style="margin:0 0 14px;font-family:${UI};font-size:24px;font-weight:600;letter-spacing:-.4px;color:${C.deep};line-height:1.25;">Shoots is open</p>
   ${p('Hi there,')}
-  ${p('The Shoots Funding platform is now open, and you are one of the first people to use it. Thank you for your interest.')}
+  ${p('The Shoots Funding platform is now open, and you are in a day before public launch. Thank you for your interest.')}
   ${p('As a fundraiser and social entrepreneur for over 20 years, finding and managing good-fit funding has always been a challenge. I built Shoots to fix that for organisations like yours, so you can spend more time delivering.')}
   <!--[if mso]>
   <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${esc(signup)}" style="height:40px;v-text-anchor:middle;width:190px;" arcsize="50%" stroke="f" fillcolor="${C.deep}">
