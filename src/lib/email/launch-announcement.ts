@@ -30,7 +30,13 @@ export function renderLaunchEmailText(opts: LaunchEmailOptions): string {
     '',
     'Hi',
     '',
-    'Shoots opens this morning, and you are one of the first people in.',
+    'The Shoots Funding platform is now open, and you are one of the first',
+    'people to use it. Thank you for your interest.',
+    '',
+    'As a fundraiser and social entrepreneur for over 20 years, finding and',
+    'managing good-fit funding has always been a challenge. I built Shoots to',
+    'fix that for organisations like yours, so you can spend more time',
+    'delivering.',
     '',
     `Set up your account: ${signup}`,
     '',
@@ -42,10 +48,11 @@ export function renderLaunchEmailText(opts: LaunchEmailOptions): string {
     'search, matches, saved opportunities with deadlines, a pipeline for your',
     'applications, and the Claude connector. At the end you choose a plan.',
     '',
-    'Match is £19 a month and Apply is £35 a month. Sign up before 31 October',
-    'and you pay £15 or £25 a month for your first 12 months. Cancel any time,',
-    'and a full refund if you ask in your first month. Team, for up to five',
-    'people or five client organisations, is by conversation: just reply.',
+    'Sign up before 31 October and the launch price is yours for 12 months:',
+    'Match for £15 a month, or Apply for £25. After that they are £19 and £35.',
+    'Cancel any time, and a full refund if you ask in your first month. Team,',
+    'for up to five people or five client organisations, is by conversation:',
+    'just reply.',
     '',
     'I read every reply to this email. If something looks wrong, or a funder',
     'you know is missing, tell me and I will fix it.',
@@ -91,7 +98,8 @@ export function renderLaunchEmail(opts: LaunchEmailOptions): string {
 <tr><td class="gutter" style="background:${C.page};padding:30px 30px 0;">
   <p style="margin:0 0 14px;font-family:${UI};font-size:24px;font-weight:600;letter-spacing:-.4px;color:${C.deep};line-height:1.25;">Shoots is open</p>
   ${p('Hi')}
-  ${p('Shoots opens this morning, and you are one of the first people in.')}
+  ${p('The Shoots Funding platform is now open, and you are one of the first people to use it. Thank you for your interest.')}
+  ${p('As a fundraiser and social entrepreneur for over 20 years, finding and managing good-fit funding has always been a challenge. I built Shoots to fix that for organisations like yours, so you can spend more time delivering.')}
   <!--[if mso]>
   <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${esc(signup)}" style="height:40px;v-text-anchor:middle;width:190px;" arcsize="50%" stroke="f" fillcolor="${C.deep}">
     <w:anchorlock/>
@@ -107,7 +115,7 @@ export function renderLaunchEmail(opts: LaunchEmailOptions): string {
   <!--<![endif]-->
   ${p('Setting up takes about five minutes. Drop in your website and we build your profile, then you see every grant, programme, social investment and in-kind offer you are eligible for, ranked by fit.')}
   ${p('Every new organisation starts with <b>14 days on Apply, no card needed</b>: search, matches, saved opportunities with deadlines, a pipeline for your applications, and the Claude connector. At the end you choose a plan.')}
-  ${p('Match is £19 a month and Apply is £35 a month. Sign up before 31 October and you pay <b>£15 or £25 a month for your first 12 months</b>. Cancel any time, and a full refund if you ask in your first month. Team, for up to five people or five client organisations, is by conversation: just reply.')}
+  ${p('Sign up before 31 October and the launch price is yours for 12 months: <b>Match for £15 a month, or Apply for £25</b>. After that they are £19 and £35. Cancel any time, and a full refund if you ask in your first month. Team, for up to five people or five client organisations, is by conversation: just reply.')}
   ${p('I read every reply to this email. If something looks wrong, or a funder you know is missing, tell me and I will fix it.')}
   <p style="margin:0 0 4px;font-family:${BODY};font-size:15.5px;line-height:1.65;color:${C.deep};">Paul</p>
   <p style="margin:0 0 6px;font-family:${BODY};font-size:13.5px;line-height:1.6;color:${C.body};">Founder, Shoots</p>
