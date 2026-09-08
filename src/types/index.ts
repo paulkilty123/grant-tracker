@@ -271,6 +271,10 @@ export interface Organisation {
    * how a field ends up with no UI.
    */
   alerts_enabled?: boolean | null
+  /** What the person said they were at signup. Recorded, not enforced. Migration 080. */
+  signup_role?: 'organisation' | 'consultant' | 'network' | null
+  /** They chose to browse without a profile: no matches card, no digest, a banner on Find Funding. Migration 080. */
+  profile_skipped?: boolean | null
   /** Minimum match score an opportunity must reach to be worth emailing. */
   alert_min_score?: number | null
   /** Cadence label. Only 'weekly' is honoured by the cron today. */

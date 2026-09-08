@@ -183,10 +183,13 @@ const UNCOLLECTED_ON_CREATE = {
   key_outcomes:                [],
 }
 
-type WizardStep = 'entry' | 'review' | 'manual' | 'sectors' | 'beneficiaries' | 'location' | 'reveal'
+type WizardStep = 'entry' | 'browse' | 'review' | 'manual' | 'sectors' | 'beneficiaries' | 'location' | 'reveal'
+
+/** Who is signing up. Recorded on the organisation row; see migration 080. */
+type SignupRole = 'organisation' | 'consultant' | 'network'
 
 const STEP_DOT_POS: Record<WizardStep, number> = {
-  entry: 1, review: 2, manual: 2, sectors: 3, beneficiaries: 4, location: 5, reveal: 6,
+  entry: 1, browse: 1, review: 2, manual: 2, sectors: 3, beneficiaries: 4, location: 5, reveal: 6,
 }
 
 type FieldConfidence = 'confident' | 'uncertain' | 'missing'
@@ -286,6 +289,8 @@ interface WizardState {
    * changes is that somebody saw it.
    */
   alertsEnabled:    boolean
+  /** Who is signing up. Defaults to the organisation itself. */
+  signupRole:       SignupRole
 }
 
 const EMPTY_STATE: WizardState = {
@@ -299,6 +304,7 @@ const EMPTY_STATE: WizardState = {
   nicheTags: [],
   excludedNicheTags: [],
   alertsEnabled: true,
+  signupRole: 'organisation',
 }
 
 /** Derive the three boolean eligibility flags from the legal structure.
@@ -798,6 +804,7 @@ export default function OnboardingWizardPage() {
           // Read back rather than defaulted, so a second pass through the
           // wizard cannot silently re-subscribe somebody who turned alerts off.
           alertsEnabled:    org.alerts_enabled ?? true,
+          signupRole:       (org.signup_role as SignupRole | null | undefined) ?? 'organisation',
         })
       }
       setLoading(false)
@@ -1013,6 +1020,67 @@ export default function OnboardingWizardPage() {
     }))
   }
 
+  /**
+   * Browse without a profile (Paul, 8 Sept 2026). A consultant or network
+   * that cannot honestly answer "what is your organisation?" gets a row under
+   * their own name so the app works, with nothing to match against. Every
+   * matching field is empty on purpose: the dashboard hides the matches card
+   * and the digest leaves them out on `profile_skipped`, and Find Funding says
+   * so in one line. Saving a profile later flips the flag back.
+   */
+  async function handleBrowseFinish() {
+    setSaving(true); setSaveError(null)
+    try {
+      const payload = {
+        name:                         state.name.trim() || 'My practice',
+        org_type:                     'other' as const,
+        legal_structure:              null,
+        org_stage:                    null,
+        social_mission_declared:      false,
+        articles_restrict_profit:     false,
+        impact_sectors:               [],
+        beneficiary_groups:           [],
+        niche_tags:                   [],
+        excluded_niche_tags:          [],
+        annual_income_band:           null,
+        primary_location:             null,
+        geographic_reach:             null,
+        themes:                       [],
+        areas_of_work:                [],
+        beneficiaries:                [],
+        mission:                      null,
+        years_operating:              null,
+        min_grant_target:             null,
+        max_grant_target:             null,
+        funding_type_preferences:     ['grant', 'programme', 'investment', 'in_kind'] as FundingType[],
+        spend_restriction_preferences: [],
+        has_asset_lock:               null,
+        owner_id:                     userId,
+        alerts_enabled:               false,
+        alert_frequency:              'weekly',
+        alert_min_score:              70,
+        website_url:                  null,
+        signup_role:                  state.signupRole,
+        profile_skipped:              true,
+      }
+      let currentOrgId = orgId
+      if (orgId) {
+        await updateOrganisation(orgId, payload)
+      } else {
+        const created = await createOrganisation({ ...UNCOLLECTED_ON_CREATE, ...payload } as Parameters<typeof createOrganisation>[0])
+        currentOrgId = created.id
+        setOrgId(created.id)
+      }
+      if (currentOrgId) writeActiveOrgCookie(currentOrgId)
+      track('onboarding_browse_without_profile', { role: state.signupRole })
+      router.push('/dashboard/search')
+      router.refresh()
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Could not save. Please try again.')
+      setSaving(false)
+    }
+  }
+
   async function handleFinish() {
     setSaving(true); setSaveError(null)
     try {
@@ -1092,6 +1160,9 @@ export default function OnboardingWizardPage() {
         alert_frequency:              'weekly',
         alert_min_score:              70,
         website_url:                  url.trim() ? (url.trim().startsWith('http') ? url.trim() : 'https://' + url.trim()) : null,
+        signup_role:                  state.signupRole,
+        // A saved profile ends the browse-only state, whoever they are.
+        profile_skipped:              false,
       }
 
       let currentOrgId = orgId
@@ -1253,6 +1324,25 @@ export default function OnboardingWizardPage() {
           error={fetchError}
           onAutoFill={handleAutoFill}
           onManual={() => { setExtracted(null); setStep('manual') }}
+          role={state.signupRole}
+          setRole={r => update('signupRole', r)}
+          onBrowse={() => setStep('browse')}
+        />
+      </CardShell>
+    )
+  }
+
+  if (step === 'browse') {
+    return (
+      <CardShell step={1}>
+        <StepBrowse
+          name={state.name}
+          setName={v => update('name', v)}
+          role={state.signupRole}
+          saving={saving}
+          error={saveError}
+          onBack={() => setStep('entry')}
+          onFinish={handleBrowseFinish}
         />
       </CardShell>
     )
@@ -1352,20 +1442,48 @@ export default function OnboardingWizardPage() {
    Step 1 — Entry (rendered inside hero page)
    ═══════════════════════════════════════════════ */
 
-function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual }: {
+const SIGNUP_ROLES: { value: SignupRole; label: string }[] = [
+  { value: 'organisation', label: 'This organisation' },
+  { value: 'consultant',   label: 'A fundraiser or consultant working with several' },
+  { value: 'network',      label: 'A network or membership body' },
+]
+
+function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual, role, setRole, onBrowse }: {
   url: string; setUrl: (v: string) => void
   fetching: boolean; error: string | null
   onAutoFill: () => void; onManual: () => void
+  role: SignupRole; setRole: (r: SignupRole) => void
+  onBrowse: () => void
 }) {
   const [hov, setHov] = useState(false)
+  const several = role !== 'organisation'
   return (
     <>
       <h1 style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 40, fontWeight: 600, color: T.textPrimary, margin: '0 0 14px', lineHeight: 1.15, letterSpacing: '-0.02em' }}>
         Let&rsquo;s build your profile
       </h1>
-      <p style={{ fontSize: 16, color: T.textSecondary, lineHeight: 1.5, margin: '0 0 36px', maxWidth: 460, fontFamily: 'var(--font-dm-sans)' }}>
+      <p style={{ fontSize: 16, color: T.textSecondary, lineHeight: 1.5, margin: '0 0 24px', maxWidth: 460, fontFamily: 'var(--font-dm-sans)' }}>
         Drop in your website and we&rsquo;ll do the heavy lifting. You can review and refine everything in the next step.
       </p>
+
+      {/* Who is signing up. Recorded on the row (migration 080). The default
+          path is unchanged; the other two open the fork below. */}
+      <fieldset style={{ border: 'none', padding: 0, margin: '0 0 24px' }}>
+        <legend style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 14, fontWeight: 600, color: T.textPrimary, marginBottom: 8 }}>I am signing up as</legend>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {SIGNUP_ROLES.map(r => (
+            <label key={r.value} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: T.textPrimary, fontFamily: 'var(--font-dm-sans)', cursor: 'pointer' }}>
+              <input type="radio" name="signup-role" value={r.value} checked={role === r.value} onChange={() => setRole(r.value)} />
+              {r.label}
+            </label>
+          ))}
+        </div>
+        {several && (
+          <p style={{ fontSize: 13.5, color: T.textSecondary, lineHeight: 1.55, margin: '12px 0 0', maxWidth: 480, fontFamily: 'var(--font-dm-sans)' }}>
+            Set up a profile for one of your organisations to get matches and the weekly update, or browse the whole catalogue without one. Client profiles come with Team.
+          </p>
+        )}
+      </fieldset>
 
       {/* URL input + CTA */}
       <div style={{ display: 'flex', gap: 8, width: '100%', maxWidth: 520 }}>
@@ -1409,6 +1527,60 @@ function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual }: {
         >
           No website? Fill in manually
         </button>
+        {several && (
+          <button
+            onClick={onBrowse}
+            style={{
+              background: 'transparent', border: 'none', color: T.textSecondary,
+              fontFamily: 'var(--font-dm-sans)', fontSize: 13, cursor: 'pointer',
+              textDecoration: 'underline', textDecorationColor: 'rgba(29,60,62,0.35)', textUnderlineOffset: 3,
+              padding: '8px 12px',
+            }}
+          >
+            Browse without a profile
+          </button>
+        )}
+      </div>
+    </>
+  )
+}
+
+/* ═══════════════════════════════════════════════
+   Step 1B — Browse without a profile
+   One field, their own name or practice, so a row exists and the app works.
+   ═══════════════════════════════════════════════ */
+function StepBrowse({ name, setName, role, saving, error, onBack, onFinish }: {
+  name: string; setName: (v: string) => void
+  role: SignupRole
+  saving: boolean; error: string | null
+  onBack: () => void; onFinish: () => void
+}) {
+  const noun = role === 'network' ? 'network' : 'practice'
+  return (
+    <>
+      <h1 style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 40, fontWeight: 600, color: T.textPrimary, margin: '0 0 14px', lineHeight: 1.15, letterSpacing: '-0.02em' }}>
+        Browse without a profile
+      </h1>
+      <p style={{ fontSize: 16, color: T.textSecondary, lineHeight: 1.5, margin: '0 0 28px', maxWidth: 460, fontFamily: 'var(--font-dm-sans)' }}>
+        You can search and save from the whole catalogue now. Matches and the weekly update need an organisation profile, which you can add later from your profile page, or get in touch about Team for client profiles.
+      </p>
+      <label style={{ display: 'block', fontFamily: 'var(--font-space-grotesk)', fontSize: 14, fontWeight: 600, color: T.textPrimary, marginBottom: 8 }}>
+        Your name or {noun}
+      </label>
+      <input
+        type="text"
+        value={name}
+        onChange={e => setName(e.target.value)}
+        onKeyDown={e => e.key === 'Enter' && !saving && name.trim() && onFinish()}
+        placeholder={role === 'network' ? 'e.g. Impact Hub Brighton' : 'e.g. Jane Smith Fundraising'}
+        style={{ ...INPUT_STYLE, maxWidth: 520, boxSizing: 'border-box' }}
+      />
+      {error && <p style={{ fontSize: 13, color: T.coralText, marginTop: 8 }}>{error}</p>}
+      <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 28 }}>
+        <Button variant="secondary" size="lg" onClick={onBack} disabled={saving}>Back</Button>
+        <Button variant="primary" size="lg" onClick={onFinish} disabled={saving || !name.trim()}>
+          {saving ? 'Saving…' : 'Browse the catalogue'}
+        </Button>
       </div>
     </>
   )

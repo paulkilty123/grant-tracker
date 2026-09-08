@@ -15,6 +15,8 @@ interface UserRow {
   org_name: string | null
   org_id: string | null
   has_legal_structure: boolean
+  signup_role: string | null
+  profile_skipped: boolean
   has_impact_sectors: boolean
   onboarding_complete: boolean
   pipeline_count: number
@@ -229,6 +231,11 @@ export default function AdminUsersPage() {
                     <td className="px-4 py-3 text-mid">{u.email ?? '—'}</td>
                     <td className="px-4 py-3">
                       <p className="text-charcoal">{u.org_name || <span className="text-light italic">no org</span>}</p>
+                      {u.signup_role && u.signup_role !== 'organisation' && (
+                        <p className="text-[10px] font-semibold uppercase tracking-wider mt-0.5" style={{ color: '#3B6D11' }}>
+                          {u.signup_role}{u.profile_skipped ? ', no profile' : ''}
+                        </p>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-mid whitespace-nowrap text-xs">{fmtDate(u.created_at)}</td>
                     <td className="px-4 py-3 text-mid whitespace-nowrap text-xs">{fmtDateTime(u.last_sign_in_at)}</td>

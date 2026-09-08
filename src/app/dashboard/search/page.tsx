@@ -1400,6 +1400,7 @@ export default function SearchPage() {
   const [smartMatched, setSmartMatched] = useState(false)
   const [toast, setToast]               = useState<{ msg: string; variant: 'success' | 'error' } | null>(null)
   const [org, setOrg]                   = useState<Organisation | null>(null)
+  const [browseDismissed, setBrowseDismissed] = useState(false)
   /**
    * "Show me what I'd match as a CIC."
    *
@@ -2676,6 +2677,18 @@ export default function SearchPage() {
       <div className="mb-2">
         <h2 className="text-4xl font-bold text-charcoal leading-tight" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.02em' }}>Find Funding</h2>
       </div>
+
+      {/* Browsing without a profile (migration 080). One line, dismissable
+          for the session, back on the next visit until a profile is saved. */}
+      {org?.profile_skipped && !browseDismissed && (
+        <div className="mb-5 p-4 flex items-start justify-between gap-4 rounded-xl" style={{ border: '1px solid rgba(29,60,62,0.18)', background: '#F5F1E8' }}>
+          <div>
+            <p className="text-sm font-semibold" style={{ color: '#173404' }}>You are browsing the whole catalogue without a profile.</p>
+            <p className="text-xs text-mid mt-0.5">Matches and the weekly update need an organisation profile. Client profiles come with Team, <a href="/#contact" className="underline">get in touch</a> and we&apos;ll set them up.</p>
+          </div>
+          <button onClick={() => setBrowseDismissed(true)} className="text-mid hover:text-charcoal text-lg leading-none flex-shrink-0" aria-label="Dismiss">×</button>
+        </div>
+      )}
 
       {/* Welcome banner — shown after first profile save */}
       {isWelcome && !welcomeDismissed && (
