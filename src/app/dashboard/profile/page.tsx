@@ -2069,7 +2069,6 @@ function AlertsCard({ org, orgId, onSaved }: {
   onSaved: () => void
 }) {
   const enabled = org.alerts_enabled ?? false
-  const minScore = org.alert_min_score ?? 70
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -2121,38 +2120,9 @@ function AlertsCard({ org, orgId, onSaved }: {
           </button>
         </div>
 
-        {enabled && (
-          <div style={{ marginTop: 18, paddingTop: 16, borderTop: `1px solid ${T.border}` }}>
-            <p style={{ margin: '0 0 10px', fontFamily: UI, fontWeight: 500, fontSize: 13, color: T.textPrimary }}>
-              Only tell me about strong matches
-            </p>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {[
-                { v: 60, label: 'Anything relevant' },
-                { v: 70, label: 'Good matches' },
-                { v: 80, label: 'Strong matches only' },
-              ].map(o => {
-                const on = minScore === o.v
-                return (
-                  <button
-                    key={o.v}
-                    disabled={saving}
-                    onClick={() => set({ alert_min_score: o.v })}
-                    style={{
-                      fontFamily: UI, fontWeight: 500, fontSize: 12.5,
-                      padding: '7px 14px', borderRadius: 999, cursor: saving ? 'wait' : 'pointer',
-                      background: on ? T.greenBg : T.white,
-                      color: on ? T.greenText : T.textSecondary,
-                      border: `1px solid ${on ? T.greenText : T.borderStrong}`,
-                    }}
-                  >
-                    {o.label}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-        )}
+        {/* The three match-threshold buttons that sat here were built for the
+            old alerts and the digest never read them: one fixed bar for everyone.
+            Removed 8 Sept 2026 rather than promise a control that did nothing. */}
 
         {!enabled && (
           <p style={{ margin: '14px 0 0', fontFamily: BODY, fontSize: 13, color: T.textTertiary }}>
