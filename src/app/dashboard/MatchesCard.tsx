@@ -121,7 +121,7 @@ export default function MatchesCard({ scopes, totalScored }: { scopes: MatchScop
         <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 20, fontWeight: 700, color: DEEP }}>Matches</span>
         {!empty && (
           <a href={seeAllHref} style={CARD_LINK}>
-            See all {scope.actionable} →
+            See all →
           </a>
         )}
       </div>
