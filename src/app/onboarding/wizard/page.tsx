@@ -1601,7 +1601,7 @@ function StepBrowse({ name, setName, website, setWebsite, band, setBand, example
       {/* Three more facts (Paul, 8 Sept 2026): who they are before Team is
           built, and what makes the get-in-touch conversation short. */}
       <label style={{ display: 'block', fontFamily: 'var(--font-space-grotesk)', fontSize: 14, fontWeight: 600, color: T.textPrimary, margin: '20px 0 8px' }}>
-        Your website
+        Your website, if you have one
       </label>
       <input
         type="url"
@@ -1642,7 +1642,7 @@ function StepBrowse({ name, setName, website, setWebsite, band, setBand, example
       {error && <p style={{ fontSize: 13, color: T.coralText, marginTop: 8 }}>{error}</p>}
       <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 28 }}>
         <Button variant="secondary" size="lg" onClick={onBack} disabled={saving}>Back</Button>
-        <Button variant="primary" size="lg" onClick={onFinish} disabled={saving || !name.trim() || !website.trim() || !band || !example.trim()}>
+        <Button variant="primary" size="lg" onClick={onFinish} disabled={saving || !name.trim() || !band || !example.trim()}>
           {saving ? 'Saving…' : 'Browse the catalogue'}
         </Button>
       </div>
