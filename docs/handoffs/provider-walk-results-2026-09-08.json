@@ -474,11 +474,11 @@
      "outcomes": [
       {
        "fund": "The Tech For Good Programme",
-       "url": "https://www.bethnalgreenventures.com/apply",
-       "action": "relink",
+       "url": "https://www.bethnalgreenventures.com/our-offer",
+       "action": "report",
        "id": "0ce8470d-9557-40a3-a8d2-ef01daba3f09",
-       "quote": "Twice a year we select 10-15 companies investing £60,000 upfront and take them through our six-week programme. Applications for our Autumn 2026 are now closed. Sign up to get notified for when we open applications for our next programme in November.",
-       "note": "LIVE front-door row: it points at the homepage and carries no amount at all, while the page states £60,000 and a six-week programme taking 10-15 companies twice a year. Two corrections in one, the URL and the missing amount. Also note for the review gate that BGV describes itself as 'Europe's leading early-stage tech for good VC' investing in founders and companies, so the audience test needs a proper read before this is treated as a charity route. Timing: Autumn 2026 is closed, next applications open in November."
+       "quote": "The journey of every portfolio company we work with starts on our Tech For Good Programme and our initial investment of £60,000 for 7% equity.",
+       "note": "REFILED as live-and-wrong for AUDIENCE, not for a missing amount, after grant-tracker-be's correction, which is the better reading. BGV takes 7% equity for its £60,000. A registered charity or a company limited by guarantee cannot issue equity, so this lands on the structure gate before it lands anywhere near the amount columns. BGV was already on Paul's list from the 7 September verdicts as an audience edge, so this is the second time it has surfaced that way. Confirmed too that the page the row actually points at, the homepage, carries no amount at all: read whole, 9,426 characters, no £60,000 and no mention of equity. Supporting detail on /apply, read whole at 10,689 characters: 'Twice a year we select 10-15 companies investing £60,000 upfront and take them through our six-week programme. Applications for our Autumn 2026 are now closed.' /our-offer puts the shape as '6 weeks of intensive learning followed by 6 weeks of coaching'."
       },
       {
        "fund": "The Tech For Good Programme (duplicate row on the right page)",
@@ -526,27 +526,27 @@
    {
     "id": "57c4802f-2d34-4d89-969e-a21f9ef397db",
     "title": "SSE — All Programmes",
-    "why": "LIVE, no deadline, no amount, apply_url is SSE's programmes index. It stands in front of the eight programmes that index lists, four of which we already hold separately. The Firstport shape on a live row. Confirmed independently by grant-tracker-be."
+    "why": "LIVE, no deadline, no amount, apply_url is SSE's programmes index, standing in front of the eight programmes that index lists, four of which we hold separately. The Firstport shape on a live row. Confirmed independently by grant-tracker-be."
    },
    {
     "id": "b818a116-3579-4eb3-8808-b40abc38e393",
     "title": "Key Fund Flexible Finance",
-    "why": "LIVE with the funding index as its apply_url while the fund's own page returns 200. Same defect."
+    "why": "LIVE with the funding index as its apply_url while the fund's own page returns 200. Same defect. Confirmed."
    },
    {
     "id": "0ce8470d-9557-40a3-a8d2-ef01daba3f09",
     "title": "Tech for Good Programme (Bethnal Green Ventures)",
-    "why": "LIVE on the homepage with no amount, while the page states £60,000 and a six-week programme."
+    "why": "LIVE and wrong on AUDIENCE. BGV's £60,000 buys 7% equity, which a registered charity or a company limited by guarantee cannot issue, so this is a structure-gate question rather than an amount one. The row also points at the homepage, which carries no amount at all. Second time BGV has surfaced as an audience edge after the 7 September verdicts."
    },
    {
     "id": "d33aa458-0eb8-473a-8b28-547cd8557a71",
     "title": "Fredericks Foundation — Community Business Loans",
-    "why": "LIVE duplicate of 011655cc, identical £20,000 to £50,000, pointing at the homepage. One offer shown twice."
+    "why": "LIVE duplicate of 011655cc, identical £20,000 to £50,000 for the one revenue-share offer the page describes, pointing at the homepage. Confirmed."
    },
    {
     "id": "18627ca4-7544-4719-93d8-1d7c80a10489",
     "title": "Community Enterprise Fund (Social Investment Business)",
-    "why": "LIVE with a third-party directory as its apply_url, and not among the three funds SIB currently lists."
+    "why": "LIVE with a third-party directory (fundingforall.org.uk) as its apply_url, and not among the three funds SIB currently lists. Confirmed."
    }
   ],
   "row_counts_are_not_a_quality_signal": "Read alongside the providers, not on their own. Lloyds Bank Foundation has 11 rows and 1 live and is the BEST-maintained provider in this walk: the foundation runs one open programme at a time and says so, and the single live row matches its page exactly on deadline, amount, structures and URL. Power to Change has 6 rows and 0 live and that is also correct: it now describes itself as a think-do tank rather than an open grant-maker, and its funds page 404s. A reader scanning row counts would mark both as failures.",
@@ -568,6 +568,9 @@
    "before": 112,
    "after": 112,
    "note": "Unchanged, as it must be: this pass wrote nothing."
-  }
+  },
+  "the_pairing_that_matters_most": "A row count alone cannot tell a well-run provider from a dead one, and this walk found both extremes sitting next to each other. Lloyds Bank Foundation shows 11 rows and 1 live and is the BEST-maintained provider in the walk: the foundation runs one open programme at a time, says so on its page, and its single live row matches that page exactly on deadline, amount, eligible structures and URL. Power to Change shows 6 rows and 0 live and is also correctly represented: it now describes itself as a think-do tank rather than an open grant-maker, and its funds page 404s. In a spreadsheet these two look identical and both look like failures. One is a provider we track well; the other is an organisation that stopped funding. Any future health metric over the catalogue has to read providers, not counts.",
+  "method_note": "Three errors today shared one shape, and the shape is worth more than the fixes. A truncated buffer reported four real figures as absent. A guessed domain (bgv.vc, and bbrc.org.uk before it) returned nothing and was briefly read as the provider having nothing. And a check for a quote came back empty because it covered the homepage and /our-offer but not /apply, the page the quote was actually on. grant-tracker-be hit the same family independently, writing three pages to one temporary file in a loop so the last overwrote the evidence for the first. Every one failed towards the answer already in hand. The rule that catches all of them: when a probe comes back empty, the first question is whether the probe worked, and the two cheapest checks are whether the buffer holds the whole page and whether it is the right page.",
+  "closed": "Stopped after tier one on grant-tracker-be's instruction: tier one plus the tier-two answer is enough for Paul to decide with, launch is Thursday, and tier three is 15 providers at one to three rows each, which is the thin end of the seam. Nine of 44 providers walked. Nothing written to the database in this job."
  }
 }
