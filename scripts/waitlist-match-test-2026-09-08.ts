@@ -113,7 +113,7 @@ const ORGS: Profile[] = [
   for (const p of ORGS) {
     goodLists[p.name] = grants
       .map(g => ({ g, s: computeMatchScore(g, p as Organisation).score }))
-      .filter(x => x.s >= GOOD).map(x => `${x.g.fundingType}|${x.g.title}`)
+      .filter(x => x.s >= GOOD).map(x => `${x.g.fundingType ?? 'unknown'}|${x.g.title}`)
   }
   const freq: Record<string, number> = {}
   for (const l of Object.values(goodLists)) for (const t of l) freq[t] = (freq[t] || 0) + 1
@@ -125,8 +125,8 @@ const ORGS: Profile[] = [
   for (const p of ORGS) {
     const list = grants.map(g => ({ g, s: computeMatchScore(g, p as Organisation).score })).filter(x => x.s >= GOOD)
     const byType: Record<string, number> = {}
-    for (const x of list) byType[x.g.fundingType] = (byType[x.g.fundingType] || 0) + 1
-    const uniq = list.filter(x => (freq[`${x.g.fundingType}|${x.g.title}`] || 0) < ORGS.length * 0.6).length
+    for (const x of list) { const t = x.g.fundingType ?? 'unknown'; byType[t] = (byType[t] || 0) + 1 }
+    const uniq = list.filter(x => (freq[`${x.g.fundingType ?? 'unknown'}|${x.g.title}`] || 0) < ORGS.length * 0.6).length
     console.log(`   ${p.name.padEnd(38)} ${String(list.length).padStart(3)} good, ${String(uniq).padStart(3)} not-universal   ${JSON.stringify(byType)}`)
   }
 
