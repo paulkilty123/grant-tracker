@@ -109,7 +109,7 @@ async function main() {
   const before = await noAmountCount(db)
   console.log(`no-amount count before: ${before}`)
 
-  const written: { id: string; min: number | null; max: number | null; prose_only: boolean }[] = []
+  const written: { id: string; min: number | null; max: number | null; prose_only: boolean; quote: string; url: string }[] = []
 
   for (const r of ROWS) {
     const before1 = await db.from('scraped_grants')
@@ -119,11 +119,12 @@ async function main() {
     const title = String(data.title)
     if (!r.re.test(title)) throw new Error(`${r.id}: title "${title}" does not match ${r.re}`)
 
+    const quote = Object.values(r.cits)[0].snippet
     console.log(`\n${title}`)
     console.log(`  min ${r.min ?? 'null'}  max ${r.max ?? 'null'}`)
-    console.log(`  "${Object.values(r.cits)[0].snippet}"`)
+    console.log(`  "${quote}"`)
 
-    if (!APPLY) { written.push({ id: r.id, min: r.min ?? null, max: r.max ?? null, prose_only: false }); continue }
+    if (!APPLY) { written.push({ id: r.id, min: r.min ?? null, max: r.max ?? null, prose_only: false, quote, url: r.sourceUrl }); continue }
 
     // Call one: the columns, plus banking the guidance page in grant_sources.
     const existingSources = (data.grant_sources as { url?: string }[] | null) ?? []
@@ -163,12 +164,12 @@ async function main() {
       throw new Error(`${title}: STATE MOVED during the write. before ${JSON.stringify(a)} after ${JSON.stringify(b)}. Stop and put it back.`)
     }
 
-    written.push({ id: r.id, min: r.min ?? null, max: r.max ?? null, prose_only: false })
+    written.push({ id: r.id, min: r.min ?? null, max: r.max ?? null, prose_only: false, quote, url: r.sourceUrl })
   }
 
   const after = APPLY ? await noAmountCount(db) : before
   console.log(`\nno-amount count after: ${after} (before ${before}, ${APPLY ? 'expect fall by 3' : 'not applied yet'})`)
 
-  if (APPLY) appendJob3(written, [])
+  if (APPLY) appendJob3(written, [], { before, after })
 }
 main().catch(e => { console.error(e); process.exit(1) })

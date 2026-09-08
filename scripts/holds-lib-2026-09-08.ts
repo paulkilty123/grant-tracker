@@ -50,7 +50,7 @@ export type Verdict = {
 
 type JobEntry =
   | { job: number; verdicts: Verdict[]; paul_list: string[] }
-  | { job: 3; written: unknown[]; report: unknown[] }
+  | { job: 3; written: unknown[]; report: unknown[]; no_amount_count: { before: number; after: number } }
 
 type ResultsFile = { jobs: JobEntry[]; summary?: unknown }
 
@@ -124,13 +124,13 @@ export function appendJob(job: number, verdicts: Verdict[]) {
   console.log(`  results -> ${RESULTS} (job ${job}: ${tally})`)
 }
 
-export function appendJob3(written: unknown[], report: unknown[]) {
+export function appendJob3(written: unknown[], report: unknown[], no_amount_count: { before: number; after: number }) {
   const file = readResults()
   file.jobs = file.jobs.filter(j => j.job !== 3)
-  file.jobs.push({ job: 3, written, report })
+  file.jobs.push({ job: 3, written, report, no_amount_count })
   file.jobs.sort((a, b) => a.job - b.job)
   writeFileSync(RESULTS, JSON.stringify(file, null, 1) + '\n')
-  console.log(`  results -> ${RESULTS} (job 3: ${written.length} written, ${report.length} reported)`)
+  console.log(`  results -> ${RESULTS} (job 3: ${written.length} written, ${report.length} reported, no-amount count ${no_amount_count.before} -> ${no_amount_count.after})`)
 }
 
 const STATE_COLS = 'id, title, is_active, pipeline_state, rejection_reason'

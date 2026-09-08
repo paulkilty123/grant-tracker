@@ -204,22 +204,33 @@
      "id": "85f9af1e-b1cb-4796-8a7c-163aabec2037",
      "min": 1000,
      "max": null,
-     "prose_only": false
+     "prose_only": false,
+     "quote": "Small Grant – £1,000 to £10,000 per annum for up to three years (Please note Rest of Scotland applicants may apply for up to £10,000 for one year only)",
+     "url": "https://www.gannochytrust.org.uk/wp-content/uploads/2026/07/Guidance-Notes-for-Grant-Applicants-2025-v7.pdf"
     },
     {
      "id": "4db45a85-2ff4-4cac-bca6-51a44bd56fe1",
      "min": 10000,
      "max": 120000,
-     "prose_only": false
+     "prose_only": false,
+     "quote": "Size and type of funding we support: Awards of between £10,000 to £120,000 in total. Funding is for a one, two or three year period.",
+     "url": "https://www.mercers.co.uk/church_and_communities_funding_guidelines"
     },
     {
      "id": "57c520fd-c715-478b-8a6e-7c9907044d2a",
      "min": 50000,
      "max": 120000,
-     "prose_only": false
+     "prose_only": false,
+     "quote": "Size and type of funding we support: We make awards of between £50,000 to £120,000 in total. Awards can be up to three years.",
+     "url": "https://www.mercers.co.uk/older_people_housing_funding_guidelines"
     }
    ],
-   "report": []
+   "report": [],
+   "no_amount_count": {
+    "before": 157,
+    "after": 154,
+    "note": "157/154 is the original run's count, independently re-derived by grant-tracker-be. This block was regenerated afterwards, adding quote/url to each written row, by re-running the script against rows already written; that re-run's own before/after was 154/154 (idempotent) and is not what is recorded here."
+   }
   }
  ],
  "summary": {
