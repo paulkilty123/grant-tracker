@@ -271,6 +271,8 @@ export interface Organisation {
    * how a field ends up with no UI.
    */
   alerts_enabled?: boolean | null
+  /** Access granted by hand or by the 14-day trial default (migration 078): apply_access is derived from it. ISO timestamp, 'infinity' for the cohort. */
+  granted_access_until?: string | null
   /** What the person said they were at signup. Recorded, not enforced. Migration 080. */
   signup_role?: 'organisation' | 'consultant' | 'network' | null
   /** They chose to browse without a profile: no matches card, no digest, a banner on Find Funding. Migration 080. */
