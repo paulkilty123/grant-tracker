@@ -12,7 +12,7 @@
 // Exit 0 readable, 2 bot wall, 1 fetch failed. READ ONLY.
 
 const [, , url, charsArg] = process.argv
-const LIMIT = Number(charsArg ?? 4000)
+const LIMIT = Number(charsArg ?? 100000)
 
 const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125 Safari/537.36'
 
@@ -53,8 +53,14 @@ async function main() {
     console.log(text.slice(0, 400))
     process.exit(2)
   }
-  console.log(`── ${url}\n── direct, ${text.length} chars\n`)
+  // A truncated buffer reports true text as ABSENT, which cost two sessions a
+  // wrong "the page does not say this" on 8 Sept. So the cut is announced loudly
+  // rather than left for the reader to infer from a short tail, and the default
+  // limit is high enough that most pages are never cut at all.
+  const cut = text.length > LIMIT
+  console.log(`── ${url}\n── direct, ${text.length} chars${cut ? `, SHOWING FIRST ${LIMIT} — TRUNCATED, do not conclude absence from this` : ' (whole page)'}\n`)
   console.log(text.slice(0, LIMIT))
+  if (cut) console.log(`\n── TRUNCATED at ${LIMIT} of ${text.length} chars. Re-run with a larger limit before deciding a page omits anything.`)
 }
 
 main().catch(e => { console.error('FAILED:', (e as Error).message); process.exit(1) })
