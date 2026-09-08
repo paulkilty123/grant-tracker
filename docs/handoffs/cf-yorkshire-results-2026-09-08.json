@@ -168,5 +168,47 @@
     "opening_within_30_days": 1,
     "closing_within_30_days": 3
   },
-  "commissioned_by": "Paul, directly in the session. He asked how address coverage would be covered and whether other grants that fit could be scoped, I proposed working the archived community foundation rows for the six waitlist areas starting with Yorkshire and checking which funds are currently open, and he said to do that. This is not part of the tier-one provider walk, which stopped where grant-tracker-be asked it to."
+  "commissioned_by": "Paul, directly in the session. He asked how address coverage would be covered and whether other grants that fit could be scoped, I proposed working the archived community foundation rows for the six waitlist areas starting with Yorkshire and checking which funds are currently open, and he said to do that. This is not part of the tier-one provider walk, which stopped where grant-tracker-be asked it to.",
+  "two_ridings_followup": {
+    "correction": "An earlier claim of mine in this job was wrong and is withdrawn. I reported Two Ridings as unreadable to both fetch and browser. It bot-walls scripted fetches only; Chrome loads it normally and get_page_text returns full content. 'Bot-walled' has to say walled to WHAT, because fetch-walled and browser-walled are different states and I collapsed them. The nine Two Ridings rows are checkable.",
+    "funds_read_in_chrome_2026_09_08": [
+      {
+        "fund": "Small Grants",
+        "url": "https://tworidingscf.org.uk/fund/small-grants-fund/",
+        "action": "already_correct",
+        "note": "LIVE and matching the page on every field checked: £200 to £2,500, income under £150,000, open all year round, covering East Yorkshire, Hull, North Yorkshire and York. This is the row that reaches all four Yorkshire waitlist signups. No change made."
+      },
+      {
+        "fund": "York Community Fund",
+        "url": "https://tworidingscf.org.uk/fund/york-community-fund/",
+        "action": "split",
+        "approved_by": "Paul, 8 September 2026",
+        "note": "One live row carried deadline 2026-10-12 and amount_max £13,500. Both true of the fund, but of DIFFERENT tiers. The £13,500 Connect and Grow tier gates on an expression of interest at noon on Monday 14 September 2026; 12 October is only the deadline for those already shortlisted. The EOI date was present and correct in the row's brief prose, so this was not a factual error in the row, it was a structural one: a date held in prose drives no alert, calendar marker or urgency colour. Split into two live rows.",
+        "result": [
+          {
+            "id": "88fd8569-c9e4-4973-b69f-b85a31425e0c",
+            "title": "York Community Fund: Connect and Grow Grants",
+            "amount_max": 13500,
+            "deadline": "2026-09-14",
+            "was": "the existing row, retitled and re-scoped"
+          },
+          {
+            "id": "42755b4a-6d38-4176-a5ae-177e80c053ca",
+            "title": "York Community Fund: Micro Grants",
+            "amount_max": 1000,
+            "deadline": "2026-10-12",
+            "was": "new sibling row"
+          }
+        ],
+        "both_live_because": "Splitting one visible row into two and hiding half would have removed the Micro Grants tier from York users entirely, which is the opposite of the point of the split."
+      },
+      {
+        "fund": "Hull Community Fund",
+        "url": "https://tworidingscf.org.uk/fund/hull-community-fund/",
+        "action": "report",
+        "note": "Closed. The deadline was noon on Monday 7 September 2026, the day before this read. The row is already hidden with deadline 2026-09-07, so the expire path worked correctly. A duplicate row on the same URL sits in rejected state and could be tidied. No change made."
+      }
+    ],
+    "evidence_caveat": "These three pages were read in Chrome, not fetched, so the quote-appears-in-a-fetched-buffer guard used elsewhere in this job could not run without checking a transcription against itself. It was not run and not faked. The check that holds is external: reopen the URLs in a browser."
+  }
 }
