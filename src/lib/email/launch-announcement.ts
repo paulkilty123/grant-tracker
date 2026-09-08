@@ -49,10 +49,9 @@ export function renderLaunchEmailText(opts: LaunchEmailOptions): string {
     'applications, and the Claude connector. At the end you choose a plan.',
     '',
     'Sign up before 31 October and the launch price is yours for 12 months:',
-    'Match for £15 a month, or Apply for £25. After that they are £19 and £35.',
-    'Cancel any time, and a full refund if you ask in your first month. Team,',
-    'for up to five people or five client organisations, is by conversation:',
-    'just reply.',
+    'Match for £15 a month, or Apply for £25, or £150 and £250 for the year.',
+    'After that they are £19 and £35. Cancel any time. Team, for up to five',
+    'people or five client organisations, is by conversation: just reply.',
     '',
     'I read every reply to this email. If something looks wrong, or a funder',
     'you know is missing, tell me and I will fix it.',
@@ -115,7 +114,7 @@ export function renderLaunchEmail(opts: LaunchEmailOptions): string {
   <!--<![endif]-->
   ${p('Setting up takes about five minutes. Drop in your website and we build your profile, then you see all the opportunities you are eligible for, ranked by fit.')}
   ${p('Every new organisation starts with <b>14 days on Apply, no card needed</b>: search, matches, saved opportunities with deadlines, a pipeline for your applications, and the Claude connector. At the end you choose a plan.')}
-  ${p('Sign up before 31 October and the launch price is yours for 12 months: <b>Match for £15 a month, or Apply for £25</b>. After that they are £19 and £35. Cancel any time, and a full refund if you ask in your first month. Team, for up to five people or five client organisations, is by conversation: just reply.')}
+  ${p('Sign up before 31 October and the launch price is yours for 12 months: <b>Match for £15 a month, or Apply for £25</b>, or £150 and £250 for the year. After that they are £19 and £35. Cancel any time. Team, for up to five people or five client organisations, is by conversation: just reply.')}
   ${p('I read every reply to this email. If something looks wrong, or a funder you know is missing, tell me and I will fix it.')}
   <p style="margin:0 0 4px;font-family:${BODY};font-size:15.5px;line-height:1.65;color:${C.deep};">Paul</p>
   <p style="margin:0 0 6px;font-family:${BODY};font-size:13.5px;line-height:1.6;color:${C.body};">Founder, Shoots</p>
