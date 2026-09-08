@@ -112,8 +112,21 @@ page is gone, so do not restage it.
 A national programme is **in scope** if we do not already hold it. That is the
 change from the cities brief. Where a programme names a cohort in Brighton,
 London, Bristol, Manchester, Edinburgh or Glasgow, tag `location_tag` to the
-city and set `is_local: true`; otherwise tag the nation or `UK` and leave
-`is_local` false. Report the city spread in the summary so the coverage gap
+city; where it covers a nation or a region, tag that. **`is_local` is true for
+anything geographically restricted, a nation included**, matching the 54
+Scotland rows and the rest of the catalogue. Only a genuinely UK-wide or global
+programme takes false. (Corrected 8 Sept: the first version of this brief said
+nation-tagged rows take false, which would have widened an inconsistency
+`matching.ts` already carries on about 16% of rows.)
+
+**Type by what the applicant receives, never by what moves a count.** A fund
+whose page says it gives grants is `funding_type: 'grant'` even when the
+provider calls it a programme and even though this job exists to grow the
+programme count. Find Funding splits Grants and Programmes into different
+tabs, so a grant filed as a programme is hidden from the people searching for
+it. `programme` is for a cohort, a course, an accelerator or a competition
+where a place, learning or a prize with support is what the applicant gets.
+Ruled 8 Sept on Firstport: three of its four funds are grants by this test. Report the city spread in the summary so the coverage gap
 stays visible, but never stage a weak row to fill a city.
 
 ## Budget: one session, sequential, no fan-out
