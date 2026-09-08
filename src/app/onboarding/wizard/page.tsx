@@ -189,7 +189,10 @@ type WizardStep = 'entry' | 'browse' | 'review' | 'manual' | 'sectors' | 'benefi
 type SignupRole = 'organisation' | 'consultant' | 'network'
 
 const STEP_DOT_POS: Record<WizardStep, number> = {
-  entry: 1, browse: 1, review: 2, manual: 2, sectors: 3, beneficiaries: 4, location: 5, reveal: 6,
+  // Who you serve comes before what you focus on (Paul, 8 Sept 2026, after
+  // a tester went looking for "children and young people" under sectors):
+  // charities describe themselves by audience first, and so do funder briefs.
+  entry: 1, browse: 1, review: 2, manual: 2, beneficiaries: 3, sectors: 4, location: 5, reveal: 6,
 }
 
 type FieldConfidence = 'confident' | 'uncertain' | 'missing'
@@ -1362,8 +1365,8 @@ export default function OnboardingWizardPage() {
           canContinue={reviewCanContinue()}
           blockers={reviewBlockers()}
           onBack={() => setStep('entry')}
-          onSkip={() => setStep('sectors')}
-          onContinue={() => setStep('sectors')}
+          onSkip={() => setStep('beneficiaries')}
+          onContinue={() => setStep('beneficiaries')}
           wizardState={state}
           toggleSector={toggleSector}
           makePrimarySector={makePrimarySector}
@@ -1377,7 +1380,7 @@ export default function OnboardingWizardPage() {
           state={state}
           update={update}
           onBack={() => setStep('entry')}
-          onContinue={() => setStep('sectors')}
+          onContinue={() => setStep('beneficiaries')}
         />
       )}
 
@@ -1389,8 +1392,8 @@ export default function OnboardingWizardPage() {
           toggleSector={toggleSector}
           makePrimarySector={makePrimarySector}
           cycleNicheTag={cycleNicheTag}
-          onBack={() => setStep(extracted ? 'review' : 'manual')}
-          onContinue={() => setStep('beneficiaries')}
+          onBack={() => setStep('beneficiaries')}
+          onContinue={() => setStep('location')}
           canContinue={sectorsValid}
         />
       )}
@@ -1400,8 +1403,8 @@ export default function OnboardingWizardPage() {
           beneficiaryGroups={state.beneficiaryGroups}
           toggleBeneficiary={toggleBeneficiary}
           makePrimaryBeneficiary={makePrimaryBeneficiary}
-          onBack={() => setStep('sectors')}
-          onContinue={() => setStep('location')}
+          onBack={() => setStep(extracted ? 'review' : 'manual')}
+          onContinue={() => setStep('sectors')}
           canContinue={beneficiariesValid}
         />
       )}
@@ -1415,7 +1418,7 @@ export default function OnboardingWizardPage() {
           saving={saving}
           saveError={saveError}
           canContinue={locationValid}
-          onBack={() => setStep('beneficiaries')}
+          onBack={() => setStep('sectors')}
           onFinish={handleFinish}
         />
       )}
