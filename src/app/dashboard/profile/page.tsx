@@ -2000,6 +2000,14 @@ function StoryCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
             <p style={{ fontFamily: BODY, fontSize: 15, color: T.textPrimary, lineHeight: 1.65, margin: 0, whiteSpace: 'pre-wrap' }}>
               {org.mission}
             </p>
+            {/* A thin story gets one nudge (Paul, 8 Sept 2026). Honest about what
+                it buys: the search, the adviser and the builder read the whole
+                story; the matcher reads only its first sentence. */}
+            {(org.mission ?? '').trim().length < 150 && (
+              <p style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary, lineHeight: 1.55, margin: '10px 0 0' }}>
+                A fuller story helps the search, the adviser and your applications sound like you. Two or three paragraphs is ideal.
+              </p>
+            )}
             {hasThemes && (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
                 {(org.themes ?? []).map(t => (
