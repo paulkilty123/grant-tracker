@@ -1,0 +1,228 @@
+{
+ "batches": [
+  {
+   "batch": 1,
+   "staged": [
+    {
+     "id": "c0744eeb-27c2-4aba-aab5-2c3097370a4a",
+     "title": "Community Works Advice and Training for Brighton and Hove",
+     "city": "Brighton and Hove",
+     "funding_type": "in_kind",
+     "url": "https://www.communityworks.org.uk/help-guidance/our-offer/"
+    },
+    {
+     "id": "3246ec33-19a1-47e1-b95e-62e5fa2cbcab",
+     "title": "Voscur One to One Support for Bristol VCSE Organisations",
+     "city": "Bristol",
+     "funding_type": "in_kind",
+     "url": "https://voscur.org/1-2-1-support/"
+    },
+    {
+     "id": "6bf49d48-04bd-431d-9c3f-cb287328363e",
+     "title": "GCVS Funded Support for Glasgow Voluntary Organisations",
+     "city": "Glasgow",
+     "funding_type": "in_kind",
+     "url": "https://gcvs.org.uk/support/funded-support/"
+    },
+    {
+     "id": "e2676a6c-7d14-418c-9cf7-73ba73367e4a",
+     "title": "EVOC Free Advice and Governance Training for Edinburgh Organisations",
+     "city": "Edinburgh",
+     "funding_type": "in_kind",
+     "url": "https://www.evoc.org.uk/need-help/"
+    },
+    {
+     "id": "16ff2d0c-47ab-4d86-a9af-c9f9f56e9c32",
+     "title": "Macc Capacity Building Support for Manchester VCSE Organisations",
+     "city": "Manchester",
+     "funding_type": "in_kind",
+     "url": "https://manchestercommunitycentral.org/support-groups"
+    },
+    {
+     "id": "7303c672-e735-4257-b466-ef7d9e8d9c69",
+     "title": "Hackney CVS Organisational Development Support",
+     "city": "London",
+     "funding_type": "in_kind",
+     "url": "https://hcvs.org.uk/resources/"
+    }
+   ],
+   "report": [
+    {
+     "title": "The Resource Centre, Brighton",
+     "city": "Brighton and Hove",
+     "url": "https://www.resourcecentre.org.uk/services/",
+     "why": "unreadable",
+     "quote": "Please wait while your request is being verified...",
+     "note": "Bot wall on fetch and on the Chrome browser alike, waited out repeatedly. Same interstitial family as rocbf.co.uk and communityfoundation.org.uk, both unreadable earlier today on the holds job. Worth a retry another day: a Brighton equipment-hire and practical-support offer for community groups is exactly the shape this job wants."
+    },
+    {
+     "title": "Plus X Innovation Brighton",
+     "city": "Brighton and Hove",
+     "url": "https://www.plusxinnovation.com/programmes",
+     "why": "no_open_route",
+     "quote": "Innovation programmes & events NEW Innovation programmes Dedicated business support programmes designed to help your business grow.",
+     "note": "A commercial workspace provider selling coworking, offices and facilities, with paid membership tiers. The programmes page names no individual programme, no round, no dates and no eligibility, and nothing on it addresses charities or social enterprises."
+    },
+    {
+     "title": "Scale Up Brighton & Hove (Sussex Innovation)",
+     "city": "Brighton and Hove",
+     "url": "https://www.sussexinnovation.co.uk/news-resources/scale-up-brighton-hove-programme-returns-for-2026/",
+     "why": "no_open_route",
+     "quote": "Starting in February 2026, the eight-week programme will bring together 35 Brighton & Hove-based B2B business leaders to share advice, experiences and growing pains as they go about scaling their businesses.",
+     "note": "Genuinely city-anchored and free at the point of use, funded through Brighton & Hove Growth Hub, but the only page found is a January 2026 announcement of a cohort that started in February and has since run. No next cohort date anywhere on it. Also framed for B2B companies of 5 to 50 employees, which is a poor fit for most charities. Worth re-checking when a 2027 cohort is announced."
+    },
+    {
+     "title": "Brighton & Hove Growth Hub",
+     "city": "Brighton and Hove",
+     "url": "https://www.brighton-hove.gov.uk/business-and-trade/support-businesses/business-support",
+     "why": "not_found",
+     "quote": "The programme is supported by Brighton & Hove Growth Hub, a Brighton & Hove City Council service providing free and accessible support for all businesses in the city, funded by the UK Government.",
+     "note": "The Growth Hub is real and free, named on the Sussex Innovation page quoted here, but two hops through the council site reached only navigation indexes of business rates and licensing, never the Growth Hub's own page. Stopped at two hops per the brief rather than crawling."
+    },
+    {
+     "title": "GMCVO (Greater Manchester Centre for Voluntary Organisation)",
+     "city": "Greater Manchester",
+     "url": "https://www.gmcvo.org.uk/",
+     "why": "unreadable",
+     "quote": "",
+     "note": "Host does not answer. Direct fetch fails outright on https, the www http variant returns the same verification interstitial as the Resource Centre, and the Chrome browser shows an error page. Macc was staged for Manchester instead, which is the city-level body rather than the Greater Manchester one."
+    },
+    {
+     "title": "Bristol & Bath Regional Capital",
+     "city": "Bristol",
+     "url": "https://bbrc.org.uk/",
+     "why": "not_found",
+     "quote": "",
+     "note": "The obvious domain for it is not theirs: bbrc.org.uk resolves to the British Birds Rarities Committee. Not pursued further within budget, and flagged here rather than guessed at, because staging a birding committee as a Bristol social investor is exactly the failure the city-anchor test exists to stop."
+    }
+   ]
+  },
+  {
+   "batch": 2,
+   "staged": [],
+   "stopped_early": "Rule 5 of the brief: a batch yielding under three candidates says so and stops rather than pressing on through a dry seam. This one yielded none. Eight leads worked, none stageable, and the reasons below are consistent enough to be a finding rather than bad luck.",
+   "report": [
+    {
+     "title": "Edinburgh Social Enterprise Network (ESEN)",
+     "city": "Edinburgh",
+     "url": "https://esen.scot/resources/business-support-and-advice/",
+     "why": "support_service_class",
+     "quote": "One to one support for new, aspiring and established social enterprises and entrepreneurs. Peer support networking, training and shared learning across members.",
+     "note": "Verified as a pass on the four tests and the city-anchor test before grant-tracker-be's ruling landed mid-batch, and held back because of it. Real, Edinburgh-anchored, and a membership network whose support is a contact form rather than a round with a decision and an award. Ready to stage in one line if Paul rules the class in."
+    },
+    {
+     "title": "Glasgow Social Enterprise Network (GSEN)",
+     "city": "Glasgow",
+     "url": "https://www.gsen.org.uk/get-support/",
+     "why": "support_service_class",
+     "quote": "If you are a Social Enterprise in Glasgow facing urgent challenges or need someone to talk to before you feel at crisis point, we are here to support you. Please complete the form below and we will get back to you.",
+     "note": "Same as ESEN: verified a pass, held back under the ruling. Glasgow-anchored and a genuine offer, but a support form, not an opportunity with a round. Ready to stage in one line if the class is ruled in."
+    },
+    {
+     "title": "GM Business Growth Hub, social enterprise support",
+     "city": "Greater Manchester",
+     "url": "https://www.businessgrowthhub.com/resources/social-enterprise-delivering-support-and-training-within-the-vcfse-sector/",
+     "why": "support_service_class",
+     "quote": "Here at GM Business Growth Hub, we have a Social Value team and a dedicated Social Enterprise Specialist delivering support and training within the VCFSE sector. With Social Enterprise needs in keeping with the skills, topic areas and requirements of most organisations, support is delivered in the form of one-to-one support and in-person workshops.",
+     "note": "Publicly funded and explicitly aimed at the VCFSE sector across the ten Greater Manchester authorities, which is a better audience fit than most business support. Still the same shape: one to one support and workshops reached through a contact form, with no named cohort, round, date or award anywhere on the page."
+    },
+    {
+     "title": "SSE London Growth and Resilience Programme",
+     "city": "London",
+     "url": "https://www.the-sse.org/schools/london/",
+     "why": "not_found",
+     "quote": "On 23 April 2026, a new cohort of social enterprises and charities from across London will begin the London Growth and Resilience Programme. Funded by City Bridge Foundation and delivered by SSE... A Set Up Grant of £4,000–£7,000 helps leaders create the time, space and capacity to test new trading ideas. This is followed by a Match Trading grant of up to £12,000 over 18 months, linked to growth in traded income.",
+     "note": "CORRECTED TWICE, 2026-09-08. Original entry cited figures as a quote and recommended Paul un-archive row f46773fa. Where they came from: a WebSearch RESULT SUMMARY. No the-sse.org page was fetched before that entry was written. That is the fault and it stands. Verdict and row unchanged: the programme URL in the original entry and the archived row's own apply_url both 404, SSE's programmes index lists no London programme, and what serves at 200 is /schools/london/, a NEWS ITEM dated 1 April 2026 rather than a programme page. A news item about a cohort that started in April, with the programme page gone and no next cohort named, is closer to evidence the archive was right than against it. SECOND CORRECTION, to the first one: the first correction claimed five of the cited figures appear nowhere live. Only THREE do not: \"60 places\", \"3 cohorts\" and \"September 2027\". The £12,000 and the 18 months ARE on the live page, in the sentence now included in the quote above. Cause of that error, since it matters more than the error: the presence check was run against a buffer truncated at 5,000 characters of an 8,131 character page by the reader script's own limit argument, and the Match Trading sentence sits past the cut. The check was case-insensitive, so case was not the issue. The tell was there and was ignored: the same script printed an empty result for \"text after the Set Up Grant sentence\", which was the buffer ending, not the page ending. So the original entry was three invented specifics wrapped around four real ones, which is what a search summary does.",
+     "related_row": "f46773fa-4719-49a9-887b-8ed8ab50add7 (archived). Left archived."
+    },
+    {
+     "title": "Firstport Social Innovation Challenge",
+     "city": "Edinburgh",
+     "url": "https://www.firstport.org.uk/funding/",
+     "why": "not_city_anchored",
+     "quote": "The Social Innovation Challenge funds and supports innovators to kick-start solutions that tackle some of the most pressing challenges of our time.",
+     "note": "A national Scottish programme, not an Edinburgh or Glasgow one, so it is already covered by the Scotland-tagged rows and would be a duplicate in everything but the tag. Firstport's Start It is also individuals only (\"up to £5,000 for individuals looking to start a social enterprise\") and we already hold it live. Two Firstport programmes we do NOT hold and which would pass a national programmes job, though not this one: Build It (grants up to £40,000 for early-stage social enterprises) and the Community Enterprise Fund (community organisations starting to trade in Scotland)."
+    },
+    {
+     "title": "Business Gateway",
+     "city": "Edinburgh",
+     "url": "https://www.bgateway.com/",
+     "why": "not_city_anchored",
+     "quote": "This September, we're encouraging more people across Scotland to explore what starting a business could mean for them.",
+     "note": "Scotland-wide national service delivered through local offices, and support-service shaped besides: advisers, webinars and personalised guidance rather than a round. Fails the city-anchor test on its own terms."
+    },
+    {
+     "title": "Glasgow City Council Social Innovation Challenge Fund",
+     "city": "Glasgow",
+     "url": "https://www.glasgow.gov.uk/article/14269/The-Social-Innovation-Challenge-Fund",
+     "why": "unreadable",
+     "quote": "",
+     "note": "Bot-walled on fetch (403) and on the Chrome browser (\"Performing security verification\"), same as the two london.gov.uk fund pages on the holds job today. Secondary sources say a £250,000 round for projects running April 2026 to March 2027 closed on 11 February 2026, so there may be nothing open regardless, but that could not be confirmed on the council's own page."
+    },
+    {
+     "title": "West of England Combined Authority business support",
+     "city": "Bristol",
+     "url": "https://www.westofengland-ca.gov.uk/business-support/",
+     "why": "not_found",
+     "quote": "Funding and support to grow your business. From business advisory boards to grants to fight shoplifting.",
+     "note": "An index over categories of support rather than a programme: no named scheme, no round, no eligibility and no route on the page or the homepage. Stopped at two hops per the brief. Nothing on it addresses charities or social enterprises specifically."
+    },
+    {
+     "title": "SETsquared Bristol",
+     "city": "Bristol",
+     "url": "https://www.setsquared.co.uk/bristol/",
+     "why": "no_open_route",
+     "quote": "Are you an Entrepreneur? Are you a Student? Are you a Researcher?",
+     "note": "Bristol-anchored and genuinely a cohort programme provider, but for commercial tech: medtech and hydrogen investment programmes, university spinouts, student enterprise and researcher training. The page offers no route for a charity or social enterprise, which is the audience test rather than the anchor test."
+    }
+   ]
+  }
+ ],
+ "summary": {
+  "finished": "2026-09-08",
+  "batches_run": 2,
+  "stopped": "Batch 2 yielded no stageable candidate, so the job stopped there under rule 5 of the brief rather than pressing on through a dry seam. Target was 40 staged; 6 were staged.",
+  "staged_by_city": {
+   "Brighton and Hove": 1,
+   "Bristol": 1,
+   "London": 1,
+   "Manchester": 1,
+   "Edinburgh": 1,
+   "Glasgow": 1
+  },
+  "staged_total": 6,
+  "reported_total": 14,
+  "live_non_grant_before": {
+   "programme": 18,
+   "in_kind": 48,
+   "investment": 46,
+   "total": 112
+  },
+  "live_non_grant_after": {
+   "programme": 18,
+   "in_kind": 48,
+   "investment": 46,
+   "total": 112
+  },
+  "nothing_went_live": "All six staged rows are is_active false, pipeline_state tagged_awaiting_review, source system:programmes-cities-2026-09-08 at trust 50. The live non-grant count is unchanged. Every publish is Paul's click from the review queue.",
+  "the_finding": "Both batches converged on the same thing. What a UK city reliably offers a charity or social enterprise is a SUPPORT SERVICE, not a programme: the CVS or third sector interface, the growth hub, the social enterprise network, each giving advice and training through a phone line, a registration or a contact form. All six staged rows are of that class, and so are three more found in batch 2 and held back. What the brief was aiming at, a city-anchored cohort with a round, a decision and an award, was not found live in either batch. The one candidate of that shape, SSE's London Growth and Resilience Programme, turned out on re-checking to have no live programme page at all: see the corrected batch 2 entry.",
+  "open_question_for_paul": "grant-tracker-be raised it mid-job and it decides whether this job continues: is the city support-service class in or out? It exists in almost every UK city and town, so ruling it in is well over a hundred near-identical rows rather than a top-up, and none of them is applied to in the way a grant or a cohort is. Ruling it out means five of the six cities go back to carrying no non-grant row at all. The six staged rows are the sample to judge it on, and ESEN and GSEN are verified and ready to stage in one line if the answer is yes.",
+  "dry_cities": {
+   "Bristol": "Voscur staged. WECA is an index with no named programme, SETsquared is commercial tech with no charity route, and Bristol & Bath Regional Capital could not be located (bbrc.org.uk belongs to the British Birds Rarities Committee).",
+   "Edinburgh and Glasgow": "EVOC and GCVS staged. ESEN and GSEN held back under the class ruling. Firstport and Business Gateway are both Scotland-wide, so they fail the city-anchor test and are already covered by the Scotland-tagged rows. Glasgow City Council's own fund page is bot-walled.",
+   "Manchester": "Macc staged. GMCVO is a dead host on every path, GM Business Growth Hub is support-service shaped, and SSE's Greater Manchester programme is already held as Trading for Good: Bury.",
+   "Brighton and Hove": "Community Works staged. The Resource Centre is bot-walled on fetch and browser, Plus X sells workspace, Scale Up's only page is a spent February 2026 cohort, and the Growth Hub has no programme page within two hops.",
+   "London": "Hackney CVS staged. Held hardest to the anchor test per the brief. The one London programme of the right shape, SSE London Growth and Resilience, has no live programme page: both its URLs 404 and SSE's index does not list it. Our archived row f46773fa stays archived."
+  },
+  "worth_picking_up_elsewhere": "Two Firstport programmes the catalogue does not hold would pass a NATIONAL programmes job though not this one: Build It (grants up to £40,000 for early-stage social enterprises) and the Community Enterprise Fund (community organisations starting to trade in Scotland).",
+  "bot_walls_hit_today": [
+   "resourcecentre.org.uk",
+   "gmcvo.org.uk (dead host, not a wall)",
+   "glasgow.gov.uk",
+   "communitysouthwark.org",
+   "bbrc.org.uk"
+  ],
+  "budget_kept": "No subagents, no Workflow, no fan-out. No Anthropic API spend: pages read with node's fetch and a browser user agent, the Chrome browser as the only fallback, and no third-party reader proxy. Nine web searches across both batches, one per source lead.",
+  "citation_correction": "One entry in this file, SSE London, originally carried a quote that was a condensed WebSearch result summary rather than a sentence from a page, and built an un-archive recommendation on it. grant-tracker-be caught it, it is corrected in place above and the recommendation is withdrawn. It is the third citation in two days built from something other than fetched page text, after the Ashoka reader-proxy quote and the Young Foundation news line. The rule that would have caught all three: a quote may only be pasted from text fetched in this session, and a search result summary is not a quote. The correction itself then needed correcting, for a different reason worth its own line: a presence check run against a silently truncated buffer reported four real figures as absent. Before concluding a page does NOT say something, check the buffer holds the whole page."
+ }
+}

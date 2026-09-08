@@ -1,0 +1,120 @@
+{
+ "batches": [
+  {
+   "batch": 1,
+   "provider": "Firstport — compound-funder split",
+   "staged": [
+    {
+     "id": "93b5e40d-069b-497e-bd9c-faddba20aa92",
+     "title": "Firstport Build It",
+     "city": "Scotland",
+     "funding_type": "grant",
+     "url": "https://www.firstport.org.uk/funding/social-entrepreneurs-fund-build-it/",
+     "is_local": true
+    },
+    {
+     "id": "1af5a790-2329-4eaa-9ebf-457436baacd7",
+     "title": "Firstport Community Enterprise Fund",
+     "city": "Scotland",
+     "funding_type": "grant",
+     "url": "https://www.firstport.org.uk/funding/community-enterprise-fund/",
+     "is_local": true
+    },
+    {
+     "id": "458979b8-caf9-43b5-9b9f-44246610e9e9",
+     "title": "Firstport Social Enterprise Boost Fund",
+     "city": "Sunderland & South Tyneside",
+     "funding_type": "grant",
+     "url": "https://www.firstport.org.uk/funding/social-enterprise-boost-fund/",
+     "is_local": true
+    },
+    {
+     "id": "2cade3f4-1c09-4e7e-b4dd-bcf1e5841226",
+     "title": "Firstport Social Innovation Challenge",
+     "city": "Scotland",
+     "funding_type": "programme",
+     "url": "https://www.firstport.org.uk/funding/social-innovation-challenge/",
+     "is_local": true
+    }
+   ],
+   "for_paul_decision": [
+    {
+     "title": "Firstport Start It Programme — LIVE ROW, needs your call",
+     "held_id": "1e994bdb-bb99-4c97-b02c-ee23c1874e18",
+     "url": "https://www.firstport.org.uk/funding/social-entrepreneurs-fund-start-it/",
+     "why": "individuals_only",
+     "quote": "Who's it for? Individuals with a business idea that addresses a social, environmental and/or community issue. ... Eligibility To apply for Start It, you must meet the following eligibility criteria: You are aged 18 or over. You are a permanent resident of Scotland.",
+     "note": "The brief said to relink this row to Start It's own page and correct its fields. Reading that page changes the question. Start It is individuals only, which under CLAUDE.md's audience rule makes the row out_of_scope, so the right action is a reject rather than a more precise link, and that is a live row during the launch freeze so it is yours not mine. Three further mismatches against the page, all on a LIVE row: it holds £5,000 to £25,000 where the page says 'Up to £5,000' and £25,000 appears nowhere on it; it lists seven eligible_structures (CICs, charities, SCIOs, co-ops, ltd) where the page's only tests are a person's age and residence; and its description calls it a programme for 'social entrepreneurs and early-stage social enterprises'. Its apply_url is also still the funding index. Not touched by this job."
+    }
+   ],
+   "report": [
+    {
+     "title": "UnLtd Awards",
+     "city": "UK",
+     "url": "https://www.unltd.org.uk/awards",
+     "why": "individuals_only",
+     "quote": "You must be 16 years old or over . View full eligibility criteria",
+     "note": "Has a genuine named intake (\"Next round on 1 October 2026 at 10:00\") and real awards up to £18,000 with support attached, so it fails only the third test. The award goes to the social entrepreneur: the eligibility tests are a person's age and right to live and work in the UK, and incorporation is optional (\"If you have already incorporated your social venture, it must be registered in the UK\")."
+    },
+    {
+     "title": "Pilotlight Weston Charity Awards",
+     "city": "North of England, Midlands and Wales",
+     "url": "https://www.pilotlight.org.uk/weston-charity-awards",
+     "why": "already_held",
+     "held_id": "73c320f7-46f1-4819-aa19-7c31fb6150c1",
+     "quote": "Twenty-two charities from the North of England, the Midlands and Wales have been named as winners of the 2026 Weston Charity Awards. Each charity will receive a support package worth over £22,000, incl",
+     "note": "Held twice: 73c320f7 (archived, same URL as this) and adc7ec22 (between_rounds_scheduled, on garfieldweston.org). Pilotlight is thoroughly covered besides, with Pilotlight 360 (c1caaf02) and Pro Bono Support Matching (c1a86516) both LIVE. Worth Paul knowing the 2026 winners are announced and the awards run annually, so between_rounds_scheduled on adc7ec22 looks like the correct state."
+    },
+    {
+     "title": "Key Fund",
+     "city": "North of England and the Midlands",
+     "url": "https://www.thekeyfund.co.uk/funding/",
+     "why": "already_held",
+     "held_id": "b818a116-3579-4eb3-8808-b40abc38e393",
+     "quote": "We can provide investments from £5k to £300k to community and social enterprises.",
+     "note": "Thirteen Key Fund rows in the table, including 'Key Fund Flexible Finance' LIVE at exactly the URL read here, plus Property Fund, Community Business Fund, Northern Impact Fund 2, Northern Cultural Regeneration Fund and More than a Pub all live. This provider is comprehensively covered."
+    },
+    {
+     "title": "Big Issue Invest",
+     "city": "UK",
+     "url": "https://bigissueinvest.com/",
+     "why": "already_held",
+     "held_id": "124a6b30-fc2a-4244-9b4e-a4cd5d61ffb0",
+     "quote": "We invest in social enterprises and charities, creating core solutions to end poverty and inequality in the UK.",
+     "note": "Held as 124a6b30 (archived) and d1fa687c (rejected), plus Power Up London separately. Both existing rows are hidden, so if Paul wants Big Issue Invest live it is an un-reject rather than a new row."
+    },
+    {
+     "title": "Plunkett UK",
+     "city": "UK",
+     "url": "https://plunkett.co.uk/",
+     "why": "support_service_class",
+     "quote": "Plunkett UK is a national charity supporting rural community businesses across the UK. We provide specialist business advice at every stage of the journey – from the initial idea and start-up, to long after opening.",
+     "note": "Membership plus specialist business advice and training. No named intake and nothing awarded, so it is the class Paul ruled out, not a cohort."
+    },
+    {
+     "title": "Impact Hub (global network site)",
+     "city": "UK",
+     "url": "https://impacthub.net/",
+     "why": "support_service_class",
+     "quote": "We connect entrepreneurs and innovators to large organisations, partners, investors, and the public sector.",
+     "note": "The global .net site is a membership network (Impact Maker Membership) rather than a programme with an intake. Impact Hub London is separately held already (between_rounds_scheduled). Individual UK Impact Hub locations run their own accelerators and would need checking location by location, which is a provider-level job rather than one row."
+    },
+    {
+     "title": "Bethnal Green Ventures",
+     "city": "UK",
+     "url": "https://bgv.vc/",
+     "why": "unreadable",
+     "quote": "",
+     "note": "Host does not answer: direct fetch fails outright and the browser returned no readable page. Not resolved, worth a retry another day, since a tech-for-good accelerator with named cohorts is exactly the shape this brief wants."
+    }
+   ],
+   "rulings_applied": {
+    "is_local": "All four set to true. The brief said nation-tagged rows get false; the catalogue's 54 Scotland rows and the existing Firstport row all use true, and a nation restriction is a geographic restriction. grant-tracker-be ruled for the catalogue and is fixing the brief. Lower stakes than it looks: matching.ts treats is_local as a legacy boolean, inconsistent on about 16% of rows, and prefers location_tag, so this is about not widening that inconsistency.",
+    "funding_type": "Build It, the Community Enterprise Fund and the Boost Fund are grants, not programmes, on their own pages' wording, and none bundles learning into the award (Build It's support is an external referral to Just Enterprise). Only the Social Innovation Challenge stays a programme: a competition with a £30,000 prize plus tailored support and £10,000 to two finalists genuinely is that shape. This cuts the batch's programme gain from four to one on purpose. A fundraiser looking for a £40,000 grant needs Build It in the Grants tab, and typing grants as programmes to move the programme count would make the count measure our tagging rather than the catalogue.",
+    "funding_subtypes": "Changed with the type, because the vocabularies are per type in src/lib/funding-subtypes.ts and includes_grant and support_programme are programme-only, so they would have been invalid on a grant row. The three grants become restricted, which is what they are. small_grant was deliberately not added: no threshold on the page or in the lib to cite for it, so it is left to the classifier rather than invented.",
+    "audience_wording": "who_can_apply on the Boost Fund and the Social Innovation Challenge now opens by saying both organisations and individuals can apply, so neither reads as individuals-only and gets skipped. Both remain in scope because the audience rule excludes individuals-ONLY."
+   },
+   "provider_first_dedup_finding": "The most useful thing in this batch, and it is a method change rather than a row. The first dedup asked whether the catalogue holds the FUND, and the answer was no in every case. Asking whether it holds the PROVIDER found three duplicate sets a fund-first query walks straight past: Key Fund has 13 rows, including 'Key Fund Flexible Finance' LIVE at the exact URL that was about to be staged; Pilotlight holds the Weston Charity Awards twice (73c320f7 archived and adc7ec22 between_rounds_scheduled) with Pilotlight 360 and Pro Bono Matching both live; and Big Issue Invest is held twice, both hidden, so wanting it live is an un-reject rather than a new row. The same question also exposed the Firstport defect this batch exists to fix, where one live row stood in front of five funds. Check the provider before the fund, every time."
+  }
+ ]
+}
