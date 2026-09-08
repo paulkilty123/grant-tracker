@@ -81,8 +81,12 @@ const INK_MUTED   = '#5F5E5A'   // 6.49:1 on white
 const INK_PLACE   = '#74736E'   // 4.75:1 on white — recedes without failing
 
 export default function MatchesCard({ scopes, totalScored }: { scopes: MatchScope[]; totalScored: number }) {
-  /** Always All on load. Remembering last week's choice quietly hides matches. */
-  const [active, setActive] = useState<ScopeKey>('all')
+  /** Lands on Grants (Paul, 8 Sept 2026): it is what most people came for.
+      Falls back to All when the organisation has no eligible grants, so the
+      first thing seen is never an empty panel. Never remembers last week's
+      choice, which quietly hides matches. */
+  const [active, setActive] = useState<ScopeKey>(() =>
+    (scopes.find(s => s.key === 'grant')?.eligible ?? 0) > 0 ? 'grant' : 'all')
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({})
 
 
