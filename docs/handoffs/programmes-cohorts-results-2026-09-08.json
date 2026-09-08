@@ -8,29 +8,33 @@
      "id": "93b5e40d-069b-497e-bd9c-faddba20aa92",
      "title": "Firstport Build It",
      "city": "Scotland",
-     "funding_type": "programme",
-     "url": "https://www.firstport.org.uk/funding/social-entrepreneurs-fund-build-it/"
+     "funding_type": "grant",
+     "url": "https://www.firstport.org.uk/funding/social-entrepreneurs-fund-build-it/",
+     "is_local": true
     },
     {
      "id": "1af5a790-2329-4eaa-9ebf-457436baacd7",
      "title": "Firstport Community Enterprise Fund",
      "city": "Scotland",
-     "funding_type": "programme",
-     "url": "https://www.firstport.org.uk/funding/community-enterprise-fund/"
+     "funding_type": "grant",
+     "url": "https://www.firstport.org.uk/funding/community-enterprise-fund/",
+     "is_local": true
     },
     {
      "id": "458979b8-caf9-43b5-9b9f-44246610e9e9",
      "title": "Firstport Social Enterprise Boost Fund",
      "city": "Sunderland & South Tyneside",
-     "funding_type": "programme",
-     "url": "https://www.firstport.org.uk/funding/social-enterprise-boost-fund/"
+     "funding_type": "grant",
+     "url": "https://www.firstport.org.uk/funding/social-enterprise-boost-fund/",
+     "is_local": true
     },
     {
      "id": "2cade3f4-1c09-4e7e-b4dd-bcf1e5841226",
      "title": "Firstport Social Innovation Challenge",
      "city": "Scotland",
      "funding_type": "programme",
-     "url": "https://www.firstport.org.uk/funding/social-innovation-challenge/"
+     "url": "https://www.firstport.org.uk/funding/social-innovation-challenge/",
+     "is_local": true
     }
    ],
    "for_paul_decision": [
@@ -103,7 +107,14 @@
      "quote": "",
      "note": "Host does not answer: direct fetch fails outright and the browser returned no readable page. Not resolved, worth a retry another day, since a tech-for-good accelerator with named cohorts is exactly the shape this brief wants."
     }
-   ]
+   ],
+   "rulings_applied": {
+    "is_local": "All four set to true. The brief said nation-tagged rows get false; the catalogue's 54 Scotland rows and the existing Firstport row all use true, and a nation restriction is a geographic restriction. grant-tracker-be ruled for the catalogue and is fixing the brief. Lower stakes than it looks: matching.ts treats is_local as a legacy boolean, inconsistent on about 16% of rows, and prefers location_tag, so this is about not widening that inconsistency.",
+    "funding_type": "Build It, the Community Enterprise Fund and the Boost Fund are grants, not programmes, on their own pages' wording, and none bundles learning into the award (Build It's support is an external referral to Just Enterprise). Only the Social Innovation Challenge stays a programme: a competition with a £30,000 prize plus tailored support and £10,000 to two finalists genuinely is that shape. This cuts the batch's programme gain from four to one on purpose. A fundraiser looking for a £40,000 grant needs Build It in the Grants tab, and typing grants as programmes to move the programme count would make the count measure our tagging rather than the catalogue.",
+    "funding_subtypes": "Changed with the type, because the vocabularies are per type in src/lib/funding-subtypes.ts and includes_grant and support_programme are programme-only, so they would have been invalid on a grant row. The three grants become restricted, which is what they are. small_grant was deliberately not added: no threshold on the page or in the lib to cite for it, so it is left to the classifier rather than invented.",
+    "audience_wording": "who_can_apply on the Boost Fund and the Social Innovation Challenge now opens by saying both organisations and individuals can apply, so neither reads as individuals-only and gets skipped. Both remain in scope because the audience rule excludes individuals-ONLY."
+   },
+   "provider_first_dedup_finding": "The most useful thing in this batch, and it is a method change rather than a row. The first dedup asked whether the catalogue holds the FUND, and the answer was no in every case. Asking whether it holds the PROVIDER found three duplicate sets a fund-first query walks straight past: Key Fund has 13 rows, including 'Key Fund Flexible Finance' LIVE at the exact URL that was about to be staged; Pilotlight holds the Weston Charity Awards twice (73c320f7 archived and adc7ec22 between_rounds_scheduled) with Pilotlight 360 and Pro Bono Matching both live; and Big Issue Invest is held twice, both hidden, so wanting it live is an un-reject rather than a new row. The same question also exposed the Firstport defect this batch exists to fix, where one live row stood in front of five funds. Check the provider before the fund, every time."
   }
  ]
 }
