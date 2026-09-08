@@ -19,7 +19,7 @@ export interface LaunchEmailOptions {
 }
 
 export const LAUNCH_EMAIL_SUBJECT = 'Shoots Funding is open'
-const PREHEADER = 'Your signup link. 14 days on Apply, no card needed.'
+const PREHEADER = 'Your signup link. 14 days of full access, no card needed.'
 
 const SIGNUP_PATH = '/signup'
 
@@ -46,8 +46,9 @@ export function renderLaunchEmailText(opts: LaunchEmailOptions): string {
     '',
     'Every new organisation starts with 14 days of full access, no card',
     'needed: search, matches, saved opportunities with deadlines, a pipeline',
-    'for your applications, and the Claude connector. That is our Apply plan,',
-    'and at the end you choose the plan that suits you.',
+    'for your applications, projects, the application builder, and the Claude',
+    'connector. That is our Apply plan, and at the end you choose the plan',
+    'that suits you.',
     '',
     'Sign up before 31 October and the launch price is yours for 12 months:',
     'Match for £15 a month, or Apply for £25, or £150 and £250 for the year.',
@@ -114,7 +115,7 @@ export function renderLaunchEmail(opts: LaunchEmailOptions): string {
   </tr></table>
   <!--<![endif]-->
   ${p('Setting up takes about five minutes. Drop in your website and we build your profile, then you see all the opportunities you are eligible for, ranked by fit.')}
-  ${p('Every new organisation starts with <b>14 days of full access, no card needed</b>: search, matches, saved opportunities with deadlines, a pipeline for your applications, and the Claude connector. That is our Apply plan, and at the end you choose the plan that suits you.')}
+  ${p('Every new organisation starts with <b>14 days of full access, no card needed</b>: search, matches, saved opportunities with deadlines, a pipeline for your applications, projects, the application builder, and the Claude connector. That is our Apply plan, and at the end you choose the plan that suits you.')}
   ${p('Sign up before 31 October and the launch price is yours for 12 months: <b>Match for £15 a month, or Apply for £25</b>, or £150 and £250 for the year. After that they are £19 and £35. Cancel any time. Team, for up to five people or five client organisations, is by conversation: just reply.')}
   ${p('I read every reply to this email. If something looks wrong, or a funder you know is missing, tell me and I will fix it.')}
   <p style="margin:0 0 4px;font-family:${BODY};font-size:15.5px;line-height:1.65;color:${C.deep};">Paul</p>
