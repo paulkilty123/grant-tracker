@@ -1,0 +1,101 @@
+{
+ "batches": [
+  {
+   "batch": 1,
+   "staged": [
+    {
+     "id": "c0744eeb-27c2-4aba-aab5-2c3097370a4a",
+     "title": "Community Works Advice and Training for Brighton and Hove",
+     "city": "Brighton and Hove",
+     "funding_type": "in_kind",
+     "url": "https://www.communityworks.org.uk/help-guidance/our-offer/"
+    },
+    {
+     "id": "3246ec33-19a1-47e1-b95e-62e5fa2cbcab",
+     "title": "Voscur One to One Support for Bristol VCSE Organisations",
+     "city": "Bristol",
+     "funding_type": "in_kind",
+     "url": "https://voscur.org/1-2-1-support/"
+    },
+    {
+     "id": "6bf49d48-04bd-431d-9c3f-cb287328363e",
+     "title": "GCVS Funded Support for Glasgow Voluntary Organisations",
+     "city": "Glasgow",
+     "funding_type": "in_kind",
+     "url": "https://gcvs.org.uk/support/funded-support/"
+    },
+    {
+     "id": "e2676a6c-7d14-418c-9cf7-73ba73367e4a",
+     "title": "EVOC Free Advice and Governance Training for Edinburgh Organisations",
+     "city": "Edinburgh",
+     "funding_type": "in_kind",
+     "url": "https://www.evoc.org.uk/need-help/"
+    },
+    {
+     "id": "16ff2d0c-47ab-4d86-a9af-c9f9f56e9c32",
+     "title": "Macc Capacity Building Support for Manchester VCSE Organisations",
+     "city": "Manchester",
+     "funding_type": "in_kind",
+     "url": "https://manchestercommunitycentral.org/support-groups"
+    },
+    {
+     "id": "7303c672-e735-4257-b466-ef7d9e8d9c69",
+     "title": "Hackney CVS Organisational Development Support",
+     "city": "London",
+     "funding_type": "in_kind",
+     "url": "https://hcvs.org.uk/resources/"
+    }
+   ],
+   "report": [
+    {
+     "title": "The Resource Centre, Brighton",
+     "city": "Brighton and Hove",
+     "url": "https://www.resourcecentre.org.uk/services/",
+     "why": "unreadable",
+     "quote": "Please wait while your request is being verified...",
+     "note": "Bot wall on fetch and on the Chrome browser alike, waited out repeatedly. Same interstitial family as rocbf.co.uk and communityfoundation.org.uk, both unreadable earlier today on the holds job. Worth a retry another day: a Brighton equipment-hire and practical-support offer for community groups is exactly the shape this job wants."
+    },
+    {
+     "title": "Plus X Innovation Brighton",
+     "city": "Brighton and Hove",
+     "url": "https://www.plusxinnovation.com/programmes",
+     "why": "no_open_route",
+     "quote": "Innovation programmes & events NEW Innovation programmes Dedicated business support programmes designed to help your business grow.",
+     "note": "A commercial workspace provider selling coworking, offices and facilities, with paid membership tiers. The programmes page names no individual programme, no round, no dates and no eligibility, and nothing on it addresses charities or social enterprises."
+    },
+    {
+     "title": "Scale Up Brighton & Hove (Sussex Innovation)",
+     "city": "Brighton and Hove",
+     "url": "https://www.sussexinnovation.co.uk/news-resources/scale-up-brighton-hove-programme-returns-for-2026/",
+     "why": "no_open_route",
+     "quote": "Starting in February 2026, the eight-week programme will bring together 35 Brighton & Hove-based B2B business leaders to share advice, experiences and growing pains as they go about scaling their businesses.",
+     "note": "Genuinely city-anchored and free at the point of use, funded through Brighton & Hove Growth Hub, but the only page found is a January 2026 announcement of a cohort that started in February and has since run. No next cohort date anywhere on it. Also framed for B2B companies of 5 to 50 employees, which is a poor fit for most charities. Worth re-checking when a 2027 cohort is announced."
+    },
+    {
+     "title": "Brighton & Hove Growth Hub",
+     "city": "Brighton and Hove",
+     "url": "https://www.brighton-hove.gov.uk/business-and-trade/support-businesses/business-support",
+     "why": "not_found",
+     "quote": "The programme is supported by Brighton & Hove Growth Hub, a Brighton & Hove City Council service providing free and accessible support for all businesses in the city, funded by the UK Government.",
+     "note": "The Growth Hub is real and free, named on the Sussex Innovation page quoted here, but two hops through the council site reached only navigation indexes of business rates and licensing, never the Growth Hub's own page. Stopped at two hops per the brief rather than crawling."
+    },
+    {
+     "title": "GMCVO (Greater Manchester Centre for Voluntary Organisation)",
+     "city": "Greater Manchester",
+     "url": "https://www.gmcvo.org.uk/",
+     "why": "unreadable",
+     "quote": "",
+     "note": "Host does not answer. Direct fetch fails outright on https, the www http variant returns the same verification interstitial as the Resource Centre, and the Chrome browser shows an error page. Macc was staged for Manchester instead, which is the city-level body rather than the Greater Manchester one."
+    },
+    {
+     "title": "Bristol & Bath Regional Capital",
+     "city": "Bristol",
+     "url": "https://bbrc.org.uk/",
+     "why": "not_found",
+     "quote": "",
+     "note": "The obvious domain for it is not theirs: bbrc.org.uk resolves to the British Birds Rarities Committee. Not pursued further within budget, and flagged here rather than guessed at, because staging a birding committee as a Bristol social investor is exactly the failure the city-anchor test exists to stop."
+    }
+   ]
+  }
+ ]
+}
