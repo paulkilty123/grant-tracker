@@ -18,7 +18,7 @@ export interface LaunchEmailOptions {
   removalUrl: string
 }
 
-export const LAUNCH_EMAIL_SUBJECT = 'Shoots is open'
+export const LAUNCH_EMAIL_SUBJECT = 'Shoots Funding is open'
 const PREHEADER = 'Your signup link. 14 days on Apply, no card needed.'
 
 const SIGNUP_PATH = '/signup'
