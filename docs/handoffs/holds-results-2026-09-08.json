@@ -196,6 +196,30 @@
     "HOLD    Jobs and Skills Funding Opportunities — Same wall as the Community Housing Fund row, same domain, today: bot-walled on both fetch and the browser. 7 Sept found this a 287KB navigation page naming no single programme, which was heading toward reject/non_funder, but there's no citable sentence from a read today to make that call on — it stays hold rather than a reject without a quote.",
     "HOLD    The Mayor's Opportunity Fund — The old page still 404s. Tried the grants listing page and a site search for the current round; the whole communityfoundation.org.uk domain is behind a \"please wait while your request is being verified\" wall today on both fetch and the browser, so no current page could be found or confirmed. Title, deadline and amount_max stay pinned and untouched; apply_url is unpinned but there is nothing better to point it to yet."
    ]
+  },
+  {
+   "job": 3,
+   "written": [
+    {
+     "id": "85f9af1e-b1cb-4796-8a7c-163aabec2037",
+     "min": 1000,
+     "max": null,
+     "prose_only": false
+    },
+    {
+     "id": "4db45a85-2ff4-4cac-bca6-51a44bd56fe1",
+     "min": 10000,
+     "max": 120000,
+     "prose_only": false
+    },
+    {
+     "id": "57c520fd-c715-478b-8a6e-7c9907044d2a",
+     "min": 50000,
+     "max": 120000,
+     "prose_only": false
+    }
+   ],
+   "report": []
   }
  ]
 }
