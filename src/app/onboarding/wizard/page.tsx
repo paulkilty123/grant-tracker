@@ -1486,7 +1486,7 @@ function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual, role, s
       {several && choice !== 'profile' && (
         <div style={{ maxWidth: 520 }}>
           <p style={{ fontSize: 14, color: T.textSecondary, lineHeight: 1.55, margin: '0 0 14px', fontFamily: 'var(--font-dm-sans)' }}>
-            A profile gets you matches and the weekly update. Client profiles come with Team, so for now choose one organisation, or browse the whole catalogue without a profile.
+            A profile gets you matches and the weekly update. Client profiles come with Team, so for now choose one organisation, or browse without a profile.
           </p>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <Button variant="primary" size="lg" onClick={() => setChoice('profile')}>Set up a profile for one organisation</Button>
@@ -1562,7 +1562,7 @@ function StepBrowse({ name, setName, role, saving, error, onBack, onFinish }: {
         Browse without a profile
       </h1>
       <p style={{ fontSize: 16, color: T.textSecondary, lineHeight: 1.5, margin: '0 0 28px', maxWidth: 460, fontFamily: 'var(--font-dm-sans)' }}>
-        You can search and save from the whole catalogue now. Matches and the weekly update need an organisation profile, which you can add later from your profile page, or get in touch about Team for client profiles.
+        You can search and save now. Matches and the weekly update need an organisation profile, which you can add later from your profile page, or get in touch about Team for client profiles.
       </p>
       <label style={{ display: 'block', fontFamily: 'var(--font-space-grotesk)', fontSize: 14, fontWeight: 600, color: T.textPrimary, marginBottom: 8 }}>
         Your name or {noun}

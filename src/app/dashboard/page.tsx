@@ -1103,7 +1103,7 @@ export default async function DashboardPage() {
       {typedOrg?.profile_skipped && (
         <div className="rounded-xl p-5 mb-6" style={{ background: '#F5F1E8', border: '1px solid rgba(29,60,62,0.12)' }}>
           <p className="text-sm font-semibold" style={{ color: '#173404', fontFamily: 'var(--font-space-grotesk)' }}>You are browsing without a profile</p>
-          <p className="text-sm text-mid mt-1">Search and save from the whole catalogue. Add an organisation profile to get matches and the weekly update, or get in touch about Team for client profiles.</p>
+          <p className="text-sm text-mid mt-1">Search and save anything you find. Add an organisation profile to get matches and the weekly update, or get in touch about Team for client profiles.</p>
           <div className="mt-3 flex gap-3">
             <Link href="/dashboard/search" className="text-sm font-semibold underline" style={{ color: '#173404' }}>Find Funding</Link>
             <Link href="/onboarding/wizard" className="text-sm font-semibold underline" style={{ color: '#173404' }}>Set up a profile</Link>
