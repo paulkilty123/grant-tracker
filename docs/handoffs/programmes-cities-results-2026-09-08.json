@@ -129,11 +129,11 @@
     {
      "title": "SSE London Growth and Resilience Programme",
      "city": "London",
-     "url": "https://www.the-sse.org/programme/london-growth-and-resilience-programme/",
-     "why": "already_held",
-     "held_id": "f46773fa-4719-49a9-887b-8ed8ab50add7",
-     "quote": "60 places across 3 cohorts, running April 2026 to September 2027, with a Set Up Grant of £4,000 to £7,000 and a Match Trading Grant of up to £12,000 over 18 months.",
-     "note": "The best-shaped candidate found in either batch, and we already hold it: a cohort programme, London-anchored, with dates and a per-applicant award. But our row f46773fa is ARCHIVED, and the programme is plainly running, with a cohort that started on 23 April 2026 and a further one to come. Worth Paul un-archiving rather than anyone re-staging it. The catalogue also already carries SSE's other city programmes (Trading for Good in Bury, Stockport and Milton Keynes), so SSE as a provider is covered rather than a gap."
+     "url": "https://www.the-sse.org/schools/london/",
+     "why": "not_found",
+     "quote": "On 23 April 2026, a new cohort of social enterprises and charities from across London will begin the London Growth and Resilience Programme. Funded by City Bridge Foundation and delivered by SSE... A Set Up Grant of £4,000–£7,000 helps leaders create the time, space and capacity to test new trading ideas.",
+     "note": "CORRECTED 2026-09-08 after grant-tracker-be could not reproduce this entry. The original version cited figures (60 places, 3 cohorts, April 2026 to September 2027, a Match Trading Grant of up to £12,000 over 18 months) as a quote and recommended Paul un-archive row f46773fa. Both were wrong and the recommendation is withdrawn. Where the figures came from: a WebSearch RESULT SUMMARY, not a page. No the-sse.org page was fetched before that entry was written. Re-checked properly now. The programme URL in the original entry and the archived row's own apply_url both return 404, and SSE's programmes index does not list a London programme, which matches what grant-tracker-be found. What does serve, at 200, is /schools/london/, and it is a NEWS ITEM dated 1 April 2026, not a programme page: the quote above is verbatim from it. So the programme was real and a cohort did begin on 23 April 2026, funded by City Bridge Foundation, with a Set Up Grant of £4,000 to £7,000. But of the figures originally cited, only the Set Up Grant band and the cohort date appear anywhere live: 60 places, 3 cohorts, September 2027, £12,000, 18 months and the phrase \"Match Trading Grant\" are all absent from that page, checked string by string. A news item about a cohort that started in April, with the programme page gone and no next cohort named anywhere, is not grounds to un-archive: it is closer to evidence the archive was right. Treat as unresolved.",
+     "related_row": "f46773fa-4719-49a9-887b-8ed8ab50add7 (archived). Left archived."
     },
     {
      "title": "Firstport Social Innovation Challenge",
@@ -205,14 +205,14 @@
    "total": 112
   },
   "nothing_went_live": "All six staged rows are is_active false, pipeline_state tagged_awaiting_review, source system:programmes-cities-2026-09-08 at trust 50. The live non-grant count is unchanged. Every publish is Paul's click from the review queue.",
-  "the_finding": "Both batches converged on the same thing. What a UK city reliably offers a charity or social enterprise is a SUPPORT SERVICE, not a programme: the CVS or third sector interface, the growth hub, the social enterprise network, each giving advice and training through a phone line, a registration or a contact form. All six staged rows are of that class, and so are three more found in batch 2 and held back. What the brief was aiming at, a city-anchored cohort with a round, a decision and an award, is genuinely rare: exactly one was found across both batches, SSE's London Growth and Resilience Programme, and the catalogue already holds it, archived, while it runs.",
+  "the_finding": "Both batches converged on the same thing. What a UK city reliably offers a charity or social enterprise is a SUPPORT SERVICE, not a programme: the CVS or third sector interface, the growth hub, the social enterprise network, each giving advice and training through a phone line, a registration or a contact form. All six staged rows are of that class, and so are three more found in batch 2 and held back. What the brief was aiming at, a city-anchored cohort with a round, a decision and an award, was not found live in either batch. The one candidate of that shape, SSE's London Growth and Resilience Programme, turned out on re-checking to have no live programme page at all: see the corrected batch 2 entry.",
   "open_question_for_paul": "grant-tracker-be raised it mid-job and it decides whether this job continues: is the city support-service class in or out? It exists in almost every UK city and town, so ruling it in is well over a hundred near-identical rows rather than a top-up, and none of them is applied to in the way a grant or a cohort is. Ruling it out means five of the six cities go back to carrying no non-grant row at all. The six staged rows are the sample to judge it on, and ESEN and GSEN are verified and ready to stage in one line if the answer is yes.",
   "dry_cities": {
    "Bristol": "Voscur staged. WECA is an index with no named programme, SETsquared is commercial tech with no charity route, and Bristol & Bath Regional Capital could not be located (bbrc.org.uk belongs to the British Birds Rarities Committee).",
    "Edinburgh and Glasgow": "EVOC and GCVS staged. ESEN and GSEN held back under the class ruling. Firstport and Business Gateway are both Scotland-wide, so they fail the city-anchor test and are already covered by the Scotland-tagged rows. Glasgow City Council's own fund page is bot-walled.",
    "Manchester": "Macc staged. GMCVO is a dead host on every path, GM Business Growth Hub is support-service shaped, and SSE's Greater Manchester programme is already held as Trading for Good: Bury.",
    "Brighton and Hove": "Community Works staged. The Resource Centre is bot-walled on fetch and browser, Plus X sells workspace, Scale Up's only page is a spent February 2026 cohort, and the Growth Hub has no programme page within two hops.",
-   "London": "Hackney CVS staged. Held hardest to the anchor test per the brief. The one genuinely well-shaped London programme found, SSE London Growth and Resilience, is already held and archived."
+   "London": "Hackney CVS staged. Held hardest to the anchor test per the brief. The one London programme of the right shape, SSE London Growth and Resilience, has no live programme page: both its URLs 404 and SSE's index does not list it. Our archived row f46773fa stays archived."
   },
   "worth_picking_up_elsewhere": "Two Firstport programmes the catalogue does not hold would pass a NATIONAL programmes job though not this one: Build It (grants up to £40,000 for early-stage social enterprises) and the Community Enterprise Fund (community organisations starting to trade in Scotland).",
   "bot_walls_hit_today": [
@@ -222,6 +222,7 @@
    "communitysouthwark.org",
    "bbrc.org.uk"
   ],
-  "budget_kept": "No subagents, no Workflow, no fan-out. No Anthropic API spend: pages read with node's fetch and a browser user agent, the Chrome browser as the only fallback, and no third-party reader proxy. Nine web searches across both batches, one per source lead."
+  "budget_kept": "No subagents, no Workflow, no fan-out. No Anthropic API spend: pages read with node's fetch and a browser user agent, the Chrome browser as the only fallback, and no third-party reader proxy. Nine web searches across both batches, one per source lead.",
+  "citation_correction": "One entry in this file, SSE London, originally carried a quote that was a condensed WebSearch result summary rather than a sentence from a page, and built an un-archive recommendation on it. grant-tracker-be caught it, it is corrected in place above, and the recommendation is withdrawn. It is the third citation in two days built from something other than fetched page text, after the Ashoka reader-proxy quote and the Young Foundation news line. The rule that would have caught all three: a quote may only be pasted from text fetched in this session, and a search result summary is not a quote."
  }
 }
