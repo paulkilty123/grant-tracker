@@ -484,8 +484,8 @@
   #pricing .lead{font-size:17px;line-height:1.6;color:var(--ink-soft);margin:0;max-width:34em}
 
   #pricing .price-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:44px;align-items:start}
-  #pricing .price{background:#fff;border-radius:20px;border:0.5px solid var(--line);padding:32px 28px;position:relative}
-  #pricing .price.pop{border:2px solid var(--deep);box-shadow:0 14px 40px rgba(29,60,62,.1)}
+  #pricing .price{background:#fff;border-radius:20px;border:0.5px solid var(--line);padding:32px 28px;position:relative;box-shadow:0 1px 2px rgba(29,60,62,.04),0 8px 24px rgba(29,60,62,.06)}
+  #pricing .price.pop{border:2px solid var(--deep);box-shadow:0 2px 4px rgba(29,60,62,.06),0 18px 44px rgba(29,60,62,.12)}
   /* Sits on the card's top border, so the card needs position:relative above.
      Centred rather than left offset, which also separates it from the plan dot.
      Charcoal, the palette's darkest neutral. Cream on it is 12.06:1. NOTE: it
@@ -493,10 +493,9 @@
      without matching; swap to var(--deep) if that reads as a near miss. */
   #pricing .trial-tag{position:absolute;top:-18px;left:50%;transform:translateX(-50%);background:var(--charcoal);color:var(--cream);font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;padding:8px 18px;border-radius:999px;white-space:nowrap}
 
-  #pricing .pname{display:flex;align-items:center;gap:10px;margin:0 0 6px}
-  #pricing .pdot{width:12px;height:12px;border-radius:50%;flex:none}
-  #pricing .pname h3{font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:600;color:var(--deep);margin:0}
-  #pricing .strap{font-size:14px;color:var(--ink-mute);margin:0 0 20px}
+  #pricing .pname{margin:0 0 14px}
+  #pricing .pname h3{display:inline-block;font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:600;letter-spacing:-.3px;color:var(--deep);margin:0;padding:8px 22px;border-radius:999px}
+  #pricing .strap{font-size:14px;color:var(--ink-mute);margin:-4px 0 20px}
 
   #pricing .amt{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:52px;color:var(--deep);margin:0;line-height:1;letter-spacing:-1.6px}
   #pricing .amt small{font-size:18px;font-family:'Plus Jakarta Sans',sans-serif;color:var(--ink-mute);letter-spacing:0;font-weight:400}
@@ -1001,7 +1000,7 @@
     <div class="price-grid">
 
       <div class="price">
-        <div class="pname"><span class="pdot" style="background:var(--sage)"></span><h3>Match</h3></div>
+        <div class="pname"><h3 style="background:var(--sage)">Match</h3></div>
         <p class="strap">Find the funding</p>
         <div class="price-row">
           <span class="was" aria-hidden="true">£19</span>
@@ -1018,7 +1017,7 @@
 
       <div class="price pop">
         <!-- NEW copy --><span class="trial-tag">14 days free</span>
-        <div class="pname"><span class="pdot" style="background:var(--gold)"></span><h3>Apply</h3></div>
+        <div class="pname"><h3 style="background:var(--gold)">Apply</h3></div>
         <p class="strap">The workspace</p>
         <div class="price-row">
           <span class="was" aria-hidden="true">£35</span>
@@ -1036,7 +1035,7 @@
       </div>
 
       <div class="price">
-        <div class="pname"><span class="pdot" style="background:var(--sky)"></span><h3>Team</h3></div>
+        <div class="pname"><h3 style="background:var(--sky)">Team</h3></div>
         <!-- NEW copy --><p class="strap">For teams and consultants</p>
         <p class="amt words">Get in touch</p>
         <p class="amt-note solo">Quoted for your organisation</p>
