@@ -1486,7 +1486,9 @@ function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual, role, s
         Let&rsquo;s build your profile
       </h1>
       <p style={{ fontSize: 16, color: T.textSecondary, lineHeight: 1.5, margin: '0 0 24px', maxWidth: 460, fontFamily: 'var(--font-dm-sans)' }}>
-        Drop in your website and we&rsquo;ll do the heavy lifting. You can review and refine everything in the next step.
+        {several
+          ? <>A profile is built for one organisation at a time, and its details drive the matches you see.</>
+          : <>Drop in your website and we&rsquo;ll do the heavy lifting. You can review and refine everything in the next step.</>}
       </p>
 
       {/* Who is signing up. Recorded on the row (migration 080). The default
@@ -1516,6 +1518,16 @@ function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual, role, s
       )}
 
       {showProfileTools && (<>
+      {several && (
+        <div style={{ margin: '0 0 12px', maxWidth: 520 }}>
+          <p style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 15, fontWeight: 600, color: T.textPrimary, margin: '0 0 4px' }}>
+            Which organisation do you want matches for?
+          </p>
+          <p style={{ fontSize: 13.5, color: T.textSecondary, lineHeight: 1.5, margin: 0, fontFamily: 'var(--font-dm-sans)' }}>
+            Enter that organisation&rsquo;s website, a client or a member, not your own. We build the profile from it and you can review everything in the next step.
+          </p>
+        </div>
+      )}
 
       {/* URL input + CTA */}
       <div style={{ display: 'flex', gap: 8, width: '100%', maxWidth: 520 }}>
@@ -1526,7 +1538,7 @@ function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual, role, s
             value={url}
             onChange={e => setUrl(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && !fetching && url.trim() && onAutoFill()}
-            placeholder="https://yourorganisation.co.uk"
+            placeholder={several ? 'https://the-organisation.org.uk' : 'https://yourorganisation.co.uk'}
             style={{ ...INPUT_STYLE, padding: '0 14px 0 34px', boxSizing: 'border-box' }}
           />
         </div>
