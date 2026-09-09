@@ -1602,7 +1602,7 @@ function StepBrowse({ name, setName, website, setWebsite, band, setBand, example
         You can search and save now. Matches and the weekly update need an organisation profile, which you can add later from your profile page, or get in touch about Team for client profiles.
       </p>
       <label style={{ display: 'block', fontFamily: 'var(--font-space-grotesk)', fontSize: 14, fontWeight: 600, color: T.textPrimary, marginBottom: 8 }}>
-        Your name or {noun}
+        Your name or {noun}<span style={{ color: T.coralText, marginLeft: 2 }}>*</span>
       </label>
       <input
         type="text"
@@ -1625,7 +1625,7 @@ function StepBrowse({ name, setName, website, setWebsite, band, setBand, example
         style={{ ...INPUT_STYLE, maxWidth: 520, boxSizing: 'border-box' }}
       />
       <p style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 14, fontWeight: 600, color: T.textPrimary, margin: '20px 0 8px' }}>
-        Roughly how many organisations do you {role === 'network' ? 'support' : 'work with'}?
+        Roughly how many organisations do you {role === 'network' ? 'support' : 'work with'}?<span style={{ color: T.coralText, marginLeft: 2 }}>*</span>
       </p>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         {((role === 'network' ? ['<20', '20-100', '100+'] : ['1-2', '3-5', '6+']) as ClientBand[]).map(b => (
@@ -1644,7 +1644,7 @@ function StepBrowse({ name, setName, website, setWebsite, band, setBand, example
         ))}
       </div>
       <label style={{ display: 'block', fontFamily: 'var(--font-space-grotesk)', fontSize: 14, fontWeight: 600, color: T.textPrimary, margin: '20px 0 8px' }}>
-        One organisation you {role === 'network' ? 'support' : 'work with'}
+        One organisation you {role === 'network' ? 'support' : 'work with'}<span style={{ color: T.coralText, marginLeft: 2 }}>*</span>
       </label>
       <input
         type="text"
