@@ -942,7 +942,20 @@ export default function OnboardingWizardPage() {
       .map(k => LABELS[k] ?? k)
   }
 
+  const [numberError, setNumberError] = useState<string | null>(null)
   function confirmField(field: string, value?: string) {
+    if (field === 'registeredNumber' && value !== undefined) {
+      const v = value.trim()
+      // A wrong number is worse than none: it drives the eligibility gate. So a
+      // value that no register recognises cannot be saved, and an empty value
+      // is an explicit "no registered number" rather than a blank tick.
+      if (v && !isRecognisedNumber(v)) {
+        setNumberError('That does not look like a charity, company or mutuals number. Check it, or leave it blank if you have none.')
+        return
+      }
+      setNumberError(null)
+      value = v
+    }
     if (value !== undefined) {
       const key = field as keyof WizardState
       if (key in EMPTY_STATE) setState(prev => ({ ...prev, [key]: value }))
@@ -1382,6 +1395,7 @@ export default function OnboardingWizardPage() {
           setEditingField={setEditingField}
           confirmField={confirmField}
           canContinue={reviewCanContinue()}
+          numberError={numberError}
           blockers={reviewBlockers()}
           onBack={() => setStep('entry')}
           onSkip={() => setStep('beneficiaries')}
@@ -1668,7 +1682,7 @@ function StepBrowse({ name, setName, website, setWebsite, band, setBand, example
    Step 2A — Review extracted data
    ═══════════════════════════════════════════════ */
 
-function StepReview({ extracted, confirmed, editingField, setEditingField, confirmField, canContinue, blockers, onBack, onSkip, onContinue, wizardState, toggleSector, makePrimarySector, toggleBeneficiary, makePrimaryBeneficiary }: {
+function StepReview({ extracted, confirmed, editingField, setEditingField, confirmField, canContinue, blockers, numberError, onBack, onSkip, onContinue, wizardState, toggleSector, makePrimarySector, toggleBeneficiary, makePrimaryBeneficiary }: {
   extracted: ExtractedData
   confirmed: Set<string>
   editingField: string | null
@@ -1676,6 +1690,7 @@ function StepReview({ extracted, confirmed, editingField, setEditingField, confi
   confirmField: (field: string, value?: string) => void
   canContinue: boolean
   blockers: string[]
+  numberError?: string | null
   onBack: () => void; onSkip: () => void; onContinue: () => void
   wizardState: WizardState
   toggleSector: (s: ImpactSector) => void
@@ -1712,8 +1727,8 @@ function StepReview({ extracted, confirmed, editingField, setEditingField, confi
     // one for a company number and then saying "we couldn't find this" tells
     // them something is wrong when nothing is. Never blocks either way.
     { key: 'registeredNumber',  label: numberExpectation.label, value: extracted.registeredNumber, stateKey: 'registeredNumber',  type: 'text',
-      emptyText: numberExpectation.emptyText,
-      hint: extracted.registeredNumber
+      emptyText: confirmed.has('registeredNumber') && !extracted.registeredNumber ? 'No registered number' : numberExpectation.emptyText,
+      hint: numberError ? numberError : extracted.registeredNumber
         ? (isRecognisedNumber(extracted.registeredNumber)
             ? `Recognised as ${registerLabel(detectRegister(extracted.registeredNumber))}. We use it to check eligibility, so your matches are right.`
             : 'We don\u2019t recognise that format. Leave it if it\u2019s right, or correct it.')
@@ -1762,7 +1777,8 @@ function StepReview({ extracted, confirmed, editingField, setEditingField, confi
       </div>
 
       <div style={ACTIONS_STYLE}>
-        <SkipAction onClick={onSkip}>I&rsquo;ll refine these later</SkipAction>
+        {/* "I'll refine these later" removed (Paul, 9 Sept 2026): the flagged
+            fields are the ones that decide eligibility, so they get confirmed here. */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
           <Button variant="primary" onClick={onContinue} disabled={!canContinue}>
             Continue <ArrowRight size={14} />
