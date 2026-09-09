@@ -1578,10 +1578,12 @@ function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual, role, s
       {several && (
         <div style={{ margin: '0 0 12px', maxWidth: 520 }}>
           <p style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 15, fontWeight: 600, color: T.textPrimary, margin: '0 0 4px' }}>
-            Which organisation do you want matches for?
+            Which organisation shall we start with?
           </p>
           <p style={{ fontSize: 13.5, color: T.textSecondary, lineHeight: 1.5, margin: 0, fontFamily: 'var(--font-dm-sans)' }}>
-            Enter that organisation&rsquo;s website, a client or a member, not your own. We build the profile from it and you can review everything in the next step.
+            {role === 'network'
+              ? <>Matches are built for one organisation at a time. Pick one member organisation to start with, and enter its website. We build its profile and show what it could apply for. If it works for your members, ask us about partner plans for networks.</>
+              : <>Matches are built for one organisation at a time. Pick one client to start with, and enter its website. We build its profile and show what it could apply for. Profiles for more clients come with Team.</>}
           </p>
         </div>
       )}
@@ -1629,21 +1631,24 @@ function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual, role, s
         >
           No website? Fill in manually
         </button>
-        {several && (
+      </div>
+      {several && (
+        <p style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.55, margin: '14px 0 0 12px', maxWidth: 520, fontFamily: 'var(--font-dm-sans)' }}>
+          Not ready to pick one organisation?{' '}
           <button
             onClick={onBrowse}
             disabled={!practiceName.trim() || !band}
             style={{
-              background: 'transparent', border: 'none', color: T.textSecondary,
-              fontFamily: 'var(--font-dm-sans)', fontSize: 13, cursor: 'pointer',
+              background: 'transparent', border: 'none', color: T.textPrimary, padding: 0,
+              fontFamily: 'var(--font-dm-sans)', fontSize: 13, fontWeight: 600, cursor: 'pointer',
               textDecoration: 'underline', textDecorationColor: 'rgba(29,60,62,0.35)', textUnderlineOffset: 3,
-              padding: '8px 12px',
             }}
           >
             Browse without a profile for now
           </button>
-        )}
-      </div>
+          . You can search everything, and add a profile later for matches.
+        </p>
+      )}
       </>)}
     </>
   )
