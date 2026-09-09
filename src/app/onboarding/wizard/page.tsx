@@ -2339,9 +2339,9 @@ function StepSectors({ impactSectors, nicheTags, excludedNicheTags, toggleSector
         )
         return (
           <div style={{ borderTop: `1px solid ${HAIR}`, paddingTop: 26, marginBottom: 20 }}>
-            <h2 style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 20, fontWeight: 600, letterSpacing: '-0.4px', color: T.greenDeep, margin: '0 0 8px' }}>Anything more specific?</h2>
+            <h2 style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 20, fontWeight: 600, letterSpacing: '-0.4px', color: T.greenDeep, margin: '0 0 8px' }}>Sharpen your matches</h2>
             <p style={{ fontSize: 14.5, lineHeight: 1.6, color: '#5f6b64', margin: '0 0 16px', maxWidth: '52em', fontFamily: 'var(--font-dm-sans)' }}>
-              Optional. Click once to add a specialism. Click again to <b style={{ fontFamily: 'var(--font-space-grotesk)', color: T.greenDeep, fontWeight: 600 }}>exclude</b> it and we will keep those grants out of your matches. A third click clears it.
+              Optional. Click once to add a specialism and funders in that area rank higher. Click again to <b style={{ fontFamily: 'var(--font-space-grotesk)', color: T.greenDeep, fontWeight: 600 }}>exclude</b> it and we keep those grants out of your matches. A third click clears it.
             </p>
             <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center', margin: '0 0 30px' }}>
               {mini('Added', 'added')}{mini('Excluded', 'excluded')}{mini('Not set', 'none')}
