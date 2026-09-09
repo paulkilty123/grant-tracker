@@ -33,7 +33,7 @@ export default function PrivacyPage() {
           Privacy policy
         </h1>
         <p style={{ marginTop: 12, marginBottom: 40, fontSize: 14, color: '#5F5E5A' }}>
-          <strong style={{ color: '#2C2C2A' }}>Last updated:</strong> 10 September 2026
+          <strong style={{ color: '#2C2C2A' }}>Last updated:</strong> 9 September 2026
         </p>
         {/* Rename note. Kept at the top, not buried in "Changes to this policy",
             because its job is to reassure a returning user who arrived expecting

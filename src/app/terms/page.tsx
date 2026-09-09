@@ -33,7 +33,7 @@ export default function TermsPage() {
           Terms of service
         </h1>
         <p style={{ marginTop: 12, marginBottom: 40, fontSize: 14, color: '#5F5E5A' }}>
-          <strong style={{ color: '#2C2C2A' }}>Last updated:</strong> 10 September 2026
+          <strong style={{ color: '#2C2C2A' }}>Last updated:</strong> 9 September 2026
         </p>
         <p style={{ marginTop: -28, marginBottom: 40, fontSize: 14, color: '#5F5E5A' }}>
           In August 2026 Grant Tracker became Shoots. This is a change of name only;
