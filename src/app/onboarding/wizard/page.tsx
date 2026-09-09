@@ -2520,7 +2520,7 @@ function StepLocation({ state, update, toggleFundingType, toggleSpendNeed, savin
 
         {/* Location row */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <Field label="Where are you based?" help='For London orgs, include borough — e.g. "Hackney, London"'>
+          <Field label="Where are you based?" help='Your town or council area. For London, include the borough, for example "Hackney, London".'>
             <input type="text" value={state.primaryLocation} onChange={e => update('primaryLocation', e.target.value)} placeholder="e.g. Brighton, Sussex" style={INPUT_STYLE} />
           </Field>
           <Field label="Geographic reach" help="We'll score local grants highest if you're place-based.">
@@ -2529,7 +2529,7 @@ function StepLocation({ state, update, toggleFundingType, toggleSpendNeed, savin
         </div>
 
         {/* Grant size — thousand-separator formatting on display */}
-        <Field label="Grant size range" hint="optional — leave blank to see all" help="The most important field for size matching — grants outside this range will score lower.">
+        <Field label="Grant size range" hint="optional" help="Grants outside this range rank lower. Leave it blank and size is ignored.">
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div style={{ position: 'relative' }}>
               <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: T.textTertiary, fontSize: 14, pointerEvents: 'none' }}>£</span>
