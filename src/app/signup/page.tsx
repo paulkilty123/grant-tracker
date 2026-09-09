@@ -160,11 +160,8 @@ export default function SignupPage() {
             ))}
           </ul>
 
-          <div className="proof">
-            <div><b>600+</b><span>Verified opportunities</span></div>
-            <div><b>4</b><span>Funding types</span></div>
-            <div><b>3 min</b><span>To first matches</span></div>
-          </div>
+          {/* The proof strip (600+, 4 types, 3 min) is gone: the count is a
+              moving target and the minutes were wrong. Paul, 9 Sept 2026. */}
         </aside>
 
         {/* Right: the form, on cream, no card. */}
@@ -193,7 +190,7 @@ export default function SignupPage() {
               <>
                 <h1 className="t-title">Create your account</h1>
                 <p className="t-body" style={{ marginTop: 10 }}>
-                  Tell us about your organisation and see what fits, in about three minutes.
+                  Tell us about your organisation and see what fits, in about five minutes.
                 </p>
 
                 <form onSubmit={handleSignup} style={{ display: 'flex', flexDirection: 'column', gap: 18, marginTop: 28 }}>
@@ -220,7 +217,7 @@ export default function SignupPage() {
                   </div>
 
                   <div className="field">
-                    <label htmlFor="email">Work email</label>
+                    <label htmlFor="email">Email</label>
                     <input
                       id="email"
                       className="input"
@@ -258,6 +255,7 @@ export default function SignupPage() {
                     <p className="helpmsg" id="pw-help">Use at least 8 characters.</p>
                   </div>
 
+                  <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 13.5, color: '#5f6b64', lineHeight: 1.55, margin: '0 0 12px' }}>14 days of full access, no card needed. You choose a plan at the end.</p>
                   <button type="submit" className="btn btn-primary btn-block" disabled={loading} style={{ marginTop: 4 }}>
                     {loading ? <><span className="spin" />Creating account…</> : 'Create account'}
                   </button>
