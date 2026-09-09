@@ -19,6 +19,20 @@
 export const LANDING_DOCUMENT = '/landing/index.html'
 
 /**
+ * The launch version of the same page: every "Join the waitlist" is "Start
+ * your free trial" pointing at /signup, the waitlist form is a trial card, and
+ * the FAQ answers name the trial and the prices. Both documents ship; one
+ * setting chooses. Thursday 8am is LAUNCH_LIVE=true and a redeploy; rolling
+ * back is the same value the other way. Nothing is edited under pressure.
+ */
+export const LAUNCH_DOCUMENT = '/landing/launch.html'
+
+/** Is the launch version of the landing page live? Read at request time. */
+export function isLaunchLive(): boolean {
+  return process.env.LAUNCH_LIVE?.trim().toLowerCase() === 'true'
+}
+
+/**
  * Is the Shoots landing page live?
  *
  * Read at request time rather than module load so a Vercel env change takes
@@ -44,5 +58,5 @@ export function landingCutoverTarget(pathname: string, isSignedIn: boolean): str
   if (pathname !== '/') return null
   if (isSignedIn) return null
   if (!isLandingCutoverOn()) return null
-  return LANDING_DOCUMENT
+  return isLaunchLive() ? LAUNCH_DOCUMENT : LANDING_DOCUMENT
 }

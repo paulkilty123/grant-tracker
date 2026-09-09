@@ -702,7 +702,7 @@ function sectorDisplayLabel(s: string): string {
   return MAP[s] ?? s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
 }
 
-function normalizeStructureTokens(s: string): string[] {
+export function normalizeStructureTokens(s: string): string[] {
   const sl = s.toLowerCase().trim()
   switch (sl) {
     case 'cic_guarantee':

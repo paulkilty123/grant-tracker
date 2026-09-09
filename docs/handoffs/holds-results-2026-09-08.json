@@ -1,0 +1,304 @@
+{
+ "jobs": [
+  {
+   "job": 1,
+   "verdicts": [
+    {
+     "id": "324d3776-917a-4498-9537-27888f142f2d",
+     "title": "Ashoka Fellowship",
+     "job": 1,
+     "verdict": "reject",
+     "code": "out_of_scope",
+     "quote": "If you are interested in recommending a social entrepreneur to the Ashoka Fellowship, we welcome any information about a candidate and their work that you can provide.",
+     "url": "https://www.ashoka.org/en-gb/recommend-ashoka-fellow",
+     "read_via": "browser",
+     "tidied": [],
+     "for_paul": "Still 403 direct; read in the browser today (the /en-gb/nominate link redirects here). Ashoka Fellows are recommended by a third party, not applicants themselves — this page is the nomination form, and the five selection criteria sit behind a collapsed accordion rather than as visible page text. No route for an organisation to apply, confirming the row's own stored brief."
+    },
+    {
+     "id": "9e3b71a8-1f2c-40ea-8d03-31bcb0c82e99",
+     "title": "Horsham District Council — Community Grant",
+     "job": 1,
+     "verdict": "hold",
+     "quote": "Our next round opens on 1st September 2026. Our grant rounds are: 1 - 30 April, 1 - 30 June, 1 - 30 September, 2 - 31 January. Grants are available of up to: £5,000 although most are around £3,000. £15,000 although most are around £8,000.",
+     "url": "https://www.horsham.gov.uk/community/grants-for-community-projects/horsham-district-council-community-grant",
+     "read_via": "browser",
+     "tidied": [],
+     "for_paul": "The round the pinned 30 June 2026 deadline belonged to has passed; the page runs four recurring rounds a year instead (next opens 1 Sept, closes 30 Sept, awarded by 31 Oct) — rolling, not a single date. The amount is pinned at £2,500-£5,000; the page shows two unlabelled grant sizes, up to £5,000 (most ~£3,000) and up to £15,000 (most ~£8,000), with nothing distinguishing which is which or whether they are two tiers of the same scheme. Worth a relook at both the pin and whether this should be rolling."
+    },
+    {
+     "id": "96c68ed0-0147-4aa1-9b4f-098a80bb7523",
+     "title": "Macmillan Q Lab — Holistic Cancer Care",
+     "job": 1,
+     "verdict": "hold",
+     "quote": "Application deadline: 14 September 2026. ... as well as getting access to expertise from Q and Macmillan with £75,000 to support teams through the process.",
+     "url": "https://www.macmillan.org.uk/about-us/what-we-do/macmillan-funding-grants/q-lab",
+     "read_via": "browser",
+     "tidied": [],
+     "for_paul": "Deadline confirmed for the Team role: 14 September 2026, matching the row. The amount does not confirm: the page states one figure, £75,000 \"to support teams through the process\" across the whole cohort of teams in the lab, not a per-team ceiling, and never mentions £200,000 (the row's pinned range, unpinned in the DB, from an Idox feed). It is also part fellowship: individuals can take part as paid contributors (deadline 7 Oct) alongside organisation teams. Needs the guidance pack read, or your call, before it can carry a figure."
+    },
+    {
+     "id": "08a08c30-453d-469f-9ce2-65a2dafbe0d8",
+     "title": "Peter Kershaw Trust — Ordinary Grants",
+     "job": 1,
+     "verdict": "hold",
+     "quote": "Whilst the Trust has no maximum amount of funding that it gives to individual organisations, applicants may want to view our latest Annual Accounts to see the average amount of funding. There is only one grant window for the receipt and determination of applications which is November. All grant applications must be received by 30 September preceding the November meeting.",
+     "url": "https://peterkershawtrust.org/ordinary-grants",
+     "read_via": "fetch",
+     "tidied": [],
+     "for_paul": "Read cleanly today (7 Sept called this a 1MB unreadable page; today's direct fetch got 1.6KB of clean text — whatever broke it before isn't reproducing). Real, open to organisations, one window a year and applications close 30 September — three weeks off. But the brief the page supports is thin: no maximum award stated (defers to Annual Accounts, not fetchable), no exclusions on the page, and who_can_apply beyond \"organisations working in social welfare\" isn't detailed enough for the seven-field bar. Time-sensitive if you want this year's window."
+    },
+    {
+     "id": "985b3216-a7bb-43ca-b086-3e81c1e69126",
+     "title": "EY Foundation Programmes for Young People",
+     "job": 1,
+     "verdict": "hold",
+     "quote": "",
+     "url": "https://ey.foundation/",
+     "read_via": "unreadable",
+     "tidied": [],
+     "for_paul": "Host does not answer on any path tried today: direct fetch, the reader proxy, and the Chrome browser all return an error page for both ey.foundation and www.ey.foundation — no TLS/DNS response, not a bot wall. Confirms the 7 Sept finding rather than resolving it; may need a different domain for this foundation."
+    },
+    {
+     "id": "7948612a-70f9-4cce-82a0-c14d9a53e2bd",
+     "title": "Screwfix Foundation Grants",
+     "job": 1,
+     "verdict": "hold",
+     "quote": "",
+     "url": "https://www.screwfixfoundation.com/",
+     "read_via": "unreadable",
+     "tidied": [],
+     "for_paul": "Same TLS refusal as 7 Sept, now also confirmed in the browser (error page, no load). Not a transient outage: unreachable on every path tried today, twice a week apart."
+    }
+   ],
+   "paul_list": [
+    "REJECT  Ashoka Fellowship (out_of_scope) — Still 403 direct; read in the browser today (the /en-gb/nominate link redirects here). Ashoka Fellows are recommended by a third party, not applicants themselves — this page is the nomination form, and the five selection criteria sit behind a collapsed accordion rather than as visible page text. No route for an organisation to apply, confirming the row's own stored brief.",
+    "HOLD    Horsham District Council — Community Grant — The round the pinned 30 June 2026 deadline belonged to has passed; the page runs four recurring rounds a year instead (next opens 1 Sept, closes 30 Sept, awarded by 31 Oct) — rolling, not a single date. The amount is pinned at £2,500-£5,000; the page shows two unlabelled grant sizes, up to £5,000 (most ~£3,000) and up to £15,000 (most ~£8,000), with nothing distinguishing which is which or whether they are two tiers of the same scheme. Worth a relook at both the pin and whether this should be rolling.",
+    "HOLD    Macmillan Q Lab — Holistic Cancer Care — Deadline confirmed for the Team role: 14 September 2026, matching the row. The amount does not confirm: the page states one figure, £75,000 \"to support teams through the process\" across the whole cohort of teams in the lab, not a per-team ceiling, and never mentions £200,000 (the row's pinned range, unpinned in the DB, from an Idox feed). It is also part fellowship: individuals can take part as paid contributors (deadline 7 Oct) alongside organisation teams. Needs the guidance pack read, or your call, before it can carry a figure.",
+    "HOLD    Peter Kershaw Trust — Ordinary Grants — Read cleanly today (7 Sept called this a 1MB unreadable page; today's direct fetch got 1.6KB of clean text — whatever broke it before isn't reproducing). Real, open to organisations, one window a year and applications close 30 September — three weeks off. But the brief the page supports is thin: no maximum award stated (defers to Annual Accounts, not fetchable), no exclusions on the page, and who_can_apply beyond \"organisations working in social welfare\" isn't detailed enough for the seven-field bar. Time-sensitive if you want this year's window.",
+    "HOLD    EY Foundation Programmes for Young People — Host does not answer on any path tried today: direct fetch, the reader proxy, and the Chrome browser all return an error page for both ey.foundation and www.ey.foundation — no TLS/DNS response, not a bot wall. Confirms the 7 Sept finding rather than resolving it; may need a different domain for this foundation.",
+    "HOLD    Screwfix Foundation Grants — Same TLS refusal as 7 Sept, now also confirmed in the browser (error page, no load). Not a transient outage: unreachable on every path tried today, twice a week apart."
+   ]
+  },
+  {
+   "job": 2,
+   "verdicts": [
+    {
+     "id": "ec46883d-f99b-4295-a61c-6b6eb06c2aa1",
+     "title": "ROCB CDFI Loans",
+     "job": 2,
+     "verdict": "hold",
+     "quote": "",
+     "url": "https://www.rocbf.co.uk/cashflow-loans-for-not-for-profits/",
+     "read_via": "unreadable",
+     "tidied": [],
+     "for_paul": "The stored apply_url (rocbf.org.uk) is dead — the live domain is rocbf.co.uk — but rocbf.co.uk is bot-walled on every path tried today (fetch, browser, a fresh tab): \"Please wait while your request is being verified...\" never clears. Could not confirm or relink to the Community Cashflow Fund page today. There's also an archived row (0362621b, Robert Owen Community Banking — Wales Social Enterprise Lending) that already carries rocbf.co.uk with every field pinned; not touched. Whether the two merge is your call, once the site is readable again.",
+     "candidates": [
+      {
+       "url": "https://www.rocbf.co.uk/",
+       "note": "Robert Owen Community Banking's homepage; same bot wall today. Its nav (readable on an earlier, since-disallowed proxy read) lists a \"Cashflow loans for not-for-profits\" product matching this row's notes, but nothing on the live site could be confirmed today."
+      }
+     ]
+    },
+    {
+     "id": "829751a6-9ad0-409a-818c-e32d62f0d1ad",
+     "title": "Social Investment Cymru Loan Fund",
+     "job": 2,
+     "verdict": "reject",
+     "code": "duplicate",
+     "quote": "",
+     "url": "https://wcva.cymru/communities-investment-fund/",
+     "read_via": "fetch",
+     "tidied": [],
+     "for_paul": "Was about to relink and publish this to Communities Investment Fund (£50k-£250k, read cleanly today) when the dedup query caught a LIVE duplicate: 279016ce, \"WCVA Social Investment Cymru — Communities Investment Fund\", published, same amounts, apply_url one path segment different (wcva.cymru/funding/social-investment-cymru/communities-investment-fund/ vs the wcva.cymru/communities-investment-fund/ just read — the site appears to serve the fund at both paths). Rejecting this row as the duplicate rather than touching the live one. Worth knowing: WCVA's Social Investment Cymru actually runs five separately paged products today (Bridge and Build Loans, Clean Energy Fund, Community Asset Loan Fund, Communities Investment Fund, Wales Micro Loan Fund), not the three the 7 Sept note counted — the three not already live are listed as candidates in case any is worth adding separately later.",
+     "dupe_of": [
+      "279016ce-2758-436a-9387-6fa286c0c2dd"
+     ],
+     "candidates": [
+      {
+       "url": "https://wcva.cymru/wales-micro-loan-fund/",
+       "note": "Wales Micro Loan Fund: £1,000 to £50,000, general-purpose micro loans for social businesses in Wales, funded via the Development Bank of Wales, up to 10 years to repay. Not carried live yet, as far as this row list shows."
+      },
+      {
+       "url": "https://wcva.cymru/community-asset-loan-fund/",
+       "note": "Community Asset Loan Fund: up to £300,000, Welsh Government funded, for voluntary organisations, charities and CICs buying property for community use. Not carried live yet, as far as this row list shows."
+      },
+      {
+       "url": "https://wcva.cymru/clean-energy-fund/",
+       "note": "Clean Energy Fund: 50% grant (£25k-£500k) plus 25% interest-free loan (up to £250k), but restricted to organisations based in or serving North Wales only. Not carried live yet, as far as this row list shows."
+      }
+     ]
+    },
+    {
+     "id": "efb34147-a31c-4088-bd85-f8ab17980990",
+     "title": "Young Foundation Social Innovation Support Programmes",
+     "job": 2,
+     "verdict": "reject",
+     "code": "out_of_scope",
+     "quote": "The Community Knowledge Fund supports community groups and organisations around the UK with grants worth between £10k and £100k. It is an open fund, supporting ideas that use the knowledge in communities to address challenges that matter locally. This programme has now closed.",
+     "url": "https://youngfoundation.org/community-knowledge-fund/",
+     "read_via": "fetch",
+     "tidied": [],
+     "for_paul": "Corrected 2026-09-08: the first quote here (Phase 2 \"delivers grants worth £50k to £100k\") read as evidence the fund was active, when the same page states plainly it has closed — grant-tracker-be caught it. Meaning intended: out_of_scope because the Young Foundation runs no open route for a fundraiser today, not that Community Knowledge Fund is closed for good — Community Research Networks (the other named programme) is an ongoing UKRI partnership, just sign-up-only, \"to stay informed... as the programme progresses,\" with no apply route, eligibility or dates on its own page."
+    },
+    {
+     "id": "45d5140a-8536-4331-b4d3-57462e108a9f",
+     "title": "Nationwide Foundation Grants Programme",
+     "job": 2,
+     "verdict": "reject",
+     "code": "out_of_scope",
+     "quote": "Unfortunately, this means that outside of the above project, we are currently unable to accept unsolicited applications for funding.",
+     "url": "https://www.nationwidefoundation.org.uk/available-funding/",
+     "read_via": "fetch",
+     "tidied": [],
+     "for_paul": "The foundation says plainly it isn't accepting new applications right now — funding stays within existing partners while it builds evidence on housing policy. Nothing here for a fundraiser to apply to today."
+    },
+    {
+     "id": "f2791500-e1cb-4cd3-ae9d-5caa399df3ca",
+     "title": "Community Housing Fund",
+     "job": 2,
+     "verdict": "hold",
+     "quote": "",
+     "url": "https://www.london.gov.uk/programmes-strategies/housing-and-land/housing-and-land-funding-programmes/community-housing-fund",
+     "read_via": "unreadable",
+     "tidied": [],
+     "for_paul": "The fund's own page (found 7 Sept, and described there as giving no dates, amounts or exclusions) is bot-walled today on every path — \"Just a moment...\" never clears, on fetch or the browser. Also checked the Community-Led Housing London Hub's own site (communityledhousing.london): it describes advisory support for community-led housing groups but carries no GLA fund or application page. Nothing better found today; apply_url stays where it is."
+    },
+    {
+     "id": "93f38ed1-ca74-4b6f-9249-51c95a134006",
+     "title": "Jobs and Skills Funding Opportunities",
+     "job": 2,
+     "verdict": "hold",
+     "quote": "",
+     "url": "https://www.london.gov.uk/programmes-strategies/jobs-and-skills/funding",
+     "read_via": "unreadable",
+     "tidied": [],
+     "for_paul": "Same wall as the Community Housing Fund row, same domain, today: bot-walled on both fetch and the browser. 7 Sept found this a 287KB navigation page naming no single programme, which was heading toward reject/non_funder, but there's no citable sentence from a read today to make that call on — it stays hold rather than a reject without a quote."
+    },
+    {
+     "id": "876a5299-1b0b-4f07-9bb1-b9c7e36257e1",
+     "title": "The Mayor's Opportunity Fund",
+     "job": 2,
+     "verdict": "hold",
+     "quote": "",
+     "url": "https://www.communityfoundation.org.uk/grants/the-mayors-opportunity-fund/",
+     "read_via": "unreadable",
+     "tidied": [],
+     "for_paul": "The old page still 404s. Tried the grants listing page and a site search for the current round; the whole communityfoundation.org.uk domain is behind a \"please wait while your request is being verified\" wall today on both fetch and the browser, so no current page could be found or confirmed. Title, deadline and amount_max stay pinned and untouched; apply_url is unpinned but there is nothing better to point it to yet."
+    }
+   ],
+   "paul_list": [
+    "REJECT  Social Investment Cymru Loan Fund (duplicate) — Was about to relink and publish this to Communities Investment Fund (£50k-£250k, read cleanly today) when the dedup query caught a LIVE duplicate: 279016ce, \"WCVA Social Investment Cymru — Communities Investment Fund\", published, same amounts, apply_url one path segment different (wcva.cymru/funding/social-investment-cymru/communities-investment-fund/ vs the wcva.cymru/communities-investment-fund/ just read — the site appears to serve the fund at both paths). Rejecting this row as the duplicate rather than touching the live one. Worth knowing: WCVA's Social Investment Cymru actually runs five separately paged products today (Bridge and Build Loans, Clean Energy Fund, Community Asset Loan Fund, Communities Investment Fund, Wales Micro Loan Fund), not the three the 7 Sept note counted — the three not already live are listed as candidates in case any is worth adding separately later.",
+    "REJECT  Young Foundation Social Innovation Support Programmes (out_of_scope) — Corrected 2026-09-08: the first quote here (Phase 2 \"delivers grants worth £50k to £100k\") read as evidence the fund was active, when the same page states plainly it has closed — grant-tracker-be caught it. Meaning intended: out_of_scope because the Young Foundation runs no open route for a fundraiser today, not that Community Knowledge Fund is closed for good — Community Research Networks (the other named programme) is an ongoing UKRI partnership, just sign-up-only, \"to stay informed... as the programme progresses,\" with no apply route, eligibility or dates on its own page.",
+    "REJECT  Nationwide Foundation Grants Programme (out_of_scope) — The foundation says plainly it isn't accepting new applications right now — funding stays within existing partners while it builds evidence on housing policy. Nothing here for a fundraiser to apply to today.",
+    "HOLD    ROCB CDFI Loans — The stored apply_url (rocbf.org.uk) is dead — the live domain is rocbf.co.uk — but rocbf.co.uk is bot-walled on every path tried today (fetch, browser, a fresh tab): \"Please wait while your request is being verified...\" never clears. Could not confirm or relink to the Community Cashflow Fund page today. There's also an archived row (0362621b, Robert Owen Community Banking — Wales Social Enterprise Lending) that already carries rocbf.co.uk with every field pinned; not touched. Whether the two merge is your call, once the site is readable again.",
+    "HOLD    Community Housing Fund — The fund's own page (found 7 Sept, and described there as giving no dates, amounts or exclusions) is bot-walled today on every path — \"Just a moment...\" never clears, on fetch or the browser. Also checked the Community-Led Housing London Hub's own site (communityledhousing.london): it describes advisory support for community-led housing groups but carries no GLA fund or application page. Nothing better found today; apply_url stays where it is.",
+    "HOLD    Jobs and Skills Funding Opportunities — Same wall as the Community Housing Fund row, same domain, today: bot-walled on both fetch and the browser. 7 Sept found this a 287KB navigation page naming no single programme, which was heading toward reject/non_funder, but there's no citable sentence from a read today to make that call on — it stays hold rather than a reject without a quote.",
+    "HOLD    The Mayor's Opportunity Fund — The old page still 404s. Tried the grants listing page and a site search for the current round; the whole communityfoundation.org.uk domain is behind a \"please wait while your request is being verified\" wall today on both fetch and the browser, so no current page could be found or confirmed. Title, deadline and amount_max stay pinned and untouched; apply_url is unpinned but there is nothing better to point it to yet."
+   ]
+  },
+  {
+   "job": 3,
+   "written": [
+    {
+     "id": "85f9af1e-b1cb-4796-8a7c-163aabec2037",
+     "min": 1000,
+     "max": null,
+     "prose_only": false,
+     "quote": "Small Grant – £1,000 to £10,000 per annum for up to three years (Please note Rest of Scotland applicants may apply for up to £10,000 for one year only)",
+     "url": "https://www.gannochytrust.org.uk/wp-content/uploads/2026/07/Guidance-Notes-for-Grant-Applicants-2025-v7.pdf"
+    },
+    {
+     "id": "4db45a85-2ff4-4cac-bca6-51a44bd56fe1",
+     "min": 10000,
+     "max": 120000,
+     "prose_only": false,
+     "quote": "Size and type of funding we support: Awards of between £10,000 to £120,000 in total. Funding is for a one, two or three year period.",
+     "url": "https://www.mercers.co.uk/church_and_communities_funding_guidelines"
+    },
+    {
+     "id": "57c520fd-c715-478b-8a6e-7c9907044d2a",
+     "min": 50000,
+     "max": 120000,
+     "prose_only": false,
+     "quote": "Size and type of funding we support: We make awards of between £50,000 to £120,000 in total. Awards can be up to three years.",
+     "url": "https://www.mercers.co.uk/older_people_housing_funding_guidelines"
+    }
+   ],
+   "report": [],
+   "no_amount_count": {
+    "before": 157,
+    "after": 154,
+    "note": "157/154 is the original run's count, independently re-derived by grant-tracker-be. This block was regenerated afterwards, adding quote/url to each written row, by re-running the script against rows already written; that re-run's own before/after was 154/154 (idempotent) and is not what is recorded here."
+   }
+  }
+ ],
+ "summary": {
+  "finished": "2026-09-08",
+  "jobs": {
+   "job1": {
+    "rows": 6,
+    "publish": 0,
+    "park": 0,
+    "reject": 1,
+    "hold": 5,
+    "reject_codes": {
+     "out_of_scope": 1
+    },
+    "read_via": {
+     "fetch": 1,
+     "browser": 3,
+     "unreadable": 2
+    }
+   },
+   "job2": {
+    "rows": 7,
+    "publish": 0,
+    "park": 0,
+    "reject": 3,
+    "hold": 4,
+    "reject_codes": {
+     "duplicate": 1,
+     "out_of_scope": 2
+    },
+    "read_via": {
+     "fetch": 3,
+     "browser": 0,
+     "unreadable": 4
+    }
+   },
+   "job3": {
+    "written": 3,
+    "reported": 0
+   }
+  },
+  "no_amount_count": {
+   "before": 157,
+   "after": 154,
+   "fell_by": 3
+  },
+  "state_changes_made": 0,
+  "reader_proxy_dropped_after_job1": "A third-party reader proxy was used for one job 1 read (Ashoka) and its text did not match what the page actually renders — caught by grant-tracker-be on check and fixed same day. Fetch then browser only, no proxy, for the rest of job 1 and all of jobs 2-3.",
+  "bot_walls_hit_today": [
+   "rocbf.co.uk — entire domain, \"please wait while your request is being verified\" never clears (job 2, ROCB CDFI Loans)",
+   "www.london.gov.uk — two specific fund pages 403, though the homepage loads fine (job 2, both GLA rows)",
+   "www.communityfoundation.org.uk — entire domain, same interstitial as rocbf.co.uk (job 2, Mayor's Opportunity Fund)"
+  ],
+  "job3_pattern": "All three job 3 rows had already been correctly nulled by an earlier null-sweep reading the apply page alone (a programme pool, not a per-applicant figure). All three funders also publish a SEPARATE guidance page — a different URL from the apply page — with a real per-applicant band under a \"size and type of funding we support\" heading. Worth checking for on any future no-amount row before concluding a page states no figure.",
+  "paul_list": [
+   "REJECT  Ashoka Fellowship (out_of_scope) — Still 403 direct; read in the browser today (the /en-gb/nominate link redirects here). Ashoka Fellows are recommended by a third party, not applicants themselves — this page is the nomination form, and the five selection criteria sit behind a collapsed accordion rather than as visible page text. No route for an organisation to apply, confirming the row's own stored brief.",
+   "REJECT  Social Investment Cymru Loan Fund (duplicate) — Was about to relink and publish this to Communities Investment Fund (£50k-£250k, read cleanly today) when the dedup query caught a LIVE duplicate: 279016ce, \"WCVA Social Investment Cymru — Communities Investment Fund\", published, same amounts, apply_url one path segment different (wcva.cymru/funding/social-investment-cymru/communities-investment-fund/ vs the wcva.cymru/communities-investment-fund/ just read — the site appears to serve the fund at both paths). Rejecting this row as the duplicate rather than touching the live one. Worth knowing: WCVA's Social Investment Cymru actually runs five separately paged products today (Bridge and Build Loans, Clean Energy Fund, Community Asset Loan Fund, Communities Investment Fund, Wales Micro Loan Fund), not the three the 7 Sept note counted — the three not already live are listed as candidates in case any is worth adding separately later.",
+   "REJECT  Young Foundation Social Innovation Support Programmes (out_of_scope) — Corrected 2026-09-08: the first quote here (Phase 2 \"delivers grants worth £50k to £100k\") read as evidence the fund was active, when the same page states plainly it has closed — grant-tracker-be caught it. Meaning intended: out_of_scope because the Young Foundation runs no open route for a fundraiser today, not that Community Knowledge Fund is closed for good — Community Research Networks (the other named programme) is an ongoing UKRI partnership, just sign-up-only, \"to stay informed... as the programme progresses,\" with no apply route, eligibility or dates on its own page.",
+   "REJECT  Nationwide Foundation Grants Programme (out_of_scope) — The foundation says plainly it isn't accepting new applications right now — funding stays within existing partners while it builds evidence on housing policy. Nothing here for a fundraiser to apply to today.",
+   "HOLD    Horsham District Council — Community Grant — The round the pinned 30 June 2026 deadline belonged to has passed; the page runs four recurring rounds a year instead (next opens 1 Sept, closes 30 Sept, awarded by 31 Oct) — rolling, not a single date. The amount is pinned at £2,500-£5,000; the page shows two unlabelled grant sizes, up to £5,000 (most ~£3,000) and up to £15,000 (most ~£8,000), with nothing distinguishing which is which or whether they are two tiers of the same scheme. Worth a relook at both the pin and whether this should be rolling.",
+   "HOLD    Macmillan Q Lab — Holistic Cancer Care — Deadline confirmed for the Team role: 14 September 2026, matching the row. The amount does not confirm: the page states one figure, £75,000 \"to support teams through the process\" across the whole cohort of teams in the lab, not a per-team ceiling, and never mentions £200,000 (the row's pinned range, unpinned in the DB, from an Idox feed). It is also part fellowship: individuals can take part as paid contributors (deadline 7 Oct) alongside organisation teams. Needs the guidance pack read, or your call, before it can carry a figure.",
+   "HOLD    Peter Kershaw Trust — Ordinary Grants — Read cleanly today (7 Sept called this a 1MB unreadable page; today's direct fetch got 1.6KB of clean text — whatever broke it before isn't reproducing). Real, open to organisations, one window a year and applications close 30 September — three weeks off. But the brief the page supports is thin: no maximum award stated (defers to Annual Accounts, not fetchable), no exclusions on the page, and who_can_apply beyond \"organisations working in social welfare\" isn't detailed enough for the seven-field bar. Time-sensitive if you want this year's window.",
+   "HOLD    EY Foundation Programmes for Young People — Host does not answer on any path tried today: direct fetch, the reader proxy, and the Chrome browser all return an error page for both ey.foundation and www.ey.foundation — no TLS/DNS response, not a bot wall. Confirms the 7 Sept finding rather than resolving it; may need a different domain for this foundation.",
+   "HOLD    Screwfix Foundation Grants — Same TLS refusal as 7 Sept, now also confirmed in the browser (error page, no load). Not a transient outage: unreachable on every path tried today, twice a week apart.",
+   "HOLD    ROCB CDFI Loans — The stored apply_url (rocbf.org.uk) is dead — the live domain is rocbf.co.uk — but rocbf.co.uk is bot-walled on every path tried today (fetch, browser, a fresh tab): \"Please wait while your request is being verified...\" never clears. Could not confirm or relink to the Community Cashflow Fund page today. There's also an archived row (0362621b, Robert Owen Community Banking — Wales Social Enterprise Lending) that already carries rocbf.co.uk with every field pinned; not touched. Whether the two merge is your call, once the site is readable again.",
+   "HOLD    Community Housing Fund — The fund's own page (found 7 Sept, and described there as giving no dates, amounts or exclusions) is bot-walled today on every path — \"Just a moment...\" never clears, on fetch or the browser. Also checked the Community-Led Housing London Hub's own site (communityledhousing.london): it describes advisory support for community-led housing groups but carries no GLA fund or application page. Nothing better found today; apply_url stays where it is.",
+   "HOLD    Jobs and Skills Funding Opportunities — Same wall as the Community Housing Fund row, same domain, today: bot-walled on both fetch and the browser. 7 Sept found this a 287KB navigation page naming no single programme, which was heading toward reject/non_funder, but there's no citable sentence from a read today to make that call on — it stays hold rather than a reject without a quote.",
+   "HOLD    The Mayor's Opportunity Fund — The old page still 404s. Tried the grants listing page and a site search for the current round; the whole communityfoundation.org.uk domain is behind a \"please wait while your request is being verified\" wall today on both fetch and the browser, so no current page could be found or confirmed. Title, deadline and amount_max stay pinned and untouched; apply_url is unpinned but there is nothing better to point it to yet."
+  ]
+ }
+}

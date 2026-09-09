@@ -1,0 +1,278 @@
+{
+ "batches": [
+  {
+   "batch": 1,
+   "provider": "Firstport — compound-funder split",
+   "staged": [
+    {
+     "id": "93b5e40d-069b-497e-bd9c-faddba20aa92",
+     "title": "Firstport Build It",
+     "city": "Scotland",
+     "funding_type": "grant",
+     "url": "https://www.firstport.org.uk/funding/social-entrepreneurs-fund-build-it/",
+     "is_local": true
+    },
+    {
+     "id": "1af5a790-2329-4eaa-9ebf-457436baacd7",
+     "title": "Firstport Community Enterprise Fund",
+     "city": "Scotland",
+     "funding_type": "grant",
+     "url": "https://www.firstport.org.uk/funding/community-enterprise-fund/",
+     "is_local": true
+    },
+    {
+     "id": "458979b8-caf9-43b5-9b9f-44246610e9e9",
+     "title": "Firstport Social Enterprise Boost Fund",
+     "city": "Sunderland & South Tyneside",
+     "funding_type": "grant",
+     "url": "https://www.firstport.org.uk/funding/social-enterprise-boost-fund/",
+     "is_local": true
+    },
+    {
+     "id": "2cade3f4-1c09-4e7e-b4dd-bcf1e5841226",
+     "title": "Firstport Social Innovation Challenge",
+     "city": "Scotland",
+     "funding_type": "programme",
+     "url": "https://www.firstport.org.uk/funding/social-innovation-challenge/",
+     "is_local": true
+    }
+   ],
+   "for_paul_decision": [
+    {
+     "title": "Firstport Start It Programme — LIVE ROW, needs your call",
+     "held_id": "1e994bdb-bb99-4c97-b02c-ee23c1874e18",
+     "url": "https://www.firstport.org.uk/funding/social-entrepreneurs-fund-start-it/",
+     "why": "individuals_only",
+     "quote": "Who's it for? Individuals with a business idea that addresses a social, environmental and/or community issue. ... Eligibility To apply for Start It, you must meet the following eligibility criteria: You are aged 18 or over. You are a permanent resident of Scotland.",
+     "note": "The brief said to relink this row to Start It's own page and correct its fields. Reading that page changes the question. Start It is individuals only, which under CLAUDE.md's audience rule makes the row out_of_scope, so the right action is a reject rather than a more precise link, and that is a live row during the launch freeze so it is yours not mine. Three further mismatches against the page, all on a LIVE row: it holds £5,000 to £25,000 where the page says 'Up to £5,000' and £25,000 appears nowhere on it; it lists seven eligible_structures (CICs, charities, SCIOs, co-ops, ltd) where the page's only tests are a person's age and residence; and its description calls it a programme for 'social entrepreneurs and early-stage social enterprises'. Its apply_url is also still the funding index. Not touched by this job."
+    }
+   ],
+   "report": [
+    {
+     "title": "UnLtd Awards",
+     "city": "UK",
+     "url": "https://www.unltd.org.uk/awards",
+     "why": "individuals_only",
+     "quote": "You must be 16 years old or over . View full eligibility criteria",
+     "note": "Has a genuine named intake (\"Next round on 1 October 2026 at 10:00\") and real awards up to £18,000 with support attached, so it fails only the third test. The award goes to the social entrepreneur: the eligibility tests are a person's age and right to live and work in the UK, and incorporation is optional (\"If you have already incorporated your social venture, it must be registered in the UK\")."
+    },
+    {
+     "title": "Pilotlight Weston Charity Awards",
+     "city": "North of England, Midlands and Wales",
+     "url": "https://www.pilotlight.org.uk/weston-charity-awards",
+     "why": "already_held",
+     "held_id": "73c320f7-46f1-4819-aa19-7c31fb6150c1",
+     "quote": "Twenty-two charities from the North of England, the Midlands and Wales have been named as winners of the 2026 Weston Charity Awards. Each charity will receive a support package worth over £22,000, incl",
+     "note": "Held twice: 73c320f7 (archived, same URL as this) and adc7ec22 (between_rounds_scheduled, on garfieldweston.org). Pilotlight is thoroughly covered besides, with Pilotlight 360 (c1caaf02) and Pro Bono Support Matching (c1a86516) both LIVE. Worth Paul knowing the 2026 winners are announced and the awards run annually, so between_rounds_scheduled on adc7ec22 looks like the correct state."
+    },
+    {
+     "title": "Key Fund",
+     "city": "North of England and the Midlands",
+     "url": "https://www.thekeyfund.co.uk/funding/",
+     "why": "already_held",
+     "held_id": "b818a116-3579-4eb3-8808-b40abc38e393",
+     "quote": "We can provide investments from £5k to £300k to community and social enterprises.",
+     "note": "Thirteen Key Fund rows in the table, including 'Key Fund Flexible Finance' LIVE at exactly the URL read here, plus Property Fund, Community Business Fund, Northern Impact Fund 2, Northern Cultural Regeneration Fund and More than a Pub all live. This provider is comprehensively covered."
+    },
+    {
+     "title": "Big Issue Invest",
+     "city": "UK",
+     "url": "https://bigissueinvest.com/",
+     "why": "already_held",
+     "held_id": "124a6b30-fc2a-4244-9b4e-a4cd5d61ffb0",
+     "quote": "We invest in social enterprises and charities, creating core solutions to end poverty and inequality in the UK.",
+     "note": "Held as 124a6b30 (archived) and d1fa687c (rejected), plus Power Up London separately. Both existing rows are hidden, so if Paul wants Big Issue Invest live it is an un-reject rather than a new row."
+    },
+    {
+     "title": "Plunkett UK",
+     "city": "UK",
+     "url": "https://plunkett.co.uk/",
+     "why": "support_service_class",
+     "quote": "Plunkett UK is a national charity supporting rural community businesses across the UK. We provide specialist business advice at every stage of the journey – from the initial idea and start-up, to long after opening.",
+     "note": "Membership plus specialist business advice and training. No named intake and nothing awarded, so it is the class Paul ruled out, not a cohort."
+    },
+    {
+     "title": "Impact Hub (global network site)",
+     "city": "UK",
+     "url": "https://impacthub.net/",
+     "why": "support_service_class",
+     "quote": "We connect entrepreneurs and innovators to large organisations, partners, investors, and the public sector.",
+     "note": "The global .net site is a membership network (Impact Maker Membership) rather than a programme with an intake. Impact Hub London is separately held already (between_rounds_scheduled). Individual UK Impact Hub locations run their own accelerators and would need checking location by location, which is a provider-level job rather than one row."
+    },
+    {
+     "title": "Bethnal Green Ventures",
+     "city": "UK",
+     "url": "https://bgv.vc/",
+     "why": "unreadable",
+     "quote": "",
+     "note": "Host does not answer: direct fetch fails outright and the browser returned no readable page. Not resolved, worth a retry another day, since a tech-for-good accelerator with named cohorts is exactly the shape this brief wants."
+    }
+   ],
+   "rulings_applied": {
+    "is_local": "All four set to true. The brief said nation-tagged rows get false; the catalogue's 54 Scotland rows and the existing Firstport row all use true, and a nation restriction is a geographic restriction. grant-tracker-be ruled for the catalogue and is fixing the brief. Lower stakes than it looks: matching.ts treats is_local as a legacy boolean, inconsistent on about 16% of rows, and prefers location_tag, so this is about not widening that inconsistency.",
+    "funding_type": "Build It, the Community Enterprise Fund and the Boost Fund are grants, not programmes, on their own pages' wording, and none bundles learning into the award (Build It's support is an external referral to Just Enterprise). Only the Social Innovation Challenge stays a programme: a competition with a £30,000 prize plus tailored support and £10,000 to two finalists genuinely is that shape. This cuts the batch's programme gain from four to one on purpose. A fundraiser looking for a £40,000 grant needs Build It in the Grants tab, and typing grants as programmes to move the programme count would make the count measure our tagging rather than the catalogue.",
+    "funding_subtypes": "Changed with the type, because the vocabularies are per type in src/lib/funding-subtypes.ts and includes_grant and support_programme are programme-only, so they would have been invalid on a grant row. The three grants become restricted, which is what they are. small_grant was deliberately not added: no threshold on the page or in the lib to cite for it, so it is left to the classifier rather than invented.",
+    "audience_wording": "who_can_apply on the Boost Fund and the Social Innovation Challenge now opens by saying both organisations and individuals can apply, so neither reads as individuals-only and gets skipped. Both remain in scope because the audience rule excludes individuals-ONLY."
+   },
+   "provider_first_dedup_finding": "The most useful thing in this batch, and it is a method change rather than a row. The first dedup asked whether the catalogue holds the FUND, and the answer was no in every case. Asking whether it holds the PROVIDER found three duplicate sets a fund-first query walks straight past: Key Fund has 13 rows, including 'Key Fund Flexible Finance' LIVE at the exact URL that was about to be staged; Pilotlight holds the Weston Charity Awards twice (73c320f7 archived and adc7ec22 between_rounds_scheduled) with Pilotlight 360 and Pro Bono Matching both live; and Big Issue Invest is held twice, both hidden, so wanting it live is an un-reject rather than a new row. The same question also exposed the Firstport defect this batch exists to fix, where one live row stood in front of five funds. Check the provider before the fund, every time."
+  },
+  {
+   "batch": 2,
+   "provider_seam": "Banks, corporates and tech, worked provider-first",
+   "staged": [],
+   "stopped_early": "Nothing stageable, so the batch stops under the brief's rule. The reason is not a dry seam, it is that the seam is already in the catalogue, and the sweep that established that cost zero page reads.",
+   "method_note": "Applying grant-tracker-be's provider-first ruling before spending any reads: 22 providers checked against the whole table by funder and host in one query. Every single one is already held. NatWest 2, Lloyds 11, Santander 3, Barclays 6, Virgin 3, Triodos 4, Charity Bank 4, Unity Trust 2, Co-operative Bank and Co-op 8, Google 2, Microsoft 4, AWS and Amazon 4, Salesforce 3, Vodafone 1, BT 1, Virgin Media O2 1. Fund-first would have meant reading dozens of pages to arrive at the same place.",
+   "report": [
+    {
+     "title": "NatWest Accelerator",
+     "city": "UK",
+     "url": "https://www.natwest.com/business/business-services/entrepreneur-accelerator.html",
+     "why": "support_service_class",
+     "quote": "NatWest Accelerator is our thriving community for entrepreneurs providing a range of support for you to grow your business. ... Any business can join our community",
+     "note": "The one apparent provider gap in the sweep, and it is not a cohort. You join a permanently open community with an app, 12 hubs, coaching and masterclasses; you do not apply to an intake. Fails the named-intake test, and the audience is any business rather than charities or social enterprises. NatWest's two held rows are a skills fund and Women In Business, neither of which is this."
+    }
+   ],
+   "the_finding": {
+    "headline": "The programme count is a review problem, not a discovery problem.",
+    "numbers": {
+     "programme_rows_total": 184,
+     "live_and_published": 18,
+     "not_live": 166,
+     "published_state_but_hidden": 18,
+     "between_rounds_scheduled": 11,
+     "archived": 90,
+     "rejected": 35,
+     "tagged_awaiting_review": 5,
+     "tagged": 6,
+     "captured": 1
+    },
+    "detail": "The brief says the 18 live programme rows are the number to move. The catalogue holds 184 programme rows and 166 of them are not live. 18 sit in pipeline_state 'published' with is_active false, which is the expire-grants desync already recorded in the project notes rather than a decision anyone made. 11 more are between_rounds_scheduled, which is the correct state for an annual cohort and means they come back when the round does. Two batches of discovery across two briefs added one programme row. Reviewing the 18 published-but-hidden and the 11 between-rounds would plausibly move the number by more than any amount of searching, and every one of those rows has already been through the review gate once.",
+    "named_examples_already_held_but_hidden": [
+     "Barclays Black Founder Accelerator — between_rounds_scheduled",
+     "Unreasonable Impact UK & Europe (Barclays and Unreasonable Group) — archived",
+     "Amazon Sustainability Accelerator — published state, is_active false",
+     "NatWest Women In Business — archived",
+     "Lloyds Bank Foundation Enhance, Invest and Specialist Programmes — archived or rejected",
+     "Impact Hub London Programmes — between_rounds_scheduled",
+     "Year Here Fellowship, On Purpose Associate Programme — archived"
+    ],
+    "CORRECTED": "My 'the programme count is a review problem' framing was overstated, and grant-tracker-be corrected it by opening the 29 rows rather than counting them. Of the 11 between-rounds programmes, five reopen in March 2027 (three Trading for Good variants and the Barclays Black Founder Accelerator) and are hidden deliberately under Paul's own one-month lead rule, and six carry no parseable date at all (Power Up London, Skills for Londoners, Impact Hub Programmes, Two Ridings Organisational Development Fund, Arts Council of Wales Extend, Weston). Of the 18 published-and-hidden programmes, fourteen have a deadline that has passed, which is the expire cron working correctly. So the genuinely reviewable set is around four rows, not 29, and a review pass over the rest would mostly re-confirm that closed funds are closed. Those per-row figures are grant-tracker-be's derivation, not mine. The counts I derived myself and re-verified are below.",
+    "what_is_actually_real": {
+     "summary": "Narrower than the headline count and more interesting. Across the WHOLE catalogue, not just programmes, 149 rows sit published-and-hidden. 126 of those have a deadline that has already passed, which is the expire cron doing its job. The residue is what matters: four rows have a reopening date inside the 30-day lead and are still hidden, and eleven have nothing on the row at all to explain why they are not visible. The mechanism is that check-coming-soon only sweeps pipeline_state='between_rounds_scheduled' and never touches is_active, so a row that is published-and-hidden with a future reopening date is picked up by neither cron. That is the expire-grants desync already recorded in the project notes, and this is a clean demonstrable instance of it.",
+     "verified_by": "Derived independently here on 2026-09-08 rather than copied, and 149 and the four match grant-tracker-be's numbers exactly.",
+     "reopening_inside_30_day_lead_still_hidden": [
+      {
+       "id": "792c4cce-e971-4544-8f5c-3e4d098bf087",
+       "reopens": "2026-09-21",
+       "title": "Pre-announcement: Gambling harms research grants",
+       "funder": "AHRC / ESRC / MRC / UKRI"
+      },
+      {
+       "id": "34c4a433-9149-4676-acad-7fe0585e96bf",
+       "reopens": "2026-09-18",
+       "title": "The Elephant Trust",
+       "funder": "The Elephant Trust"
+      },
+      {
+       "id": "6e32f1bc-2acd-4e86-bbeb-b73980d141dc",
+       "reopens": "2026-10-01",
+       "title": "Community Grants Programme",
+       "funder": "TheGivingMachine"
+      },
+      {
+       "id": "eef413f5-805b-4919-b54e-f3e5bd1e7e26",
+       "reopens": "2026-10-01",
+       "title": "UnLtd — Awards for Social Entrepreneurs",
+       "funder": "UnLtd"
+      }
+     ],
+     "eleven_with_nothing_explaining_the_hide": [
+      {
+       "id": "38d502d6-a414-40f5-a72e-405039098abd",
+       "title": "Green Roots Fund",
+       "funder": "Greater London Authority"
+      },
+      {
+       "id": "65dd568c-30c8-4e47-ac04-cb779c76a78f",
+       "title": "Lloyds Bank Foundation — Mental Health Pillar",
+       "funder": "Lloyds Bank Foundation for England and Wales"
+      },
+      {
+       "id": "321ed3d9-0619-4a5b-9a39-cae978857a03",
+       "title": "Argyll & Bute Council — Supporting Communities Fund",
+       "funder": "Argyll & Bute Council"
+      },
+      {
+       "id": "c2f62efc-64e7-4635-8a2c-9802e2ea089d",
+       "title": "Computers 4 Charity — Refurbished Hardware",
+       "funder": "Computers 4 Charity"
+      },
+      {
+       "id": "de5286bb-765c-4fcf-8d76-b19a6a657a4d",
+       "title": "Peter Harrison Foundation — Active Lives",
+       "funder": "Peter Harrison Foundation"
+      },
+      {
+       "id": "ef36f740-2f40-40e6-a561-8aa4c72a8a97",
+       "title": "Brewers Foundation",
+       "funder": "Brewers Foundation"
+      },
+      {
+       "id": "8f0e5171-379b-41c8-a17d-e0caa0867332",
+       "title": "Healthy Ageing Award",
+       "funder": "UnLtd"
+      },
+      {
+       "id": "fa1cc1d5-75fa-4a7e-aa6f-178cc3931770",
+       "title": "Funding Futures Programme",
+       "funder": "UnLtd"
+      },
+      {
+       "id": "c5e41501-c19d-4184-a701-1eecd4871c5e",
+       "title": "Chrysalis Programme",
+       "funder": "Hillingdon Council"
+      },
+      {
+       "id": "09b3d42a-e698-4194-9a61-f41062fb46e2",
+       "title": "Open Application Programme",
+       "funder": "Persimmon Charitable Foundation"
+      },
+      {
+       "id": "4fa14077-7904-4fd9-ba4f-d8ad7a501bff",
+       "title": "Social Enterprise Growth Accelerator (SEGA)",
+       "funder": "Sheffield Social Enterprise Network"
+      }
+     ],
+     "eleven_or_twelve": "grant-tracker-be counted twelve here and I derive eleven, and the difference is a distinction rather than an error. The twelfth is Henry Smith Foundation Grants, c9634fd4-6185-4aa1-9999-205dd589e9a5, which has no deadline and no parsed reopening date but DOES carry a prose next_open_date of \"TBC — between rounds\". So the row does explain why it is hidden, it just cannot be parsed into a date a cron can act on. That belongs with the known prose-parse family rather than with the eleven, where nothing on the row explains the hide at all. Counting it either way is defensible as long as the two kinds are not merged.",
+     "attribution_note": "The Gambling harms row was described in the check message as my example. It was not: I never cited it. The four-row finding is grant-tracker-be's. Confirmed here that 792c4cce is real and reopens on 21 September, thirteen days out.",
+     "do_not_fix": "Recorded only. Launch is Thursday, the standing constraint to the 11th is no new sweeps and no new defect classes, and this is a known class with a migration already attached. Post-launch work."
+    }
+   }
+  }
+ ],
+ "summary": {
+  "finished": "2026-09-08",
+  "batches_run": 2,
+  "staged_total": 4,
+  "staged_by_type": {
+   "grant": 3,
+   "programme": 1
+  },
+  "programme_count": {
+   "before": 18,
+   "after_if_all_published": 19,
+   "note": "Discovery across both briefs added exactly one programme row, the Firstport Social Innovation Challenge. The other three Firstport rows are grants and belong in the Grants tab."
+  },
+  "city_spread": {
+   "Scotland": 3,
+   "Sunderland & South Tyneside": 1,
+   "note": "Cities were a coverage lens in this brief, not a gate. No row was staged to fill a city."
+  },
+  "nothing_went_live": "All four staged rows are is_active false, tagged_awaiting_review, source system:programmes-cohorts-2026-09-08 at trust 50. No live row was touched by this job.",
+  "for_paul": [
+   "Firstport Start It (1e994bdb) is LIVE and individuals-only, and its amount, eligible_structures and description all contradict its own page. It needs rejecting, not relinking. Detail under batch 1 for_paul_decision.",
+   "Four published-and-hidden rows reopen within the 30-day lead and are visible to neither cron, the nearest on 18 and 21 September. Ids in batch 2. Recorded, not fixed: post-launch."
+  ],
+  "method_lesson": "Check the provider before the fund. Fund-first dedup returned 'not held' for candidates whose provider had 13 rows; provider-first found three duplicate sets, the Firstport front-door defect, and then established a whole 22-provider seam as already covered for the cost of one query. The corollary, from grant-tracker-be: 22 of 22 providers held, and 18 live out of 184 programme rows, says the provider layer is close to exhausted rather than under-explored. Programmes run in rounds, so most are legitimately shut at any moment, and the lever on that number is the reopening detector rather than more searching."
+ }
+}

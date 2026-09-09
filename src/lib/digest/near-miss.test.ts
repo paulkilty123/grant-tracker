@@ -103,3 +103,31 @@ describe('meta line', () => {
       .toBe('Network for Social Change · £25k – £100k')
   })
 })
+
+describe('structure containment matches the matcher', () => {
+  const cio = { ...acc, name: 'Tinderbox Collective', legal_structure: 'cio' } as unknown as Organisation
+  it('a CIO is a registered charity: a fund listing registered charities is not a structure near miss', () => {
+    // Fairer Life Chances, 7 Sept 2026: the matcher scored a CIO eligible and
+    // the digest said "ruled out on legal structure". The two must agree.
+    const r = findNearMiss({
+      grant: grant({ eligibleStructures: ['unincorporated', 'registered_charity', 'scio'] }),
+      org: cio, readOn: '7 September', otherwiseFits: true,
+    })
+    expect(r?.dimension).not.toBe('structure')
+  })
+  it('a CIO against a SCIO-only fund is not a structure near miss either: the matcher treats both as charities', () => {
+    const r = findNearMiss({
+      grant: grant({ eligibleStructures: ['scio'] }),
+      org: cio, readOn: '7 September', otherwiseFits: true,
+    })
+    expect(r?.dimension).not.toBe('structure')
+  })
+  it('a CIO against an unincorporated-only fund is still one step away', () => {
+    const r = findNearMiss({
+      grant: grant({ eligibleStructures: ['unincorporated'] }),
+      org: cio, readOn: '7 September', otherwiseFits: true,
+    })
+    expect(r?.dimension).toBe('structure')
+    expect(r?.rule).toContain('You are a CIO')
+  })
+})

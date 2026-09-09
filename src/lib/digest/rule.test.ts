@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { plainRule, shortDate } from './build'
+import { plainRule, shortDate, stripPlaceholderLead, matchOrder } from './build'
 import { daysUntil } from './text'
 import { nearMissMeta } from './near-miss'
 
@@ -70,3 +70,35 @@ describe('the year appears once it stops being obvious', () => {
   })
 })
 
+
+describe('placeholder lead on exclusions', () => {
+  it('drops "Not explicitly stated. However, ..." and keeps the caveat', () => {
+    expect(stripPlaceholderLead('Not explicitly stated. However, applicants must be based in England.'))
+      .toBe('Applicants must be based in England.')
+  })
+  it('leaves a bare placeholder for the saysNone test to drop', () => {
+    expect(stripPlaceholderLead('Not explicitly stated.')).toBe('')
+  })
+  it('leaves a real exclusion alone', () => {
+    expect(stripPlaceholderLead('No funding for individuals or statutory bodies.'))
+      .toBe('No funding for individuals or statutory bodies.')
+  })
+})
+
+describe('match rotation by send history', () => {
+  const mk = (id: string, score: number, fresh = false) => ({ row: { id }, score, fresh })
+  it('puts matches shown in the window below unshown ones, best repeats last', () => {
+    const seen = new Set(['new_match:a', 'new_match:b'])
+    const pool = [mk('a', 95), mk('b', 90), mk('c', 70), mk('d', 80)]
+    expect(pool.sort(matchOrder(seen)).map(s => s.row.id)).toEqual(['d', 'c', 'a', 'b'])
+  })
+  it('falls back to fresh-then-score when nothing has been shown', () => {
+    const pool = [mk('a', 95), mk('b', 60, true), mk('c', 70)]
+    expect(pool.sort(matchOrder(new Set())).map(s => s.row.id)).toEqual(['b', 'a', 'c'])
+  })
+  it('never empties the list: with everything shown, order is fresh then score', () => {
+    const seen = new Set(['new_match:a', 'new_match:b', 'new_match:c'])
+    const pool = [mk('a', 70), mk('b', 90), mk('c', 80)]
+    expect(pool.sort(matchOrder(seen)).map(s => s.row.id)).toEqual(['b', 'c', 'a'])
+  })
+})

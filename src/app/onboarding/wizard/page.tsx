@@ -93,13 +93,13 @@ const IMPACT_SECTORS: { value: ImpactSector; label: string }[] = [
   { value: 'housing',           label: 'Housing & Homelessness' },
   { value: 'education',         label: 'Education & Skills' },
   { value: 'employment',        label: 'Employment & Livelihoods' },
-  { value: 'disability',        label: 'Disability' },
-  { value: 'older_people',      label: 'Older People' },
+  { value: 'disability',        label: 'Disability services' },
+  { value: 'older_people',      label: 'Older people\u2019s services' },
   { value: 'environment',       label: 'Environment & Climate' },
   { value: 'creative',          label: 'Arts & Creative Industries' },
   { value: 'heritage',          label: 'Heritage & Conservation' },
   { value: 'sport',             label: 'Sport & Physical Activity' },
-  { value: 'women',             label: 'Women & Gender Equality' },
+  { value: 'women',             label: 'Women\u2019s organisations & gender equality' },
   { value: 'justice',           label: 'Human Rights, Justice & Democracy' },
   { value: 'tech',              label: 'Tech for Good' },
   { value: 'financial',         label: 'Financial Inclusion' },
@@ -183,10 +183,16 @@ const UNCOLLECTED_ON_CREATE = {
   key_outcomes:                [],
 }
 
-type WizardStep = 'entry' | 'review' | 'manual' | 'sectors' | 'beneficiaries' | 'location' | 'reveal'
+type WizardStep = 'entry' | 'browse' | 'review' | 'manual' | 'sectors' | 'beneficiaries' | 'location' | 'reveal'
+
+/** Who is signing up. Recorded on the organisation row; see migration 080. */
+type SignupRole = 'organisation' | 'consultant' | 'network'
 
 const STEP_DOT_POS: Record<WizardStep, number> = {
-  entry: 1, review: 2, manual: 2, sectors: 3, beneficiaries: 4, location: 5, reveal: 6,
+  // Who you serve comes before what you focus on (Paul, 8 Sept 2026, after
+  // a tester went looking for "children and young people" under sectors):
+  // charities describe themselves by audience first, and so do funder briefs.
+  entry: 1, browse: 1, review: 2, manual: 2, beneficiaries: 3, sectors: 4, location: 5, reveal: 6,
 }
 
 type FieldConfidence = 'confident' | 'uncertain' | 'missing'
@@ -286,6 +292,11 @@ interface WizardState {
    * changes is that somebody saw it.
    */
   alertsEnabled:    boolean
+  /** Who is signing up. Defaults to the organisation itself. */
+  signupRole:       SignupRole
+  /** Browse path only: how many organisations they work with, and one of them. */
+  clientCountBand:  '' | '1-2' | '3-5' | '6+'
+  exampleClient:    string
 }
 
 const EMPTY_STATE: WizardState = {
@@ -299,6 +310,9 @@ const EMPTY_STATE: WizardState = {
   nicheTags: [],
   excludedNicheTags: [],
   alertsEnabled: true,
+  signupRole: 'organisation',
+  clientCountBand: '',
+  exampleClient: '',
 }
 
 /** Derive the three boolean eligibility flags from the legal structure.
@@ -649,10 +663,9 @@ function PickerChip({
 
 /** Card wrapper for steps 2–5 */
 function CardShell({
-  step, showSkip = true, children,
+  step, children,
 }: {
   step: number
-  showSkip?: boolean
   children: React.ReactNode
 }) {
   const isMobile = useIsMobile()
@@ -687,18 +700,9 @@ function CardShell({
             {children}
           </div>
         </div>
-        {showSkip && (
-          <div style={{ textAlign: 'center', marginTop: 4 }}>
-            <Link
-              href="/dashboard/profile"
-              style={{ fontSize: 13, color: T.textTertiary, fontFamily: 'var(--font-space-grotesk)', padding: '12px 16px', display: 'inline-block', textDecoration: 'none' }}
-              onMouseEnter={e => (e.currentTarget.style.color = T.textSecondary)}
-              onMouseLeave={e => (e.currentTarget.style.color = T.textTertiary)}
-            >
-              Set up later
-            </Link>
-          </div>
-        )}
+        {/* "Set up later" removed (Paul, 8 Sept 2026): a profile is the
+            product, and the browse-without-a-profile path now exists for the
+            people who genuinely cannot fill one in. */}
       </div>
     </div>
   )
@@ -798,6 +802,9 @@ export default function OnboardingWizardPage() {
           // Read back rather than defaulted, so a second pass through the
           // wizard cannot silently re-subscribe somebody who turned alerts off.
           alertsEnabled:    org.alerts_enabled ?? true,
+          signupRole:       (org.signup_role as SignupRole | null | undefined) ?? 'organisation',
+          clientCountBand:  (org.client_count_band as '1-2' | '3-5' | '6+' | null | undefined) ?? '',
+          exampleClient:    org.example_client ?? '',
         })
       }
       setLoading(false)
@@ -1013,6 +1020,79 @@ export default function OnboardingWizardPage() {
     }))
   }
 
+  /**
+   * Browse without a profile (Paul, 8 Sept 2026). A consultant or network
+   * that cannot honestly answer "what is your organisation?" gets a row under
+   * their own name so the app works, with nothing to match against. Every
+   * matching field is empty on purpose: the dashboard hides the matches card
+   * and the digest leaves them out on `profile_skipped`, and Find Funding says
+   * so in one line. Saving a profile later flips the flag back.
+   */
+  async function handleBrowseFinish() {
+    setSaving(true); setSaveError(null)
+    try {
+      const payload = {
+        name:                         state.name.trim() || 'My practice',
+        org_type:                     'other' as const,
+        legal_structure:              null,
+        org_stage:                    null,
+        social_mission_declared:      false,
+        articles_restrict_profit:     false,
+        impact_sectors:               [],
+        beneficiary_groups:           [],
+        niche_tags:                   [],
+        excluded_niche_tags:          [],
+        annual_income_band:           null,
+        primary_location:             null,
+        geographic_reach:             null,
+        themes:                       [],
+        areas_of_work:                [],
+        beneficiaries:                [],
+        mission:                      null,
+        years_operating:              null,
+        min_grant_target:             null,
+        max_grant_target:             null,
+        funding_type_preferences:     ['grant', 'programme', 'investment', 'in_kind'] as FundingType[],
+        spend_restriction_preferences: [],
+        has_asset_lock:               null,
+        owner_id:                     userId,
+        alerts_enabled:               false,
+        alert_frequency:              'weekly',
+        alert_min_score:              70,
+        website_url:                  url.trim() ? (url.trim().startsWith('http') ? url.trim() : 'https://' + url.trim()) : null,
+        client_count_band:            state.clientCountBand || null,
+        example_client:               state.exampleClient.trim() || null,
+        signup_role:                  state.signupRole,
+        profile_skipped:              true,
+      }
+      let currentOrgId = orgId
+      if (orgId) {
+        // An organisation already exists for this account. Browsing without a
+        // profile must not wipe it: Paul's own test on 8 Sept emptied a real
+        // row's sectors, beneficiaries, location and mission through this
+        // path. Only the flags change; the profile stays as it was.
+        await updateOrganisation(orgId, {
+          signup_role: state.signupRole,
+          profile_skipped: true,
+          alerts_enabled: false,
+          client_count_band: state.clientCountBand || null,
+          example_client: state.exampleClient.trim() || null,
+        })
+      } else {
+        const created = await createOrganisation({ ...UNCOLLECTED_ON_CREATE, ...payload } as Parameters<typeof createOrganisation>[0])
+        currentOrgId = created.id
+        setOrgId(created.id)
+      }
+      if (currentOrgId) writeActiveOrgCookie(currentOrgId)
+      track('onboarding_browse_without_profile', { role: state.signupRole })
+      router.push('/dashboard/search')
+      router.refresh()
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Could not save. Please try again.')
+      setSaving(false)
+    }
+  }
+
   async function handleFinish() {
     setSaving(true); setSaveError(null)
     try {
@@ -1092,6 +1172,9 @@ export default function OnboardingWizardPage() {
         alert_frequency:              'weekly',
         alert_min_score:              70,
         website_url:                  url.trim() ? (url.trim().startsWith('http') ? url.trim() : 'https://' + url.trim()) : null,
+        signup_role:                  state.signupRole,
+        // A saved profile ends the browse-only state, whoever they are.
+        profile_skipped:              false,
       }
 
       let currentOrgId = orgId
@@ -1253,6 +1336,31 @@ export default function OnboardingWizardPage() {
           error={fetchError}
           onAutoFill={handleAutoFill}
           onManual={() => { setExtracted(null); setStep('manual') }}
+          role={state.signupRole}
+          setRole={r => update('signupRole', r)}
+          onBrowse={() => setStep('browse')}
+        />
+      </CardShell>
+    )
+  }
+
+  if (step === 'browse') {
+    return (
+      <CardShell step={1}>
+        <StepBrowse
+          name={state.name}
+          setName={v => update('name', v)}
+          website={url}
+          setWebsite={setUrl}
+          band={state.clientCountBand}
+          setBand={v => update('clientCountBand', v)}
+          example={state.exampleClient}
+          setExample={v => update('exampleClient', v)}
+          role={state.signupRole}
+          saving={saving}
+          error={saveError}
+          onBack={() => setStep('entry')}
+          onFinish={handleBrowseFinish}
         />
       </CardShell>
     )
@@ -1262,7 +1370,7 @@ export default function OnboardingWizardPage() {
   const cardStep = STEP_DOT_POS[step]
 
   return (
-    <CardShell step={cardStep} showSkip={step !== 'reveal'}>
+    <CardShell step={cardStep}>
 
       {step === 'review' && extracted && (
         <StepReview
@@ -1274,8 +1382,8 @@ export default function OnboardingWizardPage() {
           canContinue={reviewCanContinue()}
           blockers={reviewBlockers()}
           onBack={() => setStep('entry')}
-          onSkip={() => setStep('sectors')}
-          onContinue={() => setStep('sectors')}
+          onSkip={() => setStep('beneficiaries')}
+          onContinue={() => setStep('beneficiaries')}
           wizardState={state}
           toggleSector={toggleSector}
           makePrimarySector={makePrimarySector}
@@ -1289,7 +1397,7 @@ export default function OnboardingWizardPage() {
           state={state}
           update={update}
           onBack={() => setStep('entry')}
-          onContinue={() => setStep('sectors')}
+          onContinue={() => setStep('beneficiaries')}
         />
       )}
 
@@ -1301,8 +1409,8 @@ export default function OnboardingWizardPage() {
           toggleSector={toggleSector}
           makePrimarySector={makePrimarySector}
           cycleNicheTag={cycleNicheTag}
-          onBack={() => setStep(extracted ? 'review' : 'manual')}
-          onContinue={() => setStep('beneficiaries')}
+          onBack={() => setStep('beneficiaries')}
+          onContinue={() => setStep('location')}
           canContinue={sectorsValid}
         />
       )}
@@ -1312,8 +1420,8 @@ export default function OnboardingWizardPage() {
           beneficiaryGroups={state.beneficiaryGroups}
           toggleBeneficiary={toggleBeneficiary}
           makePrimaryBeneficiary={makePrimaryBeneficiary}
-          onBack={() => setStep('sectors')}
-          onContinue={() => setStep('location')}
+          onBack={() => setStep(extracted ? 'review' : 'manual')}
+          onContinue={() => setStep('sectors')}
           canContinue={beneficiariesValid}
         />
       )}
@@ -1327,7 +1435,7 @@ export default function OnboardingWizardPage() {
           saving={saving}
           saveError={saveError}
           canContinue={locationValid}
-          onBack={() => setStep('beneficiaries')}
+          onBack={() => setStep('sectors')}
           onFinish={handleFinish}
         />
       )}
@@ -1352,20 +1460,74 @@ export default function OnboardingWizardPage() {
    Step 1 — Entry (rendered inside hero page)
    ═══════════════════════════════════════════════ */
 
-function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual }: {
+const SIGNUP_ROLES: { value: SignupRole; label: string }[] = [
+  { value: 'organisation', label: 'This organisation' },
+  { value: 'consultant',   label: 'A fundraiser or consultant working with several' },
+  { value: 'network',      label: 'A network or membership body' },
+]
+
+function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual, role, setRole, onBrowse }: {
   url: string; setUrl: (v: string) => void
   fetching: boolean; error: string | null
   onAutoFill: () => void; onManual: () => void
+  role: SignupRole; setRole: (r: SignupRole) => void
+  onBrowse: () => void
 }) {
   const [hov, setHov] = useState(false)
+  const several = role !== 'organisation'
+  // The fork for consultants and networks. Until they choose, the website box
+  // and its links stay hidden: four ways forward on one screen was confusing
+  // (Paul, 8 Sept). Picking "one organisation" brings the normal step back.
+  const [choice, setChoice] = useState<'profile' | 'browse' | null>(null)
+  const showProfileTools = !several || choice === 'profile'
   return (
     <>
       <h1 style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 40, fontWeight: 600, color: T.textPrimary, margin: '0 0 14px', lineHeight: 1.15, letterSpacing: '-0.02em' }}>
         Let&rsquo;s build your profile
       </h1>
-      <p style={{ fontSize: 16, color: T.textSecondary, lineHeight: 1.5, margin: '0 0 36px', maxWidth: 460, fontFamily: 'var(--font-dm-sans)' }}>
-        Drop in your website and we&rsquo;ll do the heavy lifting. You can review and refine everything in the next step.
+      <p style={{ fontSize: 16, color: T.textSecondary, lineHeight: 1.5, margin: '0 0 24px', maxWidth: 460, fontFamily: 'var(--font-dm-sans)' }}>
+        {several
+          ? <>A profile is built for one organisation at a time, and its details drive the matches you see.</>
+          : <>Drop in your website and we&rsquo;ll do the heavy lifting. You can review and refine everything in the next step.</>}
       </p>
+
+      {/* Who is signing up. Recorded on the row (migration 080). The default
+          path is unchanged; the other two open the fork below. */}
+      <fieldset style={{ border: 'none', padding: 0, margin: '0 0 24px' }}>
+        <legend style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 14, fontWeight: 600, color: T.textPrimary, marginBottom: 8 }}>I am signing up as</legend>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {SIGNUP_ROLES.map(r => (
+            <label key={r.value} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: T.textPrimary, fontFamily: 'var(--font-dm-sans)', cursor: 'pointer' }}>
+              <input type="radio" name="signup-role" value={r.value} checked={role === r.value} onChange={() => setRole(r.value)} />
+              {r.label}
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
+      {several && choice !== 'profile' && (
+        <div style={{ maxWidth: 520 }}>
+          <p style={{ fontSize: 14, color: T.textSecondary, lineHeight: 1.55, margin: '0 0 14px', fontFamily: 'var(--font-dm-sans)' }}>
+            A profile gets you matches and the weekly update. Client profiles come with Team, so for now choose one organisation, or browse without a profile.
+          </p>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <Button variant="primary" size="lg" onClick={() => setChoice('profile')}>Set up a profile for one organisation</Button>
+            <Button variant="secondary" size="lg" onClick={onBrowse}>Browse without a profile</Button>
+          </div>
+        </div>
+      )}
+
+      {showProfileTools && (<>
+      {several && (
+        <div style={{ margin: '0 0 12px', maxWidth: 520 }}>
+          <p style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 15, fontWeight: 600, color: T.textPrimary, margin: '0 0 4px' }}>
+            Which organisation do you want matches for?
+          </p>
+          <p style={{ fontSize: 13.5, color: T.textSecondary, lineHeight: 1.5, margin: 0, fontFamily: 'var(--font-dm-sans)' }}>
+            Enter that organisation&rsquo;s website, a client or a member, not your own. We build the profile from it and you can review everything in the next step.
+          </p>
+        </div>
+      )}
 
       {/* URL input + CTA */}
       <div style={{ display: 'flex', gap: 8, width: '100%', maxWidth: 520 }}>
@@ -1376,7 +1538,7 @@ function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual }: {
             value={url}
             onChange={e => setUrl(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && !fetching && url.trim() && onAutoFill()}
-            placeholder="https://yourorganisation.co.uk"
+            placeholder={several ? 'https://the-organisation.org.uk' : 'https://yourorganisation.co.uk'}
             style={{ ...INPUT_STYLE, padding: '0 14px 0 34px', boxSizing: 'border-box' }}
           />
         </div>
@@ -1409,6 +1571,92 @@ function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual }: {
         >
           No website? Fill in manually
         </button>
+      </div>
+      </>)}
+    </>
+  )
+}
+
+/* ═══════════════════════════════════════════════
+   Step 1B — Browse without a profile
+   One field, their own name or practice, so a row exists and the app works.
+   ═══════════════════════════════════════════════ */
+function StepBrowse({ name, setName, website, setWebsite, band, setBand, example, setExample, role, saving, error, onBack, onFinish }: {
+  name: string; setName: (v: string) => void
+  website: string; setWebsite: (v: string) => void
+  band: '' | '1-2' | '3-5' | '6+'; setBand: (v: '' | '1-2' | '3-5' | '6+') => void
+  example: string; setExample: (v: string) => void
+  role: SignupRole
+  saving: boolean; error: string | null
+  onBack: () => void; onFinish: () => void
+}) {
+  const noun = role === 'network' ? 'network' : 'practice'
+  return (
+    <>
+      <h1 style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 40, fontWeight: 600, color: T.textPrimary, margin: '0 0 14px', lineHeight: 1.15, letterSpacing: '-0.02em' }}>
+        Browse without a profile
+      </h1>
+      <p style={{ fontSize: 16, color: T.textSecondary, lineHeight: 1.5, margin: '0 0 28px', maxWidth: 460, fontFamily: 'var(--font-dm-sans)' }}>
+        You can search and save now. Matches and the weekly update need an organisation profile, which you can add later from your profile page, or get in touch about Team for client profiles.
+      </p>
+      <label style={{ display: 'block', fontFamily: 'var(--font-space-grotesk)', fontSize: 14, fontWeight: 600, color: T.textPrimary, marginBottom: 8 }}>
+        Your name or {noun}
+      </label>
+      <input
+        type="text"
+        value={name}
+        onChange={e => setName(e.target.value)}
+        onKeyDown={e => e.key === 'Enter' && !saving && name.trim() && onFinish()}
+        placeholder={role === 'network' ? 'e.g. Impact Hub Brighton' : 'e.g. Jane Smith Fundraising'}
+        style={{ ...INPUT_STYLE, maxWidth: 520, boxSizing: 'border-box' }}
+      />
+      {/* Three more facts (Paul, 8 Sept 2026): who they are before Team is
+          built, and what makes the get-in-touch conversation short. */}
+      <label style={{ display: 'block', fontFamily: 'var(--font-space-grotesk)', fontSize: 14, fontWeight: 600, color: T.textPrimary, margin: '20px 0 8px' }}>
+        Your website, if you have one
+      </label>
+      <input
+        type="url"
+        value={website}
+        onChange={e => setWebsite(e.target.value)}
+        placeholder={role === 'network' ? 'https://yournetwork.org.uk' : 'https://yourpractice.co.uk'}
+        style={{ ...INPUT_STYLE, maxWidth: 520, boxSizing: 'border-box' }}
+      />
+      <p style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 14, fontWeight: 600, color: T.textPrimary, margin: '20px 0 8px' }}>
+        Roughly how many organisations do you {role === 'network' ? 'support' : 'work with'}?
+      </p>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        {(['1-2', '3-5', '6+'] as const).map(b => (
+          <button
+            key={b}
+            type="button"
+            onClick={() => setBand(b)}
+            style={{
+              fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 13.5, padding: '8px 16px', borderRadius: 999, cursor: 'pointer',
+              background: band === b ? '#F1F7E4' : '#fff', color: band === b ? '#3B6D11' : T.textSecondary,
+              border: `1px solid ${band === b ? '#3B6D11' : 'rgba(44,44,42,0.25)'}`,
+            }}
+          >
+            {b === '6+' ? '6 or more' : b}
+          </button>
+        ))}
+      </div>
+      <label style={{ display: 'block', fontFamily: 'var(--font-space-grotesk)', fontSize: 14, fontWeight: 600, color: T.textPrimary, margin: '20px 0 8px' }}>
+        One organisation you {role === 'network' ? 'support' : 'work with'}
+      </label>
+      <input
+        type="text"
+        value={example}
+        onChange={e => setExample(e.target.value)}
+        placeholder="e.g. Bramble Arts Collective"
+        style={{ ...INPUT_STYLE, maxWidth: 520, boxSizing: 'border-box' }}
+      />
+      {error && <p style={{ fontSize: 13, color: T.coralText, marginTop: 8 }}>{error}</p>}
+      <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 28 }}>
+        <Button variant="secondary" size="lg" onClick={onBack} disabled={saving}>Back</Button>
+        <Button variant="primary" size="lg" onClick={onFinish} disabled={saving || !name.trim() || !band || !example.trim()}>
+          {saving ? 'Saving…' : 'Browse the catalogue'}
+        </Button>
       </div>
     </>
   )

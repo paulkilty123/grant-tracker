@@ -124,13 +124,13 @@ const IMPACT_SECTOR_OPTIONS: { value: ImpactSector; label: string }[] = [
   { value: 'housing',           label: 'Housing & Homelessness' },
   { value: 'education',         label: 'Education & Skills' },
   { value: 'employment',        label: 'Employment & Livelihoods' },
-  { value: 'disability',        label: 'Disability' },
-  { value: 'older_people',      label: 'Older People' },
+  { value: 'disability',        label: 'Disability services' },
+  { value: 'older_people',      label: 'Older people\u2019s services' },
   { value: 'environment',       label: 'Environment & Climate' },
   { value: 'creative',          label: 'Arts & Creative Industries' },
   { value: 'heritage',          label: 'Heritage & Conservation' },
   { value: 'sport',             label: 'Sport & Physical Activity' },
-  { value: 'women',             label: 'Women & Gender Equality' },
+  { value: 'women',             label: 'Women\u2019s organisations & gender equality' },
   { value: 'justice',           label: 'Human Rights, Justice & Democracy' },
   { value: 'tech',              label: 'Tech for Good' },
   { value: 'financial',         label: 'Financial Inclusion' },
@@ -2000,6 +2000,14 @@ function StoryCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
             <p style={{ fontFamily: BODY, fontSize: 15, color: T.textPrimary, lineHeight: 1.65, margin: 0, whiteSpace: 'pre-wrap' }}>
               {org.mission}
             </p>
+            {/* A thin story gets one nudge (Paul, 8 Sept 2026). Honest about what
+                it buys: the search, the adviser and the builder read the whole
+                story; the matcher reads only its first sentence. */}
+            {(org.mission ?? '').trim().length < 150 && (
+              <p style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary, lineHeight: 1.55, margin: '10px 0 0' }}>
+                A fuller story helps the search, the adviser and your applications sound like you. Two or three paragraphs is ideal.
+              </p>
+            )}
             {hasThemes && (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
                 {(org.themes ?? []).map(t => (
@@ -2069,7 +2077,6 @@ function AlertsCard({ org, orgId, onSaved }: {
   onSaved: () => void
 }) {
   const enabled = org.alerts_enabled ?? false
-  const minScore = org.alert_min_score ?? 70
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -2121,38 +2128,9 @@ function AlertsCard({ org, orgId, onSaved }: {
           </button>
         </div>
 
-        {enabled && (
-          <div style={{ marginTop: 18, paddingTop: 16, borderTop: `1px solid ${T.border}` }}>
-            <p style={{ margin: '0 0 10px', fontFamily: UI, fontWeight: 500, fontSize: 13, color: T.textPrimary }}>
-              Only tell me about strong matches
-            </p>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {[
-                { v: 60, label: 'Anything relevant' },
-                { v: 70, label: 'Good matches' },
-                { v: 80, label: 'Strong matches only' },
-              ].map(o => {
-                const on = minScore === o.v
-                return (
-                  <button
-                    key={o.v}
-                    disabled={saving}
-                    onClick={() => set({ alert_min_score: o.v })}
-                    style={{
-                      fontFamily: UI, fontWeight: 500, fontSize: 12.5,
-                      padding: '7px 14px', borderRadius: 999, cursor: saving ? 'wait' : 'pointer',
-                      background: on ? T.greenBg : T.white,
-                      color: on ? T.greenText : T.textSecondary,
-                      border: `1px solid ${on ? T.greenText : T.borderStrong}`,
-                    }}
-                  >
-                    {o.label}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-        )}
+        {/* The three match-threshold buttons that sat here were built for the
+            old alerts and the digest never read them: one fixed bar for everyone.
+            Removed 8 Sept 2026 rather than promise a control that did nothing. */}
 
         {!enabled && (
           <p style={{ margin: '14px 0 0', fontFamily: BODY, fontSize: 13, color: T.textTertiary }}>
@@ -2192,6 +2170,21 @@ export default function ProfilePage() {
     return () => { cancelled = true }
   }, [])
   const [loading, setLoading] = useState(true)
+
+  // Deep links such as /dashboard/profile#card-story (the "Your material"
+  // button on Applications). The cards render after the org loads, so the
+  // browser's own hash jump fires on an empty page and lands at the top.
+  // Scroll once the target exists.
+  useEffect(() => {
+    if (loading) return
+    const hash = typeof window !== 'undefined' ? window.location.hash.slice(1) : ''
+    if (!hash) return
+    const t = setTimeout(() => {
+      const el = document.getElementById(hash)
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 120)
+    return () => clearTimeout(t)
+  }, [loading])
   const [editingCard, setEditingCard] = useState<CardId | null>(null)
   const [jumpTarget, setJumpTarget] = useState<CardId | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)

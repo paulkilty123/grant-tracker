@@ -1400,6 +1400,7 @@ export default function SearchPage() {
   const [smartMatched, setSmartMatched] = useState(false)
   const [toast, setToast]               = useState<{ msg: string; variant: 'success' | 'error' } | null>(null)
   const [org, setOrg]                   = useState<Organisation | null>(null)
+  const [browseDismissed, setBrowseDismissed] = useState(false)
   /**
    * "Show me what I'd match as a CIC."
    *
@@ -2677,6 +2678,18 @@ export default function SearchPage() {
         <h2 className="text-4xl font-bold text-charcoal leading-tight" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.02em' }}>Find Funding</h2>
       </div>
 
+      {/* Browsing without a profile (migration 080). One line, dismissable
+          for the session, back on the next visit until a profile is saved. */}
+      {org?.profile_skipped && !browseDismissed && (
+        <div className="mb-5 p-4 flex items-start justify-between gap-4 rounded-xl" style={{ border: '1px solid rgba(29,60,62,0.18)', background: '#F5F1E8' }}>
+          <div>
+            <p className="text-sm font-semibold" style={{ color: '#173404' }}>You are browsing without a profile.</p>
+            <p className="text-xs text-mid mt-0.5">Matches and the weekly update need an organisation profile. Client profiles come with Team, <a href="/#contact" className="underline">get in touch</a> and we&apos;ll set them up.</p>
+          </div>
+          <button onClick={() => setBrowseDismissed(true)} className="text-mid hover:text-charcoal text-lg leading-none flex-shrink-0" aria-label="Dismiss">×</button>
+        </div>
+      )}
+
       {/* Welcome banner — shown after first profile save */}
       {isWelcome && !welcomeDismissed && (
         <div className="mb-5 p-4 flex items-start justify-between gap-4 rounded-xl" style={{ border: '1px solid rgba(142,203,60,0.3)', background: 'rgba(142,203,60,0.06)' }}>
@@ -2695,7 +2708,7 @@ export default function SearchPage() {
           {activeView === 'browse' && org && (
             <>
               <span className="w-2 h-2 flex-shrink-0 rounded-full" style={{ backgroundColor: '#22874C' }} />
-              <span>Matched for <strong className="text-charcoal">{org.name ?? 'your organisation'}</strong>{org.primary_location && <span className="text-mid"> · {org.primary_location}</span>}</span>
+              <span>{org.profile_skipped ? 'Browsing as' : 'Matched for'} <strong className="text-charcoal">{org.name ?? 'your organisation'}</strong>{org.primary_location && <span className="text-mid"> · {org.primary_location}</span>}</span>
             </>
           )}
           {activeView === 'browse' && grantsLoaded && !org && (
@@ -3081,7 +3094,7 @@ export default function SearchPage() {
       )}
 
       {/* ── Profile-off amber nudge ── */}
-      {activeView === 'browse' && org && !profileFilterOn && !aiResults && (
+      {activeView === 'browse' && org && !org.profile_skipped && !profileFilterOn && !aiResults && (
         <div className="mb-3 px-4 py-3.5 rounded-xl flex items-center justify-between gap-4" style={{ background: '#E3F0E4', border: '0.5px solid rgba(27,107,61,0.14)' }}>
           <div className="flex items-center gap-3 min-w-0">
             {/* Icon badge — search magnifier, green */}
@@ -3295,7 +3308,7 @@ export default function SearchPage() {
       )}
 
       {/* ── Profile completion nudge ── */}
-      {hasSearched && matchQuality && matchQuality.score < 80 && !bannerDismissed && (() => {
+      {hasSearched && matchQuality && matchQuality.score < 80 && !bannerDismissed && !org?.profile_skipped && (() => {
         // Build field list with medium-weight names
         const missingFields = matchQuality.missing.slice(0, 3)
         const extraCount    = matchQuality.missing.length - missingFields.length

@@ -1,11 +1,12 @@
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import MatchesCard, { type MatchScope, type MatchRow, type TypeKey, type ScopeKey } from './MatchesCard'
 import { CARD_LINK } from './card-link'
 import { hueForIndex, hueMap } from '@/lib/project-hues'
 import { FUNDING_TYPE_COLOUR } from '@/lib/funding-type-colours'
 import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
-import { getDeadlineAlerts, formatCurrency, formatNextOpen } from '@/lib/utils'
+import { getDeadlineAlerts, formatCurrency, formatRange, formatNextOpen } from '@/lib/utils'
 import type { PipelineItem, Organisation } from '@/types'
 import { Award, TrendingUp, Users, Rocket, GraduationCap, Gift, ArrowRight, CalendarDays, Check, Sparkles, Bookmark, ListChecks, UserPlus, FilePenLine, Lightbulb, CircleCheck } from 'lucide-react'
 import { computeMatchScore, grantMatchesLocationText, MATCH_TIER, MATCH_FLOOR, MATCH_TIER_STRONG, MATCH_TIER_GOOD } from '@/lib/matching'
@@ -359,11 +360,9 @@ export default async function DashboardPage() {
   const picked  = seededShuffle(topPool, seed).slice(0, 3)
   const matchedGrants = picked.map(p => {
     const g = p.grant
-    const amountStr = g.amountMin || g.amountMax
-      ? (g.amountMin && g.amountMax && g.amountMin !== g.amountMax
-          ? `${formatCurrency(g.amountMin)} – ${formatCurrency(g.amountMax)}`
-          : formatCurrency(g.amountMax || g.amountMin || 0))
-      : 'Amount on application'
+    // formatRange, not an inline branch: an in-kind offer has no cash award
+    // and reads "In-kind", never "Amount on application" (see lib/utils).
+    const amountStr = formatRange(g.amountMin ?? null, g.amountMax ?? null, g.amountUndisclosed, g.fundingType)
     return {
       id: g.id,
       title: g.title,
@@ -1097,7 +1096,19 @@ export default async function DashboardPage() {
           mapping per CLAUDE.md palette: lime grants, gold in-kind, coral
           programmes, blue investment.
           ──────────────────────────────────────────────────────────────────── */}
-      {totalMatchCount > 0 && (() => {
+      {/* Browsing without a profile (migration 080): no matches card, one
+          nudge in its place. Nothing here is a match, so nothing is scored. */}
+      {typedOrg?.profile_skipped && (
+        <div className="rounded-xl p-5 mb-6" style={{ background: '#F5F1E8', border: '1px solid rgba(29,60,62,0.12)' }}>
+          <p className="text-sm font-semibold" style={{ color: '#173404', fontFamily: 'var(--font-space-grotesk)' }}>You are browsing without a profile</p>
+          <p className="text-sm text-mid mt-1">Search and save anything you find. Add an organisation profile to get matches and the weekly update, or get in touch about Team for client profiles.</p>
+          <div className="mt-3 flex gap-3">
+            <Link href="/dashboard/search" className="text-sm font-semibold underline" style={{ color: '#173404' }}>Find Funding</Link>
+            <Link href="/onboarding/wizard" className="text-sm font-semibold underline" style={{ color: '#173404' }}>Set up a profile</Link>
+          </div>
+        </div>
+      )}
+      {!typedOrg?.profile_skipped && totalMatchCount > 0 && (() => {
         // Three-bucket breakdown of the actionable subset (Worth your attention).
         // "Worth exploring" is the renamed Partial — same 50–69 score band,
         // friendlier label that frames it as a deliberate choice rather than a
@@ -1123,11 +1134,7 @@ export default async function DashboardPage() {
         const TYPE_KEYS = ['grant', 'programme', 'investment', 'in_kind'] as const
 
         const shapeRow = (m: typeof scoredAll[number]): MatchRow => {
-          const amt = m.grant.amountMin || m.grant.amountMax
-            ? (m.grant.amountMin && m.grant.amountMax && m.grant.amountMin !== m.grant.amountMax
-                ? `${formatCurrency(m.grant.amountMin)}–${formatCurrency(m.grant.amountMax)}`
-                : formatCurrency(m.grant.amountMax || m.grant.amountMin || 0))
-            : 'Amount on application'
+          const amt = formatRange(m.grant.amountMin ?? null, m.grant.amountMax ?? null, m.grant.amountUndisclosed, m.grant.fundingType)
 
           let deadlineLabel: string | null = null
           let deadlineTone: 'urgent' | 'plain' | 'quiet' | null = null
