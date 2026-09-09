@@ -2419,8 +2419,7 @@ function StepBeneficiaries({ beneficiaryGroups, toggleBeneficiary, makePrimaryBe
       {beneficiaryGroups.length > 0 && (
         <div style={{ background: T.pageBg, padding: '12px 14px', borderRadius: 10, marginBottom: 16, fontSize: 12, color: T.textSecondary, fontFamily: 'var(--font-dm-sans)' }}>
           <strong style={{ color: T.textPrimary, fontWeight: 500 }}>For:</strong>{'  '}
-          {BENEFICIARY_GROUPS.find(o => o.value === beneficiaryGroups[0])?.label}
-          {beneficiaryGroups.length > 1 && ` + ${beneficiaryGroups.length - 1} more`}
+          {beneficiaryGroups.map(v => BENEFICIARY_GROUPS.find(o => o.value === v)?.label ?? v).join(', ')}
         </div>
       )}
 
