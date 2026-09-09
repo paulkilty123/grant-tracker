@@ -183,7 +183,7 @@ const UNCOLLECTED_ON_CREATE = {
   key_outcomes:                [],
 }
 
-type WizardStep = 'entry' | 'browse' | 'review' | 'manual' | 'sectors' | 'beneficiaries' | 'location' | 'reveal'
+type WizardStep = 'entry' | 'review' | 'manual' | 'sectors' | 'beneficiaries' | 'location' | 'reveal'
 
 /** Who is signing up. Recorded on the organisation row; see migration 080. */
 type SignupRole = 'organisation' | 'consultant' | 'network'
@@ -194,7 +194,7 @@ const STEP_DOT_POS: Record<WizardStep, number> = {
   // Who you serve comes before what you focus on (Paul, 8 Sept 2026, after
   // a tester went looking for "children and young people" under sectors):
   // charities describe themselves by audience first, and so do funder briefs.
-  entry: 1, browse: 1, review: 2, manual: 2, beneficiaries: 3, sectors: 4, location: 5, reveal: 6,
+  entry: 1, review: 2, manual: 2, beneficiaries: 3, sectors: 4, location: 5, reveal: 6,
 }
 
 type FieldConfidence = 'confident' | 'uncertain' | 'missing'
@@ -1206,6 +1206,7 @@ export default function OnboardingWizardPage() {
                                         ? (state.practiceWebsite.trim().startsWith('http') ? state.practiceWebsite.trim() : 'https://' + state.practiceWebsite.trim())
                                         : null,
         client_count_band:            state.signupRole !== 'organisation' ? (state.clientCountBand || null) : null,
+        example_client:               state.signupRole !== 'organisation' ? (state.exampleClient.trim() || null) : null,
         signup_role:                  state.signupRole,
         // A saved profile ends the browse-only state, whoever they are.
         profile_skipped:              false,
@@ -1372,33 +1373,20 @@ export default function OnboardingWizardPage() {
           onManual={() => { setExtracted(null); setStep('manual') }}
           role={state.signupRole}
           setRole={r => update('signupRole', r)}
-          onBrowse={() => setStep('browse')}
+          onBrowse={handleBrowseFinish}
           practiceName={state.practiceName}
           setPracticeName={v => update('practiceName', v)}
           practiceWebsite={state.practiceWebsite}
           setPracticeWebsite={v => update('practiceWebsite', v)}
           band={state.clientCountBand}
           setBand={v => update('clientCountBand', v)}
+          example={state.exampleClient}
+          setExample={v => update('exampleClient', v)}
         />
       </CardShell>
     )
   }
 
-  if (step === 'browse') {
-    return (
-      <CardShell step={1}>
-        <StepBrowse
-          example={state.exampleClient}
-          setExample={v => update('exampleClient', v)}
-          role={state.signupRole}
-          saving={saving}
-          error={saveError}
-          onBack={() => setStep('entry')}
-          onFinish={handleBrowseFinish}
-        />
-      </CardShell>
-    )
-  }
 
   /* ── Steps 2–5: card layout ── */
   const cardStep = STEP_DOT_POS[step]
@@ -1501,7 +1489,7 @@ const SIGNUP_ROLES: { value: SignupRole; label: string }[] = [
   { value: 'network',      label: 'A network or membership body' },
 ]
 
-function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual, role, setRole, onBrowse, practiceName, setPracticeName, practiceWebsite, setPracticeWebsite, band, setBand }: {
+function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual, role, setRole, onBrowse, practiceName, setPracticeName, practiceWebsite, setPracticeWebsite, band, setBand, example, setExample }: {
   url: string; setUrl: (v: string) => void
   fetching: boolean; error: string | null
   onAutoFill: () => void; onManual: () => void
@@ -1510,6 +1498,7 @@ function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual, role, s
   practiceName: string; setPracticeName: (v: string) => void
   practiceWebsite: string; setPracticeWebsite: (v: string) => void
   band: ClientBand; setBand: (v: ClientBand) => void
+  example: string; setExample: (v: string) => void
 }) {
   const [hov, setHov] = useState(false)
   const several = role !== 'organisation'
@@ -1573,6 +1562,10 @@ function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual, role, s
               </button>
             ))}
           </div>
+          <label style={{ display: 'block', fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: T.textPrimary, margin: '14px 0 6px' }}>
+            One organisation you {role === 'network' ? 'support' : 'work with'}, if you like
+          </label>
+          <input type="text" value={example} onChange={e => setExample(e.target.value)} placeholder="e.g. Bramble Arts Collective" style={{ ...INPUT_STYLE, boxSizing: 'border-box' }} />
         </div>
       )}
       {several && (
@@ -1650,47 +1643,6 @@ function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual, role, s
         </p>
       )}
       </>)}
-    </>
-  )
-}
-
-/* ═══════════════════════════════════════════════
-   Step 1B — Browse without a profile
-   One field, their own name or practice, so a row exists and the app works.
-   ═══════════════════════════════════════════════ */
-function StepBrowse({ example, setExample, role, saving, error, onBack, onFinish }: {
-  example: string; setExample: (v: string) => void
-  role: SignupRole
-  saving: boolean; error: string | null
-  onBack: () => void; onFinish: () => void
-}) {
-  return (
-    <>
-      <h1 style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 40, fontWeight: 600, color: T.textPrimary, margin: '0 0 14px', lineHeight: 1.15, letterSpacing: '-0.02em' }}>
-        Browse without a profile
-      </h1>
-      <p style={{ fontSize: 16, color: T.textSecondary, lineHeight: 1.5, margin: '0 0 28px', maxWidth: 460, fontFamily: 'var(--font-dm-sans)' }}>
-        You can search and save now. Matches and the weekly update need an organisation profile, which you can add later from your profile page, or get in touch about Team for client profiles.
-      </p>
-      {/* Name, website and client count were asked on the previous step. */}
-      <label style={{ display: 'block', fontFamily: 'var(--font-space-grotesk)', fontSize: 14, fontWeight: 600, color: T.textPrimary, marginBottom: 8 }}>
-        One organisation you {role === 'network' ? 'support' : 'work with'}<span style={{ color: T.coralText, marginLeft: 2 }}>*</span>
-      </label>
-      <input
-        type="text"
-        value={example}
-        onChange={e => setExample(e.target.value)}
-        onKeyDown={e => e.key === 'Enter' && !saving && example.trim() && onFinish()}
-        placeholder="e.g. Bramble Arts Collective"
-        style={{ ...INPUT_STYLE, maxWidth: 520, boxSizing: 'border-box' }}
-      />
-      {error && <p style={{ fontSize: 13, color: T.coralText, marginTop: 8 }}>{error}</p>}
-      <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 28 }}>
-        <Button variant="secondary" size="lg" onClick={onBack} disabled={saving}>Back</Button>
-        <Button variant="primary" size="lg" onClick={onFinish} disabled={saving || !example.trim()}>
-          {saving ? 'Saving…' : 'Browse the catalogue'}
-        </Button>
-      </div>
     </>
   )
 }
