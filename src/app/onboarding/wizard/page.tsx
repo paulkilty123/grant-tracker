@@ -1730,14 +1730,18 @@ function StepReview({ extracted, confirmed, editingField, setEditingField, confi
       emptyText: confirmed.has('registeredNumber') && !extracted.registeredNumber ? 'No registered number' : numberExpectation.emptyText,
       hint: numberError ? numberError : extracted.registeredNumber
         ? (isRecognisedNumber(extracted.registeredNumber)
-            ? `Recognised as ${registerLabel(detectRegister(extracted.registeredNumber))}. We use it to check eligibility, so your matches are right.`
+            ? `Recognised as ${registerLabel(detectRegister(extracted.registeredNumber))}.`
             : 'We don\u2019t recognise that format. Leave it if it\u2019s right, or correct it.')
         : numberExpectation.hint },
     { key: 'legalStructure',    label: 'Legal structure',   value: LEGAL_STRUCTURE_OPTIONS.find(o => o.value === extracted.legalStructure)?.label ?? extracted.legalStructure, stateKey: 'legalStructure', type: 'select', options: LEGAL_STRUCTURE_OPTIONS },
     { key: 'primaryLocation',   label: 'Primary location',  value: extracted.primaryLocation,  stateKey: 'primaryLocation',   type: 'text' },
     { key: 'annualIncomeBand',  label: 'Annual income',     value: extracted.annualIncomeBand, stateKey: 'annualIncomeBand',  type: 'select', options: INCOME_BANDS.map(b => ({ value: b, label: b })) },
   ]
-  const foundCount = fields.filter(f => f.value).length
+  // The registered number is shown only when auto-fill found one (Paul,
+  // 9 Sept 2026): it is not used by matching or eligibility, so asking for it
+  // on a first run is friction for nothing. The profile page can nudge later.
+  const visibleFields = fields.filter(f => f.key !== 'registeredNumber' || !!extracted.registeredNumber)
+  const foundCount = visibleFields.filter(f => f.value).length
 
   return (
     <>
@@ -1747,12 +1751,12 @@ function StepReview({ extracted, confirmed, editingField, setEditingField, confi
 
       {/* Extract summary */}
       <div style={{ background: T.cream1, borderRadius: 10, padding: '14px 18px', marginBottom: 20, fontSize: 13, color: T.textPrimary, fontFamily: 'var(--font-dm-sans)', lineHeight: 1.5 }}>
-        <strong style={{ fontWeight: 500 }}>We found {foundCount} of {fields.length} fields</strong> from <span style={{ color: T.textSecondary }}>{hostname}</span>
-        {foundCount < fields.length && `. ${fields.length - foundCount} couldn't be inferred — you'll add ${fields.length - foundCount === 1 ? 'it' : 'them'} in a moment.`}
+        <strong style={{ fontWeight: 500 }}>We found {foundCount} of {visibleFields.length} fields</strong> from <span style={{ color: T.textSecondary }}>{hostname}</span>
+        {foundCount < visibleFields.length && `. ${visibleFields.length - foundCount} couldn't be inferred — you'll add ${visibleFields.length - foundCount === 1 ? 'it' : 'them'} in a moment.`}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {fields.map(field => (
+        {visibleFields.map(field => (
           <ReviewField
             key={field.key}
             label={field.label}
