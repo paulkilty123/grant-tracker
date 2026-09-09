@@ -41,6 +41,7 @@ const EMAIL_ROUTES = [
 // above, dug by us rather than inherited.
 const NON_ROUTE_SENDERS = [
   'scripts/send-waitlist-ack.ts',
+  'scripts/send-launch-email.ts',
 ]
 
 const root = path.resolve(__dirname, '../..')
