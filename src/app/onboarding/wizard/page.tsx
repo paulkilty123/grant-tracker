@@ -1056,7 +1056,7 @@ export default function OnboardingWizardPage() {
     setSaving(true); setSaveError(null)
     try {
       const payload = {
-        name:                         state.name.trim() || 'My practice',
+        name:                         state.practiceName.trim() || 'My practice',
         org_type:                     'other' as const,
         legal_structure:              null,
         org_stage:                    null,
@@ -1083,9 +1083,11 @@ export default function OnboardingWizardPage() {
         alerts_enabled:               false,
         alert_frequency:              'weekly',
         alert_min_score:              70,
-        website_url:                  url.trim() ? (url.trim().startsWith('http') ? url.trim() : 'https://' + url.trim()) : null,
+        website_url:                  state.practiceWebsite.trim() ? (state.practiceWebsite.trim().startsWith('http') ? state.practiceWebsite.trim() : 'https://' + state.practiceWebsite.trim()) : null,
         client_count_band:            state.clientCountBand || null,
         example_client:               state.exampleClient.trim() || null,
+        signup_practice_name:         state.practiceName.trim() || null,
+        signup_practice_website:      state.practiceWebsite.trim() ? (state.practiceWebsite.trim().startsWith('http') ? state.practiceWebsite.trim() : 'https://' + state.practiceWebsite.trim()) : null,
         signup_role:                  state.signupRole,
         profile_skipped:              true,
       }
@@ -1101,6 +1103,7 @@ export default function OnboardingWizardPage() {
           alerts_enabled: false,
           client_count_band: state.clientCountBand || null,
           example_client: state.exampleClient.trim() || null,
+          signup_practice_name: state.practiceName.trim() || null,
         })
       } else {
         const created = await createOrganisation({ ...UNCOLLECTED_ON_CREATE, ...payload } as Parameters<typeof createOrganisation>[0])
@@ -1385,12 +1388,6 @@ export default function OnboardingWizardPage() {
     return (
       <CardShell step={1}>
         <StepBrowse
-          name={state.name}
-          setName={v => update('name', v)}
-          website={url}
-          setWebsite={setUrl}
-          band={state.clientCountBand}
-          setBand={v => update('clientCountBand', v)}
           example={state.exampleClient}
           setExample={v => update('exampleClient', v)}
           role={state.signupRole}
@@ -1519,8 +1516,10 @@ function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual, role, s
   // The fork for consultants and networks. Until they choose, the website box
   // and its links stay hidden: four ways forward on one screen was confusing
   // (Paul, 8 Sept). Picking "one organisation" brings the normal step back.
-  const [choice, setChoice] = useState<'profile' | 'browse' | null>(null)
-  const showProfileTools = !several || choice === 'profile'
+  // The fork (set up a profile / browse) is gone (Paul, 9 Sept 2026): both
+  // paths collect the same "about you" facts, so the profile path is the
+  // default and browsing is a quiet link beside "fill in manually".
+  const showProfileTools = true
   return (
     <>
       <h1 style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 40, fontWeight: 600, color: T.textPrimary, margin: '0 0 14px', lineHeight: 1.15, letterSpacing: '-0.02em' }}>
@@ -1545,18 +1544,6 @@ function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual, role, s
           ))}
         </div>
       </fieldset>
-
-      {several && choice !== 'profile' && (
-        <div style={{ maxWidth: 520 }}>
-          <p style={{ fontSize: 14, color: T.textSecondary, lineHeight: 1.55, margin: '0 0 14px', fontFamily: 'var(--font-dm-sans)' }}>
-            A profile gets you matches and the weekly update. Client profiles come with Team, so for now choose one organisation, or browse without a profile.
-          </p>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            <Button variant="primary" size="lg" onClick={() => setChoice('profile')}>Set up a profile for one organisation</Button>
-            <Button variant="secondary" size="lg" onClick={onBrowse}>Browse without a profile</Button>
-          </div>
-        </div>
-      )}
 
       {showProfileTools && (<>
       {several && (
@@ -1642,6 +1629,20 @@ function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual, role, s
         >
           No website? Fill in manually
         </button>
+        {several && (
+          <button
+            onClick={onBrowse}
+            disabled={!practiceName.trim() || !band}
+            style={{
+              background: 'transparent', border: 'none', color: T.textSecondary,
+              fontFamily: 'var(--font-dm-sans)', fontSize: 13, cursor: 'pointer',
+              textDecoration: 'underline', textDecorationColor: 'rgba(29,60,62,0.35)', textUnderlineOffset: 3,
+              padding: '8px 12px',
+            }}
+          >
+            Browse without a profile for now
+          </button>
+        )}
       </div>
       </>)}
     </>
@@ -1652,16 +1653,12 @@ function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual, role, s
    Step 1B — Browse without a profile
    One field, their own name or practice, so a row exists and the app works.
    ═══════════════════════════════════════════════ */
-function StepBrowse({ name, setName, website, setWebsite, band, setBand, example, setExample, role, saving, error, onBack, onFinish }: {
-  name: string; setName: (v: string) => void
-  website: string; setWebsite: (v: string) => void
-  band: ClientBand; setBand: (v: ClientBand) => void
+function StepBrowse({ example, setExample, role, saving, error, onBack, onFinish }: {
   example: string; setExample: (v: string) => void
   role: SignupRole
   saving: boolean; error: string | null
   onBack: () => void; onFinish: () => void
 }) {
-  const noun = role === 'network' ? 'network' : 'practice'
   return (
     <>
       <h1 style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 40, fontWeight: 600, color: T.textPrimary, margin: '0 0 14px', lineHeight: 1.15, letterSpacing: '-0.02em' }}>
@@ -1670,62 +1667,22 @@ function StepBrowse({ name, setName, website, setWebsite, band, setBand, example
       <p style={{ fontSize: 16, color: T.textSecondary, lineHeight: 1.5, margin: '0 0 28px', maxWidth: 460, fontFamily: 'var(--font-dm-sans)' }}>
         You can search and save now. Matches and the weekly update need an organisation profile, which you can add later from your profile page, or get in touch about Team for client profiles.
       </p>
+      {/* Name, website and client count were asked on the previous step. */}
       <label style={{ display: 'block', fontFamily: 'var(--font-space-grotesk)', fontSize: 14, fontWeight: 600, color: T.textPrimary, marginBottom: 8 }}>
-        Your name or {noun}<span style={{ color: T.coralText, marginLeft: 2 }}>*</span>
-      </label>
-      <input
-        type="text"
-        value={name}
-        onChange={e => setName(e.target.value)}
-        onKeyDown={e => e.key === 'Enter' && !saving && name.trim() && onFinish()}
-        placeholder={role === 'network' ? 'e.g. Impact Hub Brighton' : 'e.g. Jane Smith Fundraising'}
-        style={{ ...INPUT_STYLE, maxWidth: 520, boxSizing: 'border-box' }}
-      />
-      {/* Three more facts (Paul, 8 Sept 2026): who they are before Team is
-          built, and what makes the get-in-touch conversation short. */}
-      <label style={{ display: 'block', fontFamily: 'var(--font-space-grotesk)', fontSize: 14, fontWeight: 600, color: T.textPrimary, margin: '20px 0 8px' }}>
-        Your website, if you have one
-      </label>
-      <input
-        type="url"
-        value={website}
-        onChange={e => setWebsite(e.target.value)}
-        placeholder={role === 'network' ? 'https://yournetwork.org.uk' : 'https://yourpractice.co.uk'}
-        style={{ ...INPUT_STYLE, maxWidth: 520, boxSizing: 'border-box' }}
-      />
-      <p style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 14, fontWeight: 600, color: T.textPrimary, margin: '20px 0 8px' }}>
-        Roughly how many organisations do you {role === 'network' ? 'support' : 'work with'}?<span style={{ color: T.coralText, marginLeft: 2 }}>*</span>
-      </p>
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        {((role === 'network' ? ['<20', '20-100', '100+'] : ['1-2', '3-5', '6+']) as ClientBand[]).map(b => (
-          <button
-            key={b}
-            type="button"
-            onClick={() => setBand(b)}
-            style={{
-              fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 13.5, padding: '8px 16px', borderRadius: 999, cursor: 'pointer',
-              background: band === b ? '#F1F7E4' : '#fff', color: band === b ? '#3B6D11' : T.textSecondary,
-              border: `1px solid ${band === b ? '#3B6D11' : 'rgba(44,44,42,0.25)'}`,
-            }}
-          >
-            {b === '6+' ? '6 or more' : b === '<20' ? 'Under 20' : b === '20-100' ? '20 to 100' : b === '100+' ? '100 or more' : b}
-          </button>
-        ))}
-      </div>
-      <label style={{ display: 'block', fontFamily: 'var(--font-space-grotesk)', fontSize: 14, fontWeight: 600, color: T.textPrimary, margin: '20px 0 8px' }}>
         One organisation you {role === 'network' ? 'support' : 'work with'}<span style={{ color: T.coralText, marginLeft: 2 }}>*</span>
       </label>
       <input
         type="text"
         value={example}
         onChange={e => setExample(e.target.value)}
+        onKeyDown={e => e.key === 'Enter' && !saving && example.trim() && onFinish()}
         placeholder="e.g. Bramble Arts Collective"
         style={{ ...INPUT_STYLE, maxWidth: 520, boxSizing: 'border-box' }}
       />
       {error && <p style={{ fontSize: 13, color: T.coralText, marginTop: 8 }}>{error}</p>}
       <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 28 }}>
         <Button variant="secondary" size="lg" onClick={onBack} disabled={saving}>Back</Button>
-        <Button variant="primary" size="lg" onClick={onFinish} disabled={saving || !name.trim() || !band || !example.trim()}>
+        <Button variant="primary" size="lg" onClick={onFinish} disabled={saving || !example.trim()}>
           {saving ? 'Saving…' : 'Browse the catalogue'}
         </Button>
       </div>
