@@ -603,8 +603,7 @@ function PickerChip({
       onMouseLeave={() => setHov(false)}
       style={{
         position: 'relative',
-        width: '100%',
-        padding: '9px 12px',
+        padding: '11px 17px',
         // Three treatments, loudest = most important: primary is the deep
         // fill, also-selected is the sage tint, unselected is a ghost outline.
         // The star is the extra mark that says "primary is a different KIND of
@@ -615,18 +614,21 @@ function PickerChip({
         // The loudest chip on screen was the less important one; and inside a
         // confident review field, whose own background is sage tint, the
         // primary chip became fill-on-fill and vanished entirely.
-        border: `1.5px solid ${isPrimary || isSecondary || showHover ? T.greenDeep : 'var(--border-ghost)'}`,
+        // Design of 9 Sept 2026: pills that size to their text. Unselected is
+        // deep text on white (the pale text read as disabled), selected is the
+        // pale green tint, primary is the deep fill. Nothing is dimmed at the
+        // cap; the running count above says why a fifth click does nothing.
+        border: `1px solid ${isPrimary ? T.greenDeep : isSecondary ? '#B9D9C7' : showHover ? 'rgba(29,60,62,.42)' : 'rgba(29,60,62,.18)'}`,
         borderRadius: 999,
-        background: isPrimary ? T.greenDeep : isSecondary || showHover ? T.greenCream : 'transparent',
-        color: isPrimary ? T.onDeep : T.greenTextDeep,
-        fontSize: 12,
-        fontWeight: isPrimary || isSecondary ? 500 : 400,
+        background: isPrimary ? T.greenDeep : isSecondary ? '#E4F1EA' : '#fff',
+        color: isPrimary ? T.onDeep : isSecondary ? '#1B6B3D' : T.greenDeep,
+        fontSize: 14.5,
+        fontWeight: 500,
         cursor: dimmed ? 'default' : 'pointer',
-        textAlign: 'center' as const,
-        fontFamily: 'var(--font-dm-sans)',
-        lineHeight: 1.3,
+        textAlign: 'left' as const,
+        fontFamily: 'var(--font-space-grotesk)',
+        lineHeight: 1,
         transition: 'all 120ms ease',
-        opacity: dimmed ? 0.38 : 1,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -2249,38 +2251,23 @@ function StepSectors({ impactSectors, nicheTags, excludedNicheTags, toggleSector
       <h1 style={H1_STYLE}>What do you focus on?</h1>
       <p style={SUBTITLE_STYLE}>Pick your primary focus first. That&rsquo;s what we&rsquo;ll weight most in matching.</p>
 
-      {/* Impact sectors */}
-      <div style={{ marginBottom: 6, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' as const }}>
-        <span style={{ fontSize: 13, fontWeight: 500, color: T.textPrimary, fontFamily: 'var(--font-space-grotesk)' }}>Your impact sector</span>
-        {sectorMax && <span style={{ fontSize: 11, color: T.textTertiary, fontFamily: 'var(--font-space-grotesk)', letterSpacing: '0.04em', textTransform: 'uppercase' as const }}>Max reached</span>}
+      {/* Impact sectors (design of 9 Sept 2026). A 20px question with a
+          running count rather than a MAX REACHED flag: four of four is
+          success, not an error. One instruction line, chips that size to
+          their text and wrap, deep text on white for the unselected ones. */}
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' as const, margin: '0 0 6px' }}>
+        <h2 style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 20, fontWeight: 600, letterSpacing: '-0.4px', color: T.greenDeep, margin: 0 }}>Your impact sector</h2>
+        {impactSectors.length > 0 && (
+          <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: '#7a857e', whiteSpace: 'nowrap' }}>{impactSectors.length} of 4 chosen</span>
+        )}
       </div>
-      <div style={{ marginBottom: 12, fontSize: 12.5, color: T.textSecondary, fontFamily: 'var(--font-dm-sans)', lineHeight: 1.55, display: 'flex', flexDirection: 'column' as const, gap: 4 }}>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' as const }}>
-          Pick 1
-          <span aria-label="primary" style={{
-            display: 'inline-flex', alignItems: 'center', gap: 4,
-            background: T.greenDeep, color: T.onDeep,
-            padding: '2px 8px', borderRadius: 99,
-            fontSize: 11, fontWeight: 500,
-            fontFamily: 'var(--font-space-grotesk)',
-            lineHeight: 1.2,
-          }}>
-            {/* Cream, not T.lime. lime now resolves to --deep and this pill's
-                background is --deep, so the star was deep on deep and simply
-                could not be seen. It has to match the star on the chip it is
-                describing. */}
-            <span style={{ color: T.onDeep, fontSize: 10 }}>★</span>
-            primary
-          </span>
-          plus up to 3 others. Tap a
-          <span style={{ color: T.greenMid, fontSize: 13, lineHeight: 1 }}>☆</span>
-          on a chip to change which is primary.
-        </span>
-        <span style={{ color: T.textTertiary, fontSize: 12 }}>
-          Not sure between two similar sectors? Pick the closest fit. You can always change it later.
-        </span>
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginBottom: 12 }}>
+      <p style={{ fontSize: 14.5, lineHeight: 1.6, color: '#5f6b64', margin: '0 0 4px', maxWidth: '52em', fontFamily: 'var(--font-dm-sans)' }}>
+        Pick one primary sector, plus up to three others. Tap the star on any chip to make it the primary one.
+      </p>
+      <p style={{ fontSize: 14.5, lineHeight: 1.6, color: '#7a857e', margin: '0 0 18px', maxWidth: '52em', fontFamily: 'var(--font-dm-sans)' }}>
+        Not sure between two similar sectors? Pick the closest fit, you can change it later.
+      </p>
+      <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 9, marginBottom: 20 }}>
         {IMPACT_SECTORS.map(opt => {
           const cs = chipStateFor(impactSectors, opt.value)
           return (
@@ -2504,98 +2491,91 @@ function StepLocation({ state, update, toggleFundingType, toggleSpendNeed, savin
       <h1 style={H1_STYLE}>Location and funding</h1>
       <p style={SUBTITLE_STYLE}>Last stretch. These help us rank what fits where and how you work.</p>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 18, marginBottom: 8 }}>
+      {/* Design of 9 Sept 2026: each question is a 20px heading in its own
+          hairline-ruled section, helper text at 14px, inputs at radius 12,
+          selectable cards at radius 16 with a tick circle, and the Weekly
+          Funding Update as a plain row rather than a cream box. */}
+      {(!state.name.trim() || !state.legalStructure) && (
+        <Q first>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '22px 24px' }}>
+            {!state.name.trim() && (
+              <div>
+                <QLabel required>Organisation name</QLabel>
+                <input type="text" value={state.name} onChange={e => update('name', e.target.value)} placeholder="e.g. AudioActive" style={INPUT_STYLE} />
+              </div>
+            )}
+            {!state.legalStructure && (
+              <div>
+                <QLabel required>Legal structure</QLabel>
+                <SelectInput value={state.legalStructure} onChange={v => update('legalStructure', v as LegalStructure | '')} options={LEGAL_STRUCTURE_OPTIONS} placeholder="Select your structure…" />
+              </div>
+            )}
+          </div>
+        </Q>
+      )}
 
-        {/* Only show name/structure if not already captured */}
-        {!state.name.trim() && (
-          <Field label="Organisation name" required>
-            <input type="text" value={state.name} onChange={e => update('name', e.target.value)} placeholder="e.g. AudioActive" style={INPUT_STYLE} />
-          </Field>
-        )}
-        {!state.legalStructure && (
-          <Field label="Legal structure" required>
-            <SelectInput value={state.legalStructure} onChange={v => update('legalStructure', v as LegalStructure | '')} options={LEGAL_STRUCTURE_OPTIONS} placeholder="Select your structure…" />
-          </Field>
-        )}
-
-        {/* Location row */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <Field label="Where are you based?" help='Your town or council area. For London, include the borough, for example "Hackney, London".'>
-            <input type="text" value={state.primaryLocation} onChange={e => update('primaryLocation', e.target.value)} placeholder="e.g. Brighton, Sussex" style={INPUT_STYLE} />
-          </Field>
-          <Field label="Geographic reach" help="We'll score local grants highest if you're place-based.">
+      <Q first={!!state.name.trim() && !!state.legalStructure}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '22px 24px' }}>
+          <div>
+            <QLabel htmlFor="wiz-based">Where are you based?</QLabel>
+            <input id="wiz-based" type="text" value={state.primaryLocation} onChange={e => update('primaryLocation', e.target.value)} placeholder="e.g. Brighton, Sussex" style={INPUT_STYLE} />
+            <QHelp>Your town or council area. For London, include the borough, for example &ldquo;Hackney, London&rdquo;.</QHelp>
+          </div>
+          <div>
+            <QLabel>Geographic reach</QLabel>
             <SelectInput value={state.geographicReach} onChange={v => update('geographicReach', v)} options={GEOGRAPHIC_REACH_OPTIONS} placeholder="Select reach…" />
-          </Field>
+            <QHelp>We&rsquo;ll score local grants highest if you&rsquo;re place-based.</QHelp>
+          </div>
         </div>
+      </Q>
 
-        {/* Grant size — thousand-separator formatting on display */}
-        <Field label="Grant size range" hint="optional" help="Grants outside this range rank lower. Leave it blank and size is ignored.">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <div style={{ position: 'relative' }}>
-              <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: T.textTertiary, fontSize: 14, pointerEvents: 'none' }}>£</span>
-              <input
-                type="text" inputMode="numeric"
-                value={fmtThousands(state.minGrantTarget)}
-                onChange={e => update('minGrantTarget', e.target.value.replace(/[^\d]/g, ''))}
-                placeholder="10,000"
-                style={{ ...INPUT_STYLE, paddingLeft: 24 }}
-              />
-            </div>
-            <div style={{ position: 'relative' }}>
-              <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: T.textTertiary, fontSize: 14, pointerEvents: 'none' }}>£</span>
-              <input
-                type="text" inputMode="numeric"
-                value={fmtThousands(state.maxGrantTarget)}
-                onChange={e => update('maxGrantTarget', e.target.value.replace(/[^\d]/g, ''))}
-                placeholder="250,000"
-                style={{ ...INPUT_STYLE, paddingLeft: 24 }}
-              />
-            </div>
+      <Q title="Grant size range" optional>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '22px 24px' }}>
+          <div style={{ position: 'relative' }}>
+            <label htmlFor="wiz-min" style={SR_ONLY}>Smallest amount</label>
+            <span aria-hidden="true" style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: '#7a857e', fontSize: 16, fontFamily: 'var(--font-space-grotesk)', pointerEvents: 'none' }}>£</span>
+            <input id="wiz-min" type="text" inputMode="numeric" value={fmtThousands(state.minGrantTarget)} onChange={e => update('minGrantTarget', e.target.value.replace(/[^\d]/g, ''))} placeholder="10,000" style={{ ...INPUT_STYLE, paddingLeft: 34 }} />
           </div>
-        </Field>
-
-        {/* Funding types — neutral picker-chips, same style as sector chips */}
-        <Field label="Funding types you're open to" help="Types you tick rank higher. You still see all of them, and you can change the mix on any search.">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginTop: 4 }}>
-            {FUNDING_TYPES.map(t => {
-              const active = state.fundingTypes.includes(t.value)
-              return <FundingTypeChip key={t.value} label={t.label} desc={t.desc} active={active} onClick={() => toggleFundingType(t.value)} />
-            })}
+          <div style={{ position: 'relative' }}>
+            <label htmlFor="wiz-max" style={SR_ONLY}>Largest amount</label>
+            <span aria-hidden="true" style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: '#7a857e', fontSize: 16, fontFamily: 'var(--font-space-grotesk)', pointerEvents: 'none' }}>£</span>
+            <input id="wiz-max" type="text" inputMode="numeric" value={fmtThousands(state.maxGrantTarget)} onChange={e => update('maxGrantTarget', e.target.value.replace(/[^\d]/g, ''))} placeholder="250,000" style={{ ...INPUT_STYLE, paddingLeft: 34 }} />
           </div>
-        </Field>
+        </div>
+        <QHelp>Grants outside this range rank lower. Leave it blank and size is ignored.</QHelp>
+      </Q>
 
-        {/* What the money can be spent on — a different question from the type
-            of funding, and the one small charities most often get caught by.
-            Optional: leaving it blank means no preference, not "wants nothing". */}
-        <Field label="What do you need the money for?" help="Optional. Leave blank if you're open to any of these.">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginTop: 4 }}>
-            {SPEND_RESTRICTIONS.map(r => {
-              const active = state.spendRestrictions.includes(r.value)
-              return <FundingTypeChip key={r.value} label={r.label} desc={r.desc} active={active} onClick={() => toggleSpendNeed(r.value)} />
-            })}
-          </div>
-        </Field>
-      </div>
+      <Q title="Funding types you're open to">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          {FUNDING_TYPES.map(t => {
+            const active = state.fundingTypes.includes(t.value)
+            return <FundingTypeChip key={t.value} label={t.label} desc={t.desc} active={active} onClick={() => toggleFundingType(t.value)} />
+          })}
+        </div>
+        <QHelp>Types you tick rank higher. You still see all of them, and you can change the mix on any search.</QHelp>
+      </Q>
 
-      {/* The Weekly Funding Update, stated rather than assumed.
-          Ticked by default, which is the same behaviour as before. The point
-          of putting it here is that it is now a line somebody read on their
-          way past, so nobody arrives at their first alert email wondering how
-          they were signed up. */}
-      <label
-        style={{
-          display: 'flex', alignItems: 'flex-start', gap: 11, marginTop: 22,
-          padding: '14px 16px', background: T.cream1, borderRadius: 12,
-          cursor: 'pointer',
-        }}
-      >
+      <Q title="What do you need the money for?">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          {SPEND_RESTRICTIONS.map(r => {
+            const active = state.spendRestrictions.includes(r.value)
+            return <FundingTypeChip key={r.value} label={r.label} desc={r.desc} active={active} onClick={() => toggleSpendNeed(r.value)} />
+          })}
+        </div>
+        <QHelp>Optional. Leave blank if you&rsquo;re open to any of these.</QHelp>
+      </Q>
+
+      {/* The Weekly Funding Update, stated rather than assumed, as a plain
+          row above the footer rule. Ticked by default; the unsubscribe is in
+          every email and on the profile page. */}
+      <label style={{ display: 'flex', alignItems: 'flex-start', gap: 14, margin: '30px 0 0', padding: '26px 0 0', borderTop: '1px solid rgba(29,60,62,.10)', cursor: 'pointer' }}>
         <input
           type="checkbox"
           checked={state.alertsEnabled}
           onChange={e => update('alertsEnabled', e.target.checked)}
-          style={{ marginTop: 2, width: 16, height: 16, accentColor: T.greenDeep, cursor: 'pointer', flexShrink: 0 }}
+          style={{ marginTop: 2, width: 20, height: 20, accentColor: T.greenDeep, cursor: 'pointer', flexShrink: 0 }}
         />
-        <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 13.5, lineHeight: 1.55, color: T.textSecondary }}>
+        <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 15, lineHeight: 1.6, color: '#5f6b64' }}>
           Send me the Weekly Funding Update: what is closing, what is moving,
           and new funding that matches us. One email a week, and you can turn it
           off any time from your profile.
@@ -2618,36 +2598,62 @@ function StepLocation({ state, update, toggleFundingType, toggleSpendNeed, savin
   )
 }
 
-/** Funding type chip — neutral selector, same visual logic as PickerChip secondary state */
+/** Selectable card (design of 9 Sept 2026): radius 16, a tick circle at the
+    right that fills deep when pressed, pale green tint when selected. */
 function FundingTypeChip({ label, desc, active, onClick }: { label: string; desc: string; active: boolean; onClick: () => void }) {
   const [hov, setHov] = useState(false)
   return (
     <button
+      type="button"
       onClick={onClick}
+      aria-pressed={active}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
-        padding: '10px 12px',
-        textAlign: 'left' as const,
-        background: active || hov ? T.greenCream : '#fff',
-        border: `${active ? '1.5px' : '0.5px'} solid ${active || hov ? T.greenMid : T.borderInput}`,
-        borderRadius: 8,
-        cursor: 'pointer',
-        transition: 'all 120ms ease',
-        display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8,
+        position: 'relative', textAlign: 'left' as const,
+        background: active ? '#E4F1EA' : '#fff',
+        border: `1px solid ${active ? '#1B6B3D' : hov ? 'rgba(29,60,62,.42)' : 'rgba(29,60,62,.18)'}`,
+        borderRadius: 16, padding: '16px 52px 16px 18px', cursor: 'pointer',
+        fontFamily: 'var(--font-dm-sans)', transition: 'border-color 120ms ease, background 120ms ease',
       }}
     >
-      <div>
-        <p style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 12, fontWeight: 500, color: active ? T.greenTextDeep : T.textPrimary, margin: 0 }}>{label}</p>
-        <p style={{ fontSize: 11, color: active ? T.greenTextDeep : T.textSecondary, margin: '2px 0 0', fontFamily: 'var(--font-dm-sans)', opacity: 0.85 }}>{desc}</p>
-      </div>
-      {active && (
-        <div style={{ width: 16, height: 16, borderRadius: '50%', background: T.lime, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
-          <Check size={9} color={T.onDeep} strokeWidth={3} />
-        </div>
-      )}
+      <b style={{ display: 'block', fontFamily: 'var(--font-space-grotesk)', fontSize: 15.5, fontWeight: 600, color: T.greenDeep, margin: '0 0 3px' }}>{label}</b>
+      <em style={{ fontStyle: 'normal', fontSize: 14, color: '#5f6b64' }}>{desc}</em>
+      <span aria-hidden="true" style={{
+        position: 'absolute', top: '50%', right: 18, transform: 'translateY(-50%)', width: 24, height: 24, borderRadius: '50%',
+        border: `1.5px solid ${active ? T.greenDeep : 'rgba(29,60,62,.18)'}`, background: active ? T.greenDeep : 'transparent',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        {active && <Check size={13} color={T.onDeep} strokeWidth={2.5} />}
+      </span>
     </button>
   )
+}
+
+/* Question section for the location step: hairline above (except the first),
+   20px heading with an optional tag, helper text at 14px. */
+const SR_ONLY: React.CSSProperties = { position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap', border: 0 }
+function Q({ title, optional, first, children }: { title?: string; optional?: boolean; first?: boolean; children: React.ReactNode }) {
+  return (
+    <section style={{ padding: first ? '8px 0 0' : '30px 0 0', margin: first ? '26px 0 0' : '30px 0 0', borderTop: first ? 'none' : '1px solid rgba(29,60,62,.10)' }}>
+      {title && (
+        <h2 style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 20, fontWeight: 600, letterSpacing: '-0.4px', color: T.greenDeep, margin: '0 0 18px' }}>
+          {title}{optional && <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 14, fontWeight: 400, color: '#7a857e', letterSpacing: 0, marginLeft: 8 }}>optional</span>}
+        </h2>
+      )}
+      {children}
+    </section>
+  )
+}
+function QLabel({ children, required, htmlFor }: { children: React.ReactNode; required?: boolean; htmlFor?: string }) {
+  return (
+    <label htmlFor={htmlFor} style={{ display: 'block', fontFamily: 'var(--font-space-grotesk)', fontSize: 14.5, fontWeight: 600, color: T.greenDeep, margin: '0 0 7px' }}>
+      {children}{required && <span style={{ color: T.coralText, marginLeft: 2 }}>*</span>}
+    </label>
+  )
+}
+function QHelp({ children }: { children: React.ReactNode }) {
+  return <p style={{ fontSize: 14, lineHeight: 1.55, color: '#7a857e', margin: '8px 0 0', fontFamily: 'var(--font-dm-sans)' }}>{children}</p>
 }
 
 /* ═══════════════════════════════════════════════
