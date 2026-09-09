@@ -1562,7 +1562,10 @@ export default function SearchPage() {
         if (o.impact_sectors?.length) setActiveSectors(new Set(o.impact_sectors as ImpactSector[]))
         // Mirror today's behaviour: if the org has profile data worth
         // filtering on, start with the profile filter toggled on.
-        if (o.primary_location || o.impact_sectors?.length) setProfileFilterOn(true)
+        // Browsing without a profile (migration 080) starts unfiltered even
+        // when the row still carries an old profile, so the flag means the
+        // same thing for everyone: the whole catalogue, no eligibility filter.
+        if (!o.profile_skipped && (o.primary_location || o.impact_sectors?.length)) setProfileFilterOn(true)
         setSearchModeToggle('profile')
         setProfileChipsApplied(true)
         setHasSearched(true)
