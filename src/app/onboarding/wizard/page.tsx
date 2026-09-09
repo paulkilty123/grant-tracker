@@ -2502,7 +2502,7 @@ function StepLocation({ state, update, toggleFundingType, toggleSpendNeed, savin
     <>
       <BackLink onClick={onBack} />
       <h1 style={H1_STYLE}>Location and funding</h1>
-      <p style={SUBTITLE_STYLE}>Last stretch. These help us filter out what isn&rsquo;t relevant to where and how you work.</p>
+      <p style={SUBTITLE_STYLE}>Last stretch. These help us rank what fits where and how you work.</p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 18, marginBottom: 8 }}>
 
@@ -2555,7 +2555,7 @@ function StepLocation({ state, update, toggleFundingType, toggleSpendNeed, savin
         </Field>
 
         {/* Funding types — neutral picker-chips, same style as sector chips */}
-        <Field label="Funding types you're open to" help="You can adjust this per-search later on the Find Funding page.">
+        <Field label="Funding types you're open to" help="Types you tick rank higher. You still see all of them, and you can change the mix on any search.">
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginTop: 4 }}>
             {FUNDING_TYPES.map(t => {
               const active = state.fundingTypes.includes(t.value)
