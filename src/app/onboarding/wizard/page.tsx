@@ -2259,80 +2259,80 @@ function StepSectors({ impactSectors, nicheTags, excludedNicheTags, toggleSector
         </div>
       )}
 
-      {/* Sub-tag panel — tri-state chips, mirrors the profile editor.
-          Click cycles: neutral → include (green) → exclude (coral strikethrough) → neutral */}
-      {nicheSectors.length > 0 && (
-        <div style={{
-          background: T.cream1,
-          borderLeft: `3px solid ${T.greenDeep}`,
-          borderRadius: 8,
-          padding: '12px 14px',
-          marginBottom: 20,
-        }}>
-          {/* Tip callout — explains the tri-state cycle */}
-          <div style={{
-            fontFamily: 'var(--font-space-grotesk)',
-            fontSize: 12.5,
-            fontWeight: 500,
-            color: T.textPrimary,
-            marginBottom: 14,
-            padding: '10px 12px',
-            background: 'rgba(255,255,255,0.75)',
-            borderLeft: `3px solid ${T.greenDeep}`,
-            borderRadius: 4,
-            lineHeight: 1.5,
+      {/* Specialisms (design of 9 Sept 2026). Same white ground as the
+          sector picker, a hairline above, pill chips that size to their
+          text, and three visible states: added (pale green), excluded (warm
+          terracotta with a diagonal strike), not set (outline). The strike is
+          the non-colour marker for "excluded" and must stay; the chips also
+          carry aria-pressed and a visually hidden state word. */}
+      {nicheSectors.length > 0 && (() => {
+        const ADD_BG = '#E4F1EA', ADD_BR = '#B9D9C7', ADD_FG = '#1B6B3D'
+        const EXC_BG = '#F2E8E5', EXC_FG = '#7A331F'
+        const LINE = 'rgba(29,60,62,.18)', HAIR = 'rgba(29,60,62,.10)'
+        const srOnly: React.CSSProperties = { position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap', border: 0 }
+        const strike = (inset: number, h: number) => (
+          <span aria-hidden="true" style={{ position: 'absolute', left: inset, right: inset, top: '50%', height: h, borderRadius: 2, background: EXC_FG, transform: 'translateY(-50%) rotate(-6deg)' }} />
+        )
+        const mini = (label: string, state: 'added' | 'excluded' | 'none') => (
+          <span style={{
+            position: 'relative', display: 'inline-block', fontFamily: 'var(--font-space-grotesk)', fontSize: 12, fontWeight: 500, lineHeight: 1,
+            padding: '6px 12px', borderRadius: 999,
+            border: `1px solid ${state === 'added' ? ADD_BR : state === 'excluded' ? 'transparent' : LINE}`,
+            background: state === 'added' ? ADD_BG : state === 'excluded' ? EXC_BG : 'transparent',
+            color: state === 'added' ? ADD_FG : state === 'excluded' ? EXC_FG : '#5f6b64',
           }}>
-            <strong style={{ color: T.greenTextDeep, fontWeight: 700, letterSpacing: '0.01em' }}>Tip</strong>
-            <span style={{ color: T.greenTextDeep }}> · </span>
-            Click once to mark as a specialism. Click again to <strong>exclude</strong> (we won&apos;t show grants targeting it). Click a third time to reset.
+            {label}{state === 'excluded' && strike(10, 1.2)}
+          </span>
+        )
+        return (
+          <div style={{ borderTop: `1px solid ${HAIR}`, paddingTop: 26, marginBottom: 20 }}>
+            <h2 style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 20, fontWeight: 600, letterSpacing: '-0.4px', color: T.greenDeep, margin: '0 0 8px' }}>Anything more specific?</h2>
+            <p style={{ fontSize: 14.5, lineHeight: 1.6, color: '#5f6b64', margin: '0 0 16px', maxWidth: '52em', fontFamily: 'var(--font-dm-sans)' }}>
+              Optional. Click once to add a specialism. Click again to <b style={{ fontFamily: 'var(--font-space-grotesk)', color: T.greenDeep, fontWeight: 600 }}>exclude</b> it and we will keep those grants out of your matches. A third click clears it.
+            </p>
+            <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center', margin: '0 0 30px' }}>
+              {mini('Added', 'added')}{mini('Excluded', 'excluded')}{mini('Not set', 'none')}
+            </div>
+            {nicheSectors.map((sector, gi) => {
+              const opts = NICHE_TAGS_BY_SECTOR[sector]!
+              const label = IMPACT_SECTORS.find(o => o.value === sector)?.label ?? sector
+              const isPrimary = impactSectors[0] === sector
+              return (
+                <div key={sector} style={{ marginBottom: gi < nicheSectors.length - 1 ? 28 : 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 9, margin: '0 0 13px', flexWrap: 'wrap' }}>
+                    <h3 style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 16, fontWeight: 600, color: T.greenDeep, margin: 0 }}>{label}</h3>
+                    {isPrimary && <em style={{ fontStyle: 'normal', fontSize: 12.5, color: '#7a857e', fontFamily: 'var(--font-dm-sans)' }}>primary sector</em>}
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 9 }}>
+                    {opts.map(opt => {
+                      const state = nicheTags.includes(opt.value) ? 'added' : excludedNicheTags.includes(opt.value) ? 'excluded' : 'none'
+                      return (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => cycleNicheTag(opt.value)}
+                          aria-pressed={state === 'added'}
+                          style={{
+                            position: 'relative', fontFamily: 'var(--font-space-grotesk)', fontSize: 14.5, fontWeight: 500, lineHeight: 1,
+                            padding: '11px 17px', borderRadius: 999, cursor: 'pointer',
+                            border: `1px solid ${state === 'added' ? ADD_BR : state === 'excluded' ? 'transparent' : LINE}`,
+                            background: state === 'added' ? ADD_BG : state === 'excluded' ? EXC_BG : '#fff',
+                            color: state === 'added' ? ADD_FG : state === 'excluded' ? EXC_FG : T.greenDeep,
+                          }}
+                        >
+                          {opt.label}
+                          {state !== 'none' && <span style={srOnly}>, {state}</span>}
+                          {state === 'excluded' && strike(13, 1.5)}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })}
           </div>
-          {nicheSectors.map(sector => {
-            const opts = NICHE_TAGS_BY_SECTOR[sector]!
-            const label = IMPACT_SECTORS.find(o => o.value === sector)?.label ?? sector
-            return (
-              <div key={sector} style={{ marginBottom: nicheSectors.indexOf(sector) < nicheSectors.length - 1 ? 14 : 0 }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: T.textSecondary, fontFamily: 'var(--font-space-grotesk)', marginBottom: 8, letterSpacing: '0.03em' }}>
-                  Specialisms in {label} <span style={{ fontWeight: 400, color: T.textTertiary }}>(optional)</span>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 5 }}>
-                  {opts.map(opt => {
-                    const isIncluded = nicheTags.includes(opt.value)
-                    const isExcluded = excludedNicheTags.includes(opt.value)
-                    const borderCol = isIncluded ? T.greenDeep : isExcluded ? T.coralText : 'var(--border-ghost)'
-                    const bgCol     = isIncluded ? T.greenCream : isExcluded ? T.coralBg : 'transparent'
-                    const txtCol    = isIncluded ? T.greenTextDeep : isExcluded ? T.coralText : T.textSecondary
-                    return (
-                      <button
-                        key={opt.value}
-                        onClick={() => cycleNicheTag(opt.value)}
-                        title={isIncluded ? 'Specialism — click to exclude' : isExcluded ? 'Excluded — click to reset' : 'Click to mark as specialism'}
-                        style={{
-                          fontSize: 11,
-                          fontFamily: 'var(--font-dm-sans)',
-                          padding: '5px 8px',
-                          borderRadius: 6,
-                          border: `1.5px solid ${borderCol}`,
-                          background: bgCol,
-                          color: txtCol,
-                          cursor: 'pointer',
-                          fontWeight: (isIncluded || isExcluded) ? 600 : 400,
-                          transition: 'all 0.12s',
-                          textAlign: 'left' as const,
-                          lineHeight: 1.3,
-                          textDecoration: isExcluded ? 'line-through' : 'none',
-                        }}
-                      >
-                        {isExcluded && <span style={{ marginRight: 4 }}>✕</span>}
-                        {opt.label}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      )}
+        )
+      })()}
 
       <div style={ACTIONS_STYLE}>
         <BackLink onClick={onBack} />
