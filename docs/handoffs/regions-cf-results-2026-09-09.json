@@ -4,7 +4,7 @@
   "script": "scripts/regions-cf-stage-2026-09-09.ts",
   "source": "system:regions-cf-2026-09-09",
   "api_spend": "none; every page read by direct fetch",
-  "staged": 10,
+  "staged": 11,
   "revived": 3,
   "summary_by_region": {
     "cheshire": { "staged": 3, "revived": 1, "local_live_rows_before": 0, "local_live_rows_after": 1, "note": "the revived Open Grants row is live; the other three are hidden for review" },
