@@ -277,6 +277,9 @@ export interface Organisation {
   signup_role?: 'organisation' | 'consultant' | 'network' | null
   /** Browse path only (migration 082): roughly how many organisations they work with. */
   client_count_band?: '1-2' | '3-5' | '6+' | '<20' | '20-100' | '100+' | null
+  /** Consultant or network with a client profile (migration 084): their own name or practice, and website. */
+  signup_practice_name?: string | null
+  signup_practice_website?: string | null
   /** Browse path only (migration 082): one organisation they work with. */
   example_client?: string | null
   /** They chose to browse without a profile: no matches card, no digest, a banner on Find Funding. Migration 080. */

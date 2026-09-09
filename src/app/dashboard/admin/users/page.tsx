@@ -19,6 +19,8 @@ interface UserRow {
   profile_skipped: boolean
   client_count_band: string | null
   example_client: string | null
+  signup_practice_name: string | null
+  signup_practice_website: string | null
   duplicate_of: string | null
   has_impact_sectors: boolean
   onboarding_complete: boolean
@@ -242,6 +244,9 @@ export default function AdminUsersPage() {
                       )}
                       {u.example_client && (
                         <p className="text-[11px] text-mid mt-0.5">e.g. {u.example_client}</p>
+                      )}
+                      {u.signup_practice_name && (
+                        <p className="text-[11px] text-mid mt-0.5">by {u.signup_practice_name}{u.signup_practice_website ? ` · ${u.signup_practice_website.replace(/^https?:\/\//, '')}` : ''}</p>
                       )}
                       {u.duplicate_of && (
                         <p className="text-[11px] font-semibold mt-0.5" style={{ color: '#993C1D' }} title={u.duplicate_of}>

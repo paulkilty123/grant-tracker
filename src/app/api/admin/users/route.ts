@@ -25,6 +25,9 @@ interface UserRow {
   /** Browse path facts (migration 082). */
   client_count_band: string | null
   example_client: string | null
+  /** Consultant or network with a client profile (migration 084). */
+  signup_practice_name: string | null
+  signup_practice_website: string | null
   /** Other owners' organisations sharing a website, charity number, CIC number or name. */
   duplicate_of: string | null
   has_impact_sectors: boolean
@@ -62,11 +65,11 @@ export async function GET() {
   // entitlement for, an org they never actually use.
   const { data: orgs } = await admin
     .from('organisations')
-    .select('id, owner_id, name, legal_structure, impact_sectors, apply_access, signup_role, profile_skipped, client_count_band, example_client, website_url, charity_number, cic_number')
+    .select('id, owner_id, name, legal_structure, impact_sectors, apply_access, signup_role, profile_skipped, client_count_band, example_client, website_url, charity_number, cic_number, signup_practice_name, signup_practice_website')
     .in('owner_id', userIds)
     .order('created_at', { ascending: true })
 
-  type OrgRow = { id: string; name: string | null; legal_structure: string | null; impact_sectors: string[] | null; apply_access: boolean | null; signup_role: string | null; profile_skipped: boolean | null; client_count_band: string | null; example_client: string | null; website_url: string | null; charity_number: string | null; cic_number: string | null }
+  type OrgRow = { id: string; name: string | null; legal_structure: string | null; impact_sectors: string[] | null; apply_access: boolean | null; signup_role: string | null; profile_skipped: boolean | null; client_count_band: string | null; example_client: string | null; website_url: string | null; charity_number: string | null; cic_number: string | null; signup_practice_name: string | null; signup_practice_website: string | null }
   const orgByOwner = new Map<string, OrgRow>()
   const orgCountByOwner = new Map<string, number>()
   for (const o of (orgs ?? []) as Array<OrgRow & { owner_id: string }>) {
@@ -78,6 +81,7 @@ export async function GET() {
         signup_role: o.signup_role, profile_skipped: o.profile_skipped,
         client_count_band: o.client_count_band, example_client: o.example_client,
         website_url: o.website_url, charity_number: o.charity_number, cic_number: o.cic_number,
+        signup_practice_name: o.signup_practice_name, signup_practice_website: o.signup_practice_website,
       })
     }
   }
@@ -153,6 +157,8 @@ export async function GET() {
       signup_role: org?.signup_role ?? null,
       client_count_band: org?.client_count_band ?? null,
       example_client: org?.example_client ?? null,
+      signup_practice_name: org?.signup_practice_name ?? null,
+      signup_practice_website: org?.signup_practice_website ?? null,
       duplicate_of: fullOrgByOwner.get(u.id) ? duplicateOf(fullOrgByOwner.get(u.id)!) : null,
       profile_skipped: !!org?.profile_skipped,
       has_impact_sectors: Array.isArray(sectors) && sectors.length > 0,

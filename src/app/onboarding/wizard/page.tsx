@@ -299,6 +299,9 @@ interface WizardState {
   /** Browse path only: how many organisations they work with, and one of them. */
   clientCountBand:  ClientBand
   exampleClient:    string
+  /** Consultant or network building a client profile: their own name or practice, and website. */
+  practiceName:     string
+  practiceWebsite:  string
 }
 
 const EMPTY_STATE: WizardState = {
@@ -315,6 +318,8 @@ const EMPTY_STATE: WizardState = {
   signupRole: 'organisation',
   clientCountBand: '',
   exampleClient: '',
+  practiceName: '',
+  practiceWebsite: '',
 }
 
 /** Derive the three boolean eligibility flags from the legal structure.
@@ -807,6 +812,8 @@ export default function OnboardingWizardPage() {
           signupRole:       (org.signup_role as SignupRole | null | undefined) ?? 'organisation',
           clientCountBand:  (org.client_count_band as ClientBand | null | undefined) ?? '',
           exampleClient:    org.example_client ?? '',
+          practiceName:     org.signup_practice_name ?? '',
+          practiceWebsite:  org.signup_practice_website ?? '',
         })
       }
       setLoading(false)
@@ -1187,6 +1194,13 @@ export default function OnboardingWizardPage() {
         alert_frequency:              'weekly',
         alert_min_score:              70,
         website_url:                  url.trim() ? (url.trim().startsWith('http') ? url.trim() : 'https://' + url.trim()) : null,
+        // Consultant or network building a client profile (migration 084): who
+        // they are sits beside the role, since the row itself is the client's.
+        signup_practice_name:         state.signupRole !== 'organisation' ? (state.practiceName.trim() || null) : null,
+        signup_practice_website:      state.signupRole !== 'organisation' && state.practiceWebsite.trim()
+                                        ? (state.practiceWebsite.trim().startsWith('http') ? state.practiceWebsite.trim() : 'https://' + state.practiceWebsite.trim())
+                                        : null,
+        client_count_band:            state.signupRole !== 'organisation' ? (state.clientCountBand || null) : null,
         signup_role:                  state.signupRole,
         // A saved profile ends the browse-only state, whoever they are.
         profile_skipped:              false,
@@ -1354,6 +1368,12 @@ export default function OnboardingWizardPage() {
           role={state.signupRole}
           setRole={r => update('signupRole', r)}
           onBrowse={() => setStep('browse')}
+          practiceName={state.practiceName}
+          setPracticeName={v => update('practiceName', v)}
+          practiceWebsite={state.practiceWebsite}
+          setPracticeWebsite={v => update('practiceWebsite', v)}
+          band={state.clientCountBand}
+          setBand={v => update('clientCountBand', v)}
         />
       </CardShell>
     )
@@ -1482,12 +1502,15 @@ const SIGNUP_ROLES: { value: SignupRole; label: string }[] = [
   { value: 'network',      label: 'A network or membership body' },
 ]
 
-function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual, role, setRole, onBrowse }: {
+function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual, role, setRole, onBrowse, practiceName, setPracticeName, practiceWebsite, setPracticeWebsite, band, setBand }: {
   url: string; setUrl: (v: string) => void
   fetching: boolean; error: string | null
   onAutoFill: () => void; onManual: () => void
   role: SignupRole; setRole: (r: SignupRole) => void
   onBrowse: () => void
+  practiceName: string; setPracticeName: (v: string) => void
+  practiceWebsite: string; setPracticeWebsite: (v: string) => void
+  band: ClientBand; setBand: (v: ClientBand) => void
 }) {
   const [hov, setHov] = useState(false)
   const several = role !== 'organisation'
@@ -1535,6 +1558,35 @@ function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual, role, s
 
       {showProfileTools && (<>
       {several && (
+        <div style={{ margin: '0 0 22px', maxWidth: 520 }}>
+          {/* Who they are (migration 084): the profile below belongs to a
+              client, so the person disappears from the record otherwise. */}
+          <p style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 15, fontWeight: 600, color: T.textPrimary, margin: '0 0 10px' }}>About you</p>
+          <label style={{ display: 'block', fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: T.textPrimary, margin: '0 0 6px' }}>
+            Your name or {role === 'network' ? 'network' : 'practice'}<span style={{ color: T.coralText, marginLeft: 2 }}>*</span>
+          </label>
+          <input type="text" value={practiceName} onChange={e => setPracticeName(e.target.value)} placeholder={role === 'network' ? 'e.g. Impact Hub Brighton' : 'e.g. Jane Smith Fundraising'} style={{ ...INPUT_STYLE, boxSizing: 'border-box' }} />
+          <label style={{ display: 'block', fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: T.textPrimary, margin: '14px 0 6px' }}>
+            Your website, if you have one
+          </label>
+          <input type="url" value={practiceWebsite} onChange={e => setPracticeWebsite(e.target.value)} placeholder={role === 'network' ? 'https://yournetwork.org.uk' : 'https://yourpractice.co.uk'} style={{ ...INPUT_STYLE, boxSizing: 'border-box' }} />
+          <p style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: T.textPrimary, margin: '14px 0 8px' }}>
+            Roughly how many organisations do you {role === 'network' ? 'support' : 'work with'}?<span style={{ color: T.coralText, marginLeft: 2 }}>*</span>
+          </p>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {((role === 'network' ? ['<20', '20-100', '100+'] : ['1-2', '3-5', '6+']) as ClientBand[]).map(b => (
+              <button key={b} type="button" onClick={() => setBand(b)} style={{
+                fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 13.5, padding: '8px 16px', borderRadius: 999, cursor: 'pointer',
+                background: band === b ? '#F1F7E4' : '#fff', color: band === b ? '#3B6D11' : T.textSecondary,
+                border: `1px solid ${band === b ? '#3B6D11' : 'rgba(44,44,42,0.25)'}`,
+              }}>
+                {b === '6+' ? '6 or more' : b === '<20' ? 'Under 20' : b === '20-100' ? '20 to 100' : b === '100+' ? '100 or more' : b}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      {several && (
         <div style={{ margin: '0 0 12px', maxWidth: 520 }}>
           <p style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 15, fontWeight: 600, color: T.textPrimary, margin: '0 0 4px' }}>
             Which organisation do you want matches for?
@@ -1558,7 +1610,7 @@ function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual, role, s
             style={{ ...INPUT_STYLE, padding: '0 14px 0 34px', boxSizing: 'border-box' }}
           />
         </div>
-        <Button variant="primary" size="lg" onClick={onAutoFill} disabled={fetching}>
+        <Button variant="primary" size="lg" onClick={onAutoFill} disabled={fetching || (several && (!practiceName.trim() || !band))}>
           {fetching ? (
             <span className="inline-flex items-center gap-2">
               <span className="dot-bounce inline-flex gap-0.5"><span/><span/><span/></span>
@@ -1574,6 +1626,7 @@ function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual, role, s
       <div style={{ paddingTop: 24 }}>
         <button
           onClick={onManual}
+          disabled={several && (!practiceName.trim() || !band)}
           onMouseEnter={() => setHov(true)}
           onMouseLeave={() => setHov(false)}
           style={{
