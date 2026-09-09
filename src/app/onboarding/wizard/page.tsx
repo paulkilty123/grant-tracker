@@ -187,6 +187,8 @@ type WizardStep = 'entry' | 'browse' | 'review' | 'manual' | 'sectors' | 'benefi
 
 /** Who is signing up. Recorded on the organisation row; see migration 080. */
 type SignupRole = 'organisation' | 'consultant' | 'network'
+/** Browse path: consultant bands, or network bands (migration 083). */
+type ClientBand = '' | '1-2' | '3-5' | '6+' | '<20' | '20-100' | '100+'
 
 const STEP_DOT_POS: Record<WizardStep, number> = {
   // Who you serve comes before what you focus on (Paul, 8 Sept 2026, after
@@ -295,7 +297,7 @@ interface WizardState {
   /** Who is signing up. Defaults to the organisation itself. */
   signupRole:       SignupRole
   /** Browse path only: how many organisations they work with, and one of them. */
-  clientCountBand:  '' | '1-2' | '3-5' | '6+'
+  clientCountBand:  ClientBand
   exampleClient:    string
 }
 
@@ -803,7 +805,7 @@ export default function OnboardingWizardPage() {
           // wizard cannot silently re-subscribe somebody who turned alerts off.
           alertsEnabled:    org.alerts_enabled ?? true,
           signupRole:       (org.signup_role as SignupRole | null | undefined) ?? 'organisation',
-          clientCountBand:  (org.client_count_band as '1-2' | '3-5' | '6+' | null | undefined) ?? '',
+          clientCountBand:  (org.client_count_band as ClientBand | null | undefined) ?? '',
           exampleClient:    org.example_client ?? '',
         })
       }
@@ -1584,7 +1586,7 @@ function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual, role, s
 function StepBrowse({ name, setName, website, setWebsite, band, setBand, example, setExample, role, saving, error, onBack, onFinish }: {
   name: string; setName: (v: string) => void
   website: string; setWebsite: (v: string) => void
-  band: '' | '1-2' | '3-5' | '6+'; setBand: (v: '' | '1-2' | '3-5' | '6+') => void
+  band: ClientBand; setBand: (v: ClientBand) => void
   example: string; setExample: (v: string) => void
   role: SignupRole
   saving: boolean; error: string | null
@@ -1626,7 +1628,7 @@ function StepBrowse({ name, setName, website, setWebsite, band, setBand, example
         Roughly how many organisations do you {role === 'network' ? 'support' : 'work with'}?
       </p>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        {(['1-2', '3-5', '6+'] as const).map(b => (
+        {((role === 'network' ? ['<20', '20-100', '100+'] : ['1-2', '3-5', '6+']) as ClientBand[]).map(b => (
           <button
             key={b}
             type="button"
@@ -1637,7 +1639,7 @@ function StepBrowse({ name, setName, website, setWebsite, band, setBand, example
               border: `1px solid ${band === b ? '#3B6D11' : 'rgba(44,44,42,0.25)'}`,
             }}
           >
-            {b === '6+' ? '6 or more' : b}
+            {b === '6+' ? '6 or more' : b === '<20' ? 'Under 20' : b === '20-100' ? '20 to 100' : b === '100+' ? '100 or more' : b}
           </button>
         ))}
       </div>
