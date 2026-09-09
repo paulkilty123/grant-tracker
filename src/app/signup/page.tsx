@@ -136,6 +136,7 @@ export default function SignupPage() {
               </ul>
             </div>
             <blockquote className="quote">
+              <p className="built">Built with UK charities, CICs and social enterprises</p>
               <p>&ldquo;Shoots has become our go-to funding research platform. Its eligibility matching is remarkably accurate.&rdquo;</p>
               <cite><b>David Agar</b>CEO, BankAbility UK CIC</cite>
             </blockquote>
