@@ -740,6 +740,229 @@
     }
    ],
    "verdict": "One programme and one grant from eight names, against a bar of two programmes. The London seam is thin for the same reason the city search was: what remains unheld is founder programmes, individual artist schemes, invitation-led corporate giving and support services. Stop searching; go back to the eleven programme-shaped providers already held."
+  },
+  {
+   "batch": 5,
+   "tier": 3,
+   "date": "2026-09-10",
+   "mode": "APPLIED. Script scripts/provider-walk-tier3-batch2-2026-09-10.ts. Two relinks at user_verified, one row staged hidden at system trust. No existing row's state changed.",
+   "providers_walked": 11,
+   "providers": [
+    {
+     "provider": "Reach Volunteering",
+     "page": "https://reachvolunteering.org.uk/",
+     "outcomes": [
+      {
+       "fund": "TrusteeWorks",
+       "id": "970ce070-6fea-44fc-bfea-a7317776681a",
+       "action": "report",
+       "quote": "We're very sad to announce that Reach is closing.",
+       "note": "LIVE ROW FOR A PROVIDER THAT IS CLOSING. Homepage carries a closure statement with timelines for current users. Paul's call, but this one should not stay live. Name it first."
+      }
+     ]
+    },
+    {
+     "provider": "Microsoft",
+     "page": "https://www.microsoft.com/en-gb/nonprofits",
+     "funds_on_page": 5,
+     "rows_held": 4,
+     "rows_live": 1,
+     "outcomes": [
+      {
+       "fund": "Microsoft for Nonprofits (all offers)",
+       "id": "3c2c6766-220f-4d54-ad18-4bade01df7a5",
+       "action": "already_correct",
+       "note": "One registration route for M365 discount, Copilot discount, Azure credits and Dynamics; the single-row exception applies (one continuous offer, one route, one eligibility). Elevate for Changemakers is training for individuals; not staged."
+      }
+     ]
+    },
+    {
+     "provider": "Amazon Web Services",
+     "page": "https://aws.amazon.com/government-education/nonprofits/",
+     "funds_on_page": 2,
+     "rows_held": 3,
+     "rows_live": 1,
+     "outcomes": [
+      {
+       "fund": "AWS Nonprofit Credit Program",
+       "url": "https://aws.amazon.com/government-education/nonprofits/nonprofit-credit-program/",
+       "id": "171ceb65-7ddf-4a90-ac4c-57adf480279f",
+       "action": "relink",
+       "quote": "up to $5,000 USD in AWS Promotional Credit",
+       "note": "Was the nonprofits index. UK organisations apply through TechSoup's partner network."
+      },
+      {
+       "fund": "AWS Imagine Grant",
+       "url": "https://aws.amazon.com/government-education/nonprofits/aws-imagine-grant-program/",
+       "id": "e1bdcc14-9c13-42fd-ac93-dacc5cd6ef96",
+       "action": "report",
+       "quote": "The application cycle for the 2026 AWS Imagine Grant is now closed",
+       "note": "Archived row. UK is eligible (page names the United Kingdom). Round One reopens around 19 March 2027. Revive as between_rounds_scheduled with that date is Paul's call."
+      },
+      {
+       "fund": "Amazon Sustainability Accelerator",
+       "id": "dc33bc71-60d1-4b7a-a88f-67fa9490852d",
+       "action": "report",
+       "note": "Published and hidden, deadline passed. The page still shows the April 2026 consumer-product deadline; no next round announced. For startups with physical products. Leave hidden."
+      }
+     ]
+    },
+    {
+     "provider": "CAST",
+     "page": "https://www.wearecast.org.uk/our-work/programmes-and-initiatives/",
+     "funds_on_page": 3,
+     "rows_held": 3,
+     "rows_live": 1,
+     "outcomes": [
+      {
+       "fund": "Design Hops",
+       "url": "https://www.wearecast.org.uk/our-work/programmes-and-initiatives/design-hops/",
+       "id": "5b3b3912-db0a-4a2c-a7d3-133bc851dcc3",
+       "action": "stage",
+       "type": "programme",
+       "quote": "A free seven-week online training programme",
+       "note": "Waiting list, no cohort dates published."
+      },
+      {
+       "fund": "Digital Leads Network and Coffee Connections",
+       "action": "report",
+       "note": "Peer networks and a two-monthly matched chat. Support-shaped; not staged under the 8 Sept ruling."
+      },
+      {
+       "fund": "CAST — Free Digital and AI Support for Charities",
+       "id": "86a561b4-8487-44e8-8a20-33f772a5055c",
+       "action": "report",
+       "note": "Live front door pointing at the programmes index. With Design Hops split out, this row is the remaining networks and events. Paul's call whether it stays."
+      }
+     ]
+    },
+    {
+     "provider": "LawWorks",
+     "page": "https://www.lawworks.org.uk/solicitors-and-volunteers/get-involved/not-profits-programme",
+     "funds_on_page": 2,
+     "rows_held": 3,
+     "rows_live": 1,
+     "outcomes": [
+      {
+       "fund": "Not-for-Profits Programme",
+       "id": "a5da4678-2d9e-49ce-9c9a-599c155046ef",
+       "action": "report",
+       "quote": "Volunteer solicitors advise organisations on discrete business law matters ranging from reviewing a lease or drafting a contract, to updating a constitution or advising on rights in a dispute.",
+       "note": "Live row points at the homepage. The programme's own page is already the apply_url of a REJECTED row (f44a6141), so relinking collides. Merge decision for Paul: keep the live row and relink it, or revive the rejected one."
+      }
+     ]
+    },
+    {
+     "provider": "Charity Digital",
+     "page": "https://charitydigital.org.uk/",
+     "rows_held": 3,
+     "rows_live": 2,
+     "outcomes": [
+      {
+       "fund": "Charity Digital Exchange (software donations)",
+       "id": "571f93e2-d0b5-41d7-adf1-d36b3a039ec6",
+       "action": "already_correct",
+       "note": "Points at the products catalogue, which is the offer."
+      },
+      {
+       "fund": "Charity Digital Skills Programme",
+       "id": "99a71fd2-fccc-4947-a4fd-4fdd81b58bd0",
+       "action": "report",
+       "note": "Live row points at the homepage. The Academy's courses are paid and webinars are events; there is no free programme to point it at. Paul's call whether it stays."
+      }
+     ]
+    },
+    {
+     "provider": "Pro Bono Economics",
+     "page": "https://pbe.co.uk/our-services/",
+     "funds_on_page": 3,
+     "rows_held": 2,
+     "rows_live": 2,
+     "outcomes": [
+      {
+       "fund": "Data First Aid",
+       "id": "50343bc9-4d8e-4416-8aad-c9e3ed2300ac",
+       "action": "already_correct",
+       "quote": "free support from a dedicated volunteer economist who can help charities with data analysis or visualisation, spreadsheets or short pieces of research"
+      },
+      {
+       "fund": "Analysis, advocacy and advice services",
+       "url": "https://pbe.co.uk/our-services/our-analysis-services/",
+       "id": "38f3cae0-7d56-422a-aa1f-8691c2540fc9",
+       "action": "relink",
+       "note": "Was the services index."
+      }
+     ]
+    },
+    {
+     "provider": "NCVO",
+     "page": "https://www.ncvo.org.uk/training-events/",
+     "outcomes": [
+      {
+       "fund": "Learning and Development Programmes",
+       "id": "0ebb775d-0ff1-44cd-880b-5853f73b060f",
+       "action": "report",
+       "note": "Live row. The page is paid courses and free one-off webinars; nothing a charity applies to join. Support-shaped under the 8 Sept ruling. Paul's call."
+      }
+     ]
+    },
+    {
+     "provider": "The Law Society",
+     "outcomes": [
+      {
+       "fund": "Domestic pro bono resources",
+       "id": "2df4a8ac-2902-4ffb-9a86-e945b1dbc23b",
+       "action": "report",
+       "note": "Live row pointing at a resources page that lists other providers, LawWorks among them. A directory, not an offer. Paul's call."
+      }
+     ]
+    },
+    {
+     "provider": "Pilotlight",
+     "page": "https://www.pilotlight.org.uk/charities/apply-for-support",
+     "rows_held": 4,
+     "rows_live": 2,
+     "outcomes": [
+      {
+       "fund": "Pilotlight 360",
+       "id": "c1caaf02-8461-4393-8ba1-c81096cded8a",
+       "action": "already_correct",
+       "quote": "Turnover between £100k-£5m"
+      },
+      {
+       "fund": "Pro Bono Support Matching",
+       "id": "c1a86516-b4be-4535-90cc-4a672750d652",
+       "action": "report",
+       "note": "Live duplicate front door pointing at the homepage for the same apply route as Pilotlight 360. Paul's call; likely reject."
+      },
+      {
+       "fund": "Weston Charity Awards",
+       "id": "adc7ec22-6479-48fe-b580-10cda79b5fd5",
+       "action": "report",
+       "quote": "Applications for the 2025 Weston Charity Awards are now closed.",
+       "note": "Row holds deadline 2026-11-06 between rounds. Neither Pilotlight's page nor the Garfield Weston article (January 2025 round) states a 2026 date. The date is unsupported; the row is hidden so no user harm, but it will resurface on that date with nothing behind it."
+      }
+     ]
+    },
+    {
+     "provider": "TechSoup UK",
+     "outcomes": [
+      {
+       "fund": "Donated and discounted technology",
+       "id": "b98c7493-ff5c-42f4-ab1d-b205940e550c",
+       "action": "already_correct",
+       "note": "Points at the product catalogue, which is the offer."
+      }
+     ]
+    }
+   ],
+   "batch_summary": {
+    "relinked": 2,
+    "staged": 1,
+    "reported": 12,
+    "already_correct": 6,
+    "the_point_for_paul": "Eleven programme-shaped providers produced ONE programme (CAST Design Hops, waiting list only). Most of what these providers offer is in-kind services already held as single rows, or support-shaped under the 8 Sept ruling. The walk's real yield here is hygiene: Reach Volunteering is closing and has a live row; four live rows are front doors or directories; the Weston Charity Awards date has nothing behind it."
+   }
   }
  ],
  "tier_two_answer": {
