@@ -3,8 +3,10 @@
  * Dry by default; --apply writes. Every page below was read on 2026-09-10 by
  * this session, independently of the provider walk that staged the rows.
  *
- * PUBLISH (5): three Charity Bank products, Big Issue Invest equity and revenue
- *   participation, Key Fund Regional Growth Fund. Field corrections are written
+ * PUBLISH (2): Big Issue Invest equity and revenue participation, Key Fund
+ *   Regional Growth Fund. Paul, 2026-09-10: the three Charity Bank rows (loans
+ *   from £500,000 to £7.5 million) are big loans for larger organisations and
+ *   stay in the queue unpublished. Field corrections are written
  *   first, then the row goes live.
  * REJECT (2): the BGV captured duplicate; the Social Investment Cymru row that
  *   points at the Good Finance directory while WCVA's own fund is live.
@@ -25,15 +27,6 @@ const SOURCE = 'user_verified:investment-queue-2026-09-10' as never
 const APPLY = process.argv.includes('--apply')
 
 const PUBLISH: { id: string; title: string; fields: Record<string, unknown>; note: string }[] = [
-  { id: 'c4773be7-9b10-4760-87f8-54516d8d10c2', title: 'Charity Bank Loans over £750,000',
-    fields: { sectors: ['community', 'housing', 'health', 'education', 'environment', 'sport'] },
-    note: 'page: "loans up to £7.5 million"; "only lend to organisations based in the UK"; sectors from the page examples (housing, skate parks, theatres, air ambulance) matched to the live sibling row' },
-  { id: 'd04fb64f-4f9e-4968-811f-c77070b3adca', title: 'Charity Bank Development Finance',
-    fields: { sectors: ['housing', 'community', 'health'] },
-    note: 'page: "loans up to £7.5 million on a stand-alone basis"; affordable housing, community centres, care facilities' },
-  { id: '2819c5ff-3f60-4adf-b2d8-cbda99fde7a8', title: 'Charity Bank Energy Efficiency Loan Programme',
-    fields: { amount_max: 7500000, sectors: ['housing', 'environment', 'community'] },
-    note: 'page: "Loans available from £500,000" and "loans up to £7.5 million"; the max was missing on the staged row' },
   { id: 'e8c9b8eb-1d9d-4e2b-b433-580050406796', title: 'Big Issue Invest Equity and Revenue Participation',
     fields: { sectors: ['social_economy', 'social_innovation'] },
     note: 'page: "between £150,000 and £450,000 however we do offer up to £750,000"; equity CLS only, revenue participation for trading companies; structures already exclude charities' },
@@ -91,5 +84,5 @@ const BETWEEN = { id: '3e386cdc-60ab-413e-a348-11f659d3e4fb', title: 'Tech for G
 
   const { data: after } = await db.from('scraped_grants').select('title,is_active,pipeline_state').in('id', ids)
   const live = after!.filter(r => r.is_active && r.pipeline_state === 'published').length
-  console.log(`\nend state: ${live} live (expected 5), ${after!.filter(r => r.pipeline_state === 'rejected').length} rejected (expected 2), ${after!.filter(r => r.pipeline_state === 'between_rounds_scheduled').length} between rounds (expected 1)`)
+  console.log(`\nend state: ${live} live (expected 2), ${after!.filter(r => r.pipeline_state === 'rejected').length} rejected (expected 2), ${after!.filter(r => r.pipeline_state === 'between_rounds_scheduled').length} between rounds (expected 1)`)
 })()
