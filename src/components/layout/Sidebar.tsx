@@ -118,6 +118,11 @@ const MAIN_NAV = [
 // (Needs Enrichment) and editor (GrantEditor) now live inside Grant Manager.
 // The page itself stays accessible at /dashboard/admin/intelligence for now
 // in case anything still links to it; full removal is a follow-up.
+// 2026-09-10, Paul's review of the admin section: Grant Health, Tagging Quality,
+// Cohort Matches, Match Feedback and Feedback triage are hidden from the nav.
+// The pages still exist at their URLs; deletion is a follow-up after launch
+// week, along with moving Add Funder and the bulk URL checks out of Grant
+// Manager so it can go too.
 const ADMIN_NAV = [
   // Review queue sits first: it is the only admin surface with work actually
   // waiting on a human. Catalogue is next, because it answers the other
@@ -134,10 +139,7 @@ const ADMIN_NAV = [
   { href: '/dashboard/admin/pipeline',     label: 'Pipeline',            Icon: Gauge         },
   { href: '/dashboard/admin/review',       label: 'Review queue',        Icon: Inbox         },
   { href: '/dashboard/admin/grants',       label: 'Catalogue',           Icon: Library       },
-  { href: '/dashboard/admin',              label: 'Grant Health',        Icon: Activity      },
   { href: '/dashboard/admin/urls',         label: 'Grant Manager',       Icon: ClipboardList },
-  { href: '/dashboard/admin/quality',      label: 'Tagging Quality',     Icon: BarChart3     },
-  { href: '/dashboard/admin/cohort-match-audit', label: 'Cohort Matches', Icon: User          },
   { href: '/dashboard/admin/users',        label: 'Users',               Icon: Users         },
   { href: '/dashboard/admin/waitlist',     label: 'Waitlist',            Icon: Mail          },
   { href: '/dashboard/admin/usage',        label: 'Usage',               Icon: BarChart3     },
@@ -329,8 +331,6 @@ export default function Sidebar({ org, userEmail, companionSurface = false, appl
             <nav className="flex flex-col gap-0.5">
               {ADMIN_NAV.map(item => navLink(item.href, item.label, item.Icon))}
               {navLink('/dashboard/admin/feedback-inbox', 'Feedback inbox', Inbox)}
-              {navLink('/dashboard/admin/feedback', 'Match Feedback', MessageSquare)}
-              {navLink('/dashboard/admin/feedback-triage', 'Feedback triage', MessageSquare)}
             </nav>
           </>
         )}
