@@ -526,6 +526,24 @@ function SkipAction({ onClick, children }: { onClick: () => void; children: Reac
  * Field wrapper — label, optional inline hint, children input, optional help text below.
  * The hint and help are separate elements so the asterisk never wraps near a select arrow.
  */
+/**
+ * Sole trader / individual practitioner.
+ *
+ * Shoots matches funding to organisations. Most funders will not fund an
+ * individual, so someone who picks this structure will see few or no matches,
+ * and the usual "one detail unlocks your matches" nudge would be misleading.
+ * Say so plainly at the point they choose it, and again on the reveal.
+ */
+function IndividualNotice({ compact }: { compact?: boolean }) {
+  return (
+    <div style={{ background: T.amberBgSoft, border: '1px solid rgba(133,79,11,0.22)', borderRadius: 12, padding: compact ? '10px 14px' : '14px 18px', marginTop: compact ? 10 : 0 }}>
+      <p style={{ margin: 0, fontFamily: 'var(--font-dm-sans)', fontSize: 13.5, lineHeight: 1.55, color: T.textPrimary }}>
+        Shoots matches funding to organisations. Most funders do not fund individuals, so you will see few or no matches as a sole trader. You are welcome to browse the catalogue and save anything worth watching. If you set up a constituted group or a company, change your structure here and the matches open up.
+      </p>
+    </div>
+  )
+}
+
 function Field({
   label, required, hint, help, children,
 }: {
@@ -1470,6 +1488,7 @@ export default function OnboardingWizardPage() {
           structureBlock={structureBlock}
           topMatches={revealMatches}
           hasMission={!!state.mission.trim()}
+          isIndividual={state.legalStructure === 'sole_trader'}
           onExplore={() => router.push('/dashboard/search')}
           onAddMission={() => router.push('/dashboard/profile?section=mission')}
         />
@@ -1949,6 +1968,7 @@ function StepManual({ state, update, onBack, onContinue }: {
 
         <Field label="What kind of organisation are you?" required help="Drives which funders you're eligible for.">
           <SelectInput value={state.legalStructure} onChange={v => update('legalStructure', v as LegalStructure | '')} options={LEGAL_STRUCTURE_OPTIONS} placeholder="Select your legal structure…" />
+          {state.legalStructure === 'sole_trader' && <IndividualNotice compact />}
         </Field>
 
         <Field label="Annual income" hint="approximate band is fine" help="Many funders have income caps — we use this to filter those out.">
@@ -2424,6 +2444,7 @@ function StepLocation({ state, update, toggleFundingType, toggleSpendNeed, savin
                 <SelectInput value={state.legalStructure} onChange={v => update('legalStructure', v as LegalStructure | '')} options={LEGAL_STRUCTURE_OPTIONS} placeholder="Select your structure…" />
               </div>
             )}
+            {state.legalStructure === 'sole_trader' && <IndividualNotice compact />}
           </div>
         </Q>
       )}
@@ -2574,8 +2595,8 @@ function QHelp({ children }: { children: React.ReactNode }) {
    Step 5 — The reveal
    ═══════════════════════════════════════════════ */
 
-function StepReveal({ matchCount, failed, structureBlock, topMatches, hasMission, onExplore, onAddMission }: {
-  matchCount: number | null; failed: boolean
+function StepReveal({ matchCount, failed, structureBlock, topMatches, hasMission, isIndividual, onExplore, onAddMission }: {
+  matchCount: number | null; failed: boolean; isIndividual: boolean
   structureBlock: { openNow: number; ifConstituted: number } | null
   topMatches: RevealMatch[] | null
   hasMission: boolean; onExplore: () => void; onAddMission: () => void
@@ -2657,6 +2678,21 @@ function StepReveal({ matchCount, failed, structureBlock, topMatches, hasMission
         <div style={{ fontSize: 13, color: T.textSecondary, fontFamily: 'var(--font-dm-sans)', marginBottom: 8 }}>Finding your matches…</div>
         <LoadingDots />
       </div>
+    )
+  }
+
+  if (isIndividual && matchCount === 0) {
+    return (
+      <>
+        <div style={{ textAlign: 'center', padding: '24px 0 16px' }}>
+          <div style={{ fontSize: 40, marginBottom: 12 }}>🌱</div>
+          <h1 style={{ ...H1_STYLE, fontSize: 22 }}>Your profile is saved</h1>
+        </div>
+        <div style={{ maxWidth: 460, margin: '0 auto' }}><IndividualNotice /></div>
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 24 }}>
+          <Button variant="primary" size="lg" onClick={onExplore}>Browse all funding <ArrowRight size={15} /></Button>
+        </div>
+      </>
     )
   }
 
