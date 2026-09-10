@@ -632,10 +632,7 @@ export default async function PublicGrantPage({
         <div style={{ textAlign: 'center', marginTop: 26 }}>
           <p style={{ fontSize: 13, lineHeight: 1.6, color: T.inkPlace, margin: 0 }}>
             {MCP_BRAND_NAME} keeps a curated catalogue of live, verified UK funding opportunities, every entry traced back to the
-            funder&rsquo;s own published page.{' '}
-            <Link href="/mcp" style={{ color: T.deep, fontWeight: 600, textDecoration: 'underline', textUnderlineOffset: 3, textDecorationColor: T.ghost }}>
-              How we build it
-            </Link>.
+            funder&rsquo;s own published page.
           </p>
         </div>
       </main>
