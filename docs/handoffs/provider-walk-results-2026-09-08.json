@@ -673,6 +673,73 @@
     "the_point_for_paul": "Every row this batch produced is INVESTMENT, not programme. The tier-three providers walked so far are lenders. The programme-shaped providers left in tier three are Microsoft, AWS, LawWorks, Charity Digital, CAST, Pro Bono Economics, NCVO, The Law Society, Pilotlight, Reach Volunteering and TechSoup.",
     "trap": "A single supabase-js read returns at most 1,000 rows whatever .limit() says. The first dry run read 1,000 of 2,020, reported two relink targets missing and ran the dedup over half the table. The script now pages and refuses to run if the read is short of the table count."
    }
+  },
+  {
+   "batch": 4,
+   "tier": "london probe",
+   "date": "2026-09-10",
+   "mode": "APPLIED. Script scripts/london-probe-stage-2026-09-10.ts. Two rows staged hidden at system:london-probe-2026-09-10. No existing row touched.",
+   "the_question": "Paul, 10 Sept: would it not be worth researching more providers first, there must be many more just in London alone. Tested by listing 76 London names from memory: 52 already held. Eight plausible unheld names were read.",
+   "the_bar": "two or more real programmes and the seam exists; none and we stop searching",
+   "providers": [
+    {
+     "provider": "Hackney Giving",
+     "page": "https://www.hackneygiving.org.uk/get-support/apply-for-funding/",
+     "action": "stage",
+     "id": "296a21bd-0102-4eb4-8dc9-e6a0ca4ca2dd",
+     "type": "grant",
+     "quote": "not-for-profit groups with a turnover of under £300,000",
+     "note": "Real and unheld, but a £1,000 grant, not a programme."
+    },
+    {
+     "provider": "Barclays Eagle Labs",
+     "page": "https://labs.uk.barclays/what-we-offer/our-programmes/circular-economy-foundations-programme/",
+     "action": "stage",
+     "id": "18e3673e-5bc8-4667-a78d-92953bbe0df0",
+     "type": "programme",
+     "quote": "To apply for the programme, your business must be: A UK-based SME Operational and revenue-generating A direct-to-consumer product or service",
+     "note": "Closes 9 Oct 2026. Audience is SMEs; a trading social enterprise qualifies. Paul may rule it out on audience. Eagle Labs' Funding Readiness Programme closed 1 Sept, tech founders only, not staged."
+    },
+    {
+     "provider": "Capital Enterprise",
+     "page": "https://www.capitalenterprise.org/",
+     "action": "report",
+     "note": "Founder support for tech startups, delivered through Eagle Labs and a cancer tech accelerator. No route for a charity. Out."
+    },
+    {
+     "provider": "Zinc",
+     "page": "https://www.zinc.vc/programmes/pre-seed-investment/",
+     "action": "report",
+     "quote": "initial Zinc investment of up to £250k",
+     "note": "Pre-seed investment in science-for-impact ventures with IP; for founders building companies. Out."
+    },
+    {
+     "provider": "Design Council",
+     "page": "https://www.designcouncil.org.uk/our-work/projects-programmes/design-differently/",
+     "action": "report",
+     "note": "Design, differently ran three cohorts and is described in the past tense; no application route. Out."
+    },
+    {
+     "provider": "Battersea Arts Centre",
+     "page": "https://bac.org.uk/",
+     "action": "report",
+     "note": "Artist development for individuals and youth programmes for ages 11 to 29. Individuals only. Out."
+    },
+    {
+     "provider": "Bloomberg",
+     "page": "https://www.bloomberg.com/company/philanthropy/",
+     "action": "unreadable",
+     "note": "403 on fetch. Known to be invitation-led; not pursued."
+    },
+    {
+     "provider": "Centre for Social Justice Awards",
+     "page": "https://csjfoundation.org.uk/awards/2026",
+     "action": "report",
+     "quote": "Every year, the CSJ team combs the country to identify the most outstanding, innovative and effective organisations fighting poverty on the frontline.",
+     "note": "£20,000 to four winners, but chosen by the CSJ team from its Alliance; 2026 finalists already named. Not an open application. Not staged."
+    }
+   ],
+   "verdict": "One programme and one grant from eight names, against a bar of two programmes. The London seam is thin for the same reason the city search was: what remains unheld is founder programmes, individual artist schemes, invitation-led corporate giving and support services. Stop searching; go back to the eleven programme-shaped providers already held."
   }
  ],
  "tier_two_answer": {
