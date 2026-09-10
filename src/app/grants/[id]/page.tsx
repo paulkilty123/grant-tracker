@@ -323,7 +323,9 @@ export default async function PublicGrantPage({
 
   const applyUrl = grant.apply_url ? String(grant.apply_url) : null
   const url      = canonicalFor(externalId)
-  const signupHref = `/auth/signup?return=${encodeURIComponent(`/grants/${externalId}`)}`
+  // /auth/signup redirects to /apply, the pre-launch waitlist. Signup is open
+  // at /signup since 10 Sept; it does not honour a return param yet.
+  const signupHref = '/signup'
 
   // ── JSON-LD ────────────────────────────────────────────────────────────────
   // MonetaryGrant has NO deadline property. Its own are `amount` and `funder`;
