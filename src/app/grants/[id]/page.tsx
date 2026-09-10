@@ -9,7 +9,7 @@ import { eligibilityStated, ELIGIBILITY_NOT_STATED } from '@/lib/eligibility-dis
 import { FUNDING_TYPE_COLOUR, TYPE_NEUTRAL, type FundingTypeKey } from '@/lib/funding-type-colours'
 import { sectorColour } from '@/lib/sector-colours'
 import {
-  MapPin, Calendar, CheckCircle, Clock, Info, ExternalLink, ArrowRight,
+  MapPin, Calendar, CheckCircle, Info, ExternalLink, ArrowRight,
   Building2, Search, TrendingUp, ShieldCheck,
 } from 'lucide-react'
 import { MCP_BRAND_NAME, MCP_APP_ORIGIN } from '@/lib/mcp-brand'
@@ -320,11 +320,6 @@ export default async function PublicGrantPage({
   const urgent         = days !== null && days >= 0 && days <= 7
 
   const lastSeenISO   = grant.last_seen_at ? String(grant.last_seen_at).split('T')[0] : null
-  const lastSeenHuman = humaniseDate(lastSeenISO)
-  const lastSeenDays  = lastSeenISO ? -(daysUntil(lastSeenISO) ?? 0) : null
-  /** Past 30 days the badge stops claiming freshness. It is the page's best
-   *  asset, so it must never testify against itself. (Spec §11.) */
-  const verificationAged = lastSeenDays === null || lastSeenDays > 30
 
   const applyUrl = grant.apply_url ? String(grant.apply_url) : null
   const url      = canonicalFor(externalId)
@@ -531,17 +526,11 @@ export default async function PublicGrantPage({
           <div style={section}>
             <h2 style={sectionH2}><ShieldCheck style={{ width: 13, height: 13 }} />Who can apply</h2>
             {structuresStated ? (
-              <>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
-                  {eligibleStructures.map(s => (
-                    <span key={s} style={neutralChip}>{STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' ')}</span>
-                  ))}
-                </div>
-                <p style={{ display: 'flex', alignItems: 'flex-start', gap: 9, fontSize: 13.5, lineHeight: 1.55, color: T.inkMuted, margin: '12px 0 0' }}>
-                  <Info style={{ width: 14, height: 14, flexShrink: 0, color: T.inkPlace, marginTop: 2 }} />
-                  If your organisation isn&rsquo;t one of these, this funder can&rsquo;t accept your application. Structure is a hard rule, not a preference.
-                </p>
-              </>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+                {eligibleStructures.map(s => (
+                  <span key={s} style={neutralChip}>{STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' ')}</span>
+                ))}
+              </div>
             ) : (
               /* An empty eligible_structures means nobody has established the
                  funder's rule. It does not mean "open to all", and this is the
@@ -634,23 +623,11 @@ export default async function PublicGrantPage({
           )}
         </div>
 
-        {/* Verification. The strongest trust signal on the page, so it is a
-            chip rather than 13px grey at the bottom, and it degrades past 30
-            days into wording that makes no freshness claim and hands the
-            reader an action instead. */}
+        {/* Catalogue note. The "Last checked" chip that sat above this
+            quoted last_seen_at, a scraper stamp, not the URL check, so it
+            showed dates months old on rows verified the night before.
+            Removed 2026-09-10 on Paul's ask. */}
         <div style={{ textAlign: 'center', marginTop: 26 }}>
-          {lastSeenHuman && (
-            <span style={{
-              display: 'inline-flex', alignItems: 'center', gap: 7, fontFamily: UI, fontSize: 12, fontWeight: 600,
-              padding: '6px 13px', borderRadius: 999, marginBottom: 10,
-              background: verificationAged ? T.warm : T.greenBg,
-              color: verificationAged ? T.deep : T.green,
-            }}>
-              {verificationAged
-                ? <><Clock style={{ width: 12, height: 12 }} />Last checked {lastSeenHuman}. Confirm details with the funder before applying.</>
-                : <><CheckCircle style={{ width: 12, height: 12 }} />Checked against the funder&rsquo;s own site on {lastSeenHuman}</>}
-            </span>
-          )}
           <p style={{ fontSize: 13, lineHeight: 1.6, color: T.inkPlace, margin: 0 }}>
             {MCP_BRAND_NAME} keeps a curated catalogue of live, verified UK funding opportunities, every entry traced back to the
             funder&rsquo;s own published page.{' '}
