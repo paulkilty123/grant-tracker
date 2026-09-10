@@ -93,13 +93,13 @@ const IMPACT_SECTORS: { value: ImpactSector; label: string }[] = [
   { value: 'housing',           label: 'Housing & Homelessness' },
   { value: 'education',         label: 'Education & Skills' },
   { value: 'employment',        label: 'Employment & Livelihoods' },
-  { value: 'disability',        label: 'Disability' },
-  { value: 'older_people',      label: 'Older People' },
+  { value: 'disability',        label: 'Disability services' },
+  { value: 'older_people',      label: 'Older people\u2019s services' },
   { value: 'environment',       label: 'Environment & Climate' },
   { value: 'creative',          label: 'Arts & Creative Industries' },
   { value: 'heritage',          label: 'Heritage & Conservation' },
   { value: 'sport',             label: 'Sport & Physical Activity' },
-  { value: 'women',             label: 'Women & Gender Equality' },
+  { value: 'women',             label: 'Women\u2019s organisations & gender equality' },
   { value: 'justice',           label: 'Human Rights, Justice & Democracy' },
   { value: 'tech',              label: 'Tech for Good' },
   { value: 'financial',         label: 'Financial Inclusion' },
@@ -183,13 +183,18 @@ const UNCOLLECTED_ON_CREATE = {
   key_outcomes:                [],
 }
 
-type WizardStep = 'entry' | 'browse' | 'review' | 'manual' | 'sectors' | 'beneficiaries' | 'location' | 'reveal'
+type WizardStep = 'entry' | 'review' | 'manual' | 'sectors' | 'beneficiaries' | 'location' | 'reveal'
 
 /** Who is signing up. Recorded on the organisation row; see migration 080. */
 type SignupRole = 'organisation' | 'consultant' | 'network'
+/** Browse path: consultant bands, or network bands (migration 083). */
+type ClientBand = '' | '1-2' | '3-5' | '6+' | '<20' | '20-100' | '100+'
 
 const STEP_DOT_POS: Record<WizardStep, number> = {
-  entry: 1, browse: 1, review: 2, manual: 2, sectors: 3, beneficiaries: 4, location: 5, reveal: 6,
+  // Who you serve comes before what you focus on (Paul, 8 Sept 2026, after
+  // a tester went looking for "children and young people" under sectors):
+  // charities describe themselves by audience first, and so do funder briefs.
+  entry: 1, review: 2, manual: 2, beneficiaries: 3, sectors: 4, location: 5, reveal: 6,
 }
 
 type FieldConfidence = 'confident' | 'uncertain' | 'missing'
@@ -291,6 +296,12 @@ interface WizardState {
   alertsEnabled:    boolean
   /** Who is signing up. Defaults to the organisation itself. */
   signupRole:       SignupRole
+  /** Browse path only: how many organisations they work with, and one of them. */
+  clientCountBand:  ClientBand
+  exampleClient:    string
+  /** Consultant or network building a client profile: their own name or practice, and website. */
+  practiceName:     string
+  practiceWebsite:  string
 }
 
 const EMPTY_STATE: WizardState = {
@@ -305,6 +316,10 @@ const EMPTY_STATE: WizardState = {
   excludedNicheTags: [],
   alertsEnabled: true,
   signupRole: 'organisation',
+  clientCountBand: '',
+  exampleClient: '',
+  practiceName: '',
+  practiceWebsite: '',
 }
 
 /** Derive the three boolean eligibility flags from the legal structure.
@@ -588,8 +603,7 @@ function PickerChip({
       onMouseLeave={() => setHov(false)}
       style={{
         position: 'relative',
-        width: '100%',
-        padding: '9px 12px',
+        padding: '11px 17px',
         // Three treatments, loudest = most important: primary is the deep
         // fill, also-selected is the sage tint, unselected is a ghost outline.
         // The star is the extra mark that says "primary is a different KIND of
@@ -600,18 +614,21 @@ function PickerChip({
         // The loudest chip on screen was the less important one; and inside a
         // confident review field, whose own background is sage tint, the
         // primary chip became fill-on-fill and vanished entirely.
-        border: `1.5px solid ${isPrimary || isSecondary || showHover ? T.greenDeep : 'var(--border-ghost)'}`,
+        // Design of 9 Sept 2026: pills that size to their text. Unselected is
+        // deep text on white (the pale text read as disabled), selected is the
+        // pale green tint, primary is the deep fill. Nothing is dimmed at the
+        // cap; the running count above says why a fifth click does nothing.
+        border: `1px solid ${isPrimary ? T.greenDeep : isSecondary ? '#B9D9C7' : showHover ? 'rgba(29,60,62,.42)' : 'rgba(29,60,62,.18)'}`,
         borderRadius: 999,
-        background: isPrimary ? T.greenDeep : isSecondary || showHover ? T.greenCream : 'transparent',
-        color: isPrimary ? T.onDeep : T.greenTextDeep,
-        fontSize: 12,
-        fontWeight: isPrimary || isSecondary ? 500 : 400,
+        background: isPrimary ? T.greenDeep : isSecondary ? '#E4F1EA' : '#fff',
+        color: isPrimary ? T.onDeep : isSecondary ? '#1B6B3D' : T.greenDeep,
+        fontSize: 14.5,
+        fontWeight: 500,
         cursor: dimmed ? 'default' : 'pointer',
-        textAlign: 'center' as const,
-        fontFamily: 'var(--font-dm-sans)',
-        lineHeight: 1.3,
+        textAlign: 'left' as const,
+        fontFamily: 'var(--font-space-grotesk)',
+        lineHeight: 1,
         transition: 'all 120ms ease',
-        opacity: dimmed ? 0.38 : 1,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -795,6 +812,10 @@ export default function OnboardingWizardPage() {
           // wizard cannot silently re-subscribe somebody who turned alerts off.
           alertsEnabled:    org.alerts_enabled ?? true,
           signupRole:       (org.signup_role as SignupRole | null | undefined) ?? 'organisation',
+          clientCountBand:  (org.client_count_band as ClientBand | null | undefined) ?? '',
+          exampleClient:    org.example_client ?? '',
+          practiceName:     org.signup_practice_name ?? '',
+          practiceWebsite:  org.signup_practice_website ?? '',
         })
       }
       setLoading(false)
@@ -930,7 +951,20 @@ export default function OnboardingWizardPage() {
       .map(k => LABELS[k] ?? k)
   }
 
+  const [numberError, setNumberError] = useState<string | null>(null)
   function confirmField(field: string, value?: string) {
+    if (field === 'registeredNumber' && value !== undefined) {
+      const v = value.trim()
+      // A wrong number is worse than none: it drives the eligibility gate. So a
+      // value that no register recognises cannot be saved, and an empty value
+      // is an explicit "no registered number" rather than a blank tick.
+      if (v && !isRecognisedNumber(v)) {
+        setNumberError('That does not look like a charity, company or mutuals number. Check it, or leave it blank if you have none.')
+        return
+      }
+      setNumberError(null)
+      value = v
+    }
     if (value !== undefined) {
       const key = field as keyof WizardState
       if (key in EMPTY_STATE) setState(prev => ({ ...prev, [key]: value }))
@@ -1022,7 +1056,7 @@ export default function OnboardingWizardPage() {
     setSaving(true); setSaveError(null)
     try {
       const payload = {
-        name:                         state.name.trim() || 'My practice',
+        name:                         state.practiceName.trim() || 'My practice',
         org_type:                     'other' as const,
         legal_structure:              null,
         org_stage:                    null,
@@ -1049,7 +1083,11 @@ export default function OnboardingWizardPage() {
         alerts_enabled:               false,
         alert_frequency:              'weekly',
         alert_min_score:              70,
-        website_url:                  null,
+        website_url:                  state.practiceWebsite.trim() ? (state.practiceWebsite.trim().startsWith('http') ? state.practiceWebsite.trim() : 'https://' + state.practiceWebsite.trim()) : null,
+        client_count_band:            state.clientCountBand || null,
+        example_client:               state.exampleClient.trim() || null,
+        signup_practice_name:         state.practiceName.trim() || null,
+        signup_practice_website:      state.practiceWebsite.trim() ? (state.practiceWebsite.trim().startsWith('http') ? state.practiceWebsite.trim() : 'https://' + state.practiceWebsite.trim()) : null,
         signup_role:                  state.signupRole,
         profile_skipped:              true,
       }
@@ -1063,6 +1101,9 @@ export default function OnboardingWizardPage() {
           signup_role: state.signupRole,
           profile_skipped: true,
           alerts_enabled: false,
+          client_count_band: state.clientCountBand || null,
+          example_client: state.exampleClient.trim() || null,
+          signup_practice_name: state.practiceName.trim() || null,
         })
       } else {
         const created = await createOrganisation({ ...UNCOLLECTED_ON_CREATE, ...payload } as Parameters<typeof createOrganisation>[0])
@@ -1158,6 +1199,14 @@ export default function OnboardingWizardPage() {
         alert_frequency:              'weekly',
         alert_min_score:              70,
         website_url:                  url.trim() ? (url.trim().startsWith('http') ? url.trim() : 'https://' + url.trim()) : null,
+        // Consultant or network building a client profile (migration 084): who
+        // they are sits beside the role, since the row itself is the client's.
+        signup_practice_name:         state.signupRole !== 'organisation' ? (state.practiceName.trim() || null) : null,
+        signup_practice_website:      state.signupRole !== 'organisation' && state.practiceWebsite.trim()
+                                        ? (state.practiceWebsite.trim().startsWith('http') ? state.practiceWebsite.trim() : 'https://' + state.practiceWebsite.trim())
+                                        : null,
+        client_count_band:            state.signupRole !== 'organisation' ? (state.clientCountBand || null) : null,
+        example_client:               state.signupRole !== 'organisation' ? (state.exampleClient.trim() || null) : null,
         signup_role:                  state.signupRole,
         // A saved profile ends the browse-only state, whoever they are.
         profile_skipped:              false,
@@ -1324,27 +1373,20 @@ export default function OnboardingWizardPage() {
           onManual={() => { setExtracted(null); setStep('manual') }}
           role={state.signupRole}
           setRole={r => update('signupRole', r)}
-          onBrowse={() => setStep('browse')}
+          onBrowse={handleBrowseFinish}
+          practiceName={state.practiceName}
+          setPracticeName={v => update('practiceName', v)}
+          practiceWebsite={state.practiceWebsite}
+          setPracticeWebsite={v => update('practiceWebsite', v)}
+          band={state.clientCountBand}
+          setBand={v => update('clientCountBand', v)}
+          example={state.exampleClient}
+          setExample={v => update('exampleClient', v)}
         />
       </CardShell>
     )
   }
 
-  if (step === 'browse') {
-    return (
-      <CardShell step={1}>
-        <StepBrowse
-          name={state.name}
-          setName={v => update('name', v)}
-          role={state.signupRole}
-          saving={saving}
-          error={saveError}
-          onBack={() => setStep('entry')}
-          onFinish={handleBrowseFinish}
-        />
-      </CardShell>
-    )
-  }
 
   /* ── Steps 2–5: card layout ── */
   const cardStep = STEP_DOT_POS[step]
@@ -1360,10 +1402,11 @@ export default function OnboardingWizardPage() {
           setEditingField={setEditingField}
           confirmField={confirmField}
           canContinue={reviewCanContinue()}
+          numberError={numberError}
           blockers={reviewBlockers()}
           onBack={() => setStep('entry')}
-          onSkip={() => setStep('sectors')}
-          onContinue={() => setStep('sectors')}
+          onSkip={() => setStep('beneficiaries')}
+          onContinue={() => setStep('beneficiaries')}
           wizardState={state}
           toggleSector={toggleSector}
           makePrimarySector={makePrimarySector}
@@ -1377,7 +1420,7 @@ export default function OnboardingWizardPage() {
           state={state}
           update={update}
           onBack={() => setStep('entry')}
-          onContinue={() => setStep('sectors')}
+          onContinue={() => setStep('beneficiaries')}
         />
       )}
 
@@ -1389,8 +1432,8 @@ export default function OnboardingWizardPage() {
           toggleSector={toggleSector}
           makePrimarySector={makePrimarySector}
           cycleNicheTag={cycleNicheTag}
-          onBack={() => setStep(extracted ? 'review' : 'manual')}
-          onContinue={() => setStep('beneficiaries')}
+          onBack={() => setStep('beneficiaries')}
+          onContinue={() => setStep('location')}
           canContinue={sectorsValid}
         />
       )}
@@ -1400,8 +1443,8 @@ export default function OnboardingWizardPage() {
           beneficiaryGroups={state.beneficiaryGroups}
           toggleBeneficiary={toggleBeneficiary}
           makePrimaryBeneficiary={makePrimaryBeneficiary}
-          onBack={() => setStep('sectors')}
-          onContinue={() => setStep('location')}
+          onBack={() => setStep(extracted ? 'review' : 'manual')}
+          onContinue={() => setStep('sectors')}
           canContinue={beneficiariesValid}
         />
       )}
@@ -1415,7 +1458,7 @@ export default function OnboardingWizardPage() {
           saving={saving}
           saveError={saveError}
           canContinue={locationValid}
-          onBack={() => setStep('beneficiaries')}
+          onBack={() => setStep('sectors')}
           onFinish={handleFinish}
         />
       )}
@@ -1446,27 +1489,35 @@ const SIGNUP_ROLES: { value: SignupRole; label: string }[] = [
   { value: 'network',      label: 'A network or membership body' },
 ]
 
-function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual, role, setRole, onBrowse }: {
+function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual, role, setRole, onBrowse, practiceName, setPracticeName, practiceWebsite, setPracticeWebsite, band, setBand, example, setExample }: {
   url: string; setUrl: (v: string) => void
   fetching: boolean; error: string | null
   onAutoFill: () => void; onManual: () => void
   role: SignupRole; setRole: (r: SignupRole) => void
   onBrowse: () => void
+  practiceName: string; setPracticeName: (v: string) => void
+  practiceWebsite: string; setPracticeWebsite: (v: string) => void
+  band: ClientBand; setBand: (v: ClientBand) => void
+  example: string; setExample: (v: string) => void
 }) {
   const [hov, setHov] = useState(false)
   const several = role !== 'organisation'
   // The fork for consultants and networks. Until they choose, the website box
   // and its links stay hidden: four ways forward on one screen was confusing
   // (Paul, 8 Sept). Picking "one organisation" brings the normal step back.
-  const [choice, setChoice] = useState<'profile' | 'browse' | null>(null)
-  const showProfileTools = !several || choice === 'profile'
+  // The fork (set up a profile / browse) is gone (Paul, 9 Sept 2026): both
+  // paths collect the same "about you" facts, so the profile path is the
+  // default and browsing is a quiet link beside "fill in manually".
+  const showProfileTools = true
   return (
     <>
       <h1 style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 40, fontWeight: 600, color: T.textPrimary, margin: '0 0 14px', lineHeight: 1.15, letterSpacing: '-0.02em' }}>
         Let&rsquo;s build your profile
       </h1>
       <p style={{ fontSize: 16, color: T.textSecondary, lineHeight: 1.5, margin: '0 0 24px', maxWidth: 460, fontFamily: 'var(--font-dm-sans)' }}>
-        Drop in your website and we&rsquo;ll do the heavy lifting. You can review and refine everything in the next step.
+        {several
+          ? <>A profile is built for one organisation at a time, and its details drive the matches you see.</>
+          : <>Drop in your website and we&rsquo;ll do the heavy lifting. You can review and refine everything in the next step.</>}
       </p>
 
       {/* Who is signing up. Recorded on the row (migration 080). The default
@@ -1483,19 +1534,52 @@ function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual, role, s
         </div>
       </fieldset>
 
-      {several && choice !== 'profile' && (
-        <div style={{ maxWidth: 520 }}>
-          <p style={{ fontSize: 14, color: T.textSecondary, lineHeight: 1.55, margin: '0 0 14px', fontFamily: 'var(--font-dm-sans)' }}>
-            A profile gets you matches and the weekly update. Client profiles come with Team, so for now choose one organisation, or browse without a profile.
+      {showProfileTools && (<>
+      {several && (
+        <div style={{ margin: '0 0 22px', maxWidth: 520 }}>
+          {/* Who they are (migration 084): the profile below belongs to a
+              client, so the person disappears from the record otherwise. */}
+          <p style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 15, fontWeight: 600, color: T.textPrimary, margin: '0 0 10px' }}>About you</p>
+          <label style={{ display: 'block', fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: T.textPrimary, margin: '0 0 6px' }}>
+            Your name or {role === 'network' ? 'network' : 'practice'}<span style={{ color: T.coralText, marginLeft: 2 }}>*</span>
+          </label>
+          <input type="text" value={practiceName} onChange={e => setPracticeName(e.target.value)} placeholder={role === 'network' ? 'e.g. Impact Hub Brighton' : 'e.g. Jane Smith Fundraising'} style={{ ...INPUT_STYLE, boxSizing: 'border-box' }} />
+          <label style={{ display: 'block', fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: T.textPrimary, margin: '14px 0 6px' }}>
+            Your website, if you have one
+          </label>
+          <input type="url" value={practiceWebsite} onChange={e => setPracticeWebsite(e.target.value)} placeholder={role === 'network' ? 'https://yournetwork.org.uk' : 'https://yourpractice.co.uk'} style={{ ...INPUT_STYLE, boxSizing: 'border-box' }} />
+          <p style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: T.textPrimary, margin: '14px 0 8px' }}>
+            Roughly how many organisations do you {role === 'network' ? 'support' : 'work with'}?<span style={{ color: T.coralText, marginLeft: 2 }}>*</span>
           </p>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            <Button variant="primary" size="lg" onClick={() => setChoice('profile')}>Set up a profile for one organisation</Button>
-            <Button variant="secondary" size="lg" onClick={onBrowse}>Browse without a profile</Button>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {((role === 'network' ? ['<20', '20-100', '100+'] : ['1-2', '3-5', '6+']) as ClientBand[]).map(b => (
+              <button key={b} type="button" onClick={() => setBand(b)} style={{
+                fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 13.5, padding: '8px 16px', borderRadius: 999, cursor: 'pointer',
+                background: band === b ? '#F1F7E4' : '#fff', color: band === b ? '#3B6D11' : T.textSecondary,
+                border: `1px solid ${band === b ? '#3B6D11' : 'rgba(44,44,42,0.25)'}`,
+              }}>
+                {b === '6+' ? '6 or more' : b === '<20' ? 'Under 20' : b === '20-100' ? '20 to 100' : b === '100+' ? '100 or more' : b}
+              </button>
+            ))}
           </div>
+          <label style={{ display: 'block', fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: T.textPrimary, margin: '14px 0 6px' }}>
+            One organisation you {role === 'network' ? 'support' : 'work with'}, if you like
+          </label>
+          <input type="text" value={example} onChange={e => setExample(e.target.value)} placeholder="e.g. Bramble Arts Collective" style={{ ...INPUT_STYLE, boxSizing: 'border-box' }} />
         </div>
       )}
-
-      {showProfileTools && (<>
+      {several && (
+        <div style={{ margin: '0 0 12px', maxWidth: 520 }}>
+          <p style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 15, fontWeight: 600, color: T.textPrimary, margin: '0 0 4px' }}>
+            Which organisation shall we start with?
+          </p>
+          <p style={{ fontSize: 13.5, color: T.textSecondary, lineHeight: 1.5, margin: 0, fontFamily: 'var(--font-dm-sans)' }}>
+            {role === 'network'
+              ? <>Matches are built for one organisation at a time. Pick one member organisation to start with, and enter its website. We build its profile and show what it could apply for. If it works for your members, ask us about partner plans for networks.</>
+              : <>Matches are built for one organisation at a time. Pick one client to start with, and enter its website. We build its profile and show what it could apply for. Profiles for more clients come with Team.</>}
+          </p>
+        </div>
+      )}
 
       {/* URL input + CTA */}
       <div style={{ display: 'flex', gap: 8, width: '100%', maxWidth: 520 }}>
@@ -1506,11 +1590,11 @@ function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual, role, s
             value={url}
             onChange={e => setUrl(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && !fetching && url.trim() && onAutoFill()}
-            placeholder="https://yourorganisation.co.uk"
+            placeholder={several ? 'https://the-organisation.org.uk' : 'https://yourorganisation.co.uk'}
             style={{ ...INPUT_STYLE, padding: '0 14px 0 34px', boxSizing: 'border-box' }}
           />
         </div>
-        <Button variant="primary" size="lg" onClick={onAutoFill} disabled={fetching}>
+        <Button variant="primary" size="lg" onClick={onAutoFill} disabled={fetching || (several && (!practiceName.trim() || !band))}>
           {fetching ? (
             <span className="inline-flex items-center gap-2">
               <span className="dot-bounce inline-flex gap-0.5"><span/><span/><span/></span>
@@ -1526,6 +1610,7 @@ function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual, role, s
       <div style={{ paddingTop: 24 }}>
         <button
           onClick={onManual}
+          disabled={several && (!practiceName.trim() || !band)}
           onMouseEnter={() => setHov(true)}
           onMouseLeave={() => setHov(false)}
           style={{
@@ -1540,48 +1625,24 @@ function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual, role, s
           No website? Fill in manually
         </button>
       </div>
+      {several && (
+        <p style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.55, margin: '14px 0 0 12px', maxWidth: 520, fontFamily: 'var(--font-dm-sans)' }}>
+          Not ready to pick one organisation?{' '}
+          <button
+            onClick={onBrowse}
+            disabled={!practiceName.trim() || !band}
+            style={{
+              background: 'transparent', border: 'none', color: T.textPrimary, padding: 0,
+              fontFamily: 'var(--font-dm-sans)', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+              textDecoration: 'underline', textDecorationColor: 'rgba(29,60,62,0.35)', textUnderlineOffset: 3,
+            }}
+          >
+            Browse without a profile for now
+          </button>
+          . You can search everything, and add a profile later for matches.
+        </p>
+      )}
       </>)}
-    </>
-  )
-}
-
-/* ═══════════════════════════════════════════════
-   Step 1B — Browse without a profile
-   One field, their own name or practice, so a row exists and the app works.
-   ═══════════════════════════════════════════════ */
-function StepBrowse({ name, setName, role, saving, error, onBack, onFinish }: {
-  name: string; setName: (v: string) => void
-  role: SignupRole
-  saving: boolean; error: string | null
-  onBack: () => void; onFinish: () => void
-}) {
-  const noun = role === 'network' ? 'network' : 'practice'
-  return (
-    <>
-      <h1 style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 40, fontWeight: 600, color: T.textPrimary, margin: '0 0 14px', lineHeight: 1.15, letterSpacing: '-0.02em' }}>
-        Browse without a profile
-      </h1>
-      <p style={{ fontSize: 16, color: T.textSecondary, lineHeight: 1.5, margin: '0 0 28px', maxWidth: 460, fontFamily: 'var(--font-dm-sans)' }}>
-        You can search and save now. Matches and the weekly update need an organisation profile, which you can add later from your profile page, or get in touch about Team for client profiles.
-      </p>
-      <label style={{ display: 'block', fontFamily: 'var(--font-space-grotesk)', fontSize: 14, fontWeight: 600, color: T.textPrimary, marginBottom: 8 }}>
-        Your name or {noun}
-      </label>
-      <input
-        type="text"
-        value={name}
-        onChange={e => setName(e.target.value)}
-        onKeyDown={e => e.key === 'Enter' && !saving && name.trim() && onFinish()}
-        placeholder={role === 'network' ? 'e.g. Impact Hub Brighton' : 'e.g. Jane Smith Fundraising'}
-        style={{ ...INPUT_STYLE, maxWidth: 520, boxSizing: 'border-box' }}
-      />
-      {error && <p style={{ fontSize: 13, color: T.coralText, marginTop: 8 }}>{error}</p>}
-      <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 28 }}>
-        <Button variant="secondary" size="lg" onClick={onBack} disabled={saving}>Back</Button>
-        <Button variant="primary" size="lg" onClick={onFinish} disabled={saving || !name.trim()}>
-          {saving ? 'Saving…' : 'Browse the catalogue'}
-        </Button>
-      </div>
     </>
   )
 }
@@ -1590,7 +1651,7 @@ function StepBrowse({ name, setName, role, saving, error, onBack, onFinish }: {
    Step 2A — Review extracted data
    ═══════════════════════════════════════════════ */
 
-function StepReview({ extracted, confirmed, editingField, setEditingField, confirmField, canContinue, blockers, onBack, onSkip, onContinue, wizardState, toggleSector, makePrimarySector, toggleBeneficiary, makePrimaryBeneficiary }: {
+function StepReview({ extracted, confirmed, editingField, setEditingField, confirmField, canContinue, blockers, numberError, onBack, onSkip, onContinue, wizardState, toggleSector, makePrimarySector, toggleBeneficiary, makePrimaryBeneficiary }: {
   extracted: ExtractedData
   confirmed: Set<string>
   editingField: string | null
@@ -1598,6 +1659,7 @@ function StepReview({ extracted, confirmed, editingField, setEditingField, confi
   confirmField: (field: string, value?: string) => void
   canContinue: boolean
   blockers: string[]
+  numberError?: string | null
   onBack: () => void; onSkip: () => void; onContinue: () => void
   wizardState: WizardState
   toggleSector: (s: ImpactSector) => void
@@ -1634,17 +1696,21 @@ function StepReview({ extracted, confirmed, editingField, setEditingField, confi
     // one for a company number and then saying "we couldn't find this" tells
     // them something is wrong when nothing is. Never blocks either way.
     { key: 'registeredNumber',  label: numberExpectation.label, value: extracted.registeredNumber, stateKey: 'registeredNumber',  type: 'text',
-      emptyText: numberExpectation.emptyText,
-      hint: extracted.registeredNumber
+      emptyText: confirmed.has('registeredNumber') && !extracted.registeredNumber ? 'No registered number' : numberExpectation.emptyText,
+      hint: numberError ? numberError : extracted.registeredNumber
         ? (isRecognisedNumber(extracted.registeredNumber)
-            ? `Recognised as ${registerLabel(detectRegister(extracted.registeredNumber))}. We use it to check eligibility, so your matches are right.`
+            ? `Recognised as ${registerLabel(detectRegister(extracted.registeredNumber))}.`
             : 'We don\u2019t recognise that format. Leave it if it\u2019s right, or correct it.')
         : numberExpectation.hint },
     { key: 'legalStructure',    label: 'Legal structure',   value: LEGAL_STRUCTURE_OPTIONS.find(o => o.value === extracted.legalStructure)?.label ?? extracted.legalStructure, stateKey: 'legalStructure', type: 'select', options: LEGAL_STRUCTURE_OPTIONS },
     { key: 'primaryLocation',   label: 'Primary location',  value: extracted.primaryLocation,  stateKey: 'primaryLocation',   type: 'text' },
     { key: 'annualIncomeBand',  label: 'Annual income',     value: extracted.annualIncomeBand, stateKey: 'annualIncomeBand',  type: 'select', options: INCOME_BANDS.map(b => ({ value: b, label: b })) },
   ]
-  const foundCount = fields.filter(f => f.value).length
+  // The registered number is shown only when auto-fill found one (Paul,
+  // 9 Sept 2026): it is not used by matching or eligibility, so asking for it
+  // on a first run is friction for nothing. The profile page can nudge later.
+  const visibleFields = fields.filter(f => f.key !== 'registeredNumber' || !!extracted.registeredNumber)
+  const foundCount = visibleFields.filter(f => f.value).length
 
   return (
     <>
@@ -1654,12 +1720,12 @@ function StepReview({ extracted, confirmed, editingField, setEditingField, confi
 
       {/* Extract summary */}
       <div style={{ background: T.cream1, borderRadius: 10, padding: '14px 18px', marginBottom: 20, fontSize: 13, color: T.textPrimary, fontFamily: 'var(--font-dm-sans)', lineHeight: 1.5 }}>
-        <strong style={{ fontWeight: 500 }}>We found {foundCount} of {fields.length} fields</strong> from <span style={{ color: T.textSecondary }}>{hostname}</span>
-        {foundCount < fields.length && `. ${fields.length - foundCount} couldn't be inferred — you'll add ${fields.length - foundCount === 1 ? 'it' : 'them'} in a moment.`}
+        <strong style={{ fontWeight: 500 }}>We found {foundCount} of {visibleFields.length} fields</strong> from <span style={{ color: T.textSecondary }}>{hostname}</span>
+        {foundCount < visibleFields.length && `. ${visibleFields.length - foundCount} couldn't be inferred — you'll add ${visibleFields.length - foundCount === 1 ? 'it' : 'them'} in a moment.`}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {fields.map(field => (
+        {visibleFields.map(field => (
           <ReviewField
             key={field.key}
             label={field.label}
@@ -1684,7 +1750,8 @@ function StepReview({ extracted, confirmed, editingField, setEditingField, confi
       </div>
 
       <div style={ACTIONS_STYLE}>
-        <SkipAction onClick={onSkip}>I&rsquo;ll refine these later</SkipAction>
+        {/* "I'll refine these later" removed (Paul, 9 Sept 2026): the flagged
+            fields are the ones that decide eligibility, so they get confirmed here. */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
           <Button variant="primary" onClick={onContinue} disabled={!canContinue}>
             Continue <ArrowRight size={14} />
@@ -2098,38 +2165,23 @@ function StepSectors({ impactSectors, nicheTags, excludedNicheTags, toggleSector
       <h1 style={H1_STYLE}>What do you focus on?</h1>
       <p style={SUBTITLE_STYLE}>Pick your primary focus first. That&rsquo;s what we&rsquo;ll weight most in matching.</p>
 
-      {/* Impact sectors */}
-      <div style={{ marginBottom: 6, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' as const }}>
-        <span style={{ fontSize: 13, fontWeight: 500, color: T.textPrimary, fontFamily: 'var(--font-space-grotesk)' }}>Your impact sector</span>
-        {sectorMax && <span style={{ fontSize: 11, color: T.textTertiary, fontFamily: 'var(--font-space-grotesk)', letterSpacing: '0.04em', textTransform: 'uppercase' as const }}>Max reached</span>}
+      {/* Impact sectors (design of 9 Sept 2026). A 20px question with a
+          running count rather than a MAX REACHED flag: four of four is
+          success, not an error. One instruction line, chips that size to
+          their text and wrap, deep text on white for the unselected ones. */}
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' as const, margin: '0 0 6px' }}>
+        <h2 style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 20, fontWeight: 600, letterSpacing: '-0.4px', color: T.greenDeep, margin: 0 }}>Your impact sector</h2>
+        {impactSectors.length > 0 && (
+          <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: '#7a857e', whiteSpace: 'nowrap' }}>{impactSectors.length} of 4 chosen</span>
+        )}
       </div>
-      <div style={{ marginBottom: 12, fontSize: 12.5, color: T.textSecondary, fontFamily: 'var(--font-dm-sans)', lineHeight: 1.55, display: 'flex', flexDirection: 'column' as const, gap: 4 }}>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' as const }}>
-          Pick 1
-          <span aria-label="primary" style={{
-            display: 'inline-flex', alignItems: 'center', gap: 4,
-            background: T.greenDeep, color: T.onDeep,
-            padding: '2px 8px', borderRadius: 99,
-            fontSize: 11, fontWeight: 500,
-            fontFamily: 'var(--font-space-grotesk)',
-            lineHeight: 1.2,
-          }}>
-            {/* Cream, not T.lime. lime now resolves to --deep and this pill's
-                background is --deep, so the star was deep on deep and simply
-                could not be seen. It has to match the star on the chip it is
-                describing. */}
-            <span style={{ color: T.onDeep, fontSize: 10 }}>★</span>
-            primary
-          </span>
-          plus up to 3 others. Tap a
-          <span style={{ color: T.greenMid, fontSize: 13, lineHeight: 1 }}>☆</span>
-          on a chip to change which is primary.
-        </span>
-        <span style={{ color: T.textTertiary, fontSize: 12 }}>
-          Not sure between two similar sectors? Pick the closest fit. You can always change it later.
-        </span>
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginBottom: 12 }}>
+      <p style={{ fontSize: 14.5, lineHeight: 1.6, color: '#5f6b64', margin: '0 0 4px', maxWidth: '52em', fontFamily: 'var(--font-dm-sans)' }}>
+        Pick one primary sector, plus up to three others. Tap the star on any chip to make it the primary one.
+      </p>
+      <p style={{ fontSize: 14.5, lineHeight: 1.6, color: '#7a857e', margin: '0 0 18px', maxWidth: '52em', fontFamily: 'var(--font-dm-sans)' }}>
+        Not sure between two similar sectors? Pick the closest fit, you can change it later.
+      </p>
+      <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 9, marginBottom: 20 }}>
         {IMPACT_SECTORS.map(opt => {
           const cs = chipStateFor(impactSectors, opt.value)
           return (
@@ -2161,80 +2213,80 @@ function StepSectors({ impactSectors, nicheTags, excludedNicheTags, toggleSector
         </div>
       )}
 
-      {/* Sub-tag panel — tri-state chips, mirrors the profile editor.
-          Click cycles: neutral → include (green) → exclude (coral strikethrough) → neutral */}
-      {nicheSectors.length > 0 && (
-        <div style={{
-          background: T.cream1,
-          borderLeft: `3px solid ${T.greenDeep}`,
-          borderRadius: 8,
-          padding: '12px 14px',
-          marginBottom: 20,
-        }}>
-          {/* Tip callout — explains the tri-state cycle */}
-          <div style={{
-            fontFamily: 'var(--font-space-grotesk)',
-            fontSize: 12.5,
-            fontWeight: 500,
-            color: T.textPrimary,
-            marginBottom: 14,
-            padding: '10px 12px',
-            background: 'rgba(255,255,255,0.75)',
-            borderLeft: `3px solid ${T.greenDeep}`,
-            borderRadius: 4,
-            lineHeight: 1.5,
+      {/* Specialisms (design of 9 Sept 2026). Same white ground as the
+          sector picker, a hairline above, pill chips that size to their
+          text, and three visible states: added (pale green), excluded (warm
+          terracotta with a diagonal strike), not set (outline). The strike is
+          the non-colour marker for "excluded" and must stay; the chips also
+          carry aria-pressed and a visually hidden state word. */}
+      {nicheSectors.length > 0 && (() => {
+        const ADD_BG = '#E4F1EA', ADD_BR = '#B9D9C7', ADD_FG = '#1B6B3D'
+        const EXC_BG = '#F2E8E5', EXC_FG = '#7A331F'
+        const LINE = 'rgba(29,60,62,.18)', HAIR = 'rgba(29,60,62,.10)'
+        const srOnly: React.CSSProperties = { position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap', border: 0 }
+        const strike = (inset: number, h: number) => (
+          <span aria-hidden="true" style={{ position: 'absolute', left: inset, right: inset, top: '50%', height: h, borderRadius: 2, background: EXC_FG, transform: 'translateY(-50%) rotate(-6deg)' }} />
+        )
+        const mini = (label: string, state: 'added' | 'excluded' | 'none') => (
+          <span style={{
+            position: 'relative', display: 'inline-block', fontFamily: 'var(--font-space-grotesk)', fontSize: 12, fontWeight: 500, lineHeight: 1,
+            padding: '6px 12px', borderRadius: 999,
+            border: `1px solid ${state === 'added' ? ADD_BR : state === 'excluded' ? 'transparent' : LINE}`,
+            background: state === 'added' ? ADD_BG : state === 'excluded' ? EXC_BG : 'transparent',
+            color: state === 'added' ? ADD_FG : state === 'excluded' ? EXC_FG : '#5f6b64',
           }}>
-            <strong style={{ color: T.greenTextDeep, fontWeight: 700, letterSpacing: '0.01em' }}>Tip</strong>
-            <span style={{ color: T.greenTextDeep }}> · </span>
-            Click once to mark as a specialism. Click again to <strong>exclude</strong> (we won&apos;t show grants targeting it). Click a third time to reset.
+            {label}{state === 'excluded' && strike(10, 1.2)}
+          </span>
+        )
+        return (
+          <div style={{ borderTop: `1px solid ${HAIR}`, paddingTop: 26, marginBottom: 20 }}>
+            <h2 style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 20, fontWeight: 600, letterSpacing: '-0.4px', color: T.greenDeep, margin: '0 0 8px' }}>Sharpen your matches</h2>
+            <p style={{ fontSize: 14.5, lineHeight: 1.6, color: '#5f6b64', margin: '0 0 16px', maxWidth: '52em', fontFamily: 'var(--font-dm-sans)' }}>
+              Optional. Click once to add a specialism and funders in that area rank higher. Click again to <b style={{ fontFamily: 'var(--font-space-grotesk)', color: T.greenDeep, fontWeight: 600 }}>exclude</b> it and we keep those grants out of your matches. A third click clears it.
+            </p>
+            <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center', margin: '0 0 30px' }}>
+              {mini('Added', 'added')}{mini('Excluded', 'excluded')}{mini('Not set', 'none')}
+            </div>
+            {nicheSectors.map((sector, gi) => {
+              const opts = NICHE_TAGS_BY_SECTOR[sector]!
+              const label = IMPACT_SECTORS.find(o => o.value === sector)?.label ?? sector
+              const isPrimary = impactSectors[0] === sector
+              return (
+                <div key={sector} style={{ marginBottom: gi < nicheSectors.length - 1 ? 28 : 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 9, margin: '0 0 13px', flexWrap: 'wrap' }}>
+                    <h3 style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 16, fontWeight: 600, color: T.greenDeep, margin: 0 }}>{label}</h3>
+                    {isPrimary && <em style={{ fontStyle: 'normal', fontSize: 12.5, color: '#7a857e', fontFamily: 'var(--font-dm-sans)' }}>primary sector</em>}
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 9 }}>
+                    {opts.map(opt => {
+                      const state = nicheTags.includes(opt.value) ? 'added' : excludedNicheTags.includes(opt.value) ? 'excluded' : 'none'
+                      return (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => cycleNicheTag(opt.value)}
+                          aria-pressed={state === 'added'}
+                          style={{
+                            position: 'relative', fontFamily: 'var(--font-space-grotesk)', fontSize: 14.5, fontWeight: 500, lineHeight: 1,
+                            padding: '11px 17px', borderRadius: 999, cursor: 'pointer',
+                            border: `1px solid ${state === 'added' ? ADD_BR : state === 'excluded' ? 'transparent' : LINE}`,
+                            background: state === 'added' ? ADD_BG : state === 'excluded' ? EXC_BG : '#fff',
+                            color: state === 'added' ? ADD_FG : state === 'excluded' ? EXC_FG : T.greenDeep,
+                          }}
+                        >
+                          {opt.label}
+                          {state !== 'none' && <span style={srOnly}>, {state}</span>}
+                          {state === 'excluded' && strike(13, 1.5)}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })}
           </div>
-          {nicheSectors.map(sector => {
-            const opts = NICHE_TAGS_BY_SECTOR[sector]!
-            const label = IMPACT_SECTORS.find(o => o.value === sector)?.label ?? sector
-            return (
-              <div key={sector} style={{ marginBottom: nicheSectors.indexOf(sector) < nicheSectors.length - 1 ? 14 : 0 }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: T.textSecondary, fontFamily: 'var(--font-space-grotesk)', marginBottom: 8, letterSpacing: '0.03em' }}>
-                  Specialisms in {label} <span style={{ fontWeight: 400, color: T.textTertiary }}>(optional)</span>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 5 }}>
-                  {opts.map(opt => {
-                    const isIncluded = nicheTags.includes(opt.value)
-                    const isExcluded = excludedNicheTags.includes(opt.value)
-                    const borderCol = isIncluded ? T.greenDeep : isExcluded ? T.coralText : 'var(--border-ghost)'
-                    const bgCol     = isIncluded ? T.greenCream : isExcluded ? T.coralBg : 'transparent'
-                    const txtCol    = isIncluded ? T.greenTextDeep : isExcluded ? T.coralText : T.textSecondary
-                    return (
-                      <button
-                        key={opt.value}
-                        onClick={() => cycleNicheTag(opt.value)}
-                        title={isIncluded ? 'Specialism — click to exclude' : isExcluded ? 'Excluded — click to reset' : 'Click to mark as specialism'}
-                        style={{
-                          fontSize: 11,
-                          fontFamily: 'var(--font-dm-sans)',
-                          padding: '5px 8px',
-                          borderRadius: 6,
-                          border: `1.5px solid ${borderCol}`,
-                          background: bgCol,
-                          color: txtCol,
-                          cursor: 'pointer',
-                          fontWeight: (isIncluded || isExcluded) ? 600 : 400,
-                          transition: 'all 0.12s',
-                          textAlign: 'left' as const,
-                          lineHeight: 1.3,
-                          textDecoration: isExcluded ? 'line-through' : 'none',
-                        }}
-                      >
-                        {isExcluded && <span style={{ marginRight: 4 }}>✕</span>}
-                        {opt.label}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      )}
+        )
+      })()}
 
       <div style={ACTIONS_STYLE}>
         <BackLink onClick={onBack} />
@@ -2321,8 +2373,7 @@ function StepBeneficiaries({ beneficiaryGroups, toggleBeneficiary, makePrimaryBe
       {beneficiaryGroups.length > 0 && (
         <div style={{ background: T.pageBg, padding: '12px 14px', borderRadius: 10, marginBottom: 16, fontSize: 12, color: T.textSecondary, fontFamily: 'var(--font-dm-sans)' }}>
           <strong style={{ color: T.textPrimary, fontWeight: 500 }}>For:</strong>{'  '}
-          {BENEFICIARY_GROUPS.find(o => o.value === beneficiaryGroups[0])?.label}
-          {beneficiaryGroups.length > 1 && ` + ${beneficiaryGroups.length - 1} more`}
+          {beneficiaryGroups.map(v => BENEFICIARY_GROUPS.find(o => o.value === v)?.label ?? v).join(', ')}
         </div>
       )}
 
@@ -2352,100 +2403,93 @@ function StepLocation({ state, update, toggleFundingType, toggleSpendNeed, savin
     <>
       <BackLink onClick={onBack} />
       <h1 style={H1_STYLE}>Location and funding</h1>
-      <p style={SUBTITLE_STYLE}>Last stretch. These help us filter out what isn&rsquo;t relevant to where and how you work.</p>
+      <p style={SUBTITLE_STYLE}>Last stretch. These help us rank what fits where and how you work.</p>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 18, marginBottom: 8 }}>
+      {/* Design of 9 Sept 2026: each question is a 20px heading in its own
+          hairline-ruled section, helper text at 14px, inputs at radius 12,
+          selectable cards at radius 16 with a tick circle, and the Weekly
+          Funding Update as a plain row rather than a cream box. */}
+      {(!state.name.trim() || !state.legalStructure) && (
+        <Q first>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '22px 24px' }}>
+            {!state.name.trim() && (
+              <div>
+                <QLabel required>Organisation name</QLabel>
+                <input type="text" value={state.name} onChange={e => update('name', e.target.value)} placeholder="e.g. AudioActive" style={INPUT_STYLE} />
+              </div>
+            )}
+            {!state.legalStructure && (
+              <div>
+                <QLabel required>Legal structure</QLabel>
+                <SelectInput value={state.legalStructure} onChange={v => update('legalStructure', v as LegalStructure | '')} options={LEGAL_STRUCTURE_OPTIONS} placeholder="Select your structure…" />
+              </div>
+            )}
+          </div>
+        </Q>
+      )}
 
-        {/* Only show name/structure if not already captured */}
-        {!state.name.trim() && (
-          <Field label="Organisation name" required>
-            <input type="text" value={state.name} onChange={e => update('name', e.target.value)} placeholder="e.g. AudioActive" style={INPUT_STYLE} />
-          </Field>
-        )}
-        {!state.legalStructure && (
-          <Field label="Legal structure" required>
-            <SelectInput value={state.legalStructure} onChange={v => update('legalStructure', v as LegalStructure | '')} options={LEGAL_STRUCTURE_OPTIONS} placeholder="Select your structure…" />
-          </Field>
-        )}
-
-        {/* Location row */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <Field label="Where are you based?" help='For London orgs, include borough — e.g. "Hackney, London"'>
-            <input type="text" value={state.primaryLocation} onChange={e => update('primaryLocation', e.target.value)} placeholder="e.g. Brighton, Sussex" style={INPUT_STYLE} />
-          </Field>
-          <Field label="Geographic reach" help="We'll score local grants highest if you're place-based.">
+      <Q first={!!state.name.trim() && !!state.legalStructure}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '22px 24px' }}>
+          <div>
+            <QLabel htmlFor="wiz-based">Where are you based?</QLabel>
+            <input id="wiz-based" type="text" value={state.primaryLocation} onChange={e => update('primaryLocation', e.target.value)} placeholder="e.g. Brighton, Sussex" style={INPUT_STYLE} />
+            <QHelp>Your town or council area. For London, include the borough, for example &ldquo;Hackney, London&rdquo;.</QHelp>
+          </div>
+          <div>
+            <QLabel>Geographic reach</QLabel>
             <SelectInput value={state.geographicReach} onChange={v => update('geographicReach', v)} options={GEOGRAPHIC_REACH_OPTIONS} placeholder="Select reach…" />
-          </Field>
+            <QHelp>We&rsquo;ll score local grants highest if you&rsquo;re place-based.</QHelp>
+          </div>
         </div>
+      </Q>
 
-        {/* Grant size — thousand-separator formatting on display */}
-        <Field label="Grant size range" hint="optional — leave blank to see all" help="The most important field for size matching — grants outside this range will score lower.">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <div style={{ position: 'relative' }}>
-              <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: T.textTertiary, fontSize: 14, pointerEvents: 'none' }}>£</span>
-              <input
-                type="text" inputMode="numeric"
-                value={fmtThousands(state.minGrantTarget)}
-                onChange={e => update('minGrantTarget', e.target.value.replace(/[^\d]/g, ''))}
-                placeholder="10,000"
-                style={{ ...INPUT_STYLE, paddingLeft: 24 }}
-              />
-            </div>
-            <div style={{ position: 'relative' }}>
-              <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: T.textTertiary, fontSize: 14, pointerEvents: 'none' }}>£</span>
-              <input
-                type="text" inputMode="numeric"
-                value={fmtThousands(state.maxGrantTarget)}
-                onChange={e => update('maxGrantTarget', e.target.value.replace(/[^\d]/g, ''))}
-                placeholder="250,000"
-                style={{ ...INPUT_STYLE, paddingLeft: 24 }}
-              />
-            </div>
+      <Q title="Grant size range" optional>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '22px 24px' }}>
+          <div style={{ position: 'relative' }}>
+            <label htmlFor="wiz-min" style={SR_ONLY}>Smallest amount</label>
+            <span aria-hidden="true" style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: '#7a857e', fontSize: 16, fontFamily: 'var(--font-space-grotesk)', pointerEvents: 'none' }}>£</span>
+            <input id="wiz-min" type="text" inputMode="numeric" value={fmtThousands(state.minGrantTarget)} onChange={e => update('minGrantTarget', e.target.value.replace(/[^\d]/g, ''))} placeholder="10,000" style={{ ...INPUT_STYLE, paddingLeft: 34 }} />
           </div>
-        </Field>
-
-        {/* Funding types — neutral picker-chips, same style as sector chips */}
-        <Field label="Funding types you're open to" help="You can adjust this per-search later on the Find Funding page.">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginTop: 4 }}>
-            {FUNDING_TYPES.map(t => {
-              const active = state.fundingTypes.includes(t.value)
-              return <FundingTypeChip key={t.value} label={t.label} desc={t.desc} active={active} onClick={() => toggleFundingType(t.value)} />
-            })}
+          <div style={{ position: 'relative' }}>
+            <label htmlFor="wiz-max" style={SR_ONLY}>Largest amount</label>
+            <span aria-hidden="true" style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: '#7a857e', fontSize: 16, fontFamily: 'var(--font-space-grotesk)', pointerEvents: 'none' }}>£</span>
+            <input id="wiz-max" type="text" inputMode="numeric" value={fmtThousands(state.maxGrantTarget)} onChange={e => update('maxGrantTarget', e.target.value.replace(/[^\d]/g, ''))} placeholder="250,000" style={{ ...INPUT_STYLE, paddingLeft: 34 }} />
           </div>
-        </Field>
+        </div>
+        <QHelp>Grants outside this range rank lower. Leave it blank and size is ignored.</QHelp>
+      </Q>
 
-        {/* What the money can be spent on — a different question from the type
-            of funding, and the one small charities most often get caught by.
-            Optional: leaving it blank means no preference, not "wants nothing". */}
-        <Field label="What do you need the money for?" help="Optional. Leave blank if you're open to any of these.">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginTop: 4 }}>
-            {SPEND_RESTRICTIONS.map(r => {
-              const active = state.spendRestrictions.includes(r.value)
-              return <FundingTypeChip key={r.value} label={r.label} desc={r.desc} active={active} onClick={() => toggleSpendNeed(r.value)} />
-            })}
-          </div>
-        </Field>
-      </div>
+      <Q title="Funding types you're open to">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          {FUNDING_TYPES.map(t => {
+            const active = state.fundingTypes.includes(t.value)
+            return <FundingTypeChip key={t.value} label={t.label} desc={t.desc} active={active} onClick={() => toggleFundingType(t.value)} />
+          })}
+        </div>
+        <QHelp>Types you tick rank higher. You still see all of them, and you can change the mix on any search.</QHelp>
+      </Q>
 
-      {/* The Weekly Funding Update, stated rather than assumed.
-          Ticked by default, which is the same behaviour as before. The point
-          of putting it here is that it is now a line somebody read on their
-          way past, so nobody arrives at their first alert email wondering how
-          they were signed up. */}
-      <label
-        style={{
-          display: 'flex', alignItems: 'flex-start', gap: 11, marginTop: 22,
-          padding: '14px 16px', background: T.cream1, borderRadius: 12,
-          cursor: 'pointer',
-        }}
-      >
+      <Q title="What do you need the money for?">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          {SPEND_RESTRICTIONS.map(r => {
+            const active = state.spendRestrictions.includes(r.value)
+            return <FundingTypeChip key={r.value} label={r.label} desc={r.desc} active={active} onClick={() => toggleSpendNeed(r.value)} />
+          })}
+        </div>
+        <QHelp>Optional. Leave blank if you&rsquo;re open to any of these.</QHelp>
+      </Q>
+
+      {/* The Weekly Funding Update, stated rather than assumed, as a plain
+          row above the footer rule. Ticked by default; the unsubscribe is in
+          every email and on the profile page. */}
+      <label style={{ display: 'flex', alignItems: 'flex-start', gap: 14, margin: '30px 0 0', padding: '26px 0 0', borderTop: '1px solid rgba(29,60,62,.10)', cursor: 'pointer' }}>
         <input
           type="checkbox"
           checked={state.alertsEnabled}
           onChange={e => update('alertsEnabled', e.target.checked)}
-          style={{ marginTop: 2, width: 16, height: 16, accentColor: T.greenDeep, cursor: 'pointer', flexShrink: 0 }}
+          style={{ marginTop: 2, width: 20, height: 20, accentColor: T.greenDeep, cursor: 'pointer', flexShrink: 0 }}
         />
-        <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 13.5, lineHeight: 1.55, color: T.textSecondary }}>
+        <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 15, lineHeight: 1.6, color: '#5f6b64' }}>
           Send me the Weekly Funding Update: what is closing, what is moving,
           and new funding that matches us. One email a week, and you can turn it
           off any time from your profile.
@@ -2468,36 +2512,62 @@ function StepLocation({ state, update, toggleFundingType, toggleSpendNeed, savin
   )
 }
 
-/** Funding type chip — neutral selector, same visual logic as PickerChip secondary state */
+/** Selectable card (design of 9 Sept 2026): radius 16, a tick circle at the
+    right that fills deep when pressed, pale green tint when selected. */
 function FundingTypeChip({ label, desc, active, onClick }: { label: string; desc: string; active: boolean; onClick: () => void }) {
   const [hov, setHov] = useState(false)
   return (
     <button
+      type="button"
       onClick={onClick}
+      aria-pressed={active}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
-        padding: '10px 12px',
-        textAlign: 'left' as const,
-        background: active || hov ? T.greenCream : '#fff',
-        border: `${active ? '1.5px' : '0.5px'} solid ${active || hov ? T.greenMid : T.borderInput}`,
-        borderRadius: 8,
-        cursor: 'pointer',
-        transition: 'all 120ms ease',
-        display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8,
+        position: 'relative', textAlign: 'left' as const,
+        background: active ? '#E4F1EA' : '#fff',
+        border: `1px solid ${active ? '#1B6B3D' : hov ? 'rgba(29,60,62,.42)' : 'rgba(29,60,62,.18)'}`,
+        borderRadius: 16, padding: '16px 52px 16px 18px', cursor: 'pointer',
+        fontFamily: 'var(--font-dm-sans)', transition: 'border-color 120ms ease, background 120ms ease',
       }}
     >
-      <div>
-        <p style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 12, fontWeight: 500, color: active ? T.greenTextDeep : T.textPrimary, margin: 0 }}>{label}</p>
-        <p style={{ fontSize: 11, color: active ? T.greenTextDeep : T.textSecondary, margin: '2px 0 0', fontFamily: 'var(--font-dm-sans)', opacity: 0.85 }}>{desc}</p>
-      </div>
-      {active && (
-        <div style={{ width: 16, height: 16, borderRadius: '50%', background: T.lime, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
-          <Check size={9} color={T.onDeep} strokeWidth={3} />
-        </div>
-      )}
+      <b style={{ display: 'block', fontFamily: 'var(--font-space-grotesk)', fontSize: 15.5, fontWeight: 600, color: T.greenDeep, margin: '0 0 3px' }}>{label}</b>
+      <em style={{ fontStyle: 'normal', fontSize: 14, color: '#5f6b64' }}>{desc}</em>
+      <span aria-hidden="true" style={{
+        position: 'absolute', top: '50%', right: 18, transform: 'translateY(-50%)', width: 24, height: 24, borderRadius: '50%',
+        border: `1.5px solid ${active ? T.greenDeep : 'rgba(29,60,62,.18)'}`, background: active ? T.greenDeep : 'transparent',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        {active && <Check size={13} color={T.onDeep} strokeWidth={2.5} />}
+      </span>
     </button>
   )
+}
+
+/* Question section for the location step: hairline above (except the first),
+   20px heading with an optional tag, helper text at 14px. */
+const SR_ONLY: React.CSSProperties = { position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap', border: 0 }
+function Q({ title, optional, first, children }: { title?: string; optional?: boolean; first?: boolean; children: React.ReactNode }) {
+  return (
+    <section style={{ padding: first ? '8px 0 0' : '30px 0 0', margin: first ? '26px 0 0' : '30px 0 0', borderTop: first ? 'none' : '1px solid rgba(29,60,62,.10)' }}>
+      {title && (
+        <h2 style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 20, fontWeight: 600, letterSpacing: '-0.4px', color: T.greenDeep, margin: '0 0 18px' }}>
+          {title}{optional && <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 14, fontWeight: 400, color: '#7a857e', letterSpacing: 0, marginLeft: 8 }}>optional</span>}
+        </h2>
+      )}
+      {children}
+    </section>
+  )
+}
+function QLabel({ children, required, htmlFor }: { children: React.ReactNode; required?: boolean; htmlFor?: string }) {
+  return (
+    <label htmlFor={htmlFor} style={{ display: 'block', fontFamily: 'var(--font-space-grotesk)', fontSize: 14.5, fontWeight: 600, color: T.greenDeep, margin: '0 0 7px' }}>
+      {children}{required && <span style={{ color: T.coralText, marginLeft: 2 }}>*</span>}
+    </label>
+  )
+}
+function QHelp({ children }: { children: React.ReactNode }) {
+  return <p style={{ fontSize: 14, lineHeight: 1.55, color: '#7a857e', margin: '8px 0 0', fontFamily: 'var(--font-dm-sans)' }}>{children}</p>
 }
 
 /* ═══════════════════════════════════════════════

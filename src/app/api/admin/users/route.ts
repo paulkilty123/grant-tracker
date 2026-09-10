@@ -22,6 +22,14 @@ interface UserRow {
   signup_role: string | null
   /** Chose to browse without a profile. */
   profile_skipped: boolean
+  /** Browse path facts (migration 082). */
+  client_count_band: string | null
+  example_client: string | null
+  /** Consultant or network with a client profile (migration 084). */
+  signup_practice_name: string | null
+  signup_practice_website: string | null
+  /** Other owners' organisations sharing a website, charity number, CIC number or name. */
+  duplicate_of: string | null
   has_impact_sectors: boolean
   onboarding_complete: boolean
   pipeline_count: number
@@ -57,11 +65,11 @@ export async function GET() {
   // entitlement for, an org they never actually use.
   const { data: orgs } = await admin
     .from('organisations')
-    .select('id, owner_id, name, legal_structure, impact_sectors, apply_access, signup_role, profile_skipped')
+    .select('id, owner_id, name, legal_structure, impact_sectors, apply_access, signup_role, profile_skipped, client_count_band, example_client, website_url, charity_number, cic_number, signup_practice_name, signup_practice_website')
     .in('owner_id', userIds)
     .order('created_at', { ascending: true })
 
-  type OrgRow = { id: string; name: string | null; legal_structure: string | null; impact_sectors: string[] | null; apply_access: boolean | null; signup_role: string | null; profile_skipped: boolean | null }
+  type OrgRow = { id: string; name: string | null; legal_structure: string | null; impact_sectors: string[] | null; apply_access: boolean | null; signup_role: string | null; profile_skipped: boolean | null; client_count_band: string | null; example_client: string | null; website_url: string | null; charity_number: string | null; cic_number: string | null; signup_practice_name: string | null; signup_practice_website: string | null }
   const orgByOwner = new Map<string, OrgRow>()
   const orgCountByOwner = new Map<string, number>()
   for (const o of (orgs ?? []) as Array<OrgRow & { owner_id: string }>) {
@@ -71,6 +79,9 @@ export async function GET() {
         id: o.id, name: o.name, legal_structure: o.legal_structure,
         impact_sectors: o.impact_sectors, apply_access: o.apply_access,
         signup_role: o.signup_role, profile_skipped: o.profile_skipped,
+        client_count_band: o.client_count_band, example_client: o.example_client,
+        website_url: o.website_url, charity_number: o.charity_number, cic_number: o.cic_number,
+        signup_practice_name: o.signup_practice_name, signup_practice_website: o.signup_practice_website,
       })
     }
   }
@@ -94,6 +105,39 @@ export async function GET() {
     savedByOrg.set(r.org_id, (savedByOrg.get(r.org_id) ?? 0) + 1)
   }
 
+  // Possible duplicates (Paul, 8 Sept 2026): the trial-gaming path is the
+  // same charity set up again under a new email, so every organisation is
+  // keyed by website host, charity number, CIC number and normalised name,
+  // and any key shared with another owner's organisation is flagged. Read at
+  // request time across ALL organisations, so existing duplicates show too.
+  const host = (u: string | null) => {
+    if (!u) return null
+    try { return new URL(u.startsWith('http') ? u : `https://${u}`).hostname.replace(/^www\./, '').toLowerCase() || null } catch { return null }
+  }
+  const norm = (n: string | null) => n ? n.toLowerCase().replace(/[^a-z0-9]+/g, ' ').replace(/\b(the|cic|cio|ltd|limited|charity|foundation|trust)\b/g, '').trim() || null : null
+  const emailByUser = new Map(users.map(u => [u.id, u.email ?? '']))
+  const keyOwners = new Map<string, { owner: string; name: string }[]>()
+  const allOrgs = (orgs ?? []) as Array<OrgRow & { owner_id: string }>
+  for (const o of allOrgs) {
+    for (const k of [host(o.website_url) && `h:${host(o.website_url)}`, o.charity_number && `c:${o.charity_number.trim()}`, o.cic_number && `n:${o.cic_number.trim()}`, norm(o.name) && `m:${norm(o.name)}`]) {
+      if (!k) continue
+      const list = keyOwners.get(k) ?? []
+      list.push({ owner: o.owner_id, name: o.name ?? '' })
+      keyOwners.set(k, list)
+    }
+  }
+  const duplicateOf = (o: OrgRow & { owner_id: string }): string | null => {
+    const others = new Map<string, string>()
+    for (const k of [host(o.website_url) && `h:${host(o.website_url)}`, o.charity_number && `c:${o.charity_number.trim()}`, o.cic_number && `n:${o.cic_number.trim()}`, norm(o.name) && `m:${norm(o.name)}`]) {
+      if (!k) continue
+      for (const hit of keyOwners.get(k) ?? []) if (hit.owner !== o.owner_id) others.set(hit.owner, hit.name)
+    }
+    if (!others.size) return null
+    return Array.from(others.entries()).map(([owner, name]) => `${name} (${emailByUser.get(owner) || 'unknown'})`).join('; ')
+  }
+  const fullOrgByOwner = new Map<string, OrgRow & { owner_id: string }>()
+  for (const o of allOrgs) if (!fullOrgByOwner.has(o.owner_id)) fullOrgByOwner.set(o.owner_id, o)
+
   const rows: UserRow[] = users.map(u => {
     const meta = (u.user_metadata ?? {}) as Record<string, unknown>
     const org = orgByOwner.get(u.id) ?? null
@@ -111,6 +155,11 @@ export async function GET() {
       org_id: org?.id ?? null,
       has_legal_structure: !!org?.legal_structure,
       signup_role: org?.signup_role ?? null,
+      client_count_band: org?.client_count_band ?? null,
+      example_client: org?.example_client ?? null,
+      signup_practice_name: org?.signup_practice_name ?? null,
+      signup_practice_website: org?.signup_practice_website ?? null,
+      duplicate_of: fullOrgByOwner.get(u.id) ? duplicateOf(fullOrgByOwner.get(u.id)!) : null,
       profile_skipped: !!org?.profile_skipped,
       has_impact_sectors: Array.isArray(sectors) && sectors.length > 0,
       onboarding_complete: !!org?.legal_structure && Array.isArray(sectors) && sectors.length > 0,

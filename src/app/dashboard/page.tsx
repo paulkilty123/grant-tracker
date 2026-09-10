@@ -6,7 +6,7 @@ import { hueForIndex, hueMap } from '@/lib/project-hues'
 import { FUNDING_TYPE_COLOUR } from '@/lib/funding-type-colours'
 import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
-import { getDeadlineAlerts, formatCurrency, formatNextOpen } from '@/lib/utils'
+import { getDeadlineAlerts, formatCurrency, formatRange, formatNextOpen } from '@/lib/utils'
 import type { PipelineItem, Organisation } from '@/types'
 import { Award, TrendingUp, Users, Rocket, GraduationCap, Gift, ArrowRight, CalendarDays, Check, Sparkles, Bookmark, ListChecks, UserPlus, FilePenLine, Lightbulb, CircleCheck } from 'lucide-react'
 import { computeMatchScore, grantMatchesLocationText, MATCH_TIER, MATCH_FLOOR, MATCH_TIER_STRONG, MATCH_TIER_GOOD } from '@/lib/matching'
@@ -360,11 +360,9 @@ export default async function DashboardPage() {
   const picked  = seededShuffle(topPool, seed).slice(0, 3)
   const matchedGrants = picked.map(p => {
     const g = p.grant
-    const amountStr = g.amountMin || g.amountMax
-      ? (g.amountMin && g.amountMax && g.amountMin !== g.amountMax
-          ? `${formatCurrency(g.amountMin)} – ${formatCurrency(g.amountMax)}`
-          : formatCurrency(g.amountMax || g.amountMin || 0))
-      : 'Amount on application'
+    // formatRange, not an inline branch: an in-kind offer has no cash award
+    // and reads "In-kind", never "Amount on application" (see lib/utils).
+    const amountStr = formatRange(g.amountMin ?? null, g.amountMax ?? null, g.amountUndisclosed, g.fundingType)
     return {
       id: g.id,
       title: g.title,
@@ -1136,11 +1134,7 @@ export default async function DashboardPage() {
         const TYPE_KEYS = ['grant', 'programme', 'investment', 'in_kind'] as const
 
         const shapeRow = (m: typeof scoredAll[number]): MatchRow => {
-          const amt = m.grant.amountMin || m.grant.amountMax
-            ? (m.grant.amountMin && m.grant.amountMax && m.grant.amountMin !== m.grant.amountMax
-                ? `${formatCurrency(m.grant.amountMin)}–${formatCurrency(m.grant.amountMax)}`
-                : formatCurrency(m.grant.amountMax || m.grant.amountMin || 0))
-            : 'Amount on application'
+          const amt = formatRange(m.grant.amountMin ?? null, m.grant.amountMax ?? null, m.grant.amountUndisclosed, m.grant.fundingType)
 
           let deadlineLabel: string | null = null
           let deadlineTone: 'urgent' | 'plain' | 'quiet' | null = null

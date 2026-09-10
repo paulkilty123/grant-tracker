@@ -17,6 +17,11 @@ interface UserRow {
   has_legal_structure: boolean
   signup_role: string | null
   profile_skipped: boolean
+  client_count_band: string | null
+  example_client: string | null
+  signup_practice_name: string | null
+  signup_practice_website: string | null
+  duplicate_of: string | null
   has_impact_sectors: boolean
   onboarding_complete: boolean
   pipeline_count: number
@@ -234,6 +239,18 @@ export default function AdminUsersPage() {
                       {u.signup_role && u.signup_role !== 'organisation' && (
                         <p className="text-[10px] font-semibold uppercase tracking-wider mt-0.5" style={{ color: '#3B6D11' }}>
                           {u.signup_role}{u.profile_skipped ? ', no profile' : ''}
+                          {u.client_count_band ? ` · ${u.client_count_band} orgs` : ''}
+                        </p>
+                      )}
+                      {u.example_client && (
+                        <p className="text-[11px] text-mid mt-0.5">e.g. {u.example_client}</p>
+                      )}
+                      {u.signup_practice_name && (
+                        <p className="text-[11px] text-mid mt-0.5">by {u.signup_practice_name}{u.signup_practice_website ? ` · ${u.signup_practice_website.replace(/^https?:\/\//, '')}` : ''}</p>
+                      )}
+                      {u.duplicate_of && (
+                        <p className="text-[11px] font-semibold mt-0.5" style={{ color: '#993C1D' }} title={u.duplicate_of}>
+                          Possible duplicate of {u.duplicate_of}
                         </p>
                       )}
                     </td>

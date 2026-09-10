@@ -324,7 +324,7 @@ export default function NewApplicationPage() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginBottom: 26 }}>
         <StepDot n={1} label="Set up" active={step === 'setup'} done={step === 'confirm'} />
         <div style={{ flex: '0 0 32px', height: 1, background: T.borderStrong }} />
-        <StepDot n={2} label={mode === 'project' ? 'Describe your project' : 'Check the questions'} active={step === 'confirm'} done={false} />
+        <StepDot n={2} label={mode === 'project' ? 'Structure your application' : 'Check the questions'} active={step === 'confirm'} done={false} />
         <div style={{ flex: '0 0 32px', height: 1, background: T.border }} />
         <StepDot n={3} label="Build" active={false} done={false} />
       </div>
@@ -611,12 +611,12 @@ export default function NewApplicationPage() {
           <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, padding: '20px 24px' }}>
             <h2 style={{ fontFamily: UI, fontWeight: 600, fontSize: 16, color: T.textPrimary, margin: '0 0 4px' }}>
               {mode === 'project'
-                ? 'Describe your project'
+                ? 'Structure your application'
                 : `${questions.length} ${questions.length === 1 ? 'question' : 'questions'} found, check them over`}
             </h2>
             <p style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary, margin: '0 0 16px', lineHeight: 1.55 }}>
               {mode === 'project'
-                ? 'These are the sections every funder asks about. Click any one to reword it, change its limit, or remove it, then build. You write the answers in the next step, not here.'
+                ? 'These are the sections most funders ask for. Reword any of them, change a limit, or remove one, then build. You write the answers in the next step.'
                 : 'Click any question to fix what the parser got wrong, including word limits, then build. You write the answers in the next step, not here. Word limits the funder stated in characters are shown as approximate words.'}
             </p>
             {questions.length > 12 && (

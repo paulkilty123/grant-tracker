@@ -7,6 +7,8 @@ import { Star, Check, X, AlertTriangle } from 'lucide-react'
 import Link from 'next/link'
 import type { Organisation } from '@/types'
 import { useIsMobile } from '@/hooks/useIsMobile'
+import { isFoundingCohort } from '@/lib/founding-cohort'
+import { TRIAL_DAYS, TRIAL_PLAN } from '@/lib/trial'
 
 /* ─── design tokens ─── */
 /** Same shape as the profile page's set, same values. Not a seventh. */
@@ -491,6 +493,7 @@ export default function AccountPage() {
   const [email, setEmail]           = useState('')
   const [displayName, setDisplayName] = useState('')
   const [org, setOrg]               = useState<Organisation | null>(null)
+  const [cohort, setCohort]         = useState(false)
   const [loading, setLoading]       = useState(true)
 
   // 2FA state
@@ -511,6 +514,7 @@ export default function AccountPage() {
       setUserId(user.id)
       setEmail(user.email ?? '')
       setDisplayName(user.user_metadata?.full_name ?? user.user_metadata?.name ?? '')
+      setCohort(isFoundingCohort(user.created_at))
 
       // Check 2FA factors
       const { data: mfaData } = await supabase.auth.mfa.listFactors()
@@ -639,17 +643,35 @@ export default function AccountPage() {
       {/* ── Billing ── */}
       <section style={{ marginBottom: 36 }}>
         <SectionHeader title="Billing" desc="Your plan and payment details." />
-        <div style={{ background: T.cream, border: '1px solid rgba(23,52,4,0.10)', borderRadius: 12, padding: '22px 26px', display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-          <div style={{ width: 40, height: 40, background: T.white, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.sageText, flexShrink: 0 }}>
-            <Star size={18} strokeWidth={2} />
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontFamily: UI, fontWeight: 600, fontSize: 15, color: T.textPrimary, marginBottom: 4 }}>You're in the founding cohort</div>
-            <div style={{ fontFamily: BODY, fontSize: 13.5, color: T.textSecondary, lineHeight: 1.55 }}>
-              Shoots is free for you for six months. After that, cohort members lock in a permanent <strong style={{ color: T.textPrimary, fontWeight: 600 }}>founding rate</strong>, meaningfully below the standard price, for as long as you stay active. We&apos;ll email you ahead of any changes, so there are no surprises.
+        {(() => {
+          // Three states (Paul, 8 Sept 2026). The old card told EVERYONE they
+          // were in the founding cohort; it was fixed text. Cohort = account
+          // created before public signup opened. Trial = a future
+          // granted_access_until on the organisation, which is what every new
+          // signup gets (migration 078). The subscribe path arrives with the
+          // billing merge; until then the trial card only states the facts.
+          const until = org?.granted_access_until ? new Date(String(org.granted_access_until)) : null
+          const untilOk = !!until && !Number.isNaN(until.getTime()) && until.getTime() < 8.64e15
+          const inTrial = !cohort && untilOk && until!.getTime() > Date.now()
+          const endsOn = untilOk ? until!.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : ''
+          const title = cohort ? "You're in the founding cohort" : inTrial ? 'Your free trial' : 'No active plan'
+          const body = cohort
+            ? <>Shoots is free for you for six months. After that, cohort members lock in a permanent <strong style={{ color: T.textPrimary, fontWeight: 600 }}>founding rate</strong>, meaningfully below the standard price, for as long as you stay active. We&apos;ll email you ahead of any changes, so there are no surprises.</>
+            : inTrial
+              ? <>{TRIAL_DAYS} days on {TRIAL_PLAN}, ending <strong style={{ color: T.textPrimary, fontWeight: 600 }}>{endsOn}</strong>. You choose a plan at the end, and nothing you have saved is lost. We&apos;ll email you before it ends.</>
+              : <>Your trial has ended. Choose a plan to pick up where you left off; everything you saved is still here.</>
+          return (
+            <div style={{ background: T.cream, border: '1px solid rgba(23,52,4,0.10)', borderRadius: 12, padding: '22px 26px', display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+              <div style={{ width: 40, height: 40, background: T.white, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.sageText, flexShrink: 0 }}>
+                <Star size={18} strokeWidth={2} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontFamily: UI, fontWeight: 600, fontSize: 15, color: T.textPrimary, marginBottom: 4 }}>{title}</div>
+                <div style={{ fontFamily: BODY, fontSize: 13.5, color: T.textSecondary, lineHeight: 1.55 }}>{body}</div>
+              </div>
             </div>
-          </div>
-        </div>
+          )
+        })()}
       </section>
 
       {/* ── Your data ── */}
@@ -659,16 +681,24 @@ export default function AccountPage() {
           <div style={{ flex: 1 }}>
             <div style={{ fontFamily: UI, fontWeight: 600, fontSize: 14.5, color: T.textPrimary, marginBottom: 2 }}>Export your data</div>
             <div style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary, lineHeight: 1.5 }}>
-              Everything you do here builds your organisation&apos;s profile. It&apos;s yours, it persists beyond beta, and you can export it any time. Downloads your profile, pipeline, and saved opportunities as JSON.
+              {cohort
+                ? <>Everything you do here builds your organisation&apos;s profile. It&apos;s yours, and you can export it any time. Downloads your profile, pipeline, and saved opportunities as JSON.</>
+                : <>Everything you do here builds your organisation&apos;s profile, and it&apos;s yours. Data export comes with a paid plan. If you ever need a copy of your data, email <a href="mailto:hello@shootsfunding.co.uk" style={{ color: '#1D3C3E', fontWeight: 600 }}>hello@shootsfunding.co.uk</a> and we will send it.</>}
             </div>
           </div>
+          {/* Export is a paid feature (Paul, 8 Sept 2026); the cohort keeps it.
+              Paying organisations get the button back with the billing merge,
+              when the page can read a subscription. The endpoint enforces the
+              same rule, so hiding the button is not the only gate. */}
+          {cohort && (
           <a
             href="/api/export"
             download
-            style={{ fontFamily: UI, fontWeight: 600, fontSize: 13, color: '#1D3C3E', background: '#fff', border: '1.5px solid rgba(29,60,62,0.24)', padding: '9px 16px', borderRadius: 8, textDecoration: 'none', whiteSpace: 'nowrap' }}
+            style={{ fontFamily: UI, fontWeight: 600, fontSize: 13, color: '#1D3C3E', background: '#fff', border: '1.5px solid rgba(29,60,62,0.24)', padding: '9px 16px', borderRadius: 8, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}
           >
             Download JSON
           </a>
+          )}
         </div>
       </section>
 

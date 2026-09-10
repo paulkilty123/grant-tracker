@@ -268,6 +268,17 @@ export default function ApplicationsPage() {
             ))
           })()}
           <Link
+            href="/dashboard/profile#card-story"
+            style={{
+              fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: '#1D3C3E',
+              background: 'transparent', border: '1px solid rgba(29,60,62,0.35)', padding: '10px 18px',
+              borderRadius: 999, textDecoration: 'none', display: 'inline-flex', alignItems: 'center',
+              gap: 7, whiteSpace: 'nowrap', flexShrink: 0,
+            }}
+          >
+            Your material
+          </Link>
+          <Link
             href="/dashboard/applications/new"
             style={{
               fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: '#F6F1E7',
@@ -439,25 +450,8 @@ export default function ApplicationsPage() {
                   )}
                 </span>
               </div>
-              {total > 0 && (
-                <div style={isMobile ? { width: '100%', order: 9 } : { width: 132, flexShrink: 0 }}>
-                  {/* One representation of progress: the sentence and the bar.
-                      The percentage that used to sit beside them was the same
-                      number a third time. */}
-                  <div style={{ textAlign: 'right', marginBottom: 5 }}>
-                    <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: answered === 0 ? T.textTertiary : '#1D3C3E' }}>
-                      {answered} of {total} written
-                    </span>
-                  </div>
-                  {/* Track was T.cream on a white card — 1.04:1, invisible, so the bar read as a floating stub. Same bug as the Find Funding sort pill. */}
-                  <div style={{ height: 6, background: 'rgba(29,60,62,0.15)', borderRadius: 999, overflow: 'hidden' }}>
-                    <div style={{
-                      height: '100%', width: `${Math.round((answered / total) * 100)}%`,
-                      background: '#1D3C3E', borderRadius: 999, transition: 'width 200ms ease',
-                    }} />
-                  </div>
-                </div>
-              )}
+              {/* Delete sits left of the progress block, away from the chevron:
+                  a tester reached for the arrow and landed on the bin (8 Sept). */}
               {confirmDeleteId === app.id ? (
                 <span style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}
                   onClick={e => { e.preventDefault(); e.stopPropagation() }}>
@@ -492,6 +486,25 @@ export default function ApplicationsPage() {
                 >
                   <Trash2 size={15} />
                 </button>
+              )}
+              {total > 0 && (
+                <div style={isMobile ? { width: '100%', order: 9 } : { width: 132, flexShrink: 0 }}>
+                  {/* One representation of progress: the sentence and the bar.
+                      The percentage that used to sit beside them was the same
+                      number a third time. */}
+                  <div style={{ textAlign: 'right', marginBottom: 5 }}>
+                    <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: answered === 0 ? T.textTertiary : '#1D3C3E' }}>
+                      {answered} of {total} written
+                    </span>
+                  </div>
+                  {/* Track was T.cream on a white card — 1.04:1, invisible, so the bar read as a floating stub. Same bug as the Find Funding sort pill. */}
+                  <div style={{ height: 6, background: 'rgba(29,60,62,0.15)', borderRadius: 999, overflow: 'hidden' }}>
+                    <div style={{
+                      height: '100%', width: `${Math.round((answered / total) * 100)}%`,
+                      background: '#1D3C3E', borderRadius: 999, transition: 'width 200ms ease',
+                    }} />
+                  </div>
+                </div>
               )}
               <ChevronRight size={16} color={T.textTertiary} style={{ flexShrink: 0 }} />
             </Link>

@@ -1,0 +1,52 @@
+{
+  "brief": "docs/handoffs/sectors-national-2026-09-09.md",
+  "run_by": "orchestrating session (Fable), on Paul's go, 9 Sept 2026",
+  "script": "scripts/sectors-national-stage-2026-09-09.ts",
+  "source": "system:sectors-national-2026-09-09",
+  "api_spend": "none; every page read by direct fetch",
+  "staged": 4,
+  "revived": 5,
+  "rejected": 1,
+  "target": 25,
+  "why_short_of_target": "Eleven of the funders on the brief's lead list are unreachable or closed: Youth Futures, Ragdoll, Independent Age, Consortium, Weavers, Home Instead, Caring Family Foundation and Hospital Saturday Fund could not be read (404, 403, timeout or DNS); Lloyds, Bromley, Blagrave, Rank and Peter Harrison are closed or invitation-only; City & Guilds' Big Idea Fund has spent its money. Employment and ex-offenders gained nothing new this pass; the Weavers' Company row we hold is live and remains the best route.",
+  "summary_by_sector": {
+    "older_people": { "staged": 2, "revived": 0, "note": "Barchester (opens 1 Oct) and McCarthy Stone (rolling core and project funding); Hedley and Clothworkers also cover older people" },
+    "food": { "staged": 1, "revived": 0, "note": "FareShare national in-kind; Greggs Community Action Fund moved to between rounds" },
+    "employment_ex_offenders": { "staged": 0, "revived": 0, "note": "Sir Halley Stewart (social innovation, revived live) and Hedley (ex-offenders in scope) are the nearest; Weavers' Company already live" },
+    "young_people": { "staged": 1, "revived": 0, "note": "Hedley; Youth Music Trailblazer moved to between rounds (opens 23 Oct)" },
+    "disability": { "staged": 0, "revived": 2, "note": "Baily Thomas (learning disability) revived live; Clothworkers capital grants revived hidden" }
+  },
+  "rows": [
+    { "sector": "older_people", "id": "c69e2e54", "title": "Barchester Charitable Foundation Group Grants", "why": "staged", "detail": "£100 to £2,600, older people and disabled adults, England, Scotland, Wales and Jersey; group window reopens 1 Oct 2026" },
+    { "sector": "food", "id": "dbea35d2", "title": "FareShare Community Food Membership and FareShare Go", "why": "staged", "detail": "in-kind surplus food, UK-wide, rolling" },
+    { "sector": "older_people", "id": "e02b04b3", "title": "McCarthy Stone Foundation Core and Project Funding", "why": "staged", "detail": "up to £7,500 core (charities and community groups) or project (CICs too), income under £250,000; Festive Connections £750 opens Sept 2026" },
+    { "sector": "young_people", "id": "25febf37", "title": "Hedley Foundation Grants", "why": "staged", "detail": "£250 to £5,000, small registered charities under £1m, youth, disability, elderly, carers, homeless, ex-offenders; rolling; no CICs" },
+    { "sector": "disability", "id": "b32669f0", "title": "Clothworkers Foundation Open Grants Programme (capital)", "why": "revived", "detail": "archived stub revived hidden with full facts: rolling capital grants, small ≤£15k under £2m turnover, large above under £10m", "state": "tagged_awaiting_review" },
+    { "sector": "disability", "id": "f06351b9", "title": "Baily Thomas General and Small Grants (Learning Disability)", "why": "revived", "detail": "was published, hidden by a 31 Aug deadline; open again, next deadline 31 Dec 2026, small grants rolling; three Paul-pinned fields corrected at admin trust on his 8 Sept yes", "state": "published, live" },
+    { "sector": "employment_ex_offenders", "id": "b49ef70d", "title": "Sir Halley Stewart Trust Innovative Project Funding", "why": "revived", "detail": "was published, hidden by a 29 June deadline; next round closes 23 Oct 2026 or earlier at capacity; main grants £5,001 to £60,000", "state": "published, live" },
+    { "sector": "food", "id": "cfb56fe7", "title": "Greggs Foundation Community Action Fund", "why": "revived", "detail": "closed round; four rounds a year with changing locations; between rounds; location_tag stays Glasgow & South Tyneside under an admin pin from 27 Aug", "state": "between_rounds_scheduled" },
+    { "sector": "young_people", "id": "71fcd1d1", "title": "Youth Music Trailblazer Fund", "why": "revived", "detail": "published-but-hidden row moved to between rounds; round 14 opens 23 Oct 2026", "state": "between_rounds_scheduled" },
+    { "sector": "disability", "id": "de5286bb", "title": "Peter Harrison Foundation Active Lives", "why": "rejected", "detail": "no unsolicited applications; staff identify awardees" },
+    { "title": "Lloyds Bank Foundation", "why": "closed_no_date", "detail": "only open programme (Good Place to Live: New Beginnings) closed 9 Sept 2026; extension and strategic grants are by direct contact; further rounds promised after autumn" },
+    { "title": "Youth Futures Foundation", "why": "not_found", "detail": "funding page 404; site now describes programmes, no open grants page found" },
+    { "title": "Greggs Foundation Grants (6481c4e6, rejected 16 Aug)", "why": "already_held", "detail": "the rejection stands; the live fund is the Community Action Fund row above" },
+    { "title": "Rank Foundation", "why": "closed_no_date", "detail": "site states no unsolicited applications" },
+    { "title": "Bromley Trust", "why": "closed_no_date", "detail": "one round in 2026, closed 9 March; held row 2eb1fe4f already between rounds" },
+    { "title": "Blagrave Trust", "why": "out_of_scope", "detail": "place-based in Portsmouth, Birmingham and London under its new strategy; no open programme" },
+    { "title": "City & Guilds Foundation Supporting Rehabilitation (Big Idea Fund)", "why": "closed_no_date", "detail": "page describes the fund in the past tense with eight funded programmes" },
+    { "title": "Jack Petchey Foundation", "why": "already_held", "detail": "London and Essex only; Achievement Award Scheme live (1694669a)" },
+    { "title": "Ernest Cook Trust Communities Grant and Outdoor Learning Leader Grant", "why": "not_found", "detail": "grants page names both (£500 now in specific postcodes; up to £20,000 a year from October 2026) but both detail pages 404; worth a second pass in October" },
+    { "title": "Weavers' Company Charitable Grants", "why": "already_held", "detail": "1ffe7161 live; site timed out; search summary says deadlines 12 Mar, 2 Jul and 12 Nov 2026 and charities under £5m" },
+    { "title": "Vivensa Foundation (formerly Dunhill Medical Trust)", "why": "out_of_scope", "detail": "ageing research funder; calls page 404; Academy row eb625734 held" },
+    { "title": "Sobell Foundation", "why": "unreadable", "detail": "frames-only site, no text" },
+    { "title": "Ragdoll Foundation, Independent Age, Consortium LGBT+, Home Instead Charities, Caring Family Foundation, Hospital Saturday Fund, Zurich Community Trust", "why": "unreadable", "detail": "403, DNS failure, timeout, 404 or empty page on the first and second attempt" },
+    { "title": "John Lewis Partnership Foundation", "why": "not_found", "detail": "grantmaking page is navigation only in two reads" },
+    { "title": "Baobab Foundation", "why": "not_found", "detail": "community fund page 404; membership-led fund" },
+    { "title": "Coronation Food Project (KCCF)", "why": "closed_no_date", "detail": "2026 window ran 7 to 23 January; next expected January 2027" }
+  ],
+  "held_for_paul": [
+    "Employment and ex-offenders is still the thin sector: nothing new was reachable this pass. Weavers' Company (live) is the anchor; a second pass with a browser on Weavers, Consortium and Independent Age would recover three funders.",
+    "Ernest Cook Trust's Outdoor Learning Leader Grant (up to £20,000 a year) opens in October 2026 and its detail pages are missing today; check in October.",
+    "Greggs Community Action Fund carries an admin pin on location_tag from 27 August; the fund is national with rotating locations, so the pin may want lifting."
+  ]
+}

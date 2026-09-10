@@ -271,8 +271,17 @@ export interface Organisation {
    * how a field ends up with no UI.
    */
   alerts_enabled?: boolean | null
+  /** Access granted by hand or by the 14-day trial default (migration 078): apply_access is derived from it. ISO timestamp, 'infinity' for the cohort. */
+  granted_access_until?: string | null
   /** What the person said they were at signup. Recorded, not enforced. Migration 080. */
   signup_role?: 'organisation' | 'consultant' | 'network' | null
+  /** Browse path only (migration 082): roughly how many organisations they work with. */
+  client_count_band?: '1-2' | '3-5' | '6+' | '<20' | '20-100' | '100+' | null
+  /** Consultant or network with a client profile (migration 084): their own name or practice, and website. */
+  signup_practice_name?: string | null
+  signup_practice_website?: string | null
+  /** Browse path only (migration 082): one organisation they work with. */
+  example_client?: string | null
   /** They chose to browse without a profile: no matches card, no digest, a banner on Find Funding. Migration 080. */
   profile_skipped?: boolean | null
   /** Minimum match score an opportunity must reach to be worth emailing. */

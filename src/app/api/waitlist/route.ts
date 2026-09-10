@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { getAdminDb } from '@/lib/admin/admin-db'
 import { enforceInferenceRateLimit } from '@/lib/mcp-rate-limit'
-import { EMAIL_FROM_HEADER, EMAIL_APP_URL, EMAIL_REPLY_TO } from '@/lib/mcp-brand'
+import { EMAIL_APP_URL } from '@/lib/mcp-brand'
 import { waitlistRemovalUrl } from '@/lib/waitlist-unsubscribe'
 import {
-  renderWaitlistAck, renderWaitlistAckText, WAITLIST_ACK_SUBJECT,
-} from '@/lib/email/waitlist-ack'
+  renderLaunchEmail, renderLaunchEmailText, LAUNCH_EMAIL_SUBJECT,
+} from '@/lib/email/launch-announcement'
 
 /**
  * Waitlist signup, posted by the static landing document at
@@ -140,15 +140,19 @@ async function sendAck(rowId: string, to: string): Promise<void> {
   try {
     const removalUrl = waitlistRemovalUrl(EMAIL_APP_URL, rowId)
     const { error } = await new Resend(key).emails.send({
-      from: EMAIL_FROM_HEADER,
+      // Since the waitlist was invited on 9 September 2026 the list is open,
+      // so a new joiner gets the launch email itself, from Paul, rather than
+      // "you are on the list" (Paul, 9 Sept). Both stamps are set so the
+      // send script never doubles up.
+      from: 'Paul Kilty, Shoots Funding <paul@shootsfunding.co.uk>',
       // Nothing in this email asks for a reply, but somebody will send one,
       // and alerts@ is not read. A reply-to costs a header and is the
       // difference between a question reaching a person and vanishing.
-      replyTo: EMAIL_REPLY_TO,
+      replyTo: 'paul@shootsfunding.co.uk',
       to,
-      subject: WAITLIST_ACK_SUBJECT,
-      html: renderWaitlistAck({ origin: EMAIL_APP_URL, removalUrl }),
-      text: renderWaitlistAckText({ origin: EMAIL_APP_URL, removalUrl }),
+      subject: LAUNCH_EMAIL_SUBJECT,
+      html: renderLaunchEmail({ origin: EMAIL_APP_URL, removalUrl }),
+      text: renderLaunchEmailText({ origin: EMAIL_APP_URL, removalUrl }),
       headers: {
         // One-click removal from the client's own chrome. Gmail and Outlook
         // both surface it, and a reader who uses it does not press "spam"
@@ -164,7 +168,7 @@ async function sendAck(rowId: string, to: string): Promise<void> {
 
     const { error: stampError } = await getAdminDb()
       .from('waitlist_signups')
-      .update({ ack_sent_at: new Date().toISOString() })
+      .update({ ack_sent_at: new Date().toISOString(), launch_sent_at: new Date().toISOString() })
       .eq('id', rowId)
     if (stampError) {
       // The email went out and the row does not know it. Loud, because the

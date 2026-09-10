@@ -22,8 +22,10 @@ function envFlag(raw: string | undefined, fallback: boolean): boolean {
 /**
  * The "Recently added" badge on the Find Funding grant card.
  *
- * ON by default since 2026-08-18, at Paul's request, replacing "New this week"
- * in the same position on the card.
+ * OFF by default since 2026-09-09, at Paul's request ("take out the recently
+ * added label on grant cards for now, might switch on later"). It was ON from
+ * 2026-08-18, replacing "New this week" in the same position on the card.
+ * NEXT_PUBLIC_SHOW_RECENTLY_ADDED=true switches it back on without a code change.
  *
  * IT WAS SWITCHED OFF DELIBERATELY BEFORE, and the reasons have not gone away,
  * so they are kept here rather than deleted:
@@ -45,7 +47,7 @@ function envFlag(raw: string | undefined, fallback: boolean): boolean {
  */
 export const SHOW_RECENTLY_ADDED_BADGE = envFlag(
   process.env.NEXT_PUBLIC_SHOW_RECENTLY_ADDED,
-  true,
+  false,
 )
 
 /** How recent a grant must be to carry the badge, in days. */
