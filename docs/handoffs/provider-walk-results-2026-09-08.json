@@ -498,6 +498,181 @@
      "note_on_domain": "Worth recording: bgv.vc, the domain the brief and an earlier pass both guessed for BGV, is not theirs and does not resolve. The live site is bethnalgreenventures.com. Same class of error as bbrc.org.uk turning out to belong to the British Birds Rarities Committee."
     }
    ]
+  },
+  {
+   "batch": 3,
+   "tier": 3,
+   "date": "2026-09-10",
+   "mode": "APPLIED. Script scripts/provider-walk-tier3-stage-2026-09-10.ts. Relinks at user_verified:provider-walk-2026-09-10, stages hidden at system:provider-walk-2026-09-10. No is_active or pipeline_state changed on any existing row.",
+   "providers_walked": 4,
+   "providers": [
+    {
+     "provider": "Key Fund",
+     "funding_page": "https://thekeyfund.co.uk/funding/regional-growth-fund/",
+     "note": "Only the one stage left over from tier one.",
+     "outcomes": [
+      {
+       "fund": "Regional Growth Fund",
+       "url": "https://thekeyfund.co.uk/funding/regional-growth-fund/",
+       "action": "stage",
+       "id": "f3f9a63e-d1a8-45dc-9c4b-31e5d407fb8c",
+       "quote": "Investments up to £150k",
+       "note": "Not restricted to social organisations; region not stated on the page."
+      }
+     ]
+    },
+    {
+     "provider": "Big Issue Invest",
+     "funding_page": "https://www.bigissue.com/invest/",
+     "funds_on_page": 3,
+     "rows_held": 9,
+     "rows_live": 4,
+     "outcomes": [
+      {
+       "fund": "Social Impact Loans",
+       "url": "https://www.bigissue.com/invest/apply-for-funding/loans/",
+       "action": "relink",
+       "id": "52492f76-0299-4c27-81d0-d2cd5dacddba",
+       "quote": "We lend from £20,000 to £4 million, supporting organisations at different stages of growth.",
+       "note": "Live row pointed at the /invest/ front door; amounts already matched this product."
+      },
+      {
+       "fund": "Equity and Revenue Participation",
+       "url": "https://www.bigissue.com/invest/apply-for-funding/equity/",
+       "action": "stage",
+       "id": "e8c9b8eb-1d9d-4e2b-b433-580050406796",
+       "quote": "usually investing between £150,000 and £450,000 however we do offer up to £750,000",
+       "note": "Equity is limited-by-shares only; revenue participation open to any trading company."
+      },
+      {
+       "fund": "Blended Finance and Grant Support",
+       "url": "https://www.bigissue.com/invest/apply-for-funding/grants/",
+       "action": "report",
+       "quote": "Grant support is only offered alongside certain smaller loans, typically under £200,000.",
+       "note": "Not a separate product: no separate application, up to 10% grant element on a loan. Covered by the loans row; not staged."
+      },
+      {
+       "fund": "Impact Loans England",
+       "url": "https://www.bigissue.com/invest/impact-loans-england/",
+       "action": "already_correct",
+       "id": "6ad4db4c-125f-47c8-95ca-4637fa76773c",
+       "note": "Own page returns 200."
+      },
+      {
+       "fund": "Social Impact Debt Fund IV",
+       "url": "https://www.bigissue.com/invest/investments-funds-programmes/fund-iv/",
+       "action": "report",
+       "id": "30794c2c-f8c5-4126-9340-676e297e3d96",
+       "note": "Page returns 200 but it is an investor-facing fund description, not an application route; the loans row is the route. Paul's call whether it stays live."
+      }
+     ]
+    },
+    {
+     "provider": "Resonance",
+     "funding_page": "https://resonance.ltd.uk/get-investment/",
+     "funds_on_page": 4,
+     "rows_held": 6,
+     "rows_live": 5,
+     "outcomes": [
+      {
+       "fund": "Resonance Community Developers",
+       "url": "https://resonance.ltd.uk/get-investment/community-asset-funds/resonance-community-developers-fund",
+       "action": "relink",
+       "id": "5ccc0ee4-504b-4901-84e7-212e0bf975e6",
+       "quote": "Up to £2.5m",
+       "note": "Live row pointed at a news article that now 404s. amount_max set to 2,500,000 from the fund page."
+      },
+      {
+       "fund": "Resonance Enterprise Investment Fund",
+       "url": "https://resonance.ltd.uk/get-investment/enterprise-growth-funds/resonance-enterprise-investment-fund",
+       "action": "already_correct",
+       "id": "250e4dea-d08b-49e7-9a1e-cde60c135849",
+       "quote": "£25,001 - £250,000"
+      },
+      {
+       "fund": "Resonance Housing Pathways Fund",
+       "url": "https://resonance.ltd.uk/get-investment/social-enterprise-property/resonance-housing-pathways-fund",
+       "action": "stage",
+       "id": "b8596daf-d824-4371-90c4-4485f0fc07b9",
+       "quote": "A residential property fund providing affordable and settled homes for people experiencing housing crisis across England.",
+       "note": "What the applicant receives is property on lease; filed as investment, Paul may prefer in_kind. SASC holds an archived row with the same name for a different lender's fund."
+      },
+      {
+       "fund": "Energy Resilience Fund (Resonance delivery)",
+       "url": "https://resonance.ltd.uk/get-investment/enterprise-growth-funds/energy-resilience-fund",
+       "action": "report",
+       "note": "NOT staged. Same national fund as Social Investment Business's live Energy Resilience Fund row; Key Fund's copy was already rejected as a duplicate. One row per programme, not per delivery partner."
+      },
+      {
+       "fund": "(none matches)",
+       "url": "https://resonance.ltd.uk/get-investment/",
+       "action": "report",
+       "id": "957a8b0a-3983-4f66-bc52-58b66f58faf2",
+       "note": "LIVE front door. 'Resonance — Community Investment Fund' points at the Get Investment index and matches no fund Resonance lists. Paul's call; likely reject."
+      },
+      {
+       "fund": "National Homelessness Property Fund",
+       "url": "https://resonance.ltd.uk/impact-property-funds",
+       "action": "report",
+       "id": "ebe92869-c346-408b-a466-1c28861986e6",
+       "note": "Live, points at an index that returns 200. The property page names only Housing Pathways; NHPF may be one of the eight unnamed property funds. Not relinked because that would change the fund's identity."
+      }
+     ]
+    },
+    {
+     "provider": "Charity Bank",
+     "funding_page": "https://charitybank.org/loans",
+     "funds_on_page": 5,
+     "rows_held": 4,
+     "rows_live": 2,
+     "outcomes": [
+      {
+       "fund": "Loans up to £750,000",
+       "url": "https://www.charitybank.org/loans/loans-up-to-750000/",
+       "action": "relink",
+       "id": "72739682-6794-487d-95dc-fac4d4ce3f1f",
+       "quote": "We offer secured loans from £150,000",
+       "note": "Live row pointed at the loans index; amounts already matched this product."
+      },
+      {
+       "fund": "Green Loans",
+       "url": "https://www.charitybank.org/loans/green-loans/",
+       "action": "already_correct",
+       "id": "be85b0fc-7d63-4741-97ce-1ce6f37113b5"
+      },
+      {
+       "fund": "Loans over £750,000",
+       "url": "https://www.charitybank.org/loans/loans-over-750000/",
+       "action": "stage",
+       "id": "c4773be7-9b10-4760-87f8-54516d8d10c2",
+       "quote": "We offer loans up to £7.5 million, with larger amounts available through partnerships with other social lenders."
+      },
+      {
+       "fund": "Development Finance",
+       "url": "https://www.charitybank.org/loans/development-finance/",
+       "action": "stage",
+       "id": "d04fb64f-4f9e-4968-811f-c77070b3adca",
+       "quote": "Loans up to £7.5 million on a stand-alone basis and larger loans can be delivered in partnership with other social lenders."
+      },
+      {
+       "fund": "Energy Efficiency Loan Programme",
+       "url": "https://www.charitybank.org/loans/energy-efficiency-programme/",
+       "action": "stage",
+       "id": "2819c5ff-3f60-4adf-b2d8-cbda99fde7a8",
+       "quote": "Loans available from £500,000 upwards",
+       "note": "Social housing providers and charities with residential buildings only."
+      }
+     ]
+    }
+   ],
+   "batch_summary": {
+    "relinked": 3,
+    "staged": 6,
+    "reported": 6,
+    "already_correct": 3,
+    "the_point_for_paul": "Every row this batch produced is INVESTMENT, not programme. The tier-three providers walked so far are lenders. The programme-shaped providers left in tier three are Microsoft, AWS, LawWorks, Charity Digital, CAST, Pro Bono Economics, NCVO, The Law Society, Pilotlight, Reach Volunteering and TechSoup.",
+    "trap": "A single supabase-js read returns at most 1,000 rows whatever .limit() says. The first dry run read 1,000 of 2,020, reported two relink targets missing and ran the dedup over half the table. The script now pages and refuses to run if the read is short of the table count."
+   }
   }
  ],
  "tier_two_answer": {
