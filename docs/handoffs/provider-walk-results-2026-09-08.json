@@ -1015,6 +1015,54 @@
      "note": "Would qualify under the ruling (free, no equity, physical-product startups across Europe) but the page still shows the April 2026 deadline and no next cohort. Hidden row stays; revisit when a date appears."
     }
    ]
+  },
+  {
+   "batch": 7,
+   "tier": "rejected pile re-read",
+   "date": "2026-09-10",
+   "mode": "APPLIED. One row revived from rejected to tagged_awaiting_review (hidden) on Paul's 'ok go'.",
+   "scope": "43 rejected rows whose rejection_reason mentioned business, startup, founder, SME, for-profit, commercial, entrepreneur or equity.",
+   "outcomes": [
+    {
+     "fund": "Cambridge Social Ventures (incubator)",
+     "id": "9ae71432-a044-4988-8eae-1f2c3223c764",
+     "action": "revive_to_review",
+     "quote": "A tailored programme of ongoing regular business advice and coaching, introductions to networks, access to shared workspace if required and support to access debt and equity finance.",
+     "note": "Rejected as 'for individual founders'; the incubator supports the venture. Rolling, no dates."
+    },
+    {
+     "fund": "Catch22 GoodTech Ventures Accelerator",
+     "id": "fc3f9fe3-ae00-46f0-b7e1-f200163f7e80",
+     "action": "unreadable",
+     "note": "Catch22's page names no open cohort and points at goodtech.ventures, which is behind a Cloudflare human check on fetch. Needs Paul's browser. Would qualify under the ruling if a cohort is open."
+    },
+    {
+     "fund": "Innovate UK and UKRI business-led R&D competitions (9 rows)",
+     "action": "report",
+     "note": "Rejected as 'UK registered businesses must lead'. Under the ruling a social enterprise limited by shares could lead, but these are deep-tech R&D competitions (quantum, connectivity, critical minerals, energy storage, agri-tech, BBSRC proof of concept) with three-figure-thousand budgets and academic partners. Category question for Paul: do Innovate UK business R&D competitions belong in the catalogue at all? Left rejected pending that answer."
+    },
+    {
+     "fund": "UK Global Screen Fund (4 rows)",
+     "action": "report",
+     "note": "Commercial film sales agents and producers. A screen social enterprise is conceivable; left rejected, same category question."
+    },
+    {
+     "fund": "London Social and Affordable Homes Programme 2026 to 2036",
+     "id": "6f8de7ae-4ef7-4ae6-9d5b-c06e9cae8fec",
+     "action": "report",
+     "note": "Applicants include for-profit and not-for-profit registered providers and place-based organisations. A housing social enterprise could apply; it is a GLA capital programme rather than a programme in the catalogue's sense. Paul's call."
+    },
+    {
+     "fund": "UnLtd Awards for Social Entrepreneurs",
+     "action": "report",
+     "note": "Rejected twice, most recently today, as awards to individuals. The Scaling Up awards are for people already running a social venture. Under the ruling that is close to the line; Paul's call whether the Scaling Up award is carried as a row."
+    },
+    {
+     "fund": "Everything else in the pile (27 rows)",
+     "action": "stays_rejected",
+     "note": "Duplicates, dead pages, non-funders, individuals-only (SWEF, Firstport Start It, Ashoka), CDFI capital, a £2m-minimum cluster fund. Not audience questions."
+    }
+   ]
   }
  ],
  "tier_two_answer": {
