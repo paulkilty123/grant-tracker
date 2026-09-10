@@ -963,6 +963,58 @@
     "already_correct": 6,
     "the_point_for_paul": "Eleven programme-shaped providers produced ONE programme (CAST Design Hops, waiting list only). Most of what these providers offer is in-kind services already held as single rows, or support-shaped under the 8 Sept ruling. The walk's real yield here is hygiene: Reach Volunteering is closing and has a live row; four live rows are front doors or directories; the Weston Charity Awards date has nothing behind it."
    }
+  },
+  {
+   "batch": 6,
+   "tier": "ruling re-read",
+   "date": "2026-09-10",
+   "ruling": "Paul, 10 Sept: include social enterprises as a focus for programmes; some companies limited by shares are social enterprises. A programme open to any UK business counts when a trading social enterprise could join on the page's own terms. Memory: feedback_programmes_include_social_enterprises_ltd_by_shares.",
+   "mode": "APPLIED. Script scripts/social-enterprise-programmes-stage-2026-09-10.ts. Two rows staged hidden at system trust.",
+   "outcomes": [
+    {
+     "provider": "Barclays Eagle Labs",
+     "fund": "Veteran and Military Spousal Founders Programme",
+     "id": "6d5a036d-5441-44e2-933f-a4789e1f11a5",
+     "action": "stage",
+     "type": "programme",
+     "deadline": "2027-02-09",
+     "quote": "Your business must be: A new business in any sector At idea stage with products or services At market and looking to scale.",
+     "note": "Two entry pages (veteran, spousal) with identical eligibility and dates; one row, veteran page as apply_url, spousal page in the brief."
+    },
+    {
+     "provider": "Zinc",
+     "fund": "Pre-Seed Investment and Venture Building",
+     "id": "f24244ae-df68-4682-8944-9f48fbac4d93",
+     "action": "stage",
+     "type": "investment",
+     "quote": "initial Zinc investment of up to £250k",
+     "note": "Equity; limited-by-shares only. Previously ruled out with a charity lens in batch 4."
+    },
+    {
+     "provider": "Barclays Eagle Labs",
+     "fund": "Funding Readiness Programme",
+     "action": "report",
+     "note": "Closed 1 Sept 2026, tech and innovation businesses at least 12 months old, no next date. Would qualify under the ruling when it reopens; nothing to act on now."
+    },
+    {
+     "provider": "Barclays Eagle Labs",
+     "fund": "Future programmes: Sales Growth, Carbon13 Venture Builder, Female Founder Accelerator, Scaleup, Insight to Impact",
+     "action": "report",
+     "note": "Listed without dates under Future programmes. Qualify under the ruling; stage when a date appears. Black Founder Accelerator is already held between rounds."
+    },
+    {
+     "provider": "Capital Enterprise",
+     "action": "report",
+     "note": "Still out: its programmes are delivered through Eagle Labs and a cancer tech accelerator; no direct application route."
+    },
+    {
+     "provider": "Amazon",
+     "fund": "Sustainability Accelerator",
+     "id": "dc33bc71-60d1-4b7a-a88f-67fa9490852d",
+     "action": "report",
+     "note": "Would qualify under the ruling (free, no equity, physical-product startups across Europe) but the page still shows the April 2026 deadline and no next cohort. Hidden row stays; revisit when a date appears."
+    }
+   ]
   }
  ],
  "tier_two_answer": {
