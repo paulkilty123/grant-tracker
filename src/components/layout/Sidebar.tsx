@@ -140,6 +140,7 @@ const ADMIN_NAV = [
   { href: '/dashboard/admin/cohort-match-audit', label: 'Cohort Matches', Icon: User          },
   { href: '/dashboard/admin/users',        label: 'Users',               Icon: Users         },
   { href: '/dashboard/admin/waitlist',     label: 'Waitlist',            Icon: Mail          },
+  { href: '/dashboard/admin/usage',        label: 'Usage',               Icon: BarChart3     },
 ]
 
 export default function Sidebar({ org, userEmail, companionSurface = false, applyAccess = false }: Props) {
