@@ -138,3 +138,21 @@ right page.
   brief for Paul researching by hand, and the reopening scope
 - Results: `programmes-cities-results-`, `provider-walk-results-`,
   `cf-yorkshire-results-`, all dated 2026-09-08
+
+---
+
+## Correction, 2026-09-10: the sweep was never too narrow
+
+Part two says `check-coming-soon` reads only rows marked `between_rounds_scheduled`.
+It does not; its first pass reads every row with a parsed reopening date,
+hidden or live. The rows were still reaching nobody for a different reason:
+nearly every reopening date is written by a human (`user_verified:` at trust
+70), the cron writes at `system:` (50), so the ladder refused to clear the
+badge, and the cron treated that refusal as a reason to skip the row
+entirely. Twenty-eight rows were listed as "skipped (admin-pinned)" every
+morning, The Elephant Trust and Kirklees Round 11 among them.
+
+Fixed on `fix/reopening-sweep-pinned-rows`: the badge stays, and a hidden row
+is still routed to `tagged_awaiting_review`. Rejected and archived rows are now
+excluded up front. Live rows are left alone. See
+`src/lib/reopening-resurface.ts` and the note at the write site.

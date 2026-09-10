@@ -34,6 +34,7 @@ import { getAdminDb } from '@/lib/admin/admin-db'
 import { mergeGrantUpdate } from '@/lib/grant-merge'
 import { recordRun } from '@/lib/admin/cron-runs'
 import { detectReopening } from '@/lib/verification/reopening'
+import { resurfaceDecision } from '@/lib/reopening-resurface'
 
 export const dynamic = 'force-dynamic'
 
@@ -59,9 +60,13 @@ export async function GET(req: NextRequest) {
     // Find grants whose "opens" date has arrived or passed
     const { data: dueGrants, error: fetchErr } = await db
       .from('scraped_grants')
-      .select('id, title, funder, next_open_date')
+      .select('id, title, funder, next_open_date, is_active, pipeline_state')
       .not('next_open_date', 'is', null)
       .not('next_open_date_parsed', 'is', null)
+      // A date must never drag a rejected or archived fund back into review.
+      // Before 2026-09-10 nothing excluded them; the Ford of Britain small
+      // grants row sat rejected with a September date and was listed daily.
+      .not('pipeline_state', 'in', '("rejected","archived")')
       // A month's lead: the row surfaces for a look before the fund opens, so
       // it is live when the round starts, not a week into it. Paul, 2026-09-07.
       .lte('next_open_date_parsed', leadCutoff(today))
@@ -88,6 +93,7 @@ export async function GET(req: NextRequest) {
     // internally inconsistent (badge text present, parsed date gone).
     const processed: string[] = []
     const skippedPinned: string[] = []
+    const resurfaced: string[] = []
     const failed: { id: string; error: string }[] = []
 
     for (const g of dueList) {
@@ -101,8 +107,28 @@ export async function GET(req: NextRequest) {
         })
 
         if (probe.rejected.some(r => r.field === 'next_open_date')) {
-          // Admin pinned the badge. Respect it, and don't desync the pair.
-          skippedPinned.push(label)
+          // A human wrote the badge (user_verified at 70 or admin at 100
+          // outranks this cron at 50). Respect it, and don't desync the pair.
+          //
+          // BUT A REFUSED BADGE CLEAR IS NOT A REASON TO IGNORE THE ROW. Until
+          // 2026-09-10 this branch was a bare `continue`, and because nearly
+          // every reopening date is written by a human, it swallowed 28 of the
+          // 28 rows due that morning. The Elephant Trust, hidden since April
+          // and reopening on 18 September, was listed as "skipped" every day
+          // and reached nobody. The badge stays; a hidden row still goes to
+          // review. See src/lib/reopening-resurface.ts.
+          const decision = resurfaceDecision(g)
+          if (decision === 'route') {
+            await mergeGrantUpdate({
+              id:     g.id,
+              fields: { pipeline_state: 'tagged_awaiting_review' },
+              source: PROVENANCE_SOURCE,
+              db,
+            })
+            resurfaced.push(label)
+          } else {
+            skippedPinned.push(`${label} [${decision}]`)
+          }
           continue
         }
 
@@ -202,6 +228,7 @@ export async function GET(req: NextRequest) {
 
     console.log(
       `[check-coming-soon] ${today} — moved ${processed.length} to review, ` +
+      `${resurfaced.length} resurfaced with a human-written badge, ` +
       `${reopened.length} reopened by evidence, ` +
       `skipped ${skippedPinned.length} (admin-pinned), failed ${failed.length}`
     )
@@ -209,10 +236,12 @@ export async function GET(req: NextRequest) {
     return {
       ok: failed.length === 0,
       processed: processed.length,
+      resurfaced: resurfaced.length,
       reopened: reopened.length,
       skippedPinned: skippedPinned.length,
       failed: failed.length,
       grants: processed,
+      resurfacedGrants: resurfaced,
       reopenedGrants: reopened,
       skippedGrants: skippedPinned,
       failures: failed,
