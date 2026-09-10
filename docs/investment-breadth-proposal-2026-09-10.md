@@ -269,3 +269,47 @@ equity, quasi-equity, convertible and revenue share? My recommendation is
 the grouping.
 
 Then a go for each publish batch, per the freeze.
+
+---
+
+## Rulings and additions, later on 2026-09-10
+
+**Paul's rulings on step one.** Two rows went live: Big Issue Invest equity
+and revenue participation, and Key Fund Regional Growth Fund. The three
+Charity Bank products were held: loans from £500,000 to £7.5 million are
+big loans for larger organisations and not fit for purpose. Apply that
+judgement to every lender whose floor is six figures. The paying heartland
+is £100,000 to £1 million of income, and a loan the size of the
+organisation's turnover is not something they will take up. "Impact
+investment" is a display grouping over equity, quasi-equity, convertible
+and revenue share, not a tag.
+
+**A seam the plan under-weighted: trusts and foundations with a social
+investment arm.** Paul named Friends Provident Foundation and Esmée
+Fairbairn. These are the better fit for the audience: smaller tickets,
+mission-led, patient, often blended with a grant, and open to charities
+rather than trading companies. Checked against the catalogue:
+
+| Foundation | Held as investment? |
+|---|---|
+| Esmée Fairbairn | yes, live |
+| Joseph Rowntree | yes, live |
+| Trust for London | yes, live |
+| City Bridge | yes, live |
+| Postcode Innovation Trust | yes, live |
+| Friends Provident Foundation | **no row at all** |
+| Barrow Cadbury | no investment row |
+| Lankelly Chase | no investment row |
+| Tudor Trust | no investment row |
+| Comic Relief | no investment row |
+| Paul Hamlyn | no investment row |
+| Lloyds Bank Foundation | Invest is a grant programme, archived |
+
+So this is step 4a, ahead of the lender directories: walk the foundations
+that state a social investment programme on their own site. The list to
+read, each on its own page: Friends Provident, Barrow Cadbury, Lankelly
+Chase, Tudor, Comic Relief, Paul Hamlyn, plus the Association of
+Charitable Foundations' social investment members as the directory. Some
+will have closed the programme or moved to investing through
+intermediaries; the page decides. Expect five to eight rows, all in the
+size range that fits.
