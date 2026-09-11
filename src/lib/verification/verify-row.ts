@@ -9,6 +9,7 @@ import { asStructures, asExclusions, compareStructures, newExclusions, namesJuri
 // it was already part of this module's surface.
 import { PAGE_CAP, excerpt } from '../page-excerpt'
 import { htmlToText } from '../page-text'
+import { pageHash, unchangedDecision, type UnchangedInput } from './page-hash'
 import { classifyPage, type UnreadableReason } from './page-readable'
 export { excerpt } from '../page-excerpt'
 
@@ -169,6 +170,12 @@ export type VerifyResult = {
   notes:     string[]
   /** Set on round_closed: the passed date the page states, and its quote. */
   closedRound?: { deadline: string; quote: string }
+  /** Fingerprint of the page text this read fetched. Stored on the page-read
+   *  stamp so the next read can tell whether anything moved. */
+  pageHash?: string
+  /** True when the page matched its last hash and the model was not called.
+   *  The row's previous evidence still stands; nothing new was learned. */
+  unchanged?: boolean
   /** Set when the answer came from a page one level down from apply_url. */
   followedUrl?: string
   /** Every page this run actually read, apply_url first. One URL per row was
@@ -495,18 +502,19 @@ function stripHtml(html: string): string {
 
 export type Fetched =
   /** `source` is the raw page, kept so a later hop can re-score its links for a
-   *  different question. `links` is the funding-biased default. */
-  | { text: string; via: 'direct' | 'proxy'; links: string[]; source: string; url: string }
+   *  different question. `links` is the funding-biased default. `hash` is the
+   *  fingerprint of the WHOLE page text, before the excerpt cap, so a change
+   *  below the cap still registers. */
+  | { text: string; via: 'direct' | 'proxy'; links: string[]; source: string; url: string; hash: string }
   | { error: string }
 
 export async function fetchPage(url: string, forceProxy = false): Promise<Fetched> {
   const shape = (raw: string, via: 'direct' | 'proxy'): Fetched => {
     const isMarkdown = via === 'proxy'
     const links = candidateLinks(raw, url, isMarkdown)
-    const text = isMarkdown
-      ? excerpt(raw.replace(/\s{2,}/g, ' ').trim())
-      : stripHtml(raw)
-    return { text, via, links, source: raw, url }
+    const full = isMarkdown ? raw.replace(/\s{2,}/g, ' ').trim() : htmlToText(raw)
+    const text = excerpt(full)
+    return { text, via, links, source: raw, url, hash: pageHash(full) }
   }
 
   if (!forceProxy) {
@@ -1024,6 +1032,9 @@ export async function verifyRow(
    *  — this module stays stateless. */
   opts: {
     hopOn?: HopScope
+    /** What the row's last read recorded, so an unchanged page can skip the
+     *  model. Omit to always read, which is what scripts want. */
+    unchanged?: Omit<UnchangedInput, 'currentHash'>
     hostGuard?: {
       /** Non-null means skip: the host is inside its backoff window. */
       skip: (url: string) => { reason: string; hoursLeft: number } | null
@@ -1123,10 +1134,28 @@ export async function verifyRow(
 
     if (followedFrom.length === 0) followedFrom = fetched.links
     lastFetched = { source: fetched.source, url: fetched.url, isMarkdown: fetched.via === 'proxy', links: fetched.links }
+
+    // AN UNCHANGED PAGE COSTS A FETCH, NOT A READ.
+    //
+    // 355 of 389 reads in the week to 11 Sept found nothing new. If the whole
+    // page text hashes to what the last passed read stored, and the row is not
+    // flagged or at a dated checkpoint, the previous evidence still stands and
+    // the model is not called. Only on the direct attempt: a proxy re-read is
+    // asked for because the direct one failed its gate, so its hash is new.
+    if (!forceProxy && opts.unchanged) {
+      const decision = unchangedDecision({ ...opts.unchanged, currentHash: fetched.hash })
+      if (decision.skip) {
+        return { ...base, usage, outcome: 'verified', gate: { pass: true, fund_on_page: null },
+                 pageHash: fetched.hash, unchanged: true,
+                 notes: [`unchanged: ${decision.reason}; model not called`] }
+      }
+    }
+
     // The reader proxy is a transport, not a source: the fact still came from
     // the funder's own page, so that is the URL the evidence cites.
     modelCalls++
     const result = await runModel(row, read.text, anthropic, base, row.apply_url)
+    result.pageHash = fetched.hash
     usage = { input: usage.input + (result.usage?.input ?? 0), output: usage.output + (result.usage?.output ?? 0) }
     result.usage = usage
     if (fetched.via === 'proxy') result.notes = [...result.notes, 'read through the reader proxy']

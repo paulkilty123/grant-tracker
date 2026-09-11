@@ -66,7 +66,7 @@ import {
   shouldSkipHost, recordFailure, hostOf, isHostLevel, backoffHours, type HostState,
 } from '@/lib/verification/host-backoff'
 import type { UnreadableReason } from '@/lib/verification/page-readable'
-import { buildEvidencePatch, recordFieldEvidence, PAGE_READ_KEY } from '@/lib/field-evidence'
+import { buildEvidencePatch, recordFieldEvidence, PAGE_READ_KEY, type FieldEvidence } from '@/lib/field-evidence'
 import { computeCadence, previousSilentStreak } from '@/lib/verification/verify-cadence'
 import { withRowBudget } from '@/lib/verification/row-budget'
 
@@ -162,7 +162,7 @@ function adminClient(): SupabaseClient {
 // One line, not a concatenation: supabase-js parses this string at TYPE level to
 // infer the row shape, and a `+` defeats that parser — it falls back to
 // GenericStringError and every downstream cast becomes a lie.
-const SELECT_COLS = 'id, title, funder, funding_type, apply_url, deadline, deadline_cycle, next_open_date, is_rolling, amount_min, amount_max, max_org_income, min_org_income, is_invite_only, eligible_structures, location_tag, funder_brief, field_evidence, grant_sources'
+const SELECT_COLS = 'id, title, funder, funding_type, apply_url, deadline, deadline_cycle, next_open_date, is_rolling, amount_min, amount_max, max_org_income, min_org_income, is_invite_only, eligible_structures, location_tag, funder_brief, field_evidence, grant_sources, verify_flag'
 
 /**
  * What the row carries for scheduling, on top of what the extraction reads.
@@ -175,6 +175,26 @@ const SELECT_COLS = 'id, title, funder, funding_type, apply_url, deadline, deadl
 type CadenceCols = {
   next_open_date: string | null
   field_evidence: Record<string, unknown> | null
+  /** Set by an outside signal (watchlist, admin). A flagged row is always read
+   *  in full: the unchanged-page skip does not apply. */
+  verify_flag?:   string | null
+}
+
+/**
+ * What the row's last page read left behind, for the unchanged-page skip.
+ * `previousPassed` reads the stamp's note: a passed read stores the bare
+ * outcome ('verified', 'unchanged'); a failed one stores 'outcome: failure'.
+ */
+function lastRead(row: CadenceCols): { previousHash: string | null; previousShape: string | null; previousPassed: boolean; flagged: boolean } {
+  const stamp = (row.field_evidence?.[PAGE_READ_KEY] ?? null) as
+    { page_hash?: unknown; cadence_shape?: unknown; note?: unknown } | null
+  const note = typeof stamp?.note === 'string' ? stamp.note : ''
+  return {
+    previousHash:   typeof stamp?.page_hash === 'string' ? stamp.page_hash : null,
+    previousShape:  typeof stamp?.cadence_shape === 'string' ? stamp.cadence_shape : null,
+    previousPassed: note.length > 0 && !note.includes(':'),
+    flagged:        !!row.verify_flag,
+  }
 }
 
 type QueueCounts = {
@@ -348,6 +368,9 @@ export async function GET(req: NextRequest) {
      *  the extraction is the problem, not the schedule. */
     const shapes:     Record<string, number> = {}
     const tally = { confirmed: 0, contradicted: 0, silent: 0, unquoted: 0 }
+    /** Rows whose page matched its last hash: fetched, not read. The saving
+     *  this run made, reported so it can be watched. */
+    let unchanged = 0
     const proposals: unknown[]    = []
     const fixable:   unknown[]    = []
     const failures:  unknown[]    = []
@@ -385,7 +408,7 @@ export async function GET(req: NextRequest) {
     const { consumed } = await pool(rows, CONCURRENCY, overtime, async row => {
       let result: VerifyResult
       try {
-        result = await withRowBudget(row.id, ROW_BUDGET_MS, verifyRow(row, anthropic, { hostGuard }))
+        result = await withRowBudget(row.id, ROW_BUDGET_MS, verifyRow(row, anthropic, { hostGuard, unchanged: lastRead(row) }))
       } catch (e) {
         failures.push({ id: row.id, title: row.title, error: e instanceof Error ? e.message : String(e) })
         return
@@ -412,13 +435,22 @@ export async function GET(req: NextRequest) {
       // pre-run evidence would key the schedule off the previous read, which is
       // the mistake the whole change exists to remove.
       const { patch: fieldPatch, unquoted } = buildEvidencePatch(result.evidence, { by: VERIFIER })
+      if (result.unchanged) unchanged++
+      // AN UNCHANGED PAGE KEEPS ITS OLD EVIDENCE, AND THE CADENCE IT IMPLIED.
+      //
+      // The model was not called, so this run produced no stamps. Deriving the
+      // cadence from an empty patch would call every unchanged page "silent"
+      // and walk it up the backoff ladder for having said nothing, when it
+      // said exactly what it said last time. The page is byte-identical, so
+      // the previous stamps are still what the page says: the cadence is
+      // computed against them.
       const cadence = computeCadence({
         deadline:       typeof row.deadline === 'string' ? row.deadline : null,
         next_open_date: typeof row.next_open_date === 'string' ? row.next_open_date : null,
         deadline_cycle: Array.isArray(row.deadline_cycle)
           ? (row.deadline_cycle as { day: number; month: number; label?: string }[])
           : null,
-        evidence: fieldPatch,
+        evidence: result.unchanged ? (row.field_evidence as FieldEvidence | null) : fieldPatch,
       }, {
         checkedAt,
         previousStreak: previousSilentStreak(row.field_evidence),
@@ -429,9 +461,11 @@ export async function GET(req: NextRequest) {
         {
           field: PAGE_READ_KEY, agrees: null, quote: null,
           source_url: result.followedUrl ?? row.apply_url,
-          note: result.gate.pass ? result.outcome : `${result.outcome}: ${gate.failure ?? 'gate failed'}`,
+          note: result.unchanged ? 'unchanged' : result.gate.pass ? result.outcome : `${result.outcome}: ${gate.failure ?? 'gate failed'}`,
           silent_streak: cadence.silentStreak,
           hops: result.notes,
+          ...(result.pageHash ? { page_hash: result.pageHash } : {}),
+          cadence_shape: cadence.shape,
         },
       ], { by: VERIFIER, checkedAt })
       tally.unquoted += unquoted.length
@@ -512,6 +546,7 @@ export async function GET(req: NextRequest) {
       armed,
       ranWork: true,
       checked: consumed,
+      unchanged,
       requested: rows.length,
       stoppedEarly,
       remaining: Math.max(0, rows.length - consumed),
