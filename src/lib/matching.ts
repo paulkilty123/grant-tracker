@@ -777,6 +777,25 @@ export function normalizeStructureTokens(s: string): string[] {
  */
 const INDIVIDUAL_ONLY_SCORE_CAP = 5
 
+/** Ceiling for an in-kind offer with no restriction the matcher can score. One
+ *  below MATCH_TIER_GOOD, so it reads Partial and sits under every scored grant. */
+export const UNRESTRICTED_IN_KIND_SCORE_CAP = 60
+
+/**
+ * True when nothing on the row narrows who may take it up: not local, no
+ * income band, and either no structure list or one wide enough to admit every
+ * common form. Beneficiary and sector tags are deliberately NOT consulted:
+ * on in-kind rows they describe who the offer is about, not who is barred,
+ * and the first cut of this guard let StreetGames membership and Buddle
+ * through at 90 on a young_people tag.
+ */
+export function isUnrestrictedOffer(grant: GrantOpportunity): boolean {
+  if (grant.isLocal) return false
+  if (grant.minOrgIncome != null || grant.maxOrgIncome != null) return false
+  const structures = grant.eligibleStructures ?? []
+  return structures.length === 0 || structures.length >= 5
+}
+
 /**
  * Is the applicant a person rather than an organisation?
  *
@@ -2034,6 +2053,21 @@ export function computeMatchScore(
   // highly for a theatre, even if both work with young people.
   if (primaryDomainMismatch) {
     score = Math.min(score, 44)
+  }
+
+  // ── Unrestricted in-kind offers ────────────────────────────────────────────
+  // An in-kind row open to any organisation anywhere, with no structure, income
+  // or beneficiary restriction, gives the matcher nothing to mark it down on,
+  // so it scores near the top for every organisation and outranks real grants.
+  // On 2026-09-11 NCVO's paid training courses scored 91 and 84 for two fresh
+  // signups and sat first and second in both lists, above Sported and the
+  // Football Foundation for a cricket charity. Paul: show them, but never above
+  // a scored grant. The cap sits just under the Good band, so an unrestricted
+  // offer can be Partial at best. A targeted in-kind offer (a place, a
+  // beneficiary group, an income band) is left alone: FareShare for food
+  // charities is a real match and should score like one.
+  if (grant.fundingType === 'in_kind' && isUnrestrictedOffer(grant)) {
+    score = Math.min(score, UNRESTRICTED_IN_KIND_SCORE_CAP)
   }
 
   // Build a narrative sentence rather than a flat bullet list
