@@ -196,11 +196,22 @@ export async function GET(req: NextRequest) {
     // A REVIEW, NEVER A PUBLICATION. `is_active` is untouched, exactly as in the
     // pass above: the row joins the queue and a human — or auto-publish, on a
     // clean gate — decides what users see.
+    // WIDENED 2026-09-11 TO HIDDEN ROWS STILL MARKED PUBLISHED.
+    //
+    // A row that expired while live stays `published` with is_active=false
+    // (expire-grants hides, it does not re-file), and the nightly read keeps
+    // re-reading it and banking what the page says. This pass only looked at
+    // `between_rounds_scheduled`, so 141 such rows were read every month and
+    // never acted on. On the day this was widened, eight of them carried a
+    // future closing date on the funder's own page: Theatres Trust to 31 Jan
+    // 2027, Hugh Fraser to 30 Oct 2026, Nature Networks to 3 Nov 2026. Still a
+    // review, never a publication: is_active is untouched.
     const reopened: string[] = []
     const { data: hidden, error: hiddenErr } = await db
       .from('scraped_grants')
-      .select('id, title, funder, deadline, field_evidence')
-      .eq('pipeline_state', 'between_rounds_scheduled')
+      .select('id, title, funder, deadline, field_evidence, pipeline_state')
+      .eq('is_active', false)
+      .in('pipeline_state', ['between_rounds_scheduled', 'published'])
       .limit(1000)
 
     if (hiddenErr) {
