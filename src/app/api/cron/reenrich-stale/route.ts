@@ -38,6 +38,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getAdminDb } from '@/lib/admin/admin-db'
 import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
 import { recordRun, usageFromAdminJson } from '@/lib/admin/cron-runs'
+import { reenrichUnchanged, currentPageHash, BRIEF_HASH_KEY } from '@/lib/verification/reenrich-unchanged'
 import { gateDecision } from '@/lib/admin/publish-gate'
 import type { ReviewRow } from '@/lib/admin/review-reasons'
 
@@ -169,6 +170,8 @@ type Candidate = {
   funder: string
   url_status: string | null
   field_provenance: Record<string, { source?: string; set_at?: string; pinned?: boolean }> | null
+  funder_brief: Record<string, unknown> | null
+  field_evidence: Record<string, unknown> | null
 }
 
 export async function GET(req: NextRequest) {
@@ -234,7 +237,7 @@ export async function GET(req: NextRequest) {
     const overFetch = effectiveLimit * 3
     const { data: rows, error: fetchErr } = await db
       .from('scraped_grants')
-      .select('id, title, funder, url_status, funder_brief, field_provenance')
+      .select('id, title, funder, url_status, funder_brief, field_provenance, field_evidence')
       .eq('is_active', true)
       .eq('pipeline_state', 'published')
       .is('needs_intervention_reason', null)
@@ -269,6 +272,10 @@ export async function GET(req: NextRequest) {
     const guardCutoff = Date.now() - ADMIN_TOUCH_GUARD_DAYS * 24 * 60 * 60 * 1000
     const eligible: Candidate[] = []
     const skipped: Array<{ id: string; title: string }> = []
+    /** Briefs whose page is byte-identical to the one they were written from.
+     *  Rewriting them would produce the same words for the same money, so they
+     *  are stamped as attempted (14-day backoff) and left alone. Paul, 11 Sept. */
+    const skippedUnchanged: Array<{ id: string; title: string }> = []
 
     for (const row of rows as Candidate[]) {
       const prov = row.field_provenance ?? {}
@@ -282,6 +289,14 @@ export async function GET(req: NextRequest) {
         skipped.push({ id: row.id, title: row.title })
         continue
       }
+      const unchanged = reenrichUnchanged(row.funder_brief, row.field_evidence)
+      if (unchanged.skip) {
+        skippedUnchanged.push({ id: row.id, title: row.title })
+        await db.from('scraped_grants')
+          .update({ last_reenrich_attempt: new Date().toISOString() })
+          .eq('id', row.id)
+        continue
+      }
       eligible.push(row)
       if (eligible.length >= effectiveLimit) break
     }
@@ -292,6 +307,7 @@ export async function GET(req: NextRequest) {
         candidates: rows.length,
         processed:  0,
         skipped_admin_touch: skipped.length,
+        skipped_unchanged:   skippedUnchanged.length,
       }
     }
 
@@ -406,6 +422,22 @@ export async function GET(req: NextRequest) {
       }
       result.swept = true
 
+      // Stamp the page fingerprint the brief was written against, so the next
+      // 90-day pass can tell an unchanged page from a changed one. A direct
+      // jsonb edit on purpose: this is bookkeeping about the brief, not a
+      // change to it, and routing it through the merger would restamp the
+      // brief's provenance for a key no reader of the brief ever sees.
+      const pageHashNow = currentPageHash(row.field_evidence)
+      if (pageHashNow) {
+        const { data: fresh } = await db.from('scraped_grants').select('funder_brief').eq('id', row.id).single()
+        const brief = (fresh?.funder_brief ?? null) as Record<string, unknown> | null
+        if (brief) {
+          await db.from('scraped_grants')
+            .update({ funder_brief: { ...brief, [BRIEF_HASH_KEY]: pageHashNow } })
+            .eq('id', row.id)
+        }
+      }
+
       // Step 4: capture post-state and compute diff
       const { data: postRow, error: postErr } = await db
         .from('scraped_grants')
@@ -512,6 +544,7 @@ export async function GET(req: NextRequest) {
       materially_changed:  materiallyChanged,
       flagged_for_review:  flaggedForReview,
       skipped_admin_touch: skipped.length,
+      skipped_unchanged:   skippedUnchanged.length,
       results,
     }
   })
