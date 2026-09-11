@@ -181,6 +181,9 @@ export type ReviewRow = {
   url_quality_score?:        number | null
   amount_min?:               number | null
   amount_max?:               number | null
+  /** The funder states no fixed figure. An affirmative, admin-only flag; when
+   *  true, a missing amount is the truth of the page, not a gap. */
+  amount_undisclosed?:       boolean | null
   deadline?:                 string | null
   is_rolling?:               boolean | null
   next_open_date?:           string | null
@@ -928,7 +931,11 @@ export function deriveReviewReasons(row: ReviewRow, todayISO?: string): ReviewRe
       label: 'Amount reads £0 to £0',
       detail: 'no usable figure was found on the page',
     })
-  } else if (max === null || max === undefined) {
+  } else if ((max === null || max === undefined) && row.amount_undisclosed !== true) {
+    // A row an admin has marked `amount_undisclosed` is stating a fact about
+    // the funder, not missing one. Before 2026-09-11 the flag was invisible
+    // here, so seven rows whose pages state no figure sat in Needs reading
+    // with nothing a read could add.
     reasons.push({
       code: 'no_amount', severity: 'check',
       label: 'No amount',
@@ -1136,7 +1143,16 @@ export function deriveReviewReasons(row: ReviewRow, todayISO?: string): ReviewRe
       detail: 'nothing records what this fund is for',
     })
   }
-  if (row.target_beneficiaries?.length === 1 && row.target_beneficiaries[0] === 'general_public') {
+  // "General public" alone is suspicious when it is a default nobody
+  // checked. It is the honest answer for a community fund open to everyone.
+  // The difference is whether anyone determined it: a brief that states who
+  // can apply, on a page the engine has read and passed, is a determination.
+  // Before 2026-09-11 nineteen such rows sat in Needs reading with nothing a
+  // read could add.
+  const whoStated = typeof brief?.who_can_apply === 'string' && brief.who_can_apply.trim().length > 0
+  const readNote  = (row.field_evidence as { _page_read?: { note?: unknown } } | null | undefined)?._page_read?.note
+  const readPassed = typeof readNote === 'string' && readNote.length > 0 && !readNote.includes(':')
+  if (row.target_beneficiaries?.length === 1 && row.target_beneficiaries[0] === 'general_public' && !(whoStated && readPassed)) {
     reasons.push({
       code: 'beneficiaries_generic_only', severity: 'check',
       label: 'Beneficiaries unspecific',

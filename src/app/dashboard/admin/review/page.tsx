@@ -40,7 +40,7 @@ const COLS = [
   // land on the same record a user would see.
   'id', 'external_id', 'title', 'funder', 'apply_url', 'funding_index_url', 'is_active', 'pipeline_state', 'is_invite_only',
   'url_status', 'url_quality_score',
-  'amount_min', 'amount_max', 'deadline', 'is_rolling', 'next_open_date', 'deadline_cycle',
+  'amount_min', 'amount_max', 'amount_undisclosed', 'deadline', 'is_rolling', 'next_open_date', 'deadline_cycle',
   'eligible_structures', 'impact_sectors', 'target_beneficiaries', 'niche_tags', 'funding_type',
   // What a USER sees at a glance. The queue showed none of it on the card, so
   // judging a row meant opening it or trusting the reason chips.

@@ -71,7 +71,7 @@ const QUEUE_STATES = ['captured', 'enriched', 'tagged', 'tagged_awaiting_review'
 const COLS = [
   'id', 'title', 'funder', 'is_active', 'pipeline_state', 'url_status', 'url_quality_score',
   'amount_min', 'amount_max', 'deadline', 'is_rolling', 'next_open_date', 'deadline_cycle',
-  'eligible_structures', 'impact_sectors', 'target_beneficiaries',
+  'eligible_structures', 'impact_sectors', 'target_beneficiaries', 'amount_undisclosed',
   'funder_brief', 'field_provenance', 'raw_data', 'needs_intervention_reason',
   // Required by deriveReviewReasons for the page-verdict reasons. Without it
   // readStamp returns null, no reason is raised, and the gate silently stops

@@ -88,7 +88,7 @@ const DIFF_FIELDS = [
 const REVIEW_COLS = [
   'id', 'title', 'funder', 'is_active', 'pipeline_state', 'url_status', 'url_quality_score',
   'amount_min', 'amount_max', 'deadline', 'is_rolling', 'next_open_date', 'deadline_cycle',
-  'eligible_structures', 'impact_sectors', 'target_beneficiaries',
+  'eligible_structures', 'impact_sectors', 'target_beneficiaries', 'amount_undisclosed',
   'funder_brief', 'field_provenance', 'raw_data', 'needs_intervention_reason',
   'field_evidence', 'funding_type', 'apply_url', 'funding_index_url', 'is_invite_only',
 ].join(', ')
