@@ -2132,7 +2132,11 @@ function Row({
         }}>
           <span><b style={{ ...display, fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--color-text-tertiary)' }}>Amount </b>
             {item.values.amountMin || item.values.amountMax
-              ? `${gbp(item.values.amountMin)} to ${gbp(item.values.amountMax)}`
+              ? (item.values.amountMin !== null && item.values.amountMin === item.values.amountMax
+                  ? gbp(item.values.amountMin)            // a fixed award, not a range: "£185,000", never "£185,000 to £185,000"
+                  : item.values.amountMin === null ? `Up to ${gbp(item.values.amountMax)}`
+                  : item.values.amountMax === null ? `From ${gbp(item.values.amountMin)}`
+                  : `${gbp(item.values.amountMin)} to ${gbp(item.values.amountMax)}`)
               : <em style={{ color: 'var(--amber-deep)' }}>not recorded</em>}</span>
           <span><b style={{ ...display, fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--color-text-tertiary)' }}>Deadline </b>
             {item.values.deadline ?? (item.values.isRolling ? 'Rolling'
