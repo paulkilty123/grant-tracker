@@ -324,6 +324,8 @@ export interface PipelineItem {
   grant_url: string | null
   outcome_date: string | null
   outcome_notes: string | null
+  outcome_reason?: string | null
+  amount_awarded?: number | null
   created_by: string
 }
 
