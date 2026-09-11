@@ -1,0 +1,156 @@
+{
+ "brief": "docs/handoffs/northern-ireland-2026-09-11.md",
+ "run": "2026-09-11, orchestrating session, on Paul's 'start now'",
+ "mode": "APPLIED. scripts/northern-ireland-stage-2026-09-11.ts. 9 rows staged hidden at system:northern-ireland-2026-09-11. No existing row's state changed. No API spend.",
+ "live_ni_before": 12,
+ "live_ni_after": 12,
+ "note_on_live": "Staged rows are hidden; the live count moves when Paul activates them.",
+ "staged": [
+  {
+   "tier": 1,
+   "title": "Halifax Foundation for Northern Ireland Community FLEX",
+   "id": "86c43e8c-bf8f-4e86-81de-0c93f6112128",
+   "state": "tagged_awaiting_review",
+   "note": "rolling; average £5,500; charities income up to £500k"
+  },
+  {
+   "tier": 1,
+   "title": "Belfast Harbour Community Awards",
+   "id": "6bb843bf-0429-4f9b-8839-fbff756fa6d3",
+   "state": "tagged_awaiting_review",
+   "note": "up to £5k; closes 25 Sept 2026"
+  },
+  {
+   "tier": 2,
+   "title": "Belfast City Council Ending Violence Against Women and Girls Local Change Fund",
+   "id": "a0a43c9e-02ef-471f-9276-e107b50f81df",
+   "state": "tagged_awaiting_review",
+   "note": "£1k to £25k; closes 9 Oct 2026"
+  },
+  {
+   "tier": 2,
+   "title": "Causeway Coast and Glens Christmas Festive Fund 2026",
+   "id": "06d1e547-f455-45e7-bb48-d5f399701f75",
+   "state": "tagged_awaiting_review",
+   "note": "up to £2,500 (amount from the index page); closes 2 Oct 2026"
+  },
+  {
+   "tier": 2,
+   "title": "Causeway Coast and Glens LEP Capital Grant Programme 2026-27",
+   "id": "752dbfdd-4f62-469a-9536-647f6564b60b",
+   "state": "tagged_awaiting_review",
+   "note": "£5k to £30k for trading businesses and social enterprises; closes 5 Oct 2026; staged under the 10 Sept ruling"
+  },
+  {
+   "tier": 1,
+   "title": "The Fibrus Community Fund",
+   "id": "1f9dc594-11c2-4153-840f-1407a277086d",
+   "state": "tagged_awaiting_review",
+   "note": "CFNI; up to £1,500; income under £50k; closes 16 Oct 2026"
+  },
+  {
+   "tier": 1,
+   "title": "Ireland Funds Heart of the Community Fund, Arts and Culture Round",
+   "id": "e5f3b5e8-2b51-4d97-b17d-00ceb860ea74",
+   "state": "tagged_awaiting_review",
+   "note": "opens 14 Sept 2026; closing date not yet published; amounts from the spring round"
+  },
+  {
+   "tier": 1,
+   "title": "The Honourable The Irish Society Small Grants",
+   "id": "f76d112d-f966-440b-a51b-f0db87b35477",
+   "state": "tagged_awaiting_review",
+   "note": "rolling to committee; mostly up to £2,000; NW and North Coast"
+  },
+  {
+   "tier": 1,
+   "title": "Ulster Garden Villages Grants",
+   "id": "a78e6a77-5057-4f24-89ed-cf21b7cbc343",
+   "state": "between_rounds_scheduled",
+   "note": "EoI window 2 to 30 Nov 2026; amount range from a third-party note, confirm before publishing"
+  }
+ ],
+ "not_staged": [
+  {
+   "lead": "Halifax Foundation NI Thrive",
+   "why": "closed_no_date: 'now closed for applications'"
+  },
+  {
+   "lead": "Ireland Funds Heart of the Community spring round",
+   "why": "closed 20 March 2026; the autumn round is staged"
+  },
+  {
+   "lead": "CFNI Randal Foundation Small Grant",
+   "why": "already_held, live; closes 17 Sept"
+  },
+  {
+   "lead": "CFNI Corlacky Community Benefit Fund",
+   "why": "already_held ('tagged'); closes 8 Oct 2026, worth Paul's look"
+  },
+  {
+   "lead": "CFNI SWEF Enterprise Fund (both)",
+   "why": "already rejected: individuals aged 18 to 30"
+  },
+  {
+   "lead": "Belfast Charitable Society",
+   "why": "no_apply_route: grants page 404; grants made through its own projects"
+  },
+  {
+   "lead": "Bryson Charitable Group",
+   "why": "not a grant-maker; delivers services"
+  },
+  {
+   "lead": "Coca-Cola HBC Thank You Fund 2026",
+   "why": "closed 26 June 2026"
+  },
+  {
+   "lead": "Belfast City Council Community Support Plan",
+   "why": "already_held, between rounds"
+  },
+  {
+   "lead": "Belfast City Council Vacant to Vibrant",
+   "why": "out_of_scope: property owners"
+  },
+  {
+   "lead": "Derry City and Strabane",
+   "why": "closed_no_date: Good Relations closed April, Live Here Love Here closed June; portal only"
+  },
+  {
+   "lead": "Lisburn and Castlereagh",
+   "why": "closed_no_date: all 2026 funds closed June; Community Support Grant closed Nov 2025"
+  },
+  {
+   "lead": "Ards and North Down",
+   "why": "closed_no_date: Community Development Grants closed 6 July; Festivals closed"
+  },
+  {
+   "lead": "Antrim and Newtownabbey",
+   "why": "closed_no_date: Community Festival Grant closed 14 Aug; capital grants closed May"
+  },
+  {
+   "lead": "Mid and East Antrim",
+   "why": "unreadable: grants page redirects to a login portal"
+  },
+  {
+   "lead": "Fermanagh and Omagh Seeding Grant Aid",
+   "why": "front_door_only: rolling, applicant types stated, no purpose or amount on the page"
+  },
+  {
+   "lead": "Mid Ulster Community Investment Programme",
+   "why": "closed_no_date: three-year cycle closed 27 Feb 2026; the rolling categories are for individuals and sports teams"
+  },
+  {
+   "lead": "Newry Mourne and Down",
+   "why": "closed_no_date: calls 1 and 2 for 2026-27 both closed"
+  },
+  {
+   "lead": "Armagh City Banbridge and Craigavon Community Development Grants",
+   "why": "closed_no_date: closed 11 Sept 2026 at noon, today"
+  },
+  {
+   "lead": "Causeway Coast and Glens rolling small pots (Health and Wellbeing £1k, LiveSmart £750, PCSP £999, Volunteering £500)",
+   "why": "index only: eligibility lives behind the grants portal; four fetches not spent on £500 pots"
+  }
+ ],
+ "verdict": "9 staged against a target of 15. Trusts and foundations gave 6 of 12 leads; the eleven councils gave 3, and two of those were one council (Causeway Coast and Glens) whose page lists deadlines in the open. The other nine councils were closed rounds or portals, as Scotland predicted."
+}
