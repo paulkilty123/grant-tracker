@@ -1,0 +1,199 @@
+{
+ "brief": "docs/handoffs/scotland-2026-09-11.md",
+ "run": "2026-09-11, orchestrating session, on Paul's 'start now'",
+ "mode": "APPLIED. Two batches, scripts/scotland-stage-2026-09-11.ts and scripts/scotland-stage-batch2-2026-09-11.ts. 14 rows staged hidden at system:scotland-2026-09-11. No existing row's state changed. No API spend.",
+ "live_scotland_before": 50,
+ "live_scotland_after": 50,
+ "note_on_live": "Staged rows are hidden; the live count moves when Paul activates them.",
+ "staged": [
+  {
+   "tier": 1,
+   "title": "Bank of Scotland Foundation Energise",
+   "id": "b9e2549b-a8b7-4394-9c3d-432617daed94",
+   "state": "tagged_awaiting_review",
+   "note": "opens 28 Sept, closes 7 Oct 2026"
+  },
+  {
+   "tier": 1,
+   "title": "Bank of Scotland Foundation Empower",
+   "id": "ecbe7f2e-9869-44a6-9eb0-983c398b04b2",
+   "state": "between_rounds_scheduled",
+   "note": "next round January 2027, date TBC"
+  },
+  {
+   "tier": 1,
+   "title": "RS Macdonald Charitable Trust Small Grants",
+   "id": "dbaae444-2a26-4df8-82ac-12b134857ecd",
+   "state": "tagged_awaiting_review",
+   "note": "rolling, up to £20k; main grants closed 8 Sept, next date unpublished"
+  },
+  {
+   "tier": 1,
+   "title": "Cruden Foundation Appeals",
+   "id": "fe5f36c0-e803-48fa-9703-61fd295008f1",
+   "state": "tagged_awaiting_review",
+   "note": "deadline 6 Nov 2026"
+  },
+  {
+   "tier": 1,
+   "title": "Nancie Massey Charitable Trust",
+   "id": "97d79da0-b66b-41c0-a797-ebd2152cbbf5",
+   "state": "tagged_awaiting_review",
+   "note": "Edinburgh and Lothians; deadline 28 Nov 2026; form by email"
+  },
+  {
+   "tier": 1,
+   "title": "W A Cargill Fund",
+   "id": "b5aeb420-854f-4f97-bae5-c43a779f4fa4",
+   "state": "tagged_awaiting_review",
+   "note": "no own site; funding.scot URL; write in"
+  },
+  {
+   "tier": 1,
+   "title": "James T Howat Charitable Trust",
+   "id": "952702c1-ad48-48d9-9762-fb256b0583e2",
+   "state": "tagged_awaiting_review",
+   "note": "no own site; funding.scot URL; write in"
+  },
+  {
+   "tier": 1,
+   "title": "Gordon and Ena Baxter Foundation Grants",
+   "id": "1fab6b40-aef6-4811-a6fd-9af41b7fe891",
+   "state": "tagged_awaiting_review",
+   "note": "deadline 30 Oct 2026"
+  },
+  {
+   "tier": 2,
+   "title": "Highland Small Grants Programme",
+   "id": "ed650a87-574f-46cd-83ec-7df1f63248b1",
+   "state": "tagged_awaiting_review",
+   "note": "rolling; activity by Feb 2027"
+  },
+  {
+   "tier": 2,
+   "title": "Highland Nature Restoration Fund Community Grants",
+   "id": "5a0b7c28-4329-48d8-a971-8454675aeac7",
+   "state": "tagged_awaiting_review",
+   "note": "rolling since 14 Aug 2026"
+  },
+  {
+   "tier": 3,
+   "title": "Scotmid Community Grant",
+   "id": "2412a025-abee-4bee-86e6-1249477e355d",
+   "state": "tagged_awaiting_review",
+   "note": "up to £500, rolling"
+  },
+  {
+   "tier": 3,
+   "title": "Corra Racial Equity Fund",
+   "id": "e1018712-f0dc-4742-83f3-3e097e0294d3",
+   "state": "tagged_awaiting_review",
+   "note": "deadline 15 Oct 2026"
+  },
+  {
+   "tier": 2,
+   "title": "Communities Mental Health and Wellbeing Fund, Dumfries and Galloway, Round Six",
+   "id": "f9d07773-b915-4d73-9e6a-672974947491",
+   "state": "tagged_awaiting_review",
+   "note": "opens 14 Sept, closes 21 Oct 2026"
+  },
+  {
+   "tier": 3,
+   "title": "STV Children's Appeal Ignite Fund",
+   "id": "4c0ae288-f8d6-4f9b-9a99-a1a7597c929d",
+   "state": "between_rounds_scheduled",
+   "note": "annual outline by 15 Aug; 2026 cycle closed"
+  }
+ ],
+ "not_staged": [
+  {
+   "lead": "Hunter Foundation",
+   "why": "proactive funder, no application route"
+  },
+  {
+   "lead": "William Grant Foundation",
+   "why": "proactive funder, no application route"
+  },
+  {
+   "lead": "Cattanach",
+   "why": "now Elevate Great, an accelerator; no open fund"
+  },
+  {
+   "lead": "Northwood Charitable Trust",
+   "why": "invitation only after expression of interest"
+  },
+  {
+   "lead": "Binks Trust",
+   "why": "no route; gives through Corra's human rights fund, which is closed"
+  },
+  {
+   "lead": "Bank of Scotland Foundation Enable",
+   "why": "closed_no_date: 'CLOSED FOR 2026'"
+  },
+  {
+   "lead": "RS Macdonald main grants",
+   "why": "closed_no_date: 8 Sept 2026 deadline passed, next unpublished"
+  },
+  {
+   "lead": "Edinburgh Community Grants Fund",
+   "why": "already_held (f4b5d074, live). Its pinned deadline 2027-06-29 and 'TBC' badge are wrong: the page says final round 18 Sept to 31 Oct 2026. Paul's call, admin-pinned."
+  },
+  {
+   "lead": "Glasgow Communities Fund",
+   "why": "closed until 2029; Area Partnership budgets are councillor-allocated"
+  },
+  {
+   "lead": "Corra micro grants",
+   "why": "already_held, live"
+  },
+  {
+   "lead": "Corra Independent Human Rights Fund",
+   "why": "closed since Sept 2024; distributed by consultation"
+  },
+  {
+   "lead": "Aberdeen Culture Investment Programme",
+   "why": "closed_no_date: all four streams closed"
+  },
+  {
+   "lead": "Dundee Community Regeneration Forums",
+   "why": "contact-based ward pots, no named intake on the page"
+  },
+  {
+   "lead": "Perth and Kinross Community Investment Fund",
+   "why": "closed_no_date"
+  },
+  {
+   "lead": "Fife Communities Mental Health and Wellbeing Fund",
+   "why": "unreadable: fife.gov.uk 403 on fetch; opens Sept 2026 per search; needs Paul's browser"
+  },
+  {
+   "lead": "Orkney CLLD",
+   "why": "stale: the only page found is a 2024 round"
+  },
+  {
+   "lead": "Shetland Community Development Fund",
+   "why": "unreadable: both URLs 404"
+  },
+  {
+   "lead": "Scottish Borders CLLD 2026-27",
+   "why": "closed_no_date: rounds closed 20 May and 1 July 2026"
+  },
+  {
+   "lead": "Dumfries and Galloway CLLD",
+   "why": "closed_no_date: closed 1 June 2026"
+  },
+  {
+   "lead": "Youth Scotland funds (Grassroots, Safe Spaces, Rural Action)",
+   "why": "closed or showing last year's deadline; two are members-only"
+  },
+  {
+   "lead": "Impact Funding Partners (Volunteering Support, Social Isolation, Bairns' Hoose)",
+   "why": "all closed to new applications"
+  },
+  {
+   "lead": "Voluntary Sector Development Fund 2026-27",
+   "why": "closed 4 Sept 2026"
+  }
+ ],
+ "verdict": "14 staged against a target of 25. Tier one (the trusts) gave 8 of 14 leads; tier two (councils) gave 3 of 12, because council pages are closed rounds, contact-based pots or blocked to fetch; tier three gave 3. The council layer needs a browser, not a fetch."
+}
