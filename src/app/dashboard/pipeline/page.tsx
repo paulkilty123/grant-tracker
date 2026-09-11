@@ -1037,11 +1037,13 @@ export default function PipelinePage() {
               </div>
               {stageItems.length === 0 && (() => {
                 /* With nothing anywhere on the board there is nothing TO drag,
-                   so "Drag here" is a dead instruction on every column at once
-                   — exactly when a first-time user is reading them. It becomes
-                   "Add here" instead, and it opens the add form, because a
-                   zone that says Add and does nothing when clicked is worse
-                   than one that says nothing at all. */
+                   so "Drag here" is a dead instruction on every column at once,
+                   exactly when a first-time user is reading them. It becomes
+                   "Find a grant" and goes to Find Funding, where + Pipeline
+                   puts a catalogue grant on the board. It used to open the
+                   "fund not listed" form, which is the route for grants we do
+                   NOT have, the wrong first step for someone with an empty
+                   board. Paul, 2026-09-11. */
                 const boardEmpty = items.length === 0
                 const box: React.CSSProperties = {
                   minHeight: 152, borderRadius: 11, fontSize: 13.5, fontWeight: 500,
@@ -1049,11 +1051,11 @@ export default function PipelinePage() {
                   border: `1.5px dashed ${stage.id === 'declined' ? 'rgba(153,60,29,0.24)' : 'rgba(29,60,62,0.20)'}`,
                 }
                 return boardEmpty ? (
-                  <button type="button" onClick={() => setShowAdd(true)}
+                  <a href="/dashboard/search"
                     className="flex items-center justify-center text-center transition-colors hover:bg-[rgba(255,255,255,0.45)]"
-                    style={{ ...box, cursor: 'pointer', fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, color: '#1D3C3E' }}>
-                    + Add here
-                  </button>
+                    style={{ ...box, cursor: 'pointer', fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, color: '#1D3C3E', textDecoration: 'none' }}>
+                    + Find a grant
+                  </a>
                 ) : (
                   <div className="flex items-center justify-center text-center" style={box}>Drag here</div>
                 )
