@@ -23,6 +23,9 @@ describe('no_amount respects amount_undisclosed', () => {
   it('FIRES when the amount is missing and nobody has said the funder states none', () => {
     expect(codes({ ...base(), amount_max: null })).toContain('no_amount')
   })
+  it('stops when the page states a floor with no ceiling', () => {
+    expect(codes({ ...base(), amount_min: 10_000, amount_max: null })).not.toContain('no_amount')
+  })
   it('stops when an admin has marked the amount undisclosed', () => {
     expect(codes({ ...base(), amount_max: null, amount_undisclosed: true })).not.toContain('no_amount')
   })

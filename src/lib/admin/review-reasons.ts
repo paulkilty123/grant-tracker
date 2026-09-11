@@ -931,7 +931,9 @@ export function deriveReviewReasons(row: ReviewRow, todayISO?: string): ReviewRe
       label: 'Amount reads £0 to £0',
       detail: 'no usable figure was found on the page',
     })
-  } else if ((max === null || max === undefined) && row.amount_undisclosed !== true) {
+  } else if ((max === null || max === undefined) && (min === null || min === undefined) && row.amount_undisclosed !== true) {
+    // A floor with no ceiling ("grants from £10,000") states what an applicant
+    // can ask for; only a row with neither figure states nothing.
     // A row an admin has marked `amount_undisclosed` is stating a fact about
     // the funder, not missing one. Before 2026-09-11 the flag was invisible
     // here, so seven rows whose pages state no figure sat in Needs reading
