@@ -33,6 +33,8 @@ export const EXCLUDED_ORG_IDS = new Set([
   'f1f9c904-ef5a-4591-8c6d-e7d9a1535133', // IoI test
   '4ef429df-19d0-49b0-9c7b-ccb802b70a6d', // Common Ground Kitchen test
   'cb66226d-1ec0-47e1-945d-4ef2d7ee7896', // OpenAccess Digital test
+  '24a916c8-d6d6-4a39-9f68-770ba5d5af8c', // MCP Fixture, Apply tier
+  'f5de0ebf-0346-40dd-a0e3-bdc0c3523a6f', // MCP Fixture, Free tier
 ])
 
 export type Flag = 'engaged' | 'warming' | 'quiet' | 'never_returned' | 'dormant' | 'ended'

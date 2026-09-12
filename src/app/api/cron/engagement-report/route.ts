@@ -33,14 +33,28 @@ export async function GET(req: NextRequest) {
     const db = getAdminDb()
     const since = new Date(Date.now() - WINDOW_DAYS * 86_400_000).toISOString()
 
-    const [{ data: orgs, error: orgErr }, { data: events, error: evErr }, { data: users, error: uErr }] = await Promise.all([
+    const [{ data: orgs, error: orgErr }, { data: users, error: uErr }] = await Promise.all([
       db.from('organisations').select('id, name, created_at, granted_access_until, apply_access, profile_skipped, signup_role, owner_id'),
-      db.from('events').select('org_id, event_type, created_at').gte('created_at', since).not('org_id', 'is', null),
       db.auth.admin.listUsers({ perPage: 1000 }),
     ])
     if (orgErr) throw orgErr
-    if (evErr) throw evErr
     if (uErr) throw uErr
+
+    // PostgREST caps a select at 1000 rows and says nothing. The first dry run
+    // against production had 1101 events in the window and quietly reported
+    // launch-week signups as inactive. Page until a short page comes back.
+    const PAGE = 1000
+    const events: EventRow[] = []
+    for (let from = 0; ; from += PAGE) {
+      const { data, error } = await db.from('events')
+        .select('org_id, event_type, created_at')
+        .gte('created_at', since).not('org_id', 'is', null)
+        .order('created_at', { ascending: true })
+        .range(from, from + PAGE - 1)
+      if (error) throw error
+      events.push(...((data ?? []) as EventRow[]))
+      if (!data || data.length < PAGE) break
+    }
 
     const emailByUser = new Map((users?.users ?? []).map(u => [u.id, u.email ?? null]))
     const orgRows: OrgRow[] = (orgs ?? []).map(o => ({
@@ -49,12 +63,12 @@ export async function GET(req: NextRequest) {
       profile_skipped: o.profile_skipped, signup_role: o.signup_role,
       owner_email: emailByUser.get(o.owner_id) ?? null,
     }))
-    const rows = summariseEngagement(orgRows, (events ?? []) as EventRow[])
+    const rows = summariseEngagement(orgRows, events)
     const { subject, html } = renderEngagementHtml(rows)
     htmlOut = html
 
     const counts = rows.reduce<Record<string, number>>((acc, r) => { acc[r.flag] = (acc[r.flag] ?? 0) + 1; return acc }, {})
-    if (dry) return { mode: 'dry-run', subject, counts, rows }
+    if (dry) return { mode: 'dry-run', subject, eventsRead: events.length, counts, rows }
 
     const key = process.env.RESEND_API_KEY
     if (!key) throw new Error('RESEND_API_KEY not configured')
