@@ -33,6 +33,8 @@ const EMAIL_ROUTES = [
   // Added 2026-09-05. Fifteen people had submitted the landing waitlist form
   // and heard nothing, because this route wrote a row and returned.
   'src/app/api/waitlist/route.ts',
+  // Added 2026-09-12. Weekly engagement report to Paul, admin only.
+  'src/app/api/cron/engagement-report/route.ts',
 ]
 
 // Senders that are NOT route handlers. The walk below only looks at route.ts,
