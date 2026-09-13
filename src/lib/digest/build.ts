@@ -5,7 +5,8 @@ import { daysUntil, humanDate, plural, spell, spellCap, verb } from './text'
 import { findNearMiss, nearMissMeta } from './near-miss'
 import { FUNDING_TYPE_COLOUR, type FundingTypeKey } from '@/lib/funding-type-colours'
 import { activeEdition } from './edition'
-import type { Organisation, GrantOpportunity, FunderType, ImpactSector, BeneficiaryGroup, LegalStructure, FundingType } from '@/types'
+import { normaliseScrapedGrant } from '@/lib/grants-normalise'
+import type { Organisation, FundingType } from '@/types'
 
 /* ═══════════════════════════════════════════════════════════════════════════
    The weekly digest's data model.
@@ -178,46 +179,6 @@ function byNearness(
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
-const VALID_FUNDER_TYPES: FunderType[] = [
-  'trust_foundation', 'community_foundation', 'corporate_foundation', 'capacity_builder',
-  'local_authority', 'housing_association', 'corporate', 'lottery', 'government',
-  'competition', 'loan', 'crowdfund_match', 'other',
-]
-
-function normalise(row: Record<string, unknown>): GrantOpportunity {
-  const rawType = String(row.funder_type ?? 'other')
-  return {
-    id:                  String(row.external_id ?? row.id),
-    title:               String(row.title ?? ''),
-    funder:              String(row.funder ?? 'Unknown funder'),
-    funderType:          (VALID_FUNDER_TYPES.includes(rawType as FunderType) ? rawType : 'other') as FunderType,
-    description:         String(row.description ?? ''),
-    amountMin:           typeof row.amount_min === 'number' ? row.amount_min : 0,
-    amountMax:           typeof row.amount_max === 'number' ? row.amount_max : 0,
-    deadline:            row.deadline ? String(row.deadline) : null,
-    isRolling:           Boolean(row.is_rolling),
-    isLocal:             Boolean(row.is_local),
-    locationTag:         row.location_tag ? String(row.location_tag) : null,
-    sectors:             Array.isArray(row.sectors) ? (row.sectors as string[]) : [],
-    impactSectors:       Array.isArray(row.impact_sectors) ? (row.impact_sectors as ImpactSector[]) : undefined,
-    eligibilityCriteria: Array.isArray(row.eligibility_criteria) ? (row.eligibility_criteria as string[]) : [],
-    eligibleStructures:  Array.isArray(row.eligible_structures) ? (row.eligible_structures as LegalStructure[]) : undefined,
-    // Present here and absent from the alert path's April snapshot — without it
-    // the beneficiary dimension silently scores differently from the app.
-    beneficiaryGroups:   Array.isArray(row.target_beneficiaries) ? (row.target_beneficiaries as BeneficiaryGroup[]) : undefined,
-    applyUrl:            row.apply_url ? String(row.apply_url) : null,
-    isInviteOnly:        Boolean(row.is_invite_only),
-    // Needed by the income near-miss test, and previously dropped here, which
-    // meant the digest's copy of a grant disagreed with the matcher's.
-    minOrgIncome:        typeof row.min_org_income === 'number' ? row.min_org_income : null,
-    maxOrgIncome:        typeof row.max_org_income === 'number' ? row.max_org_income : null,
-    nextOpenDate:        row.next_open_date ? String(row.next_open_date) : null,
-    fundingType:         (row.funding_type ? String(row.funding_type) : 'grant') as FundingType,
-    source:              'scraped',
-    dateAdded:           row.first_seen_at ? String(row.first_seen_at).split('T')[0] : undefined,
-    lastVerifiedAt:      row.last_seen_at ? String(row.last_seen_at).split('T')[0] : undefined,
-  }
-}
 
 /**
  * The verdict names the DIMENSION, because that is what tells a reader whether
@@ -586,7 +547,13 @@ export async function buildDigest(
     // list did not. Rolling funds have no deadline to pass.
     if (g.deadline && !g.is_rolling && daysUntil(String(g.deadline), now) < 0) continue
 
-    const normalised = normalise(g)
+    // The app's normaliser, not the local copy below. The local one carried
+    // no nicheTags, funderBrief or fundingSubtypes, all of which the scorer
+    // reads, so the email ranked with different numbers from the app: for
+    // Bank of Dreams and Nightmares (13 Sept) 71 of 657 rows differed, the
+    // Coward photography grant fell from 89 to 78, BFI from 80 to 69, and an
+    // armed forces pupils fund rose from 66 to 79 into the five.
+    const normalised = normaliseScrapedGrant(g)
     const result = computeMatchScore(normalised, org)
     const firstSeen = g.first_seen_at ? new Date(String(g.first_seen_at)) : null
     const fresh = !!firstSeen && (now.getTime() - firstSeen.getTime()) / 86_400_000 <= NEW_MATCH_LOOKBACK_DAYS
