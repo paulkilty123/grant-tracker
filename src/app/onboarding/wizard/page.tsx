@@ -2773,9 +2773,9 @@ function StepMission({ state, update, crib, onBack, onContinue }: {
         </div>
       )}
 
-      {prompt('missionWho', 'Who do you help?', 'e.g. Children and young people aged 7 to 19 in Dorset')}
-      {prompt('missionWhat', 'What changes for them?', 'e.g. They find their voice through theatre and creative writing and build confidence and literacy')}
-      {prompt('missionWhere', 'Where, and how?', 'e.g. In schools and community venues across Dorset, through weekly workshops')}
+      {prompt('missionWho', 'Who you help, and what they are up against', 'e.g. Children and young people aged 7 to 19 in Dorset who lack confidence and struggle with reading')}
+      {prompt('missionWhat', 'What you do with them, and what changes as a result', 'e.g. Weekly theatre and creative writing workshops that build confidence, literacy and a sense of being heard')}
+      {prompt('missionWhere', 'Where you work, and who you work with', 'e.g. In schools and community venues across Dorset, in partnership with local libraries and youth services')}
 
       <div style={{ marginTop: 6 }}>
         <QLabel>What funders will read</QLabel>
