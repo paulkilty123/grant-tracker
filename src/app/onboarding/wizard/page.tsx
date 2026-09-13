@@ -2680,6 +2680,48 @@ function StepCheck({ state, update, findings, reviewing, saving, saveError, onBa
   }
   const benLabel = (v: string) => BENEFICIARY_GROUPS.find(b => b.value === v)?.label ?? v
 
+  const missionBox = (
+    <div style={{ marginTop: 14 }}>
+      <QLabel>Your mission</QLabel>
+      <textarea value={state.mission} onChange={e => update('mission', e.target.value)} rows={3} placeholder="Who you help, what changes for them, and where." style={{ ...INPUT_STYLE, height: 'auto', padding: '12px 15px', resize: 'vertical', lineHeight: 1.5 }} />
+    </div>
+  )
+  /* Two rows of chips: the ones the mission already mentions, and the ones it
+     does not yet. Nothing is removed unless tapped; the words in the mission
+     are the only thing we know, so the first fix offered is to add to them. */
+  function chipRows(all: string[], unmentioned: string[], label: (v: string) => string, remove: (v: string) => void) {
+    const mentioned = all.filter(v => !unmentioned.includes(v))
+    const row = (title: string, vals: string[]) => vals.length ? (
+      <div style={{ marginBottom: 8 }}>
+        <p style={{ margin: '0 0 6px', fontFamily: 'var(--font-space-grotesk)', fontSize: 12, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: T.textTertiary }}>{title}</p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+          {vals.map(v => <PickerChip key={v} label={label(v)} chipState="primary" onClick={() => remove(v)} />)}
+        </div>
+      </div>
+    ) : null
+    return (
+      <div>
+        {row('Not in your mission yet', unmentioned)}
+        {row('In your mission', mentioned)}
+        <QHelp>Tap one to untick it. Or say it in the mission below and keep it.</QHelp>
+        {missionBox}
+      </div>
+    )
+  }
+  const nichePicker = (() => {
+    const opts = state.impactSectors.flatMap(sec => NICHE_TAGS_BY_SECTOR[sec] ?? [])
+    if (!opts.length) return <QHelp>Add specialisms later from your profile.</QHelp>
+    return (
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+        {opts.map(o => {
+          const on = state.nicheTags.includes(o.value)
+          return <PickerChip key={o.value} label={o.label} chipState={on ? 'primary' : 'unselected'}
+            onClick={() => update('nicheTags', on ? state.nicheTags.filter(x => x !== o.value) : [...state.nicheTags, o.value])} />
+        })}
+      </div>
+    )
+  })()
+
   /* Each finding renders its sentence and, under it, the one control that
      resolves it. A chip row for tags, a select for income and reach, a
      textarea for the mission. Controls act on the wizard state directly, so
@@ -2692,25 +2734,9 @@ function StepCheck({ state, update, findings, reviewing, saving, saveError, onBa
       case 'set_reach':
         return <SelectInput value={state.geographicReach} onChange={v => update('geographicReach', v)} options={GEOGRAPHIC_REACH_OPTIONS} placeholder="Select reach…" />
       case 'remove_beneficiaries':
-        return (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {state.beneficiaryGroups.map(b => (
-              <PickerChip key={b} label={benLabel(b)} chipState={a.values.includes(b) ? 'secondary' : 'primary'}
-                onClick={() => update('beneficiaryGroups', state.beneficiaryGroups.filter(x => x !== b))} />
-            ))}
-            <QHelp>Tap a group to remove it. {a.values.length ? `We suggest removing ${a.values.map(benLabel).join(', ')}.` : ''}</QHelp>
-          </div>
-        )
+        return chipRows(state.beneficiaryGroups, a.values as string[], benLabel, v => update('beneficiaryGroups', state.beneficiaryGroups.filter(x => x !== v)))
       case 'remove_niche':
-        return (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {state.nicheTags.map(t => (
-              <PickerChip key={t} label={nicheLabel(t)} chipState={a.values.includes(t) ? 'secondary' : 'primary'}
-                onClick={() => update('nicheTags', state.nicheTags.filter(x => x !== t))} />
-            ))}
-            <QHelp>Tap a specialism to remove it.</QHelp>
-          </div>
-        )
+        return chipRows(state.nicheTags, a.values, nicheLabel, v => update('nicheTags', state.nicheTags.filter(x => x !== v)))
       case 'edit_mission':
         return <textarea value={state.mission} onChange={e => update('mission', e.target.value)} rows={4} placeholder="Who you help, what changes for them, and where." style={{ ...INPUT_STYLE, height: 'auto', padding: '12px 15px', resize: 'vertical', lineHeight: 1.5 }} />
       case 'set_grant_range':
@@ -2721,7 +2747,7 @@ function StepCheck({ state, update, findings, reviewing, saving, saveError, onBa
           </div>
         )
       case 'add_niche':
-        return <QHelp>Go back one step to add specialisms, or add them later from your profile.</QHelp>
+        return nichePicker
       default:
         return null
     }
@@ -2743,7 +2769,7 @@ function StepCheck({ state, update, findings, reviewing, saving, saveError, onBa
       <BackLink onClick={onBack} />
       <h1 style={H1_STYLE}>One look before your matches</h1>
       <p style={SUBTITLE_STYLE}>
-        We read your profile back the way a funder would. {fixes.length ? `${fixes.length === 1 ? 'One thing is' : `${fixes.length} things are`} pulling your matches off course.` : 'Nothing is wrong, a few things could be sharper.'} Change what you want here, or skip and see your matches.
+        A quick check so your matches are as relevant as they can be. {fixes.length ? `${fixes.length === 1 ? 'One thing is' : `${fixes.length} things are`} pulling them off course.` : 'Nothing is wrong, a few things could be sharper.'} Change what you want here, or skip and see your matches. We only know what your profile tells us, so the mission is the place to put anything we have missed.
       </p>
 
       {fixes.map(card)}

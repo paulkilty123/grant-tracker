@@ -162,10 +162,13 @@ export function checkProfile(org: Organisation, opts: ProfileCheckOptions = {}):
     })
     if (unmentioned.length) {
       const names = unmentioned.map(b => BENEFICIARY_OPTIONS.find(o => o.value === b)?.label ?? b)
+      const none = unmentioned.length >= bens.filter(b => b !== 'general_public').length
       out.push({
         id: 'beneficiaries_too_many', severity: bens.length - unmentioned.length <= 1 ? 'fix' : 'consider',
-        title: `${bens.length} beneficiary groups is pulling in funders for people you do not mention`,
-        body: `Your mission does not mention ${list(names)}. Each group you tick brings in every funder for that group, so the list fills with funds for work you do not do. Keep the groups your mission names.`,
+        title: none
+          ? `Your mission does not mention any of your ${bens.length} beneficiary groups yet`
+          : `Your mission does not mention ${list(names)} yet`,
+        body: `Each group you tick brings in every funder for that group, and we only know a group is really yours from what your mission says. If ${unmentioned.length === 1 ? 'this group is' : 'these groups are'} part of your work, add a line about ${unmentioned.length === 1 ? 'it' : 'them'} to the mission. If not, untick ${unmentioned.length === 1 ? 'it' : 'the ones that are not'} and those funders drop out of your list.`,
         action: { kind: 'remove_beneficiaries', values: unmentioned },
       })
     }
@@ -178,8 +181,8 @@ export function checkProfile(org: Organisation, opts: ProfileCheckOptions = {}):
       const names = unmentioned.map(b => BENEFICIARY_OPTIONS.find(o => o.value === b)?.label ?? b)
       out.push({
         id: 'beneficiaries_unmentioned', severity: 'consider',
-        title: `Your mission does not mention ${list(names)}`,
-        body: 'If they are a real part of your work, add a line about them to the mission. If not, untick them and the funders for that group drop out of your list.',
+        title: `Your mission does not mention ${list(names)} yet`,
+        body: `We only know a group is really yours from what your mission says. If ${unmentioned.length === 1 ? 'this group is' : 'they are'} part of your work, add a line about ${unmentioned.length === 1 ? 'it' : 'them'}. If not, untick ${unmentioned.length === 1 ? 'it' : 'them'} and the funders for that group drop out of your list.`,
         action: { kind: 'remove_beneficiaries', values: unmentioned },
       })
     }
@@ -202,8 +205,8 @@ export function checkProfile(org: Organisation, opts: ProfileCheckOptions = {}):
       const names = unmentioned.map(t => labels[t])
       out.push({
         id: 'niche_unmentioned', severity: 'consider',
-        title: `${list(names)}: is that really your work?`,
-        body: `Your mission does not mention ${unmentioned.length === 1 ? 'it' : 'them'}. A specialism tag brings in every funder for that specialism, so a tag that is only sometimes true costs more than it gains.`,
+        title: `Your mission does not mention ${list(names)} yet`,
+        body: `A specialism brings in every funder for that specialism. If ${unmentioned.length === 1 ? 'it is' : 'they are'} part of your work, say so in the mission and the matching follows. If ${unmentioned.length === 1 ? 'it is' : 'they are'} only sometimes true, untick ${unmentioned.length === 1 ? 'it' : 'them'}.`,
         action: { kind: 'remove_niche', values: unmentioned },
       })
     }
@@ -211,8 +214,8 @@ export function checkProfile(org: Organisation, opts: ProfileCheckOptions = {}):
   if (!niche.length && (org.impact_sectors ?? []).length) {
     out.push({
       id: 'niche_missing', severity: 'consider',
-      title: 'Get more specific about your work',
-      body: 'Funders often fund something narrower than a whole sector. Two or three specialisms cut the irrelevant matches without losing the relevant ones.',
+      title: 'Two or three specialisms would sharpen your matches',
+      body: 'Funders often fund something narrower than a whole sector. Pick the ones that are really your work; each one brings in the funders for it.',
       action: { kind: 'add_niche' },
     })
   }
