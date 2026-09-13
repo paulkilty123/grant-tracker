@@ -47,7 +47,8 @@ const model: DigestModel = {
   prompt: { title: 'Get more specific', body: 'Because.', cta: 'Add your specialisms',
             href: 'https://www.shootsfunding.co.uk/dashboard/profile#card-focus' },
   reassurance: 'Nothing else closes before 14 October.',
-  catalogue: { live: 581, addedRecently: 20 },
+  catalogue: { live: 581, addedRecently: 20, addedThisWeek: 9 },
+  edition: null,
   shown: [],
   debug: { nearMissCandidates: [], nearMissCandidateCount: 0 },
 }
@@ -244,5 +245,25 @@ describe('the promised send day matches the schedule', () => {
 describe('a row with no deadline', () => {
   it('never renders the 999 sort sentinel as a number of days', () => {
     expect(html).not.toMatch(/>999</)
+  })
+})
+
+describe('edition block', () => {
+  it('is absent outside an edition window', () => {
+    expect(html).not.toContain('This week at Shoots')
+  })
+  it('renders the title, intro and every update inside one', () => {
+    const out = renderDigest({ ...model, edition: {
+      title: 'Your Shoots Funding update',
+      intro: 'Every Tuesday, one email.',
+      updates: ['9 funding opportunities added to the catalogue in the last seven days, 581 open now.', 'Matches are now ranked by fit.'],
+    } }, { origin: 'https://www.shootsfunding.co.uk', unsubscribeUrl: 'https://www.shootsfunding.co.uk/u' })
+    expect(out).toContain('Your Shoots Funding update')
+    expect(out).toContain('Every Tuesday, one email.')
+    expect(out).toContain('This week at Shoots')
+    expect(out).toContain('9 funding opportunities added')
+    expect(out).toContain('Matches are now ranked by fit.')
+    // The ordinary digest still follows it.
+    expect(out).toContain('Upcoming deadlines')
   })
 })

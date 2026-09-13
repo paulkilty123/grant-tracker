@@ -92,11 +92,15 @@ describe('match rotation by send history', () => {
     const pool = [mk('a', 95), mk('b', 90), mk('c', 70), mk('d', 80)]
     expect(pool.sort(matchOrder(seen)).map(s => s.row.id)).toEqual(['d', 'c', 'a', 'b'])
   })
-  it('falls back to fresh-then-score when nothing has been shown', () => {
+  it('falls back to score when nothing has been shown; fresh does not outrank a better fit', () => {
     const pool = [mk('a', 95), mk('b', 60, true), mk('c', 70)]
-    expect(pool.sort(matchOrder(new Set())).map(s => s.row.id)).toEqual(['b', 'a', 'c'])
+    expect(pool.sort(matchOrder(new Set())).map(s => s.row.id)).toEqual(['a', 'c', 'b'])
   })
-  it('never empties the list: with everything shown, order is fresh then score', () => {
+  it('fresh breaks a tie on score', () => {
+    const pool = [mk('a', 70), mk('b', 70, true), mk('c', 70)]
+    expect(pool.sort(matchOrder(new Set())).map(s => s.row.id)[0]).toBe('b')
+  })
+  it('never empties the list: with everything shown, order is score then fresh', () => {
     const seen = new Set(['new_match:a', 'new_match:b', 'new_match:c'])
     const pool = [mk('a', 70), mk('b', 90), mk('c', 80)]
     expect(pool.sort(matchOrder(seen)).map(s => s.row.id)).toEqual(['b', 'c', 'a'])

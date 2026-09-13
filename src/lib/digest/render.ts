@@ -222,6 +222,27 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
     </tr></table>
   </td></tr>`)
 
+  /* ── Edition. Only inside a dated window (edition.ts). The title is the
+        subject the reader clicked, the intro says what the email is, and the
+        updates are the week's changes, catalogue count first. The deep card
+        marks it as the one part of the email that is about Shoots rather
+        than about them; everything under it is the ordinary digest. ── */
+  if (m.edition) {
+    const items = m.edition.updates.map(u => `
+        <tr><td style="padding:0 0 8px;font-family:${BODY};font-size:14px;line-height:1.55;color:${C.onDeep};">&bull;&nbsp; ${esc(u)}</td></tr>`).join('')
+    rows.push(`<tr><td class="gutter" style="background:${C.page};padding:0 30px 0;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.deep};border-radius:14px;">
+      <tr><td style="padding:24px 24px 16px;">
+        <p style="margin:0 0 10px;font-family:${UI};font-size:20px;font-weight:600;letter-spacing:-.4px;color:${C.onDeep};">${esc(m.edition.title)}</p>
+        <p style="margin:0 0 18px;font-family:${BODY};font-size:15px;line-height:1.55;color:${C.onDeep};">${esc(m.edition.intro)}</p>
+        <p style="margin:0 0 8px;font-family:${UI};font-size:12px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:${C.onDeep};">This week at Shoots</p>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${items}
+        </table>
+      </td></tr>
+    </table>
+  </td></tr>`)
+  }
+
   /* ── Lead. The label is the identity, same place every week. No hero
         headline — the subject already named the consequential item, and a
         variable hero means the email is re-learned every send. ── */

@@ -4,6 +4,7 @@ import { pickProfilePrompt, promptTitleWithCount, type ProfilePrompt, type Profi
 import { daysUntil, humanDate, plural, spell, spellCap, verb } from './text'
 import { findNearMiss, nearMissMeta } from './near-miss'
 import { FUNDING_TYPE_COLOUR, type FundingTypeKey } from '@/lib/funding-type-colours'
+import { activeEdition } from './edition'
 import type { Organisation, GrantOpportunity, FunderType, ImpactSector, BeneficiaryGroup, LegalStructure, FundingType } from '@/types'
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -142,7 +143,13 @@ export interface DigestModel {
   prompt: { title: string; body: string; cta: string; href: string } | null
   /** "Nothing else in your pipeline or saved list closes before 14 October." */
   reassurance: string | null
-  catalogue: { live: number; addedRecently: number }
+  catalogue: { live: number; addedRecently: number; addedThisWeek: number }
+  /**
+   * A dated edition (edition.ts): the intro and the week's updates, rendered
+   * above everything else, with its subject replacing the computed one. Null
+   * outside an edition window, which is every ordinary week.
+   */
+  edition: { title: string; intro: string; updates: string[] } | null
   /** Everything shown, for digest_sent_items. */
   shown: { section: string; key: string }[]
   /**
@@ -333,17 +340,27 @@ function grantUrl(origin: string, row: Record<string, unknown>): string {
 }
 
 /**
- * Order for the ranked match list: not-yet-shown first, then fresh, then score.
+ * Order for the ranked match list: not-yet-shown first, then score, then fresh.
  * `seen` holds `section:item_key` pairs from digest_sent_items for the history
  * window. Exported so the rotation can be tested without a database.
+ *
+ * Freshness used to come before score. Measured on the twelve launch-week
+ * signups (13 Sept): Unicorn Theatre's five were Impact Loans England, Tesco
+ * Community Grants, the BBC Children in Need core costs stream and a teacher
+ * development fund, all inside the 30-day window at 65 to 70, while the
+ * Theatres Trust, Scops, Backstage and Fidelio sat unshown at 81 and 82. A
+ * cricket foundation got the Army Benevolent Fund ahead of Sported at 92. The
+ * same four generic rows led for every arts organisation. Fresh now breaks
+ * ties only; the "new" label still tells the reader when the shown rows are
+ * recent.
  */
 export function matchOrder(seen: Set<string>) {
   type S = { row: Record<string, unknown>; score: number; fresh: boolean }
   const shownBefore = (s: S) => seen.has(`new_match:${String(s.row.id)}`)
   return (a: S, b: S) =>
     Number(shownBefore(a)) - Number(shownBefore(b)) ||
-    Number(b.fresh) - Number(a.fresh) ||
-    b.score - a.score
+    b.score - a.score ||
+    Number(b.fresh) - Number(a.fresh)
 }
 
 /**
@@ -872,10 +889,28 @@ export async function buildDigest(
   // The footer line reads "added in the last two weeks", so the window is two
   // weeks. It said thirty days while the copy said a fortnight.
   const fortnightAgo = new Date(now.getTime() - 14 * 86_400_000)
+  const weekAgo = new Date(now.getTime() - 7 * 86_400_000)
+  const addedSince = (d: Date) => grants.filter(g => g.first_seen_at && new Date(String(g.first_seen_at)) >= d).length
   const catalogue = {
     live: grants.length,
-    addedRecently: grants.filter(g => g.first_seen_at && new Date(String(g.first_seen_at)) >= fortnightAgo).length,
+    addedRecently: addedSince(fortnightAgo),
+    addedThisWeek: addedSince(weekAgo),
   }
+
+  /* ── Edition. The subject names the email rather than the nearest deadline
+        while an edition runs; the deadline still leads the body. The catalogue
+        line comes first because it is the one line computed from the rows
+        rather than typed. ─────────────────────────────────────────────────── */
+  const ed = activeEdition(now)
+  const edition = ed ? {
+    title: ed.subject,
+    intro: ed.intro,
+    updates: [
+      `${plural(catalogue.addedThisWeek, 'funding opportunity', 'funding opportunities')} added to the catalogue in the last seven days, ${catalogue.live} open now.`,
+      ...ed.updates,
+    ],
+  } : null
+  if (ed) subject = ed.subject
 
   // Subjects are composed from user data, and pipeline items carry whatever
   // name somebody typed. Reprezent's produced "youth music has not moved in
@@ -888,7 +923,7 @@ export async function buildDigest(
     closing: closingShown, closingOverflow,
     inProgress, inProgressOverflow,
     matches, matchesOverflow, matchTotal, matchLabel, newThisWeek,
-    nearMisses, prompt, reassurance, catalogue, shown,
+    nearMisses, prompt, reassurance, catalogue, edition, shown,
     debug: {
       // The SAME comparator the shown list uses. It briefly had its own, which
       // made the diagnostic disagree with the email it was meant to explain —
