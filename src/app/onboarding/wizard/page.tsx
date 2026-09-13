@@ -14,6 +14,7 @@ import { normaliseScrapedGrant } from '@/lib/grants-normalise'
 import type { LegalStructure, ImpactSector, BeneficiaryGroup, FundingType, SpendNeed, Organisation } from '@/types'
 import Button from '@/components/ui/Button'
 import { checkProfile, type ProfileFinding } from '@/lib/profile-check'
+import { suggestTags, IMPACT_SECTOR_OPTIONS, BENEFICIARY_OPTIONS, SECTOR_SYNONYMS, BENEFICIARY_SYNONYMS } from '@/lib/tag-suggestions'
 import LogoMark from '@/components/icons/LogoMark'
 
 /* ═══════════════════════════════════════════════
@@ -184,7 +185,7 @@ const UNCOLLECTED_ON_CREATE = {
   key_outcomes:                [],
 }
 
-type WizardStep = 'entry' | 'review' | 'manual' | 'sectors' | 'beneficiaries' | 'location' | 'check' | 'reveal'
+type WizardStep = 'entry' | 'review' | 'manual' | 'mission' | 'sectors' | 'beneficiaries' | 'location' | 'check' | 'reveal'
 
 /** Who is signing up. Recorded on the organisation row; see migration 080. */
 type SignupRole = 'organisation' | 'consultant' | 'network'
@@ -198,7 +199,9 @@ const STEP_DOT_POS: Record<WizardStep, number> = {
   // The check (Paul, 13 Sept 2026) sits between the last question and the
   // reveal: it reads the profile back the way a funder would and says what
   // is pulling the matches off course, with the edit right there.
-  entry: 1, review: 2, manual: 2, beneficiaries: 3, sectors: 4, location: 5, check: 6, reveal: 7,
+  // Mission before any list (Paul, 13 Sept 2026): the words come first and
+  // the tags are proposed from them, so every tag starts with a reason.
+  entry: 1, review: 2, manual: 2, mission: 3, beneficiaries: 4, sectors: 5, location: 6, check: 7, reveal: 8,
 }
 
 type FieldConfidence = 'confident' | 'uncertain' | 'missing'
@@ -280,6 +283,10 @@ interface WizardState {
   annualIncomeBand: string
   geographicReach:  string
   mission:          string
+  /** The three prompts that compose the mission on the mission step. */
+  missionWho:       string
+  missionWhat:      string
+  missionWhere:     string
   impactSectors:    ImpactSector[]
   beneficiaryGroups: BeneficiaryGroup[]
   minGrantTarget:   string   // raw digit string, formatted on display
@@ -311,7 +318,7 @@ interface WizardState {
 const EMPTY_STATE: WizardState = {
   name: '',
   registeredNumber: '', legalStructure: '', primaryLocation: '',
-  annualIncomeBand: '', geographicReach: '', mission: '',
+  annualIncomeBand: '', geographicReach: '', mission: '', missionWho: '', missionWhat: '', missionWhere: '',
   impactSectors: [], beneficiaryGroups: [],
   minGrantTarget: '', maxGrantTarget: '',
   fundingTypes: ['grant', 'programme', 'investment', 'in_kind'],
@@ -455,7 +462,7 @@ const ACTIONS_STYLE: React.CSSProperties = {
  * hard to count at a glance. The text carries the state and the dots become
  * decorative, which is where they belong, so they are aria-hidden.
  */
-function StepDots({ active, total = 7 }: { active: number; total?: number }) {
+function StepDots({ active, total = 8 }: { active: number; total?: number }) {
   return (
     <div style={{ display: 'flex', gap: 11, alignItems: 'center' }}>
       <span style={{
@@ -811,6 +818,7 @@ export default function OnboardingWizardPage() {
           annualIncomeBand: org.annual_income_band ?? '',
           geographicReach:  org.geographic_reach ?? '',
           mission:          org.mission ?? '',
+          missionWho: '', missionWhat: '', missionWhere: '',
           impactSectors:    ((org.impact_sectors as ImpactSector[]) ?? []).filter(s => IMPACT_SECTORS.some(o => o.value === s)).slice(0, 4),
           beneficiaryGroups: (org.beneficiary_groups as BeneficiaryGroup[]) ?? [],
           // Store raw digits; fmtThousands() formats on display
@@ -933,9 +941,11 @@ export default function OnboardingWizardPage() {
         legalStructure:    (ext.legalStructure as LegalStructure) ?? prev.legalStructure,
         primaryLocation:   ext.primaryLocation ?? prev.primaryLocation,
         annualIncomeBand:  ext.annualIncomeBand ?? prev.annualIncomeBand,
-        mission:           ext.mission ?? prev.mission,
-        impactSectors:     ext.impactSectors.length > 0 ? ext.impactSectors.filter(s => IMPACT_SECTORS.some(o => o.value === s)).slice(0, 4) : prev.impactSectors,
-        beneficiaryGroups: ext.beneficiaryGroups.length > 0 ? ext.beneficiaryGroups : prev.beneficiaryGroups,
+        // Facts only. The mission, sectors and beneficiary groups the
+        // extractor proposes stay in `extracted` as a crib for the mission
+        // step and are never written into the profile unread. Until 13 Sept
+        // 2026 they were, and nobody saw the mission until the reveal: a
+        // fluent guess from a domain name went straight into matching.
       }))
       const autoConfirmed = new Set<string>()
       ;(Object.keys(conf) as Array<keyof ExtractedData['confidence']>).forEach(f => {
@@ -1144,6 +1154,33 @@ export default function OnboardingWizardPage() {
       setSaveError(err instanceof Error ? err.message : 'Could not save. Please try again.')
       setSaving(false)
     }
+  }
+
+  /* ── Mission first, tags proposed from it ───────────────────────────────
+     The mission is the truest signal the matcher has, so it is asked before
+     any list. Leaving the mission step proposes beneficiary groups and
+     sectors from its words (the same word-and-synonym rules the profile
+     check uses), ticked, only when the reader has not chosen any yet. They
+     can untick or add; the note on the step says where the ticks came from. */
+  const [suggestedNote, setSuggestedNote] = useState<{ beneficiaries: string | null; sectors: string | null }>({ beneficiaries: null, sectors: null })
+  const SUGGESTED = 'Ticked from your mission. Untick anything that is not right, and add what is missing.'
+
+  function goToBeneficiaries() {
+    if (state.beneficiaryGroups.length === 0 && state.mission.trim()) {
+      const allowed = new Set(BENEFICIARY_GROUPS.map(b => b.value as string))
+      const picks = suggestTags(BENEFICIARY_OPTIONS, [], state.mission, BENEFICIARY_SYNONYMS).missing.filter(v => allowed.has(v)).slice(0, 4) as BeneficiaryGroup[]
+      if (picks.length) { update('beneficiaryGroups', picks); setSuggestedNote(n => ({ ...n, beneficiaries: SUGGESTED })) }
+    }
+    setStep('beneficiaries')
+  }
+
+  function goToSectors() {
+    if (state.impactSectors.length === 0 && state.mission.trim()) {
+      const allowed = new Set(IMPACT_SECTORS.map(o => o.value as string))
+      const picks = suggestTags(IMPACT_SECTOR_OPTIONS, [], state.mission, SECTOR_SYNONYMS).missing.filter(v => allowed.has(v)).slice(0, 4) as ImpactSector[]
+      if (picks.length) { update('impactSectors', picks); setSuggestedNote(n => ({ ...n, sectors: SUGGESTED })) }
+    }
+    setStep('sectors')
   }
 
   /* ── The profile check ──────────────────────────────────────────────────
@@ -1481,8 +1518,8 @@ export default function OnboardingWizardPage() {
           numberError={numberError}
           blockers={reviewBlockers()}
           onBack={() => setStep('entry')}
-          onSkip={() => setStep('beneficiaries')}
-          onContinue={() => setStep('beneficiaries')}
+          onSkip={() => setStep('mission')}
+          onContinue={() => setStep('mission')}
           wizardState={state}
           toggleSector={toggleSector}
           makePrimarySector={makePrimarySector}
@@ -1497,7 +1534,17 @@ export default function OnboardingWizardPage() {
           update={update}
           notice={fetchError}
           onBack={() => { setFetchError(null); setStep('entry') }}
-          onContinue={() => setStep('beneficiaries')}
+          onContinue={() => setStep('mission')}
+        />
+      )}
+
+      {step === 'mission' && (
+        <StepMission
+          state={state}
+          update={update}
+          crib={extracted?.mission ?? null}
+          onBack={() => setStep(extracted ? 'review' : 'manual')}
+          onContinue={goToBeneficiaries}
         />
       )}
 
@@ -1509,6 +1556,7 @@ export default function OnboardingWizardPage() {
           toggleSector={toggleSector}
           makePrimarySector={makePrimarySector}
           cycleNicheTag={cycleNicheTag}
+          suggestedNote={suggestedNote.sectors}
           onBack={() => setStep('beneficiaries')}
           onContinue={() => setStep('location')}
           canContinue={sectorsValid}
@@ -1520,8 +1568,9 @@ export default function OnboardingWizardPage() {
           beneficiaryGroups={state.beneficiaryGroups}
           toggleBeneficiary={toggleBeneficiary}
           makePrimaryBeneficiary={makePrimaryBeneficiary}
-          onBack={() => setStep(extracted ? 'review' : 'manual')}
-          onContinue={() => setStep('sectors')}
+          suggestedNote={suggestedNote.beneficiaries}
+          onBack={() => setStep('mission')}
+          onContinue={goToSectors}
           canContinue={beneficiariesValid}
         />
       )}
@@ -2237,13 +2286,14 @@ function validNicheTagsFor(sectors: ImpactSector[]): Set<string> {
    Step 3a — Sectors + sub-tags
    ═══════════════════════════════════════════════ */
 
-function StepSectors({ impactSectors, nicheTags, excludedNicheTags, toggleSector, makePrimarySector, cycleNicheTag, onBack, onContinue, canContinue }: {
+function StepSectors({ impactSectors, nicheTags, excludedNicheTags, toggleSector, makePrimarySector, cycleNicheTag, suggestedNote, onBack, onContinue, canContinue }: {
   impactSectors: ImpactSector[]
   nicheTags: string[]
   excludedNicheTags: string[]
   toggleSector: (s: ImpactSector) => void
   makePrimarySector: (s: ImpactSector) => void
   cycleNicheTag: (tag: string) => void
+  suggestedNote?: string | null
   onBack: () => void; onContinue: () => void; canContinue: boolean
 }) {
   const sectorMax = impactSectors.length >= 4
@@ -2263,6 +2313,7 @@ function StepSectors({ impactSectors, nicheTags, excludedNicheTags, toggleSector
       <BackLink onClick={onBack} />
       <h1 style={H1_STYLE}>What do you focus on?</h1>
       <p style={SUBTITLE_STYLE}>Pick your primary focus first. That&rsquo;s what we&rsquo;ll weight most in matching.</p>
+      {suggestedNote && <SuggestedNote text={suggestedNote} />}
 
       {/* Impact sectors (design of 9 Sept 2026). A 20px question with a
           running count rather than a MAX REACHED flag: four of four is
@@ -2401,10 +2452,11 @@ function StepSectors({ impactSectors, nicheTags, excludedNicheTags, toggleSector
    Step 3b — Beneficiaries
    ═══════════════════════════════════════════════ */
 
-function StepBeneficiaries({ beneficiaryGroups, toggleBeneficiary, makePrimaryBeneficiary, onBack, onContinue, canContinue }: {
+function StepBeneficiaries({ beneficiaryGroups, toggleBeneficiary, makePrimaryBeneficiary, suggestedNote, onBack, onContinue, canContinue }: {
   beneficiaryGroups: BeneficiaryGroup[]
   toggleBeneficiary: (b: BeneficiaryGroup) => void
   makePrimaryBeneficiary: (b: BeneficiaryGroup) => void
+  suggestedNote?: string | null
   onBack: () => void; onContinue: () => void; canContinue: boolean
 }) {
   const beneficiaryMax = beneficiaryGroups.length >= 4
@@ -2421,6 +2473,7 @@ function StepBeneficiaries({ beneficiaryGroups, toggleBeneficiary, makePrimaryBe
       <BackLink onClick={onBack} />
       <h1 style={H1_STYLE}>Who do you serve?</h1>
       <p style={SUBTITLE_STYLE}>Pick your primary beneficiary group first. That&rsquo;s what we&rsquo;ll weight most in matching.</p>
+      {suggestedNote && <SuggestedNote text={suggestedNote} />}
 
       <div style={{ marginBottom: 6, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' as const }}>
         <span style={{ fontSize: 13, fontWeight: 500, color: T.textPrimary, fontFamily: 'var(--font-space-grotesk)' }}>Who you serve</span>
@@ -2668,6 +2721,76 @@ function QLabel({ children, required, htmlFor }: { children: React.ReactNode; re
 }
 function QHelp({ children }: { children: React.ReactNode }) {
   return <p style={{ fontSize: 14, lineHeight: 1.55, color: '#7a857e', margin: '8px 0 0', fontFamily: 'var(--font-dm-sans)' }}>{children}</p>
+}
+
+/* ═══════════════════════════════════════════════
+   Step 3 — The mission, in their words
+   ═══════════════════════════════════════════════ */
+
+function SuggestedNote({ text }: { text: string }) {
+  return (
+    <div role="status" style={{ background: T.greenCream, color: T.textPrimary, padding: '10px 14px', borderRadius: 12, fontSize: 13.5, lineHeight: 1.5, margin: '-14px 0 18px', fontFamily: 'var(--font-dm-sans)' }}>
+      {text}
+    </div>
+  )
+}
+
+/** Three prompts compose the mission; the composed text is editable underneath. */
+const MISSION_MIN = 40
+
+function StepMission({ state, update, crib, onBack, onContinue }: {
+  state: WizardState
+  update: <K extends keyof WizardState>(k: K, v: WizardState[K]) => void
+  /** What the website said, in the extractor's words. A crib, never the answer. */
+  crib: string | null
+  onBack: () => void; onContinue: () => void
+}) {
+  const compose = (who: string, what: string, where: string) =>
+    [who, what, where].map(x => x.trim()).filter(Boolean).map(x => /[.!?]$/.test(x) ? x : `${x}.`).join(' ')
+  function setPrompt(key: 'missionWho' | 'missionWhat' | 'missionWhere', v: string) {
+    update(key, v)
+    const next = { ...state, [key]: v }
+    update('mission', compose(next.missionWho, next.missionWhat, next.missionWhere))
+  }
+  const valid = state.mission.trim().length >= MISSION_MIN
+  const prompt = (key: 'missionWho' | 'missionWhat' | 'missionWhere', label: string, placeholder: string) => (
+    <div style={{ marginBottom: 16 }}>
+      <QLabel>{label}</QLabel>
+      <input type="text" value={state[key]} onChange={e => setPrompt(key, e.target.value)} placeholder={placeholder} style={INPUT_STYLE} />
+    </div>
+  )
+  return (
+    <>
+      <BackLink onClick={onBack} />
+      <h1 style={H1_STYLE}>What do you do?</h1>
+      <p style={SUBTITLE_STYLE}>Three short answers, in your own words. This is what we match on, and what a funder reads first, so it matters more than any tag.</p>
+
+      {crib && (
+        <div style={{ background: T.pageBg, borderRadius: 12, padding: '12px 16px', margin: '0 0 22px', fontFamily: 'var(--font-dm-sans)', fontSize: 13.5, lineHeight: 1.55, color: T.textSecondary }}>
+          <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 12, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: T.textTertiary, display: 'block', marginBottom: 4 }}>What your website says, in our words</span>
+          {crib}
+          <span style={{ display: 'block', marginTop: 6, color: T.textTertiary }}>A crib, not your answer. Only you know what is true.</span>
+        </div>
+      )}
+
+      {prompt('missionWho', 'Who do you help?', 'e.g. Children and young people aged 7 to 19 in Dorset')}
+      {prompt('missionWhat', 'What changes for them?', 'e.g. They find their voice through theatre and creative writing and build confidence and literacy')}
+      {prompt('missionWhere', 'Where, and how?', 'e.g. In schools and community venues across Dorset, through weekly workshops')}
+
+      <div style={{ marginTop: 6 }}>
+        <QLabel>What funders will read</QLabel>
+        <textarea value={state.mission} onChange={e => update('mission', e.target.value)} rows={4} placeholder="Your answers appear here. Edit them freely." style={{ ...INPUT_STYLE, height: 'auto', padding: '12px 15px', resize: 'vertical', lineHeight: 1.5 }} />
+        <QHelp>{valid ? 'Good. You can change this any time from your profile.' : `A couple of sentences is enough. ${Math.max(0, MISSION_MIN - state.mission.trim().length)} more characters.`}</QHelp>
+      </div>
+
+      <div style={{ ...ACTIONS_STYLE, marginTop: 24 }}>
+        <BackLink onClick={onBack} />
+        <Button variant="primary" onClick={onContinue} disabled={!valid}>
+          Continue <ArrowRight size={14} />
+        </Button>
+      </div>
+    </>
+  )
 }
 
 /* ═══════════════════════════════════════════════
