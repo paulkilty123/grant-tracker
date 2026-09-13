@@ -283,10 +283,6 @@ interface WizardState {
   annualIncomeBand: string
   geographicReach:  string
   mission:          string
-  /** The three prompts that compose the mission on the mission step. */
-  missionWho:       string
-  missionWhat:      string
-  missionWhere:     string
   impactSectors:    ImpactSector[]
   beneficiaryGroups: BeneficiaryGroup[]
   minGrantTarget:   string   // raw digit string, formatted on display
@@ -318,7 +314,7 @@ interface WizardState {
 const EMPTY_STATE: WizardState = {
   name: '',
   registeredNumber: '', legalStructure: '', primaryLocation: '',
-  annualIncomeBand: '', geographicReach: '', mission: '', missionWho: '', missionWhat: '', missionWhere: '',
+  annualIncomeBand: '', geographicReach: '', mission: '',
   impactSectors: [], beneficiaryGroups: [],
   minGrantTarget: '', maxGrantTarget: '',
   fundingTypes: ['grant', 'programme', 'investment', 'in_kind'],
@@ -818,7 +814,7 @@ export default function OnboardingWizardPage() {
           annualIncomeBand: org.annual_income_band ?? '',
           geographicReach:  org.geographic_reach ?? '',
           mission:          org.mission ?? '',
-          missionWho: '', missionWhat: '', missionWhere: '',
+         
           impactSectors:    ((org.impact_sectors as ImpactSector[]) ?? []).filter(s => IMPACT_SECTORS.some(o => o.value === s)).slice(0, 4),
           beneficiaryGroups: (org.beneficiary_groups as BeneficiaryGroup[]) ?? [],
           // Store raw digits; fmtThousands() formats on display
@@ -2735,53 +2731,46 @@ function SuggestedNote({ text }: { text: string }) {
   )
 }
 
-/** Three prompts compose the mission; the composed text is editable underneath. */
+/** One box. The three prompts are a checklist beside it, not fields (Paul, 14 Sept: four boxes read as a form). */
 const MISSION_MIN = 40
 
 function StepMission({ state, update, crib, onBack, onContinue }: {
   state: WizardState
   update: <K extends keyof WizardState>(k: K, v: WizardState[K]) => void
-  /** What the website said, in the extractor's words. A crib, never the answer. */
+  /** What the website said, in the extractor's words. Offered behind a button, never dropped in unasked. */
   crib: string | null
   onBack: () => void; onContinue: () => void
 }) {
-  const compose = (who: string, what: string, where: string) =>
-    [who, what, where].map(x => x.trim()).filter(Boolean).map(x => /[.!?]$/.test(x) ? x : `${x}.`).join(' ')
-  function setPrompt(key: 'missionWho' | 'missionWhat' | 'missionWhere', v: string) {
-    update(key, v)
-    const next = { ...state, [key]: v }
-    update('mission', compose(next.missionWho, next.missionWhat, next.missionWhere))
-  }
   const valid = state.mission.trim().length >= MISSION_MIN
-  const prompt = (key: 'missionWho' | 'missionWhat' | 'missionWhere', label: string, placeholder: string) => (
-    <div style={{ marginBottom: 16 }}>
-      <QLabel>{label}</QLabel>
-      <input type="text" value={state[key]} onChange={e => setPrompt(key, e.target.value)} placeholder={placeholder} style={INPUT_STYLE} />
-    </div>
-  )
   return (
     <>
       <BackLink onClick={onBack} />
       <h1 style={H1_STYLE}>What do you do?</h1>
-      <p style={SUBTITLE_STYLE}>Three short answers, in your own words. This is what we match on, and what a funder reads first, so it matters more than any tag.</p>
+      <p style={SUBTITLE_STYLE}>Two or three sentences in your own words. This is what we match on and what a funder reads first, so it matters more than any tag.</p>
 
-      {crib && (
-        <div style={{ background: T.pageBg, borderRadius: 12, padding: '12px 16px', margin: '0 0 22px', fontFamily: 'var(--font-dm-sans)', fontSize: 13.5, lineHeight: 1.55, color: T.textSecondary }}>
-          <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 12, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: T.textTertiary, display: 'block', marginBottom: 4 }}>What your website says, in our words</span>
-          {crib}
-          <span style={{ display: 'block', marginTop: 6, color: T.textTertiary }}>A crib, not your answer. Only you know what is true.</span>
-        </div>
-      )}
+      <textarea
+        value={state.mission}
+        onChange={e => update('mission', e.target.value)}
+        rows={5}
+        placeholder="Paste the description you use on your website or in a funding bid, or write two sentences here."
+        style={{ ...INPUT_STYLE, height: 'auto', padding: '14px 16px', resize: 'vertical', lineHeight: 1.55 }}
+      />
 
-      {prompt('missionWho', 'Who benefits from your work, and what problem you are tackling', 'e.g. Young people in Dorset who leave school without the confidence or skills to find work')}
-      {prompt('missionWhat', 'What you do, and what are the changes', 'e.g. We run a cafe and training kitchen that gives them paid work, a qualification and a route into a job')}
-      {prompt('missionWhere', 'Where you work, and who you work alongside', 'e.g. Across Dorset, with local colleges, employers and the youth service')}
-
-      <div style={{ marginTop: 6 }}>
-        <QLabel>What funders will read</QLabel>
-        <textarea value={state.mission} onChange={e => update('mission', e.target.value)} rows={4} placeholder="Your answers appear here. Edit them freely." style={{ ...INPUT_STYLE, height: 'auto', padding: '12px 15px', resize: 'vertical', lineHeight: 1.5 }} />
-        <QHelp>{valid ? 'Good. You can change this any time from your profile.' : `A couple of sentences is enough. ${Math.max(0, MISSION_MIN - state.mission.trim().length)} more characters.`}</QHelp>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, marginTop: 10, flexWrap: 'wrap' }}>
+        <p style={{ margin: 0, fontFamily: 'var(--font-dm-sans)', fontSize: 13.5, lineHeight: 1.55, color: T.textSecondary, maxWidth: 520 }}>
+          Worth covering: who benefits from your work and the problem you are tackling, what you do and what changes, where you work and who you work alongside.
+        </p>
+        {crib && (
+          <button type="button" onClick={() => update('mission', crib)}
+            style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13, fontWeight: 600, color: T.greenDeep, background: 'transparent', border: `1.5px solid ${T.borderInput}`, borderRadius: 999, padding: '8px 14px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+            Use our reading of your website
+          </button>
+        )}
       </div>
+      {crib && (
+        <QHelp>Our reading of your site is a starting point, not the truth. Edit it until it says what you actually do.</QHelp>
+      )}
+      <QHelp>{valid ? 'Good. You can change this any time from your profile.' : `${Math.max(0, MISSION_MIN - state.mission.trim().length)} more characters and you can continue.`}</QHelp>
 
       <div style={{ ...ACTIONS_STYLE, marginTop: 24 }}>
         <BackLink onClick={onBack} />
