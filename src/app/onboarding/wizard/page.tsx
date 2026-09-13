@@ -1495,7 +1495,8 @@ export default function OnboardingWizardPage() {
         <StepManual
           state={state}
           update={update}
-          onBack={() => setStep('entry')}
+          notice={fetchError}
+          onBack={() => { setFetchError(null); setStep('entry') }}
           onContinue={() => setStep('beneficiaries')}
         />
       )}
@@ -2020,15 +2021,22 @@ function ReviewField({ label, value, hint, emptyText, fieldState: fState, isConf
    Step 2B — Manual entry
    ═══════════════════════════════════════════════ */
 
-function StepManual({ state, update, onBack, onContinue }: {
+function StepManual({ state, update, notice, onBack, onContinue }: {
   state: WizardState
   update: <K extends keyof WizardState>(k: K, v: WizardState[K]) => void
+  /** Why the reader is here rather than on the review step: the site could not be read. Shown, or a user is left wondering what autofill did (Paul, 13 Sept). */
+  notice?: string | null
   onBack: () => void; onContinue: () => void
 }) {
   const valid = !!(state.name.trim() && state.legalStructure)
   return (
     <>
       <BackLink onClick={onBack} />
+      {notice && (
+        <div role="status" style={{ background: T.amberBgSoft, color: T.textPrimary, padding: '12px 16px', borderRadius: 12, fontSize: 14, lineHeight: 1.5, margin: '0 0 18px', fontFamily: 'var(--font-dm-sans)' }}>
+          {notice}
+        </div>
+      )}
       <h1 style={H1_STYLE}>Tell us about your organisation</h1>
       <p style={SUBTITLE_STYLE}>We use this to check eligibility on the funders we match you with.</p>
 
