@@ -6,6 +6,7 @@ import { findNearMiss, nearMissMeta } from './near-miss'
 import { FUNDING_TYPE_COLOUR, type FundingTypeKey } from '@/lib/funding-type-colours'
 import { activeEdition } from './edition'
 import { normaliseScrapedGrant } from '@/lib/grants-normalise'
+import { checkProfile } from '@/lib/profile-check'
 import type { Organisation, FundingType } from '@/types'
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -748,6 +749,19 @@ export async function buildDigest(
       href: `${origin}/dashboard/profile#card-${promptPick.card}`,
     }
     shown.push({ section: 'profile_prompt', key: promptPick.field })
+  } else {
+    // Nothing is missing, but something may be pulling the matches off
+    // course: too many beneficiary groups, reach wider than the mission, a
+    // specialism the mission never mentions. Same rules as the wizard's check
+    // step (Paul, 13 Sept 2026), so the email keeps asking what the signup
+    // screen asked, until it is fixed. Rotates on the finding id so one
+    // nudge is not repeated inside the history window.
+    const nudgedRecently = new Set((opts.recentlyShown ?? []).filter(r => r.section === 'profile_nudge').map(r => r.item_key))
+    const nudge = checkProfile(org).find(f => f.action.kind !== 'none' && !nudgedRecently.has(f.id))
+    if (nudge) {
+      prompt = { title: nudge.title, body: nudge.body, cta: 'Fix this on your profile', href: `${origin}/dashboard/profile#card-focus` }
+      shown.push({ section: 'profile_nudge', key: nudge.id })
+    }
   }
 
   /* ── The reassurance line. Load-bearing, not filler. ──────────────────── */

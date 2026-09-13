@@ -11,8 +11,9 @@ import { track } from '@/lib/analytics'
 import { computeMatchScore, MATCH_FLOOR } from '@/lib/matching'
 import { columnFor, normaliseNumber, detectRegister, registerLabel, isRecognisedNumber, expectedRegisterFor } from '@/lib/registered-number'
 import { normaliseScrapedGrant } from '@/lib/grants-normalise'
-import type { LegalStructure, ImpactSector, BeneficiaryGroup, FundingType, SpendNeed } from '@/types'
+import type { LegalStructure, ImpactSector, BeneficiaryGroup, FundingType, SpendNeed, Organisation } from '@/types'
 import Button from '@/components/ui/Button'
+import { checkProfile, type ProfileFinding } from '@/lib/profile-check'
 import LogoMark from '@/components/icons/LogoMark'
 
 /* ═══════════════════════════════════════════════
@@ -183,7 +184,7 @@ const UNCOLLECTED_ON_CREATE = {
   key_outcomes:                [],
 }
 
-type WizardStep = 'entry' | 'review' | 'manual' | 'sectors' | 'beneficiaries' | 'location' | 'reveal'
+type WizardStep = 'entry' | 'review' | 'manual' | 'sectors' | 'beneficiaries' | 'location' | 'check' | 'reveal'
 
 /** Who is signing up. Recorded on the organisation row; see migration 080. */
 type SignupRole = 'organisation' | 'consultant' | 'network'
@@ -194,7 +195,10 @@ const STEP_DOT_POS: Record<WizardStep, number> = {
   // Who you serve comes before what you focus on (Paul, 8 Sept 2026, after
   // a tester went looking for "children and young people" under sectors):
   // charities describe themselves by audience first, and so do funder briefs.
-  entry: 1, review: 2, manual: 2, beneficiaries: 3, sectors: 4, location: 5, reveal: 6,
+  // The check (Paul, 13 Sept 2026) sits between the last question and the
+  // reveal: it reads the profile back the way a funder would and says what
+  // is pulling the matches off course, with the edit right there.
+  entry: 1, review: 2, manual: 2, beneficiaries: 3, sectors: 4, location: 5, check: 6, reveal: 7,
 }
 
 type FieldConfidence = 'confident' | 'uncertain' | 'missing'
@@ -451,7 +455,7 @@ const ACTIONS_STYLE: React.CSSProperties = {
  * hard to count at a glance. The text carries the state and the dots become
  * decorative, which is where they belong, so they are aria-hidden.
  */
-function StepDots({ active, total = 6 }: { active: number; total?: number }) {
+function StepDots({ active, total = 7 }: { active: number; total?: number }) {
   return (
     <div style={{ display: 'flex', gap: 11, alignItems: 'center' }}>
       <span style={{
@@ -1138,6 +1142,56 @@ export default function OnboardingWizardPage() {
     }
   }
 
+  /* ── The profile check ──────────────────────────────────────────────────
+     Rules run on the in-memory state, so nothing is written until the reader
+     has seen what the profile says about them. A profile with nothing to say
+     goes straight to the matches; the step only appears when it has a line
+     worth reading. The model read (/api/profile/review) is asked for in the
+     background and folded in if it answers in time; the step never waits on
+     it and never fails because of it. */
+  const [checkFindings, setCheckFindings] = useState<ProfileFinding[]>([])
+  const [reviewing, setReviewing] = useState(false)
+
+  function orgForCheck(): Organisation {
+    return {
+      ...(UNCOLLECTED_ON_CREATE as unknown as Organisation),
+      id: '', created_at: '', owner_id: '',
+      name: state.name, mission: state.mission || null,
+      legal_structure: (state.legalStructure || null) as Organisation['legal_structure'],
+      impact_sectors: state.impactSectors, niche_tags: state.nicheTags, excluded_niche_tags: state.excludedNicheTags,
+      beneficiary_groups: state.beneficiaryGroups,
+      annual_income_band: state.annualIncomeBand || null, primary_location: state.primaryLocation || null,
+      geographic_reach: state.geographicReach || null,
+      min_grant_target: state.minGrantTarget ? parseInt(state.minGrantTarget, 10) : null,
+      max_grant_target: state.maxGrantTarget ? parseInt(state.maxGrantTarget, 10) : null,
+    }
+  }
+
+  async function goToCheck() {
+    const labels: Record<string, string> = {}
+    for (const list of Object.values(NICHE_TAGS_BY_SECTOR)) for (const t of list ?? []) labels[t.value] = t.label
+    const rules = checkProfile(orgForCheck(), { nicheLabels: labels, skip: ['grant_range_missing'] })
+    if (rules.length === 0) { await handleFinish(); return }
+    setCheckFindings(rules)
+    setStep('check')
+    track('profile_check_shown', { findings: rules.map(f => f.id) })
+    // Model read, folded in only if it adds something the rules did not.
+    setReviewing(true)
+    try {
+      const res = await fetch('/api/profile/review', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mission: state.mission, impact_sectors: state.impactSectors, niche_tags: state.nicheTags, niche_labels: labels, beneficiary_groups: state.beneficiaryGroups, name: state.name }),
+      })
+      if (res.ok) {
+        const data = await res.json() as { findings?: ProfileFinding[] }
+        if (Array.isArray(data.findings) && data.findings.length) {
+          setCheckFindings(prev => [...prev, ...data.findings!.filter(f => !prev.some(p => p.id === f.id))])
+        }
+      }
+    } catch { /* the rules stand on their own */ }
+    finally { setReviewing(false) }
+  }
+
   async function handleFinish() {
     setSaving(true); setSaveError(null)
     try {
@@ -1477,6 +1531,19 @@ export default function OnboardingWizardPage() {
           saveError={saveError}
           canContinue={locationValid}
           onBack={() => setStep('sectors')}
+          onFinish={goToCheck}
+        />
+      )}
+
+      {step === 'check' && (
+        <StepCheck
+          state={state}
+          update={update}
+          findings={checkFindings}
+          reviewing={reviewing}
+          saving={saving}
+          saveError={saveError}
+          onBack={() => setStep('location')}
           onFinish={handleFinish}
         />
       )}
@@ -2589,6 +2656,118 @@ function QLabel({ children, required, htmlFor }: { children: React.ReactNode; re
 }
 function QHelp({ children }: { children: React.ReactNode }) {
   return <p style={{ fontSize: 14, lineHeight: 1.55, color: '#7a857e', margin: '8px 0 0', fontFamily: 'var(--font-dm-sans)' }}>{children}</p>
+}
+
+/* ═══════════════════════════════════════════════
+   Step 6 — The profile check
+   ═══════════════════════════════════════════════ */
+
+const REACH_LABEL: Record<string, string> = Object.fromEntries(GEOGRAPHIC_REACH_OPTIONS.map(o => [o.value, o.label]))
+
+function StepCheck({ state, update, findings, reviewing, saving, saveError, onBack, onFinish }: {
+  state: WizardState
+  update: <K extends keyof WizardState>(k: K, v: WizardState[K]) => void
+  findings: ProfileFinding[]
+  reviewing: boolean
+  saving: boolean; saveError: string | null
+  onBack: () => void; onFinish: () => void
+}) {
+  const fixes = findings.filter(f => f.severity === 'fix')
+  const considers = findings.filter(f => f.severity === 'consider')
+  const nicheLabel = (v: string) => {
+    for (const list of Object.values(NICHE_TAGS_BY_SECTOR)) { const t = (list ?? []).find(x => x.value === v); if (t) return t.label }
+    return v
+  }
+  const benLabel = (v: string) => BENEFICIARY_GROUPS.find(b => b.value === v)?.label ?? v
+
+  /* Each finding renders its sentence and, under it, the one control that
+     resolves it. A chip row for tags, a select for income and reach, a
+     textarea for the mission. Controls act on the wizard state directly, so
+     the finding is already resolved by the time the profile is saved. */
+  function control(f: ProfileFinding) {
+    const a = f.action
+    switch (a.kind) {
+      case 'set_income':
+        return <SelectInput value={state.annualIncomeBand} onChange={v => update('annualIncomeBand', v)} options={INCOME_BANDS.map(b => ({ value: b, label: b }))} placeholder="Select a band…" />
+      case 'set_reach':
+        return <SelectInput value={state.geographicReach} onChange={v => update('geographicReach', v)} options={GEOGRAPHIC_REACH_OPTIONS} placeholder="Select reach…" />
+      case 'remove_beneficiaries':
+        return (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {state.beneficiaryGroups.map(b => (
+              <PickerChip key={b} label={benLabel(b)} chipState={a.values.includes(b) ? 'secondary' : 'primary'}
+                onClick={() => update('beneficiaryGroups', state.beneficiaryGroups.filter(x => x !== b))} />
+            ))}
+            <QHelp>Tap a group to remove it. {a.values.length ? `We suggest removing ${a.values.map(benLabel).join(', ')}.` : ''}</QHelp>
+          </div>
+        )
+      case 'remove_niche':
+        return (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {state.nicheTags.map(t => (
+              <PickerChip key={t} label={nicheLabel(t)} chipState={a.values.includes(t) ? 'secondary' : 'primary'}
+                onClick={() => update('nicheTags', state.nicheTags.filter(x => x !== t))} />
+            ))}
+            <QHelp>Tap a specialism to remove it.</QHelp>
+          </div>
+        )
+      case 'edit_mission':
+        return <textarea value={state.mission} onChange={e => update('mission', e.target.value)} rows={4} placeholder="Who you help, what changes for them, and where." style={{ ...INPUT_STYLE, height: 'auto', padding: '12px 15px', resize: 'vertical', lineHeight: 1.5 }} />
+      case 'set_grant_range':
+        return (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <input type="text" inputMode="numeric" value={state.minGrantTarget} onChange={e => update('minGrantTarget', e.target.value.replace(/[^0-9]/g, ''))} placeholder="Minimum, e.g. 1000" style={INPUT_STYLE} />
+            <input type="text" inputMode="numeric" value={state.maxGrantTarget} onChange={e => update('maxGrantTarget', e.target.value.replace(/[^0-9]/g, ''))} placeholder="Maximum, e.g. 25000" style={INPUT_STYLE} />
+          </div>
+        )
+      case 'add_niche':
+        return <QHelp>Go back one step to add specialisms, or add them later from your profile.</QHelp>
+      default:
+        return null
+    }
+  }
+
+  function card(f: ProfileFinding) {
+    const fix = f.severity === 'fix'
+    return (
+      <div key={f.id} style={{ background: fix ? T.amberBgSoft : T.pageBg, borderRadius: 14, padding: '18px 20px', marginBottom: 12 }}>
+        <p style={{ margin: '0 0 6px', fontFamily: 'var(--font-space-grotesk)', fontSize: 16.5, fontWeight: 600, color: T.greenDeep, lineHeight: 1.3 }}>{f.title}</p>
+        <p style={{ margin: '0 0 14px', fontFamily: 'var(--font-dm-sans)', fontSize: 14, lineHeight: 1.55, color: T.textSecondary }}>{f.body}</p>
+        {control(f)}
+      </div>
+    )
+  }
+
+  return (
+    <>
+      <BackLink onClick={onBack} />
+      <h1 style={H1_STYLE}>One look before your matches</h1>
+      <p style={SUBTITLE_STYLE}>
+        We read your profile back the way a funder would. {fixes.length ? `${fixes.length === 1 ? 'One thing is' : `${fixes.length} things are`} pulling your matches off course.` : 'Nothing is wrong, a few things could be sharper.'} Change what you want here, or skip and see your matches.
+      </p>
+
+      {fixes.map(card)}
+      {considers.length > 0 && fixes.length > 0 && (
+        <p style={{ margin: '22px 0 10px', fontFamily: 'var(--font-space-grotesk)', fontSize: 13, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: T.textTertiary }}>Worth a look</p>
+      )}
+      {considers.map(card)}
+
+      {reviewing && (
+        <p style={{ margin: '6px 0 0', fontFamily: 'var(--font-dm-sans)', fontSize: 13, color: T.textTertiary }}>Reading your mission for anything else…</p>
+      )}
+
+      {saveError && (
+        <div style={{ background: T.coralBg, color: T.coralText, padding: '10px 14px', borderRadius: 10, fontSize: 13, marginTop: 8, fontFamily: 'var(--font-dm-sans)' }}>{saveError}</div>
+      )}
+
+      <div style={{ ...ACTIONS_STYLE, marginTop: 24 }}>
+        <BackLink onClick={onBack} />
+        <Button variant="primary" onClick={onFinish} disabled={saving}>
+          {saving ? 'Saving…' : <><span>Show me my matches</span> <ArrowRight size={14} /></>}
+        </Button>
+      </div>
+    </>
+  )
 }
 
 /* ═══════════════════════════════════════════════
