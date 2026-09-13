@@ -74,12 +74,35 @@ export async function POST(req: NextRequest) {
       // Network error — fall through with empty pageText
     }
 
+    // NO PAGE, NO GUESS. Until 13 Sept 2026 an unreadable site fell through to
+    // a prompt that said "use your knowledge of this organisation based on the
+    // URL/domain", and the model obliged: Our Sansar, a Brighton charity working
+    // with street children in Nepal, was signed up twice that day with two
+    // different invented missions ("South Asian women and girls in the UK",
+    // "South Asian communities in the UK") because its site returns an empty
+    // page to automated readers. The mission is what the matcher and the
+    // profile check read first, so a fluent guess there is worse than a blank.
+    // A site that blocks readers, times out, or answers with nothing usable
+    // now returns only what was actually found, and says so.
+    if (pageText.replace(/\s+/g, ' ').trim().length < 200) {
+      return NextResponse.json({
+        unreadable: true,
+        name: null, orgType: null,
+        charityNumber: scannedNumber && isRecognisedNumber(scannedNumber) ? scannedNumber : null,
+        primaryLocation: null, mission: null, themes: [], areasOfWork: [], beneficiaries: [],
+        annualIncome: null, impactSectors: [], beneficiaryGroups: [],
+        _confidence: {},
+        message: 'We could not read that website, so nothing has been filled in for you. Please write two lines on what you do and who you help.',
+      })
+    }
+
     const prompt = `You are helping a UK grant management tool auto-fill an organisation profile form.
 
-${pageText
-  ? `Website content from ${fullUrl} (truncated):\n"""\n${pageText}\n"""`
-  : `The website at ${fullUrl} could not be fetched (it may block automated access). Use your knowledge of this organisation based on the URL/domain to fill in what you can.`
-}
+Website content from ${fullUrl} (truncated):
+"""
+${pageText}
+"""
+Use ONLY this content. Do not fill any field from the domain name or from anything you believe you know about the organisation; if the content does not say it, the value is null and the confidence 0.0.
 
 Extract information and return ONLY a valid JSON object with these exact keys:
 

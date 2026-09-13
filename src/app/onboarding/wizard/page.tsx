@@ -916,8 +916,12 @@ export default function OnboardingWizardPage() {
         ext.name, ext.registeredNumber, ext.legalStructure, ext.primaryLocation,
         ext.annualIncomeBand, ext.mission,
       ].filter(Boolean).length + (ext.impactSectors.length > 0 ? 1 : 0) + (ext.beneficiaryGroups.length > 0 ? 1 : 0)
-      if (foundCount === 0) {
-        setFetchError('We couldn’t pick anything up from that site. Fill the details in below.')
+      if (foundCount === 0 || data.unreadable) {
+        // The site could not be read, or read as nothing. The route no longer
+        // guesses from the domain, so this is the honest branch: say so, and
+        // carry the one thing it may have found (a registration number).
+        setFetchError(data.message ?? 'We couldn’t pick anything up from that site. Fill the details in below.')
+        if (ext.registeredNumber) setState(prev => ({ ...prev, registeredNumber: ext.registeredNumber ?? prev.registeredNumber }))
         setStep('manual')
         return
       }
