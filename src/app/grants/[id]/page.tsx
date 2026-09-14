@@ -10,7 +10,7 @@ import { FUNDING_TYPE_COLOUR, TYPE_NEUTRAL, type FundingTypeKey } from '@/lib/fu
 import { sectorColour } from '@/lib/sector-colours'
 import {
   MapPin, Calendar, CheckCircle, Info, ExternalLink, ArrowRight,
-  Building2, Search, TrendingUp, ShieldCheck,
+  Building2, Search, TrendingUp, ShieldCheck, Lock, Star, Lightbulb,
 } from 'lucide-react'
 import { MCP_BRAND_NAME, MCP_APP_ORIGIN } from '@/lib/mcp-brand'
 import { ctaSupportLine } from '@/lib/trial'
@@ -190,6 +190,34 @@ function briefText(brief: Record<string, unknown> | null, key: string): string |
   return t
 }
 
+/** The real first sentence of a brief field, for the locked preview. Never a
+ *  written teaser: if the field is empty the lock does not appear at all. */
+function firstSentence(text: string | null): string | null {
+  if (!text) return null
+  const m = text.match(/^[^.!?]*[.!?](?=\s|$)/)
+  const first = (m ? m[0] : text).trim()
+  return first.length > 160 ? first.slice(0, 157).replace(/\s+\S*$/, '') + '…' : first
+}
+
+/**
+ * The rules Shoots checks for this funder, named in plain words, counted from
+ * the row itself. All of them are visible on the page above, so counting them
+ * gives nothing away (rule 6): the locked part is the check against a profile.
+ */
+function rulesChecked(row: Record<string, unknown>): string[] {
+  const out: string[] = []
+  if (Array.isArray(row.eligible_structures) && row.eligible_structures.length) out.push('legal structure')
+  if (row.min_org_income != null || row.max_org_income != null) out.push('annual income')
+  if (row.location_tag || row.is_local) out.push('where you work')
+  const sectors = Array.isArray(row.impact_sectors) ? row.impact_sectors.length : 0
+  if (sectors) out.push('what you do')
+  const ben = Array.isArray(row.target_beneficiaries) ? row.target_beneficiaries.length : 0
+  if (ben) out.push('who you help')
+  if (row.org_stage) out.push('how long you have operated')
+  if (row.amount_min != null || row.amount_max != null) out.push('grant size')
+  return out
+}
+
 async function loadGrant(rawId: string) {
   const id = decodeURIComponent(rawId)
   const supabase = await createClient()
@@ -339,6 +367,9 @@ export default async function PublicGrantPage({
   const lead         = leadParagraph(brief, grant.description ? String(grant.description) : null)
   const whoCanApply  = briefText(brief, 'who_can_apply')
   const exclusions   = briefText(brief, 'exclusions')
+  const strongFirst  = firstSentence(briefText(brief, 'strong_application'))
+  const tipsFirst    = firstSentence(briefText(brief, 'funder_tips'))
+  const rules        = rulesChecked(grant as Record<string, unknown>)
   const facts        = PUBLIC_FACT_FIELDS
     .map(([key, label]) => [key, label, briefText(brief, key)] as const)
     .filter((f): f is readonly [typeof f[0], typeof f[1], string] => f[2] !== null)
@@ -619,18 +650,36 @@ export default async function PublicGrantPage({
                 ? 'There are more in the catalogue. Shoots checks them against your organisation and tells you which ones are open to you now.'
                 : 'Structure is only the first hurdle. Shoots checks this opportunity against your organisation and tells you where you actually stand.'}
             </p>
-            <ul style={{ margin: '0 0 22px', padding: 0, listStyle: 'none', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16 }}>
+            {/* This grant's own locked content, not a general claim. Each tile
+                appears only when the row really holds it, and the preview line
+                is the field's actual first sentence. The visitor searched for
+                this funder; the argument is what Shoots knows about this funder. */}
+            <ul style={{ margin: '0 0 22px', padding: 0, listStyle: 'none', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
               {[
-                { bg: T.terra, Icon: CheckCircle, t: 'Whether you qualify', d: 'Every rule this funder sets, checked against your profile, including the ones that rule you out.' },
-                { bg: T.teal,  Icon: TrendingUp,  t: 'How well you match',  d: 'A score against what they fund, who they fund and where, so you know if it is worth the week.' },
-                { bg: T.sage,  Icon: Search,      t: 'What else is open',   d: 'Every opportunity in the catalogue, filtered to the ones your organisation can actually apply for.' },
-              ].map(({ bg, Icon, t, d }) => (
-                <li key={t} style={{ fontSize: 14, lineHeight: 1.55, color: 'rgba(246,241,231,0.85)' }}>
-                  <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 9, marginBottom: 10, background: bg, color: T.deep }}>
-                    <Icon style={{ width: 16, height: 16 }} />
+                strongFirst ? { Icon: Star, bg: T.terra, t: 'What makes a strong application', d: strongFirst, locked: true } : null,
+                tipsFirst   ? { Icon: Lightbulb, bg: T.gold, t: 'Insider tips', d: tipsFirst, locked: true } : null,
+                { Icon: TrendingUp, bg: T.teal, t: 'Your match score', d: 'How well you match what they fund, who they fund and where. Scored against your profile, out of 100.', locked: true, dial: true },
+                rules.length
+                  ? { Icon: CheckCircle, bg: T.sage, t: `${rules.length} rule${rules.length === 1 ? '' : 's'} checked against you`, d: rules.join(', ') + '. Including the ones that rule you out.', locked: true }
+                  : { Icon: CheckCircle, bg: T.sage, t: 'Whether you qualify', d: 'Every rule this funder sets, checked against your profile, including the ones that rule you out.', locked: true },
+              ].filter((x): x is NonNullable<typeof x> => x !== null).map(({ Icon, bg, t, d, dial }) => (
+                <li key={t} style={{ position: 'relative', background: 'rgba(246,241,231,0.06)', border: '1px solid rgba(246,241,231,0.12)', borderRadius: 12, padding: '14px 14px 12px', fontSize: 13.5, lineHeight: 1.5, color: 'rgba(246,241,231,0.85)' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 26, height: 26, borderRadius: 8, background: bg, color: T.deep, flexShrink: 0 }}>
+                      <Icon style={{ width: 14, height: 14 }} />
+                    </span>
+                    <b style={{ fontFamily: UI, fontWeight: 600, fontSize: 14, color: T.cream, letterSpacing: '-0.012em', lineHeight: 1.25 }}>{t}</b>
                   </span>
-                  <b style={{ display: 'block', fontFamily: UI, fontWeight: 600, fontSize: 14.5, color: T.cream, marginBottom: 4, letterSpacing: '-0.012em' }}>{t}</b>
-                  {d}
+                  {dial ? (
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                      <span style={{ fontFamily: UI, fontSize: 26, fontWeight: 700, color: 'rgba(246,241,231,0.35)', lineHeight: 1 }}>&mdash;</span>
+                      <span style={{ flex: 1, height: 6, borderRadius: 999, background: 'rgba(246,241,231,0.15)' }} />
+                    </span>
+                  ) : null}
+                  <span style={{ display: 'block', maxHeight: dial ? 'none' : '3.1em', overflow: 'hidden', WebkitMaskImage: dial ? 'none' : 'linear-gradient(180deg, #000 45%, transparent 100%)', maskImage: dial ? 'none' : 'linear-gradient(180deg, #000 45%, transparent 100%)' }}>{d}</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 8, fontFamily: UI, fontSize: 11.5, fontWeight: 600, letterSpacing: '0.04em', color: 'rgba(246,241,231,0.6)' }}>
+                    <Lock style={{ width: 11, height: 11 }} /> Free with an account
+                  </span>
                 </li>
               ))}
             </ul>
