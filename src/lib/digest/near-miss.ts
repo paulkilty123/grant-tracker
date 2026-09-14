@@ -72,6 +72,20 @@ const ADJACENT: Partial<Record<LegalStructure, LegalStructure[]>> = {
   scio:               ['cio'],
 }
 
+/** Lower and upper edge of each income band, in pounds. */
+const INCOME_BOUNDS: Record<string, [number, number]> = {
+  'Under £10,000':           [0, 10_000],
+  '£10,000–£50,000':         [10_000, 50_000],
+  '£50,000–£100,000':        [50_000, 100_000],
+  '£100,000–£250,000':       [100_000, 250_000],
+  '£250,000–£500,000':       [250_000, 500_000],
+  '£500,000–£1 million':     [500_000, 1_000_000],
+  '£1 million–£5 million':   [1_000_000, 5_000_000],
+  'Over £5 million':         [5_000_000, Number.POSITIVE_INFINITY],
+  '£100,000–£500,000':       [100_000, 500_000],
+  'Over £500,000':           [500_000, Number.POSITIVE_INFINITY],
+}
+
 function isAdjacent(a: LegalStructure, b: LegalStructure): boolean {
   return (ADJACENT[a] ?? []).includes(b)
 }
@@ -220,8 +234,17 @@ export function findNearMiss({ grant, org, readOn, otherwiseFits }: NearMissInpu
   const g = grant as unknown as Record<string, unknown>
   const cap   = typeof g.maxOrgIncome === 'number' ? g.maxOrgIncome : null
   const floor = typeof g.minOrgIncome === 'number' ? g.minOrgIncome : null
+  // The band's edges, not its midpoint. Unicorn Theatre, in the £1 million to
+  // £5 million band, was told the Clothworkers Foundation (cap £2 million)
+  // had "ruled it out on size" (Paul, 14 Sept 2026). Nothing had: the cap
+  // sits inside the band, so the organisation may well be under it, and the
+  // matcher itself only warns. A cap or floor inside the band is not a near
+  // miss, it is an open question the match list already carries.
+  const bounds = org.annual_income_band ? INCOME_BOUNDS[org.annual_income_band] ?? null : null
+  const straddlesCap   = !!(bounds && cap   && bounds[0] < cap   && cap   < bounds[1])
+  const straddlesFloor = !!(bounds && floor && bounds[0] < floor && floor < bounds[1])
 
-  if (mid && cap && mid > cap && mid <= cap * 2) {
+  if (mid && cap && !straddlesCap && mid > cap && mid <= cap * 2) {
     return {
       dimension: 'income',
       verdict: 'Ruled out on size.',
@@ -231,7 +254,7 @@ export function findNearMiss({ grant, org, readOn, otherwiseFits }: NearMissInpu
         : 'Income bands are approximate. If yours is nearer the cap than the band suggests, it is worth asking.',
     }
   }
-  if (mid && floor && mid < floor && mid >= floor * 0.5) {
+  if (mid && floor && !straddlesFloor && mid < floor && mid >= floor * 0.5) {
     return {
       dimension: 'income',
       verdict: 'Ruled out on size.',

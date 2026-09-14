@@ -592,7 +592,11 @@ export async function buildDigest(
     // on a dimension the reader can do something about, and it never returns
     // area at all.
     const blockers = (result.eligibilityIssues ?? []).filter(i => i.severity === 'blocker')
-    if (result.score < MATCH_FLOOR && result.score > 5) {
+    // Near enough to matter. Below 45 the row failed on more than the one
+    // thing the near-miss names: the Legal Education Foundation's justice
+    // fund was offered to a children's theatre as "everything else fits"
+    // when the theme score said otherwise (Paul, 14 Sept 2026).
+    if (result.score < MATCH_FLOOR && result.score >= 45) {
       const near = findNearMiss({
         grant: normalised,
         org,

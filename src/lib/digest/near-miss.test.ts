@@ -139,3 +139,23 @@ describe('structure containment matches the matcher', () => {
     expect(r?.condition).toBe('')
   })
 })
+
+describe('income near miss uses the band edges', () => {
+  const grant = (over: Partial<Record<string, unknown>>) => ({
+    id: 'g', title: 'G', funder: 'F', funderType: 'trust_foundation', description: '', amountMin: 1000, amountMax: 15000,
+    deadline: null, isRolling: true, isLocal: false, locationTag: 'UK', sectors: [], eligibilityCriteria: [], eligibleStructures: ['registered_charity'],
+    ...over,
+  }) as unknown as Parameters<typeof findNearMiss>[0]['grant']
+  const org = { legal_structure: 'registered_charity', annual_income_band: '£1 million–£5 million', min_grant_target: null, max_grant_target: null } as unknown as Parameters<typeof findNearMiss>[0]['org']
+  it('a cap inside the band is not a near miss', () => {
+    const r = findNearMiss({ grant: grant({ maxOrgIncome: 2_000_000 }), org, readOn: null, otherwiseFits: true })
+    expect(r).toBeNull()
+  })
+  it('a cap just below the band still is', () => {
+    const r = findNearMiss({ grant: grant({ maxOrgIncome: 900_000 }), org: { ...org, annual_income_band: '£1 million–£5 million' } as typeof org, readOn: null, otherwiseFits: true })
+    // midpoint 2.5m is more than twice a 900k cap, so not near either
+    expect(r).toBeNull()
+    const r2 = findNearMiss({ grant: grant({ maxOrgIncome: 400_000 }), org: { ...org, annual_income_band: '£500,000–£1 million' } as typeof org, readOn: null, otherwiseFits: true })
+    expect(r2?.dimension).toBe('income')
+  })
+})
