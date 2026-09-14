@@ -8,7 +8,7 @@ import { ArrowLeft, ArrowRight, ChevronRight, Check, Globe, Pencil, X } from 'lu
 import { createClient } from '@/lib/supabase/client'
 import { getOrganisationByOwner, createOrganisation, updateOrganisation, writeActiveOrgCookie } from '@/lib/organisations'
 import { track } from '@/lib/analytics'
-import { computeMatchScore, MATCH_FLOOR } from '@/lib/matching'
+import { computeMatchScore, MATCH_FLOOR, grantMatchesLocationText } from '@/lib/matching'
 import { columnFor, normaliseNumber, detectRegister, registerLabel, isRecognisedNumber, expectedRegisterFor } from '@/lib/registered-number'
 import { normaliseScrapedGrant } from '@/lib/grants-normalise'
 import type { LegalStructure, ImpactSector, BeneficiaryGroup, FundingType, SpendNeed, Organisation } from '@/types'
@@ -1421,7 +1421,15 @@ export default function OnboardingWizardPage() {
             setStructureBlock({ openNow, ifConstituted })
           }
 
+          // The same two defaults Find Funding applies, so the first screen
+          // and the second agree. On 14 Sept the reveal showed three at 72%
+          // and Find Funding one: the Mark Leonard Trust is invite-only,
+          // which Find Funding hides unless switched on, and Albert Gubay's
+          // "England & Wales, Isle of Man & Ireland" tag fails the location
+          // box Find Funding pre-fills with the organisation's own location.
+          const revealLocation = payload.primary_location ?? ''
           const scored = rows
+            .filter(grant => !grant.isInviteOnly && grantMatchesLocationText(grant.locationTag, revealLocation))
             .map(grant => {
               const result = computeMatchScore(grant, orgForMatching as Parameters<typeof computeMatchScore>[1])
               return { grant, score: result.score }
