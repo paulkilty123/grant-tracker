@@ -395,7 +395,7 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
                     )}
                     {briefHasContent(grant.funder_brief) && (
                       <div className={lead ? 'mt-4 pt-4 border-t border-[#E8E0D1]' : ''}>
-                        <FunderBrief brief={grant.funder_brief} variant="modal" />
+                        <FunderBrief brief={grant.funder_brief} variant="modal" fundingType={grant.funding_type} />
                       </div>
                     )}
                   </div>

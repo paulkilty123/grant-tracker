@@ -347,9 +347,13 @@ export default async function PublicGrantPage({
   const lead         = leadParagraph(brief, grant.description ? String(grant.description) : null)
   const whoCanApply  = briefText(brief, 'who_can_apply')
   const exclusions   = briefText(brief, 'exclusions')
+  const isProgramme  = String(grant.funding_type ?? '') === 'programme'
+  const PROG_FIRST: readonly string[] = ['programme_offer', 'time_commitment', 'cost', 'stage_fit', 'cohort_and_selection', 'delivered_by', 'alumni_outcomes']
   const facts        = PUBLIC_FACT_FIELDS
     .map(([key, label]) => [key, label, briefText(brief, key)] as const)
     .filter((f): f is readonly [typeof f[0], typeof f[1], string] => f[2] !== null)
+    // A programme leads with what you get, not "typical award: a place".
+    .sort((a, b) => isProgramme ? ((PROG_FIRST.indexOf(a[0]) === -1 ? 99 : PROG_FIRST.indexOf(a[0])) - (PROG_FIRST.indexOf(b[0]) === -1 ? 99 : PROG_FIRST.indexOf(b[0]))) : 0)
   /**
    * A programme is not a grant with no amount. What someone wants to know is
    * how long, in what format, when it starts, and whether any money comes with

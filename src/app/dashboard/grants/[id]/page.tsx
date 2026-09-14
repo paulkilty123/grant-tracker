@@ -251,7 +251,7 @@ export default async function GrantDetailPage({
             )}
             {briefHasContent(grant.funder_brief) && (
               <div className={lead ? 'mt-5' : ''}>
-                <FunderBrief brief={grant.funder_brief} variant="page" />
+                <FunderBrief brief={grant.funder_brief} variant="page" fundingType={grant.funding_type ? String(grant.funding_type) : null} />
               </div>
             )}
           </div>

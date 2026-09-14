@@ -86,18 +86,33 @@ export function leadParagraph(
 
 type Variant = 'page' | 'modal'
 
+/** Keys that lead on a programme row. A programme is not a grant with no
+ *  amount: what you get and what it takes come before "typical award". */
+export const PROGRAMME_FIRST: readonly PublicBriefField[] = [
+  'programme_offer', 'time_commitment', 'cost', 'stage_fit', 'cohort_and_selection', 'delivered_by', 'alumni_outcomes',
+]
+
+export function orderedBriefFields(fundingType?: string | null): typeof PUBLIC_BRIEF_FIELDS[number][] {
+  if (fundingType !== 'programme') return [...PUBLIC_BRIEF_FIELDS]
+  const first = PROGRAMME_FIRST.map(k => PUBLIC_BRIEF_FIELDS.find(([key]) => key === k)!).filter(Boolean)
+  const rest = PUBLIC_BRIEF_FIELDS.filter(([key]) => !PROGRAMME_FIRST.includes(key))
+  return [...first, ...rest]
+}
+
 export function FunderBrief({
   brief,
   variant = 'page',
+  fundingType,
 }: {
   brief: Record<string, unknown> | null | undefined
   variant?: Variant
+  fundingType?: string | null
 }) {
   if (!brief) return null
 
   // what_they_fund is deliberately skipped here when it has already been used as
   // the lead, so the same paragraph never appears twice on one screen.
-  const shown = PUBLIC_BRIEF_FIELDS
+  const shown = orderedBriefFields(fundingType)
     .filter(([key]) => usable(brief[key]))
     .filter(([key]) => !(key === 'what_they_fund' && usable(brief.what_they_fund)))
 

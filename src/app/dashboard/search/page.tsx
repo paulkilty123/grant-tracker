@@ -1173,6 +1173,10 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                 brief.delivered_by         ? { Icon: Users,        pal: 'amber' as const, label: 'Delivered by',          text: brief.delivered_by }         : null,
                 brief.alumni_outcomes      ? { Icon: TrendingUp,   pal: 'coral' as const, label: 'Past cohorts',          text: brief.alumni_outcomes }      : null,
               ].filter((b): b is NonNullable<typeof b> => b !== null)
+              // A programme leads with what you get and what it takes, not with
+              // "typical funding: a place on the programme".
+              const PROG_FIRST = ['What you get', 'Time commitment', 'Cost', 'Who it is for', 'Places and selection', 'Delivered by', 'Past cohorts']
+              if (ft === 'programme') blocks.sort((a, b) => (PROG_FIRST.indexOf(a.label) === -1 ? 99 : PROG_FIRST.indexOf(a.label)) - (PROG_FIRST.indexOf(b.label) === -1 ? 99 : PROG_FIRST.indexOf(b.label)))
 
               const lastRow = Math.floor((blocks.length - 1) / 2) * 2
 
