@@ -625,7 +625,7 @@ export default async function PublicGrantPage({
             <h3 style={{ fontFamily: UI, fontSize: 22, fontWeight: 600, letterSpacing: '-0.025em', color: T.cream, margin: '0 0 9px' }}>
               {deadlinePassed ? 'Missed this round?' : 'Is it worth applying?'}
             </h3>
-            <p style={{ fontSize: 15.5, lineHeight: 1.6, color: 'rgba(246,241,231,0.85)', margin: '0 0 20px', maxWidth: '56ch' }}>
+            <p style={{ fontSize: 15.5, lineHeight: 1.6, color: 'rgba(246,241,231,0.85)', margin: '0 0 20px', maxWidth: '62ch' }}>
               {deadlinePassed
                 ? 'There are more in the catalogue. Shoots checks them against your organisation and tells you which ones are open to you now.'
                 : 'Being eligible is not the same as being a good fit. Shoots checks this opportunity against your organisation and tells you where you actually stand.'}
@@ -668,11 +668,12 @@ export default async function PublicGrantPage({
               </Link>
               {/* From lib/trial.ts, never a literal: the trial length is a
                   commercial promise and this is the page a stranger reads
-                  before signing up. Today that is the setup time alone. The
-                  trial is Apply-only and not purchasable until 10 September,
-                  and this CTA goes to ordinary signup, which lands on Match,
-                  so the offer would be undeliverable from here twice over. */}
-              <span style={{ fontSize: 13.5, color: 'rgba(246,241,231,0.7)' }}>{ctaSupportLine()}</span>
+                  before signing up. Live since 14 September, because every
+                  ordinary signup starts the 14-day Apply trial. Beside the
+                  button on desktop, under it only when the row has to wrap;
+                  body colour, not the dimmed grey: it is the strongest line on
+                  the panel. */}
+              <span style={{ fontSize: 14.5, lineHeight: 1.5, color: 'rgba(246,241,231,0.85)', flex: '1 1 260px' }}>{ctaSupportLine()}</span>
             </span>
           </div>
 
