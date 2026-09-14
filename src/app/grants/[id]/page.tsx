@@ -352,7 +352,10 @@ export default async function PublicGrantPage({
   const facts        = PUBLIC_FACT_FIELDS
     .map(([key, label]) => [key, label, briefText(brief, key)] as const)
     .filter((f): f is readonly [typeof f[0], typeof f[1], string] => f[2] !== null)
-    // A programme leads with what you get, not "typical award: a place".
+    // On a programme row the short facts live in the strip above (cost) or say
+    // the same thing as the strip (typical award: "a place, no cash"), so they
+    // come out of the prose list. The rest lead with what you get.
+    .filter(([key]) => !(isProgramme && (key === 'cost' || key === 'typical_award')))
     .sort((a, b) => isProgramme ? ((PROG_FIRST.indexOf(a[0]) === -1 ? 99 : PROG_FIRST.indexOf(a[0])) - (PROG_FIRST.indexOf(b[0]) === -1 ? 99 : PROG_FIRST.indexOf(b[0]))) : 0)
   /**
    * A programme is not a grant with no amount. What someone wants to know is
@@ -370,9 +373,11 @@ export default async function PublicGrantPage({
     const start = humaniseDateLong(grant.prog_next_cohort_start ? String(grant.prog_next_cohort_start) : null)
     if (start) programme.push(['Next start', start])
     if (typeof grant.prog_cohort_size === 'number' && grant.prog_cohort_size > 0) programme.push(['Cohort size', String(grant.prog_cohort_size)])
-    if (typeof grant.prog_includes_funding === 'boolean') {
+    const cost = briefText(brief, 'cost')
+    if (cost) programme.push(['Cost', cost.replace(/\.$/, '')])
+    if (grant.prog_includes_funding === true) {
       const amt = typeof grant.prog_funding_amount === 'number' ? money(grant.prog_funding_amount) : null
-      programme.push(['Includes funding', grant.prog_includes_funding ? (amt ? `Yes, ${amt}` : 'Yes') : 'No, the offer is the place'])
+      programme.push(['Includes funding', amt ? `Yes, ${amt}` : 'Yes'])
     }
   }
 
@@ -631,12 +636,12 @@ export default async function PublicGrantPage({
 
           {programme.length > 0 && (
             <div style={section}>
-              <h2 style={sectionH2}>Programme details</h2>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 18 }}>
+              <h2 style={sectionH2}>Programme at a glance</h2>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
                 {programme.map(([label, value]) => (
-                  <div key={label}>
-                    <p style={{ fontFamily: UI, fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.deep, margin: '0 0 6px' }}>{label}</p>
-                    <p style={{ fontSize: 14.5, lineHeight: 1.6, color: T.deep, margin: 0 }}>{value}</p>
+                  <div key={label} style={{ background: T.warm, borderRadius: 12, padding: '10px 14px', minWidth: 120 }}>
+                    <p style={{ fontFamily: UI, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.inkMuted, margin: '0 0 3px' }}>{label}</p>
+                    <p style={{ fontFamily: UI, fontSize: 15, fontWeight: 600, color: T.deep, margin: 0, lineHeight: 1.3 }}>{value}</p>
                   </div>
                 ))}
               </div>
@@ -646,7 +651,7 @@ export default async function PublicGrantPage({
           {facts.length > 0 && (
             <div style={section}>
               <h2 style={sectionH2}>From the funder&rsquo;s own pages</h2>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 18 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isProgramme ? '1fr' : 'repeat(auto-fit, minmax(240px, 1fr))', gap: isProgramme ? 16 : 18 }}>
                 {facts.map(([key, label, text]) => (
                   <div key={key}>
                     <p style={{ fontFamily: UI, fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.deep, margin: '0 0 6px' }}>{label}</p>
