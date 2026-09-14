@@ -198,15 +198,6 @@ function briefText(brief: Record<string, unknown> | null, key: string): string |
   return t
 }
 
-/** The real first sentence of a brief field, for the locked preview. Never a
- *  written teaser: if the field is empty the lock does not appear at all. */
-function firstSentence(text: string | null): string | null {
-  if (!text) return null
-  const m = text.match(/^[^.!?]*[.!?](?=\s|$)/)
-  const first = (m ? m[0] : text).trim()
-  return first.length > 160 ? first.slice(0, 157).replace(/\s+\S*$/, '') + '…' : first
-}
-
 async function loadGrant(rawId: string) {
   const id = decodeURIComponent(rawId)
   const supabase = await createClient()
@@ -356,8 +347,6 @@ export default async function PublicGrantPage({
   const lead         = leadParagraph(brief, grant.description ? String(grant.description) : null)
   const whoCanApply  = briefText(brief, 'who_can_apply')
   const exclusions   = briefText(brief, 'exclusions')
-  const strongFirst  = firstSentence(briefText(brief, 'strong_application'))
-  const tipsFirst    = firstSentence(briefText(brief, 'funder_tips'))
   const facts        = PUBLIC_FACT_FIELDS
     .map(([key, label]) => [key, label, briefText(brief, key)] as const)
     .filter((f): f is readonly [typeof f[0], typeof f[1], string] => f[2] !== null)
@@ -676,16 +665,18 @@ export default async function PublicGrantPage({
                 ? 'There are more in the catalogue. Shoots checks them against your organisation and tells you which ones are open to you now.'
                 : 'Being eligible is not the same as being a good fit. Shoots checks this opportunity against your organisation and tells you where you actually stand.'}
             </p>
-            {/* What an account adds, in this funder's terms. No locks: a padlock
+            {/* What an account adds, across the catalogue. No locks: a padlock
                 reads as a paywall, and the moment is about what the reader gains.
-                The two brief-backed tiles appear only when the row holds them. */}
+                All four tiles always show (Paul, 14 Sept): the panel describes the
+                product, and the line beneath says the check runs on every
+                opportunity, so it is not a claim about this one row. */}
             <ul style={{ margin: '0 0 20px', padding: 0, listStyle: 'none', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
               {[
                 { Icon: CheckCircle, bg: T.sage, t: 'Do you qualify?', d: 'The funder\u2019s eligibility rules, checked against your profile.' },
                 { Icon: TrendingUp, bg: T.teal, t: 'Your match score', d: 'How closely you fit what they fund, who they fund and where.' },
-                strongFirst ? { Icon: Star, bg: T.terra, t: 'What makes a strong application', d: 'What this funder wants to see.' } : null,
-                tipsFirst   ? { Icon: Lightbulb, bg: T.gold, t: 'Insider tips', d: 'What applicants tend to miss in the guidance.' } : null,
-              ].filter((x): x is NonNullable<typeof x> => x !== null).map(({ Icon, bg, t, d }) => (
+                { Icon: Star, bg: T.terra, t: 'What makes a strong application', d: 'What this funder wants to see.' },
+                { Icon: Lightbulb, bg: T.gold, t: 'Insider tips', d: 'What applicants tend to miss in the guidance.' },
+              ].map(({ Icon, bg, t, d }) => (
                 <li key={t} style={{ background: 'rgba(246,241,231,0.06)', border: '1px solid rgba(246,241,231,0.12)', borderRadius: 12, padding: '14px 14px 13px' }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                     <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 26, height: 26, borderRadius: 8, background: bg, color: T.deep, flexShrink: 0 }}>
