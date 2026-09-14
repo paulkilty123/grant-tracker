@@ -547,6 +547,10 @@ export async function buildDigest(
     // 31 August — and the closing section filters those out while the match
     // list did not. Rolling funds have no deadline to pass.
     if (g.deadline && !g.is_rolling && daysUntil(String(g.deadline), now) < 0) continue
+    // Invite-only funds stay out of the email. Find Funding shows them with a
+    // badge; the email has no badge, and "Reach Fund" as a top match for a
+    // reader who cannot apply to it is a false promise (Paul, 14 Sept 2026).
+    if (g.is_invite_only) continue
 
     // The app's normaliser, not the local copy below. The local one carried
     // no nicheTags, funderBrief or fundingSubtypes, all of which the scorer
@@ -596,7 +600,10 @@ export async function buildDigest(
     // thing the near-miss names: the Legal Education Foundation's justice
     // fund was offered to a children's theatre as "everything else fits"
     // when the theme score said otherwise (Paul, 14 Sept 2026).
-    if (result.score < MATCH_FLOOR && result.score >= 45) {
+    // 55 is the app's own floor for "worth showing". Below it the row failed
+    // on more than the one thing the near miss names: a cancer care
+    // programme was a near miss for a transport charity at 47.
+    if (result.score < MATCH_FLOOR && result.score >= 55) {
       const near = findNearMiss({
         grant: normalised,
         org,
