@@ -36,7 +36,12 @@ Be strict. A funder reads this to decide whether to spend an hour on the organis
 
 Proposals: sectors, 1 to 4 values from the SECTORS list, most central first. beneficiaries, 1 to 4 values from the BENEFICIARIES list, primary first; use general_public only when no group is named. niche, up to 5 values from the SPECIALISMS list, and only ones that belong to a sector you proposed. reach, where the people they help live: "local" for one town, borough or district; "regional" for a county or region; "national" for across the UK; "international" when some or all of the work is outside the UK; null when the text does not say. Propose only what the text supports; an empty list is right when it says nothing. Values must be copied exactly from the lists.
 
-The test is whether a funder could tell this organisation apart from a hundred others doing similar work. If the text gives a real group, a real activity and a real change, it passes, however plainly it is written. Only a genuinely vague line is not covered.
+The test is whether a funder could tell this organisation apart from a hundred others doing similar work. If the text gives a real group, a real activity and a real change, it passes, however plainly it is written.
+
+Calibration, judge consistently with these:
+- "Fighting hunger and tackling food waste by redistributing surplus food to people facing food insecurity across the South West." who: NOT covered ("people facing food insecurity" names no particular group). what: NOT covered ("redistributing surplus food" is the activity, nothing says what changes for anyone). where: covered.
+- "We collect surplus food from supermarkets and deliver it to food banks and community groups across the South West, so families on low incomes can eat well." who: covered. what: covered. where: covered.
+- "We run a training kitchen in Bristol where young people leaving care gain a catering qualification and their first paid job." who: covered. what: covered. where: covered.
 
 When a line is not covered, also give "question": one short question, at most 14 words, that the writer can answer in a few words and that would cover the line, specific to their text: "Who receives the food, and what are they facing?" rather than "Who benefits?". Empty when the line is covered.
 
@@ -61,7 +66,7 @@ export async function POST(req: NextRequest) {
   try {
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
     const res = await client.messages.create({
-      model: MODEL, max_tokens: 800, system: SYSTEM,
+      model: MODEL, max_tokens: 800, temperature: 0, system: SYSTEM,
       messages: [{ role: 'user', content: [
         `Organisation: ${(body.name ?? '').slice(0, 120)}`,
         `Stated location: ${(body.location ?? '').slice(0, 120)}`,
