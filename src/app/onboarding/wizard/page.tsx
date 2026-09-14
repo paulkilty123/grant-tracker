@@ -2881,11 +2881,20 @@ function StepMission({ state, update, crib, onProposals, onBack, onContinue }: {
 
       {/* Covered lines go quiet; an open line becomes the instruction, with an
           example, so the reader sees what to add without reading anything else. */}
-      <p style={{ margin: '14px 0 8px', fontFamily: 'var(--font-space-grotesk)', fontSize: 12, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: T.textTertiary }}>
-        {complete ? 'All three covered' : `${items.filter(i => !i.done).length === 1 ? 'One thing' : `${items.filter(i => !i.done).length} things`} still to add`}
-        {grading && <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, marginLeft: 10 }}>reading…</span>}
-      </p>
-      <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 8 }}>
+      {/* While the model reads, say so at a size a person notices (Paul,
+          14 Sept). The checklist below dims until it answers. */}
+      {grading ? (
+        <div role="status" aria-live="polite" style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '14px 0 8px', padding: '10px 14px', borderRadius: 12, background: T.greenCream, fontFamily: 'var(--font-space-grotesk)', fontSize: 14.5, fontWeight: 600, color: T.greenDeep }}>
+          <style>{`@keyframes wizPulse { 0%, 100% { opacity: .25; transform: scale(.85) } 50% { opacity: 1; transform: scale(1) } }`}</style>
+          <span aria-hidden="true" style={{ width: 10, height: 10, borderRadius: 99, background: T.greenDeep, animation: 'wizPulse 1s ease-in-out infinite' }} />
+          Reading your description…
+        </div>
+      ) : (
+        <p style={{ margin: '14px 0 8px', fontFamily: 'var(--font-space-grotesk)', fontSize: 12, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: T.textTertiary }}>
+          {complete ? 'All three covered' : `${items.filter(i => !i.done).length === 1 ? 'One thing' : `${items.filter(i => !i.done).length} things`} still to add`}
+        </p>
+      )}
+      <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 8, opacity: grading ? 0.45 : 1, transition: 'opacity 200ms ease' }}>
         {items.map(i => (
           <li key={i.label} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontFamily: 'var(--font-dm-sans)', fontSize: 14, lineHeight: 1.45 }}>
             <span aria-hidden="true" style={{ width: 20, height: 20, marginTop: 1, borderRadius: 99, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: i.done ? T.greenDeep : 'transparent', border: `1.5px solid ${i.done ? T.greenDeep : T.coralText}`, color: T.onDeep, fontSize: 12, flexShrink: 0 }}>{i.done ? '✓' : ''}</span>
