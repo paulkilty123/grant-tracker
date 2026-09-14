@@ -353,6 +353,27 @@ export default async function PublicGrantPage({
   const facts        = PUBLIC_FACT_FIELDS
     .map(([key, label]) => [key, label, briefText(brief, key)] as const)
     .filter((f): f is readonly [typeof f[0], typeof f[1], string] => f[2] !== null)
+  /**
+   * A programme is not a grant with no amount. What someone wants to know is
+   * how long, in what format, when it starts, and whether any money comes with
+   * the place. Rendered only for programme rows, from the prog_* columns.
+   */
+  const MODE_LABEL: Record<string, string> = { online: 'Online', in_person: 'In person', hybrid: 'Online, with in-person sessions' }
+  const programme: Array<[string, string]> = []
+  if (String(grant.funding_type ?? '') === 'programme') {
+    const weeks = typeof grant.prog_length_weeks === 'number' ? grant.prog_length_weeks : null
+    if (weeks) programme.push(['Length', `${weeks} week${weeks === 1 ? '' : 's'}`])
+    const mode = grant.prog_location_mode ? MODE_LABEL[String(grant.prog_location_mode)] ?? String(grant.prog_location_mode) : null
+    const city = grant.prog_location_city ? String(grant.prog_location_city) : null
+    if (mode || city) programme.push(['Format', [mode, city].filter(Boolean).join(', ')])
+    const start = humaniseDateLong(grant.prog_next_cohort_start ? String(grant.prog_next_cohort_start) : null)
+    if (start) programme.push(['Next start', start])
+    if (typeof grant.prog_cohort_size === 'number' && grant.prog_cohort_size > 0) programme.push(['Cohort size', String(grant.prog_cohort_size)])
+    if (typeof grant.prog_includes_funding === 'boolean') {
+      const amt = typeof grant.prog_funding_amount === 'number' ? money(grant.prog_funding_amount) : null
+      programme.push(['Includes funding', grant.prog_includes_funding ? (amt ? `Yes, ${amt}` : 'Yes') : 'No, the offer is the place'])
+    }
+  }
 
   const funderType = String(grant.funder_type ?? 'other')
   const typeLabel  = FUNDER_LABELS[funderType] ?? funderType.replace(/_/g, ' ')
@@ -606,6 +627,20 @@ export default async function PublicGrantPage({
               </div>
             )}
           </div>
+
+          {programme.length > 0 && (
+            <div style={section}>
+              <h2 style={sectionH2}>Programme details</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 18 }}>
+                {programme.map(([label, value]) => (
+                  <div key={label}>
+                    <p style={{ fontFamily: UI, fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.deep, margin: '0 0 6px' }}>{label}</p>
+                    <p style={{ fontSize: 14.5, lineHeight: 1.6, color: T.deep, margin: 0 }}>{value}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {facts.length > 0 && (
             <div style={section}>
