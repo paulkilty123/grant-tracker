@@ -2768,7 +2768,35 @@ function StepMission({ state, update, crib, onBack, onContinue }: {
     if (crib && !state.mission.trim()) { update('mission', crib); setFromSite(true) }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
-  const items = missionChecklist(state.mission, state.primaryLocation)
+  /* The model's grading, when it has answered for the current text. The
+     word rules render instantly; this replaces them line by line, and the
+     suggestion under an open line is then in the reader's own terms. Asked
+     800ms after typing stops, and on arrival when the box was pre-filled. */
+  const [graded, setGraded] = useState<{ text: string; items: { key: string; covered: boolean; suggestion: string }[] } | null>(null)
+  const [grading, setGrading] = useState(false)
+  useEffect(() => {
+    const text = state.mission.trim()
+    if (text.length < 20) return
+    const t = setTimeout(async () => {
+      setGrading(true)
+      try {
+        const res = await fetch('/api/profile/mission-check', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mission: text, name: state.name, location: state.primaryLocation }) })
+        if (res.ok) {
+          const data = await res.json() as { items: { key: string; covered: boolean; suggestion: string }[] | null }
+          if (data.items) setGraded({ text, items: data.items })
+        }
+      } catch { /* the rules stand */ }
+      finally { setGrading(false) }
+    }, 800)
+    return () => clearTimeout(t)
+  }, [state.mission, state.name, state.primaryLocation])
+
+  const ruleItems = missionChecklist(state.mission, state.primaryLocation)
+  const KEYS = ['who', 'what', 'where'] as const
+  const items = ruleItems.map((r, i) => {
+    const g = graded && graded.text === state.mission.trim() ? graded.items.find(x => x.key === KEYS[i]) : undefined
+    return g ? { ...r, done: g.covered, hint: g.suggestion || r.hint } : r
+  })
   const complete = items.every(i => i.done)
   const showTag = !!crib && (fromSite || state.mission === crib)
   return (
@@ -2806,6 +2834,7 @@ function StepMission({ state, update, crib, onBack, onContinue }: {
           example, so the reader sees what to add without reading anything else. */}
       <p style={{ margin: '14px 0 8px', fontFamily: 'var(--font-space-grotesk)', fontSize: 12, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: T.textTertiary }}>
         {complete ? 'All three covered' : `${items.filter(i => !i.done).length === 1 ? 'One thing' : `${items.filter(i => !i.done).length} things`} still to add`}
+        {grading && <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, marginLeft: 10 }}>reading…</span>}
       </p>
       <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 8 }}>
         {items.map(i => (
