@@ -21,6 +21,7 @@ export const BODY = "'Plus Jakarta Sans',Helvetica,Arial,sans-serif"
 export const C = {
   page:   '#FFFFFF',
   card:   '#EDF6F1',
+  cream:  '#F5F1E8',   // the house Cream: a second card colour so two asks do not look like one (Paul, 14 Sept 2026)
   deep:   '#1D3C3E',
   onDeep: '#F6F1E7',
   body:   '#5F5E5A',

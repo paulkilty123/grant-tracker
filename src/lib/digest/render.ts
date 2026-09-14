@@ -427,7 +427,7 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
   // pills gave the prompt and this equal weight.
   if (!profileGap) {
     rows.push(`<tr><td class="gutter" style="background:${C.page};padding:26px 30px 30px;">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.card};border-radius:14px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.cream};border-radius:14px;">
       <tr><td style="padding:18px 20px;">
         <p style="margin:0 0 6px;font-family:${UI};font-size:15px;font-weight:600;letter-spacing:-.2px;color:${C.deep};">Seen a funder we are missing, or something that looks wrong?</p>
         <p style="margin:0 0 14px;font-family:${BODY};font-size:13.5px;line-height:1.6;color:${C.body};">
