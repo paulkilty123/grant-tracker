@@ -2876,7 +2876,7 @@ function StepMission({ state, update, crib, onProposals, onBack, onContinue }: {
     <>
       <BackLink onClick={onBack} />
       <h1 style={H1_STYLE}>What do you do?</h1>
-      <p style={SUBTITLE_STYLE}>Two or three sentences. This is what we match on.</p>
+      <p style={SUBTITLE_STYLE}>Two or three sentences. We use it to suggest your sectors, beneficiaries and specialisms, which is what the matching runs on.</p>
 
       <div style={{ position: 'relative' }}>
         <textarea
