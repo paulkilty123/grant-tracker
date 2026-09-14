@@ -1,4 +1,4 @@
-import type { DigestModel } from './build'
+import { NEW_THIS_WEEK_SECTION, type DigestModel } from './build'
 import { esc, humanDayDate, plural, spell } from './text'
 import { FUNDING_TYPE_COLOUR, type FundingTypeKey } from '@/lib/funding-type-colours'
 import { UI, BODY, C } from '@/lib/email/tokens'
@@ -314,8 +314,7 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
   // beneficiary group as a warning rather than a cap. The builder still
   // computes the rows so they stay deduped out of the ranked list; the
   // renderer simply does not draw them until the matcher is fixed.
-  const SHOW_NEW_THIS_WEEK = false
-  if (SHOW_NEW_THIS_WEEK && m.newThisWeek.length) {
+  if (NEW_THIS_WEEK_SECTION && m.newThisWeek.length) {
     const body = m.newThisWeek.map(r => `
       <p style="margin:0 0 3px;">${nameLink(r.url, r.title, 16)}</p>
       ${typedMeta(r.type, r.meta, true)}

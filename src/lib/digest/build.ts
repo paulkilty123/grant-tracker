@@ -30,6 +30,15 @@ export const MATCH_FLOOR = 65
  * claim is literally "since the last one".
  */
 export const NEW_THIS_WEEK_DAYS = 7
+/**
+ * Whether the "New this week" section is drawn. OFF since the 8 Sept send
+ * (Paul, 7 Sept): at the 65 floor it surfaced the Army Benevolent Fund for
+ * three arts charities, because the matcher treats a funder's named
+ * beneficiary group as a warning rather than a cap. The builder still
+ * computes the rows; while OFF they stay in the ranked list rather than
+ * being carved out for a section nobody sees.
+ */
+export const NEW_THIS_WEEK_SECTION = false
 
 /** Caps are a safety valve for a pathological week, not an editing device. */
 export const CAPS = { closing: 5, inProgress: 3, newMatches: 5, nearMisses: 2, newThisWeek: 5 } as const
@@ -690,7 +699,13 @@ export async function buildDigest(
   //
   // Still deduped against "New this week", so one fund cannot appear twice in
   // one email under two headings.
-  const unshown = withBlurb.filter(s => !newThisWeekKeys.has(String(s.row.id)))
+  // Only carve "New this week" out of the ranked list when that section is
+  // actually rendered. It was switched off for the 8 Sept send, but the carve
+  // stayed, so every row first seen in the last seven days that cleared the
+  // floor vanished from the email: CAST Design Hops at 79, Big Issue Invest
+  // at 77, Daring Capital at 74 (Paul, 14 Sept 2026, "some digests fall
+  // short of five"). One switch, read by builder and renderer alike.
+  const unshown = NEW_THIS_WEEK_SECTION ? withBlurb.filter(s => !newThisWeekKeys.has(String(s.row.id))) : withBlurb
   unshown.sort(matchOrder(seen))
 
   // Week one names its sort out loud — "here are the three closing soonest" —
