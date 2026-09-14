@@ -1647,7 +1647,7 @@ export default function OnboardingWizardPage() {
    ═══════════════════════════════════════════════ */
 
 const SIGNUP_ROLES: { value: SignupRole; label: string }[] = [
-  { value: 'organisation', label: 'This organisation' },
+  { value: 'organisation', label: 'An organisation' },
   { value: 'consultant',   label: 'A fundraiser or consultant working with several' },
   { value: 'network',      label: 'A network or membership body' },
 ]
