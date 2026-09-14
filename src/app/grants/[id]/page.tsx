@@ -199,25 +199,6 @@ function firstSentence(text: string | null): string | null {
   return first.length > 160 ? first.slice(0, 157).replace(/\s+\S*$/, '') + '…' : first
 }
 
-/**
- * The rules Shoots checks for this funder, named in plain words, counted from
- * the row itself. All of them are visible on the page above, so counting them
- * gives nothing away (rule 6): the locked part is the check against a profile.
- */
-function rulesChecked(row: Record<string, unknown>): string[] {
-  const out: string[] = []
-  if (Array.isArray(row.eligible_structures) && row.eligible_structures.length) out.push('legal structure')
-  if (row.min_org_income != null || row.max_org_income != null) out.push('annual income')
-  if (row.location_tag || row.is_local) out.push('where you work')
-  const sectors = Array.isArray(row.impact_sectors) ? row.impact_sectors.length : 0
-  if (sectors) out.push('what you do')
-  const ben = Array.isArray(row.target_beneficiaries) ? row.target_beneficiaries.length : 0
-  if (ben) out.push('who you help')
-  if (row.org_stage) out.push('how long you have operated')
-  if (row.amount_min != null || row.amount_max != null) out.push('grant size')
-  return out
-}
-
 async function loadGrant(rawId: string) {
   const id = decodeURIComponent(rawId)
   const supabase = await createClient()
@@ -369,7 +350,6 @@ export default async function PublicGrantPage({
   const exclusions   = briefText(brief, 'exclusions')
   const strongFirst  = firstSentence(briefText(brief, 'strong_application'))
   const tipsFirst    = firstSentence(briefText(brief, 'funder_tips'))
-  const rules        = rulesChecked(grant as Record<string, unknown>)
   const facts        = PUBLIC_FACT_FIELDS
     .map(([key, label]) => [key, label, briefText(brief, key)] as const)
     .filter((f): f is readonly [typeof f[0], typeof f[1], string] => f[2] !== null)
@@ -658,7 +638,7 @@ export default async function PublicGrantPage({
                 strongFirst ? { Icon: Star, bg: T.terra, t: 'What makes a strong application' } : null,
                 tipsFirst   ? { Icon: Lightbulb, bg: T.gold, t: 'Insider tips' } : null,
                 { Icon: TrendingUp, bg: T.teal, t: 'Your match score' },
-                { Icon: CheckCircle, bg: T.sage, t: rules.length ? `${rules.length} rule${rules.length === 1 ? '' : 's'} checked against you` : 'Whether you qualify' },
+                { Icon: CheckCircle, bg: T.sage, t: 'Do you qualify?' },
               ].filter((x): x is NonNullable<typeof x> => x !== null).map(({ Icon, bg, t }) => (
                 <li key={t} style={{ background: 'rgba(246,241,231,0.06)', border: '1px solid rgba(246,241,231,0.12)', borderRadius: 12, padding: '14px 14px 12px' }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
@@ -668,7 +648,7 @@ export default async function PublicGrantPage({
                     <b style={{ fontFamily: UI, fontWeight: 600, fontSize: 14, color: T.cream, letterSpacing: '-0.012em', lineHeight: 1.25 }}>{t}</b>
                   </span>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: UI, fontSize: 11.5, fontWeight: 600, letterSpacing: '0.04em', color: 'rgba(246,241,231,0.6)' }}>
-                    <Lock style={{ width: 11, height: 11 }} /> Free with an account
+                    <Lock style={{ width: 11, height: 11 }} /> Sign up to see
                   </span>
                 </li>
               ))}
