@@ -1433,11 +1433,12 @@ export default function OnboardingWizardPage() {
               const result = computeMatchScore(grant, orgForMatching as Parameters<typeof computeMatchScore>[1])
               return { grant, score: result.score }
             })
-            // All four funding types, not grants only. Hiding programmes,
-            // investment and in-kind here meant onboarding concealed the
-            // non-grant breadth at the exact moment the product is meant to
-            // prove itself. 113 of the 639 live rows are non-grant.
-            .filter(x => x.score >= MATCH_FLOOR)
+            // Grants only, to match the tab Find Funding opens on (Paul, 14
+            // Sept 2026: most people look for funding first and consider
+            // programmes, investment and in-kind later). This reverses the
+            // earlier decision to show all four types here; the breadth is one
+            // tab away and the first screen must agree with the second.
+            .filter(x => x.score >= MATCH_FLOOR && (x.grant.fundingType ?? 'grant') === 'grant')
             .sort((a, b) => b.score - a.score)
 
           setRevealCount(scored.length)
@@ -3191,7 +3192,7 @@ function StepReveal({ matchCount, failed, structureBlock, topMatches, hasMission
       {topMatches && topMatches.length > 0 && (
         <>
           <div style={{ fontSize: 13, fontWeight: 500, color: T.textPrimary, fontFamily: 'var(--font-space-grotesk)', marginBottom: 10 }}>
-            Your top {Math.min(topMatches.length, 3)} matches
+            Your top {Math.min(topMatches.length, 3)} grant matches
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
             {topMatches.map(m => (
