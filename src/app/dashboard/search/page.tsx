@@ -1164,6 +1164,14 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                 typicalAwardText         ? { Icon: DollarSign,   pal: 'green' as const, label: LBL('typical_award'),      text: typicalAwardText }         : null,
                 brief.decision_timeline  ? { Icon: CalendarDays, pal: 'amber' as const, label: LBL('decision_timeline'),  text: brief.decision_timeline }  : null,
                 brief.funder_tips        ? { Icon: Lightbulb,    pal: 'coral' as const, label: 'Insider tips',            text: brief.funder_tips }        : null,
+                // Programme-shaped fields. Only programme rows carry them.
+                brief.programme_offer      ? { Icon: CheckCircle2, pal: 'green' as const, label: 'What you get',          text: brief.programme_offer }      : null,
+                brief.time_commitment      ? { Icon: CalendarDays, pal: 'amber' as const, label: 'Time commitment',       text: brief.time_commitment }      : null,
+                brief.cost                 ? { Icon: DollarSign,   pal: 'green' as const, label: 'Cost',                  text: brief.cost }                 : null,
+                brief.stage_fit            ? { Icon: Users,        pal: 'green' as const, label: 'Who it is for',         text: brief.stage_fit }            : null,
+                brief.cohort_and_selection ? { Icon: Star,         pal: 'amber' as const, label: 'Places and selection',  text: brief.cohort_and_selection } : null,
+                brief.delivered_by         ? { Icon: Users,        pal: 'amber' as const, label: 'Delivered by',          text: brief.delivered_by }         : null,
+                brief.alumni_outcomes      ? { Icon: TrendingUp,   pal: 'coral' as const, label: 'Past cohorts',          text: brief.alumni_outcomes }      : null,
               ].filter((b): b is NonNullable<typeof b> => b !== null)
 
               const lastRow = Math.floor((blocks.length - 1) / 2) * 2

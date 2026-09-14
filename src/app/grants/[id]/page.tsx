@@ -178,6 +178,14 @@ const PUBLIC_FACT_FIELDS = [
   ['geographic_focus',  'Where'],
   ['priorities',        'Current priorities'],
   ['decision_timeline', 'Decision timeline'],
+  // Programme-shaped answers; absent on grant rows.
+  ['programme_offer',      'What you get'],
+  ['time_commitment',      'Time commitment'],
+  ['cost',                 'Cost'],
+  ['stage_fit',            'Who it is for'],
+  ['cohort_and_selection', 'Places and selection'],
+  ['delivered_by',         'Delivered by'],
+  ['alumni_outcomes',      'Past cohorts'],
 ] as const
 
 /** Non-empty string, and not one of the enricher's ways of saying "unknown". */

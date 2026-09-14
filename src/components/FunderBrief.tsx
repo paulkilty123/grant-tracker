@@ -40,6 +40,15 @@ export const PUBLIC_BRIEF_FIELDS = [
   ['decision_timeline',  'Decision timeline'],
   ['strong_application', 'What makes a strong application'],
   ['funder_tips',        'Tips'],
+  // Programme-shaped answers, added 14 Sept 2026 by scripts/enrich-programmes-2026-09-14.ts.
+  // Absent on grant rows, so they cost grants nothing.
+  ['programme_offer',      'What you get'],
+  ['time_commitment',      'Time commitment'],
+  ['cost',                 'Cost'],
+  ['stage_fit',            'Who it is for'],
+  ['cohort_and_selection', 'Places and selection'],
+  ['delivered_by',         'Delivered by'],
+  ['alumni_outcomes',      'Past cohorts'],
 ] as const
 
 export type PublicBriefField = (typeof PUBLIC_BRIEF_FIELDS)[number][0]
