@@ -106,3 +106,11 @@ export const SETUP_PHRASE = `About ${SETUP_MINUTES} minutes to set up.`
 export function ctaSupportLine(): string {
   return TRIAL_IS_LIVE ? `${TRIAL_PHRASE}. ${SETUP_PHRASE}` : SETUP_PHRASE
 }
+
+/**
+ * The same line as sentences, for a surface that wants each sentence to stay
+ * whole when the row wraps. Joined with a space this is ctaSupportLine().
+ */
+export function ctaSupportParts(): string[] {
+  return TRIAL_IS_LIVE ? [`${TRIAL_PHRASE}.`, SETUP_PHRASE] : [SETUP_PHRASE]
+}

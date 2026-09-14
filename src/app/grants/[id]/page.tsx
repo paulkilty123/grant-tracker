@@ -13,7 +13,7 @@ import {
   Building2, Search, TrendingUp, ShieldCheck, Star, Lightbulb,
 } from 'lucide-react'
 import { MCP_BRAND_NAME, MCP_APP_ORIGIN } from '@/lib/mcp-brand'
-import { ctaSupportLine } from '@/lib/trial'
+import { ctaSupportParts } from '@/lib/trial'
 import { leadParagraph } from '@/components/FunderBrief'
 
 // ── Public bridge page ───────────────────────────────────────────────────────
@@ -673,7 +673,11 @@ export default async function PublicGrantPage({
                   button on desktop, under it only when the row has to wrap;
                   body colour, not the dimmed grey: it is the strongest line on
                   the panel. */}
-              <span style={{ fontSize: 14.5, lineHeight: 1.5, color: 'rgba(246,241,231,0.85)', flex: '1 1 260px' }}>{ctaSupportLine()}</span>
+              <span style={{ fontSize: 14.5, lineHeight: 1.5, color: 'rgba(246,241,231,0.85)', flex: '1 1 260px' }}>
+                {ctaSupportParts().map((part, i) => (
+                  <span key={part} style={{ whiteSpace: 'nowrap' }}>{i > 0 ? ' ' : ''}{part}</span>
+                ))}
+              </span>
             </span>
           </div>
 
