@@ -101,7 +101,7 @@ export const BENEFICIARY_SYNONYMS: Record<string, string[]> = {
   homeless:           ['homeless', 'rough sleep', 'housing crisis'],
   veterans:           ['veteran', 'armed forces', 'ex-service', 'military'],
   ex_offenders:       ['ex-offender', 'prisoner', 'ex-prisoner', 'criminal justice', 'rehabilitation'],
-  people_in_poverty:  ['poverty', 'low income', 'deprivation', 'destitution', 'hardship'],
+  people_in_poverty:  ['poverty', 'low income', 'low incomes', 'low-income', 'deprivation', 'destitution', 'hardship', 'food bank', 'food banks', 'food insecurity', 'hunger', 'cost of living', 'disadvantaged'],
   rural_communities:  ['rural', 'countryside', 'village'],
   general_public:     ['general public', 'open to all', 'anyone'],
 }

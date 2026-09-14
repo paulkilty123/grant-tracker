@@ -1232,7 +1232,12 @@ export default function OnboardingWizardPage() {
   async function goToCheck() {
     const labels: Record<string, string> = {}
     for (const list of Object.values(NICHE_TAGS_BY_SECTOR)) for (const t of list ?? []) labels[t.value] = t.label
-    const rules = checkProfile(orgForCheck(), { nicheLabels: labels, skip: ['grant_range_missing'] })
+    // The tag-versus-mission findings stay out of the wizard: the mission
+    // step now reads meaning and proposes the tags, and a word rule raising
+    // "your mission does not mention People in Poverty" against a mission
+    // that says "families on low incomes" contradicts it (Paul, 14 Sept).
+    // They still drive the weekly email nudge, with fuller synonyms.
+    const rules = checkProfile(orgForCheck(), { nicheLabels: labels, skip: ['grant_range_missing', 'beneficiaries_too_many', 'beneficiaries_unmentioned', 'niche_unmentioned'] })
     if (rules.length === 0) { await handleFinish(); return }
     setCheckFindings(rules)
     setStep('check')
@@ -3049,9 +3054,9 @@ function StepCheck({ state, update, findings, reviewing, saving, saveError, onBa
   function card(f: ProfileFinding) {
     const fix = f.severity === 'fix'
     return (
-      <div key={f.id} style={{ background: fix ? T.amberBgSoft : T.pageBg, borderRadius: 14, padding: '18px 20px', marginBottom: 12 }}>
-        <p style={{ margin: '0 0 6px', fontFamily: 'var(--font-space-grotesk)', fontSize: 16.5, fontWeight: 600, color: T.greenDeep, lineHeight: 1.3 }}>{f.title}</p>
-        <p style={{ margin: '0 0 14px', fontFamily: 'var(--font-dm-sans)', fontSize: 14, lineHeight: 1.55, color: T.textSecondary }}>{f.body}</p>
+      <div key={f.id} style={{ background: '#fff', border: `1px solid ${fix ? 'rgba(180,120,40,.35)' : 'rgba(29,60,62,.14)'}`, borderLeft: `4px solid ${fix ? T.amberMid : 'rgba(29,60,62,.25)'}`, borderRadius: 14, padding: '16px 18px', marginBottom: 10 }}>
+        <p style={{ margin: '0 0 4px', fontFamily: 'var(--font-space-grotesk)', fontSize: 16, fontWeight: 600, color: T.greenDeep, lineHeight: 1.3 }}>{f.title}</p>
+        <p style={{ margin: '0 0 12px', fontFamily: 'var(--font-dm-sans)', fontSize: 13.5, lineHeight: 1.5, color: T.textSecondary }}>{f.body}</p>
         {control(f)}
       </div>
     )
@@ -3062,7 +3067,7 @@ function StepCheck({ state, update, findings, reviewing, saving, saveError, onBa
       <BackLink onClick={onBack} />
       <h1 style={H1_STYLE}>One look before your matches</h1>
       <p style={SUBTITLE_STYLE}>
-        A quick check so your matches are as relevant as they can be. {fixes.length ? `${fixes.length === 1 ? 'One thing is' : `${fixes.length} things are`} pulling them off course.` : 'Nothing is wrong, a few things could be sharper.'} Change what you want here, or skip and see your matches. We only know what your profile tells us, so the mission is the place to put anything we have missed.
+        {fixes.length ? `${fixes.length === 1 ? 'One thing is' : `${fixes.length} things are`} holding your matches back.` : 'A couple of things could make your matches sharper.'} Change what you want here, or skip straight to your matches.
       </p>
 
       {fixes.map(card)}
