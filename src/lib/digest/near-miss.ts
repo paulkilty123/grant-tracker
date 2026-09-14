@@ -127,13 +127,20 @@ const money = (n: number): string =>
  * The meta line: "Network for Social Change · £25k – £100k" or
  * "Trading for Good · £1k – £4k · England".
  */
+/** "£1k – £15k", "up to £15k", "from £1k", or null when the funder states nothing. */
+export function amountLabel(min: number | null | undefined, max: number | null | undefined): string | null {
+  const lo = min || null
+  const hi = max || null
+  if (lo && hi) return lo === hi ? money(lo) : `${money(lo)} – ${money(hi)}`
+  if (hi) return `up to ${money(hi)}`
+  if (lo) return `from ${money(lo)}`
+  return null
+}
+
 export function nearMissMeta(grant: GrantOpportunity, locationTag: string | null): string {
   const parts: string[] = [grant.funder]
-  const min = grant.amountMin || null
-  const max = grant.amountMax || null
-  if (min && max) parts.push(`${money(min)} – ${money(max)}`)
-  else if (max)   parts.push(`up to ${money(max)}`)
-  else if (min)   parts.push(`from ${money(min)}`)
+  const amount = amountLabel(grant.amountMin, grant.amountMax)
+  if (amount) parts.push(amount)
   // "Global" is a scope, not a place, and reads as noise beside a funder name.
   if (locationTag && locationTag.toLowerCase() !== 'global') parts.push(locationTag)
   return parts.join(' · ')

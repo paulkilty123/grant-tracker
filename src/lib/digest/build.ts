@@ -2,7 +2,7 @@ import { getAdminDb } from '@/lib/admin/admin-db'
 import { computeMatchScore } from '@/lib/matching'
 import { pickProfilePrompt, promptTitleWithCount, type ProfilePrompt, type ProfileFieldLabel } from '@/lib/profile-completeness'
 import { daysUntil, humanDate, plural, spell, spellCap, verb } from './text'
-import { findNearMiss, nearMissMeta } from './near-miss'
+import { findNearMiss, nearMissMeta, amountLabel } from './near-miss'
 import { FUNDING_TYPE_COLOUR, type FundingTypeKey } from '@/lib/funding-type-colours'
 import { activeEdition } from './edition'
 import { normaliseScrapedGrant } from '@/lib/grants-normalise'
@@ -281,8 +281,11 @@ function typeKey(g: Record<string, unknown>): FundingTypeKey {
 
 /** One shape for every opportunity row, so the two sections cannot drift. */
 function toMatchRow(g: Record<string, unknown>, origin: string, now: Date, blurb: string): MatchRow {
+  // Funder, amount, timing (Paul, 14 Sept 2026: the amount was missing from
+  // match rows while near-miss rows carried it).
   const parts = [
     String(g.funder ?? ''),
+    amountLabel(typeof g.amount_min === 'number' ? g.amount_min : null, typeof g.amount_max === 'number' ? g.amount_max : null),
     g.deadline ? `closes ${shortDate(String(g.deadline), now)}` : g.is_rolling ? 'rolling' : null,
   ].filter(Boolean) as string[]
   return {
