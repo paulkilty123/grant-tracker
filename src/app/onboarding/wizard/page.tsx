@@ -2775,26 +2775,11 @@ function SuggestedNote({ text }: { text: string }) {
 /** One box and a live checklist (Paul, 14 Sept: less text, show what is missing). */
 const MISSION_MIN = 40
 
-/* Word rules for the checklist. Not a judgement of quality, a prompt: does the
-   text name anyone, say what is done, and place it somewhere. Honest enough to
-   point at a gap without pretending to read meaning. */
-const PEOPLE_WORDS = ['people', 'children', 'young', 'families', 'women', 'girls', 'men', 'boys', 'older', 'adults', 'residents', 'communities', 'community', 'refugees', 'migrants', 'carers', 'veterans', 'disabled', 'disabilities', 'homeless', 'households', 'students', 'pupils', 'patients', 'survivors', 'tenants', 'customers', 'clients', 'members', 'volunteers', 'charities', 'organisations', 'groups', 'businesses', 'schools', 'everyone', 'anyone', 'those', 'individuals', 'parents', 'learners', 'artists', 'players', 'workers']
-const ACTION_WORDS = ['provide', 'providing', 'run', 'running', 'deliver', 'delivering', 'support', 'supporting', 'offer', 'offering', 'train', 'training', 'teach', 'teaching', 'help', 'helping', 'work', 'working', 'redistribute', 'distribute', 'collect', 'rescue', 'build', 'create', 'produce', 'sell', 'grow', 'campaign', 'advise', 'mentor', 'coach', 'host', 'organise', 'connect', 'fund', 'employ', 'house', 'feed', 'care', 'counsel', 'protect', 'enable', 'empower', 'improve', 'reduce', 'tackle', 'tackling', 'fight', 'fighting', 'prevent', 'give', 'bring']
-const PLACE_WORDS = ['in ', 'across ', 'throughout ', 'around ', 'local', 'borough', 'county', 'town', 'city', 'village', 'parish', 'district', 'region', 'regional', 'national', 'nationwide', 'uk', 'england', 'scotland', 'wales', 'northern ireland', 'london', 'overseas', 'international', 'worldwide', 'nepal', 'africa', 'asia', 'europe']
-
-function missionChecklist(mission: string, location: string): { label: string; hint: string; done: boolean }[] {
-  const m = ` ${mission.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ')} `
-  const has = (w: string) => m.includes(` ${w} `) || m.includes(` ${w}s `)
-  const loc = location.split(',')[0].trim().toLowerCase()
-  const who = PEOPLE_WORDS.some(has)
-  const what = ACTION_WORDS.some(has)
-  const where = (loc.length > 2 && m.includes(` ${loc} `)) || PLACE_WORDS.some(w => w.endsWith(' ') ? m.includes(` ${w}`) && /\b(in|across|throughout|around) [a-z]/.test(m) : has(w.trim()))
-  return [
-    { label: 'Who benefits, and the problem you tackle', hint: 'e.g. families in Bristol who cannot afford enough food', done: who },
-    { label: 'What you do, and what changes', hint: 'e.g. we collect surplus food and deliver it to 300 community groups each week', done: what },
-    { label: 'Where you work', hint: location.trim() ? `e.g. across ${location.split(',')[0].trim()} and the surrounding area` : 'e.g. across Bristol and the South West', done: where },
-  ]
-}
+const MISSION_ITEMS: { key: 'who' | 'what' | 'where'; label: string; hint: (loc: string) => string }[] = [
+  { key: 'who',   label: 'Who benefits, and the problem you tackle', hint: () => 'e.g. families in Bristol who cannot afford enough food' },
+  { key: 'what',  label: 'What you do, and what changes',           hint: () => 'e.g. we collect surplus food and deliver it to 300 community groups each week' },
+  { key: 'where', label: 'Where you work',                           hint: loc => loc.trim() ? `e.g. across ${loc.split(',')[0].trim()} and the surrounding area` : 'e.g. across Bristol and the South West' },
+]
 
 function StepMission({ state, update, crib, onProposals, onBack, onContinue }: {
   state: WizardState
@@ -2810,43 +2795,48 @@ function StepMission({ state, update, crib, onProposals, onBack, onContinue }: {
     if (crib && !state.mission.trim()) { update('mission', crib); setFromSite(true) }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
-  /* The model's grading, when it has answered for the current text. The
-     word rules render instantly; this replaces them line by line, and the
-     suggestion under an open line is then in the reader's own terms. Asked
-     800ms after typing stops, and on arrival when the box was pre-filled. */
+  /* The model's grading, on a button (Paul, 14 Sept: a read that fires
+     when you pause mid-thought is off-putting). Read once on arrival when the
+     box came pre-filled, then only when "Check my description" is pressed.
+     The checklist keeps the last result; a grey line says when the text has
+     changed since. No word rules: a wrong tick is worse than a short wait. */
   const [graded, setGraded] = useState<{ text: string; items: { key: string; covered: boolean; suggestion: string }[] } | null>(null)
   const [grading, setGrading] = useState(false)
+  const arrivalRead = useRef(false)
+  async function runCheck(textIn?: string) {
+    const text = (textIn ?? state.mission).trim()
+    if (text.length < 20 || grading) return
+    setGrading(true)
+    try {
+      const taxonomy = {
+        sectors: IMPACT_SECTORS.map(o => ({ value: o.value, label: o.label })),
+        beneficiaries: BENEFICIARY_GROUPS.map(o => ({ value: o.value, label: o.label })),
+        niche: Object.entries(NICHE_TAGS_BY_SECTOR).flatMap(([sector, list]) => (list ?? []).map(o => ({ value: o.value, label: o.label, sector }))),
+      }
+      const res = await fetch('/api/profile/mission-check', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mission: text, name: state.name, location: state.primaryLocation, taxonomy }) })
+      if (res.ok) {
+        const data = await res.json() as { items: { key: string; covered: boolean; suggestion: string }[] | null; proposals?: { sectors: string[]; beneficiaries: string[]; niche: string[]; reach?: string | null } }
+        if (data.items) setGraded({ text, items: data.items })
+        onProposals(data.proposals ?? null)
+      }
+    } catch { /* the reader can press again */ }
+    finally { setGrading(false) }
+  }
   useEffect(() => {
-    const text = state.mission.trim()
-    if (text.length < 20) return
-    const t = setTimeout(async () => {
-      setGrading(true)
-      try {
-        const taxonomy = {
-          sectors: IMPACT_SECTORS.map(o => ({ value: o.value, label: o.label })),
-          beneficiaries: BENEFICIARY_GROUPS.map(o => ({ value: o.value, label: o.label })),
-          niche: Object.entries(NICHE_TAGS_BY_SECTOR).flatMap(([sector, list]) => (list ?? []).map(o => ({ value: o.value, label: o.label, sector }))),
-        }
-        const res = await fetch('/api/profile/mission-check', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mission: text, name: state.name, location: state.primaryLocation, taxonomy }) })
-        if (res.ok) {
-          const data = await res.json() as { items: { key: string; covered: boolean; suggestion: string }[] | null; proposals?: { sectors: string[]; beneficiaries: string[]; niche: string[]; reach?: string | null } }
-          if (data.items) setGraded({ text, items: data.items })
-          onProposals(data.proposals ?? null)
-        }
-      } catch { /* the rules stand */ }
-      finally { setGrading(false) }
-    }, 800)
-    return () => clearTimeout(t)
+    if (arrivalRead.current) return
+    arrivalRead.current = true
+    const text = (state.mission.trim() || crib || '').trim()
+    if (text.length >= 20) void runCheck(text)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.mission, state.name, state.primaryLocation])
+  }, [])
 
-  const ruleItems = missionChecklist(state.mission, state.primaryLocation)
-  const KEYS = ['who', 'what', 'where'] as const
-  const items = ruleItems.map((r, i) => {
-    const g = graded && graded.text === state.mission.trim() ? graded.items.find(x => x.key === KEYS[i]) : undefined
-    return g ? { ...r, done: g.covered, hint: g.suggestion || r.hint } : r
+  const current = state.mission.trim()
+  const stale = !!graded && graded.text !== current
+  const items = MISSION_ITEMS.map(m => {
+    const g = graded?.items.find(x => x.key === m.key)
+    return { label: m.label, done: !!g?.covered, hint: g?.suggestion || m.hint(state.primaryLocation) }
   })
-  const complete = items.every(i => i.done)
+  const complete = !!graded && !stale && items.every(i => i.done)
   const showTag = !!crib && (fromSite || state.mission === crib)
   return (
     <>
@@ -2883,18 +2873,23 @@ function StepMission({ state, update, crib, onProposals, onBack, onContinue }: {
           example, so the reader sees what to add without reading anything else. */}
       {/* While the model reads, say so at a size a person notices (Paul,
           14 Sept). The checklist below dims until it answers. */}
-      {grading ? (
-        <div role="status" aria-live="polite" style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '14px 0 8px', padding: '10px 14px', borderRadius: 12, background: T.greenCream, fontFamily: 'var(--font-space-grotesk)', fontSize: 14.5, fontWeight: 600, color: T.greenDeep }}>
-          <style>{`@keyframes wizPulse { 0%, 100% { opacity: .25; transform: scale(.85) } 50% { opacity: 1; transform: scale(1) } }`}</style>
-          <span aria-hidden="true" style={{ width: 10, height: 10, borderRadius: 99, background: T.greenDeep, animation: 'wizPulse 1s ease-in-out infinite' }} />
-          Reading your description…
-        </div>
-      ) : (
-        <p style={{ margin: '14px 0 8px', fontFamily: 'var(--font-space-grotesk)', fontSize: 12, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: T.textTertiary }}>
-          {complete ? 'All three covered' : `${items.filter(i => !i.done).length === 1 ? 'One thing' : `${items.filter(i => !i.done).length} things`} still to add`}
-        </p>
-      )}
-      <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 8, opacity: grading ? 0.45 : 1, transition: 'opacity 200ms ease' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, margin: '12px 0 10px', flexWrap: 'wrap' }}>
+        {grading ? (
+          <div role="status" aria-live="polite" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 12, background: T.greenCream, fontFamily: 'var(--font-space-grotesk)', fontSize: 14.5, fontWeight: 600, color: T.greenDeep }}>
+            <style>{`@keyframes wizPulse { 0%, 100% { opacity: .25; transform: scale(.85) } 50% { opacity: 1; transform: scale(1) } }`}</style>
+            <span aria-hidden="true" style={{ width: 10, height: 10, borderRadius: 99, background: T.greenDeep, animation: 'wizPulse 1s ease-in-out infinite' }} />
+            Reading your description…
+          </div>
+        ) : (
+          <p style={{ margin: 0, fontFamily: 'var(--font-space-grotesk)', fontSize: 12, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: T.textTertiary }}>
+            {!graded ? 'Press check to see what to add' : stale ? 'Edited since last check' : complete ? 'All three covered' : `${items.filter(i => !i.done).length === 1 ? 'One thing' : `${items.filter(i => !i.done).length} things`} still to add`}
+          </p>
+        )}
+        <Button variant={!graded || stale ? 'primary' : 'secondary'} size="sm" onClick={() => runCheck()} disabled={grading || current.length < 20}>
+          Check my description
+        </Button>
+      </div>
+      <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 8, opacity: grading || !graded ? 0.45 : stale ? 0.7 : 1, transition: 'opacity 200ms ease' }}>
         {items.map(i => (
           <li key={i.label} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontFamily: 'var(--font-dm-sans)', fontSize: 14, lineHeight: 1.45 }}>
             <span aria-hidden="true" style={{ width: 20, height: 20, marginTop: 1, borderRadius: 99, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: i.done ? T.greenDeep : 'transparent', border: `1.5px solid ${i.done ? T.greenDeep : T.coralText}`, color: T.onDeep, fontSize: 12, flexShrink: 0 }}>{i.done ? '✓' : ''}</span>
