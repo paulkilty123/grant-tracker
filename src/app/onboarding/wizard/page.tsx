@@ -2623,7 +2623,7 @@ function StepLocation({ state, update, toggleFundingType, toggleSpendNeed, savin
         </div>
       </Q>
 
-      <Q title="Where do the people you help live?">
+      <Q title="Where does your work reach?">
         {reachNote && <SuggestedNote text={reachNote} />}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           {GEOGRAPHIC_REACH_OPTIONS.map(o => (
