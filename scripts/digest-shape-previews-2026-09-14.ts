@@ -20,7 +20,9 @@ const PICKS = process.argv.slice(2).length ? process.argv.slice(2) : ['Bridlingt
 async function main() {
   const db = getAdminDb()
   const resend = new Resend(process.env.RESEND_API_KEY!)
-  const { data: orgs, error } = await db.from('organisations').select('*').in('name', PICKS).gte('created_at', '2026-09-10')
+  // Named picks can be any organisation; the default three are post-launch signups.
+  const q = db.from('organisations').select('*').in('name', PICKS).eq('alerts_enabled', true)
+  const { data: orgs, error } = await (process.argv.slice(2).length ? q : q.gte('created_at', '2026-09-10'))
   if (error) throw error
   if ((orgs ?? []).length !== PICKS.length) throw new Error(`expected ${PICKS.length} orgs, read ${(orgs ?? []).length}: ${(orgs ?? []).map(o => o.name).join(', ')}`)
   for (const org of orgs as Organisation[]) {
