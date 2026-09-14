@@ -892,7 +892,7 @@ export async function buildDigest(
     title: ed.subject,
     intro: ed.intro,
     updates: [
-      `${plural(catalogue.addedThisWeek, 'funding opportunity', 'funding opportunities')} added to the catalogue in the last seven days, ${catalogue.live} open now.`,
+      `${plural(catalogue.addedThisWeek, 'new opportunity', 'new opportunities')} added this week.`,
       ...ed.updates,
     ],
   } : null

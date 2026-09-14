@@ -24,10 +24,10 @@ export const EDITIONS: Edition[] = [
     from: '2026-09-14',
     until: '2026-09-16',
     subject: 'Your Shoots Funding update',
-    intro: 'Every Tuesday, one email: what is closing in your pipeline, the applications that have gone quiet, and the funding that fits your profile and is open now. It follows what you save and add in Shoots, so the more you use it, the sharper it gets.',
+    intro: 'This lands every Tuesday. It shows what is closing in your pipeline, which applications have stalled, and new funding that fits your profile. Save and add opportunities in Shoots and it gets more useful each week.',
     updates: [
-      'Matches are now ranked by how well they fit you. A newer, weaker match no longer pushes a stronger one down the list.',
-      'The Match and Apply plans are live, at the launch price until 31 October. Your trial carries on as it is.',
+      'You should see better matches now. We improved scoring.',
+      'Match and Apply plans are live. Launch price until 31 October.',
     ],
   },
 ]
