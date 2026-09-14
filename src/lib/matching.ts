@@ -777,6 +777,19 @@ export function normalizeStructureTokens(s: string): string[] {
  */
 const INDIVIDUAL_ONLY_SCORE_CAP = 5
 
+/**
+ * A sport is not a theme, it is a gate. The Football Foundation funds
+ * football and nothing else, and on 14 Sept 2026 Bridlington Cricket
+ * Foundation was shown it at 89: both sides said "sport", and the niche
+ * overlap on disability_sport and women_in_sport earned a bonus that
+ * outweighed the football-versus-cricket conflict the mismatch rule would
+ * otherwise have applied. These tags name a discipline; when the funder
+ * names one and the organisation names a different one, the row is out.
+ * Cross-cutting sport tags (disability_sport, women_in_sport) are not here.
+ */
+const SPORT_DISCIPLINE_TAGS = new Set(['football', 'cricket', 'rugby', 'basketball', 'swimming', 'athletics', 'tennis', 'cycling', 'martial_arts'])
+const SPORT_DISCIPLINE_SCORE_CAP = 30
+
 /** Ceiling for an in-kind offer with no restriction the matcher can score. One
  *  below MATCH_TIER_GOOD, so it reads Partial and sits under every scored grant. */
 export const UNRESTRICTED_IN_KIND_SCORE_CAP = 60
@@ -1987,6 +2000,15 @@ export function computeMatchScore(
   // list while staying browsable. (Previously described as being below a 60%
   // "Other matches" floor on Find Funding. No such floor exists; see the note
   // on INDIVIDUAL_ONLY_SCORE_CAP.)
+  {
+    const grantDisciplines = (grant.nicheTags ?? []).map(t => t.toLowerCase()).filter(t => SPORT_DISCIPLINE_TAGS.has(t))
+    const orgDisciplines   = (org.niche_tags   ?? []).map(t => t.toLowerCase()).filter(t => SPORT_DISCIPLINE_TAGS.has(t))
+    if (grantDisciplines.length && orgDisciplines.length && !grantDisciplines.some(t => orgDisciplines.includes(t))) {
+      score = Math.min(score, SPORT_DISCIPLINE_SCORE_CAP)
+      reasons.push(`This funder is for ${grantDisciplines[0].replace(/_/g, ' ')}, not ${orgDisciplines[0].replace(/_/g, ' ')}`)
+    }
+  }
+
   if (sizeFloorTriggered) {
     score = Math.min(score, SIZE_FLOOR_SCORE_CAP)
   }
