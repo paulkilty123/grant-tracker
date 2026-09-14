@@ -1421,15 +1421,14 @@ export default function OnboardingWizardPage() {
             setStructureBlock({ openNow, ifConstituted })
           }
 
-          // The same two defaults Find Funding applies, so the first screen
-          // and the second agree. On 14 Sept the reveal showed three at 72%
-          // and Find Funding one: the Mark Leonard Trust is invite-only,
-          // which Find Funding hides unless switched on, and Albert Gubay's
-          // "England & Wales, Isle of Man & Ireland" tag fails the location
-          // box Find Funding pre-fills with the organisation's own location.
+          // The same location default Find Funding applies, so the first
+          // screen and the second agree: Find Funding pre-fills its location
+          // box with the organisation's own location, and a tag like
+          // "England & Wales, Isle of Man & Ireland" fails it. Invite-only
+          // rows are NOT hidden: Find Funding shows them by default.
           const revealLocation = payload.primary_location ?? ''
           const scored = rows
-            .filter(grant => !grant.isInviteOnly && grantMatchesLocationText(grant.locationTag, revealLocation))
+            .filter(grant => grantMatchesLocationText(grant.locationTag, revealLocation))
             .map(grant => {
               const result = computeMatchScore(grant, orgForMatching as Parameters<typeof computeMatchScore>[1])
               return { grant, score: result.score }
