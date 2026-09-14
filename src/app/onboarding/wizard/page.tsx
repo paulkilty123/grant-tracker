@@ -2651,14 +2651,14 @@ function StepLocation({ state, update, toggleFundingType, toggleSpendNeed, savin
         <QHelp>Untick any you would never take. Ticked types rank higher, you still see all of them, and you can change the mix on any search.</QHelp>
       </Q>
 
-      <Q title="What do you need the money for?">
+      <Q title="What do you need the money for?" optional>
+        <p style={{ margin: '-8px 0 14px', fontFamily: 'var(--font-dm-sans)', fontSize: 14, lineHeight: 1.5, color: '#7a857e' }}>Leave blank if you&rsquo;re open to any of these.</p>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           {SPEND_RESTRICTIONS.map(r => {
             const active = state.spendRestrictions.includes(r.value)
             return <FundingTypeChip key={r.value} label={r.label} desc={r.desc} active={active} onClick={() => toggleSpendNeed(r.value)} />
           })}
         </div>
-        <QHelp>Optional. Leave blank if you&rsquo;re open to any of these.</QHelp>
       </Q>
 
       {/* The Weekly Funding Update, stated rather than assumed, as a plain
