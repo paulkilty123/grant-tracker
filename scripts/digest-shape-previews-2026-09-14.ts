@@ -4,7 +4,7 @@
 // recipient and a subject prefix naming the shape. Nothing is recorded in
 // digest_sent_items, so rotation history is untouched.
 //
-//   npx tsx --env-file=.env.local scripts/digest-shape-previews-2026-09-14.ts
+//   npx tsx --env-file=.env.local scripts/digest-shape-previews-2026-09-14.ts ["Org name" ...]
 import { Resend } from 'resend'
 import { getAdminDb } from '../src/lib/admin/admin-db'
 import { buildDigest } from '../src/lib/digest/build'
@@ -15,14 +15,14 @@ import type { Organisation } from '../src/types'
 
 const TO = 'paul@shootsfunding.co.uk'
 const ORIGIN = 'https://www.shootsfunding.co.uk'
-const PICKS = ['Bridlington Cricket Foundation', 'Redhill Fields Open Air Events', 'Unicorn Theatre']
+const PICKS = process.argv.slice(2).length ? process.argv.slice(2) : ['Bridlington Cricket Foundation', 'Redhill Fields Open Air Events', 'Unicorn Theatre']
 
 async function main() {
   const db = getAdminDb()
   const resend = new Resend(process.env.RESEND_API_KEY!)
   const { data: orgs, error } = await db.from('organisations').select('*').in('name', PICKS).gte('created_at', '2026-09-10')
   if (error) throw error
-  if ((orgs ?? []).length !== 3) throw new Error(`expected 3 orgs, read ${(orgs ?? []).length}`)
+  if ((orgs ?? []).length !== PICKS.length) throw new Error(`expected ${PICKS.length} orgs, read ${(orgs ?? []).length}: ${(orgs ?? []).map(o => o.name).join(', ')}`)
   for (const org of orgs as Organisation[]) {
     const { data: recent } = await db.from('digest_sent_items').select('section, item_key').eq('org_id', org.id).gte('sent_at', new Date(Date.now() - 31 * 86_400_000).toISOString())
     const m = await buildDigest(org, { origin: ORIGIN, recentlyShown: (recent ?? []) as { section: string; item_key: string }[] })
