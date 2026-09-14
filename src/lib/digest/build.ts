@@ -757,7 +757,12 @@ export async function buildDigest(
     // screen asked, until it is fixed. Rotates on the finding id so one
     // nudge is not repeated inside the history window.
     const nudgedRecently = new Set((opts.recentlyShown ?? []).filter(r => r.section === 'profile_nudge').map(r => r.item_key))
-    const nudge = checkProfile(org).find(f => f.action.kind !== 'none' && !nudgedRecently.has(f.id))
+    // Hard facts only, as the wizard's check step (Paul, 14 Sept): the
+    // tag-versus-mission word findings would tell Mustard Tree its mission
+    // does not mention homeless people, and a word rule cannot be trusted
+    // with that sentence. Income, reach, grant range and a thin mission can.
+    const nudge = checkProfile(org, { skip: ['beneficiaries_too_many', 'beneficiaries_unmentioned', 'niche_unmentioned', 'niche_missing', 'beneficiaries_general_only'] })
+      .find(f => f.action.kind !== 'none' && !nudgedRecently.has(f.id))
     if (nudge) {
       prompt = { title: nudge.title, body: nudge.body, cta: 'Fix this on your profile', href: `${origin}/dashboard/profile#card-focus` }
       shown.push({ section: 'profile_nudge', key: nudge.id })
