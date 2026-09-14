@@ -2852,21 +2852,24 @@ function StepMission({ state, update, crib, onProposals, onBack, onContinue }: {
      model, using only what is there and what was typed, then the check runs
      again so the ticks reflect the new text. */
   const [answers, setAnswers] = useState<Record<string, string>>({})
-  const [weaving, setWeaving] = useState<string | null>(null)
-  async function weave(key: string, question: string) {
-    const answer = (answers[key] ?? '').trim()
-    if (!answer || weaving) return
-    setWeaving(key)
+  const [weaving, setWeaving] = useState(false)
+  /* One button for every answer typed (Paul, 14 Sept: one at a time meant
+     the second answer had no way in). All filled boxes go in one call. */
+  async function weaveAll() {
+    const pairs = items.filter(i => !i.done && (answers[i.key] ?? '').trim()).map(i => ({ question: i.question, answer: (answers[i.key] ?? '').trim() }))
+    if (!pairs.length || weaving) return
+    setWeaving(true)
     try {
-      const res = await fetch('/api/profile/mission-weave', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mission: state.mission, question, answer, name: state.name }) })
+      const res = await fetch('/api/profile/mission-weave', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mission: state.mission, answers: pairs, name: state.name }) })
       const data = res.ok ? await res.json() as { mission?: string } : {}
-      const next = (data.mission ?? `${state.mission.trim()} ${answer}`).trim()
+      const next = (data.mission ?? [state.mission.trim(), ...pairs.map(p => p.answer)].join(' ')).trim()
       update('mission', next)
       if (fromSite) setFromSite(false)
-      setAnswers(a => ({ ...a, [key]: '' }))
+      setAnswers({})
       await runCheck(next)
-    } finally { setWeaving(null) }
+    } finally { setWeaving(false) }
   }
+  const answersTyped = items.some(i => !i.done && (answers[i.key] ?? '').trim())
   const complete = !!graded && !stale && items.every(i => i.done)
   const showTag = !!crib && (fromSite || state.mission === crib)
   return (
@@ -2927,24 +2930,26 @@ function StepMission({ state, update, crib, onProposals, onBack, onContinue }: {
             <span aria-hidden="true" style={{ width: 20, height: 20, marginTop: 1, borderRadius: 99, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: i.done ? T.greenDeep : 'transparent', border: `1.5px solid ${i.done ? T.greenDeep : T.coralText}`, color: T.onDeep, fontSize: 12, flexShrink: 0 }}>{i.done ? '✓' : ''}</span>
             <span>
               <span style={{ color: i.done ? T.textTertiary : T.textPrimary, fontWeight: i.done ? 400 : 600 }}>{i.done ? i.label : `Add ${i.label.charAt(0).toLowerCase()}${i.label.slice(1)}`}</span>
-              {!i.done && <span style={{ display: 'block', color: T.textSecondary }}>{i.hint}</span>}
-              {!i.done && graded && !stale && (
-                <span style={{ display: 'block', marginTop: 8 }}>
-                  <span style={{ display: 'block', fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: T.greenDeep, marginBottom: 6 }}>{i.question}</span>
-                  <span style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                    <input type="text" value={answers[i.key] ?? ''} onChange={e => setAnswers(a => ({ ...a, [i.key]: e.target.value }))}
-                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); void weave(i.key, i.question) } }}
-                      placeholder="A few words is enough" style={{ ...INPUT_STYLE, height: 42, flex: '1 1 260px', fontSize: 14 }} />
-                    <Button variant="primary" size="sm" onClick={() => weave(i.key, i.question)} disabled={!(answers[i.key] ?? '').trim() || !!weaving || grading}>
-                      {weaving === i.key ? 'Adding…' : 'Add to my description'}
-                    </Button>
-                  </span>
+              {!i.done && graded && !stale ? (
+                <span style={{ display: 'block', marginTop: 6 }}>
+                  <span style={{ display: 'block', fontFamily: 'var(--font-dm-sans)', fontSize: 14, color: T.textSecondary, marginBottom: 6 }}>{i.question}</span>
+                  <input type="text" value={answers[i.key] ?? ''} onChange={e => setAnswers(a => ({ ...a, [i.key]: e.target.value }))}
+                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); void weaveAll() } }}
+                    placeholder="A few words is enough" style={{ ...INPUT_STYLE, height: 42, fontSize: 14, maxWidth: 560 }} />
                 </span>
-              )}
+              ) : (!i.done && <span style={{ display: 'block', color: T.textSecondary }}>{i.hint}</span>)}
             </span>
           </li>
         ))}
       </ul>
+
+      {graded && !stale && !complete && (
+        <div style={{ marginTop: 14 }}>
+          <Button variant="primary" size="sm" onClick={weaveAll} disabled={!answersTyped || weaving || grading}>
+            {weaving ? 'Adding…' : 'Add my answers to the description'}
+          </Button>
+        </div>
+      )}
 
       <div style={{ ...ACTIONS_STYLE, marginTop: 24 }}>
         <BackLink onClick={onBack} />
