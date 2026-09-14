@@ -17,6 +17,13 @@ export interface Edition {
   intro: string
   /** Platform changes this week. The catalogue count is added by the builder. */
   updates: string[]
+  /**
+   * Hand-written profile notes for named organisations, used in place of the
+   * computed prompt while the edition runs. For the cases no rule can see:
+   * a tag the mission contradicts, a description that is not true. Written
+   * from a read of the organisation's own site, never from the tags alone.
+   */
+  profileNotes?: Record<string, { title: string; body: string; cta: string }>
 }
 
 export const EDITIONS: Edition[] = [
@@ -29,6 +36,17 @@ export const EDITIONS: Edition[] = [
       'You should see better matches now. We improved scoring.',
       'Match and Apply plans are live. Launch price until 31 October.',
     ],
+    profileNotes: {
+      // The Bank of Dreams and Nightmares (Paul, 14 Sept): a writing charity
+      // whose profile carries film and media and youth mental health tags,
+      // which put a photography grant and a clinical mental health fund at
+      // the top of its list. No grant range set.
+      '9340fced-68e9-4aaf-a4b4-8b40754e9c7e': {
+        title: 'Two tags are pulling your matches off course',
+        body: 'Your profile lists film and media, and youth mental health, as specialisms. Your work is writing, so those two are bringing in photography and clinical mental health funders above the literacy ones. Untick them, and add the grant range you would apply for, and the list will lead with the funders that fit.',
+        cta: 'Update your profile',
+      },
+    },
   },
 ]
 

@@ -739,7 +739,13 @@ export async function buildDigest(
     .map(r => r.item_key as ProfileFieldLabel)
   const promptPick: ProfilePrompt | null = pickProfilePrompt(org, promptedRecently)
   let prompt: DigestModel['prompt'] = null
-  if (promptPick) {
+  const handNote = activeEdition(now)?.profileNotes?.[org.id]
+  if (handNote) {
+    // A note written for this organisation this week outranks anything
+    // computed: it exists because the computed prompts could not see it.
+    prompt = { title: handNote.title, body: handNote.body, cta: handNote.cta, href: `${origin}/dashboard/profile#card-focus` }
+    shown.push({ section: 'profile_nudge', key: `hand:${now.toISOString().slice(0, 10)}` })
+  } else if (promptPick) {
     // Count only what can be counted. An invented figure on a product whose
     // pitch is verified data is the worst possible place to guess.
     let count: number | null = null
