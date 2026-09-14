@@ -44,6 +44,7 @@ const EMAIL_ROUTES = [
 const NON_ROUTE_SENDERS = [
   'scripts/send-waitlist-ack.ts',
   'scripts/send-launch-email.ts',
+  'scripts/digest-shape-previews-2026-09-14.ts',
 ]
 
 const root = path.resolve(__dirname, '../..')
