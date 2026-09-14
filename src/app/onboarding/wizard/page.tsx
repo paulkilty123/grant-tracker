@@ -2742,6 +2742,15 @@ function StepMission({ state, update, crib, onBack, onContinue }: {
   onBack: () => void; onContinue: () => void
 }) {
   const valid = state.mission.trim().length >= MISSION_MIN
+  // Pre-filled from the site reading when there is one and the box is empty
+  // (Paul, 14 Sept: editing what is there beats starting fresh). Once, on
+  // arrival; "Clear and write my own" empties it and the reading stays a tap
+  // away. The notice under the box says where the words came from.
+  const [fromSite, setFromSite] = useState(false)
+  useEffect(() => {
+    if (crib && !state.mission.trim()) { update('mission', crib); setFromSite(true) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   return (
     <>
       <BackLink onClick={onBack} />
@@ -2761,14 +2770,15 @@ function StepMission({ state, update, crib, onBack, onContinue }: {
           Worth covering: who benefits from your work and the problem you are tackling, what you do and what changes, where you work and who you work alongside.
         </p>
         {crib && (
-          <button type="button" onClick={() => update('mission', crib)}
+          <button type="button"
+            onClick={() => { if (fromSite || state.mission === crib) { update('mission', ''); setFromSite(false) } else { update('mission', crib); setFromSite(true) } }}
             style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13, fontWeight: 600, color: T.greenDeep, background: 'transparent', border: `1.5px solid ${T.borderInput}`, borderRadius: 999, padding: '8px 14px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
-            Use our reading of your website
+            {fromSite || state.mission === crib ? 'Clear and write my own' : 'Use our reading of your website'}
           </button>
         )}
       </div>
-      {crib && (
-        <QHelp>Our reading of your site is a starting point, not the truth. Edit it until it says what you actually do.</QHelp>
+      {crib && (fromSite || state.mission === crib) && (
+        <QHelp>Written from our reading of your website. It is a starting point, not the truth: edit it until it says what you actually do.</QHelp>
       )}
       <QHelp>{valid ? 'Good. You can change this any time from your profile.' : `${Math.max(0, MISSION_MIN - state.mission.trim().length)} more characters and you can continue.`}</QHelp>
 
