@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { MCP_BRAND_NAME, MCP_APP_ORIGIN } from '@/lib/mcp-brand'
 import { ctaSupportLine } from '@/lib/trial'
+import { leadParagraph } from '@/components/FunderBrief'
 
 // ── Public bridge page ───────────────────────────────────────────────────────
 // Reached from an MCP link inside someone's AI assistant, or from search. So
@@ -26,8 +27,14 @@ import { ctaSupportLine } from '@/lib/trial'
 // structure chips and a lime button. Rebuilt to the Band C reference
 // (grant-public.html + grant-public-spec.md).
 //
-// Field set: the Q1-confirmed superset. Still excludes funder_brief (that is
-// account-holder value), field_provenance, and the source slug, which leaks
+// Field set: the Q1-confirmed superset, plus (from 14 September 2026, Paul's
+// call) the factual half of the funder brief: what they fund, who can apply,
+// what they will not fund, typical award, where, priorities, decision timeline.
+// Rule 6 in CLAUDE.md wants who_can_apply and exclusions complete on every
+// surface anyway, and a public page that showed seven structure chips and a
+// one-line stub was hiding the catalogue it exists to show off. The judgement
+// half of the brief (what makes a strong application, tips) stays behind the
+// account, along with field_provenance and the source slug, which leaks
 // internal operational names like "catalogue-seed" and "manual_ingest_*".
 //
 // force-dynamic because the countdown is computed per request. A statically
@@ -158,6 +165,30 @@ function money(n: number | null | undefined): string | null {
 }
 
 // ── Data ─────────────────────────────────────────────────────────────────────
+
+/**
+ * The brief fields a stranger sees. An allowlist, so a new internal key cannot
+ * leak by default. who_can_apply and exclusions render inside the eligibility
+ * section; the rest render as facts below it. strong_application and
+ * funder_tips are deliberately absent: they are the judgement, and the reason
+ * to have an account.
+ */
+const PUBLIC_FACT_FIELDS = [
+  ['typical_award',     'Typical award'],
+  ['geographic_focus',  'Where'],
+  ['priorities',        'Current priorities'],
+  ['decision_timeline', 'Decision timeline'],
+] as const
+
+/** Non-empty string, and not one of the enricher's ways of saying "unknown". */
+function briefText(brief: Record<string, unknown> | null, key: string): string | null {
+  const v = brief?.[key]
+  if (typeof v !== 'string') return null
+  const t = v.trim()
+  if (!t || t === 'unknown') return null
+  if (/^the source does not (state|specify|mention)/i.test(t)) return null
+  return t
+}
 
 async function loadGrant(rawId: string) {
   const id = decodeURIComponent(rawId)
@@ -304,6 +335,13 @@ export default async function PublicGrantPage({
   const impactSectors: string[]      = Array.isArray(grant.impact_sectors)      ? grant.impact_sectors      : []
   const eligibleStructures: string[] = Array.isArray(grant.eligible_structures) ? grant.eligible_structures : []
   const structuresStated             = eligibilityStated(eligibleStructures)
+  const brief: Record<string, unknown> | null = grant.funder_brief && typeof grant.funder_brief === 'object' ? grant.funder_brief as Record<string, unknown> : null
+  const lead         = leadParagraph(brief, grant.description ? String(grant.description) : null)
+  const whoCanApply  = briefText(brief, 'who_can_apply')
+  const exclusions   = briefText(brief, 'exclusions')
+  const facts        = PUBLIC_FACT_FIELDS
+    .map(([key, label]) => [key, label, briefText(brief, key)] as const)
+    .filter((f): f is readonly [typeof f[0], typeof f[1], string] => f[2] !== null)
 
   const funderType = String(grant.funder_type ?? 'other')
   const typeLabel  = FUNDER_LABELS[funderType] ?? funderType.replace(/_/g, ' ')
@@ -500,11 +538,11 @@ export default async function PublicGrantPage({
             ) : null}
           </div>
 
-          {grant.description && (
+          {lead && (
             <div style={{ ...section, borderTop: 'none', marginTop: 0, paddingTop: 0 }}>
               <h2 style={sectionH2}>About this opportunity</h2>
               <p style={{ fontSize: 16, lineHeight: 1.65, color: T.deep, margin: 0, whiteSpace: 'pre-line' }}>
-                {String(grant.description)}
+                {lead}
               </p>
             </div>
           )}
@@ -544,7 +582,30 @@ export default async function PublicGrantPage({
                 {ELIGIBILITY_NOT_STATED}
               </p>
             )}
+            {whoCanApply && (
+              <p style={{ fontSize: 15, lineHeight: 1.6, color: T.deep, margin: '14px 0 0', whiteSpace: 'pre-line' }}>{whoCanApply}</p>
+            )}
+            {exclusions && (
+              <div style={{ marginTop: 16, padding: '14px 16px', background: '#FBF1EC', borderRadius: 12 }}>
+                <p style={{ fontFamily: UI, fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#993C1D', margin: '0 0 6px' }}>What they will not fund</p>
+                <p style={{ fontSize: 14.5, lineHeight: 1.6, color: T.deep, margin: 0, whiteSpace: 'pre-line' }}>{exclusions}</p>
+              </div>
+            )}
           </div>
+
+          {facts.length > 0 && (
+            <div style={section}>
+              <h2 style={sectionH2}>From the funder&rsquo;s own pages</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 18 }}>
+                {facts.map(([key, label, text]) => (
+                  <div key={key}>
+                    <p style={{ fontFamily: UI, fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.inkMuted, margin: '0 0 6px' }}>{label}</p>
+                    <p style={{ fontSize: 14.5, lineHeight: 1.6, color: T.deep, margin: 0, whiteSpace: 'pre-line' }}>{text}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* The conversion moment. One panel, mid-card, on a logged-out page
               whose job is conversion, arguing against the question the visitor
