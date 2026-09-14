@@ -628,7 +628,7 @@ export default async function PublicGrantPage({
             <p style={{ fontSize: 15.5, lineHeight: 1.6, color: 'rgba(246,241,231,0.85)', margin: '0 0 20px', maxWidth: '56ch' }}>
               {deadlinePassed
                 ? 'There are more in the catalogue. Shoots checks them against your organisation and tells you which ones are open to you now.'
-                : 'Structure is only the first hurdle. Shoots checks this opportunity against your organisation and tells you where you actually stand.'}
+                : 'Being eligible is not the same as being a good fit. Shoots scores this opportunity against your organisation and shows you what the funder is looking for.'}
             </p>
             {/* This grant's own locked content, not a general claim. Titles
                 only, by Paul's call on 14 Sept: the strong-application and tips
