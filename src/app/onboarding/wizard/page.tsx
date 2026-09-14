@@ -1160,11 +1160,15 @@ export default function OnboardingWizardPage() {
      can untick or add; the note on the step says where the ticks came from. */
   const [suggestedNote, setSuggestedNote] = useState<{ beneficiaries: string | null; sectors: string | null }>({ beneficiaries: null, sectors: null })
   const SUGGESTED = 'Ticked from your mission. Untick anything that is not right, and add what is missing.'
+  /* What the model proposed from the mission (the mission-check read carries
+     it back). Used ahead of the word rules; null until it has answered. */
+  const [proposals, setProposals] = useState<{ sectors: string[]; beneficiaries: string[]; niche: string[] } | null>(null)
 
   function goToBeneficiaries() {
     if (state.beneficiaryGroups.length === 0 && state.mission.trim()) {
       const allowed = new Set(BENEFICIARY_GROUPS.map(b => b.value as string))
-      const picks = suggestTags(BENEFICIARY_OPTIONS, [], state.mission, BENEFICIARY_SYNONYMS).missing.filter(v => allowed.has(v)).slice(0, 4) as BeneficiaryGroup[]
+      const fromModel = (proposals?.beneficiaries ?? []).filter(v => allowed.has(v))
+      const picks = (fromModel.length ? fromModel : suggestTags(BENEFICIARY_OPTIONS, [], state.mission, BENEFICIARY_SYNONYMS).missing.filter(v => allowed.has(v))).slice(0, 4) as BeneficiaryGroup[]
       if (picks.length) { update('beneficiaryGroups', picks); setSuggestedNote(n => ({ ...n, beneficiaries: SUGGESTED })) }
     }
     setStep('beneficiaries')
@@ -1173,8 +1177,18 @@ export default function OnboardingWizardPage() {
   function goToSectors() {
     if (state.impactSectors.length === 0 && state.mission.trim()) {
       const allowed = new Set(IMPACT_SECTORS.map(o => o.value as string))
-      const picks = suggestTags(IMPACT_SECTOR_OPTIONS, [], state.mission, SECTOR_SYNONYMS).missing.filter(v => allowed.has(v)).slice(0, 4) as ImpactSector[]
-      if (picks.length) { update('impactSectors', picks); setSuggestedNote(n => ({ ...n, sectors: SUGGESTED })) }
+      const fromModel = (proposals?.sectors ?? []).filter(v => allowed.has(v))
+      const picks = (fromModel.length ? fromModel : suggestTags(IMPACT_SECTOR_OPTIONS, [], state.mission, SECTOR_SYNONYMS).missing.filter(v => allowed.has(v))).slice(0, 4) as ImpactSector[]
+      if (picks.length) {
+        update('impactSectors', picks)
+        // Specialisms too, but only from the model and only within those sectors.
+        if (state.nicheTags.length === 0 && proposals?.niche.length) {
+          const valid = validNicheTagsFor(picks)
+          const niche = proposals.niche.filter(v => valid.has(v)).slice(0, 5)
+          if (niche.length) update('nicheTags', niche)
+        }
+        setSuggestedNote(n => ({ ...n, sectors: SUGGESTED }))
+      }
     }
     setStep('sectors')
   }
@@ -1539,6 +1553,7 @@ export default function OnboardingWizardPage() {
           state={state}
           update={update}
           crib={extracted?.mission ?? null}
+          onProposals={setProposals}
           onBack={() => setStep(extracted ? 'review' : 'manual')}
           onContinue={goToBeneficiaries}
         />
@@ -2755,11 +2770,12 @@ function missionChecklist(mission: string, location: string): { label: string; h
   ]
 }
 
-function StepMission({ state, update, crib, onBack, onContinue }: {
+function StepMission({ state, update, crib, onProposals, onBack, onContinue }: {
   state: WizardState
   update: <K extends keyof WizardState>(k: K, v: WizardState[K]) => void
   /** What the website said, in the extractor's words. Pre-filled on arrival; a tag on the box says so. */
   crib: string | null
+  onProposals: (p: { sectors: string[]; beneficiaries: string[]; niche: string[] } | null) => void
   onBack: () => void; onContinue: () => void
 }) {
   const valid = state.mission.trim().length >= MISSION_MIN
@@ -2780,15 +2796,22 @@ function StepMission({ state, update, crib, onBack, onContinue }: {
     const t = setTimeout(async () => {
       setGrading(true)
       try {
-        const res = await fetch('/api/profile/mission-check', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mission: text, name: state.name, location: state.primaryLocation }) })
+        const taxonomy = {
+          sectors: IMPACT_SECTORS.map(o => ({ value: o.value, label: o.label })),
+          beneficiaries: BENEFICIARY_GROUPS.map(o => ({ value: o.value, label: o.label })),
+          niche: Object.entries(NICHE_TAGS_BY_SECTOR).flatMap(([sector, list]) => (list ?? []).map(o => ({ value: o.value, label: o.label, sector }))),
+        }
+        const res = await fetch('/api/profile/mission-check', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mission: text, name: state.name, location: state.primaryLocation, taxonomy }) })
         if (res.ok) {
-          const data = await res.json() as { items: { key: string; covered: boolean; suggestion: string }[] | null }
+          const data = await res.json() as { items: { key: string; covered: boolean; suggestion: string }[] | null; proposals?: { sectors: string[]; beneficiaries: string[]; niche: string[] } }
           if (data.items) setGraded({ text, items: data.items })
+          onProposals(data.proposals ?? null)
         }
       } catch { /* the rules stand */ }
       finally { setGrading(false) }
     }, 800)
     return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.mission, state.name, state.primaryLocation])
 
   const ruleItems = missionChecklist(state.mission, state.primaryLocation)
