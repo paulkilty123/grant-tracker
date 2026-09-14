@@ -122,12 +122,20 @@ describe('structure containment matches the matcher', () => {
     })
     expect(r?.dimension).not.toBe('structure')
   })
-  it('a CIO against an unincorporated-only fund is still one step away', () => {
+  it('a CIO against an unincorporated-only fund is NOT near: a CIO does not un-incorporate, and such a list usually means no charities', () => {
     const r = findNearMiss({
-      grant: grant({ eligibleStructures: ['unincorporated'] }),
+      grant: grant({ eligibleStructures: ['unincorporated', 'cic_guarantee', 'ltd_guarantee'] }),
       org: cio, readOn: '7 September', otherwiseFits: true,
     })
+    expect(r?.dimension).not.toBe('structure')
+  })
+  it('an unincorporated group against a CIO-only fund is one step away, and carries no provenance line', () => {
+    const r = findNearMiss({
+      grant: grant({ eligibleStructures: ['cio'] }),
+      org: { ...cio, legal_structure: 'unincorporated' } as typeof cio, readOn: '7 September', otherwiseFits: true,
+    })
     expect(r?.dimension).toBe('structure')
-    expect(r?.rule).toContain('You are a CIO')
+    expect(r?.rule).toContain('one step away')
+    expect(r?.condition).toBe('')
   })
 })

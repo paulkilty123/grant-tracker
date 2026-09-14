@@ -380,7 +380,7 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
         <p style="margin:0 0 5px;">${nameLink(r.url, r.title, 15.5)}</p>
         ${typedMeta(r.type, r.meta)}
         <p style="margin:0 0 5px;font-family:${BODY};font-size:13.5px;line-height:1.55;color:${C.body};"><b style="color:${C.deep};">${esc(r.verdict)}</b> ${esc(r.rule)}</p>
-        <p style="margin:0 0 ${i === n - 1 ? '0' : '16px'};font-family:${BODY};font-size:13px;line-height:1.55;color:${C.body};">${esc(r.condition)}</p>`).join('')
+        ${r.condition ? `<p style="margin:0 0 ${i === n - 1 ? '0' : '16px'};font-family:${BODY};font-size:13px;line-height:1.55;color:${C.body};">${esc(r.condition)}</p>` : (i === n - 1 ? '' : '<div style="height:16px"></div>')}`).join('')
     rows.push(ruledSection(`
       ${sectionLabel('Just outside your profile', 8)}
       <p style="margin:0 0 16px;font-family:${BODY};font-size:14px;line-height:1.55;color:${C.body};">${esc(intro)}</p>

@@ -60,7 +60,14 @@ const ADJACENT: Partial<Record<LegalStructure, LegalStructure[]>> = {
   ltd_guarantee:      ['cic_guarantee'],
   ltd_shares:         ['cic_shares'],
   unincorporated:     ['cio'],
-  cio:                ['unincorporated', 'registered_charity', 'scio'],
+  // cio → unincorporated is gone (Paul, 14 Sept 2026). An unincorporated
+  // group can become a CIO, so that direction is a real step; a CIO does not
+  // un-incorporate to suit a funder. Worse, a fund whose list holds CICs,
+  // companies and unincorporated groups but no charity form is usually one
+  // that does not fund charities at all (Andrew Wainwright Reform Trust says
+  // so in terms), and Bridlington Cricket, a CIO, was told it was "one step
+  // away". It was not near at all.
+  cio:                ['registered_charity', 'scio'],
   registered_charity: ['cio'],
   scio:               ['cio'],
 }
@@ -134,10 +141,6 @@ export interface NearMissInput {
  * absent — see the note at the foot of this file.
  */
 export function findNearMiss({ grant, org, readOn, otherwiseFits }: NearMissInput): NearMiss | null {
-  const provenance = readOn
-    ? `We read that from their page on ${readOn}.`
-    : 'That is our reading of their page.'
-
   /* ── 1. Legal structure ────────────────────────────────────────────────
      Near when the org's form is ADJACENT to one the funder accepts. A CIC
      limited by guarantee against a fund open to companies limited by
@@ -165,7 +168,9 @@ export function findNearMiss({ grant, org, readOn, otherwiseFits }: NearMissInpu
         dimension: 'structure',
         verdict: 'Ruled out on legal structure.',
         rule: `They fund ${theyFund}. You are ${youAre}, which is one step away.`,
-        condition: `${provenance} If they would count a form this close, it is worth asking.`,
+        // No provenance line here (Paul, 14 Sept): the read date and "worth
+        // asking" added nothing the rule did not already say.
+        condition: '',
       }
     }
   }
