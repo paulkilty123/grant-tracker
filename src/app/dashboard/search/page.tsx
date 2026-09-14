@@ -2157,7 +2157,21 @@ export default function SearchPage() {
     })
 
     if (aiResults) {
-      return aiResults
+      // A name is not a topic. The AI pass ranks by relevance to what the
+      // query is ABOUT, and its prompt tells it to drop anything off-topic, so
+      // a search for "The Supporting Act Foundation" could come back without
+      // The Supporting Act Foundation (Paul, 14 Sept 2026). Any live row whose
+      // title or funder contains the typed text is pinned to the top of the
+      // AI list, once, with the keyword score rather than an AI score.
+      const typed = filterQuery.trim().toLowerCase()
+      const aiIds = new Set(aiResults.map(r => r.grantId))
+      const nameHits: DisplayGrant[] = typed.length >= 3
+        ? filtered
+            .filter(g => !aiIds.has(g.id) && (`${g.title} ${g.funder}`.toLowerCase().includes(typed)))
+            .slice(0, 5)
+            .map(g => ({ grant: g, score: org ? computeMatchScore(g, org).score : 50, displayScore: org ? computeMatchScore(g, org).score : 50, reason: 'Matches the name you typed', isAiScore: false }))
+        : []
+      return [...nameHits, ...aiResults
         .map(r => {
           const grant = allGrants.find(g => g.id === r.grantId)
           if (!grant) return null
@@ -2169,7 +2183,7 @@ export default function SearchPage() {
           if (locationFilter && !grantMatchesLocationText(locTag, locationFilter)) return null
           return { grant, score: r.score, displayScore: r.score, reason: r.reason, isAiScore: true }
         })
-        .filter((x): x is DisplayGrant => x !== null)
+        .filter((x): x is DisplayGrant => x !== null)]
     }
 
     // ── Build feedback signals from liked/disliked grant history ──────────
