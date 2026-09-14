@@ -358,7 +358,7 @@ export default async function PublicGrantPage({
    * how long, in what format, when it starts, and whether any money comes with
    * the place. Rendered only for programme rows, from the prog_* columns.
    */
-  const MODE_LABEL: Record<string, string> = { online: 'Online', in_person: 'In person', hybrid: 'Online, with in-person sessions' }
+  const MODE_LABEL: Record<string, string> = { remote: 'Online', online: 'Online', in_person: 'In person', hybrid: 'Online, with in-person sessions' }
   const programme: Array<[string, string]> = []
   if (String(grant.funding_type ?? '') === 'programme') {
     const weeks = typeof grant.prog_length_weeks === 'number' ? grant.prog_length_weeks : null
