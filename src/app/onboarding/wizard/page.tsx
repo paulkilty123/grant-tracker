@@ -1159,7 +1159,7 @@ export default function OnboardingWizardPage() {
      check uses), ticked, only when the reader has not chosen any yet. They
      can untick or add; the note on the step says where the ticks came from. */
   const [suggestedNote, setSuggestedNote] = useState<{ beneficiaries: string | null; sectors: string | null }>({ beneficiaries: null, sectors: null })
-  const SUGGESTED = 'Ticked from your mission. Untick anything that is not right, and add what is missing.'
+  const SUGGESTED = 'Selected from your organisation description. Untick anything that is not right, and add what is missing.'
   /* What the model proposed from the mission (the mission-check read carries
      it back). Used ahead of the word rules; null until it has answered. */
   const [proposals, setProposals] = useState<{ sectors: string[]; beneficiaries: string[]; niche: string[] } | null>(null)
