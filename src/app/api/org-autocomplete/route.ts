@@ -25,7 +25,9 @@ async function fetchAboutPages(homeHtml: string, baseUrl: string, headers: Recor
   try { base = new URL(baseUrl) } catch { return [] }
   const seen = new Set<string>()
   const targets: string[] = []
-  for (const m of homeHtml.matchAll(/href=["']([^"'#?]+)[^"']*["']/gi)) {
+  const hrefRe = /href=["']([^"'#?]+)[^"']*["']/gi
+  let m: RegExpExecArray | null
+  while ((m = hrefRe.exec(homeHtml)) !== null) {
     let u: URL
     try { u = new URL(m[1], base) } catch { continue }
     if (u.host !== base.host) continue
