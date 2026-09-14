@@ -2731,60 +2731,89 @@ function SuggestedNote({ text }: { text: string }) {
   )
 }
 
-/** One box. The three prompts are a checklist beside it, not fields (Paul, 14 Sept: four boxes read as a form). */
+/** One box and a live checklist (Paul, 14 Sept: less text, show what is missing). */
 const MISSION_MIN = 40
+
+/* Word rules for the checklist. Not a judgement of quality, a prompt: does the
+   text name anyone, say what is done, and place it somewhere. Honest enough to
+   point at a gap without pretending to read meaning. */
+const PEOPLE_WORDS = ['people', 'children', 'young', 'families', 'women', 'girls', 'men', 'boys', 'older', 'adults', 'residents', 'communities', 'community', 'refugees', 'migrants', 'carers', 'veterans', 'disabled', 'disabilities', 'homeless', 'households', 'students', 'pupils', 'patients', 'survivors', 'tenants', 'customers', 'clients', 'members', 'volunteers', 'charities', 'organisations', 'groups', 'businesses', 'schools', 'everyone', 'anyone', 'those', 'individuals', 'parents', 'learners', 'artists', 'players', 'workers']
+const ACTION_WORDS = ['provide', 'providing', 'run', 'running', 'deliver', 'delivering', 'support', 'supporting', 'offer', 'offering', 'train', 'training', 'teach', 'teaching', 'help', 'helping', 'work', 'working', 'redistribute', 'distribute', 'collect', 'rescue', 'build', 'create', 'produce', 'sell', 'grow', 'campaign', 'advise', 'mentor', 'coach', 'host', 'organise', 'connect', 'fund', 'employ', 'house', 'feed', 'care', 'counsel', 'protect', 'enable', 'empower', 'improve', 'reduce', 'tackle', 'tackling', 'fight', 'fighting', 'prevent', 'give', 'bring']
+const PLACE_WORDS = ['in ', 'across ', 'throughout ', 'around ', 'local', 'borough', 'county', 'town', 'city', 'village', 'parish', 'district', 'region', 'regional', 'national', 'nationwide', 'uk', 'england', 'scotland', 'wales', 'northern ireland', 'london', 'overseas', 'international', 'worldwide', 'nepal', 'africa', 'asia', 'europe']
+
+function missionChecklist(mission: string, location: string): { label: string; done: boolean }[] {
+  const m = ` ${mission.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ')} `
+  const has = (w: string) => m.includes(` ${w} `) || m.includes(` ${w}s `)
+  const loc = location.split(',')[0].trim().toLowerCase()
+  const who = PEOPLE_WORDS.some(has)
+  const what = ACTION_WORDS.some(has)
+  const where = (loc.length > 2 && m.includes(` ${loc} `)) || PLACE_WORDS.some(w => w.endsWith(' ') ? m.includes(` ${w}`) && /\b(in|across|throughout|around) [a-z]/.test(m) : has(w.trim()))
+  return [
+    { label: 'Who benefits, and the problem you tackle', done: who },
+    { label: 'What you do, and what changes', done: what },
+    { label: 'Where you work', done: where },
+  ]
+}
 
 function StepMission({ state, update, crib, onBack, onContinue }: {
   state: WizardState
   update: <K extends keyof WizardState>(k: K, v: WizardState[K]) => void
-  /** What the website said, in the extractor's words. Offered behind a button, never dropped in unasked. */
+  /** What the website said, in the extractor's words. Pre-filled on arrival; a tag on the box says so. */
   crib: string | null
   onBack: () => void; onContinue: () => void
 }) {
   const valid = state.mission.trim().length >= MISSION_MIN
-  // Pre-filled from the site reading when there is one and the box is empty
-  // (Paul, 14 Sept: editing what is there beats starting fresh). Once, on
-  // arrival; "Clear and write my own" empties it and the reading stays a tap
-  // away. The notice under the box says where the words came from.
   const [fromSite, setFromSite] = useState(false)
   useEffect(() => {
     if (crib && !state.mission.trim()) { update('mission', crib); setFromSite(true) }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+  const items = missionChecklist(state.mission, state.primaryLocation)
+  const complete = items.every(i => i.done)
+  const showTag = !!crib && (fromSite || state.mission === crib)
   return (
     <>
       <BackLink onClick={onBack} />
       <h1 style={H1_STYLE}>What do you do?</h1>
-      <p style={SUBTITLE_STYLE}>Two or three sentences in your own words. This is what we match on and what a funder reads first, so it matters more than any tag.</p>
+      <p style={SUBTITLE_STYLE}>Two or three sentences. This is what we match on.</p>
 
-      <textarea
-        value={state.mission}
-        onChange={e => update('mission', e.target.value)}
-        rows={5}
-        placeholder="Paste the description you use on your website or in a funding bid, or write two sentences here."
-        style={{ ...INPUT_STYLE, height: 'auto', padding: '14px 16px', resize: 'vertical', lineHeight: 1.55 }}
-      />
-
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, marginTop: 10, flexWrap: 'wrap' }}>
-        <p style={{ margin: 0, fontFamily: 'var(--font-dm-sans)', fontSize: 13.5, lineHeight: 1.55, color: T.textSecondary, maxWidth: 520 }}>
-          Worth covering: who benefits from your work and the problem you are tackling, what you do and what changes, where you work and who you work alongside.
-        </p>
-        {crib && (
-          <button type="button"
-            onClick={() => { if (fromSite || state.mission === crib) { update('mission', ''); setFromSite(false) } else { update('mission', crib); setFromSite(true) } }}
-            style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13, fontWeight: 600, color: T.greenDeep, background: 'transparent', border: `1.5px solid ${T.borderInput}`, borderRadius: 999, padding: '8px 14px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
-            {fromSite || state.mission === crib ? 'Clear and write my own' : 'Use our reading of your website'}
+      <div style={{ position: 'relative' }}>
+        <textarea
+          value={state.mission}
+          onChange={e => { update('mission', e.target.value); if (fromSite) setFromSite(false) }}
+          rows={5}
+          placeholder="Paste the description you use on your website or in a funding bid, or write two sentences here."
+          style={{ ...INPUT_STYLE, height: 'auto', padding: showTag ? '38px 16px 14px' : '14px 16px', resize: 'vertical', lineHeight: 1.55 }}
+        />
+        {showTag && (
+          <div style={{ position: 'absolute', top: 10, left: 14, right: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontFamily: 'var(--font-space-grotesk)', fontSize: 12, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: T.textTertiary }}>
+            <span>From your website, edit freely</span>
+            <button type="button" onClick={() => { update('mission', ''); setFromSite(false) }}
+              style={{ background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', font: 'inherit', color: T.greenDeep, letterSpacing: 'inherit', textTransform: 'inherit' }}>
+              Clear
+            </button>
+          </div>
+        )}
+        {!showTag && crib && !state.mission.trim() && (
+          <button type="button" onClick={() => { update('mission', crib); setFromSite(true) }}
+            style={{ position: 'absolute', top: 10, right: 14, background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'var(--font-space-grotesk)', fontSize: 12, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: T.greenDeep }}>
+            Use our reading of your site
           </button>
         )}
       </div>
-      {crib && (fromSite || state.mission === crib) && (
-        <QHelp>Written from our reading of your website. It is a starting point, not the truth: edit it until it says what you actually do.</QHelp>
-      )}
-      <QHelp>{valid ? 'Good. You can change this any time from your profile.' : `${Math.max(0, MISSION_MIN - state.mission.trim().length)} more characters and you can continue.`}</QHelp>
+
+      <ul style={{ listStyle: 'none', padding: 0, margin: '14px 0 0', display: 'grid', gap: 6 }}>
+        {items.map(i => (
+          <li key={i.label} style={{ display: 'flex', alignItems: 'center', gap: 10, fontFamily: 'var(--font-dm-sans)', fontSize: 14, color: i.done ? T.textSecondary : T.textPrimary }}>
+            <span aria-hidden="true" style={{ width: 20, height: 20, borderRadius: 99, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: i.done ? T.greenDeep : 'transparent', border: `1.5px solid ${i.done ? T.greenDeep : T.borderInput}`, color: T.onDeep, fontSize: 12, flexShrink: 0 }}>{i.done ? '✓' : ''}</span>
+            <span>{i.label}{!i.done && state.mission.trim() ? <span style={{ color: T.textTertiary }}>, not yet</span> : null}</span>
+          </li>
+        ))}
+      </ul>
 
       <div style={{ ...ACTIONS_STYLE, marginTop: 24 }}>
         <BackLink onClick={onBack} />
-        <Button variant="primary" onClick={onContinue} disabled={!valid}>
+        <Button variant={complete ? 'primary' : 'secondary'} onClick={onContinue} disabled={!valid}>
           Continue <ArrowRight size={14} />
         </Button>
       </div>
