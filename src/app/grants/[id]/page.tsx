@@ -447,8 +447,8 @@ export default async function PublicGrantPage({
   }
   const neutralChip: React.CSSProperties = { ...chip, background: T.warm, color: T.deep }
   const sectionH2: React.CSSProperties = {
-    fontFamily: UI, fontSize: 11, fontWeight: 700, letterSpacing: '0.14em',
-    textTransform: 'uppercase', color: T.inkPlace, margin: '0 0 12px',
+    fontFamily: UI, fontSize: 13, fontWeight: 700, letterSpacing: '0.12em',
+    textTransform: 'uppercase', color: T.deep, margin: '0 0 12px',
     display: 'flex', alignItems: 'center', gap: 8,
   }
   const section: React.CSSProperties = {
@@ -598,7 +598,7 @@ export default async function PublicGrantPage({
             )}
             {exclusions && (
               <div style={{ marginTop: 16, padding: '14px 16px', background: '#FBF1EC', borderRadius: 12 }}>
-                <p style={{ fontFamily: UI, fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#993C1D', margin: '0 0 6px' }}>What they will not fund</p>
+                <p style={{ fontFamily: UI, fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#993C1D', margin: '0 0 6px' }}>What they will not fund</p>
                 <p style={{ fontSize: 14.5, lineHeight: 1.6, color: T.deep, margin: 0, whiteSpace: 'pre-line' }}>{exclusions}</p>
               </div>
             )}
@@ -610,7 +610,7 @@ export default async function PublicGrantPage({
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 18 }}>
                 {facts.map(([key, label, text]) => (
                   <div key={key}>
-                    <p style={{ fontFamily: UI, fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.inkMuted, margin: '0 0 6px' }}>{label}</p>
+                    <p style={{ fontFamily: UI, fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.deep, margin: '0 0 6px' }}>{label}</p>
                     <p style={{ fontSize: 14.5, lineHeight: 1.6, color: T.deep, margin: 0, whiteSpace: 'pre-line' }}>{text}</p>
                   </div>
                 ))}
