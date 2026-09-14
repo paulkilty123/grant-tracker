@@ -2800,7 +2800,7 @@ function StepMission({ state, update, crib, onProposals, onBack, onContinue }: {
      box came pre-filled, then only when "Check my description" is pressed.
      The checklist keeps the last result; a grey line says when the text has
      changed since. No word rules: a wrong tick is worse than a short wait. */
-  const [graded, setGraded] = useState<{ text: string; items: { key: string; covered: boolean; suggestion: string }[] } | null>(null)
+  const [graded, setGraded] = useState<{ text: string; items: { key: string; covered: boolean; suggestion: string; sentence?: string }[] } | null>(null)
   const [grading, setGrading] = useState(false)
   const arrivalRead = useRef(false)
   async function runCheck(textIn?: string) {
@@ -2815,7 +2815,7 @@ function StepMission({ state, update, crib, onProposals, onBack, onContinue }: {
       }
       const res = await fetch('/api/profile/mission-check', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mission: text, name: state.name, location: state.primaryLocation, taxonomy }) })
       if (res.ok) {
-        const data = await res.json() as { items: { key: string; covered: boolean; suggestion: string }[] | null; proposals?: { sectors: string[]; beneficiaries: string[]; niche: string[]; reach?: string | null } }
+        const data = await res.json() as { items: { key: string; covered: boolean; suggestion: string; sentence?: string }[] | null; proposals?: { sectors: string[]; beneficiaries: string[]; niche: string[]; reach?: string | null } }
         if (data.items) setGraded({ text, items: data.items })
         onProposals(data.proposals ?? null)
       }
@@ -2834,8 +2834,25 @@ function StepMission({ state, update, crib, onProposals, onBack, onContinue }: {
   const stale = !!graded && graded.text !== current
   const items = MISSION_ITEMS.map(m => {
     const g = graded?.items.find(x => x.key === m.key)
-    return { label: m.label, done: !!g?.covered, hint: g?.suggestion || m.hint(state.primaryLocation) }
+    return { label: m.label, done: !!g?.covered, hint: g?.suggestion || m.hint(state.primaryLocation), sentence: g?.sentence?.trim() || '' }
   })
+  const boxRef = useRef<HTMLTextAreaElement | null>(null)
+  /* Drops the model's blanked sentence into the box and selects the first
+     blank, so the next keystroke replaces it. The facts stay the reader's. */
+  function addSentence(sentence: string) {
+    const base = state.mission.trim()
+    const next = base ? `${base}${/[.!?]$/.test(base) ? '' : '.'} ${sentence}` : sentence
+    update('mission', next)
+    const at = next.indexOf('[', base.length)
+    const end = at >= 0 ? next.indexOf(']', at) + 1 : -1
+    requestAnimationFrame(() => {
+      const el = boxRef.current
+      if (!el) return
+      el.focus()
+      if (at >= 0 && end > at) el.setSelectionRange(at, end)
+      else el.setSelectionRange(next.length, next.length)
+    })
+  }
   const complete = !!graded && !stale && items.every(i => i.done)
   const showTag = !!crib && (fromSite || state.mission === crib)
   return (
@@ -2846,6 +2863,7 @@ function StepMission({ state, update, crib, onProposals, onBack, onContinue }: {
 
       <div style={{ position: 'relative' }}>
         <textarea
+          ref={boxRef}
           value={state.mission}
           onChange={e => { update('mission', e.target.value); if (fromSite) setFromSite(false) }}
           rows={5}
@@ -2896,6 +2914,12 @@ function StepMission({ state, update, crib, onProposals, onBack, onContinue }: {
             <span>
               <span style={{ color: i.done ? T.textTertiary : T.textPrimary, fontWeight: i.done ? 400 : 600 }}>{i.done ? i.label : `Add ${i.label.charAt(0).toLowerCase()}${i.label.slice(1)}`}</span>
               {!i.done && <span style={{ display: 'block', color: T.textSecondary }}>{i.hint}</span>}
+              {!i.done && i.sentence && (
+                <button type="button" onClick={() => addSentence(i.sentence)}
+                  style={{ display: 'block', marginTop: 4, padding: 0, background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-space-grotesk)', fontSize: 13, fontWeight: 600, color: T.greenDeep, textDecoration: 'underline', textUnderlineOffset: 3 }}>
+                  Add this sentence and fill the blanks
+                </button>
+              )}
             </span>
           </li>
         ))}
