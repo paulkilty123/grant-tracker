@@ -2708,7 +2708,7 @@ export default function SearchPage() {
         <div className="mb-5 p-4 flex items-start justify-between gap-4 rounded-xl" style={{ border: '1px solid rgba(142,203,60,0.3)', background: 'rgba(142,203,60,0.06)' }}>
           <div>
             <p className="text-sm font-semibold" style={{ color: '#1B6B3D' }}>Profile saved. Here are your matches.</p>
-            <p className="text-xs text-mid mt-0.5">Results are filtered to grants you&apos;re eligible for. Use &ldquo;Show all grants&rdquo; below to browse everything.</p>
+            <p className="text-xs text-mid mt-0.5">Results are filtered to what you&apos;re eligible for. Use &ldquo;Show all&rdquo; below to browse everything.</p>
           </div>
           <button onClick={() => setWelcomeDismissed(true)} className="text-mid hover:text-charcoal text-lg leading-none flex-shrink-0">×</button>
         </div>
@@ -3274,7 +3274,7 @@ export default function SearchPage() {
                         className="text-sm font-semibold px-5 py-2 transition-colors"
                         style={{ background: '#fff', color: '#1D3C3E', border: '1.5px solid rgba(29,60,62,0.24)', borderRadius: 999 }}
                       >
-                        Show all {allCount} grants
+                        Show all {allCount} {tabNoun}
                       </button>
                     )}
                   </>
