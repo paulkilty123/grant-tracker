@@ -2741,7 +2741,7 @@ const PEOPLE_WORDS = ['people', 'children', 'young', 'families', 'women', 'girls
 const ACTION_WORDS = ['provide', 'providing', 'run', 'running', 'deliver', 'delivering', 'support', 'supporting', 'offer', 'offering', 'train', 'training', 'teach', 'teaching', 'help', 'helping', 'work', 'working', 'redistribute', 'distribute', 'collect', 'rescue', 'build', 'create', 'produce', 'sell', 'grow', 'campaign', 'advise', 'mentor', 'coach', 'host', 'organise', 'connect', 'fund', 'employ', 'house', 'feed', 'care', 'counsel', 'protect', 'enable', 'empower', 'improve', 'reduce', 'tackle', 'tackling', 'fight', 'fighting', 'prevent', 'give', 'bring']
 const PLACE_WORDS = ['in ', 'across ', 'throughout ', 'around ', 'local', 'borough', 'county', 'town', 'city', 'village', 'parish', 'district', 'region', 'regional', 'national', 'nationwide', 'uk', 'england', 'scotland', 'wales', 'northern ireland', 'london', 'overseas', 'international', 'worldwide', 'nepal', 'africa', 'asia', 'europe']
 
-function missionChecklist(mission: string, location: string): { label: string; done: boolean }[] {
+function missionChecklist(mission: string, location: string): { label: string; hint: string; done: boolean }[] {
   const m = ` ${mission.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ')} `
   const has = (w: string) => m.includes(` ${w} `) || m.includes(` ${w}s `)
   const loc = location.split(',')[0].trim().toLowerCase()
@@ -2749,9 +2749,9 @@ function missionChecklist(mission: string, location: string): { label: string; d
   const what = ACTION_WORDS.some(has)
   const where = (loc.length > 2 && m.includes(` ${loc} `)) || PLACE_WORDS.some(w => w.endsWith(' ') ? m.includes(` ${w}`) && /\b(in|across|throughout|around) [a-z]/.test(m) : has(w.trim()))
   return [
-    { label: 'Who benefits, and the problem you tackle', done: who },
-    { label: 'What you do, and what changes', done: what },
-    { label: 'Where you work', done: where },
+    { label: 'Who benefits, and the problem you tackle', hint: 'e.g. families in Bristol who cannot afford enough food', done: who },
+    { label: 'What you do, and what changes', hint: 'e.g. we collect surplus food and deliver it to 300 community groups each week', done: what },
+    { label: 'Where you work', hint: location.trim() ? `e.g. across ${location.split(',')[0].trim()} and the surrounding area` : 'e.g. across Bristol and the South West', done: where },
   ]
 }
 
@@ -2802,11 +2802,19 @@ function StepMission({ state, update, crib, onBack, onContinue }: {
         )}
       </div>
 
-      <ul style={{ listStyle: 'none', padding: 0, margin: '14px 0 0', display: 'grid', gap: 6 }}>
+      {/* Covered lines go quiet; an open line becomes the instruction, with an
+          example, so the reader sees what to add without reading anything else. */}
+      <p style={{ margin: '14px 0 8px', fontFamily: 'var(--font-space-grotesk)', fontSize: 12, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: T.textTertiary }}>
+        {complete ? 'All three covered' : `${items.filter(i => !i.done).length === 1 ? 'One thing' : `${items.filter(i => !i.done).length} things`} still to add`}
+      </p>
+      <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 8 }}>
         {items.map(i => (
-          <li key={i.label} style={{ display: 'flex', alignItems: 'center', gap: 10, fontFamily: 'var(--font-dm-sans)', fontSize: 14, color: i.done ? T.textSecondary : T.textPrimary }}>
-            <span aria-hidden="true" style={{ width: 20, height: 20, borderRadius: 99, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: i.done ? T.greenDeep : 'transparent', border: `1.5px solid ${i.done ? T.greenDeep : T.borderInput}`, color: T.onDeep, fontSize: 12, flexShrink: 0 }}>{i.done ? '✓' : ''}</span>
-            <span>{i.label}{!i.done && state.mission.trim() ? <span style={{ color: T.textTertiary }}>, not yet</span> : null}</span>
+          <li key={i.label} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontFamily: 'var(--font-dm-sans)', fontSize: 14, lineHeight: 1.45 }}>
+            <span aria-hidden="true" style={{ width: 20, height: 20, marginTop: 1, borderRadius: 99, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: i.done ? T.greenDeep : 'transparent', border: `1.5px solid ${i.done ? T.greenDeep : T.coralText}`, color: T.onDeep, fontSize: 12, flexShrink: 0 }}>{i.done ? '✓' : ''}</span>
+            <span>
+              <span style={{ color: i.done ? T.textTertiary : T.textPrimary, fontWeight: i.done ? 400 : 600 }}>{i.done ? i.label : `Add ${i.label.charAt(0).toLowerCase()}${i.label.slice(1)}`}</span>
+              {!i.done && <span style={{ display: 'block', color: T.textSecondary }}>{i.hint}</span>}
+            </span>
           </li>
         ))}
       </ul>
