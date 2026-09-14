@@ -30,6 +30,7 @@ export const PROGRAMME_KEYS = [
   'cohort_and_selection',  // places available and how they choose
   'delivered_by',          // who runs it and any partner behind the brand
   'alumni_outcomes',       // what past cohorts got, named alumni, follow-on
+  'strong_application',    // added 14 Sept evening: the public page's tile needs it and the grant enricher rarely fills it for programmes
 ] as const
 
 async function fetchText(url: string): Promise<string> {
@@ -81,6 +82,7 @@ Return JSON with exactly these keys, each a string or null:
 - cohort_and_selection: how many places, how they choose, and any interview or pitch stage.
 - delivered_by: who runs it day to day and any partner or funder behind it, if named.
 - alumni_outcomes: what past participants got or went on to, any named alumni, follow-on funding or awards mentioned.
+- strong_application: what the page says a strong application looks like: the qualities, evidence or attitude they say they select for. Only what the page states.
 Also return "_citations": an object with the same keys, each the exact short sentence from the page that supports the answer, or null.
 
 PAGE TEXT:
@@ -100,7 +102,7 @@ async function main() {
   for (const r of rows ?? []) {
     const brief = (r.funder_brief ?? {}) as Record<string, unknown>
     const missing = PROGRAMME_KEYS.filter(k => typeof brief[k] !== 'string' || !(brief[k] as string).trim())
-    if (missing.length === 0) { console.log(`= ${r.title}: already has all seven`); skipped++; continue }
+    if (missing.length === 0) { console.log(`= ${r.title}: already complete`); skipped++; continue }
     if (!r.apply_url) { console.log(`! ${r.title}: no url`); failed++; continue }
 
     let page: string
