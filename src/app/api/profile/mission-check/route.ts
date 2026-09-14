@@ -21,19 +21,19 @@ export const dynamic = 'force-dynamic'
 const MODEL = 'claude-haiku-4-5-20251001'
 
 export type MissionCheckItem = { key: 'who' | 'what' | 'where'; covered: boolean; suggestion: string }
-export type MissionProposals = { sectors: string[]; beneficiaries: string[]; niche: string[] }
+export type MissionProposals = { sectors: string[]; beneficiaries: string[]; niche: string[]; reach: 'local' | 'regional' | 'national' | 'international' | null }
 type Opt = { value: string; label: string; sector?: string }
 
 const SYSTEM = `You help a UK charity or social enterprise write two or three sentences about what it does, for a funding matching tool. British spelling. No dashes. Sentence case. Plain words.
 
 Judge the text on three things, and propose tags from the lists given, and answer only with JSON of this shape, nothing else:
-{"items":[{"key":"who","covered":true,"suggestion":""},{"key":"what","covered":false,"suggestion":"..."},{"key":"where","covered":false,"suggestion":"..."}],"proposals":{"sectors":["value"],"beneficiaries":["value"],"niche":["value"]}}
+{"items":[{"key":"who","covered":true,"suggestion":""},{"key":"what","covered":false,"suggestion":"..."},{"key":"where","covered":false,"suggestion":"..."}],"proposals":{"sectors":["value"],"beneficiaries":["value"],"niche":["value"],"reach":"local"}}
 
 - who: does it name the people or organisations that benefit, and the problem they face? A vision ("all people can thrive") does not count; a named group with a need does.
 - what: does it say what the organisation actually does, concretely, and what changes as a result? An aim ("fighting hunger") does not count; an activity ("we collect surplus food and deliver it to community groups") does.
 - where: does it say where the work happens, at the level a funder would use (a town, county, region, nation, or overseas)?
 
-Proposals: sectors, 1 to 4 values from the SECTORS list, most central first. beneficiaries, 1 to 4 values from the BENEFICIARIES list, primary first; use general_public only when no group is named. niche, up to 5 values from the SPECIALISMS list, and only ones that belong to a sector you proposed. Propose only what the text supports; an empty list is right when it says nothing. Values must be copied exactly from the lists.
+Proposals: sectors, 1 to 4 values from the SECTORS list, most central first. beneficiaries, 1 to 4 values from the BENEFICIARIES list, primary first; use general_public only when no group is named. niche, up to 5 values from the SPECIALISMS list, and only ones that belong to a sector you proposed. reach, where the people they help live: "local" for one town, borough or district; "regional" for a county or region; "national" for across the UK; "international" when some or all of the work is outside the UK; null when the text does not say. Propose only what the text supports; an empty list is right when it says nothing. Values must be copied exactly from the lists.
 
 When a line is covered, suggestion is an empty string. When it is not, suggestion is one sentence, at most 25 words, telling the writer what to add, using what the text already says so it reads as theirs: "Add who receives the food and what they are facing, for example community groups feeding families in poverty." Never invent facts about the organisation; say what to add, not what is true.`
 
@@ -79,10 +79,13 @@ export async function POST(req: NextRequest) {
     }
     const pSectors = only(parsed.proposals?.sectors, sectors, 4)
     const allowedNiche = niche.filter(o => !o.sector || pSectors.includes(o.sector))
+    const reachRaw = parsed.proposals?.reach
+    const reach = reachRaw === 'local' || reachRaw === 'regional' || reachRaw === 'national' || reachRaw === 'international' ? reachRaw : null
     const proposals: MissionProposals = {
       sectors: pSectors,
       beneficiaries: only(parsed.proposals?.beneficiaries, bens, 4),
       niche: only(parsed.proposals?.niche, allowedNiche, 5),
+      reach,
     }
     return NextResponse.json({ items: items.length === 3 ? items : null, proposals, usage: { in: res.usage.input_tokens, out: res.usage.output_tokens } })
   } catch (err) {

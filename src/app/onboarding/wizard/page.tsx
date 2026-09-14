@@ -66,11 +66,14 @@ const INCOME_BANDS = [
   '£1 million–£5 million', 'Over £5 million',
 ]
 
+// Answers to "Where do the people you help live?" (Paul, 14 Sept 2026: the
+// old labels mixed two ideas, "Regional + national", and nobody knew which
+// to pick). Same four values underneath, so matching is unchanged.
 const GEOGRAPHIC_REACH_OPTIONS = [
-  { value: 'local',         label: 'Local only',              hint: 'One town, borough, or district' },
-  { value: 'regional',      label: 'Regional + national',     hint: 'County, region, or UK-wide' },
-  { value: 'national',      label: 'National only',           hint: 'UK-wide programmes' },
-  { value: 'international', label: 'UK-wide + international', hint: 'Includes overseas work' },
+  { value: 'local',         label: 'One town or area',   hint: 'A borough, town or district' },
+  { value: 'regional',      label: 'A county or region', hint: 'For example the South West or Greater Manchester' },
+  { value: 'national',      label: 'Across the UK',      hint: 'Anywhere in the country' },
+  { value: 'international', label: 'Overseas as well',   hint: 'Some or all of your work is outside the UK' },
 ]
 
 const LEGAL_STRUCTURE_OPTIONS: { value: LegalStructure; label: string }[] = [
@@ -1158,11 +1161,11 @@ export default function OnboardingWizardPage() {
      sectors from its words (the same word-and-synonym rules the profile
      check uses), ticked, only when the reader has not chosen any yet. They
      can untick or add; the note on the step says where the ticks came from. */
-  const [suggestedNote, setSuggestedNote] = useState<{ beneficiaries: string | null; sectors: string | null }>({ beneficiaries: null, sectors: null })
+  const [suggestedNote, setSuggestedNote] = useState<{ beneficiaries: string | null; sectors: string | null; reach: string | null }>({ beneficiaries: null, sectors: null, reach: null })
   const SUGGESTED = 'Selected from your organisation description. Untick anything that is not right, and add what is missing.'
   /* What the model proposed from the mission (the mission-check read carries
      it back). Used ahead of the word rules; null until it has answered. */
-  const [proposals, setProposals] = useState<{ sectors: string[]; beneficiaries: string[]; niche: string[] } | null>(null)
+  const [proposals, setProposals] = useState<{ sectors: string[]; beneficiaries: string[]; niche: string[]; reach?: string | null } | null>(null)
 
   function goToBeneficiaries() {
     if (state.beneficiaryGroups.length === 0 && state.mission.trim()) {
@@ -1191,6 +1194,14 @@ export default function OnboardingWizardPage() {
       }
     }
     setStep('sectors')
+  }
+
+  function goToLocation() {
+    if (!state.geographicReach && proposals?.reach) {
+      update('geographicReach', proposals.reach)
+      setSuggestedNote(n => ({ ...n, reach: SUGGESTED }))
+    }
+    setStep('location')
   }
 
   /* ── The profile check ──────────────────────────────────────────────────
@@ -1569,7 +1580,7 @@ export default function OnboardingWizardPage() {
           cycleNicheTag={cycleNicheTag}
           suggestedNote={suggestedNote.sectors}
           onBack={() => setStep('beneficiaries')}
-          onContinue={() => setStep('location')}
+          onContinue={goToLocation}
           canContinue={sectorsValid}
         />
       )}
@@ -1595,6 +1606,7 @@ export default function OnboardingWizardPage() {
           saving={saving}
           saveError={saveError}
           canContinue={locationValid}
+          reachNote={suggestedNote.reach}
           onBack={() => setStep('sectors')}
           onFinish={goToCheck}
         />
@@ -2554,12 +2566,13 @@ function StepBeneficiaries({ beneficiaryGroups, toggleBeneficiary, makePrimaryBe
    Step 4 — Location, size, funding types
    ═══════════════════════════════════════════════ */
 
-function StepLocation({ state, update, toggleFundingType, toggleSpendNeed, saving, saveError, canContinue, onBack, onFinish }: {
+function StepLocation({ state, update, toggleFundingType, toggleSpendNeed, saving, saveError, canContinue, reachNote, onBack, onFinish }: {
   state: WizardState
   update: <K extends keyof WizardState>(k: K, v: WizardState[K]) => void
   toggleFundingType: (t: FundingType) => void
   toggleSpendNeed: (r: SpendNeed) => void
   saving: boolean; saveError: string | null; canContinue: boolean
+  reachNote?: string | null
   onBack: () => void; onFinish: () => void
 }) {
   return (
@@ -2593,18 +2606,23 @@ function StepLocation({ state, update, toggleFundingType, toggleSpendNeed, savin
       )}
 
       <Q first={!!state.name.trim() && !!state.legalStructure}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '22px 24px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '22px 24px' }}>
           <div>
             <QLabel htmlFor="wiz-based">Where are you based?</QLabel>
             <input id="wiz-based" type="text" value={state.primaryLocation} onChange={e => update('primaryLocation', e.target.value)} placeholder="e.g. Brighton, Sussex" style={INPUT_STYLE} />
             <QHelp>Your town or council area. For London, include the borough, for example &ldquo;Hackney, London&rdquo;.</QHelp>
           </div>
-          <div>
-            <QLabel>Geographic reach</QLabel>
-            <SelectInput value={state.geographicReach} onChange={v => update('geographicReach', v)} options={GEOGRAPHIC_REACH_OPTIONS} placeholder="Select reach…" />
-            <QHelp>We&rsquo;ll score local grants highest if you&rsquo;re place-based.</QHelp>
-          </div>
         </div>
+      </Q>
+
+      <Q title="Where do the people you help live?">
+        {reachNote && <SuggestedNote text={reachNote} />}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          {GEOGRAPHIC_REACH_OPTIONS.map(o => (
+            <FundingTypeChip key={o.value} label={o.label} desc={o.hint} active={state.geographicReach === o.value} onClick={() => update('geographicReach', o.value)} />
+          ))}
+        </div>
+        <QHelp>Local funders score highest when your work is in one place, so pick the smallest that is true.</QHelp>
       </Q>
 
       <Q title="Grant size range" optional>
@@ -2775,7 +2793,7 @@ function StepMission({ state, update, crib, onProposals, onBack, onContinue }: {
   update: <K extends keyof WizardState>(k: K, v: WizardState[K]) => void
   /** What the website said, in the extractor's words. Pre-filled on arrival; a tag on the box says so. */
   crib: string | null
-  onProposals: (p: { sectors: string[]; beneficiaries: string[]; niche: string[] } | null) => void
+  onProposals: (p: { sectors: string[]; beneficiaries: string[]; niche: string[]; reach?: string | null } | null) => void
   onBack: () => void; onContinue: () => void
 }) {
   const valid = state.mission.trim().length >= MISSION_MIN
@@ -2803,7 +2821,7 @@ function StepMission({ state, update, crib, onProposals, onBack, onContinue }: {
         }
         const res = await fetch('/api/profile/mission-check', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mission: text, name: state.name, location: state.primaryLocation, taxonomy }) })
         if (res.ok) {
-          const data = await res.json() as { items: { key: string; covered: boolean; suggestion: string }[] | null; proposals?: { sectors: string[]; beneficiaries: string[]; niche: string[] } }
+          const data = await res.json() as { items: { key: string; covered: boolean; suggestion: string }[] | null; proposals?: { sectors: string[]; beneficiaries: string[]; niche: string[]; reach?: string | null } }
           if (data.items) setGraded({ text, items: data.items })
           onProposals(data.proposals ?? null)
         }
