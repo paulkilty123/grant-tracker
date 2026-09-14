@@ -770,6 +770,18 @@ export async function buildDigest(
     if (nudge) {
       prompt = { title: nudge.title, body: nudge.body, cta: 'Fix this on your profile', href: `${origin}/dashboard/profile#card-focus` }
       shown.push({ section: 'profile_nudge', key: nudge.id })
+    } else if (!hasHistory) {
+      // A complete profile with a wrong description is invisible to every
+      // rule (Our Sansar, 14 Sept 2026: an invented mission, every field
+      // filled). The first email can still say the one true thing: the
+      // matches come from the description, and where to change it.
+      prompt = {
+        title: 'Matches looking off? Start with your description',
+        body: 'Everything in this email comes from what your profile says. Two or three plain sentences on who you help, what you do and where make the biggest difference.',
+        cta: 'Check your description',
+        href: `${origin}/dashboard/profile#card-story`,
+      }
+      shown.push({ section: 'profile_nudge', key: 'week_one_description' })
     }
   }
 
