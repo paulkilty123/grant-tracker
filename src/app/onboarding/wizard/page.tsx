@@ -2648,7 +2648,7 @@ function StepLocation({ state, update, toggleFundingType, toggleSpendNeed, savin
             return <FundingTypeChip key={t.value} label={t.label} desc={t.desc} active={active} onClick={() => toggleFundingType(t.value)} />
           })}
         </div>
-        <QHelp>Types you tick rank higher. You still see all of them, and you can change the mix on any search.</QHelp>
+        <QHelp>Untick any you would never take. Ticked types rank higher, you still see all of them, and you can change the mix on any search.</QHelp>
       </Q>
 
       <Q title="What do you need the money for?">
