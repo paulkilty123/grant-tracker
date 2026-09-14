@@ -670,12 +670,11 @@ export default async function PublicGrantPage({
                   commercial promise and this is the page a stranger reads
                   before signing up. Live since 14 September, because every
                   ordinary signup starts the 14-day Apply trial. Beside the
-                  button on desktop, under it only when the row has to wrap;
-                  body colour, not the dimmed grey: it is the strongest line on
-                  the panel. */}
-              <span style={{ fontSize: 14.5, lineHeight: 1.5, color: 'rgba(246,241,231,0.85)', flex: '1 1 260px' }}>
-                {ctaSupportParts().map((part, i) => (
-                  <span key={part} style={{ whiteSpace: 'nowrap' }}>{i > 0 ? ' ' : ''}{part}</span>
+                  button as two stacked lines, one sentence each; body colour,
+                  not the dimmed grey: it is the strongest line on the panel. */}
+              <span style={{ fontSize: 14.5, lineHeight: 1.5, color: 'rgba(246,241,231,0.85)' }}>
+                {ctaSupportParts().map(part => (
+                  <span key={part} style={{ display: 'block', whiteSpace: 'nowrap' }}>{part}</span>
                 ))}
               </span>
             </span>
