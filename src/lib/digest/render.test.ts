@@ -174,15 +174,18 @@ describe('mobile', () => {
 })
 
 describe('the feedback ask is not footer boilerplate', () => {
-  it('sits on the card ground with its own button', () => {
+  it('sits on its own cream card with its own button', () => {
     // As plain grey text at the foot it read as the small print every email
     // ends with. It asks for the two cheapest sources of improvement there are.
+    // Cream, not the mint of the profile prompt: two mint cards read as one
+    // ask (Paul, 14 Sept 2026).
     const i = html.indexOf('Seen a funder we are missing')
     expect(i).toBeGreaterThan(-1)
     // Generous forward window: inline styles make each element long, and a
     // short slice lands in the profile prompt's button instead.
     const block = html.slice(i - 400, i + 1600)
-    expect(block).toContain('#EDF6F1')
+    expect(block).toContain('#F5F1E8')
+    expect(block).not.toContain('#EDF6F1')
     expect(block).toContain('>Tell us</a>')
   })
 })
