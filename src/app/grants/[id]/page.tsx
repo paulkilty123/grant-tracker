@@ -469,7 +469,7 @@ export default async function PublicGrantPage({
                 display: 'inline-flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap',
               }}
             >
-              Find funding<span className="hidden md:inline">&nbsp;for your organisation</span>
+              <span>Find funding<span className="hidden md:inline"> for your organisation</span></span>
               <ArrowRight style={{ width: 15, height: 15 }} />
             </Link>
           </span>
