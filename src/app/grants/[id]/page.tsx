@@ -464,8 +464,11 @@ export default async function PublicGrantPage({
           link colour out-ranking a button class) cannot happen here. */}
       <nav style={{ background: '#fff', borderBottom: `1px solid ${T.hair}` }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', padding: '16px 26px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 9, fontFamily: UI, fontWeight: 700, fontSize: 21, letterSpacing: '-0.03em', color: T.deep, textDecoration: 'none' }}>
-            <LogoMark size={26} />
+          {/* Same as the landing header (.brand / .brand-svg / .site-header .logo
+              in public/landing/launch.html): 42px mark, 11px gap, wordmark 27px
+              at weight 500 with -0.01em tracking. Paul, 14 Sept: exactly the same. */}
+          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 11, fontFamily: UI, fontWeight: 500, fontSize: 27, letterSpacing: '-0.01em', color: T.deep, textDecoration: 'none' }}>
+            <LogoMark size={42} />
             {MCP_BRAND_NAME.toLowerCase()}
           </Link>
           <span style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
