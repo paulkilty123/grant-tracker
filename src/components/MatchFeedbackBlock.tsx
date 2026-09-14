@@ -36,6 +36,7 @@ const ThumbDown = () => (
 interface Props {
   grantId: string
   userId: string
+  orgId: string
   matchScore: number
   compact?: boolean
   /** Fired when the user taps a direction — 'up' restores a previously-dismissed grant. */
@@ -45,7 +46,7 @@ interface Props {
   onDoneAndRemove?: () => void
 }
 
-export function MatchFeedbackBlock({ grantId, userId, matchScore, compact = false, onDirectionChange, onDoneAndRemove }: Props) {
+export function MatchFeedbackBlock({ grantId, userId, orgId, matchScore, compact = false, onDirectionChange, onDoneAndRemove }: Props) {
   const [direction, setDirection]             = useState<'up' | 'down' | null>(null)
   const [selectedReasons, setSelectedReasons] = useState<string[]>([])
   const [freeText, setFreeText]               = useState('')
@@ -69,6 +70,7 @@ export function MatchFeedbackBlock({ grantId, userId, matchScore, compact = fals
     if (!userId) return
     await saveMatchFeedback({
       userId,
+      orgId,
       grantId,
       direction: dir,
       reasons: reasons.filter(r => r !== 'something_else'),

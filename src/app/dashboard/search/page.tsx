@@ -957,6 +957,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                       key={`fb-${feedbackBoost ?? 0}`}
                       grantId={grant.id}
                       userId={org.owner_id}
+                      orgId={org.id}
                       matchScore={score}
                       compact
                       onDirectionChange={d => { if (d === 'up') onUndismiss(grant.id) }}
@@ -997,6 +998,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                       key={`fb-${feedbackBoost ?? 0}`}
               grantId={grant.id}
               userId={org.owner_id}
+                      orgId={org.id}
               matchScore={score}
               compact
               onDirectionChange={d => { if (d === 'up') onUndismiss(grant.id) }}
@@ -1547,7 +1549,7 @@ export default function SearchPage() {
         setSavedReminders(rem)
         setSavedNotes(await getSavedNotes(o.id))
         setDismissSnoozes(snoozes)
-        const mfb = await getMatchFeedback(user.id)
+        const mfb = await getMatchFeedback(user.id, o.id)
         setMatchFeedbackMap(mfb)
         // Load existing pipeline grant names to show button state
         const { data: pipelineRows } = await supabase
