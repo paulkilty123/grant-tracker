@@ -431,8 +431,7 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
       <tr><td style="padding:18px 20px;">
         <p style="margin:0 0 6px;font-family:${UI};font-size:15px;font-weight:600;letter-spacing:-.2px;color:${C.deep};">Seen a funder we are missing, or something that looks wrong?</p>
         <p style="margin:0 0 14px;font-family:${BODY};font-size:13.5px;line-height:1.6;color:${C.body};">
-          Funders you send us get checked and added. Matches you flag help us pick better ones for you.
-        </p>
+          If a funder is missing, or a match does not fit, tell us. We check every suggestion and use what you flag to improve your matches.</p>
         ${ghostButton(`${origin}/dashboard/feedback`, 'Tell us')}
       </td></tr>
     </table>
