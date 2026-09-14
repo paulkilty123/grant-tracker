@@ -18,7 +18,7 @@ describe('trial copy', () => {
   })
 
   it('keeps the hedge on the setup time', () => {
-    expect(SETUP_PHRASE).toContain('about')
+    expect(SETUP_PHRASE.toLowerCase()).toContain('about')
     expect(SETUP_PHRASE).toContain(String(SETUP_MINUTES))
   })
 
@@ -29,7 +29,7 @@ describe('trial copy', () => {
       expect(ctaSupportLine()).toBe(SETUP_PHRASE)
       expect(ctaSupportLine().toLowerCase()).not.toContain('free')
     } else {
-      expect(ctaSupportLine()).toBe('Free for 14 days. Takes about 5 minutes to set up.')
+      expect(ctaSupportLine()).toBe('Free for 14 days, full access. About 5 minutes to set up.')
     }
   })
 
@@ -39,7 +39,7 @@ describe('trial copy', () => {
   })
 
   it('tracks the constants rather than hardcoding them', () => {
-    expect(TRIAL_PHRASE).toBe(`Free for ${TRIAL_DAYS} days`)
-    expect(SETUP_PHRASE).toBe(`Takes about ${SETUP_MINUTES} minutes to set up.`)
+    expect(TRIAL_PHRASE).toBe(`Free for ${TRIAL_DAYS} days, full access`)
+    expect(SETUP_PHRASE).toBe(`About ${SETUP_MINUTES} minutes to set up.`)
   })
 })

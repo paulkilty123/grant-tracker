@@ -10,7 +10,7 @@ import { FUNDING_TYPE_COLOUR, TYPE_NEUTRAL, type FundingTypeKey } from '@/lib/fu
 import { sectorColour } from '@/lib/sector-colours'
 import {
   MapPin, Calendar, CheckCircle, Info, ExternalLink, ArrowRight,
-  Building2, Search, TrendingUp, ShieldCheck, Lock, Star, Lightbulb,
+  Building2, Search, TrendingUp, ShieldCheck, Star, Lightbulb,
 } from 'lucide-react'
 import { MCP_BRAND_NAME, MCP_APP_ORIGIN } from '@/lib/mcp-brand'
 import { ctaSupportLine } from '@/lib/trial'
@@ -628,31 +628,32 @@ export default async function PublicGrantPage({
             <p style={{ fontSize: 15.5, lineHeight: 1.6, color: 'rgba(246,241,231,0.85)', margin: '0 0 20px', maxWidth: '56ch' }}>
               {deadlinePassed
                 ? 'There are more in the catalogue. Shoots checks them against your organisation and tells you which ones are open to you now.'
-                : 'Being eligible is not the same as being a good fit. Shoots scores this opportunity against your organisation and shows you what the funder is looking for.'}
+                : 'Being eligible is not the same as being a good fit. Shoots checks this opportunity against your organisation and tells you where you actually stand.'}
             </p>
-            {/* This grant's own locked content, not a general claim. Titles
-                only, by Paul's call on 14 Sept: the strong-application and tips
-                tiles appear only when the row really holds those fields. */}
-            <ul style={{ margin: '0 0 22px', padding: 0, listStyle: 'none', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
+            {/* What an account adds, in this funder's terms. No locks: a padlock
+                reads as a paywall, and the moment is about what the reader gains.
+                The two brief-backed tiles appear only when the row holds them. */}
+            <ul style={{ margin: '0 0 20px', padding: 0, listStyle: 'none', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
               {[
-                strongFirst ? { Icon: Star, bg: T.terra, t: 'What makes a strong application' } : null,
-                tipsFirst   ? { Icon: Lightbulb, bg: T.gold, t: 'Insider tips' } : null,
-                { Icon: TrendingUp, bg: T.teal, t: 'Your match score' },
-                { Icon: CheckCircle, bg: T.sage, t: 'Do you qualify?' },
-              ].filter((x): x is NonNullable<typeof x> => x !== null).map(({ Icon, bg, t }) => (
-                <li key={t} style={{ background: 'rgba(246,241,231,0.06)', border: '1px solid rgba(246,241,231,0.12)', borderRadius: 12, padding: '14px 14px 12px' }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                { Icon: CheckCircle, bg: T.sage, t: 'Do you qualify?', d: 'The funder\u2019s eligibility rules, checked against your profile.' },
+                { Icon: TrendingUp, bg: T.teal, t: 'Your match score', d: 'How closely you fit what they fund, who they fund and where.' },
+                strongFirst ? { Icon: Star, bg: T.terra, t: 'What makes a strong application', d: 'What this funder wants to see.' } : null,
+                tipsFirst   ? { Icon: Lightbulb, bg: T.gold, t: 'Insider tips', d: 'What applicants tend to miss in the guidance.' } : null,
+              ].filter((x): x is NonNullable<typeof x> => x !== null).map(({ Icon, bg, t, d }) => (
+                <li key={t} style={{ background: 'rgba(246,241,231,0.06)', border: '1px solid rgba(246,241,231,0.12)', borderRadius: 12, padding: '14px 14px 13px' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                     <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 26, height: 26, borderRadius: 8, background: bg, color: T.deep, flexShrink: 0 }}>
                       <Icon style={{ width: 14, height: 14 }} />
                     </span>
                     <b style={{ fontFamily: UI, fontWeight: 600, fontSize: 14, color: T.cream, letterSpacing: '-0.012em', lineHeight: 1.25 }}>{t}</b>
                   </span>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: UI, fontSize: 11.5, fontWeight: 600, letterSpacing: '0.04em', color: 'rgba(246,241,231,0.6)' }}>
-                    <Lock style={{ width: 11, height: 11 }} /> Sign up to see
-                  </span>
+                  <span style={{ display: 'block', fontSize: 13.5, lineHeight: 1.5, color: 'rgba(246,241,231,0.8)' }}>{d}</span>
                 </li>
               ))}
             </ul>
+            <p style={{ fontSize: 14.5, lineHeight: 1.5, color: 'rgba(246,241,231,0.85)', margin: '0 0 16px' }}>
+              The same check runs on every opportunity in the catalogue.
+            </p>
             <span style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
               <Link
                 href={signupHref}

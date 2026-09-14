@@ -71,7 +71,14 @@ export const TRIAL_PLAN = 'Apply'
  * answer to both is no.
  * ─────────────────────────────────────────────────────────────────────────────
  */
-export const TRIAL_IS_LIVE = false
+export const TRIAL_IS_LIVE = true
+// Flipped 14 September 2026. Both conditions above are met, and condition 2
+// was met by design rather than by Stripe: since migration 078 (5 September)
+// EVERY organisation created through ordinary signup starts with 14 days of
+// Apply access, so the public opportunity page's CTA, which leads to ordinary
+// signup, now delivers exactly what the words beside it promise. Paul's rule
+// for launch: one signup path, every trial. Stripe is still not merged, which
+// is fine here: the trial needs no card.
 
 /** Intended live date, for the record. Decided 2026-08-28. */
 export const TRIAL_LIVE_FROM = '2026-09-10'
@@ -83,16 +90,16 @@ export const SETUP_MINUTES = 5
  * The trial, always bounded by its length. Never render the word "free" about
  * the product without this.
  */
-export const TRIAL_PHRASE = `Free for ${TRIAL_DAYS} days`
+export const TRIAL_PHRASE = `Free for ${TRIAL_DAYS} days, full access`
 
 /** The setup expectation, with the hedge that keeps it honest. */
-export const SETUP_PHRASE = `Takes about ${SETUP_MINUTES} minutes to set up.`
+export const SETUP_PHRASE = `About ${SETUP_MINUTES} minutes to set up.`
 
 /**
  * What actually goes beside a signup CTA today.
  *
  * Once the trial is live and the CTA leads somewhere that can honour it, this
- * is "Free for 14 days. Takes about 5 minutes to set up." Until then it is the
+ * is "Free for 14 days, full access. About 5 minutes to set up." Until then it is the
  * setup time alone, which is true now. The offer does not get announced early
  * on the strength of a date in a comment.
  */
