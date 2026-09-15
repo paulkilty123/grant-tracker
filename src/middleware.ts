@@ -117,7 +117,8 @@ export async function middleware(request: NextRequest) {
     pathname === '/terms' ||
     pathname === '/mcp' ||
     pathname === '/mcp/terms' ||
-    pathname.startsWith('/grants/')  // Public bridge pages for MCP-returned URLs (read-only catalogue view)
+    pathname === '/grants' ||        // The public catalogue's front door (hubs by sector, region, type)
+    pathname.startsWith('/grants/')  // Public bridge pages and hub pages (read-only catalogue view)
   // OAuth 2.0 + DCR endpoints — discovery, registration, token exchange,
   // revocation. /oauth/authorize is also listed here because it does its own
   // auth gate inside the page (logged-out users are redirected to

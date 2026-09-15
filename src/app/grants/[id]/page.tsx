@@ -15,6 +15,11 @@ import {
 import { MCP_BRAND_NAME, MCP_APP_ORIGIN } from '@/lib/mcp-brand'
 import { ctaSupportParts } from '@/lib/trial'
 import { leadParagraph } from '@/components/FunderBrief'
+import {
+  IMPACT_SECTOR_LABELS, loadRelatedCandidates, relatedRows, regionHubForRow, sectorSlug, typeHubForRow,
+  type HubRow,
+} from '@/lib/hubs'
+import { Crumbs, GrantRow } from '@/components/public/HubPage'
 
 // ── Public bridge page ───────────────────────────────────────────────────────
 // Reached from an MCP link inside someone's AI assistant, or from search. So
@@ -120,14 +125,8 @@ const STRUCTURE_LABELS: Record<string, string> = {
   not_registered:        'Pre-registration',
 }
 
-const IMPACT_SECTOR_LABELS: Record<string, string> = {
-  creative: 'Arts & Culture', environment: 'Environment', health: 'Health',
-  education: 'Education', tech: 'Technology', housing: 'Housing',
-  food: 'Food', employment: 'Employment', community: 'Community',
-  justice: 'Justice & Equality', financial: 'Financial Inclusion', international: 'International',
-  heritage: 'Heritage', sport: 'Sport', social_economy: 'Social Economy',
-  mental_health: 'Mental Health',
-}
+// IMPACT_SECTOR_LABELS lives in src/lib/hubs.ts now, shared with the hub
+// pages, and covers all twenty-two live values rather than sixteen.
 
 const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 const MONTHS_LONG  = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
@@ -399,9 +398,40 @@ export default async function PublicGrantPage({
 
   const applyUrl = grant.apply_url ? String(grant.apply_url) : null
   const url      = canonicalFor(externalId)
+  const amountLoRaw = grant.amount_min as number | null
+  const amountHiRaw = grant.amount_max as number | null
   // /auth/signup redirects to /apply, the pre-launch waitlist. Signup is open
   // at /signup since 10 Sept; it does not honour a return param yet.
   const signupHref = '/signup'
+
+  // ── Neighbours and hubs ────────────────────────────────────────────────────
+  // Until 2026-09-15 this page linked to nothing else in the catalogue, and
+  // nothing but the sitemap linked to it. See src/lib/hubs.ts. The related
+  // block and the breadcrumb are the links a crawler follows; the sector
+  // chips below link to their hubs for the same reason.
+  const hubRow: HubRow = {
+    id: String(grant.id), external_id: grant.external_id ? String(grant.external_id) : null,
+    title: String(grant.title ?? ''), funder: grant.funder ? String(grant.funder) : null,
+    funding_type: grant.funding_type ? String(grant.funding_type) : null,
+    amount_min: amountLoRaw, amount_max: amountHiRaw,
+    amount_undisclosed: Boolean(grant.amount_undisclosed),
+    deadline: deadlineISO, is_rolling: isRolling,
+    location_tag: grant.location_tag ? String(grant.location_tag) : null,
+    is_local: Boolean(grant.is_local), impact_sectors: impactSectors,
+  }
+  const related = relatedRows(hubRow, await loadRelatedCandidates(hubRow).catch(() => []))
+  const regionHubOfRow = regionHubForRow(hubRow)
+  const typeHubOfRow   = typeHubForRow(hubRow)
+  const primarySector  = impactSectors[0] ?? null
+  const crumbs = [
+    { href: '/grants', label: 'Browse funding' },
+    { href: `/grants/type/${typeHubOfRow.slug}`, label: typeHubOfRow.label },
+    ...(regionHubOfRow ? [{ href: `/grants/region/${regionHubOfRow.slug}`, label: regionHubOfRow.label }] : []),
+    ...(primarySector && IMPACT_SECTOR_LABELS[primarySector]
+      ? [{ href: `/grants/sector/${sectorSlug(primarySector)}`, label: IMPACT_SECTOR_LABELS[primarySector] }]
+      : []),
+  ]
+  const todayISO = new Date().toISOString().slice(0, 10)
 
   // ── JSON-LD ────────────────────────────────────────────────────────────────
   // MonetaryGrant has NO deadline property. Its own are `amount` and `funder`;
@@ -518,6 +548,7 @@ export default async function PublicGrantPage({
       </nav>
 
       <main style={{ maxWidth: 800, margin: '0 auto', padding: '32px 26px 70px' }}>
+        <Crumbs items={crumbs} />
         <div style={{ background: '#fff', border: `1px solid ${T.hair}`, borderRadius: 18, padding: '30px 32px' }}>
 
           {/* Meta chips. No funder-initial avatar: a grey letter in a rounded
@@ -594,10 +625,15 @@ export default async function PublicGrantPage({
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
                 {impactSectors.map(s => {
                   const c = sectorColour(s)
-                  return (
-                    <span key={s} style={{ ...chip, background: c.bg, color: c.color }}>
-                      {IMPACT_SECTOR_LABELS[s] ?? s.replace(/_/g, ' ')}
-                    </span>
+                  const label = IMPACT_SECTOR_LABELS[s] ?? s.replace(/_/g, ' ')
+                  // A chip that is also the way to every other row in that
+                  // sector. Same colour, underlined on hover only.
+                  return IMPACT_SECTOR_LABELS[s] ? (
+                    <Link key={s} href={`/grants/sector/${sectorSlug(s)}`} style={{ ...chip, background: c.bg, color: c.color, textDecoration: 'none' }}>
+                      {label}
+                    </Link>
+                  ) : (
+                    <span key={s} style={{ ...chip, background: c.bg, color: c.color }}>{label}</span>
                   )
                 })}
               </div>
@@ -755,6 +791,32 @@ export default async function PublicGrantPage({
             </div>
           )}
         </div>
+
+        {related.length > 0 && (
+          <section style={{ background: '#fff', border: `1px solid ${T.hair}`, borderRadius: 18, padding: '26px 32px', marginTop: 22 }}>
+            <h2 style={{ ...sectionH2, marginBottom: 4 }}>More funding like this</h2>
+            <p style={{ fontSize: 14, color: T.inkMuted, margin: '0 0 12px' }}>
+              Same area of work
+              {regionHubOfRow ? `, ${regionHubOfRow.slug === 'uk' ? 'open across the UK' : regionHubOfRow.phrase}` : ''}, soonest deadline first.
+            </p>
+            <ul style={{ margin: 0, padding: 0, borderBottom: `1px solid ${T.hair}` }}>
+              {related.map(r => <GrantRow key={r.id} row={r} todayISO={todayISO} />)}
+            </ul>
+            <p style={{ fontSize: 14, color: T.inkMuted, margin: '14px 0 0', display: 'flex', flexWrap: 'wrap', gap: '4px 16px' }}>
+              {primarySector && IMPACT_SECTOR_LABELS[primarySector] && (
+                <Link href={`/grants/sector/${sectorSlug(primarySector)}`} style={{ color: T.deep, fontWeight: 600 }}>
+                  All {IMPACT_SECTOR_LABELS[primarySector].toLowerCase()} funding
+                </Link>
+              )}
+              {regionHubOfRow && (
+                <Link href={`/grants/region/${regionHubOfRow.slug}`} style={{ color: T.deep, fontWeight: 600 }}>
+                  {regionHubOfRow.slug === 'uk' ? 'All UK-wide funding' : `All funding ${regionHubOfRow.phrase}`}
+                </Link>
+              )}
+              <Link href="/grants" style={{ color: T.deep, fontWeight: 600 }}>Browse everything</Link>
+            </p>
+          </section>
+        )}
 
         {/* Catalogue note. The "Last checked" chip that sat above this
             quoted last_seen_at, a scraper stamp, not the URL check, so it

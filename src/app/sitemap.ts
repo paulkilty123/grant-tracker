@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next'
 import { getAdminDb } from '@/lib/admin/admin-db'
 import { MCP_APP_ORIGIN } from '@/lib/mcp-brand'
+import { hubCounts, type HubRow } from '@/lib/hubs'
 
 // Built per request, not at build time.
 //
@@ -48,7 +49,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const db = getAdminDb()
     const { data, error } = await db
       .from('scraped_grants')
-      .select('id, external_id, last_seen_at, first_seen_at')
+      .select('id, external_id, last_seen_at, first_seen_at, funding_type, location_tag, impact_sectors')
       .eq('is_active', true)
       .eq('pipeline_state', 'published')
 
@@ -70,7 +71,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }
     })
 
-    return [...statics, ...grants]
+    // Hub pages: one per sector, region and funding type that has enough rows
+    // for a page (the same threshold the routes 404 below). Computed from the
+    // rows just fetched, so a hub is listed only while it would render.
+    const counts = hubCounts((data ?? []) as unknown as HubRow[])
+    const hub = (path: string): MetadataRoute.Sitemap[number] =>
+      ({ url: `${MCP_APP_ORIGIN}${path}`, lastModified: now, changeFrequency: 'daily' as const, priority: 0.9 })
+    const hubs: MetadataRoute.Sitemap = [
+      hub('/grants'),
+      ...counts.types.map(t => hub(`/grants/type/${t.slug}`)),
+      ...counts.regions.map(r => hub(`/grants/region/${r.slug}`)),
+      ...counts.sectors.map(s => hub(`/grants/sector/${s.slug}`)),
+    ]
+
+    return [...statics, ...hubs, ...grants]
   } catch (err) {
     // Serve the static pages rather than an empty document. An empty sitemap is
     // worse than a partial one: it is a positive assertion that there is
