@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   mergeFieldUpdate,
+  isCycleRoll,
   trustOf,
   transitionPipelineState,
   compactValue,
@@ -246,5 +247,51 @@ describe('compactValue — what a refusal is allowed to carry', () => {
     expect(replayable({ who_can_apply: 'x' })).toBe(false)     // blob, omitted
     expect(replayable(Array.from({ length: 30 }, () => 'x'))).toBe(false)  // too long, omitted
     expect(replayable([{ day: 1, month: 4 }])).toBe(false)     // objects inside, omitted
+  })
+})
+
+/**
+ * The expire-grants cron rolling a deadline along the row's own cycle. The
+ * Achlachan case, 2026-09-15: user_verified deadline 15 Sep, cycle on the 15th
+ * of Mar/Jun/Sep/Dec, cron writing as system. Prediction before the run: the
+ * roll to 15 Dec goes through, a roll to a date NOT on the cycle is still
+ * lower_trust, a pinned date still holds, and a roll BACKWARDS is refused.
+ */
+describe('expire-grants cycle roll over a higher-trust deadline', () => {
+  const cycle = [{ day: 15, month: 3 }, { day: 15, month: 6 }, { day: 15, month: 9 }, { day: 15, month: 12 }]
+  const held = prov('user_verified:timing-2026-09-06', { set_at: '2026-09-06T19:44:33.764Z' })
+  const cron = prov('system:expire_grants:v2', { set_at: '2026-09-16T02:00:00.000Z' })
+
+  it('advances 15 Sep to 15 Dec over a user_verified deadline when 15 Dec is on the cycle', () => {
+    const d = mergeFieldUpdate('2026-09-15', held, '2026-12-15', cron, 'deadline', { deadlineCycle: cycle })
+    expect(d.write).toBe(true)
+    if (d.write) {
+      expect(d.value).toBe('2026-12-15')
+      expect(d.prov.previous).toEqual({ source: 'user_verified:timing-2026-09-06', value: '2026-09-15' })
+    }
+  })
+
+  it('advances over an unpinned admin deadline too', () => {
+    const d = mergeFieldUpdate('2026-09-15', prov('admin:paul'), '2026-12-15', cron, 'deadline', { deadlineCycle: cycle })
+    expect(d.write).toBe(true)
+  })
+
+  it('still refuses a date that is not on the cycle', () => {
+    const d = mergeFieldUpdate('2026-09-15', held, '2026-11-01', cron, 'deadline', { deadlineCycle: cycle })
+    expect(d).toEqual({ write: false, reason: 'lower_trust' })
+  })
+
+  it('still refuses when the deadline is pinned', () => {
+    const d = mergeFieldUpdate('2026-09-15', prov('admin:paul', { pinned: true }), '2026-12-15', cron, 'deadline', { deadlineCycle: cycle })
+    expect(d).toEqual({ write: false, reason: 'pinned' })
+  })
+
+  it('refuses a roll backwards, a roll with no cycle, and a roll by any other source', () => {
+    expect(isCycleRoll('deadline', '2026-12-15', '2026-09-15', cron, cycle)).toBe(false)
+    expect(isCycleRoll('deadline', '2026-09-15', '2026-12-15', cron, null)).toBe(false)
+    expect(isCycleRoll('deadline', '2026-09-15', '2026-12-15', prov('scraper:x'), cycle)).toBe(false)
+    expect(isCycleRoll('amount_max', '2026-09-15', '2026-12-15', cron, cycle)).toBe(false)
+    // Without the ctx the old behaviour holds exactly.
+    expect(mergeFieldUpdate('2026-09-15', held, '2026-12-15', cron, 'deadline')).toEqual({ write: false, reason: 'lower_trust' })
   })
 })

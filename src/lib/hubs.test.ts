@@ -101,15 +101,25 @@ describe('region bucketing', () => {
 })
 
 describe('relatedRows', () => {
-  it('ranks shared sectors above region above type, and never returns itself', () => {
-    const self = row({ id: 'self', impact_sectors: ['creative', 'young_people'], location_tag: 'Scotland', funding_type: 'grant' })
+  // The Achlachan shape: a Caithness row. Prediction: Scottish rows first
+  // whatever their sector, then shared-sector rows from elsewhere, then the
+  // rest; four at most; never itself.
+  it('puts the same region first, then the same sector, then the rest, four rows', () => {
+    const self = row({ id: 'self', impact_sectors: ['community', 'environment'], location_tag: 'Halkirk, Highland', funding_type: 'grant' })
     const c = [
       self,
-      row({ id: 'two-sectors', impact_sectors: ['creative', 'young_people'], location_tag: 'Leeds' }),
-      row({ id: 'one-sector-scotland', impact_sectors: ['creative'], location_tag: 'Scotland' }),
-      row({ id: 'type-only', impact_sectors: ['health'], location_tag: 'Leeds' }),
-      row({ id: 'nothing', impact_sectors: ['health'], location_tag: 'Leeds', funding_type: 'in_kind' }),
+      row({ id: 'cumbria-two-sectors', impact_sectors: ['community', 'environment'], location_tag: 'Cumbria' }),
+      row({ id: 'scotland-health', impact_sectors: ['health'], location_tag: 'Scotland' }),
+      row({ id: 'glasgow-community', impact_sectors: ['community'], location_tag: 'Glasgow' }),
+      row({ id: 'somerset-community', impact_sectors: ['community'], location_tag: 'Somerset' }),
+      row({ id: 'brighton-health', impact_sectors: ['health'], location_tag: 'Brighton & Hove' }),
+      row({ id: 'leeds-health-inkind', impact_sectors: ['health'], location_tag: 'Leeds', funding_type: 'in_kind' }),
     ]
-    expect(relatedRows(self, c).map(r => r.id)).toEqual(['two-sectors', 'one-sector-scotland', 'type-only'])
+    expect(relatedRows(self, c).map(r => r.id)).toEqual(['glasgow-community', 'scotland-health', 'cumbria-two-sectors', 'somerset-community'])
+  })
+  it('fills from the rest when region and sector run out, and returns fewer than four if there are fewer', () => {
+    const self = row({ id: 'self', impact_sectors: ['women'], location_tag: 'Wales' })
+    const c = [self, row({ id: 'a', impact_sectors: ['health'], location_tag: 'Leeds' }), row({ id: 'b', impact_sectors: ['health'], location_tag: 'Leeds', funding_type: 'in_kind' })]
+    expect(relatedRows(self, c).map(r => r.id)).toEqual(['a', 'b'])
   })
 })

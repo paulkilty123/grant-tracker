@@ -415,50 +415,33 @@ export function hubCounts(rows: HubRow[]): HubCounts {
 // ── Related rows for a grant page ────────────────────────────────────────────
 
 /**
- * Neighbours for the "More funding like this" block. Shared sectors weigh
- * most, same region next, same funding type last, so a Scottish arts grant
- * points at other Scottish arts grants before it points at any grant in
- * Scotland. Ties break on soonest deadline, which is also what the reader
- * wants.
+ * Neighbours for the "More funding like this" block: four rows, same region
+ * first, then same sector, then the rest (Paul, 2026-09-15). Region before
+ * sector because the first version ranked by shared sectors and the Achlachan
+ * page (Caithness) offered Cumbria, Bedfordshire, Somerset and Brighton. Not
+ * ordered by deadline: most rows have no fixed one, so it says nothing. Within
+ * a group, more shared sectors first, then the most recently checked.
  */
-export function relatedRows(self: HubRow, candidates: HubRow[], limit = 6): HubRow[] {
+export function relatedRows(self: HubRow, candidates: HubRow[], limit = 4): HubRow[] {
   const mySectors = new Set(self.impact_sectors ?? [])
   const myRegion = regionHubForRow(self)?.slug
   const myType = typeHubForRow(self).slug
-  const todayISO = new Date().toISOString().slice(0, 10)
+  const freshness = (r: HubRow) => String(r.url_last_checked ?? r.first_seen_at ?? '')
   const scored = candidates
     .filter(c => c.id !== self.id)
     .map(c => {
       const shared = (c.impact_sectors ?? []).filter(s => mySectors.has(s)).length
-      let score = shared * 3
-      if (myRegion && regionHubForRow(c)?.slug === myRegion) score += 2
-      if (typeHubForRow(c).slug === myType) score += 1
-      const upcoming = c.deadline && c.deadline >= todayISO ? c.deadline : '9999'
-      return { c, score, upcoming }
+      const sameRegion = Boolean(myRegion) && regionHubForRow(c)?.slug === myRegion
+      const sameType = typeHubForRow(c).slug === myType
+      // Group: 2 same region (sector shared or not), 1 same sector elsewhere, 0 the rest.
+      const group = sameRegion ? 2 : shared > 0 ? 1 : 0
+      return { c, group, shared, sameType }
     })
-    .filter(x => x.score > 0)
-    .sort((a, b) => b.score - a.score || a.upcoming.localeCompare(b.upcoming))
+    .sort((a, b) =>
+      b.group - a.group
+      || b.shared - a.shared
+      || Number(b.sameType) - Number(a.sameType)
+      || freshness(b.c).localeCompare(freshness(a.c))
+      || a.c.title.localeCompare(b.c.title))
   return scored.slice(0, limit).map(x => x.c)
-}
-
-/**
- * The candidate pool for relatedRows: rows sharing a sector, or failing that
- * the same funding type. Bounded, so a grant page never pulls the whole
- * catalogue for six links.
- */
-export async function loadRelatedCandidates(self: HubRow): Promise<HubRow[]> {
-  const db = getAdminDb()
-  const sectors = (self.impact_sectors ?? []).filter(Boolean)
-  let q = db
-    .from('scraped_grants')
-    .select(HUB_ROW_COLUMNS)
-    .eq('is_active', true)
-    .eq('pipeline_state', 'published')
-    .neq('id', self.id)
-    .limit(120)
-  if (sectors.length) q = q.overlaps('impact_sectors', sectors)
-  else q = q.eq('funding_type', String(self.funding_type ?? 'grant'))
-  const { data, error } = await q
-  if (error) throw new Error(error.message)
-  return (data ?? []) as unknown as HubRow[]
 }

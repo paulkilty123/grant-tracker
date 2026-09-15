@@ -242,6 +242,42 @@ export function supersedesAsStale(
   return now > was
 }
 
+/**
+ * Is this write the expire-grants cron advancing `deadline` along the row's own
+ * `deadline_cycle`?
+ *
+ * Found 2026-09-15 on Achlachan Wind Farm (Foundation Scotland). Its deadline
+ * was set by a user-verified timing pass (trust 70) and its cycle says the 15th
+ * of March, June, September and December. The cron writes as `system` (50), so
+ * on 16 September the roll to 15 December would have been refused as
+ * lower_trust, the row left active on a passed date, and the page would have
+ * said "Round closed" for three months. 53 live rows carried a user_verified
+ * deadline with a cycle that day, and 10 more an unpinned admin one.
+ *
+ * The roll is not a claim about the funder; the cycle is the claim, and it was
+ * made by the higher-trust source. Applying it to today's date is bookkeeping,
+ * so it goes through when the new date lands on a cycle entry and is later
+ * than the date it replaces. A pin still holds (case 3 runs first): an admin
+ * who froze a date meant it.
+ */
+export function isCycleRoll(
+  field: string | undefined,
+  currentValue: unknown,
+  newValue: unknown,
+  newProv: ProvenanceEntry,
+  cycle: unknown,
+): boolean {
+  if (field !== 'deadline') return false
+  if (!newProv.source.startsWith('system:expire_grants')) return false
+  if (typeof newValue !== 'string' || typeof currentValue !== 'string') return false
+  if (!(newValue > currentValue)) return false
+  if (!Array.isArray(cycle) || cycle.length === 0) return false
+  const m = newValue.match(/^\d{4}-(\d{2})-(\d{2})/)
+  if (!m) return false
+  const month = Number(m[1]), day = Number(m[2])
+  return cycle.some(c => c && typeof c === 'object' && Number((c as { month?: unknown }).month) === month && Number((c as { day?: unknown }).day) === day)
+}
+
 export function mergeFieldUpdate(
   currentValue: unknown,
   currentProv: ProvenanceEntry | undefined,
@@ -250,6 +286,8 @@ export function mergeFieldUpdate(
   /** Needed only by the perishable-field rule; omitting it keeps the old
    *  behaviour exactly, so every existing caller is unchanged. */
   field?: string,
+  /** The row's deadline_cycle, needed only by the cycle-roll rule. */
+  ctx?: { deadlineCycle?: unknown },
 ): MergeFieldDecision {
   // Case 1 — first write to this field
   if (!currentProv) {
@@ -319,6 +357,17 @@ export function mergeFieldUpdate(
       return { write: true, value: newValue, prov: newProv }
     }
     return { write: false, reason: 'pinned' }
+  }
+
+  // Case 3b — the expire-grants cron advancing a deadline along the row's own
+  // cycle. Below the pin check on purpose, above the ladder on purpose. See
+  // isCycleRoll. The entry it replaces is kept as `previous`, the same way a
+  // supersede keeps it, so a reviewer can see what the roll moved on from.
+  if (isCycleRoll(field, currentValue, newValue, newProv, ctx?.deadlineCycle)) {
+    return {
+      write: true, value: newValue,
+      prov: { ...newProv, previous: { source: currentProv.source, value: currentValue } },
+    }
   }
 
   // Case 4 — trust ladder
@@ -485,9 +534,13 @@ export async function mergeGrantUpdate(opts: MergeGrantOptions): Promise<MergeGr
   // equivalence derivation below needs the row's geography to decide whether a
   // SCIO or CIO is implied, and geography is usually NOT part of this write.
   const needsGeo    = trackedCols.includes('eligible_structures')
+  // deadline_cycle is pulled when deadline is written so the cycle-roll rule
+  // (isCycleRoll) can see it; it is not part of the write.
+  const needsCycle  = trackedCols.includes('deadline')
   const selectCols  = Array.from(new Set([
     ...trackedCols, 'field_provenance', 'pipeline_state',
     ...(needsGeo ? ['location_tag', 'funder_brief'] : []),
+    ...(needsCycle ? ['deadline_cycle'] : []),
   ])).join(', ')
   const { data: current, error: fetchErr } = await db
     .from('scraped_grants')
@@ -547,6 +600,7 @@ export async function mergeGrantUpdate(opts: MergeGrantOptions): Promise<MergeGr
       newValue,
       fieldProv,
       field,
+      { deadlineCycle: currentRow.deadline_cycle },
     )
     if (decision.write) {
       valuesToWrite[field] = decision.value
