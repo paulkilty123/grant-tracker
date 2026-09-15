@@ -46,7 +46,7 @@ export default async function TypeHubPage({ params }: Params) {
       path={path}
       crumbs={[{ href: '/grants', label: 'Browse funding' }, { label: hub.label }]}
       heading={hub.noun}
-      intro={<>{INTRO[hub.slug]} {cap(roundedCount(rows.length))} live, soonest deadline first.</>}
+      intro={<>{INTRO[hub.slug]} {cap(roundedCount(rows.length))} live: the soonest deadlines, then the most recently checked.</>}
       rows={rows}
       allRows={all}
     />

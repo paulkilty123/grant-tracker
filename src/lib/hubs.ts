@@ -26,7 +26,7 @@ import { grantInGeoSelection } from '@/lib/matching'
 // ── Row shape ────────────────────────────────────────────────────────────────
 
 export const HUB_ROW_COLUMNS =
-  'id, external_id, title, funder, funding_type, amount_min, amount_max, amount_undisclosed, deadline, is_rolling, location_tag, is_local, impact_sectors'
+  'id, external_id, title, funder, funding_type, amount_min, amount_max, amount_undisclosed, deadline, is_rolling, location_tag, is_local, impact_sectors, first_seen_at, url_last_checked'
 
 export interface HubRow {
   id: string
@@ -42,6 +42,8 @@ export interface HubRow {
   location_tag: string | null
   is_local: boolean | null
   impact_sectors: string[] | null
+  first_seen_at?: string | null
+  url_last_checked?: string | null
 }
 
 /** The public URL slug: the same choice the sitemap makes, never two URLs for one row. */
@@ -170,6 +172,21 @@ const NI_PLACES = [
   'northern ireland', 'belfast', 'antrim', 'armagh', 'londonderry', 'derry', 'tyrone', 'fermanagh',
   'causeway coast', 'lisburn', 'newry', 'mourne', 'ards', 'craigavon',
 ]
+/**
+ * London boroughs. grantInGeoSelection's 'london' branch only tests for the
+ * word, so "Camden" (4 rows), "Islington" (3), "Westminster" (3) and twenty
+ * more borough-tagged rows missed the London page on the first fixture run.
+ * Bare "Richmond", "Kingston" and "Sutton" are left out: each is also a town
+ * elsewhere, and the catalogue tags them with "upon Thames" when it means the
+ * borough.
+ */
+const LONDON_PLACES = [
+  'london', 'lambeth', 'southwark', 'lewisham', 'greenwich', 'bexley', 'bromley', 'croydon', 'merton',
+  'kingston upon thames', 'richmond upon thames', 'wandsworth', 'hammersmith', 'fulham', 'kensington',
+  'chelsea', 'westminster', 'camden', 'islington', 'hackney', 'tower hamlets', 'newham', 'barking',
+  'dagenham', 'havering', 'redbridge', 'waltham forest', 'haringey', 'enfield', 'barnet', 'harrow', 'brent',
+  'ealing', 'hounslow', 'hillingdon', 'city of london',
+]
 function mentionsAny(tag: string | null, places: string[]): boolean {
   if (!tag) return false
   const t = tag.toLowerCase()
@@ -178,6 +195,7 @@ function mentionsAny(tag: string | null, places: string[]): boolean {
 const inScotland = (t: string | null) => mentionsAny(t, SCOTLAND_PLACES)
 const inWales    = (t: string | null) => mentionsAny(t, WALES_PLACES)
 const inNI       = (t: string | null) => mentionsAny(t, NI_PLACES)
+const inLondon   = (t: string | null) => mentionsAny(t, LONDON_PLACES)
 
 /**
  * "UK-wide" here is what the matcher calls national: UK, no tag, or a set of
@@ -206,7 +224,7 @@ export const REGION_HUBS: RegionHub[] = [
       && (grantInGeoSelection(t, 'scotland') || grantInGeoSelection(t, 'wales') || grantInGeoSelection(t, 'northern_ireland')
           || !(inScotland(t) || inWales(t) || inNI(t))) },
   { slug: 'london',           label: 'London',           phrase: 'in London',
-    matches: t => !isUkWide(t) && !isInternational(t) && grantInGeoSelection(t, 'london') },
+    matches: t => !isUkWide(t) && !isInternational(t) && (grantInGeoSelection(t, 'london') || inLondon(t)) },
   { slug: 'scotland',         label: 'Scotland',         phrase: 'in Scotland',
     matches: t => !isUkWide(t) && !isInternational(t) && (grantInGeoSelection(t, 'scotland') || inScotland(t)) },
   { slug: 'wales',            label: 'Wales',            phrase: 'in Wales',
@@ -225,7 +243,10 @@ export function regionHub(slug: string): RegionHub | null {
 export function regionHubForRow(row: Pick<HubRow, 'location_tag'>): RegionHub | null {
   const tag = row.location_tag
   // London before England: a London row matches both, and the narrower page
-  // is the one its neighbours are on.
+  // is the one its neighbours are on. A nation list that names England
+  // ("England & Wales") crumbs to England rather than to whichever other
+  // nation is checked first; it is on both pages either way.
+  if (tag && /\bengland\b/i.test(tag) && regionHub('england')!.matches(tag)) return regionHub('england')
   const order = ['london', 'scotland', 'wales', 'northern-ireland', 'international', 'england', 'uk']
   for (const slug of order) {
     const hub = regionHub(slug)!
@@ -307,7 +328,29 @@ export const HUB_MIN_ROWS = 3
  * to lift the table from one page. The grant pages' own related blocks keep
  * the rest of the graph connected.
  */
-export const HUB_PAGE_CAP = 30
+export const HUB_PAGE_CAP = 15
+
+/**
+ * Which rows fill a hub's fifteen slots. Not purely soonest-deadline: 192 of
+ * the 655 live rows are rolling, and under a pure deadline sort they would
+ * sit last on every hub and never receive an internal link from any of them
+ * (Paul, 2026-09-15). So half the slots go to the soonest deadlines and half
+ * to the most recently verified or added, which the verify cron rotates as
+ * rows come due. Over weeks every row gets a turn; the grant pages' related
+ * blocks and the sitemap carry the rest.
+ */
+export function pickForHub(rows: HubRow[], cap = HUB_PAGE_CAP, todayISO = new Date().toISOString().slice(0, 10)): HubRow[] {
+  const dated = rows
+    .filter(r => r.deadline && r.deadline >= todayISO)
+    .sort((a, b) => String(a.deadline).localeCompare(String(b.deadline)) || a.title.localeCompare(b.title))
+  const soonest = dated.slice(0, Math.ceil(cap / 2))
+  const taken = new Set(soonest.map(r => r.id))
+  const freshness = (r: HubRow) => String(r.url_last_checked ?? r.first_seen_at ?? '')
+  const recent = rows
+    .filter(r => !taken.has(r.id))
+    .sort((a, b) => freshness(b).localeCompare(freshness(a)) || a.title.localeCompare(b.title))
+  return [...soonest, ...recent.slice(0, cap - soonest.length)]
+}
 
 /**
  * "Over 100", never "113". Exact counts go stale and contradict the "over

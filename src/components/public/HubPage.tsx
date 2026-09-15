@@ -6,7 +6,7 @@ import { FUNDING_TYPE_COLOUR } from '@/lib/funding-type-colours'
 import { formatRange, locationLabel } from '@/lib/utils'
 import { MCP_BRAND_NAME, MCP_APP_ORIGIN } from '@/lib/mcp-brand'
 import {
-  grantPath, hubCounts, sortForHub, typeHubForRow, roundedCount, roundedCountShort, HUB_PAGE_CAP,
+  grantPath, hubCounts, pickForHub, typeHubForRow, roundedCount, roundedCountShort,
   type HubRow, type HubCounts,
 } from '@/lib/hubs'
 
@@ -176,8 +176,8 @@ export interface HubPageProps {
 export default function HubPage(p: HubPageProps) {
   const signupHref = '/signup'
   const todayISO = new Date().toISOString().slice(0, 10)
-  const all = sortForHub(p.rows, todayISO)
-  const rows = all.slice(0, HUB_PAGE_CAP)
+  const all = p.rows
+  const rows = pickForHub(all, undefined, todayISO)
   const hidden = all.length - rows.length
   const counts = hubCounts(p.allRows)
 
@@ -230,7 +230,7 @@ export default function HubPage(p: HubPageProps) {
             {hidden > 0 && (
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', padding: '18px 4px 4px' }}>
                 <span style={{ fontSize: 14.5, lineHeight: 1.5, color: T.inkMuted, maxWidth: '48ch' }}>
-                  Showing the first {rows.length} of {roundedCount(all.length)}. <b style={{ color: T.deep, fontWeight: 600 }}>The full list is free with an account</b>, matched to your organisation.
+                  Showing {rows.length} of {roundedCount(all.length)}. <b style={{ color: T.deep, fontWeight: 600 }}>The full list is free with an account</b>, matched to your organisation.
                 </span>
                 <Link
                   href={signupHref}

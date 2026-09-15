@@ -54,16 +54,16 @@ export default async function RegionHubPage({ params }: Params) {
       intro={
         hub.slug === 'uk' ? (
           <>
-            {cap(roundedCount(rows.length))} live opportunities open to charities, CICs and social enterprises anywhere in the UK, soonest deadline first.
+            {cap(roundedCount(rows.length))} live opportunities open to charities, CICs and social enterprises anywhere in the UK: the soonest deadlines, then the most recently checked.
             Funders that only work in one nation or region are on their own pages.
           </>
         ) : hub.slug === 'international' ? (
           <>
-            {cap(roundedCount(rows.length))} live opportunities for UK organisations whose work reaches beyond the UK, soonest deadline first.
+            {cap(roundedCount(rows.length))} live opportunities for UK organisations whose work reaches beyond the UK: the soonest deadlines, then the most recently checked.
           </>
         ) : (
           <>
-            {cap(roundedCount(rows.length))} live opportunities from funders that work specifically {hub.phrase}, soonest deadline first.
+            {cap(roundedCount(rows.length))} live opportunities from funders that work specifically {hub.phrase}: the soonest deadlines, then the most recently checked.
             Most <Link href="/grants/region/uk" style={{ color: T_DEEP, fontWeight: 600 }}>UK-wide funding</Link> is open to
             organisations {hub.phrase} too.
           </>

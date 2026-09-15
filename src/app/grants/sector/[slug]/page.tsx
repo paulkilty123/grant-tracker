@@ -50,7 +50,7 @@ export default async function SectorHubPage({ params }: Params) {
       intro={
         <>
           {cap(roundedCount(rows.length))} live opportunities for UK charities, CICs and social enterprises working in {phrase}: grants,
-          programmes, social investment and in-kind support, soonest deadline first. Narrow by region from the list on the right,
+          programmes, social investment and in-kind support: the soonest deadlines, then the most recently checked. Narrow by region from the list on the right,
           or see <Link href="/grants/type/grants" style={{ color: T_DEEP, fontWeight: 600 }}>grants only</Link>.
         </>
       }
