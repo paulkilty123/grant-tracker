@@ -398,6 +398,47 @@ export default async function PublicGrantPage({
   const eligibilitySummary = [roundsText, areaText].filter(Boolean).join('. ')
 
   /**
+   * The five cards in the gate, worded for what the row actually is. A
+   * programme has no award and no exclusions list; an investment has terms;
+   * an in-kind offer has a thing you get. Paul, 15 Sept: the grant wording
+   * (the mock) did not fit the other three types.
+   */
+  type LockedCard = { Icon: typeof Check; bg: string; t: string; d: string; wide?: boolean }
+  const eligibilityCard: LockedCard = { Icon: Check, bg: T.sage, t: 'Eligibility in full', d: 'Every condition the funder sets, checked line by line against their own guidance.' }
+  const applyCard: LockedCard = { Icon: Link2, bg: '#C9C2E6', t: 'Apply and guidance', d: 'Where to apply and what to read first, where the funder publishes it.', wide: true }
+  const lockedCardsByType: Record<string, LockedCard[]> = {
+    grants: [
+      eligibilityCard,
+      { Icon: Ban,      bg: T.terra, t: 'What they will not fund',             d: 'The exclusions, so you know before you write a word.' },
+      { Icon: Star,     bg: T.gold,  t: 'Current priorities',                  d: 'What this funder is looking for right now, and what makes an application stand out.' },
+      { Icon: Calendar, bg: T.teal,  t: 'Typical award and decision timeline', d: 'How much they usually give, round dates, and when you will hear back.' },
+      applyCard,
+    ],
+    programmes: [
+      eligibilityCard,
+      { Icon: Star,     bg: T.gold,  t: 'Who it is for',                       d: 'The stage, size and kind of organisation they take, in their own words.' },
+      { Icon: Ban,      bg: T.terra, t: 'What you get',                        d: 'Sessions, mentoring, the cohort, any funding that comes with a place, and the time it takes.' },
+      { Icon: Calendar, bg: T.teal,  t: 'Places, cost and selection',          d: 'How many get in, what it costs, how they choose, and when you will hear back.' },
+      { ...applyCard, t: 'Apply and programme details', d: 'Where to apply, the dates, and what to read first, where the provider publishes it.' },
+    ],
+    investment: [
+      eligibilityCard,
+      { Icon: Ban,      bg: T.terra, t: 'What they will not fund',             d: 'The exclusions, so you know before you write a word.' },
+      { Icon: Star,     bg: T.gold,  t: 'Current priorities',                  d: 'What this investor is looking for right now, and what makes a proposal stand out.' },
+      { Icon: Calendar, bg: T.teal,  t: 'Typical investment and terms',        d: 'How much they usually lend or invest, on what terms, and when you will hear back.' },
+      applyCard,
+    ],
+    'in-kind': [
+      eligibilityCard,
+      { Icon: Ban,      bg: T.terra, t: 'What they will not support',          d: 'The exclusions, so you know before you ask.' },
+      { Icon: Star,     bg: T.gold,  t: 'What you get',                        d: 'What is on offer, how much of it, and for how long.' },
+      { Icon: Calendar, bg: T.teal,  t: 'How to claim it and when',            d: 'Round dates if there are any, how they choose, and when you will hear back.' },
+      { ...applyCard, d: 'Where to apply and what to read first, where the provider publishes it.' },
+    ],
+  }
+  const lockedCards = lockedCardsByType[typeHubForRow({ funding_type: grant.funding_type ? String(grant.funding_type) : null }).slug] ?? lockedCardsByType.grants
+
+  /**
    * A programme is not a grant with no amount. What someone wants to know is
    * how long, in what format, when it starts, and whether any money comes with
    * the place. Rendered only for programme rows, from the prog_* columns.
@@ -767,13 +808,7 @@ export default async function PublicGrantPage({
                 </span>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12 }}>
-                {([
-                  { Icon: Check,    bg: T.sage,   t: 'Eligibility in full',                 d: 'Every condition the funder sets, checked line by line against their own guidance.' },
-                  { Icon: Ban,      bg: T.terra,  t: 'What they will not fund',             d: 'The exclusions, so you know before you write a word.' },
-                  { Icon: Star,     bg: T.gold,   t: 'Current priorities',                  d: 'What this funder is looking for right now, and what makes an application stand out.' },
-                  { Icon: Calendar, bg: T.teal,   t: 'Typical award and decision timeline', d: 'How much they usually give, round dates, and when you will hear back.' },
-                  { Icon: Link2,    bg: '#C9C2E6', t: 'Apply and guidance',                 d: 'Where to apply and what to read first, where the funder publishes it.', wide: true },
-                ] as Array<{ Icon: typeof Check; bg: string; t: string; d: string; wide?: boolean }>).map(({ Icon, bg, t, d, wide }) => (
+                {lockedCards.map(({ Icon, bg, t, d, wide }) => (
                   <div key={t} style={{ background: '#fff', borderRadius: 14, padding: '16px 18px', display: 'flex', alignItems: 'flex-start', gap: 14, gridColumn: wide ? '1 / -1' : undefined }}>
                     <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, borderRadius: 10, background: bg, color: T.deep, flexShrink: 0 }}>
                       <Icon style={{ width: 18, height: 18 }} />
