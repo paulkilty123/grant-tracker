@@ -116,6 +116,7 @@ const STRUCTURE_LABELS: Record<string, string> = {
   cic_shares:            'CIC (Ltd by Shares)',
   cio:                   'CIO',
   scio:                  'SCIO',
+  individual:            'Individual',
   registered_charity:    'Registered Charity',
   ltd_guarantee:         'Ltd by Guarantee',
   company_ltd_guarantee: 'Company Ltd by Guarantee',
