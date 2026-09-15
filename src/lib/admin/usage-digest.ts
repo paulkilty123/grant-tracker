@@ -1,14 +1,15 @@
 // Usage digest: the launch-week funnel, computed once here and shown in two
 // places, the admin page at /dashboard/admin/usage and scripts/usage-digest.ts.
 //
-// Reads public.events, organisations and auth.users. Actions only: nothing
-// records page views, time on site or drop-off between pages, so this cannot
-// report them. Paul asked for it on 2026-09-10, launch day.
+// Reads public.events, organisations and auth.users for actions, and the
+// Umami analytics project for page views, visitors, sources and landing pages
+// (src/lib/admin/site-stats.ts). Paul asked for it on 2026-09-10, launch day.
 //
 // The demo org is excluded by name so the launch-video account does not read
 // as a customer.
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { fetchSiteStats, type SiteStatsResult } from './site-stats'
 
 export const FUNNEL: { type: string; label: string }[] = [
   { type: 'results_shown',              label: 'Saw results' },
@@ -48,6 +49,8 @@ export interface UsageDigest {
   orgs: OrgLine[]
   joinedNoAction: number
   mcp: { requests: number; orgs: number }
+  /** Page views and visitors from Umami. Not configured is a reason, never zeros. */
+  site: SiteStatsResult
 }
 
 type EventRow = { org_id: string | null; event_type: string; surface: string; created_at: string }
@@ -59,11 +62,12 @@ export async function computeUsageDigest(db: SupabaseClient, days = 7): Promise<
   const now = Date.now()
   const sinceIso = new Date(now - days * 86400_000).toISOString()
 
-  const [{ data: events, error: e1 }, { data: orgs, error: e2 }, users] = await Promise.all([
+  const [{ data: events, error: e1 }, { data: orgs, error: e2 }, users, site] = await Promise.all([
     db.from('events').select('org_id, event_type, surface, created_at')
       .gte('created_at', sinceIso).order('created_at', { ascending: true }).limit(EVENT_CAP),
     db.from('organisations').select('id, name, created_at, owner_id'),
     db.auth.admin.listUsers({ perPage: 1000 }),
+    fetchSiteStats(days),
   ])
   if (e1) throw new Error(`events: ${e1.message}`)
   if (e2) throw new Error(`organisations: ${e2.message}`)
@@ -156,5 +160,6 @@ export async function computeUsageDigest(db: SupabaseClient, days = 7): Promise<
     orgs: orgLines,
     joinedNoAction,
     mcp: { requests: mcpEv.length, orgs: new Set(mcpEv.map(e => e.org_id).filter(Boolean)).size },
+    site,
   }
 }

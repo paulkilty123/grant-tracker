@@ -142,7 +142,32 @@ const FLAG_LABEL: Record<Flag, string> = {
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
 /** Plain HTML, one table per flag, nothing clever. Reads fine as text too. */
-export function renderEngagementHtml(rows: EngagementRow[], now: Date = new Date()): { subject: string; html: string } {
+export interface SiteBlock {
+  pageviews: number
+  visitors: number
+  sources: { source: string; visitors: number }[]
+  landing: { path: string; visitors: number }[]
+  days: number
+}
+
+/** The week on the site, ahead of the per-organisation rows. `null` renders as a stated gap. */
+function renderSiteBlock(site: SiteBlock | null | undefined, reason?: string): string {
+  if (!site) {
+    return `<p style="margin:0 0 16px;font-size:13px;color:#B4472A">Page views not read${reason ? `: ${esc(reason)}` : ''}.</p>`
+  }
+  const list = (rows: { label: string; n: number }[]) => rows.slice(0, 6).map(r => `${esc(r.label)} ${r.n}`).join(', ') || 'none'
+  return `
+    <p style="margin:0 0 4px;font-size:14px"><strong>${site.pageviews}</strong> page views from <strong>${site.visitors}</strong> visitors in the last ${site.days} days, admin sessions removed.</p>
+    <p style="margin:0 0 4px;font-size:13px;color:#5F5E5A">Where they came from: ${list(site.sources.map(s => ({ label: s.source, n: s.visitors })))}.</p>
+    <p style="margin:0 0 16px;font-size:13px;color:#5F5E5A">First page seen: ${list(site.landing.map(l => ({ label: l.path, n: l.visitors })))}.</p>`
+}
+
+export function renderEngagementHtml(
+  rows: EngagementRow[],
+  now: Date = new Date(),
+  site?: SiteBlock | null,
+  siteReason?: string,
+): { subject: string; html: string } {
   const quiet = rows.filter(r => r.flag === 'quiet').length
   const engaged = rows.filter(r => r.flag === 'engaged').length
   const never = rows.filter(r => r.flag === 'never_returned').length
@@ -174,6 +199,7 @@ export function renderEngagementHtml(rows: EngagementRow[], now: Date = new Date
   const html = `
     <div style="max-width:960px;margin:0 auto;padding:24px;font-family:Helvetica,Arial,sans-serif;color:#2C2C2A">
       <h2 style="font-size:20px;color:#1D3C3E;margin:0 0 4px">Engagement, week to ${now.toISOString().slice(0, 10)}</h2>
+      ${renderSiteBlock(site, siteReason)}
       <p style="margin:0 0 8px;font-size:13px;color:#5F5E5A">Last ${WINDOW_DAYS} days of activity per organisation, from the events table. Demo and test organisations are left out. Quiet means nothing in seven days with the trial ending inside ten: those are the ones to write to.</p>
       ${tables}
       <p style="margin:24px 0 0;font-size:12px;color:#8A8986">Engaged: three or more active days with something in the pipeline, or five active days. Never came back: nothing since the day they signed up.</p>

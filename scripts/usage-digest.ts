@@ -3,7 +3,7 @@
 // src/lib/admin/usage-digest.ts so the two cannot drift.
 //
 // Commissioned by Paul on 2026-09-10 (launch day) to watch the first-week
-// funnel. Actions only: page views and time on site are not recorded.
+// funnel. Page views, visitors and sources come from Umami since 15 Sept.
 //
 //   npx tsx --env-file=.env.local scripts/usage-digest.ts            # last 7 days
 //   npx tsx --env-file=.env.local scripts/usage-digest.ts --days 3
@@ -36,9 +36,24 @@ async function main() {
 
   console.log(`\nUSAGE DIGEST  ${day(d.since)} to ${day(new Date().toISOString())}  (${d.days} days, ${d.totalEvents} events)\n`)
 
-  console.log('BY DAY          users  orgs  active  actions')
-  for (const r of d.byDay) console.log(`  ${r.day}  ${num(r.users)} ${num(r.orgs)}  ${num(r.active)}  ${num(r.actions, 7)}`)
-  console.log('  users = new accounts, orgs = new organisations, active = orgs with any action, actions = app events\n')
+  const site = d.site.ok ? d.site.stats : null
+  const siteDay = new Map(site?.byDay.map(s => [s.day, s]) ?? [])
+  console.log('BY DAY          views  visitors  users  orgs  active  actions')
+  for (const r of d.byDay) {
+    const s = siteDay.get(r.day)
+    console.log(`  ${r.day}  ${s ? num(s.pageviews) : '    ?'}  ${s ? num(s.visitors, 8) : '       ?'}  ${num(r.users)} ${num(r.orgs)}  ${num(r.active)}  ${num(r.actions, 7)}`)
+  }
+  console.log('  views and visitors = Umami, admin sessions removed; users = new accounts, orgs = new organisations, active = orgs with any action, actions = app events\n')
+
+  if (site) {
+    console.log(`SITE  ${site.pageviews} page views from ${site.visitors} visitors in ${site.days} days (${site.adminSessionsExcluded} admin sessions left out)`)
+    console.log('  where they came from: ' + site.sources.map(s => `${s.source} ${s.visitors}`).join(', '))
+    console.log('  first page seen:      ' + site.landing.slice(0, 6).map(l => `${l.path} ${l.visitors}`).join(', '))
+    console.log('  most viewed:          ' + site.pages.slice(0, 8).map(p => `${p.path} ${p.views}`).join(', '))
+    console.log()
+  } else {
+    console.log(`SITE  page views not read: ${d.site.ok ? '' : d.site.reason}\n`)
+  }
 
   console.log('FUNNEL (distinct orgs in window)')
   console.log(`  ${pad('Any action', 22)} ${num(d.activeOrgs, 4)}`)
@@ -55,7 +70,7 @@ async function main() {
   console.log(`\n  ${d.orgs.length} orgs listed. ${d.joinedNoAction} joined in the window and have done nothing yet.`)
 
   console.log(`\nMCP  ${d.mcp.requests} requests from ${d.mcp.orgs} attributed org(s) (unattributed tool calls are a known gap).`)
-  console.log('\nNot measured: page views, time on site, drop-off between pages. Nothing records them.\n')
+  console.log('\nNot measured: time on site. Page-to-page drop-off is in Umami but not summarised here.\n')
 }
 
 main().catch(err => { console.error(err); process.exit(1) })

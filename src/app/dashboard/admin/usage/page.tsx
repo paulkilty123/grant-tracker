@@ -6,8 +6,9 @@
 //
 // The numbers come from src/lib/admin/usage-digest.ts, shared with
 // scripts/usage-digest.ts so the terminal and the page cannot disagree.
-// Actions only: nothing records page views or time on site, and the page
-// says so rather than leaving a gap.
+// Page views, visitors, sources and landing pages come from Umami through
+// src/lib/admin/site-stats.ts; when that read fails the page says why rather
+// than showing zeros.
 import { redirect } from 'next/navigation'
 import { requireAdmin } from '@/lib/auth/require-admin'
 import { getAdminDb } from '@/lib/admin/admin-db'
@@ -85,9 +86,9 @@ export default async function AdminUsagePage({ searchParams }: { searchParams?: 
         Usage
       </h1>
       <p style={{ color: '#5F5E5A', margin: '0 0 18px', fontSize: 14, maxWidth: 720 }}>
-        What people are doing on the site, from the actions it records: searches, grants opened,
-        saves, pipeline adds. It does not know page views or time on site, because nothing
-        records those. The demo org is left out.
+        Who came to the site and what they did once inside. Page views and visitors are from
+        Umami with admin sessions removed. Actions are the ones the app records: searches, grants
+        opened, saves, pipeline adds. The demo org is left out.
       </p>
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
@@ -133,6 +134,47 @@ export default async function AdminUsagePage({ searchParams }: { searchParams?: 
             <Stat value={digest.joinedNoAction} label="joined, done nothing yet" />
           </div>
 
+          {digest.site.ok ? (
+            <>
+              <h2 style={h2}>Site</h2>
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
+                <Stat value={digest.site.stats.pageviews} label={`page views in ${days} days`} />
+                <Stat value={digest.site.stats.visitors} label={`visitors in ${days} days`} />
+                <Stat value={digest.site.stats.adminSessionsExcluded} label="admin sessions left out" />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 12 }}>
+                {([
+                  ['Where they came from', digest.site.stats.sources.map(s => [s.source, s.visitors] as const)],
+                  ['First page seen', digest.site.stats.landing.map(l => [l.path, l.visitors] as const)],
+                  ['Most viewed', digest.site.stats.pages.map(p => [p.path, p.views] as const)],
+                ] as const).map(([title, rows]) => (
+                  <div key={title} style={card}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                      <thead>
+                        <tr style={{ background: '#F5F1E8' }}>
+                          <th style={th}>{title}</th>
+                          <th style={thNum}>{title === 'Most viewed' ? 'Views' : 'Visitors'}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rows.slice(0, 10).map(([label, n], i) => (
+                          <tr key={label} style={{ borderTop: i === 0 ? 'none' : '1px solid #F0EBE0' }}>
+                            <td style={{ ...td, wordBreak: 'break-all' }}>{label}</td>
+                            <td style={tdNum}>{n}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div style={{ background: '#FAEEDA', color: '#854F0B', border: '1px solid #EF9F27', borderRadius: 10, padding: '12px 16px', margin: '20px 0 0', fontSize: 14 }}>
+              Page views not read: {digest.site.reason}
+            </div>
+          )}
+
           <h2 style={h2}>By day</h2>
           <div style={card}>
             <div style={{ overflowX: 'auto' }}>
@@ -140,6 +182,8 @@ export default async function AdminUsagePage({ searchParams }: { searchParams?: 
                 <thead>
                   <tr style={{ background: '#F5F1E8' }}>
                     <th style={th}>Day</th>
+                    <th style={thNum}>Page views</th>
+                    <th style={thNum}>Visitors</th>
                     <th style={thNum}>New accounts</th>
                     <th style={thNum}>New orgs</th>
                     <th style={thNum}>Orgs active</th>
@@ -147,15 +191,20 @@ export default async function AdminUsagePage({ searchParams }: { searchParams?: 
                   </tr>
                 </thead>
                 <tbody>
-                  {digest.byDay.map((r, i) => (
+                  {digest.byDay.map((r, i) => {
+                    const s = digest.site.ok ? digest.site.stats.byDay.find(x => x.day === r.day) : undefined
+                    return (
                     <tr key={r.day} style={{ borderTop: i === 0 ? 'none' : '1px solid #F0EBE0' }}>
                       <td style={td}>{fmtDay(r.day)}</td>
+                      <td style={tdNum}>{s ? <Zero n={s.pageviews} /> : <span style={{ color: '#C4C2BD' }}>?</span>}</td>
+                      <td style={tdNum}>{s ? <Zero n={s.visitors} /> : <span style={{ color: '#C4C2BD' }}>?</span>}</td>
                       <td style={tdNum}><Zero n={r.users} /></td>
                       <td style={tdNum}><Zero n={r.orgs} /></td>
                       <td style={tdNum}><Zero n={r.active} /></td>
                       <td style={tdNum}><Zero n={r.actions} /></td>
                     </tr>
-                  ))}
+                    )
+                  })}
                 </tbody>
               </table>
             </div>

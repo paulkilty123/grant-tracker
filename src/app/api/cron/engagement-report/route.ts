@@ -4,6 +4,7 @@ import { getAdminDb } from '@/lib/admin/admin-db'
 import { recordRun } from '@/lib/admin/cron-runs'
 import { EMAIL_FROM_HEADER } from '@/lib/mcp-brand'
 import { summariseEngagement, renderEngagementHtml, WINDOW_DAYS, type OrgRow, type EventRow } from '@/lib/engagement/report'
+import { fetchSiteStats } from '@/lib/admin/site-stats'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -12,7 +13,7 @@ export const maxDuration = 60
  * Weekly engagement report to Paul: who is about to pay, who is about to leave.
  *
  *   - Runs Monday 07:00 UTC (vercel.json). Reads organisations, the last 28 days
- *     of events, and owner emails. Sends one email to ENGAGEMENT_REPORT_TO
+ *     of events, owner emails, and the week's page views from Umami. Sends one email to ENGAGEMENT_REPORT_TO
  *     (falls back to the admin address). Nothing user-facing.
  *   - ?dry=1 returns the rows as JSON instead of sending; ?html=1 with dry
  *     returns the rendered email for a look.
@@ -33,9 +34,10 @@ export async function GET(req: NextRequest) {
     const db = getAdminDb()
     const since = new Date(Date.now() - WINDOW_DAYS * 86_400_000).toISOString()
 
-    const [{ data: orgs, error: orgErr }, { data: users, error: uErr }] = await Promise.all([
+    const [{ data: orgs, error: orgErr }, { data: users, error: uErr }, site] = await Promise.all([
       db.from('organisations').select('id, name, created_at, granted_access_until, apply_access, profile_skipped, signup_role, owner_id'),
       db.auth.admin.listUsers({ perPage: 1000 }),
+      fetchSiteStats(7),
     ])
     if (orgErr) throw orgErr
     if (uErr) throw uErr
@@ -64,11 +66,11 @@ export async function GET(req: NextRequest) {
       owner_email: emailByUser.get(o.owner_id) ?? null,
     }))
     const rows = summariseEngagement(orgRows, events)
-    const { subject, html } = renderEngagementHtml(rows)
+    const { subject, html } = renderEngagementHtml(rows, new Date(), site.ok ? site.stats : null, site.ok ? undefined : site.reason)
     htmlOut = html
 
     const counts = rows.reduce<Record<string, number>>((acc, r) => { acc[r.flag] = (acc[r.flag] ?? 0) + 1; return acc }, {})
-    if (dry) return { mode: 'dry-run', subject, eventsRead: events.length, counts, rows }
+    if (dry) return { mode: 'dry-run', subject, eventsRead: events.length, site: site.ok ? { pageviews: site.stats.pageviews, visitors: site.stats.visitors } : { error: site.reason }, counts, rows }
 
     const key = process.env.RESEND_API_KEY
     if (!key) throw new Error('RESEND_API_KEY not configured')
