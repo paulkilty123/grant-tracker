@@ -807,7 +807,9 @@ export default async function PublicGrantPage({
 
           {/* The conversion moment. One panel, mid-card, on a logged-out page
               whose job is conversion, arguing against the question the visitor
-              actually arrived with. */}
+              actually arrived with. Logged out only (Paul, 15 Sept): a
+              signed-in reader already has everything it sells. */}
+          {!signedIn && (
           <div style={{ background: T.deep, borderRadius: 16, padding: '26px 28px', marginTop: 26 }}>
             <h3 style={{ fontFamily: UI, fontSize: 22, fontWeight: 600, letterSpacing: '-0.025em', color: T.cream, margin: '0 0 9px' }}>
               {deadlinePassed ? 'Missed this round?' : 'Is it worth applying?'}
@@ -877,6 +879,7 @@ export default async function PublicGrantPage({
               </span>
             </span>
           </div>
+          )}
 
           {/* The funder link stays, and stays one click. Hiding it to force a
               signup is the kind of thing that makes people distrust a
