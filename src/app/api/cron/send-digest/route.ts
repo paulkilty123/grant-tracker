@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { getOrgsWithAlertsEnabled } from '@/lib/alerts'
-import { digestAllowlist, isDigestRecipient, digestIsDryRun, testSubjectPrefix } from '@/lib/digest/send-guards'
+import { digestAllowlist, isDigestRecipient, digestIsDryRun, testSubjectPrefix, sentRecently, RESEND_GUARD_DAYS } from '@/lib/digest/send-guards'
 import { oneOrgPerRecipient, type Suppressed } from '@/lib/digest/one-per-recipient'
 import { recordRun } from '@/lib/admin/cron-runs'
 import { getAdminDb } from '@/lib/admin/admin-db'
@@ -110,9 +110,39 @@ export async function GET(req: NextRequest) {
       // a section can legitimately return.
       const since = new Date(Date.now() - 31 * 86_400_000).toISOString()
 
+      // The resend guard. One row per email in digest_sends; any organisation
+      // with one inside the window is skipped. ?org= is exempt: aiming at one
+      // organisation is a deliberate act, the same rule as the one-per-person
+      // heuristic above. A failed read is an error, not "nobody was sent":
+      // the direction that fails quietly is the one that sends twice.
+      const lastSent = new Map<string, string>()
+      if (!onlyOrgId) {
+        const guardSince = new Date(Date.now() - RESEND_GUARD_DAYS * 86_400_000).toISOString()
+        const { data: sends, error: sendsErr } = await db
+          .from('digest_sends')
+          .select('org_id, sent_at')
+          .in('org_id', orgs.map(o => o.id))
+          .gte('sent_at', guardSince)
+        if (sendsErr) {
+          httpStatus = 500
+          return { error: `resend guard read failed, nothing sent: ${sendsErr.message}` }
+        }
+        for (const r of (sends ?? []) as { org_id: string; sent_at: string }[]) {
+          const prev = lastSent.get(r.org_id)
+          if (!prev || r.sent_at > prev) lastSent.set(r.org_id, r.sent_at)
+        }
+      }
+      const recentlySent: { org: string; to: string; sentAt: string }[] = []
+
       for (const org of orgs) {
         if (!dryRun && !isDigestRecipient(org.owner_email)) {
           blocked.push({ org: org.name, to: org.owner_email })
+          continue
+        }
+        // Counted in dry runs too, so a dry broadcast is the proof of the guard.
+        const last = lastSent.get(org.id)
+        if (sentRecently(last)) {
+          recentlySent.push({ org: org.name, to: org.owner_email, sentAt: last! })
           continue
         }
 
@@ -167,6 +197,14 @@ export async function GET(req: NextRequest) {
             model.shown.map(s => ({ org_id: org.id, section: s.section, item_key: s.key })),
           )
         }
+        // The email itself, for the resend guard. Same before-the-call rule.
+        const { error: logErr } = await db
+          .from('digest_sends')
+          .insert({ org_id: org.id, recipient: org.owner_email, mode: model.mode })
+        if (logErr) {
+          failed.push({ org: org.name, to: org.owner_email, error: `send not logged, so not sent: ${logErr.message}` })
+          continue
+        }
 
         const { error } = await resend.emails.send({
           from:    EMAIL_FROM_HEADER,
@@ -194,6 +232,7 @@ export async function GET(req: NextRequest) {
         limits: {
           ...CAPS,
           closingWindowDays: CLOSING_WINDOW_DAYS,
+          resendGuardDays: RESEND_GUARD_DAYS,
           allowlistSize: allowlist.length,
           dryRunDefault: digestIsDryRun(),
           testPrefix: testSubjectPrefix() || null,
@@ -203,7 +242,8 @@ export async function GET(req: NextRequest) {
         recipients: new Set(orgs.map(o => o.owner_email)).size,
         suppressedDuplicates: suppressed,
         sentCount: sentTo.length,
-        sentTo, blocked, skipped, failed,
+        recentlySentCount: recentlySent.length,
+        sentTo, blocked, skipped, failed, recentlySent,
         ...(dryRun ? { previews } : {}),
         ...(html ? { html } : {}),
       }

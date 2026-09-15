@@ -57,3 +57,20 @@ export function isProductionEnv(): boolean {
 export function testSubjectPrefix(): string {
   return isProductionEnv() ? '' : '[TEST] '
 }
+
+/**
+ * No organisation gets a second digest inside this many days.
+ *
+ * On 15 September 2026 a manual broadcast at 07:50 and the first scheduled
+ * run at 10:00 each emailed the same thirty people. The cron is weekly, so
+ * five days blocks a repeat inside the week and still allows next Tuesday's.
+ */
+export const RESEND_GUARD_DAYS = 5
+
+/** True when `lastSentAt` falls inside the guard window before `now`. */
+export function sentRecently(lastSentAt: string | Date | null | undefined, now: Date = new Date()): boolean {
+  if (!lastSentAt) return false
+  const t = new Date(lastSentAt).getTime()
+  if (!Number.isFinite(t)) return false
+  return now.getTime() - t < RESEND_GUARD_DAYS * 86_400_000
+}

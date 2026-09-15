@@ -84,3 +84,25 @@ describe('test subject prefix', () => {
     expect(testSubjectPrefix()).toBe('')
   })
 })
+
+describe('resend guard', () => {
+  const now = new Date('2026-09-15T10:00:00Z')
+
+  it('blocks a second send inside the window', async () => {
+    const { sentRecently } = await load()
+    expect(sentRecently('2026-09-15T07:50:59Z', now)).toBe(true)
+    expect(sentRecently('2026-09-11T10:00:00Z', now)).toBe(true)
+  })
+
+  it('lets next Tuesday through and goes quiet after the window', async () => {
+    const { sentRecently } = await load()
+    expect(sentRecently('2026-09-08T10:00:00Z', now)).toBe(false)
+    expect(sentRecently('2026-09-10T09:59:59Z', now)).toBe(false)
+  })
+
+  it('never sent, or an unreadable timestamp, does not block', async () => {
+    const { sentRecently } = await load()
+    expect(sentRecently(null, now)).toBe(false)
+    expect(sentRecently('not a date', now)).toBe(false)
+  })
+})
