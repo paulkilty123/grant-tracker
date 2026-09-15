@@ -10,7 +10,7 @@ import { FUNDING_TYPE_COLOUR, TYPE_NEUTRAL, type FundingTypeKey } from '@/lib/fu
 import { sectorColour } from '@/lib/sector-colours'
 import {
   MapPin, Calendar, CheckCircle, Info, ExternalLink, ArrowRight,
-  Building2, Search, TrendingUp, ShieldCheck, Star, Lightbulb,
+  Building2, Search, TrendingUp, ShieldCheck, Star, Lightbulb, Lock, Check, Ban, Link2,
 } from 'lucide-react'
 import { MCP_BRAND_NAME, MCP_APP_ORIGIN } from '@/lib/mcp-brand'
 import { ctaSupportParts } from '@/lib/trial'
@@ -390,31 +390,12 @@ export default async function PublicGrantPage({
   const roundsText = Boolean(grant.is_rolling)
     ? 'Applications are accepted at any time'
     : cycle.length >= 2
-      ? `${['', 'One round', 'Two rounds', 'Three rounds', 'Four rounds', 'Five rounds', 'Six rounds'][cycle.length] ?? `${cycle.length} rounds`} a year`
+      ? ({ 2: 'Two rounds a year', 3: 'Three rounds a year', 4: 'Quarterly rounds', 6: 'Six rounds a year', 12: 'Monthly rounds' } as Record<number, string>)[cycle.length] ?? `${cycle.length} rounds a year`
       : grant.deadline
         ? 'One round at a time'
         : null
   const areaText = locationLabel(grant.is_local, grant.location_tag) ?? 'Across the UK'
   const eligibilitySummary = [roundsText, areaText].filter(Boolean).join('. ')
-
-  /**
-   * The line and a half a logged-out reader sees of each gated field: the
-   * first ~140 characters, cut at a word, and nothing more in the source.
-   */
-  const teaser = (text: string | null): string | null => {
-    if (!text) return null
-    const t = text.replace(/\s+/g, ' ').trim()
-    if (t.length <= 140) return t
-    const cut = t.slice(0, 140)
-    return cut.slice(0, Math.max(cut.lastIndexOf(' '), 100)) + ' …'
-  }
-  const typicalAndTimeline = [briefText(brief, 'typical_award'), briefText(brief, 'decision_timeline')].filter(Boolean).join(' ')
-  const lockedFields: Array<[string, string | null]> = [
-    ['Eligibility in full',               teaser(whoCanApply)],
-    ['What they will not fund',           teaser(exclusions)],
-    ['Current priorities',                teaser(briefText(brief, 'priorities'))],
-    ['Typical award and decision timeline', teaser(typicalAndTimeline || null)],
-  ]
 
   /**
    * A programme is not a grant with no amount. What someone wants to know is
@@ -774,36 +755,53 @@ export default async function PublicGrantPage({
           )}
 
           {!signedIn && (
-            /* The locked preview. Four headings, a line and a half of each
-               fading out, and nothing past that in the source. */
-            <div style={{ ...section, background: T.warm, borderRadius: 14, padding: '20px 22px' }}>
-              <h2 style={{ ...sectionH2, marginBottom: 14 }}>The full record</h2>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 18 }}>
-                {lockedFields.map(([label, text]) => (
-                  <div key={label}>
-                    <p style={{ fontFamily: UI, fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.deep, margin: '0 0 6px' }}>{label}</p>
-                    <p
-                      aria-hidden
-                      style={{
-                        fontSize: 14.5, lineHeight: 1.6, color: T.deep, margin: 0, maxHeight: 36, overflow: 'hidden',
-                        WebkitMaskImage: 'linear-gradient(180deg, rgba(0,0,0,1) 0%, rgba(0,0,0,0.55) 55%, rgba(0,0,0,0) 100%)',
-                        maskImage: 'linear-gradient(180deg, rgba(0,0,0,1) 0%, rgba(0,0,0,0.55) 55%, rgba(0,0,0,0) 100%)',
-                      }}
-                    >
-                      {text ?? 'Not stated on the funder\u2019s pages.'}
-                    </p>
+            /* The gate, to Paul's mock (Claude outputs/grant-page-mock.html,
+               15 Sept). Five cards naming what the full record holds, each
+               with a fixed one-line description. None of the record's own
+               text is here, so none of it is in the source. */
+            <div style={{ ...section, background: T.warm, borderRadius: 18, padding: '24px 26px 22px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 16 }}>
+                <h2 style={{ ...sectionH2, margin: 0 }}>The full record</h2>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: UI, fontSize: 12, fontWeight: 600, background: '#fff', borderRadius: 999, padding: '6px 12px', color: T.inkMuted }}>
+                  <Lock style={{ width: 12, height: 12 }} />Sign in to read
+                </span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12 }}>
+                {([
+                  { Icon: Check,    bg: T.sage,   t: 'Eligibility in full',                 d: 'Every condition the funder sets, checked line by line against their own guidance.' },
+                  { Icon: Ban,      bg: T.terra,  t: 'What they will not fund',             d: 'The exclusions, so you know before you write a word.' },
+                  { Icon: Star,     bg: T.gold,   t: 'Current priorities',                  d: 'What this funder is looking for right now, and what makes an application stand out.' },
+                  { Icon: Calendar, bg: T.teal,   t: 'Typical award and decision timeline', d: 'How much they usually give, round dates, and when you will hear back.' },
+                  { Icon: Link2,    bg: '#C9C2E6', t: 'Apply and guidance',                 d: 'Where to apply and what to read first, where the funder publishes it.', wide: true },
+                ] as Array<{ Icon: typeof Check; bg: string; t: string; d: string; wide?: boolean }>).map(({ Icon, bg, t, d, wide }) => (
+                  <div key={t} style={{ background: '#fff', borderRadius: 14, padding: '16px 18px', display: 'flex', alignItems: 'flex-start', gap: 14, gridColumn: wide ? '1 / -1' : undefined }}>
+                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, borderRadius: 10, background: bg, color: T.deep, flexShrink: 0 }}>
+                      <Icon style={{ width: 18, height: 18 }} />
+                    </span>
+                    <span>
+                      <span style={{ display: 'block', fontFamily: UI, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.deep, marginBottom: 4 }}>{t}</span>
+                      <span style={{ display: 'block', fontSize: 14.5, lineHeight: 1.5, color: T.deep }}>{d}</span>
+                    </span>
                   </div>
                 ))}
               </div>
-              <p style={{ fontSize: 14, lineHeight: 1.55, color: T.inkMuted, margin: '16px 0 0' }}>
-                Also in the full record: the direct link to the funder&rsquo;s application and guidance pages.
-              </p>
-              <p style={{ fontSize: 14.5, lineHeight: 1.55, color: T.deep, margin: '10px 0 0' }}>
-                <Link href="/auth/login" style={{ color: T.deep, fontWeight: 600 }}>Sign in</Link>
-                {' '}or{' '}
-                <Link href={signupHref} style={{ color: T.deep, fontWeight: 600 }}>start a free trial</Link>
-                {' '}to read the full record.
-              </p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap', marginTop: 18 }}>
+                <Link
+                  href={signupHref}
+                  style={{
+                    fontFamily: UI, fontSize: 15, fontWeight: 600, color: T.cream, background: T.deep,
+                    padding: '13px 24px', borderRadius: 999, textDecoration: 'none',
+                    display: 'inline-flex', alignItems: 'center', gap: 9,
+                  }}
+                >
+                  Read the full record
+                  <ArrowRight style={{ width: 15, height: 15 }} />
+                </Link>
+                <span style={{ fontSize: 14, lineHeight: 1.5, color: T.inkMuted }}>
+                  Free for 14 days, no card needed. Already a member?{' '}
+                  <Link href="/auth/login" style={{ color: T.deep, fontWeight: 600 }}>Sign in</Link>
+                </span>
+              </div>
             </div>
           )}
 
@@ -892,7 +890,7 @@ export default async function PublicGrantPage({
                 {deadlinePassed ? (
                   <>The funder&rsquo;s page may already list the next round. <b style={{ color: T.deep, fontWeight: 600 }}>Worth a look.</b></>
                 ) : (
-                  <>{MCP_BRAND_NAME} doesn&rsquo;t sit between you and the application.</>
+                  <>This fund is run by <b style={{ color: T.deep, fontWeight: 600 }}>{String(grant.funder ?? 'the funder')}</b>. {MCP_BRAND_NAME} doesn&rsquo;t sit between you and the application.</>
                 )}
               </span>
               <a
