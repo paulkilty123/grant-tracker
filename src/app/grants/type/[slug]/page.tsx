@@ -4,6 +4,8 @@ import { notFound } from 'next/navigation'
 import HubPage from '@/components/public/HubPage'
 import { MCP_BRAND_NAME, MCP_APP_ORIGIN } from '@/lib/mcp-brand'
 import { HUB_MIN_ROWS, loadPublicRows, rowsForType, typeHub } from '@/lib/hubs'
+import { roundedCount } from '@/lib/hubs'
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
 export const dynamic = 'force-dynamic'
 
@@ -44,7 +46,7 @@ export default async function TypeHubPage({ params }: Params) {
       path={path}
       crumbs={[{ href: '/grants', label: 'Browse funding' }, { label: hub.label }]}
       heading={hub.noun}
-      intro={<>{INTRO[hub.slug]} {rows.length} live, soonest deadline first.</>}
+      intro={<>{INTRO[hub.slug]} {cap(roundedCount(rows.length))} live, soonest deadline first.</>}
       rows={rows}
       allRows={all}
     />

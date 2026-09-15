@@ -6,7 +6,7 @@ import { FUNDING_TYPE_COLOUR } from '@/lib/funding-type-colours'
 import { formatRange, locationLabel } from '@/lib/utils'
 import { MCP_BRAND_NAME, MCP_APP_ORIGIN } from '@/lib/mcp-brand'
 import {
-  grantPath, hubCounts, sortForHub, typeHubForRow,
+  grantPath, hubCounts, sortForHub, typeHubForRow, roundedCount, roundedCountShort, HUB_PAGE_CAP,
   type HubRow, type HubCounts,
 } from '@/lib/hubs'
 
@@ -116,7 +116,7 @@ export function HubLinks({ counts, current }: { counts: HubCounts; current?: str
                 }}
               >
                 {it.label}
-                <span style={{ fontWeight: 500, color: active ? 'rgba(246,241,231,0.75)' : T.inkPlace }}>{it.count}</span>
+                <span style={{ fontWeight: 500, color: active ? 'rgba(246,241,231,0.75)' : T.inkPlace }}>{roundedCountShort(it.count)}</span>
               </Link>
             </li>
           )
@@ -176,7 +176,9 @@ export interface HubPageProps {
 export default function HubPage(p: HubPageProps) {
   const signupHref = '/signup'
   const todayISO = new Date().toISOString().slice(0, 10)
-  const rows = sortForHub(p.rows, todayISO)
+  const all = sortForHub(p.rows, todayISO)
+  const rows = all.slice(0, HUB_PAGE_CAP)
+  const hidden = all.length - rows.length
   const counts = hubCounts(p.allRows)
 
   const jsonLd = {
@@ -224,6 +226,24 @@ export default function HubPage(p: HubPageProps) {
               <ul style={{ margin: 0, padding: 0, borderBottom: `1px solid ${T.hair}` }}>
                 {rows.map(r => <GrantRow key={r.id} row={r} todayISO={todayISO} showRegion={p.showRegion ?? true} />)}
               </ul>
+            )}
+            {hidden > 0 && (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', padding: '18px 4px 4px' }}>
+                <span style={{ fontSize: 14.5, lineHeight: 1.5, color: T.inkMuted, maxWidth: '48ch' }}>
+                  Showing the first {rows.length} of {roundedCount(all.length)}. <b style={{ color: T.deep, fontWeight: 600 }}>The full list is free with an account</b>, matched to your organisation.
+                </span>
+                <Link
+                  href={signupHref}
+                  style={{
+                    fontFamily: UI, fontSize: 14.5, fontWeight: 600, color: T.cream, background: T.deep,
+                    padding: '12px 20px', borderRadius: 999, textDecoration: 'none',
+                    display: 'inline-flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap',
+                  }}
+                >
+                  See the full list
+                  <ArrowRight style={{ width: 14, height: 14 }} />
+                </Link>
+              </div>
             )}
             {p.footnote && <p style={{ fontSize: 14, lineHeight: 1.55, color: T.inkMuted, margin: '18px 0 0' }}>{p.footnote}</p>}
             <HubCta signupHref={signupHref} />

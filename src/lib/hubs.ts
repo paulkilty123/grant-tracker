@@ -186,7 +186,12 @@ const inNI       = (t: string | null) => mentionsAny(t, NI_PLACES)
  * belongs on the UK page once, not on five pages.
  */
 function isUkWide(tag: string | null): boolean {
-  return !isInternational(tag) && grantInGeoSelection(tag, 'uk')
+  if (isInternational(tag)) return false
+  // "UK (15 designated places)", "Luton & UK", "UK & Portugal": the matcher
+  // reads these as regional and the England fallback took them. A tag that
+  // says UK is a UK-wide row for the purpose of a browse page.
+  if (tag && /\buk\b/i.test(tag)) return true
+  return grantInGeoSelection(tag, 'uk')
 }
 
 export const REGION_HUBS: RegionHub[] = [
@@ -295,6 +300,32 @@ export function rowsForType(rows: HubRow[], hub: TypeHub): HubRow[] {
 
 /** Hubs with fewer rows than this are not worth a page: a thin page is what the hubs exist to cure. */
 export const HUB_MIN_ROWS = 3
+
+/**
+ * Rows shown on a hub before the list stops and asks for an account. Paul,
+ * 2026-09-15: enough for the crawler to follow, not enough for a competitor
+ * to lift the table from one page. The grant pages' own related blocks keep
+ * the rest of the graph connected.
+ */
+export const HUB_PAGE_CAP = 30
+
+/**
+ * "Over 100", never "113". Exact counts go stale and contradict the "over
+ * 600" said everywhere else (Paul, 2026-09-15). Below ten the exact number is
+ * fine; there is nothing to go stale about "4".
+ */
+export function roundedCount(n: number): string {
+  if (n < 10) return String(n)
+  const step = n >= 500 ? 100 : n >= 100 ? 50 : 10
+  const floor = Math.floor((n - 1) / step) * step
+  return `over ${floor}`
+}
+/** The chip form: "450+". */
+export function roundedCountShort(n: number): string {
+  if (n < 10) return String(n)
+  const step = n >= 500 ? 100 : n >= 100 ? 50 : 10
+  return `${Math.floor((n - 1) / step) * step}+`
+}
 
 /**
  * Soonest deadline first, then rolling, then undated. A hub is a list a

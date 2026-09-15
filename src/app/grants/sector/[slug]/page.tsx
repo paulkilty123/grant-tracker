@@ -8,6 +8,8 @@ import {
   HUB_MIN_ROWS, IMPACT_SECTOR_LABELS, SECTOR_PHRASE,
   loadPublicRows, rowsForSector, sectorKeyFromSlug, sectorSlug,
 } from '@/lib/hubs'
+import { roundedCount } from '@/lib/hubs'
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
 export const dynamic = 'force-dynamic'
 
@@ -47,7 +49,7 @@ export default async function SectorHubPage({ params }: Params) {
       heading={`${label} funding`}
       intro={
         <>
-          {rows.length} live opportunities for UK charities, CICs and social enterprises working in {phrase}: grants,
+          {cap(roundedCount(rows.length))} live opportunities for UK charities, CICs and social enterprises working in {phrase}: grants,
           programmes, social investment and in-kind support, soonest deadline first. Narrow by region from the list on the right,
           or see <Link href="/grants/type/grants" style={{ color: T_DEEP, fontWeight: 600 }}>grants only</Link>.
         </>

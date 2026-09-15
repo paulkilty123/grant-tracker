@@ -5,6 +5,8 @@ import { notFound } from 'next/navigation'
 import HubPage from '@/components/public/HubPage'
 import { MCP_BRAND_NAME, MCP_APP_ORIGIN } from '@/lib/mcp-brand'
 import { HUB_MIN_ROWS, loadPublicRows, regionHub, rowsForRegion } from '@/lib/hubs'
+import { roundedCount } from '@/lib/hubs'
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
 export const dynamic = 'force-dynamic'
 
@@ -52,16 +54,16 @@ export default async function RegionHubPage({ params }: Params) {
       intro={
         hub.slug === 'uk' ? (
           <>
-            {rows.length} live opportunities open to charities, CICs and social enterprises anywhere in the UK, soonest deadline first.
+            {cap(roundedCount(rows.length))} live opportunities open to charities, CICs and social enterprises anywhere in the UK, soonest deadline first.
             Funders that only work in one nation or region are on their own pages.
           </>
         ) : hub.slug === 'international' ? (
           <>
-            {rows.length} live opportunities for UK organisations whose work reaches beyond the UK, soonest deadline first.
+            {cap(roundedCount(rows.length))} live opportunities for UK organisations whose work reaches beyond the UK, soonest deadline first.
           </>
         ) : (
           <>
-            {rows.length} live opportunities from funders that work specifically {hub.phrase}, soonest deadline first.
+            {cap(roundedCount(rows.length))} live opportunities from funders that work specifically {hub.phrase}, soonest deadline first.
             Most <Link href="/grants/region/uk" style={{ color: T_DEEP, fontWeight: 600 }}>UK-wide funding</Link> is open to
             organisations {hub.phrase} too.
           </>
