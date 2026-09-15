@@ -89,7 +89,7 @@ export default function LineChart({ title, points, unit = '', yMax, colour = '#3
             <text x={PAD.l - 6} y={y(t) + 4} textAnchor="end" fontSize={11} fill={MUTED} fontFamily="inherit">{Math.round(t)}{unit}</text>
           </g>
         ))}
-        {points.map((p, i) => (i % labelEvery === 0 || i === n - 1) && (
+        {points.map((p, i) => (i === n - 1 || (i % labelEvery === 0 && n - 1 - i >= labelEvery)) && (
           <text key={p.x} x={x(i)} y={H - 8} textAnchor={i === n - 1 ? 'end' : i === 0 ? 'start' : 'middle'} fontSize={11} fill={MUTED} fontFamily="inherit">{shortDate(p.x)}</text>
         ))}
         {segments.map((d, i) => <path key={i} d={d} fill="none" stroke={colour} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />)}
