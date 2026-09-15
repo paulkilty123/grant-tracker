@@ -16,7 +16,7 @@
 
 import { createClient } from '@supabase/supabase-js'
 
-export interface SiteDay    { day: string; pageviews: number; visitors: number }
+export interface SiteDay    { day: string; pageviews: number; visitors: number; signupVisitors: number }
 export interface SitePage   { path: string; views: number; visitors: number }
 export interface SiteSource { source: string; visitors: number }
 export interface SiteLanding{ path: string; visitors: number }
@@ -57,7 +57,7 @@ export function parseSiteStats(raw: unknown, days: number): SiteStats {
     visitors:  n(j.visitors, 'visitors'),
     signupVisitors: n(j.signupVisitors ?? 0, 'signupVisitors'),
     adminSessionsExcluded: n(j.adminSessionsExcluded ?? 0, 'adminSessionsExcluded'),
-    byDay:   arr(j.byDay, 'byDay').map(r => ({ day: String(r.day), pageviews: n(r.pageviews, 'byDay.pageviews'), visitors: n(r.visitors, 'byDay.visitors') })),
+    byDay:   arr(j.byDay, 'byDay').map(r => ({ day: String(r.day), pageviews: n(r.pageviews, 'byDay.pageviews'), visitors: n(r.visitors, 'byDay.visitors'), signupVisitors: n(r.signupVisitors ?? 0, 'byDay.signupVisitors') })),
     pages:   arr(j.pages, 'pages').map(r => ({ path: String(r.path), views: n(r.views, 'pages.views'), visitors: n(r.visitors, 'pages.visitors') })),
     sources: arr(j.sources, 'sources').map(r => ({ source: String(r.source), visitors: n(r.visitors, 'sources.visitors') })),
     landing: arr(j.landing, 'landing').map(r => ({ path: String(r.path), visitors: n(r.visitors, 'landing.visitors') })),
@@ -73,7 +73,7 @@ export function fillDays(byDay: SiteDay[], days: number, now: Date = new Date())
   const out: SiteDay[] = []
   for (let i = days - 1; i >= 0; i--) {
     const day = new Date(now.getTime() - i * 86_400_000).toISOString().slice(0, 10)
-    out.push(have.get(day) ?? { day, pageviews: 0, visitors: 0 })
+    out.push(have.get(day) ?? { day, pageviews: 0, visitors: 0, signupVisitors: 0 })
   }
   return out
 }

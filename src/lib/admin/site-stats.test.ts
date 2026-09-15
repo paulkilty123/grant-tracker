@@ -30,9 +30,9 @@ describe('parseSiteStats', () => {
 describe('fillDays', () => {
   it('puts a zero row on every missing day, in order, ending today', () => {
     const now = new Date('2026-09-15T12:00:00Z')
-    const out = fillDays([{ day: '2026-09-13', pageviews: 30, visitors: 11 }], 3, now)
+    const out = fillDays([{ day: '2026-09-13', pageviews: 30, visitors: 11, signupVisitors: 2 }], 3, now)
     expect(out.map(d => d.day)).toEqual(['2026-09-13', '2026-09-14', '2026-09-15'])
     expect(out[0].pageviews).toBe(30)
-    expect(out[1]).toEqual({ day: '2026-09-14', pageviews: 0, visitors: 0 })
+    expect(out[1]).toEqual({ day: '2026-09-14', pageviews: 0, visitors: 0, signupVisitors: 0 })
   })
 })

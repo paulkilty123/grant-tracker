@@ -91,7 +91,8 @@ export default async function AdminUsagePage({ searchParams }: { searchParams?: 
         opened, saves, pipeline adds. The demo org is left out.
       </p>
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 20, alignItems: 'center' }}>
+        <a href="/dashboard/admin/usage/trends" style={{ fontFamily: GROTESK, fontSize: 13, fontWeight: 600, color: '#3B6D11', textDecoration: 'underline', marginRight: 8 }}>Over time</a>
         {WINDOWS.map(w => (
           <a key={w} href={`/dashboard/admin/usage?days=${w}`} style={{
             fontFamily: GROTESK, fontSize: 13, fontWeight: 600, textDecoration: 'none',
