@@ -4,7 +4,7 @@ import { parseSiteStats, fillDays } from './site-stats'
 // Fixture in the RPC's real shape: jsonb counts arrive as numbers, but a
 // bigint aggregate can arrive as a string through PostgREST, so both are fed.
 const payload = {
-  pageviews: '204', visitors: 83, adminSessionsExcluded: 3,
+  pageviews: '204', visitors: 83, signupVisitors: 28, adminSessionsExcluded: 3,
   byDay: [{ day: '2026-09-10', pageviews: 204, visitors: 83 }],
   pages: [{ path: '/', views: 137, visitors: 106 }],
   sources: [{ source: 'linkedin / launch', visitors: 11 }, { source: 'direct', visitors: 160 }],
@@ -16,6 +16,7 @@ describe('parseSiteStats', () => {
     const s = parseSiteStats(payload, 7)
     expect(s.pageviews).toBe(204)
     expect(s.visitors).toBe(83)
+    expect(s.signupVisitors).toBe(28)
     expect(s.sources[0]).toEqual({ source: 'linkedin / launch', visitors: 11 })
   })
 

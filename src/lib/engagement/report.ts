@@ -167,6 +167,8 @@ export function renderEngagementHtml(
   now: Date = new Date(),
   site?: SiteBlock | null,
   siteReason?: string,
+  /** Rendered week-on-week block (week-compare.ts), placed above the site line. */
+  compareHtml = '',
 ): { subject: string; html: string } {
   const quiet = rows.filter(r => r.flag === 'quiet').length
   const engaged = rows.filter(r => r.flag === 'engaged').length
@@ -199,6 +201,7 @@ export function renderEngagementHtml(
   const html = `
     <div style="max-width:960px;margin:0 auto;padding:24px;font-family:Helvetica,Arial,sans-serif;color:#2C2C2A">
       <h2 style="font-size:20px;color:#1D3C3E;margin:0 0 4px">Engagement, week to ${now.toISOString().slice(0, 10)}</h2>
+      ${compareHtml}
       ${renderSiteBlock(site, siteReason)}
       <p style="margin:0 0 8px;font-size:13px;color:#5F5E5A">Last ${WINDOW_DAYS} days of activity per organisation, from the events table. Demo and test organisations are left out. Quiet means nothing in seven days with the trial ending inside ten: those are the ones to write to.</p>
       ${tables}

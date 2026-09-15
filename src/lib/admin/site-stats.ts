@@ -25,6 +25,8 @@ export interface SiteStats {
   days: number
   pageviews: number
   visitors: number
+  /** Distinct sessions that saw /signup. The top of the signup ratio. */
+  signupVisitors: number
   adminSessionsExcluded: number
   byDay: SiteDay[]
   pages: SitePage[]
@@ -53,6 +55,7 @@ export function parseSiteStats(raw: unknown, days: number): SiteStats {
     days,
     pageviews: n(j.pageviews, 'pageviews'),
     visitors:  n(j.visitors, 'visitors'),
+    signupVisitors: n(j.signupVisitors ?? 0, 'signupVisitors'),
     adminSessionsExcluded: n(j.adminSessionsExcluded ?? 0, 'adminSessionsExcluded'),
     byDay:   arr(j.byDay, 'byDay').map(r => ({ day: String(r.day), pageviews: n(r.pageviews, 'byDay.pageviews'), visitors: n(r.visitors, 'byDay.visitors') })),
     pages:   arr(j.pages, 'pages').map(r => ({ path: String(r.path), views: n(r.views, 'pages.views'), visitors: n(r.visitors, 'pages.visitors') })),
@@ -75,18 +78,23 @@ export function fillDays(byDay: SiteDay[], days: number, now: Date = new Date())
   return out
 }
 
-export async function fetchSiteStats(days: number): Promise<SiteStatsResult> {
+/**
+ * `endingDaysAgo` shifts the window back, so `fetchSiteStats(7, 7)` is the
+ * week before last week: the comparison the Monday report needs.
+ */
+export async function fetchSiteStats(days: number, endingDaysAgo = 0): Promise<SiteStatsResult> {
   const url = process.env.UMAMI_SUPABASE_URL
   const key = process.env.UMAMI_SUPABASE_ANON_KEY
   if (!url || !key) return { ok: false, reason: 'UMAMI_SUPABASE_URL or UMAMI_SUPABASE_ANON_KEY not set' }
 
   const client = createClient(url, key, { auth: { persistSession: false } })
-  const since = new Date(Date.now() - days * 86_400_000).toISOString()
-  const { data, error } = await client.rpc('shoots_site_stats', { p_since: since })
+  const until = new Date(Date.now() - endingDaysAgo * 86_400_000)
+  const since = new Date(until.getTime() - days * 86_400_000).toISOString()
+  const { data, error } = await client.rpc('shoots_site_stats', { p_since: since, p_until: until.toISOString() })
   if (error) return { ok: false, reason: `shoots_site_stats: ${error.message}` }
   try {
     const stats = parseSiteStats(data, days)
-    return { ok: true, stats: { ...stats, byDay: fillDays(stats.byDay, days) } }
+    return { ok: true, stats: { ...stats, byDay: fillDays(stats.byDay, days, until) } }
   } catch (err) {
     return { ok: false, reason: err instanceof Error ? err.message : String(err) }
   }
