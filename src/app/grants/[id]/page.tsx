@@ -529,6 +529,9 @@ export default async function PublicGrantPage({
             {MCP_BRAND_NAME.toLowerCase()}
           </Link>
           <span style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+            <Link href="/grants" style={{ fontFamily: UI, fontSize: 14, fontWeight: 500, color: T.inkMuted, textDecoration: 'none' }}>
+              Browse funding
+            </Link>
             <Link href="/auth/login" style={{ fontFamily: UI, fontSize: 14, fontWeight: 500, color: T.inkMuted, textDecoration: 'none' }}>
               Sign in
             </Link>
@@ -796,8 +799,7 @@ export default async function PublicGrantPage({
           <section style={{ background: '#fff', border: `1px solid ${T.hair}`, borderRadius: 18, padding: '26px 32px', marginTop: 22 }}>
             <h2 style={{ ...sectionH2, marginBottom: 4 }}>More funding like this</h2>
             <p style={{ fontSize: 14, color: T.inkMuted, margin: '0 0 12px' }}>
-              Same area of work
-              {regionHubOfRow ? `, ${regionHubOfRow.slug === 'uk' ? 'open across the UK' : regionHubOfRow.phrase}` : ''}, soonest deadline first.
+              Sharing an area of work with this one, soonest deadline first.
             </p>
             <ul style={{ margin: 0, padding: 0, borderBottom: `1px solid ${T.hair}` }}>
               {related.map(r => <GrantRow key={r.id} row={r} todayISO={todayISO} />)}
