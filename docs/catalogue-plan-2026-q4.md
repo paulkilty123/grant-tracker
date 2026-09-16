@@ -32,16 +32,17 @@ room for autumn closures, which run at 5 to 15 a week.
 | Directories as discovery | 60 to 100 | BVSC monthly PDF, funding.scot, the Charity Excellence list, GLA and NCVO round-ups. Discovery only: every row is still read against the funder's page before it goes live. |
 | 360Giving | 40 to 60 | Funders that filed grants last year and run an open programme not yet listed. Doubles as the dossier data promised in the Crowdfunder document. Not started; the import is the first job. |
 | Programmes and investment | 30 to 40 | The investment breadth work is half done (homepage re-checks, then directories, then watchlist enrolment). Programmes are seasonal, 18 live of 184 tracked; the autumn intakes lift that on their own. |
+| Film and documentary | 25 to 40 | Added 16 Sept after a documentary maker's voice note: Shooting People folded and nothing lists film funding in one place. Six rows live, three BFI funds staged. Sources: the rest of the BFI National Lottery funds (immersive, screen heritage, the regional NETWORK hubs where they take companies), Doc Society's other funds as they reopen, Creative Scotland and Screen Scotland's smaller schemes, Film Hub Wales and Film Hub North, Creative UK, the Wellcome and Nuffield film commissions, broadcaster funds (Channel 4's Indie Growth Fund, BBC Docs), the Whickers, Sheffield DocFest's MeetMarket, Chicken & Egg, and the climate and human rights story funds run through Doc Society. Production companies are limited by shares, so the audience rule as it stands applies (a trading company with a social purpose is in); five UK Global Screen Fund rows were rejected earlier as industry funds, so each row is judged on whether a social-purpose producer could apply. |
 | Review pens | 40 | 36 awaiting review and 11 tagged, waiting on Paul. |
 
-Total 440 to 590 gross, against 510 to 550 needed. Tight, and the top two
-lines carry it.
+Total 465 to 630 gross, against 510 to 550 needed. Tight, and the top two
+lines carry it; film is the one sector with a named user waiting for it.
 
 ## Weekly rhythm
 
 - Monday: the counter, the review pens cleared, closures from the weekend read.
 - Tuesday: the digest goes; its "new this week" section is the public face of the number.
-- Midweek: one Opus brief batch (a region's community foundations, or a directory), staged into Needs reading, read overnight by the verify cron, published on Paul's spot check. Launch week showed 15 to 25 live rows per batch.
+- Midweek: one Opus brief batch (a region's community foundations, a directory, or a sector such as film), staged into Needs reading, read overnight by the verify cron, published on Paul's spot check. Launch week showed 15 to 25 live rows per batch. The film batch goes first, in the week of 22 September, because a user is waiting.
 - Friday: what went live, what closed, what is behind the line.
 
 ## What blocks the pace
