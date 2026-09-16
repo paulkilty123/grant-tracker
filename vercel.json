@@ -136,5 +136,6 @@
       "path": "/api/cron/expire-access-grants",
       "schedule": "30 5 * * *"
     }
-  ]
+  ],
+  "ignoreCommand": "bash -c 'echo \"$VERCEL_GIT_COMMIT_MESSAGE\" | grep -q \"\\[deploy\\]\\|\\[preview\\]\" && exit 1 || exit 0'"
 }

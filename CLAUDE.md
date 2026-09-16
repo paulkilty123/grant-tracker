@@ -62,6 +62,25 @@ Next.js 14 App Router + Supabase + Tailwind CSS, deployed on Vercel via GitHub a
 
 ## Git
 
+**Deploys are opt-in, set by Paul 2026-09-16.** Vercel bills build CPU minutes:
+493 deployments between 4 and 16 September (every push to every branch
+built) cost $14.69 of the $20 monthly credit, with $5 left for the rest of
+the cycle. `vercel.json` now carries an `ignoreCommand`: **a push builds only
+when the head commit message contains `[deploy]` (main) or `[preview]` (a
+branch)**. Anything else is pushed but not built. So:
+
+- Commit as often as you like. Push a branch as often as you like. Neither
+  costs anything now.
+- When a piece of work is finished and merged to main, make the LAST commit
+  carry `[deploy]` (an empty commit is fine:
+  `git commit --allow-empty -m "deploy: <what> [deploy]"`). One deploy per
+  finished piece, not per commit. Verify on the live site after it.
+- Want Paul to see a branch? Put `[preview]` in the commit you push. Ask
+  yourself first whether a screenshot would do.
+- Budget: about two builds a day for the rest of September. A build is
+  roughly eight CPU-minutes, about 20p.
+
+
 This repo lives at a **plain local path** (`~/dev/grant-tracker`) — **not** inside `~/Documents` or `~/Desktop`. Those are iCloud-synced ("Desktop & Documents Folders"), and syncing a live `.git` corrupts it (stale lock files, broken index/refs, a duplicated object store). Keep the working copy off any synced/cloud location.
 
 Normal git works — no workaround:
