@@ -13,6 +13,7 @@ import { redirect } from 'next/navigation'
 import { requireAdmin } from '@/lib/auth/require-admin'
 import { getAdminDb } from '@/lib/admin/admin-db'
 import { computeUsageDigest, type UsageDigest } from '@/lib/admin/usage-digest'
+import { catalogueProgress, CATALOGUE_TARGET, type CatalogueProgress } from '@/lib/admin/catalogue-target'
 
 export const dynamic = 'force-dynamic'
 
@@ -70,9 +71,12 @@ export default async function AdminUsagePage({ searchParams }: { searchParams?: 
   const days = WINDOWS.includes(requested) ? requested : 7
 
   let digest: UsageDigest | null = null
+
+  let catalogue: CatalogueProgress | null = null
   let error: string | null = null
   try {
     digest = await computeUsageDigest(getAdminDb(), days)
+    try { catalogue = await catalogueProgress(getAdminDb()) } catch { catalogue = null }
   } catch (err) {
     error = err instanceof Error ? err.message : String(err)
   }
@@ -123,6 +127,30 @@ export default async function AdminUsagePage({ searchParams }: { searchParams?: 
           Could not load usage: {error}
         </div>
       )}
+
+      {/* The catalogue target (Paul, 16 Sept 2026): 1,100 live by 31 December.
+          Behind or ahead of the straight line is the one number to read. */}
+      {catalogue && (() => {
+        const gap = catalogue.live - catalogue.onTrackToday
+        const tone = gap >= 0 ? { fg: '#3B6D11', bg: '#F1F7E4' } : { fg: '#854F0B', bg: '#FAEEDA' }
+        const types = ['grant', 'programme', 'investment', 'in_kind'].map(t => `${t.replace('_', '-')} ${catalogue.byType[t] ?? 0}`).join(' · ')
+        return (
+          <div style={{ ...card, padding: '14px 18px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 22, flexWrap: 'wrap' }}>
+            <div>
+              <div style={{ fontFamily: GROTESK, fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#8A8986', marginBottom: 2 }}>Catalogue, live now</div>
+              <div style={{ fontFamily: GROTESK, fontSize: 26, fontWeight: 700, color: '#2C2C2A', lineHeight: 1.1 }}>{catalogue.live.toLocaleString('en-GB')} <span style={{ fontSize: 14, fontWeight: 500, color: '#5F5E5A' }}>of {CATALOGUE_TARGET.target.toLocaleString('en-GB')} by 31 Dec</span></div>
+              <div style={{ fontSize: 12.5, color: '#5F5E5A', marginTop: 4 }}>{types}</div>
+            </div>
+            <div style={{ fontFamily: GROTESK, fontSize: 13, fontWeight: 600, color: tone.fg, background: tone.bg, borderRadius: 999, padding: '6px 12px', whiteSpace: 'nowrap' }}>
+              {gap >= 0 ? `${gap} ahead of the line` : `${-gap} behind the line`}
+            </div>
+            <div style={{ fontSize: 13, color: '#5F5E5A', lineHeight: 1.5 }}>
+              On track today would be {catalogue.onTrackToday.toLocaleString('en-GB')}. {catalogue.newLiveThisWeek} went live in the last seven days.
+              Needs {catalogue.neededPerWeek} net a week for the {catalogue.weeksLeft} weeks left. <a href="/dashboard/admin/grants" style={{ color: '#3B6D11' }}>The plan</a> is docs/catalogue-plan-2026-q4.md.
+            </div>
+          </div>
+        )
+      })()}
 
       {digest && digest.totalEvents === 0 && (
         <div style={{ background: '#FAECE7', color: '#993C1D', border: '1px solid #D85A30', borderRadius: 10, padding: '12px 16px', marginBottom: 20, fontSize: 14 }}>
