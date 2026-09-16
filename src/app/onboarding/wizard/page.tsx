@@ -188,7 +188,7 @@ const UNCOLLECTED_ON_CREATE = {
   key_outcomes:                [],
 }
 
-type WizardStep = 'entry' | 'review' | 'manual' | 'mission' | 'sectors' | 'beneficiaries' | 'location' | 'check' | 'reveal'
+type WizardStep = 'entry' | 'review' | 'manual' | 'sectors' | 'beneficiaries' | 'location' | 'check' | 'reveal'
 
 /** Who is signing up. Recorded on the organisation row; see migration 080. */
 type SignupRole = 'organisation' | 'consultant' | 'network'
@@ -202,10 +202,18 @@ const STEP_DOT_POS: Record<WizardStep, number> = {
   // The check (Paul, 13 Sept 2026) sits between the last question and the
   // reveal: it reads the profile back the way a funder would and says what
   // is pulling the matches off course, with the edit right there.
-  // Mission before any list (Paul, 13 Sept 2026): the words come first and
-  // the tags are proposed from them, so every tag starts with a reason.
-  entry: 1, review: 2, manual: 2, mission: 3, beneficiaries: 4, sectors: 5, location: 6, check: 7, reveal: 8,
+  // The mission step went on 16 Sept 2026 (Paul, after four of six confirmed
+  // signups left without a profile, two of them on that screen). The website
+  // scan already reads the mission, sectors and beneficiaries; the mission is
+  // now an editable box on the review step (or the manual step), the scanned
+  // tags arrive pre-ticked, and the profile is saved from the review step on
+  // so a drop after it still leaves something to follow up.
+  entry: 1, review: 2, manual: 2, beneficiaries: 3, sectors: 4, location: 5, check: 6, reveal: 6,
 }
+const STEP_TOTAL = 6
+
+/** Two lines minimum for the mission, whichever box it is typed into. */
+const MISSION_MIN = 40
 
 type FieldConfidence = 'confident' | 'uncertain' | 'missing'
 
@@ -461,7 +469,7 @@ const ACTIONS_STYLE: React.CSSProperties = {
  * hard to count at a glance. The text carries the state and the dots become
  * decorative, which is where they belong, so they are aria-hidden.
  */
-function StepDots({ active, total = 8 }: { active: number; total?: number }) {
+function StepDots({ active, total = STEP_TOTAL }: { active: number; total?: number }) {
   return (
     <div style={{ display: 'flex', gap: 11, alignItems: 'center' }}>
       <span style={{
@@ -846,6 +854,15 @@ export default function OnboardingWizardPage() {
           practiceName:     org.signup_practice_name ?? '',
           practiceWebsite:  org.signup_practice_website ?? '',
         })
+        // Resume where the profile stops. A row saved from the review step
+        // has the facts and the mission and nothing else; sending that
+        // reader back to the URL box would ask for what they already gave.
+        const hasFacts = !!(org.name?.trim() && org.legal_structure)
+        if (!hasFacts) setStep('entry')
+        else if ((org.mission ?? '').trim().length < MISSION_MIN) setStep('manual')
+        else if (!(org.beneficiary_groups?.length)) setStep('beneficiaries')
+        else if (!(org.impact_sectors?.length)) setStep('sectors')
+        else setStep('location')
       }
       setLoading(false)
     }
@@ -933,6 +950,7 @@ export default function OnboardingWizardPage() {
         return
       }
       setExtracted(ext)
+      setMissionFromSite(!!ext.mission && !state.mission.trim())
       setState(prev => ({
         ...prev,
         name:              ext.name ?? prev.name,
@@ -940,11 +958,13 @@ export default function OnboardingWizardPage() {
         legalStructure:    (ext.legalStructure as LegalStructure) ?? prev.legalStructure,
         primaryLocation:   ext.primaryLocation ?? prev.primaryLocation,
         annualIncomeBand:  ext.annualIncomeBand ?? prev.annualIncomeBand,
-        // Facts only. The mission, sectors and beneficiary groups the
-        // extractor proposes stay in `extracted` as a crib for the mission
-        // step and are never written into the profile unread. Until 13 Sept
-        // 2026 they were, and nobody saw the mission until the reveal: a
-        // fluent guess from a domain name went straight into matching.
+        // The scanned mission goes into the box on the review step, labelled
+        // as from the website and edited freely; it is read there before it
+        // is saved. Sectors and beneficiary groups stay in `extracted` and
+        // arrive pre-ticked on their own steps, where they are read too.
+        // Until 13 Sept 2026 all three were written unread; until 16 Sept the
+        // mission had a step of its own, which is where people left.
+        mission:           prev.mission.trim() ? prev.mission : (ext.mission ?? ''),
       }))
       const autoConfirmed = new Set<string>()
       ;(Object.keys(conf) as Array<keyof ExtractedData['confidence']>).forEach(f => {
@@ -1162,15 +1182,71 @@ export default function OnboardingWizardPage() {
      check uses), ticked, only when the reader has not chosen any yet. They
      can untick or add; the note on the step says where the ticks came from. */
   const [suggestedNote, setSuggestedNote] = useState<{ beneficiaries: string | null; sectors: string | null; reach: string | null }>({ beneficiaries: null, sectors: null, reach: null })
-  const SUGGESTED = 'Selected from your organisation description. Untick anything that is not right, and add what is missing.'
-  /* What the model proposed from the mission (the mission-check read carries
-     it back). Used ahead of the word rules; null until it has answered. */
-  const [proposals, setProposals] = useState<{ sectors: string[]; beneficiaries: string[]; niche: string[]; reach?: string | null } | null>(null)
+  const SUGGESTED = 'Selected from your website and description. Untick anything that is not right, and add what is missing.'
+  /* Once the mission-check model's proposals; since 16 Sept nothing fills
+     this, and the website scan's reading in `extracted` takes its place. Kept
+     as a null constant so the fallbacks below read the same. */
+  const proposals: { sectors: string[]; beneficiaries: string[]; niche: string[]; reach?: string | null } | null = null
+
+  /* ── Save from the review step on ───────────────────────────────────────
+     Until 16 Sept 2026 nothing reached the database before the last button,
+     so a drop on step three left no trace and nothing to follow up. The
+     facts and the mission are saved as soon as they have been read; the
+     lists and the location are added by handleFinish. A partial row is
+     still "incomplete" to isOnboardingComplete (no sectors yet), so the next
+     visit resumes the wizard at the right step rather than skipping it. */
+  const [missionFromSite, setMissionFromSite] = useState(false)
+  async function saveDraft(): Promise<void> {
+    setSaveError(null)
+    const eligibilityFlags = deriveEligibilityFlags(state.legalStructure)
+    const num = state.registeredNumber.trim()
+    const col = num ? columnFor(num, state.legalStructure) : null
+    const payload = {
+      name:                     state.name.trim() || 'My Organisation',
+      ...(col ? { [col]: normaliseNumber(num) } : {}),
+      org_type:                 legalStructureToOrgType(state.legalStructure) as 'cic' | 'registered_charity' | 'social_enterprise' | 'community_group' | 'other',
+      legal_structure:          state.legalStructure || null,
+      social_mission_declared:  eligibilityFlags.social_mission_declared,
+      articles_restrict_profit: eligibilityFlags.articles_restrict_profit,
+      annual_income_band:       state.annualIncomeBand || null,
+      primary_location:         state.primaryLocation.trim() || null,
+      mission:                  state.mission.trim() || null,
+      ...(url.trim() ? { website_url: url.trim().startsWith('http') ? url.trim() : 'https://' + url.trim() } : {}),
+      signup_role:              state.signupRole,
+      profile_skipped:          false,
+    }
+    try {
+      if (orgId) {
+        await updateOrganisation(orgId, payload)
+      } else {
+        // Lists come later in the wizard; empty on create, and never touched
+        // on the update branch, so a second pass cannot wipe what was chosen.
+        const created = await createOrganisation({
+          ...UNCOLLECTED_ON_CREATE,
+          impact_sectors: [], beneficiary_groups: [], niche_tags: [], excluded_niche_tags: [],
+          themes: [], areas_of_work: [], geographic_reach: null, org_stage: null,
+          ...payload,
+        } as unknown as Parameters<typeof createOrganisation>[0])
+        setOrgId(created.id)
+        writeActiveOrgCookie(created.id)
+        if (typeof window !== 'undefined') localStorage.setItem('gt_active_org_id', created.id)
+      }
+    } catch (err) {
+      // The draft is a safety net, not a gate: say so and carry on. The
+      // final save retries the create with everything.
+      setSaveError(err instanceof Error ? err.message : 'Could not save yet. Carry on, it will be saved at the end.')
+    }
+  }
+  async function continueFromFacts() {
+    await saveDraft()
+    goToBeneficiaries()
+  }
 
   function goToBeneficiaries() {
     if (state.beneficiaryGroups.length === 0 && state.mission.trim()) {
       const allowed = new Set(BENEFICIARY_GROUPS.map(b => b.value as string))
-      const fromModel = (proposals?.beneficiaries ?? []).filter(v => allowed.has(v))
+      // The website scan's reading first, then the word rules on the mission.
+      const fromModel = ((proposals?.beneficiaries?.length ? proposals.beneficiaries : extracted?.beneficiaryGroups) ?? []).filter(v => allowed.has(v))
       const picks = (fromModel.length ? fromModel : suggestTags(BENEFICIARY_OPTIONS, [], state.mission, BENEFICIARY_SYNONYMS).missing.filter(v => allowed.has(v))).slice(0, 4) as BeneficiaryGroup[]
       if (picks.length) { update('beneficiaryGroups', picks); setSuggestedNote(n => ({ ...n, beneficiaries: SUGGESTED })) }
     }
@@ -1180,7 +1256,7 @@ export default function OnboardingWizardPage() {
   function goToSectors() {
     if (state.impactSectors.length === 0 && state.mission.trim()) {
       const allowed = new Set(IMPACT_SECTORS.map(o => o.value as string))
-      const fromModel = (proposals?.sectors ?? []).filter(v => allowed.has(v))
+      const fromModel = ((proposals?.sectors?.length ? proposals.sectors : extracted?.impactSectors) ?? []).filter(v => allowed.has(v))
       const picks = (fromModel.length ? fromModel : suggestTags(IMPACT_SECTOR_OPTIONS, [], state.mission, SECTOR_SYNONYMS).missing.filter(v => allowed.has(v))).slice(0, 4) as ImpactSector[]
       if (picks.length) {
         update('impactSectors', picks)
@@ -1491,7 +1567,9 @@ export default function OnboardingWizardPage() {
 
   const sectorsValid      = state.impactSectors.length > 0
   const beneficiariesValid = state.beneficiaryGroups.length > 0
-  const locationValid = !!(state.name.trim() && state.legalStructure)
+  // Where they are and how far the work reaches drive the location score,
+  // the heaviest dimension after structure; both were skippable until 16 Sept.
+  const locationValid = !!(state.name.trim() && state.legalStructure && state.primaryLocation.trim() && state.geographicReach)
 
   if (loading) {
     return (
@@ -1552,8 +1630,12 @@ export default function OnboardingWizardPage() {
           numberError={numberError}
           blockers={reviewBlockers()}
           onBack={() => setStep('entry')}
-          onSkip={() => setStep('mission')}
-          onContinue={() => setStep('mission')}
+          onContinue={continueFromFacts}
+          mission={state.mission}
+          setMission={v => { update('mission', v); if (missionFromSite) setMissionFromSite(false) }}
+          missionFromSite={missionFromSite}
+          clearMission={() => { update('mission', ''); setMissionFromSite(false) }}
+          saveError={saveError}
           wizardState={state}
           toggleSector={toggleSector}
           makePrimarySector={makePrimarySector}
@@ -1568,18 +1650,8 @@ export default function OnboardingWizardPage() {
           update={update}
           notice={fetchError}
           onBack={() => { setFetchError(null); setStep('entry') }}
-          onContinue={() => setStep('mission')}
-        />
-      )}
-
-      {step === 'mission' && (
-        <StepMission
-          state={state}
-          update={update}
-          crib={extracted?.mission ?? null}
-          onProposals={setProposals}
-          onBack={() => setStep(extracted ? 'review' : 'manual')}
-          onContinue={goToBeneficiaries}
+          onContinue={continueFromFacts}
+          saveError={saveError}
         />
       )}
 
@@ -1604,7 +1676,7 @@ export default function OnboardingWizardPage() {
           toggleBeneficiary={toggleBeneficiary}
           makePrimaryBeneficiary={makePrimaryBeneficiary}
           suggestedNote={suggestedNote.beneficiaries}
-          onBack={() => setStep('mission')}
+          onBack={() => setStep(extracted ? 'review' : 'manual')}
           onContinue={goToSectors}
           canContinue={beneficiariesValid}
         />
@@ -1770,7 +1842,7 @@ function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual, role, s
             style={{ ...INPUT_STYLE, padding: '0 14px 0 34px', boxSizing: 'border-box' }}
           />
         </div>
-        <Button variant="primary" size="lg" onClick={onAutoFill} disabled={fetching || (several && (!practiceName.trim() || !band))}>
+        <Button variant="primary" size="lg" onClick={onAutoFill} disabled={fetching || !url.trim() || (several && (!practiceName.trim() || !band))}>
           {fetching ? (
             <span className="inline-flex items-center gap-2">
               <span className="dot-bounce inline-flex gap-0.5"><span/><span/><span/></span>
@@ -1781,6 +1853,13 @@ function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual, role, s
       </div>
 
       {error && <p style={{ fontSize: 13, color: T.coralText, marginTop: 8 }}>{error}</p>}
+      {several && (!practiceName.trim() || !band) && (
+        /* Three dead buttons with nothing saying why is how this card trapped
+           consultants; name what they want, the way the review step does. */
+        <p style={{ fontSize: 12, color: T.amberMid, marginTop: 8, fontFamily: 'var(--font-dm-sans)' }}>
+          Add {[!practiceName.trim() ? 'your name or practice' : null, !band ? 'how many organisations you work with' : null].filter(Boolean).join(' and ')} above to carry on.
+        </p>
+      )}
 
       {/* Manual alternative */}
       <div style={{ paddingTop: 24 }}>
@@ -1827,7 +1906,7 @@ function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual, role, s
    Step 2A — Review extracted data
    ═══════════════════════════════════════════════ */
 
-function StepReview({ extracted, confirmed, editingField, setEditingField, confirmField, canContinue, blockers, numberError, onBack, onSkip, onContinue, wizardState, toggleSector, makePrimarySector, toggleBeneficiary, makePrimaryBeneficiary }: {
+function StepReview({ extracted, confirmed, editingField, setEditingField, confirmField, canContinue, blockers, numberError, onBack, onContinue, mission, setMission, missionFromSite, clearMission, saveError, wizardState, toggleSector, makePrimarySector, toggleBeneficiary, makePrimaryBeneficiary }: {
   extracted: ExtractedData
   confirmed: Set<string>
   editingField: string | null
@@ -1836,7 +1915,9 @@ function StepReview({ extracted, confirmed, editingField, setEditingField, confi
   canContinue: boolean
   blockers: string[]
   numberError?: string | null
-  onBack: () => void; onSkip: () => void; onContinue: () => void
+  onBack: () => void; onContinue: () => void
+  mission: string; setMission: (v: string) => void; missionFromSite: boolean; clearMission: () => void
+  saveError?: string | null
   wizardState: WizardState
   toggleSector: (s: ImpactSector) => void
   makePrimarySector: (s: ImpactSector) => void
@@ -1925,20 +2006,31 @@ function StepReview({ extracted, confirmed, editingField, setEditingField, confi
         ))}
       </div>
 
+      <MissionBox value={mission} onChange={setMission} fromSite={missionFromSite} onClear={clearMission} />
+
+      {saveError && (
+        <div role="status" style={{ background: T.amberBgSoft, color: T.textPrimary, padding: '10px 14px', borderRadius: 10, fontSize: 13, margin: '12px 0 0', fontFamily: 'var(--font-dm-sans)' }}>
+          {saveError}
+        </div>
+      )}
+
       <div style={ACTIONS_STYLE}>
         {/* "I'll refine these later" removed (Paul, 9 Sept 2026): the flagged
             fields are the ones that decide eligibility, so they get confirmed here. */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
-          <Button variant="primary" onClick={onContinue} disabled={!canContinue}>
+          <Button variant="primary" onClick={onContinue} disabled={!canContinue || mission.trim().length < MISSION_MIN}>
             Continue <ArrowRight size={14} />
           </Button>
           {/* A greyed-out Continue with nothing saying why is exactly how this
               page trapped people. If it is disabled, name what it wants. */}
-          {!canContinue && blockers.length > 0 && (
+          {(!canContinue && blockers.length > 0) || mission.trim().length < MISSION_MIN ? (
             <p style={{ fontSize: 11.5, color: T.amberMid, margin: 0, fontFamily: 'var(--font-dm-sans)', textAlign: 'right' as const }}>
-              Confirm {blockers.join(', ')} to carry on
+              {[
+                !canContinue && blockers.length > 0 ? `Confirm ${blockers.join(', ')}` : null,
+                mission.trim().length < MISSION_MIN ? 'add two lines on what you do' : null,
+              ].filter(Boolean).join(', and ')} to carry on
             </p>
-          )}
+          ) : null}
         </div>
       </div>
     </>
@@ -2106,14 +2198,16 @@ function ReviewField({ label, value, hint, emptyText, fieldState: fState, isConf
    Step 2B — Manual entry
    ═══════════════════════════════════════════════ */
 
-function StepManual({ state, update, notice, onBack, onContinue }: {
+function StepManual({ state, update, notice, saveError, onBack, onContinue }: {
   state: WizardState
   update: <K extends keyof WizardState>(k: K, v: WizardState[K]) => void
   /** Why the reader is here rather than on the review step: the site could not be read. Shown, or a user is left wondering what autofill did (Paul, 13 Sept). */
   notice?: string | null
+  saveError?: string | null
   onBack: () => void; onContinue: () => void
 }) {
-  const valid = !!(state.name.trim() && state.legalStructure)
+  const missionOk = state.mission.trim().length >= MISSION_MIN
+  const valid = !!(state.name.trim() && state.legalStructure) && missionOk
   return (
     <>
       <BackLink onClick={onBack} />
@@ -2140,11 +2234,26 @@ function StepManual({ state, update, notice, onBack, onContinue }: {
         </Field>
       </div>
 
+      <MissionBox value={state.mission} onChange={v => update('mission', v)} fromSite={false} onClear={() => update('mission', '')} />
+
+      {saveError && (
+        <div role="status" style={{ background: T.amberBgSoft, color: T.textPrimary, padding: '10px 14px', borderRadius: 10, fontSize: 13, margin: '12px 0 0', fontFamily: 'var(--font-dm-sans)' }}>
+          {saveError}
+        </div>
+      )}
+
       <div style={ACTIONS_STYLE}>
         <SkipAction onClick={onBack}>← Back</SkipAction>
-        <Button variant="primary" onClick={onContinue} disabled={!valid}>
-          Continue <ArrowRight size={14} />
-        </Button>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
+          <Button variant="primary" onClick={onContinue} disabled={!valid}>
+            Continue <ArrowRight size={14} />
+          </Button>
+          {!valid && (
+            <p style={{ fontSize: 11.5, color: T.amberMid, margin: 0, fontFamily: 'var(--font-dm-sans)', textAlign: 'right' as const }}>
+              {[!state.name.trim() ? 'your name' : null, !state.legalStructure ? 'your legal structure' : null, !missionOk ? 'two lines on what you do' : null].filter(Boolean).join(', ')} to carry on
+            </p>
+          )}
+        </div>
       </div>
     </>
   )
@@ -2699,9 +2808,16 @@ function StepLocation({ state, update, toggleFundingType, toggleSpendNeed, savin
 
       <div style={{ ...ACTIONS_STYLE, marginTop: 24 }}>
         <BackLink onClick={onBack} />
-        <Button variant="primary" onClick={onFinish} disabled={saving || !canContinue}>
-          {saving ? 'Saving…' : <><span>Show me my matches</span> <ArrowRight size={14} /></>}
-        </Button>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
+          <Button variant="primary" onClick={onFinish} disabled={saving || !canContinue}>
+            {saving ? 'Saving…' : <><span>Show me my matches</span> <ArrowRight size={14} /></>}
+          </Button>
+          {!canContinue && !saving && (
+            <p style={{ fontSize: 11.5, color: T.amberMid, margin: 0, fontFamily: 'var(--font-dm-sans)', textAlign: 'right' as const }}>
+              {[!state.name.trim() ? 'your name' : null, !state.legalStructure ? 'your legal structure' : null, !state.primaryLocation.trim() ? 'where you are based' : null, !state.geographicReach ? 'where your work reaches' : null].filter(Boolean).join(', ')} to carry on
+            </p>
+          )}
+        </div>
       </div>
     </>
   )
@@ -2777,195 +2893,45 @@ function SuggestedNote({ text }: { text: string }) {
   )
 }
 
-/** One box and a live checklist (Paul, 14 Sept: less text, show what is missing). */
-const MISSION_MIN = 40
-
-const MISSION_QUESTIONS: Record<'who' | 'what' | 'where', string> = {
-  who: 'Who benefits from your work, and what are they up against?',
-  what: 'What do you actually do, and what changes for them?',
-  where: 'Where does your work happen?',
-}
-const MISSION_ITEMS: { key: 'who' | 'what' | 'where'; label: string; hint: (loc: string) => string }[] = [
-  { key: 'who',   label: 'Who benefits, and the problem you tackle', hint: () => 'e.g. families in Bristol who cannot afford enough food' },
-  { key: 'what',  label: 'What you do, and what changes',           hint: () => 'e.g. we collect surplus food and deliver it to 300 community groups each week' },
-  { key: 'where', label: 'Where you work',                           hint: loc => loc.trim() ? `e.g. across ${loc.split(',')[0].trim()} and the surrounding area` : 'e.g. across Bristol and the South West' },
-]
-
-function StepMission({ state, update, crib, onProposals, onBack, onContinue }: {
-  state: WizardState
-  update: <K extends keyof WizardState>(k: K, v: WizardState[K]) => void
-  /** What the website said, in the extractor's words. Pre-filled on arrival; a tag on the box says so. */
-  crib: string | null
-  onProposals: (p: { sectors: string[]; beneficiaries: string[]; niche: string[]; reach?: string | null } | null) => void
-  onBack: () => void; onContinue: () => void
+/* ── The mission box ──────────────────────────────────────────────────────
+   Was a step of its own with a model-graded checklist (13 to 16 Sept 2026).
+   Two of the four launch-week drops happened on it: three coral circles and
+   "Two things still to add" read as a validation failure even though
+   Continue was never blocked. Now one box on the review step (or the manual
+   step), pre-filled from the website scan where there was one. The checker
+   routes (/api/profile/mission-check, mission-weave) are kept for the
+   profile page, which does not use them yet. */
+function MissionBox({ value, onChange, fromSite, onClear }: {
+  value: string; onChange: (v: string) => void; fromSite: boolean; onClear: () => void
 }) {
-  const valid = state.mission.trim().length >= MISSION_MIN
-  const [fromSite, setFromSite] = useState(false)
-  useEffect(() => {
-    if (crib && !state.mission.trim()) { update('mission', crib); setFromSite(true) }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-  /* The model's grading, on a button (Paul, 14 Sept: a read that fires
-     when you pause mid-thought is off-putting). Read once on arrival when the
-     box came pre-filled, then only when "Check my description" is pressed.
-     The checklist keeps the last result; a grey line says when the text has
-     changed since. No word rules: a wrong tick is worse than a short wait. */
-  const [graded, setGraded] = useState<{ text: string; items: { key: string; covered: boolean; suggestion: string; question?: string }[] } | null>(null)
-  const [grading, setGrading] = useState(false)
-  const arrivalRead = useRef(false)
-  async function runCheck(textIn?: string) {
-    const text = (textIn ?? state.mission).trim()
-    if (text.length < 20 || grading) return
-    setGrading(true)
-    try {
-      const taxonomy = {
-        sectors: IMPACT_SECTORS.map(o => ({ value: o.value, label: o.label })),
-        beneficiaries: BENEFICIARY_GROUPS.map(o => ({ value: o.value, label: o.label })),
-        niche: Object.entries(NICHE_TAGS_BY_SECTOR).flatMap(([sector, list]) => (list ?? []).map(o => ({ value: o.value, label: o.label, sector }))),
-      }
-      const res = await fetch('/api/profile/mission-check', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mission: text, name: state.name, location: state.primaryLocation, taxonomy }) })
-      if (res.ok) {
-        const data = await res.json() as { items: { key: string; covered: boolean; suggestion: string; question?: string }[] | null; proposals?: { sectors: string[]; beneficiaries: string[]; niche: string[]; reach?: string | null } }
-        if (data.items) setGraded({ text, items: data.items })
-        onProposals(data.proposals ?? null)
-      }
-    } catch { /* the reader can press again */ }
-    finally { setGrading(false) }
-  }
-  useEffect(() => {
-    if (arrivalRead.current) return
-    arrivalRead.current = true
-    const text = (state.mission.trim() || crib || '').trim()
-    if (text.length >= 20) void runCheck(text)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  const current = state.mission.trim()
-  const stale = !!graded && graded.text !== current
-  const items = MISSION_ITEMS.map(m => {
-    const g = graded?.items.find(x => x.key === m.key)
-    return { key: m.key, label: m.label, done: !!g?.covered, hint: g?.suggestion || m.hint(state.primaryLocation), question: g?.question?.trim() || MISSION_QUESTIONS[m.key] }
-  })
-  const boxRef = useRef<HTMLTextAreaElement | null>(null)
-  /* A question with a short answer under each open line (Paul, 14 Sept:
-     blanks were fiddly). The answer is woven into the description by the
-     model, using only what is there and what was typed, then the check runs
-     again so the ticks reflect the new text. */
-  const [answers, setAnswers] = useState<Record<string, string>>({})
-  const [weaving, setWeaving] = useState(false)
-  /* One button for every answer typed (Paul, 14 Sept: one at a time meant
-     the second answer had no way in). All filled boxes go in one call. */
-  async function weaveAll() {
-    const pairs = items.filter(i => !i.done && (answers[i.key] ?? '').trim()).map(i => ({ question: i.question, answer: (answers[i.key] ?? '').trim() }))
-    if (!pairs.length || weaving) return
-    setWeaving(true)
-    try {
-      const res = await fetch('/api/profile/mission-weave', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mission: state.mission, answers: pairs, name: state.name }) })
-      const data = res.ok ? await res.json() as { mission?: string } : {}
-      const next = (data.mission ?? [state.mission.trim(), ...pairs.map(p => p.answer)].join(' ')).trim()
-      update('mission', next)
-      if (fromSite) setFromSite(false)
-      setAnswers({})
-      await runCheck(next)
-    } finally { setWeaving(false) }
-  }
-  const answersTyped = items.some(i => !i.done && (answers[i.key] ?? '').trim())
-  const complete = !!graded && !stale && items.every(i => i.done)
-  const showTag = !!crib && (fromSite || state.mission === crib)
+  const showTag = fromSite && !!value.trim()
   return (
-    <>
-      <BackLink onClick={onBack} />
-      <h1 style={H1_STYLE}>What do you do?</h1>
-      <p style={SUBTITLE_STYLE}>Two or three sentences. We use it to suggest your sectors, beneficiaries and specialisms, which is what the matching runs on.</p>
-
+    <div style={{ marginTop: 22 }}>
+      <p style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 15, fontWeight: 600, color: T.textPrimary, margin: '0 0 4px' }}>What you do</p>
+      <p style={{ fontSize: 13.5, color: T.textSecondary, lineHeight: 1.5, margin: '0 0 10px', fontFamily: 'var(--font-dm-sans)' }}>
+        Two or three sentences: who you help, what you do, and where. It suggests your sectors and beneficiaries on the next screens, and the matching reads it.
+      </p>
       <div style={{ position: 'relative' }}>
         <textarea
-          ref={boxRef}
-          value={state.mission}
-          onChange={e => { update('mission', e.target.value); if (fromSite) setFromSite(false) }}
-          rows={5}
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          rows={4}
           placeholder="Paste the description you use on your website or in a funding bid, or write two sentences here."
           style={{ ...INPUT_STYLE, height: 'auto', padding: showTag ? '38px 16px 14px' : '14px 16px', resize: 'vertical', lineHeight: 1.55 }}
         />
         {showTag && (
           <div style={{ position: 'absolute', top: 10, left: 14, right: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontFamily: 'var(--font-space-grotesk)', fontSize: 12, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: T.textTertiary }}>
             <span>From your website, edit freely</span>
-            <button type="button" onClick={() => { update('mission', ''); setFromSite(false) }}
+            <button type="button" onClick={onClear}
               style={{ background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', font: 'inherit', color: T.greenDeep, letterSpacing: 'inherit', textTransform: 'inherit' }}>
               Clear
             </button>
           </div>
         )}
-        {!showTag && crib && !state.mission.trim() && (
-          <button type="button" onClick={() => { update('mission', crib); setFromSite(true) }}
-            style={{ position: 'absolute', top: 10, right: 14, background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'var(--font-space-grotesk)', fontSize: 12, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: T.greenDeep }}>
-            Use our reading of your site
-          </button>
-        )}
       </div>
-
-      {/* Covered lines go quiet; an open line becomes the instruction, with an
-          example, so the reader sees what to add without reading anything else. */}
-      {/* While the model reads, say so at a size a person notices (Paul,
-          14 Sept). The checklist below dims until it answers. */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, margin: '12px 0 10px', flexWrap: 'wrap' }}>
-        {grading ? (
-          <div role="status" aria-live="polite" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 12, background: T.greenCream, fontFamily: 'var(--font-space-grotesk)', fontSize: 14.5, fontWeight: 600, color: T.greenDeep }}>
-            <style>{`@keyframes wizPulse { 0%, 100% { opacity: .25; transform: scale(.85) } 50% { opacity: 1; transform: scale(1) } }`}</style>
-            <span aria-hidden="true" style={{ width: 10, height: 10, borderRadius: 99, background: T.greenDeep, animation: 'wizPulse 1s ease-in-out infinite' }} />
-            Reading your description…
-          </div>
-        ) : (
-          <p style={{ margin: 0, fontFamily: 'var(--font-space-grotesk)', fontSize: 12, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: T.textTertiary }}>
-            {!graded ? 'Press check to see what to add' : stale ? 'Edited since last check' : complete ? 'All three covered' : `${items.filter(i => !i.done).length === 1 ? 'One thing' : `${items.filter(i => !i.done).length} things`} still to add`}
-          </p>
-        )}
-        <Button variant={!graded || stale ? 'primary' : 'secondary'} size="sm" onClick={() => runCheck()} disabled={grading || current.length < 20}>
-          Check my description
-        </Button>
-      </div>
-      <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 8, opacity: grading || !graded ? 0.45 : stale ? 0.7 : 1, transition: 'opacity 200ms ease' }}>
-        {items.map(i => (
-          <li key={i.label} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontFamily: 'var(--font-dm-sans)', fontSize: 14, lineHeight: 1.45 }}>
-            <span aria-hidden="true" style={{ width: 20, height: 20, marginTop: 1, borderRadius: 99, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: i.done ? T.greenDeep : 'transparent', border: `1.5px solid ${i.done ? T.greenDeep : T.coralText}`, color: T.onDeep, fontSize: 12, flexShrink: 0 }}>{i.done ? '✓' : ''}</span>
-            <span>
-              <span style={{ color: i.done ? T.textTertiary : T.textPrimary, fontWeight: i.done ? 400 : 600 }}>{i.done ? i.label : `Add ${i.label.charAt(0).toLowerCase()}${i.label.slice(1)}`}</span>
-              {!i.done && graded && !stale ? (
-                <span style={{ display: 'block', marginTop: 6 }}>
-                  <span style={{ display: 'block', fontFamily: 'var(--font-dm-sans)', fontSize: 14, color: T.textSecondary, marginBottom: 6 }}>{i.question}</span>
-                  <input type="text" value={answers[i.key] ?? ''} onChange={e => setAnswers(a => ({ ...a, [i.key]: e.target.value }))}
-                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); void weaveAll() } }}
-                    placeholder="A few words is enough" style={{ ...INPUT_STYLE, height: 42, fontSize: 14, maxWidth: 560 }} />
-                </span>
-              ) : (!i.done && <span style={{ display: 'block', color: T.textSecondary }}>{i.hint}</span>)}
-            </span>
-          </li>
-        ))}
-      </ul>
-
-      {graded && !stale && !complete && (
-        <div style={{ marginTop: 14 }}>
-          <Button variant="primary" size="sm" onClick={weaveAll} disabled={!answersTyped || weaving || grading}>
-            {weaving ? 'Adding…' : 'Add my answers to the description'}
-          </Button>
-        </div>
-      )}
-
-      <div style={{ ...ACTIONS_STYLE, marginTop: 24 }}>
-        <BackLink onClick={onBack} />
-        <Button variant={complete ? 'primary' : 'secondary'} onClick={onContinue} disabled={!valid}>
-          Continue <ArrowRight size={14} />
-        </Button>
-      </div>
-    </>
+    </div>
   )
 }
-
-/* ═══════════════════════════════════════════════
-   Step 6 — The profile check
-   ═══════════════════════════════════════════════ */
-
-const REACH_LABEL: Record<string, string> = Object.fromEntries(GEOGRAPHIC_REACH_OPTIONS.map(o => [o.value, o.label]))
 
 function StepCheck({ state, update, findings, reviewing, saving, saveError, onBack, onFinish }: {
   state: WizardState
@@ -3248,7 +3214,7 @@ function StepReveal({ matchCount, failed, structureBlock, topMatches, hasMission
             {topMatches.map(m => (
               <Link
                 key={m.id}
-                href="/dashboard/profile"
+                href={`/dashboard/search?grant=${encodeURIComponent(m.id)}`}
                 style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: T.pageBg, border: `0.5px solid ${T.borderLight}`, borderRadius: 10, textDecoration: 'none', cursor: 'pointer', transition: 'background 120ms ease' }}
                 onMouseEnter={e => (e.currentTarget.style.background = T.cream1)}
                 onMouseLeave={e => (e.currentTarget.style.background = T.pageBg)}

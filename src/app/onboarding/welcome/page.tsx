@@ -82,7 +82,9 @@ export default function OnboardingWelcomePage() {
         </Link>
 
         <div style={{ marginTop: 26 }}>
-          <Link href="/dashboard/profile" className="skip">Set up later</Link>
+          {/* The dashboard, not the long profile form: two of four launch-week
+              drops took this link and never saved the form (16 Sept 2026). */}
+          <Link href="/dashboard" className="skip">Set up later</Link>
         </div>
 
       </div>
