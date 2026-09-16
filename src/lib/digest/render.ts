@@ -251,6 +251,20 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
     <p style="margin:0 0 16px;font-family:${BODY};font-size:16px;line-height:1.55;color:${C.deep};">${esc(m.lead)}</p>
   </td></tr>`)
 
+  /* ── The structure notice. Sole traders only: why the list is short, and
+        what changes it. Under the lead so it is read before the (usually
+        empty) sections, with "your profile" as the way to change it. ── */
+  if (m.structureNotice) {
+    const profileHref = `${origin}/dashboard/profile`
+    const body = esc(m.structureNotice).replace(
+      'your profile',
+      `<a href="${profileHref}" style="color:${C.deep};font-weight:600;text-decoration:underline;">your profile</a>`,
+    )
+    rows.push(`<tr><td class="gutter" style="background:${C.page};padding:0 30px 0;">
+    <p style="margin:0 0 16px;padding:14px 16px;background:${C.card};border-radius:10px;font-family:${BODY};font-size:14px;line-height:1.55;color:${C.body};">${body}</p>
+  </td></tr>`)
+  }
+
   /* ── 1. Closing soon ─────────────────────────────────────────────────── */
   m.closing.forEach((r, i) => {
     const href = r.url ?? `${origin}/dashboard/deadlines`

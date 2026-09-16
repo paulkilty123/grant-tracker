@@ -36,6 +36,7 @@ const model: DigestModel = {
   matchTotal: 1,
   matchLabel: 'worth_a_look',
   newThisWeek: [],
+  structureNotice: null,
   nearMisses: [
     { title: 'Network for Social Change — Grants', funder: 'Network for Social Change',
       type: 'grant', meta: 'Network for Social Change · £25k – £100k',
@@ -268,5 +269,17 @@ describe('edition block', () => {
     expect(out).toContain('Matches are now ranked by fit.')
     // The ordinary digest still follows it.
     expect(out).toContain('Upcoming deadlines')
+  })
+})
+
+describe('the sole-trader notice', () => {
+  const notice = 'Shoots matches funding to organisations. Most funders do not fund individuals, so as a sole trader you will see few or no matches. You are welcome to browse the catalogue and save anything worth watching. If you set up a constituted group or a company, change your structure in your profile and the matches open up.'
+  it('renders under the lead with a link to the profile, and nowhere for an organisation', () => {
+    const html = renderDigest({ ...model, structureNotice: notice }, { origin: 'https://www.shootsfunding.co.uk', unsubscribeUrl: 'https://www.shootsfunding.co.uk/u' })
+    expect(html).toContain('Most funders do not fund individuals')
+    expect(html).toContain('href="https://www.shootsfunding.co.uk/dashboard/profile"')
+    expect(html.indexOf('Most funders do not fund')).toBeGreaterThan(html.indexOf(model.lead))
+    const plain = renderDigest(model, { origin: 'https://www.shootsfunding.co.uk', unsubscribeUrl: 'https://www.shootsfunding.co.uk/u' })
+    expect(plain).not.toContain('sole trader')
   })
 })

@@ -106,3 +106,13 @@ describe('match rotation by send history', () => {
     expect(pool.sort(matchOrder(seen)).map(s => s.row.id)).toEqual(['b', 'c', 'a'])
   })
 })
+
+import { structureNoticeFor } from './build'
+describe('structureNoticeFor', () => {
+  it('is set for a sole trader and null for every organisational form', () => {
+    expect(structureNoticeFor({ legal_structure: 'sole_trader' } as never)).toMatch(/sole trader/)
+    for (const ls of ['registered_charity', 'cio', 'cic_guarantee', 'ltd_guarantee', 'unincorporated', 'not_registered', null]) {
+      expect(structureNoticeFor({ legal_structure: ls } as never)).toBeNull()
+    }
+  })
+})

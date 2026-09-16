@@ -47,6 +47,19 @@ export const WEEK_ONE_MATCHES = 3
 
 export type DigestMode = 'full' | 'week_one' | 'thin'
 
+/**
+ * What a sole trader is told, in the email. The wizard says the same thing at
+ * signup (onboarding/wizard/page.tsx); this is the version for someone who has
+ * already signed up and is wondering why the list is short. "Your profile" is
+ * the link target in the render.
+ */
+export const SOLE_TRADER_NOTICE =
+  'Shoots matches funding to organisations. Most funders do not fund individuals, so as a sole trader you will see few or no matches. You are welcome to browse the catalogue and save anything worth watching. If you set up a constituted group or a company, change your structure in your profile and the matches open up.'
+
+export function structureNoticeFor(org: Pick<Organisation, 'legal_structure'>): string | null {
+  return org.legal_structure === 'sole_trader' ? SOLE_TRADER_NOTICE : null
+}
+
 export interface ClosingRow {
   kind: 'pipeline' | 'saved'
   name: string
@@ -161,6 +174,13 @@ export interface DigestModel {
    * outside an edition window, which is every ordinary week.
    */
   edition: { title: string; intro: string; updates: string[] } | null
+  /**
+   * The sole-trader line (Paul, 16 Sept 2026, board m03). Most funders do not
+   * fund individuals, so a sole trader's digest is thin by nature, and without
+   * this line it reads as a broken product. Same idea as the wizard notice,
+   * rendered under the lead. Null for every organisational structure.
+   */
+  structureNotice: string | null
   /** Everything shown, for digest_sent_items. */
   shown: { section: string; key: string }[]
   /**
@@ -851,13 +871,24 @@ export async function buildDigest(
   // The content floor. Nothing to say means no send — a digest that says
   // "nothing this week" teaches someone the email is ignorable before it has
   // ever been useful.
-  if (!closingShown.length && !inProgress.length && !matches.length && !newThisWeek.length && !nearMisses.length && !prompt) {
+  //
+  // One exception: a sole trader's first digest. It usually has nothing in it,
+  // and that is the thing the reader needs told, once. After week one the
+  // floor applies as it does for everyone.
+  const structureNotice = structureNoticeFor(org)
+  if (!closingShown.length && !inProgress.length && !matches.length && !newThisWeek.length && !nearMisses.length && !prompt
+      && !(structureNotice && mode === 'week_one')) {
     return null
   }
 
   let lead: string
   let subject: string
-  if (mode === 'week_one' && matchTotal === 0) {
+  if (structureNotice && matchTotal === 0) {
+    // A sole trader with nothing matching. Not a profile gap, and saying so
+    // would send them to fix a profile that is already right.
+    lead = 'Nothing is matching, and for a sole trader that is expected rather than a gap in your profile. The note below says why, and what opens it up.'
+    subject = `Funding for sole traders on Shoots, and what opens it up`
+  } else if (mode === 'week_one' && matchTotal === 0) {
     // Nothing matched, and the floor above let the send through because a
     // profile prompt exists. "Zero opportunities are open to you. Here are the
     // zero closing soonest" is what the general wording produces here, and it
@@ -956,7 +987,7 @@ export async function buildDigest(
     closing: closingShown, closingOverflow,
     inProgress, inProgressOverflow,
     matches, matchesOverflow, matchTotal, matchLabel, newThisWeek,
-    nearMisses, prompt, reassurance, catalogue, edition, shown,
+    nearMisses, prompt, reassurance, catalogue, edition, structureNotice, shown,
     debug: {
       // The SAME comparator the shown list uses. It briefly had its own, which
       // made the diagnostic disagree with the email it was meant to explain —
