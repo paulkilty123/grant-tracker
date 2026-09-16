@@ -151,6 +151,20 @@ const STRONG_POOL_RIGHT = /^[\s,()]*(?:available\s+(?:annually|each\s+year|per\s
 // ("distributes up to £100,000 per year" → pool).
 const PER_GRANT_LEFT_CUES = /(?:^|[\s.,;:(])(?:up\s+to|of\s+up\s+to|maximum(?:\s+of)?|max(?:\s+of)?|no\s+more\s+than|limit(?:\s+of)?|typically|typical(?:\s+(?:up\s+to|grant|award))?|grants?\s+of(?:\s+up\s+to)?|awards?\s+of(?:\s+up\s+to)?|ranges?\s+from|from)\s*$/i
 
+// Prior-receipt thresholds and cost caps. Neither is an award.
+//
+// BFI Development Funding, 16 Sept 2026: "If your project has already
+// received an accumulated total of £60,000 funding from the BFI through
+// previous stages, you must be able to articulate a clear route to
+// production" became amount_max 60,000 on a fund whose page says awards are
+// made "in accordance with the scale, ambition and potential reach of each
+// proposal". The same guidelines list "Producer fees: Up to £3,000 per stage"
+// and "Legal fees up to £3,500", which are caps on what a budget may contain,
+// not what an applicant receives. Same family as the pot rule above: a
+// figure the funder states about something other than the award.
+const THRESHOLD_CUES_LEFT = /(?:\b(?:accumulated|cumulative|aggregate)\s+(?:total\s+)?(?:of\s+)?|\b(?:already|previously)\s+(?:received|been\s+awarded|had)\s+(?:an?\s+)?(?:accumulated|cumulative|total)?\s*(?:total\s+)?(?:of\s+)?|\b(?:have|has|having)\s+received\s+(?:more|less)\s+than\s+|\b(?:fees?|overheads?|expenses?|subsistence|accommodation|per\s+diems?)\b[^£]{0,25}(?:up\s+to\s+|capped\s+(?:at\s+)?|of\s+)?|\blocked\s+box\b[^£]{0,30})$/i
+const COST_CAP_RIGHT = /^[\s,()]*(?:per\s+(?:stage|night|day|document|agreement)\b|for\s+(?:writer|option|director)\b|in\s+(?:their|your|the|its)\s+(?:bfi\s+)?locked\s+box\b)/i
+
 // Ceiling-specific subset: these assert a cap, never a floor.
 const CEILING_LEFT_CUES = /(?:^|[\s.,;:(])(?:up\s+to|of\s+up\s+to|maximum(?:\s+of)?|max(?:\s+of)?|no\s+more\s+than|limit(?:\s+of)?)\s*$/i
 
@@ -271,6 +285,9 @@ export function extractGrantAmounts(awardText: string): DetectedAmounts {
     const rightCtx = awardText.slice(idx + m[0].length, idx + m[0].length + 50)
     const perGrantLeft = PER_GRANT_LEFT_CUES.test(leftCtx)
 
+    // A threshold on what was already received, or a cap on a budget line, is
+    // not an award (see THRESHOLD_CUES_LEFT). Skipped outright, no chain.
+    if (THRESHOLD_CUES_LEFT.test(leftCtx) || COST_CAP_RIGHT.test(rightCtx)) continue
     // Pool total → anchor a breakdown chain and skip the figure itself.
     if (POOL_CUES_LEFT.test(leftCtx)) { chainEnd = idx + m[0].length; continue }
     if (STRONG_POOL_RIGHT.test(rightCtx)) continue
