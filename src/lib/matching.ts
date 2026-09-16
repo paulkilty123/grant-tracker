@@ -790,6 +790,69 @@ const INDIVIDUAL_ONLY_SCORE_CAP = 5
 const SPORT_DISCIPLINE_TAGS = new Set(['football', 'cricket', 'rugby', 'basketball', 'swimming', 'athletics', 'tennis', 'cycling', 'martial_arts'])
 const SPORT_DISCIPLINE_SCORE_CAP = 30
 
+/**
+ * A grant's primary beneficiary group is a gate, not a theme.
+ *
+ * Found 2026-09-16 on the first signup after launch to be checked in detail
+ * (a Bournemouth fertility-support CIC, beneficiaries women and girls,
+ * families). Its top fifteen carried the Army Benevolent Fund at 72, Cash for
+ * Kids and 7Stars at 66, funds for veterans and children. Each reached the
+ * list on broad sector overlap (health, mental health, community are the
+ * three commonest tags in the catalogue) plus the 30 points every eligible
+ * grant collects for size, funder type and eligibility, while the beneficiary
+ * dimension only scored the mismatch DOWN to 4 or 8 of 20. Nothing said "this
+ * fund is for someone else".
+ *
+ * The rule: on a grant, when the funder names a specific primary group, the
+ * organisation does not serve it, the organisation's own primary group is
+ * not on the funder's list, AND either the two lists share nothing at all or
+ * the funder's list is short (two groups: a fund that names veterans and
+ * families is a veterans' fund), the score is capped below the shown floor.
+ * Children and young people count as each other. general_public on either
+ * side means no gate: the fund, or the organisation, is for everyone.
+ * The first draft capped on the primary alone and took the Rayne Foundation
+ * (young people, refugees, older people, carers) off a homelessness charity
+ * that serves refugees; a funder with several named groups is a broad
+ * funder, and one shared group is enough to keep it in view.
+ * Org-centred types (programmes, investment, in-kind) are untouched: they
+ * pick on the organisation, not its end users, as the weights already say.
+ *
+ * A CAP, not a filter, like every gate in this file: the row stays browsable
+ * and the reason says why it sits where it does.
+ */
+const BENEFICIARY_PRIMARY_SCORE_CAP = 49
+const BENEFICIARY_GATE_LABELS: Record<string, string> = {
+  young_people: 'young people', children: 'children', people_in_poverty: 'people in poverty',
+  mental_health: 'people with mental health conditions', disabled_people: 'disabled people',
+  older_people: 'older people', women_girls: 'women and girls', men_boys: 'men and boys', families: 'families',
+  refugees_migrants: 'refugees and migrants', homeless: 'people experiencing homelessness',
+  rural_communities: 'rural communities', lgbtq: 'LGBTQ+ people', ethnic_minorities: 'people from ethnic minorities',
+  carers: 'carers', veterans: 'veterans', ex_offenders: 'ex-offenders',
+}
+const BENEFICIARY_UNIVERSAL = new Set(['general_public', 'social_impact_orgs'])
+const BENEFICIARY_NEIGHBOURS: Record<string, string[]> = { children: ['young_people'], young_people: ['children'] }
+
+export function beneficiaryPrimaryGate(
+  grantGroups: readonly string[] | null | undefined,
+  orgGroups: readonly string[] | null | undefined,
+  fundingType: string | null | undefined,
+): { capped: boolean; primary: string | null } {
+  if (fundingType && fundingType !== 'grant') return { capped: false, primary: null }
+  const g = (grantGroups ?? []).filter(Boolean)
+  const o = (orgGroups ?? []).filter(Boolean)
+  if (!g.length || !o.length) return { capped: false, primary: null }
+  const primary = g[0]
+  if (BENEFICIARY_UNIVERSAL.has(primary) || g.some(x => BENEFICIARY_UNIVERSAL.has(x)) || o.some(x => BENEFICIARY_UNIVERSAL.has(x))) {
+    return { capped: false, primary }
+  }
+  const near = (a: string, b: string) => a === b || (BENEFICIARY_NEIGHBOURS[a] ?? []).includes(b)
+  const orgServesPrimary = o.some(x => near(x, primary))
+  const grantListsOrgPrimary = g.some(x => near(x, o[0]))
+  if (orgServesPrimary || grantListsOrgPrimary) return { capped: false, primary }
+  const shareAnything = g.some(x => o.some(y => near(x, y)))
+  return { capped: !shareAnything || g.length <= 2, primary }
+}
+
 /** Ceiling for an in-kind offer with no restriction the matcher can score. One
  *  below MATCH_TIER_GOOD, so it reads Partial and sits under every scored grant. */
 export const UNRESTRICTED_IN_KIND_SCORE_CAP = 60
@@ -1967,6 +2030,15 @@ export function computeMatchScore(
   // strong the location/sector match is, a structure mismatch is a deal-breaker.
   if (structureMismatch) {
     score = Math.min(score, 45)
+  }
+
+  // ── Primary beneficiary gate (see beneficiaryPrimaryGate) ─────────────────
+  const benGate = beneficiaryPrimaryGate(grant.beneficiaryGroups, org.beneficiary_groups, grant.fundingType)
+  if (benGate.capped && benGate.primary) {
+    score = Math.min(score, BENEFICIARY_PRIMARY_SCORE_CAP)
+    const who = BENEFICIARY_GATE_LABELS[benGate.primary] ?? benGate.primary.replace(/_/g, ' ')
+    // "not match" is what the reason splitter files as a warning.
+    reasons.push(`This fund is for ${who}; your profile does not match that group`)
   }
 
   // ── Individual-applicant funds ─────────────────────────────────────────────
