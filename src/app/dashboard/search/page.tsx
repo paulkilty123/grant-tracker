@@ -546,14 +546,6 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
   // ── Insights strip label ──
   // Opportunity-type-specific. Mirrors the type chip vocabulary
   // (GRANT / PROGRAMME / INVESTMENT / IN-KIND) in sentence case.
-  // Same label used for visible title and aria-label, in both
-  // collapsed and expanded states.
-  const insightsTypeWord = grant.fundingType === 'investment' ? 'Investment'
-    : grant.fundingType === 'programme' ? 'Programme'
-    : grant.fundingType === 'in_kind'   ? 'In-kind'
-    : 'Grant'
-  const insightsLabel = `${insightsTypeWord} insights`
-
   // ── Sector pills (up to 3 + overflow) ──
   const allSectors: string[] = (grant as EnrichedGrant).impactSectors?.length
     ? (grant as EnrichedGrant).impactSectors!.map(s => s.toLowerCase())
@@ -1014,6 +1006,24 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
           on it to toggle. The chevron rotates: right when collapsed, up when
           expanded. Background goes pale-green when expanded (replacing the old
           centered "HIDE INSIGHTS" caps bar). */}
+      {/* The eligibility verdict on the collapsed card (Paul, 16 Sept 2026).
+          Thirteen record opens against eighteen pipeline adds in launch week:
+          people decide from the top of the card, and who can apply was only
+          inside the strip. One line, the verdict first. */}
+      {eligibilityStatus && (() => {
+        const brief = (grant as EnrichedGrant).funderBrief
+        const who = (() => { const t = (brief?.who_can_apply ?? '').trim(); if (!t) return null; const m = t.match(/^(.{20,160}?[.!?])(\s|$)/); return (m ? m[1] : t.slice(0, 140)).trim() })()
+        const st = String(eligibilityStatus)
+        const tone = st === 'ineligible' ? { fg: '#993C1D', bg: '#FAECE7' } : st === 'check_required' ? { fg: '#854F0B', bg: '#FAEEDA' } : { fg: '#3B6D11', bg: '#F1F7E4' }
+        const lead = st === 'ineligible' ? 'Not open to your organisation' : st === 'check_required' ? 'Check before applying' : st === 'likely_eligible' ? 'Likely open to you' : 'Open to you'
+        const detail = st === 'check_required' && eligibilityReason ? eligibilityReason : who
+        return (
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, padding: '9px 20px 10px', borderTop: '0.5px solid rgba(0,0,0,0.06)', fontFamily: 'var(--font-dm-sans)', fontSize: 12.5, lineHeight: 1.45, color: '#2C2C2A' }}>
+            <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 11.5, fontWeight: 600, color: tone.fg, background: tone.bg, borderRadius: 999, padding: '2px 9px', whiteSpace: 'nowrap' }}>{lead}</span>
+            {detail && <span style={{ color: '#5F5E5A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{detail}</span>}
+          </div>
+        )
+      })()}
       {(!!(grant as EnrichedGrant).funderBrief || grant.eligibilityCriteria?.length > 0 || (grant as EnrichedGrant).impactSectors?.length || grant.sectors?.length) && (
         <button
           onClick={() => setInsightsExpanded(v => {
@@ -1029,7 +1039,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
           })}
           onMouseEnter={() => setInsightsHover(true)}
           onMouseLeave={() => setInsightsHover(false)}
-          aria-label={insightsLabel}
+          aria-label="Read the full record"
           aria-expanded={insightsExpanded}
           style={{
             width: '100%', display: 'flex', alignItems: 'center', gap: 12,
@@ -1043,22 +1053,20 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
             transition: 'background-color 160ms ease',
           }}
         >
-          <svg
-            style={{ color: insightsHover || insightsExpanded ? '#1B6B3D' : '#1D3C3E', flexShrink: 0, transition: 'color 160ms ease' }}
-            width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-          >
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-            <polyline points="14 2 14 8 20 8"/>
-            <line x1="16" y1="13" x2="8" y2="13"/>
-            <line x1="16" y1="17" x2="8" y2="17"/>
-          </svg>
+          {/* A chevron, not a document icon: the header is a control, and it
+              said "Grant insights" like a feature name. Paul, 16 Sept 2026:
+              "Read the full record", and say in words what is in it. */}
+          <ChevronDown
+            size={18} strokeWidth={2.25}
+            style={{ color: insightsHover || insightsExpanded ? '#1B6B3D' : '#1D3C3E', flexShrink: 0, transition: 'transform 160ms ease, color 160ms ease', transform: insightsExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
+          />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 15, fontWeight: 500, fontFamily: 'var(--font-dm-sans)', color: '#2C2C2A' }}>
-              {insightsLabel}
+            <div style={{ fontSize: 15, fontWeight: 600, fontFamily: 'var(--font-space-grotesk)', color: '#2C2C2A' }}>
+              {insightsExpanded ? 'The full record' : 'Read the full record'}
             </div>
             {!insightsExpanded && (
-              <div style={{ fontSize: 11, fontFamily: 'var(--font-dm-sans)', marginTop: 1, color: '#5F5E5A' }}>
-                {(grant as EnrichedGrant).funderBrief ? 'What they fund, who qualifies, tips for applying' : 'Eligibility, who qualifies, and more'}
+              <div style={{ fontSize: 12, fontFamily: 'var(--font-dm-sans)', marginTop: 1, color: '#5F5E5A' }}>
+                {(grant as EnrichedGrant).funderBrief ? 'Who can apply, what they will not fund, what they look for, and how to apply' : 'Who can apply, and what we know about this funder'}
               </div>
             )}
           </div>
