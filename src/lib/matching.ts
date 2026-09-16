@@ -1194,10 +1194,17 @@ export function computeMatchScore(
       'food', 'animal_welfare', 'faith',
     ]
     const grantPrimaryDomains = grantImpactSectors.filter(s => PRIMARY_DOMAINS.includes(s))
+    // A grant whose FIRST sector is the organisation's FIRST sector is about
+    // the same thing they are, whatever else it lists. Doc Society's
+    // documentary fund is tagged creative, justice, environment, health; for
+    // a documentary production house (creative first) the environment tag
+    // fired this veto and the fund scored 44 (16 Sept 2026). The veto exists
+    // for a football grant reaching a theatre, not for that.
+    const samePrimarySector = orgImpactSectors[0] !== undefined && grantImpactSectors[0] === orgImpactSectors[0]
     if (grantPrimaryDomains.length > 0) {
       const orgCoversDomain = grantPrimaryDomains.some(s => orgImpactSectors.includes(s))
       // See generalist-grant comment near the top of this fn.
-      if (!orgCoversDomain && !isGeneralistGrant) {
+      if (!orgCoversDomain && !isGeneralistGrant && !samePrimarySector) {
         primaryDomainMismatch = true
         themesScore = Math.min(themesScore, 5)
       }
