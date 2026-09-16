@@ -82,9 +82,22 @@ export default async function AdminUsagePage({ searchParams }: { searchParams?: 
 
   return (
     <div style={{ padding: '32px 28px', maxWidth: 1040 }}>
-      <h1 style={{ fontFamily: GROTESK, fontSize: 26, fontWeight: 700, color: '#2C2C2A', margin: '0 0 6px' }}>
-        Usage
-      </h1>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', margin: '0 0 6px' }}>
+        <h1 style={{ fontFamily: GROTESK, fontSize: 26, fontWeight: 700, color: '#2C2C2A', margin: 0 }}>
+          Usage
+        </h1>
+        {/* The way to the trends page. It was a small underlined "Over time"
+            among the day-window pills, and Paul could not find it (16 Sept). */}
+        <a
+          href="/dashboard/admin/usage/trends"
+          style={{
+            fontFamily: GROTESK, fontSize: 13.5, fontWeight: 600, color: '#2C2C2A', background: '#fff',
+            border: '1px solid #2C2C2A', borderRadius: 999, padding: '8px 16px', textDecoration: 'none', whiteSpace: 'nowrap',
+          }}
+        >
+          Usage over time, by day and week &rarr;
+        </a>
+      </div>
       <p style={{ color: '#5F5E5A', margin: '0 0 18px', fontSize: 14, maxWidth: 720 }}>
         Who came to the site and what they did once inside. Page views and visitors are from
         Umami with admin sessions removed. Actions are the ones the app records: searches, grants
@@ -92,7 +105,6 @@ export default async function AdminUsagePage({ searchParams }: { searchParams?: 
       </p>
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 20, alignItems: 'center' }}>
-        <a href="/dashboard/admin/usage/trends" style={{ fontFamily: GROTESK, fontSize: 13, fontWeight: 600, color: '#3B6D11', textDecoration: 'underline', marginRight: 8 }}>Over time</a>
         {WINDOWS.map(w => (
           <a key={w} href={`/dashboard/admin/usage?days=${w}`} style={{
             fontFamily: GROTESK, fontSize: 13, fontWeight: 600, textDecoration: 'none',
