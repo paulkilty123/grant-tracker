@@ -707,8 +707,12 @@ export default async function PublicGrantPage({
           {lead && (
             <div style={{ ...section, borderTop: 'none', marginTop: 0, paddingTop: 0 }}>
               <h2 style={sectionH2}>About this opportunity</h2>
+              {/* Logged out, the first sentence only (Paul, 17 Sept 2026). The
+                  paragraph is the enricher's own writing, and 660 of them in
+                  one crawl is a dataset; the facts around it are public
+                  anyway. Logged in, the whole thing as before. */}
               <p style={{ fontSize: 16, lineHeight: 1.65, color: T.deep, margin: 0, whiteSpace: 'pre-line' }}>
-                {lead}
+                {signedIn ? lead : (lead.match(/^[\s\S]{20,}?[.!?](?=\s|$)/)?.[0] ?? lead.slice(0, 220)).trim()}
               </p>
             </div>
           )}
