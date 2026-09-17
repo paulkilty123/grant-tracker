@@ -35,7 +35,7 @@ import { isPlanId, type BillingPeriod, type PriceKind, lookupKeyFor } from '@/co
 export const dynamic = 'force-dynamic'
 
 const PERIODS: BillingPeriod[] = ['monthly', 'annual']
-const KINDS:   PriceKind[]     = ['standard', 'founding']
+const KINDS:   PriceKind[]     = ['standard', 'launch', 'founding']
 
 export async function POST(req: NextRequest) {
   const supabase = await createServerClient()
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'period must be monthly or annual' }, { status: 400 })
   }
   if (typeof kind !== 'string' || !KINDS.includes(kind as PriceKind)) {
-    return NextResponse.json({ error: 'kind must be standard or founding' }, { status: 400 })
+    return NextResponse.json({ error: 'kind must be standard, launch or founding' }, { status: 400 })
   }
 
   // WHICH organisation is being paid for. One is unambiguous; several needs an

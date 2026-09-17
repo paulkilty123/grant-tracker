@@ -23,7 +23,7 @@
 // Nothing here decides WHO gets a granted checkout. That is an entitlement
 // question and it belongs with the grant, not with the price.
 
-import { FOUNDING_OFFER_CLOSES } from '@/config/plans'
+import { FOUNDING_OFFER_CLOSES, LAUNCH_OFFER_CLOSES } from '@/config/plans'
 
 export type PurchaseChannel =
   /** Somebody choosing a price for themselves on the pricing page. */
@@ -56,6 +56,34 @@ export function foundingPriceAvailable(
     allowed: false,
     reason: `the public founding offer closed on ${closes.toISOString().slice(0, 10)}`,
   }
+}
+
+/**
+ * When the LAUNCH price may be used.
+ *
+ * Self-serve until the end of October 2026 (Paul, 5 September). Unlike the
+ * founding rate there is no standing promise beyond that date: somebody who
+ * has not subscribed by then pays the standard price. A granted channel is
+ * still allowed, so an admin honouring a conversation that started in
+ * October can finish it in November.
+ */
+export function launchPriceAvailable(
+  channel: PurchaseChannel,
+  now: Date = new Date(),
+): FoundingDecision {
+  if (channel === 'granted') {
+    return { allowed: true, reason: 'granted checkout: honouring a launch-price conversation' }
+  }
+  const closes = new Date(LAUNCH_OFFER_CLOSES)
+  if (now.getTime() <= closes.getTime()) {
+    return { allowed: true, reason: 'the launch price is open' }
+  }
+  return { allowed: false, reason: `the launch price closed on ${closes.toISOString().slice(0, 10)}` }
+}
+
+/** For the pricing page: show the launch price, or the standard one? */
+export function launchPriceIsOpen(now: Date = new Date()): boolean {
+  return launchPriceAvailable('self_serve', now).allowed
 }
 
 /**

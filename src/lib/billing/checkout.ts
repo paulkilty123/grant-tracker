@@ -12,7 +12,7 @@ import {
   PLANS, type PlanId, type BillingPeriod, type PriceKind,
   lookupKeyFor, amountFor,
 } from '@/config/plans'
-import { foundingPriceAvailable, type PurchaseChannel } from './founding'
+import { foundingPriceAvailable, launchPriceAvailable, type PurchaseChannel } from './founding'
 
 export interface CheckoutRequest {
   plan: PlanId
@@ -35,6 +35,7 @@ export type CheckoutRefusal =
   | 'plan_not_self_serve'
   | 'price_not_in_stripe'
   | 'founding_offer_closed'
+  | 'launch_offer_closed'
   | 'already_subscribed'
 
 /**
@@ -73,6 +74,12 @@ export function decideCheckout(
       return { ok: false, code: 'founding_offer_closed', message: founding.reason }
     }
   }
+  if (req.kind === 'launch') {
+    const launch = launchPriceAvailable(req.channel, opts.now)
+    if (!launch.allowed) {
+      return { ok: false, code: 'launch_offer_closed', message: launch.reason }
+    }
+  }
 
   if (opts.existing && BLOCKING_STATUSES.has(opts.existing.status)) {
     return {
@@ -82,7 +89,8 @@ export function decideCheckout(
   }
 
   const lookupKey = lookupKeyFor(req.plan, req.kind, req.period)
-  if (!opts.availableLookupKeys.has(lookupKey)) {
+  const amount = amountFor(req.plan, req.kind, req.period)
+  if (amount === null || !opts.availableLookupKeys.has(lookupKey)) {
     return {
       ok: false, code: 'price_not_in_stripe',
       message: `No price is configured for ${plan.name}, ${req.period}. This is a fault on our side, not on yours.`,
@@ -92,7 +100,7 @@ export function decideCheckout(
   return {
     ok: true,
     lookupKey,
-    amount: amountFor(req.plan, req.kind, req.period),
+    amount,
     // A trial is a property of the plan, not of the checkout, and it is only
     // ever offered on a first subscription — somebody resubscribing after
     // cancelling has already had it.

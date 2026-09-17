@@ -49,13 +49,22 @@ export type BillingPeriod = 'monthly' | 'annual'
 /**
  * Which price somebody is on.
  *
- * `founding` is a SEPARATE PRICE and deliberately not a coupon. A coupon is a
- * percentage off the public price, so it moves whenever the public price moves;
- * these people are promised a fixed figure permanently. A separate price is
- * also what makes "permanent for those who take it" true without any further
- * machinery: they simply stay on the price they subscribed to.
+ * `launch` is the public offer, Paul's decision of 5 September 2026: £15 and
+ * £25 instead of £19 and £35, open to anyone who signs up before the end of
+ * October, and held for TWELVE MONTHS from the day they subscribe, after which
+ * they move to the standard price. It is its own Stripe price and not a
+ * coupon, so what somebody pays never depends on a percentage applied to a
+ * number that may move. The move to standard after twelve months is done with
+ * a subscription schedule (src/lib/billing/launch-schedule.ts) and is the one
+ * piece of machinery this kind needs. The launch email of 10 September made
+ * exactly this promise in writing, so the shape is not open.
+ *
+ * `founding` is the earlier, PERMANENT price promised to the founding cohort
+ * (the 20 to 30 organisations on free access to 10 March 2027). It is kept
+ * because the promise is kept; its amounts are the 29 August figures and Paul
+ * has not yet decided whether they change. It is never self-serve any more.
  */
-export type PriceKind = 'standard' | 'founding'
+export type PriceKind = 'standard' | 'launch' | 'founding'
 
 export const CURRENCY = 'gbp'
 
@@ -73,6 +82,16 @@ export const CURRENCY = 'gbp'
  * machinery, because they simply stay on the price they subscribed to.
  */
 export const FOUNDING_OFFER_CLOSES = '2026-10-31T23:59:59Z'
+
+/**
+ * When the public LAUNCH price stops being available to new subscribers.
+ * Paul, 5 September 2026: the end of October. Somebody who takes it before
+ * then keeps it for LAUNCH_PRICE_MONTHS from their subscription start.
+ */
+export const LAUNCH_OFFER_CLOSES = '2026-10-31T23:59:59Z'
+
+/** How long the launch price is held from the subscription start. */
+export const LAUNCH_PRICE_MONTHS = 12
 
 export interface PlanCapabilities {
   /** Matched search, eligibility checking, and the catalogue. Every plan. */
@@ -112,6 +131,7 @@ export interface PlanCapabilities {
  */
 export interface PlanPrices {
   standard: Record<BillingPeriod, number>
+  launch: Record<BillingPeriod, number>
   founding: Record<BillingPeriod, number>
 }
 
@@ -122,7 +142,13 @@ export interface Plan {
   /** One line, used on the pricing page and in upgrade copy. */
   summary: string
   capabilities: PlanCapabilities
-  prices: PlanPrices
+  /**
+   * Null for a plan that has no price yet. Team, since 5 September: it is
+   * not built, no figure is shown, and every enquiry is a pricing
+   * conversation, so nothing is created in Stripe for it. A Team deal is a
+   * dated access grant on the organisation until that changes.
+   */
+  prices: PlanPrices | null
   /**
    * Can somebody buy this for themselves, or does it need granting?
    *
@@ -171,7 +197,8 @@ export const PLANS: Readonly<Record<PlanId, Plan>> = {
       orgLimit: 1,
     },
     prices: {
-      standard: { monthly: 1500, annual: 15000 },
+      standard: { monthly: 1900, annual: 19000 },
+      launch:   { monthly: 1500, annual: 15000 },
       founding: { monthly: 1200, annual: 12000 },
     },
     selfServe: true,
@@ -187,7 +214,8 @@ export const PLANS: Readonly<Record<PlanId, Plan>> = {
       orgLimit: 1,
     },
     prices: {
-      standard: { monthly: 2500, annual: 25000 },
+      standard: { monthly: 3500, annual: 35000 },
+      launch:   { monthly: 2500, annual: 25000 },
       founding: { monthly: 2000, annual: 20000 },
     },
     selfServe: true,
@@ -196,16 +224,13 @@ export const PLANS: Readonly<Record<PlanId, Plan>> = {
   team: {
     id: 'team',
     name: 'Team',
-    summary: 'Everything in Apply, for up to three organisation profiles, each with its own pipeline.',
+    summary: 'Everything in Apply, for up to five people or five organisation profiles, each with its own pipeline.',
     capabilities: {
       search: true, bookmarks: true, alerts: true,
       pipeline: true, applications: true,
-      orgLimit: 3,
+      orgLimit: 5,
     },
-    prices: {
-      standard: { monthly: 4500, annual: 45000 },
-      founding: { monthly: 3600, annual: 36000 },
-    },
+    prices: null,
     selfServe: false,
     trialDays: null,
   },
@@ -215,7 +240,7 @@ export const PLANS: Readonly<Record<PlanId, Plan>> = {
 export const PLAN_ORDER: readonly PlanId[] = ['match', 'apply', 'team'] as const
 
 export const BILLING_PERIODS: readonly BillingPeriod[] = ['monthly', 'annual'] as const
-export const PRICE_KINDS: readonly PriceKind[] = ['standard', 'founding'] as const
+export const PRICE_KINDS: readonly PriceKind[] = ['standard', 'launch', 'founding'] as const
 
 export function isPlanId(value: unknown): value is PlanId {
   return typeof value === 'string' && value in PLANS
@@ -253,9 +278,14 @@ export function planForLookupKey(
   return null
 }
 
-/** The amount in pence. Every plan carries all four prices. */
-export function amountFor(plan: PlanId, kind: PriceKind, period: BillingPeriod): number {
-  return PLANS[plan].prices[kind][period]
+/** The amount in pence, or null for a plan with no price (Team). */
+export function amountFor(plan: PlanId, kind: PriceKind, period: BillingPeriod): number | null {
+  return PLANS[plan].prices?.[kind][period] ?? null
+}
+
+/** Does this plan have prices at all? Team does not, for now. */
+export function hasPrices(plan: PlanId): boolean {
+  return PLANS[plan].prices !== null
 }
 
 /** Every price this repo intends to exist in Stripe. The sync script's input. */
@@ -264,11 +294,12 @@ export function definedPrices(): {
 }[] {
   const out: { plan: PlanId; kind: PriceKind; period: BillingPeriod; amount: number; lookupKey: string }[] = []
   for (const plan of PLAN_ORDER) {
+    if (!hasPrices(plan)) continue
     for (const kind of PRICE_KINDS) {
       for (const period of BILLING_PERIODS) {
         out.push({
           plan, kind, period,
-          amount: amountFor(plan, kind, period),
+          amount: amountFor(plan, kind, period)!,
           lookupKey: lookupKeyFor(plan, kind, period),
         })
       }
@@ -317,10 +348,10 @@ export function planAllows<K extends keyof PlanCapabilities>(
  * the product, and they stop being self-serve at the end of October while the
  * plan carries on.
  */
-export function sellablePlans(availableLookupKeys: ReadonlySet<string>): PlanId[] {
+export function sellablePlans(availableLookupKeys: ReadonlySet<string>, kind: PriceKind = 'standard'): PlanId[] {
   return PLAN_ORDER.filter(plan =>
-    PLANS[plan].selfServe &&
-    BILLING_PERIODS.every(period => availableLookupKeys.has(lookupKeyFor(plan, 'standard', period))),
+    PLANS[plan].selfServe && hasPrices(plan) &&
+    BILLING_PERIODS.every(period => availableLookupKeys.has(lookupKeyFor(plan, kind, period))),
   )
 }
 
@@ -337,7 +368,11 @@ export function contactOnlyPlans(): PlanId[] {
   return PLAN_ORDER.filter(plan => !PLANS[plan].selfServe)
 }
 
-/** "from £45" — the entry price for a plan you have to ask about. */
+/**
+ * The label beside a plan you have to ask about. Team shows NO figure at all,
+ * Paul's decision of 5 September: the aim is the conversation.
+ */
 export function fromPriceLabel(plan: PlanId): string {
-  return `from ${formatAmount(amountFor(plan, 'standard', 'monthly'))}`
+  const monthly = amountFor(plan, 'standard', 'monthly')
+  return monthly === null ? 'Get in touch' : `from ${formatAmount(monthly)}`
 }

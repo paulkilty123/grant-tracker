@@ -16,7 +16,7 @@ export default function BuyButton({
 }: {
   plan: string
   period: 'monthly' | 'annual'
-  kind?: 'standard' | 'founding'
+  kind?: 'standard' | 'launch' | 'founding'
   label: string
 }) {
   const [busy, setBusy] = useState(false)

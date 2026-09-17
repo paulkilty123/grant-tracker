@@ -3,6 +3,11 @@
  *
  *   npx tsx scripts/stripe-sync-catalogue.ts           dry run, changes nothing
  *   npx tsx scripts/stripe-sync-catalogue.ts --apply   creates what is missing
+ *   npx tsx scripts/stripe-sync-catalogue.ts --apply --replace
+ *       ALSO replaces a mismatched price: creates the new one, moves the
+ *       lookup key onto it, archives the old. Existing subscriptions stay on
+ *       the old price, and the script says how many there are. This is the
+ *       "decision for a person" below, made explicit on the command line.
  *
  * Paul skipped Stripe's dashboard setup on purpose: the repo is the single
  * source of truth for what we sell, and the dashboard stays empty until this
@@ -41,6 +46,7 @@ for (const line of readFileSync(path.resolve(__dirname, '../.env.local'), 'utf8'
 }
 
 const APPLY = process.argv.includes('--apply')
+const REPLACE = process.argv.includes('--replace')
 
 const key = process.env.STRIPE_SECRET_KEY
 if (!key) {
@@ -127,7 +133,29 @@ async function main() {
     if (verdict.action === 'mismatch') {
       console.log(`  ${label}  MISMATCH`)
       for (const d of verdict.differences) console.log(`      ${d}`)
-      mismatches.push(`${want.lookupKey}: ${verdict.differences.join('; ')}`)
+      if (!REPLACE) {
+        mismatches.push(`${want.lookupKey}: ${verdict.differences.join('; ')}`)
+        continue
+      }
+      // Who is on the old price. Stated, because archiving it does not move
+      // them and somebody has to decide whether anything should.
+      const subs = await stripe.subscriptions.list({ price: verdict.priceId, status: 'all', limit: 100 })
+      const live = subs.data.filter(s => !['canceled', 'incomplete_expired'].includes(s.status)).length
+      console.log(`      ${live} live subscription(s) stay on the old price ${verdict.priceId}`)
+      console.log(`      ${APPLY ? 'replacing' : 'WOULD replace'}: new price takes the lookup key, old price archived`)
+      if (APPLY) {
+        await stripe.prices.create({
+          product: productIds.get(want.plan)!,
+          unit_amount: want.amount,
+          currency: CURRENCY,
+          recurring: { interval: stripeInterval(want.period) },
+          lookup_key: want.lookupKey,
+          transfer_lookup_key: true,
+          nickname: `${PLANS[want.plan].name} ${want.kind === 'standard' ? '' : want.kind + ' '}${want.period}`,
+        })
+        await stripe.prices.update(verdict.priceId, { active: false })
+      }
+      created++
       continue
     }
 
@@ -139,7 +167,7 @@ async function main() {
         currency: CURRENCY,
         recurring: { interval: stripeInterval(want.period) },
         lookup_key: want.lookupKey,
-        nickname: `${PLANS[want.plan].name} ${want.kind === 'founding' ? 'founding ' : ''}${want.period}`,
+        nickname: `${PLANS[want.plan].name} ${want.kind === 'standard' ? '' : want.kind + ' '}${want.period}`,
       })
     }
     created++

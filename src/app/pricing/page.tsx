@@ -14,10 +14,10 @@
 import Link from 'next/link'
 import { getStripe } from '@/lib/billing/stripe-client'
 import {
-  PLANS, PLAN_ORDER, sellablePlans, contactOnlyPlans, fromPriceLabel,
-  amountFor, formatAmount, lookupKeyFor, type PlanId,
+  PLANS, PLAN_ORDER, sellablePlans, contactOnlyPlans,
+  amountFor, formatAmount, LAUNCH_PRICE_MONTHS, type PlanId, type PriceKind,
 } from '@/config/plans'
-import { foundingOfferIsOpen } from '@/lib/billing/founding'
+import { launchPriceIsOpen } from '@/lib/billing/founding'
 import { ctaSupportLine } from '@/lib/trial'
 import BuyButton from './BuyButton'
 
@@ -52,10 +52,13 @@ function Row({ label, on }: { label: string; on: boolean }) {
   )
 }
 
-function PlanCard({ id, sellable }: { id: PlanId; sellable: boolean }) {
+function PlanCard({ id, sellable, kind }: { id: PlanId; sellable: boolean; kind: PriceKind }) {
   const plan = PLANS[id]
-  const monthly = amountFor(id, 'standard', 'monthly')
-  const annual = amountFor(id, 'standard', 'annual')
+  const monthly = amountFor(id, kind, 'monthly')
+  const annual = amountFor(id, kind, 'annual')
+  const listMonthly = amountFor(id, 'standard', 'monthly')
+  const listAnnual = amountFor(id, 'standard', 'annual')
+  const priced = sellable && monthly !== null && annual !== null
   const c = plan.capabilities
 
   return (
@@ -72,13 +75,25 @@ function PlanCard({ id, sellable }: { id: PlanId; sellable: boolean }) {
       </div>
 
       <div>
-        <div style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 32, color: INK }}>
-          {sellable ? formatAmount(monthly) : fromPriceLabel(id)}
-          {sellable && <span style={{ fontSize: 15, fontWeight: 500, color: MID }}> a month</span>}
-        </div>
-        {sellable && (
-          <div style={{ fontSize: 13, color: MID, marginTop: 2 }}>
-            or {formatAmount(annual)} a year, which is two months free
+        {priced ? (
+          <>
+            <div style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 32, color: INK }}>
+              {formatAmount(monthly)}
+              <span style={{ fontSize: 15, fontWeight: 500, color: MID }}> a month</span>
+            </div>
+            <div style={{ fontSize: 13, color: MID, marginTop: 2 }}>
+              or {formatAmount(annual)} a year, which is two months free
+            </div>
+            {kind === 'launch' && listMonthly !== null && listAnnual !== null && (
+              <div style={{ fontSize: 13, color: MID, marginTop: 6, lineHeight: 1.5 }}>
+                Launch price, held for {LAUNCH_PRICE_MONTHS} months from the day you subscribe.
+                After that {formatAmount(listMonthly)} a month or {formatAmount(listAnnual)} a year.
+              </div>
+            )}
+          </>
+        ) : (
+          <div style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, fontSize: 20, color: INK }}>
+            By conversation
           </div>
         )}
       </div>
@@ -92,8 +107,8 @@ function PlanCard({ id, sellable }: { id: PlanId; sellable: boolean }) {
         {c.orgLimit > 1 && <Row label={`Up to ${c.orgLimit} organisation profiles`} on />}
       </ul>
 
-      {sellable ? (
-        <BuyButton plan={id} period="monthly" label={`Choose ${plan.name}`} />
+      {priced ? (
+        <BuyButton plan={id} period="monthly" kind={kind} label={`Choose ${plan.name}`} />
       ) : (
         <a
           href="mailto:hello@shootsfunding.co.uk?subject=Team%20plan"
@@ -112,9 +127,13 @@ function PlanCard({ id, sellable }: { id: PlanId; sellable: boolean }) {
 
 export default async function PricingPage() {
   const keys = await availableLookupKeys()
-  const sellable = new Set(sellablePlans(keys))
   const contactOnly = new Set(contactOnlyPlans())
-  const foundingOpen = foundingOfferIsOpen()
+  // While the launch price is open it is THE price on this page. Somebody
+  // arriving in November sees the standard price and nothing about an offer
+  // they missed.
+  const launchOpen = launchPriceIsOpen()
+  const kind: PriceKind = launchOpen ? 'launch' : 'standard'
+  const sellable = new Set(sellablePlans(keys, kind))
 
   return (
     <main style={{ maxWidth: 1040, margin: '0 auto', padding: '56px 24px 80px' }}>
@@ -134,7 +153,7 @@ export default async function PricingPage() {
         gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
       }}>
         {PLAN_ORDER.map(id => (
-          <PlanCard key={id} id={id} sellable={sellable.has(id) && !contactOnly.has(id)} />
+          <PlanCard key={id} id={id} kind={kind} sellable={sellable.has(id) && !contactOnly.has(id)} />
         ))}
       </div>
 
@@ -144,11 +163,12 @@ export default async function PricingPage() {
         </p>
       )}
 
-      {foundingOpen && (
+      {launchOpen && (
         <p style={{ marginTop: 28, fontSize: 14, color: MID, lineHeight: 1.6 }}>
-          Founding rates are open until the end of October and are kept for as long as you stay.{' '}
-          <Link href="mailto:hello@shootsfunding.co.uk?subject=Founding%20rate" style={{ color: '#3B6D11' }}>
-            Ask about a founding rate
+          The launch price is open to anyone who subscribes before the end of October.
+          Team, for up to five people or five organisation profiles, is arranged by conversation:{' '}
+          <Link href="mailto:hello@shootsfunding.co.uk?subject=Team%20plan" style={{ color: '#3B6D11' }}>
+            get in touch
           </Link>
           .
         </p>

@@ -44,6 +44,7 @@ import { getStripe } from '@/lib/billing/stripe-client'
 import { getAdminDb } from '@/lib/admin/admin-db'
 import { mapSubscription, type StripeSubscriptionLike } from '@/lib/billing/webhook-map'
 import { recordBillingIncident } from '@/lib/billing/incidents'
+import { ensureLaunchSchedule } from '@/lib/billing/launch-schedule-stripe'
 
 export const dynamic = 'force-dynamic'
 
@@ -157,10 +158,31 @@ export async function POST(req: NextRequest) {
       : NextResponse.json({ error: 'Write failed' }, { status: 500 })
   }
 
+  // The twelve-month end to the launch price. Idempotent: a subscription that
+  // already carries a schedule is left alone, so replays and the `updated`
+  // events that follow creation do nothing. Failure here is recorded and does
+  // NOT fail the webhook: the customer is entitled either way, and a missing
+  // schedule is a billing correction for a person, not a reason to make
+  // Stripe retry a write that already succeeded.
+  let schedule: string | null = null
+  try {
+    schedule = await ensureLaunchSchedule(stripe, fresh)
+  } catch (e) {
+    console.error(`[stripe-webhook] launch schedule failed for ${fresh.id}:`, e)
+    await recordBillingIncident({
+      kind: 'launch_schedule_failed',
+      detail: e instanceof Error ? e.message : String(e),
+      stripe_subscription_id: fresh.id,
+      stripe_customer_id: typeof fresh.customer === 'string' ? fresh.customer : null,
+      owner_id: mapped.row.owner_id,
+    })
+  }
+
   return NextResponse.json({
     ok: true,
     owner_id: mapped.row.owner_id,
     plan: mapped.row.plan,
     status: mapped.row.status,
+    ...(schedule ? { launch_schedule: schedule } : {}),
   })
 }

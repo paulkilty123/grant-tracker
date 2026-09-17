@@ -3,6 +3,7 @@ import {
   PLANS, PLAN_ORDER, PRICE_KINDS, BILLING_PERIODS, isPlanId, planAllows,
   lookupKeyFor, planForLookupKey, amountFor, definedPrices, formatAmount,
   sellablePlans, contactOnlyPlans, fromPriceLabel, FOUNDING_OFFER_CLOSES,
+  LAUNCH_OFFER_CLOSES, LAUNCH_PRICE_MONTHS, hasPrices,
 } from './plans'
 import { TRIAL_DAYS, TRIAL_PLAN } from '@/lib/trial'
 
@@ -29,7 +30,8 @@ describe('the plan shapes Paul set on 2026-08-19', () => {
     const { orgLimit: teamLimit,  ...teamRest  } = PLANS.team.capabilities
     expect(teamRest).toEqual(applyRest)
     expect(applyLimit).toBe(1)
-    expect(teamLimit).toBe(3)
+    // Five people or five organisation profiles, Paul, 5 September.
+    expect(teamLimit).toBe(5)
   })
 
   it('gives every plan search, bookmarks and alerts', () => {
@@ -63,74 +65,67 @@ describe('the trial, which must agree with src/lib/trial.ts', () => {
   })
 })
 
-describe('the prices Paul set on 2026-08-29', () => {
+describe('the prices Paul set on 2026-09-05', () => {
   // Written out longhand and checked one by one. These are the figures that
   // get charged; a clever derivation here would hide a typo behind a formula.
-  it('carries the public monthly prices', () => {
-    expect(amountFor('match', 'standard', 'monthly')).toBe(1500)
-    expect(amountFor('apply', 'standard', 'monthly')).toBe(2500)
-    expect(amountFor('team',  'standard', 'monthly')).toBe(4500)
+  const PRICED = ['match', 'apply'] as const
+
+  it('carries the list prices, monthly and annual', () => {
+    expect(amountFor('match', 'standard', 'monthly')).toBe(1900)
+    expect(amountFor('apply', 'standard', 'monthly')).toBe(3500)
+    expect(amountFor('match', 'standard', 'annual')).toBe(19000)
+    expect(amountFor('apply', 'standard', 'annual')).toBe(35000)
   })
 
-  it('carries the public annual prices', () => {
-    expect(amountFor('match', 'standard', 'annual')).toBe(15000)
-    expect(amountFor('apply', 'standard', 'annual')).toBe(25000)
-    expect(amountFor('team',  'standard', 'annual')).toBe(45000)
+  it('carries the launch prices, monthly and annual', () => {
+    // The figures the launch email of 10 September promised in writing.
+    expect(amountFor('match', 'launch', 'monthly')).toBe(1500)
+    expect(amountFor('apply', 'launch', 'monthly')).toBe(2500)
+    expect(amountFor('match', 'launch', 'annual')).toBe(15000)
+    expect(amountFor('apply', 'launch', 'annual')).toBe(25000)
   })
 
-  it('carries the founding monthly prices', () => {
+  it('keeps the founding prices as promised on 2026-08-29', () => {
+    // Unchanged until Paul decides the cohort rate. Not self-serve any more.
     expect(amountFor('match', 'founding', 'monthly')).toBe(1200)
     expect(amountFor('apply', 'founding', 'monthly')).toBe(2000)
-    expect(amountFor('team',  'founding', 'monthly')).toBe(3600)
-  })
-
-  it('carries the founding annual prices', () => {
-    // Confirmed 2026-08-29, after being left unset rather than inferred: a
-    // Stripe price cannot be edited once created and somebody may hold a
-    // founding price permanently.
     expect(amountFor('match', 'founding', 'annual')).toBe(12000)
     expect(amountFor('apply', 'founding', 'annual')).toBe(20000)
-    expect(amountFor('team',  'founding', 'annual')).toBe(36000)
   })
 
-  it('discounts founding by the same proportion in both intervals', () => {
-    // The founding rate is a standing promise, so a cohort member should not
-    // be quietly better off monthly than annually or the reverse.
-    for (const plan of PLAN_ORDER) {
-      const monthlyRatio = amountFor(plan, 'founding', 'monthly') / amountFor(plan, 'standard', 'monthly')
-      const annualRatio  = amountFor(plan, 'founding', 'annual')  / amountFor(plan, 'standard', 'annual')
-      expect(annualRatio).toBeCloseTo(monthlyRatio, 10)
+  it('gives Team no price at all', () => {
+    // Paul, 5 September: no figure shown, every enquiry is a conversation.
+    expect(hasPrices('team')).toBe(false)
+    for (const kind of PRICE_KINDS) for (const period of BILLING_PERIODS) {
+      expect(amountFor('team', kind, period)).toBeNull()
     }
   })
 
-  it('prices a year at ten months in every plan and both kinds', () => {
-    // Two months free is the offer. Asserted because it is the shape Paul
-    // confirmed, and a typo in one annual figure is otherwise invisible.
-    for (const plan of PLAN_ORDER) {
-      for (const kind of PRICE_KINDS) {
-        expect(amountFor(plan, kind, 'annual')).toBe(amountFor(plan, kind, 'monthly') * 10)
-      }
+  it('prices a year at ten months in every priced plan and every kind', () => {
+    // Two months free is the offer. A typo in one annual figure is otherwise invisible.
+    for (const plan of PRICED) for (const kind of PRICE_KINDS) {
+      expect(amountFor(plan, kind, 'annual')).toBe(amountFor(plan, kind, 'monthly')! * 10)
     }
   })
 
-  it('never prices founding above standard, in either interval', () => {
-    // A founding rate that costs more than the public price is not a discount,
-    // it is a bug that charges loyal customers extra.
-    for (const plan of PLAN_ORDER) {
-      for (const period of BILLING_PERIODS) {
-        expect(amountFor(plan, 'founding', period)).toBeLessThan(amountFor(plan, 'standard', period))
-      }
+  it('never prices launch or founding above standard', () => {
+    for (const plan of PRICED) for (const period of BILLING_PERIODS) {
+      expect(amountFor(plan, 'launch', period)!).toBeLessThan(amountFor(plan, 'standard', period)!)
+      expect(amountFor(plan, 'founding', period)!).toBeLessThan(amountFor(plan, 'standard', period)!)
     }
   })
 
-  it('prices the plans in the order it presents them', () => {
-    const monthly = PLAN_ORDER.map(p => amountFor(p, 'standard', 'monthly'))
+  it('prices the priced plans in the order it presents them', () => {
+    const monthly = PRICED.map(p => amountFor(p, 'standard', 'monthly')!)
     expect([...monthly].sort((a, b) => a - b)).toEqual(monthly)
   })
 
-  it('closes the founding offer at the end of October 2026', () => {
-    expect(new Date(FOUNDING_OFFER_CLOSES).getUTCMonth()).toBe(9)
-    expect(new Date(FOUNDING_OFFER_CLOSES).getUTCFullYear()).toBe(2026)
+  it('closes both public offers at the end of October 2026, and holds launch for twelve months', () => {
+    for (const closes of [FOUNDING_OFFER_CLOSES, LAUNCH_OFFER_CLOSES]) {
+      expect(new Date(closes).getUTCMonth()).toBe(9)
+      expect(new Date(closes).getUTCFullYear()).toBe(2026)
+    }
+    expect(LAUNCH_PRICE_MONTHS).toBe(12)
   })
 })
 
@@ -162,13 +157,13 @@ describe('lookup keys — the repo owns the name, Stripe owns the id', () => {
 })
 
 describe('definedPrices — what the sync script will create', () => {
-  it('lists all twelve prices', () => {
-    // 3 plans x 2 kinds x 2 periods. Was nine until the founding annual prices
-    // were confirmed on 29 August.
+  it('lists the twelve prices of the two priced plans, and nothing for Team', () => {
+    // 2 plans x 3 kinds x 2 periods. Team has no price, so nothing is created
+    // in Stripe for it.
     const prices = definedPrices()
     expect(prices).toHaveLength(12)
-    expect(prices.filter(p => p.kind === 'founding')).toHaveLength(6)
-    expect(prices.some(p => p.kind === 'founding' && p.period === 'annual')).toBe(true)
+    expect(prices.filter(p => p.kind === 'launch')).toHaveLength(4)
+    expect(prices.some(p => p.plan === 'team')).toBe(false)
   })
 
   it('gives every entry a positive amount and its lookup key', () => {
@@ -231,6 +226,14 @@ describe('sellablePlans — can we actually take money', () => {
       lookupKeyFor('apply', 'standard', 'annual'),
     ))).toEqual(['apply'])
   })
+
+  it('sells on the launch keys while the launch price is what the page offers', () => {
+    // The pricing page asks for the kind it is showing. Standard keys alone
+    // do not make a plan sellable at the launch price.
+    const launchKeys = keys(lookupKeyFor('apply', 'launch', 'monthly'), lookupKeyFor('apply', 'launch', 'annual'))
+    expect(sellablePlans(launchKeys, 'launch')).toEqual(['apply'])
+    expect(sellablePlans(launchKeys, 'standard')).toEqual([])
+  })
 })
 
 describe('plans you have to ask about', () => {
@@ -247,8 +250,8 @@ describe('plans you have to ask about', () => {
     for (const plan of contactOnlyPlans()) expect(sellable.has(plan)).toBe(false)
   })
 
-  it('quotes the monthly entry price', () => {
-    expect(fromPriceLabel('team')).toBe('from £45')
+  it('shows no figure for Team', () => {
+    expect(fromPriceLabel('team')).toBe('Get in touch')
   })
 })
 

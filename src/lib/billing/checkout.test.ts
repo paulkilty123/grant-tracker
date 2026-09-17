@@ -20,7 +20,7 @@ describe('what may be bought', () => {
     expect(d.ok).toBe(true)
     if (!d.ok) return
     expect(d.lookupKey).toBe('shoots_apply_standard_monthly')
-    expect(d.amount).toBe(2500)
+    expect(d.amount).toBe(3500)
     expect(d.trialDays).toBe(TRIAL_DAYS)
   })
 
@@ -34,12 +34,6 @@ describe('what may be bought', () => {
     expect(d.message).toContain('arranged with us')
   })
 
-  it('allows Team through a granted checkout', () => {
-    const d = decideCheckout(req({ plan: 'team', channel: 'granted' }), {
-      availableLookupKeys: allKeys, existing: null,
-    })
-    expect(d.ok).toBe(true)
-  })
 
   it('gives Match no trial', () => {
     const d = decideCheckout(req({ plan: 'match' }), { availableLookupKeys: allKeys, existing: null })
@@ -68,6 +62,30 @@ describe('the founding window', () => {
       availableLookupKeys: allKeys, existing: null, now: new Date('2027-03-10T09:00:00Z'),
     })
     expect(d.ok).toBe(true)
+  })
+})
+
+describe('the launch price', () => {
+  it('sells at the launch amount while the offer is open', () => {
+    const d = decideCheckout(req({ kind: 'launch' }), { availableLookupKeys: allKeys, existing: null, now: beforeClose })
+    expect(d.ok).toBe(true)
+    if (!d.ok) return
+    expect(d.lookupKey).toBe('shoots_apply_launch_monthly')
+    expect(d.amount).toBe(2500)
+  })
+
+  it('refuses it self-serve after 31 October, as a closed offer', () => {
+    const d = decideCheckout(req({ kind: 'launch' }), { availableLookupKeys: allKeys, existing: null, now: afterClose })
+    expect(d.ok).toBe(false)
+    if (!d.ok) expect(d.code).toBe('launch_offer_closed')
+  })
+
+  it('refuses a plan with no price as a fault, not as a sale', () => {
+    // Team through a granted channel is allowed in principle but has no price
+    // to sell at, so the honest answer is that nothing is configured.
+    const d = decideCheckout(req({ plan: 'team', channel: 'granted' }), { availableLookupKeys: allKeys, existing: null })
+    expect(d.ok).toBe(false)
+    if (!d.ok) expect(d.code).toBe('price_not_in_stripe')
   })
 })
 
