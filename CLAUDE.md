@@ -39,9 +39,13 @@ Next.js 14 App Router + Supabase + Tailwind CSS, deployed on Vercel via GitHub a
 
   Products and prices are created from config, never in the dashboard — the
   repo is the single source of truth and the Stripe dashboard stays empty.
-  **Not yet applied:** `src/config/plans.ts`, `/pricing` ("from £45") and the
-  Stripe sandbox still carry the 29 August numbers below. The 12-month end to
-  the launch price also still needs building on the billing branch.
+  **Applied on the billing branch 17 Sept 2026 (`money/stripe-foundation`,
+  not yet merged):** `src/config/plans.ts` carries these numbers, the launch
+  price is its own Stripe price held for 12 months by a subscription schedule
+  the webhook attaches (proved in the sandbox by
+  `scripts/stripe-launch-schedule-rehearsal.ts`), Team has no price, and the
+  sandbox catalogue matches. Founding prices are unchanged pending the cohort
+  decision. The live Stripe account is still empty.
 
   Supersedes "Match £15, Apply £25, Team £45 with a permanent founding rate of
   £12/£20/£36" (29 August), which superseded "Match £12, Apply £18", which
