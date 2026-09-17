@@ -84,7 +84,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       ...counts.sectors.map(s => hub(`/grants/sector/${s.slug}`)),
     ]
 
-    return [...statics, ...hubs, ...grants]
+    // Grant URLs are deliberately NOT listed (Paul, 17 Sept 2026). A sitemap
+    // of 660 grant pages is also a one-file list of every fund in the
+    // catalogue with its name in the slug, which is exactly what a competitor
+    // would fetch first. Every live grant page is linked from at least one
+    // hub and from other grants' "more like this" blocks, so a crawler still
+    // reaches all of them by following links; a scraper has to walk the site
+    // the same way, and the records are gated. `grants` is still computed
+    // above because the hub list is derived from the same rows.
+    void grants
+    return [...statics, ...hubs]
   } catch (err) {
     // Serve the static pages rather than an empty document. An empty sitemap is
     // worse than a partial one: it is a positive assertion that there is
