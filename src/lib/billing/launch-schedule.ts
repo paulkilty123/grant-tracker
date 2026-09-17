@@ -20,8 +20,8 @@ import {
 } from '@/config/plans'
 
 export interface LaunchPhasePlan {
-  /** Billing cycles the launch price runs for: 12 monthly, or 1 annual. */
-  launchIterations: number
+  /** How long the launch price runs: twelve months, or one year. Stripe's phase `duration`. */
+  launchDuration: { interval: 'month' | 'year'; interval_count: number }
   /** Lookup key of the price to move to. */
   standardLookupKey: string
   period: BillingPeriod
@@ -38,7 +38,9 @@ export function launchPhasePlanFor(priceLookupKey: string | null | undefined): L
   const resolved = planForLookupKey(priceLookupKey)
   if (!resolved || resolved.kind !== 'launch') return null
   return {
-    launchIterations: resolved.period === 'monthly' ? LAUNCH_PRICE_MONTHS : 1,
+    launchDuration: resolved.period === 'monthly'
+      ? { interval: 'month', interval_count: LAUNCH_PRICE_MONTHS }
+      : { interval: 'year', interval_count: 1 },
     standardLookupKey: lookupKeyFor(resolved.plan, 'standard', resolved.period),
     period: resolved.period,
   }
@@ -48,7 +50,9 @@ export function launchPhasePlanFor(priceLookupKey: string | null | undefined): L
  * The phases to send to Stripe, given the schedule Stripe created from the
  * subscription. The first phase keeps everything Stripe already put there
  * (start date, trial, the launch price) and gains an iteration count; the
- * second is the standard price with no end.
+ * second is the standard price with no end. Stripe's API (2026-07-29) takes a
+ * `duration` per phase; the older `iterations` is refused, which the sandbox
+ * rehearsal found on the first run.
  */
 export function schedulePhases(
   existingFirstPhase: { start_date: number; items: { price: string; quantity?: number | null }[]; trial_end?: number | null },
@@ -58,7 +62,7 @@ export function schedulePhases(
   const first: Record<string, unknown> = {
     start_date: existingFirstPhase.start_date,
     items: existingFirstPhase.items.map(i => ({ price: i.price, quantity: i.quantity ?? 1 })),
-    iterations: plan.launchIterations,
+    duration: plan.launchDuration,
   }
   if (existingFirstPhase.trial_end) first.trial_end = existingFirstPhase.trial_end
   return [

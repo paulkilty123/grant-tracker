@@ -4,13 +4,13 @@ import { launchPhasePlanFor, schedulePhases } from './launch-schedule'
 describe('launchPhasePlanFor', () => {
   it('plans twelve monthly cycles on the launch price, then standard', () => {
     expect(launchPhasePlanFor('shoots_apply_launch_monthly')).toEqual({
-      launchIterations: 12, standardLookupKey: 'shoots_apply_standard_monthly', period: 'monthly',
+      launchDuration: { interval: 'month', interval_count: 12 }, standardLookupKey: 'shoots_apply_standard_monthly', period: 'monthly',
     })
   })
 
   it('plans one annual cycle, then standard annual', () => {
     expect(launchPhasePlanFor('shoots_match_launch_annual')).toEqual({
-      launchIterations: 1, standardLookupKey: 'shoots_match_standard_annual', period: 'annual',
+      launchDuration: { interval: 'year', interval_count: 1 }, standardLookupKey: 'shoots_match_standard_annual', period: 'annual',
     })
   })
 
@@ -31,7 +31,7 @@ describe('schedulePhases', () => {
       plan, 'price_standard',
     )
     expect(phases).toEqual([
-      { start_date: 1_760_000_000, items: [{ price: 'price_launch', quantity: 1 }], iterations: 12, trial_end: 1_761_209_600 },
+      { start_date: 1_760_000_000, items: [{ price: 'price_launch', quantity: 1 }], duration: { interval: 'month', interval_count: 12 }, trial_end: 1_761_209_600 },
       { items: [{ price: 'price_standard', quantity: 1 }] },
     ])
   })
