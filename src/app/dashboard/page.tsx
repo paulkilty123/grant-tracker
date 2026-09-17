@@ -1,14 +1,15 @@
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import MatchesCard, { type MatchScope, type MatchRow, type TypeKey, type ScopeKey } from './MatchesCard'
 import { CARD_LINK } from './card-link'
 import { hueForIndex, hueMap } from '@/lib/project-hues'
 import { FUNDING_TYPE_COLOUR } from '@/lib/funding-type-colours'
 import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
-import { getDeadlineAlerts, formatCurrency, formatNextOpen } from '@/lib/utils'
+import { getDeadlineAlerts, formatCurrency, formatRange, formatNextOpen } from '@/lib/utils'
 import type { PipelineItem, Organisation } from '@/types'
 import { Award, TrendingUp, Users, Rocket, GraduationCap, Gift, ArrowRight, CalendarDays, Check, Sparkles, Bookmark, ListChecks, UserPlus, FilePenLine, Lightbulb, CircleCheck } from 'lucide-react'
-import { computeMatchScore, MATCH_TIER, MATCH_FLOOR, MATCH_TIER_STRONG, MATCH_TIER_GOOD } from '@/lib/matching'
+import { computeMatchScore, grantMatchesLocationText, MATCH_TIER, MATCH_FLOOR, MATCH_TIER_STRONG, MATCH_TIER_GOOD } from '@/lib/matching'
 import { normaliseScrapedGrant } from '@/lib/grants-normalise'
 import { getBuilderUser } from '@/lib/builder/access'
 import { agentEnabledForOrg } from '@/lib/agent/orchestrator/config'
@@ -92,6 +93,19 @@ export default async function DashboardPage() {
     savedCount = count ?? 0
   }
 
+  // Grants the org has hidden on Find Funding stay hidden here too. Without
+  // this, a dismissed grant could still top the Matches card and the
+  // deadlines widget, because both read the scored list below.
+  const hiddenIds = new Set<string>()
+  if (typedOrg) {
+    const { data: hiddenRows } = await supabase
+      .from('grant_interactions')
+      .select('grant_id')
+      .eq('org_id', typedOrg.id)
+      .eq('action', 'dismissed')
+    for (const r of hiddenRows ?? []) if (r.grant_id) hiddenIds.add(String(r.grant_id))
+  }
+
   // ── Matched Opportunities — definition aligned with Find Funding's
   // crossTabCounts (src/app/dashboard/search/page.tsx:2108). A "match" is
   // a pure FILTER, not a scored result. Same row that surfaces in Find
@@ -114,7 +128,6 @@ export default async function DashboardPage() {
   const today = new Date().toISOString().split('T')[0]
   type ScoredGrant = { grant: ReturnType<typeof normaliseScrapedGrant>; score: number; lastSeenAt: string | null }
   // UK-wide / nation-wide scopes always pass the location check.
-  const BROAD_LOCATION = new Set(['uk', 'uk-wide', 'england', 'nationwide', 'national', 'uk wide', 'all uk'])
   let scoredAll: ScoredGrant[] = []
   let grantPoolRaw: Record<string, unknown>[] = []  // reused for per-project "funders fit"
   if (typedOrg) {
@@ -140,6 +153,7 @@ export default async function DashboardPage() {
 
       scoredAll = grantRows
         .map(row => {
+          if (hiddenIds.has(String((row as Record<string, unknown>).id ?? ''))) return null
           const g = normaliseScrapedGrant(row as Record<string, unknown>)
           const ge = g as ReturnType<typeof normaliseScrapedGrant> & { impactSectors?: string[]; geoScope?: string[] }
           const ft = (g.fundingType ?? 'grant') as string
@@ -154,15 +168,12 @@ export default async function DashboardPage() {
             if (!ge.impactSectors.some((s: string) => orgSectors.has(s))) return null
           }
 
-          // Location — only fires when both sides have location set; broad
-          // scopes (UK-wide etc.) always pass
-          if (orgLocation && ge.geoScope && ge.geoScope.length > 0) {
-            const passes = ge.geoScope.some((s: string) => {
-              const sl = s.toLowerCase()
-              return BROAD_LOCATION.has(sl) || sl.includes(orgLocation) || orgLocation.includes(sl)
-            })
-            if (!passes) return null
-          }
+          // Location: the SAME test Find Funding applies when the profile is
+          // on (grantMatchesLocationText on location_tag). Until 2026-09-04
+          // this gate read geoScope through a broad allow-list, which let 421
+          // rows through for a Leeds org where Find Funding showed 183, so
+          // the two screens disagreed on every count. One gate, one number.
+          if (orgLocation && !grantMatchesLocationText(g.locationTag, typedOrg.primary_location ?? '')) return null
 
           // Score within the matched set (used for top-4 + quality buckets)
           const result = computeMatchScore(g, typedOrg)
@@ -177,6 +188,29 @@ export default async function DashboardPage() {
     }
   }
   const totalMatchCount = scoredAll.length
+
+  // "YOU CAN APPLY FOR" IS ONE NUMBER ON BOTH SCREENS.
+  //
+  // Paul, 2026-09-04, from the demo: the dashboard said "67 you can apply
+  // for" and Find Funding, one click later, said "148 grants you can apply
+  // for". The dashboard's 67 was a SCORE threshold (50+) over rows that had
+  // already passed sector and location gates; Find Funding's 148 was the
+  // structure gate alone over every open row. Same phrase, two definitions.
+  //
+  // The phrase now means what Find Funding's tab badges mean with the profile
+  // on (search/page.tsx crossTabCounts): an open row of a canonical type, not
+  // hidden, that passes the structure gate, the sector overlap and the
+  // location text test. That is exactly scoredAll, now that the location gate
+  // above is the same function, so the headline is scoredAll counted per
+  // type and the quality tiers keep their own words below it. Predicted for
+  // Bramble Arts Collective (Leeds) before deploy: grants 146, programmes 5,
+  // against 148 and 5 on Paul's recording, the gap being that day's catalogue
+  // changes.
+  const eligibleCounts: Record<string, number> = { all: scoredAll.length, grant: 0, programme: 0, investment: 0, in_kind: 0 }
+  for (const m of scoredAll) {
+    const ft = (m.grant.fundingType ?? 'grant') as string
+    eligibleCounts[ft] = (eligibleCounts[ft] ?? 0) + 1
+  }
 
   // ── "Your work" band (cohort/builder only) — in-progress applications +
   // projects. Fully gated: non-builder users get the byte-identical dashboard.
@@ -261,9 +295,7 @@ export default async function DashboardPage() {
             if (!CANONICAL_TYPES.has((g.fundingType ?? 'grant') as string)) continue
             const es = g.eligibleStructures
             if (orgStructure && es && es.length > 0 && !es.includes(orgStructure)) continue
-            if (orgLoc && ge.geoScope && ge.geoScope.length > 0) {
-              if (!ge.geoScope.some(s => { const sl = s.toLowerCase(); return BROAD_LOCATION.has(sl) || sl.includes(orgLoc) || orgLoc.includes(sl) })) continue
-            }
+            if (orgLoc && !grantMatchesLocationText(g.locationTag, typedOrg.primary_location ?? '')) continue
             if (projectSectors.size > 0 && ge.impactSectors && ge.impactSectors.length > 0) {
               if (!ge.impactSectors.some(s => projectSectors.has(s))) continue
             }
@@ -328,11 +360,9 @@ export default async function DashboardPage() {
   const picked  = seededShuffle(topPool, seed).slice(0, 3)
   const matchedGrants = picked.map(p => {
     const g = p.grant
-    const amountStr = g.amountMin || g.amountMax
-      ? (g.amountMin && g.amountMax && g.amountMin !== g.amountMax
-          ? `${formatCurrency(g.amountMin)} – ${formatCurrency(g.amountMax)}`
-          : formatCurrency(g.amountMax || g.amountMin || 0))
-      : 'Amount on application'
+    // formatRange, not an inline branch: an in-kind offer has no cash award
+    // and reads "In-kind", never "Amount on application" (see lib/utils).
+    const amountStr = formatRange(g.amountMin ?? null, g.amountMax ?? null, g.amountUndisclosed, g.fundingType)
     return {
       id: g.id,
       title: g.title,
@@ -985,6 +1015,57 @@ export default async function DashboardPage() {
   })()
 
 
+  /**
+   * The first-project pitch. Rendered ABOVE the pipeline for an org with an
+   * empty board (the board would be four empty boxes) and BELOW it for an
+   * org with cards on it, whose live work comes first. Paul, 2026-09-03.
+   */
+  const firstProjectCard = builderAllowed && !hasWork ? (
+        <div className="card rounded-xl mb-8" style={{ padding: 28, display: 'grid', gridTemplateColumns: 'minmax(0,1.4fr) minmax(0,1fr)', gap: 28, alignItems: 'center' }}>
+          <div>
+            <div style={{ width: 46, height: 46, borderRadius: 999, background: '#E3F0E4', color: '#1B6B3D', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+              <Lightbulb size={23} />
+            </div>
+            <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 22, fontWeight: 600, color: '#1D3C3E', letterSpacing: '-0.02em', marginBottom: 8 }}>Start your first project</div>
+            <p className="text-mid" style={{ fontSize: 14.5, lineHeight: 1.6, marginBottom: 20, maxWidth: 420 }}>
+              Describe what you need funded once. We&apos;ll match it against the{' '}
+              <span style={{ color: '#2C2C2A', fontWeight: 500 }}>{totalMatchCount} funders that already fit your organisation</span>,
+              then help you build a tailored application for each one you choose.
+            </p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap' }}>
+              <a href="/dashboard/projects/new" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#1D3C3E', color: '#F6F1E7', fontFamily: 'var(--font-space-grotesk)', fontSize: 14.5, fontWeight: 600, padding: '12px 22px', borderRadius: 999, textDecoration: 'none' }}>
+                <Lightbulb size={16} /> Describe a project
+              </a>
+              <a href="/dashboard/applications/new" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 14, fontWeight: 600, color: '#1D3C3E', borderBottom: '1.5px solid rgba(29,60,62,0.24)', paddingBottom: 1, textDecoration: 'none' }}>
+                Know which funder to apply to? Start a direct application →
+              </a>
+            </div>
+          </div>
+          {/* Deep circles with a cream numeral rather than the four homepage
+              accents used on Projects and Connect. Those carry a size floor —
+              the numeral has to be 19px bold on a 44px circle to clear 3:1 on
+              terracotta — and this list is a compact aside inside a band, with
+              no room for it. Deep on cream passes at any size, so the compact
+              shape stays honest instead of shrinking a treatment that would
+              then fail. */}
+          <div style={{ background: '#FAF9F5', border: '1px solid rgba(29,60,62,0.10)', borderRadius: 16, padding: 22 }}>
+            {[
+              { t: 'Describe it once', b: 'A few sentences or paste an old plan.' },
+              { t: 'See who fits', b: 'We rank funders against your project.' },
+              { t: 'Apply to each', b: 'Build a tailored application per funder.' },
+            ].map((s, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: i < 2 ? 16 : 0 }}>
+                <span style={{ width: 26, height: 26, borderRadius: 999, background: '#1D3C3E', color: '#F6F1E7', fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</span>
+                <div>
+                  <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: '#1D3C3E' }}>{s.t}</div>
+                  <div className="text-mid" style={{ fontSize: 12 }}>{s.b}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+  ) : null
+
   return (
     <div>
       {/* Greeting */}
@@ -1015,7 +1096,19 @@ export default async function DashboardPage() {
           mapping per CLAUDE.md palette: lime grants, gold in-kind, coral
           programmes, blue investment.
           ──────────────────────────────────────────────────────────────────── */}
-      {totalMatchCount > 0 && (() => {
+      {/* Browsing without a profile (migration 080): no matches card, one
+          nudge in its place. Nothing here is a match, so nothing is scored. */}
+      {typedOrg?.profile_skipped && (
+        <div className="rounded-xl p-5 mb-6" style={{ background: '#F5F1E8', border: '1px solid rgba(29,60,62,0.12)' }}>
+          <p className="text-sm font-semibold" style={{ color: '#173404', fontFamily: 'var(--font-space-grotesk)' }}>You are browsing without a profile</p>
+          <p className="text-sm text-mid mt-1">Search and save anything you find. Add an organisation profile to get matches and the weekly update, or get in touch about Team for client profiles.</p>
+          <div className="mt-3 flex gap-3">
+            <Link href="/dashboard/search" className="text-sm font-semibold underline" style={{ color: '#173404' }}>Find Funding</Link>
+            <Link href="/onboarding/wizard" className="text-sm font-semibold underline" style={{ color: '#173404' }}>Set up a profile</Link>
+          </div>
+        </div>
+      )}
+      {!typedOrg?.profile_skipped && totalMatchCount > 0 && (() => {
         // Three-bucket breakdown of the actionable subset (Worth your attention).
         // "Worth exploring" is the renamed Partial — same 50–69 score band,
         // friendlier label that frames it as a deliberate choice rather than a
@@ -1041,11 +1134,7 @@ export default async function DashboardPage() {
         const TYPE_KEYS = ['grant', 'programme', 'investment', 'in_kind'] as const
 
         const shapeRow = (m: typeof scoredAll[number]): MatchRow => {
-          const amt = m.grant.amountMin || m.grant.amountMax
-            ? (m.grant.amountMin && m.grant.amountMax && m.grant.amountMin !== m.grant.amountMax
-                ? `${formatCurrency(m.grant.amountMin)}–${formatCurrency(m.grant.amountMax)}`
-                : formatCurrency(m.grant.amountMax || m.grant.amountMin || 0))
-            : 'Amount on application'
+          const amt = formatRange(m.grant.amountMin ?? null, m.grant.amountMax ?? null, m.grant.amountUndisclosed, m.grant.fundingType)
 
           let deadlineLabel: string | null = null
           let deadlineTone: 'urgent' | 'plain' | 'quiet' | null = null
@@ -1083,9 +1172,10 @@ export default async function DashboardPage() {
 
         const emptyTiers = { strong: 0, good: 0, partial: 0, weak: 0 }
         const matchScopes: MatchScope[] = [
-          { key: 'all' as ScopeKey, actionable: actionableCount, tiers: qualityCounts, top: scoredAll.slice(0, 3).map(shapeRow) },
+          { key: 'all' as ScopeKey, eligible: eligibleCounts.all, actionable: actionableCount, tiers: qualityCounts, top: scoredAll.slice(0, 3).map(shapeRow) },
           ...TYPE_KEYS.map(k => ({
             key: k as ScopeKey,
+            eligible: eligibleCounts[k] ?? 0,
             actionable: typeCounts[k] ?? 0,
             tiers: tiersByType[k] ?? emptyTiers,
             top: scoredAll.filter(m => (m.grant.fundingType ?? 'grant') === k).slice(0, 3).map(shapeRow),
@@ -1217,51 +1307,7 @@ export default async function DashboardPage() {
 
       {/* ── Your work band (cohort/builder only): resume in-flight work before
           scanning new matches. Empty state steers to the project route. ── */}
-      {builderAllowed && !hasWork && (
-        <div className="card rounded-xl mb-8" style={{ padding: 28, display: 'grid', gridTemplateColumns: 'minmax(0,1.4fr) minmax(0,1fr)', gap: 28, alignItems: 'center' }}>
-          <div>
-            <div style={{ width: 46, height: 46, borderRadius: 999, background: '#E3F0E4', color: '#1B6B3D', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
-              <Lightbulb size={23} />
-            </div>
-            <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 22, fontWeight: 600, color: '#1D3C3E', letterSpacing: '-0.02em', marginBottom: 8 }}>Start your first project</div>
-            <p className="text-mid" style={{ fontSize: 14.5, lineHeight: 1.6, marginBottom: 20, maxWidth: 420 }}>
-              Describe what you need funded once. We&apos;ll match it against the{' '}
-              <span style={{ color: '#2C2C2A', fontWeight: 500 }}>{totalMatchCount} funders that already fit your organisation</span>,
-              then help you build a tailored application for each one you choose.
-            </p>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap' }}>
-              <a href="/dashboard/projects/new" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#1D3C3E', color: '#F6F1E7', fontFamily: 'var(--font-space-grotesk)', fontSize: 14.5, fontWeight: 600, padding: '12px 22px', borderRadius: 999, textDecoration: 'none' }}>
-                <Lightbulb size={16} /> Describe a project
-              </a>
-              <a href="/dashboard/applications/new" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 14, fontWeight: 600, color: '#1D3C3E', borderBottom: '1.5px solid rgba(29,60,62,0.24)', paddingBottom: 1, textDecoration: 'none' }}>
-                Know which funder to apply to? Start a direct application →
-              </a>
-            </div>
-          </div>
-          {/* Deep circles with a cream numeral rather than the four homepage
-              accents used on Projects and Connect. Those carry a size floor —
-              the numeral has to be 19px bold on a 44px circle to clear 3:1 on
-              terracotta — and this list is a compact aside inside a band, with
-              no room for it. Deep on cream passes at any size, so the compact
-              shape stays honest instead of shrinking a treatment that would
-              then fail. */}
-          <div style={{ background: '#FAF9F5', border: '1px solid rgba(29,60,62,0.10)', borderRadius: 16, padding: 22 }}>
-            {[
-              { t: 'Describe it once', b: 'A few sentences or paste an old plan.' },
-              { t: 'See who fits', b: 'We rank funders against your project.' },
-              { t: 'Apply to each', b: 'Build a tailored application per funder.' },
-            ].map((s, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: i < 2 ? 16 : 0 }}>
-                <span style={{ width: 26, height: 26, borderRadius: 999, background: '#1D3C3E', color: '#F6F1E7', fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</span>
-                <div>
-                  <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: '#1D3C3E' }}>{s.t}</div>
-                  <div className="text-mid" style={{ fontSize: 12 }}>{s.b}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {items.length === 0 && firstProjectCard}
 
       {/* Row 2. Pipeline sits in the right column under projects rather than in
           a full-width row of its own.
@@ -1416,7 +1462,10 @@ export default async function DashboardPage() {
         </div>
       ) : (
         /* No builder work to show, so pipeline keeps the full-width row it had. */
-        <div className="mb-8">{pipelineCard}</div>
+        <>
+          <div className="mb-8">{pipelineCard}</div>
+          {items.length > 0 && firstProjectCard}
+        </>
       )}
 
 

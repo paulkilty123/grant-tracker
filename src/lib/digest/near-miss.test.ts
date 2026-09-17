@@ -1,0 +1,161 @@
+import { describe, it, expect } from 'vitest'
+import { findNearMiss, nearMissMeta } from './near-miss'
+import type { Organisation, GrantOpportunity } from '@/types'
+
+const acc = {
+  name: 'Asian Community Concern',
+  legal_structure: 'cic_guarantee',
+  annual_income_band: '£100,000–£250,000',
+  min_grant_target: 5000,
+  max_grant_target: 250000,
+  primary_location: 'Ealing, London',
+} as unknown as Organisation
+
+const grant = (o: Partial<GrantOpportunity> & Record<string, unknown> = {}): GrantOpportunity => ({
+  id: 'g', title: 'A fund', funder: 'A funder', funderType: 'trust_foundation',
+  description: '', amountMin: 0, amountMax: 0, deadline: null, isRolling: false,
+  isLocal: false, locationTag: null, sectors: [], eligibilityCriteria: [],
+  applyUrl: null, isInviteOnly: false, nextOpenDate: null, fundingType: 'grant',
+  source: 'scraped', ...o,
+} as unknown as GrantOpportunity)
+
+const run = (g: GrantOpportunity, otherwiseFits = true) =>
+  findNearMiss({ grant: g, org: acc, readOn: '25 June', otherwiseFits })
+
+describe('structure adjacency', () => {
+  it('is NOT a near miss when the funder takes companies limited by guarantee', () => {
+    // A CIC limited by guarantee IS one, so eligibility.ts matches it outright
+    // and there is nothing near about it. Network for Social Change was
+    // generating this row for a funder whose own text welcomes CICs.
+    expect(run(grant({ eligibleStructures: ['registered_charity', 'cio', 'ltd_guarantee', 'unincorporated'] }))).toBeNull()
+    expect(run(grant({ eligibleStructures: ['ltd_guarantee'] }))).toBeNull()
+  })
+
+  it('is near in the other direction, because containment runs one way', () => {
+    const ltd = { ...acc, legal_structure: 'ltd_guarantee' } as typeof acc
+    const n = findNearMiss({
+      grant: grant({ eligibleStructures: ['cic_guarantee'] }),
+      org: ltd, readOn: '25 June', otherwiseFits: true,
+    })
+    expect(n?.dimension).toBe('structure')
+    expect(n?.rule).toBe('They fund CICs limited by guarantee. You are a company limited by guarantee, which is one step away.')
+  })
+
+  it('is NOT near when no allowed structure is adjacent', () => {
+    expect(run(grant({ eligibleStructures: ['llp', 'sole_trader'] }))).toBeNull()
+  })
+
+  it('is not a near miss at all when the org already qualifies', () => {
+    expect(run(grant({ eligibleStructures: ['cic_guarantee', 'cio'] }))).toBeNull()
+  })
+
+  it('never treats an individual-only fund as adjacent to an organisation', () => {
+    // An organisation cannot become a person. Nothing to check, nothing to
+    // hand back.
+    expect(run(grant({ eligibleStructures: ['individual'] }))).toBeNull()
+    expect(run(grant({ eligibleStructures: ['sole_trader'] }))).toBeNull()
+  })
+})
+
+describe('amount', () => {
+  it('is near when the funder gives a bit less than the org needs', () => {
+    // Trading for Good, verified in production: £1k–£4k against a £5k floor.
+    const n = run(grant({
+      eligibleStructures: ['cic_guarantee'], amountMin: 1000, amountMax: 4000,
+    }))
+    expect(n?.dimension).toBe('amount')
+    expect(n?.rule).toBe('They give up to £4,000. You told us you are looking for £5,000 or more.')
+    expect(n?.condition).toContain('Everything else fits')
+  })
+
+  it('is NOT near when the funder gives far less', () => {
+    // £500 against a £5,000 floor is not a smaller grant, it is a different
+    // kind of thing.
+    expect(run(grant({ eligibleStructures: ['cic_guarantee'], amountMax: 500 }))).toBeNull()
+  })
+
+  it('drops the "everything else fits" claim when something else also blocks', () => {
+    const n = run(grant({ eligibleStructures: ['cic_guarantee'], amountMax: 4000 }), false)
+    expect(n?.condition).not.toContain('Everything else fits')
+  })
+})
+
+describe('area is switched off, and stays off', () => {
+  it('never produces a near miss for a fund in another nation', () => {
+    // The row this whole rule exists to stop: a Scotland-only fund offered to
+    // an organisation in Ealing. Correctly ruled out, and useless — no amount
+    // of checking makes Ealing be in Scotland.
+    for (const tag of ['Scotland', 'Northern Ireland', 'Wales', 'Hackney']) {
+      const n = run(grant({ eligibleStructures: ['cic_guarantee'], locationTag: tag, isLocal: true }))
+      expect(n?.dimension).not.toBe('area')
+      if (n) expect(n.rule.toLowerCase()).not.toContain(tag.toLowerCase())
+    }
+  })
+})
+
+describe('meta line', () => {
+  it('reads funder · range · place', () => {
+    expect(nearMissMeta(grant({ funder: 'Trading for Good', amountMin: 1000, amountMax: 4000 }), 'England'))
+      .toBe('Trading for Good · £1k – £4k · England')
+  })
+  it('drops "Global", which is a scope and not a place', () => {
+    expect(nearMissMeta(grant({ funder: 'Network for Social Change', amountMin: 25000, amountMax: 100000 }), 'Global'))
+      .toBe('Network for Social Change · £25k – £100k')
+  })
+})
+
+describe('structure containment matches the matcher', () => {
+  const cio = { ...acc, name: 'Tinderbox Collective', legal_structure: 'cio' } as unknown as Organisation
+  it('a CIO is a registered charity: a fund listing registered charities is not a structure near miss', () => {
+    // Fairer Life Chances, 7 Sept 2026: the matcher scored a CIO eligible and
+    // the digest said "ruled out on legal structure". The two must agree.
+    const r = findNearMiss({
+      grant: grant({ eligibleStructures: ['unincorporated', 'registered_charity', 'scio'] }),
+      org: cio, readOn: '7 September', otherwiseFits: true,
+    })
+    expect(r?.dimension).not.toBe('structure')
+  })
+  it('a CIO against a SCIO-only fund is not a structure near miss either: the matcher treats both as charities', () => {
+    const r = findNearMiss({
+      grant: grant({ eligibleStructures: ['scio'] }),
+      org: cio, readOn: '7 September', otherwiseFits: true,
+    })
+    expect(r?.dimension).not.toBe('structure')
+  })
+  it('a CIO against an unincorporated-only fund is NOT near: a CIO does not un-incorporate, and such a list usually means no charities', () => {
+    const r = findNearMiss({
+      grant: grant({ eligibleStructures: ['unincorporated', 'cic_guarantee', 'ltd_guarantee'] }),
+      org: cio, readOn: '7 September', otherwiseFits: true,
+    })
+    expect(r?.dimension).not.toBe('structure')
+  })
+  it('an unincorporated group against a CIO-only fund is one step away, and carries no provenance line', () => {
+    const r = findNearMiss({
+      grant: grant({ eligibleStructures: ['cio'] }),
+      org: { ...cio, legal_structure: 'unincorporated' } as typeof cio, readOn: '7 September', otherwiseFits: true,
+    })
+    expect(r?.dimension).toBe('structure')
+    expect(r?.rule).toContain('one step away')
+    expect(r?.condition).toBe('')
+  })
+})
+
+describe('income near miss uses the band edges', () => {
+  const grant = (over: Partial<Record<string, unknown>>) => ({
+    id: 'g', title: 'G', funder: 'F', funderType: 'trust_foundation', description: '', amountMin: 1000, amountMax: 15000,
+    deadline: null, isRolling: true, isLocal: false, locationTag: 'UK', sectors: [], eligibilityCriteria: [], eligibleStructures: ['registered_charity'],
+    ...over,
+  }) as unknown as Parameters<typeof findNearMiss>[0]['grant']
+  const org = { legal_structure: 'registered_charity', annual_income_band: '£1 million–£5 million', min_grant_target: null, max_grant_target: null } as unknown as Parameters<typeof findNearMiss>[0]['org']
+  it('a cap inside the band is not a near miss', () => {
+    const r = findNearMiss({ grant: grant({ maxOrgIncome: 2_000_000 }), org, readOn: null, otherwiseFits: true })
+    expect(r).toBeNull()
+  })
+  it('a cap just below the band still is', () => {
+    const r = findNearMiss({ grant: grant({ maxOrgIncome: 900_000 }), org: { ...org, annual_income_band: '£1 million–£5 million' } as typeof org, readOn: null, otherwiseFits: true })
+    // midpoint 2.5m is more than twice a 900k cap, so not near either
+    expect(r).toBeNull()
+    const r2 = findNearMiss({ grant: grant({ maxOrgIncome: 400_000 }), org: { ...org, annual_income_band: '£500,000–£1 million' } as typeof org, readOn: null, otherwiseFits: true })
+    expect(r2?.dimension).toBe('income')
+  })
+})

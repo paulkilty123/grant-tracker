@@ -17,6 +17,36 @@ function stripHtml(html: string): string {
     .trim()
 }
 
+const ABOUT_PATH = /(about|who-we-are|what-we-do|our-work|our-story|mission|services|what_we_do|our-impact)/i
+
+/** Up to three same-host pages whose path looks like an About page, read in parallel. Failures are dropped. */
+async function fetchAboutPages(homeHtml: string, baseUrl: string, headers: Record<string, string>): Promise<string[]> {
+  let base: URL
+  try { base = new URL(baseUrl) } catch { return [] }
+  const seen = new Set<string>()
+  const targets: string[] = []
+  const hrefRe = /href=["']([^"'#?]+)[^"']*["']/gi
+  let m: RegExpExecArray | null
+  while ((m = hrefRe.exec(homeHtml)) !== null) {
+    let u: URL
+    try { u = new URL(m[1], base) } catch { continue }
+    if (u.host !== base.host) continue
+    if (!ABOUT_PATH.test(u.pathname)) continue
+    if (/\.(pdf|jpg|jpeg|png|gif|svg|css|js)$/i.test(u.pathname)) continue
+    const key = u.pathname.replace(/\/$/, '').toLowerCase()
+    if (!key || key === base.pathname.replace(/\/$/, '').toLowerCase() || seen.has(key)) continue
+    seen.add(key)
+    targets.push(u.toString())
+    if (targets.length >= 3) break
+  }
+  const results = await Promise.allSettled(targets.map(async t => {
+    const r = await fetch(t, { headers, signal: AbortSignal.timeout(8000) })
+    if (!r.ok) return ''
+    return stripHtml(await r.text())
+  }))
+  return results.map(r => (r.status === 'fulfilled' ? r.value : '')).filter(t => t.length > 200)
+}
+
 export async function POST(req: NextRequest) {
   try {
     // Auth + per-user rate limit — fetches a URL and calls Anthropic (Haiku).
@@ -49,15 +79,13 @@ export async function POST(req: NextRequest) {
 
     let pageText = ''
     let scannedNumber: string | null = null
+    const HEADERS = {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+      Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      'Accept-Language': 'en-GB,en;q=0.9',
+    }
     try {
-      const pageRes = await fetch(fullUrl, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-          Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-          'Accept-Language': 'en-GB,en;q=0.9',
-        },
-        signal: AbortSignal.timeout(12000),
-      })
+      const pageRes = await fetch(fullUrl, { headers: HEADERS, signal: AbortSignal.timeout(12000) })
       if (pageRes.ok) {
         const html = await pageRes.text()
         const full = stripHtml(html)
@@ -69,17 +97,54 @@ export async function POST(req: NextRequest) {
         // tokens and is more reliable than the model for a string this regular.
         scannedNumber = scanRegistrationNumber(full)
         pageText = full.slice(0, 5000)
+
+        // The homepage is a strapline; the About page is the description.
+        // Paul, 14 Sept 2026: reading only the homepage gave "Fighting hunger
+        // and tackling food waste" for FareShare South West, and every signup
+        // was typing the who, what and where that sat one click away. Follow
+        // up to three internal links that look like an about or what-we-do
+        // page and add their text, capped so the whole read stays small.
+        const followed = await fetchAboutPages(html, fullUrl, HEADERS)
+        for (const t of followed) {
+          if (pageText.length >= 12000) break
+          pageText += `\n\n---\n${t.slice(0, 3500)}`
+          if (!scannedNumber) scannedNumber = scanRegistrationNumber(t)
+        }
+        pageText = pageText.slice(0, 12000)
       }
     } catch {
       // Network error — fall through with empty pageText
     }
 
+    // NO PAGE, NO GUESS. Until 13 Sept 2026 an unreadable site fell through to
+    // a prompt that said "use your knowledge of this organisation based on the
+    // URL/domain", and the model obliged: Our Sansar, a Brighton charity working
+    // with street children in Nepal, was signed up twice that day with two
+    // different invented missions ("South Asian women and girls in the UK",
+    // "South Asian communities in the UK") because its site returns an empty
+    // page to automated readers. The mission is what the matcher and the
+    // profile check read first, so a fluent guess there is worse than a blank.
+    // A site that blocks readers, times out, or answers with nothing usable
+    // now returns only what was actually found, and says so.
+    if (pageText.replace(/\s+/g, ' ').trim().length < 200) {
+      return NextResponse.json({
+        unreadable: true,
+        name: null, orgType: null,
+        charityNumber: scannedNumber && isRecognisedNumber(scannedNumber) ? scannedNumber : null,
+        primaryLocation: null, mission: null, themes: [], areasOfWork: [], beneficiaries: [],
+        annualIncome: null, impactSectors: [], beneficiaryGroups: [],
+        _confidence: {},
+        message: 'We could not read that website, so nothing has been filled in for you. Please write two lines on what you do and who you help.',
+      })
+    }
+
     const prompt = `You are helping a UK grant management tool auto-fill an organisation profile form.
 
-${pageText
-  ? `Website content from ${fullUrl} (truncated):\n"""\n${pageText}\n"""`
-  : `The website at ${fullUrl} could not be fetched (it may block automated access). Use your knowledge of this organisation based on the URL/domain to fill in what you can.`
-}
+Website content from ${fullUrl} (truncated):
+"""
+${pageText}
+"""
+Use ONLY this content. Do not fill any field from the domain name or from anything you believe you know about the organisation; if the content does not say it, the value is null and the confidence 0.0.
 
 Extract information and return ONLY a valid JSON object with these exact keys:
 
@@ -88,7 +153,7 @@ Extract information and return ONLY a valid JSON object with these exact keys:
   "orgType": "one of: registered_charity | cic | social_enterprise | community_group | other",
   "charityNumber": "charity registration number or CIC Companies House number if found, else null",
   "primaryLocation": "main town, city or borough they operate in (e.g. Southall, London Borough of Ealing)",
-  "mission": "1–2 sentence mission statement in the organisation's own words where possible",
+  "mission": "2 to 3 plain sentences describing the organisation, drawn from the pages: who benefits and the problem they face, what the organisation does and what changes as a result, and where it works. Use the organisation's own facts and phrases; leave out any of the three the pages do not state rather than guessing. Not a slogan or a vision statement.",
   "themes": ["high-level topic strings, e.g. mental health, domestic abuse, employment, community development"],
   "areasOfWork": ["specific programme/activity strings, e.g. English language classes, counselling, food bank, CV writing workshops"],
   "beneficiaries": ["specific beneficiary group strings, e.g. BAME women, young people aged 16–25, care leavers, refugees"],

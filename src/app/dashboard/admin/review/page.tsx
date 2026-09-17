@@ -19,6 +19,7 @@ import {
 } from '@/lib/admin/review-reasons'
 import { gateDecision } from '@/lib/admin/publish-gate'
 import { amountSuggestionFrom } from '@/lib/grant-flags'
+import { countLaunchInvariants, cachedReachability } from '@/lib/admin/launch-bar'
 import { ReviewQueue, type QueueItem } from './ReviewQueue'
 import { getAdminDb } from '@/lib/admin/admin-db'
 
@@ -37,9 +38,9 @@ const COLS = [
   // external_id is what the PUBLIC grant API keys on (grants-normalise sets
   // id = external_id ?? id), so the user-preview modal has to fetch by it to
   // land on the same record a user would see.
-  'id', 'external_id', 'title', 'funder', 'apply_url', 'funding_index_url', 'is_active', 'pipeline_state',
+  'id', 'external_id', 'title', 'funder', 'apply_url', 'funding_index_url', 'is_active', 'pipeline_state', 'is_invite_only',
   'url_status', 'url_quality_score',
-  'amount_min', 'amount_max', 'deadline', 'is_rolling', 'next_open_date', 'deadline_cycle',
+  'amount_min', 'amount_max', 'amount_undisclosed', 'deadline', 'is_rolling', 'next_open_date', 'deadline_cycle',
   'eligible_structures', 'impact_sectors', 'target_beneficiaries', 'niche_tags', 'funding_type',
   // What a USER sees at a glance. The queue showed none of it on the card, so
   // judging a row meant opening it or trusting the reason chips.
@@ -287,8 +288,20 @@ export default async function ReviewPage() {
   // that here rather than in the client is what makes the scan affordable: it
   // reads about 7MB of briefs, evidence and flags, and roughly a sixth of that
   // reaches the browser. The rest never leaves the server.
-  const liveBlocking = (await fetchLiveRows(db) as unknown as typeof rows)
-    .filter(r => gateDecision(r).outcome === 'attention')
+  const liveScan = (await fetchLiveRows(db) as unknown as typeof rows)
+    .map(r => ({ r, reasons: deriveReviewReasons(r) }))
+  const liveBlocking = liveScan
+    .filter(x => gateDecision(x.r, x.reasons).outcome === 'attention')
+    .map(x => x.r)
+
+  // THE LAUNCH BAR. Three numbers Paul reads before any queue count: live rows
+  // with a past deadline, live rows with an unsupported figure, hidden rows
+  // still reachable. The first two come off the same reasons the Live and wrong
+  // tab is built from, so the bar and the tab cannot disagree. The third is a
+  // probe of the public site, cached for five minutes, and it says when it
+  // could not check rather than showing a zero it did not earn.
+  const launchCounts = countLaunchInvariants(liveScan.map(x => x.reasons))
+  const reachability = await cachedReachability(db)
 
   // Merge, de-duplicating by id in case a state ever overlaps.
   //
@@ -392,7 +405,13 @@ export default async function ReviewPage() {
       Number(b.gateOutcome === 'attention') - Number(a.gateOutcome === 'attention') ||
       compareByReadiness(a.reasons, b.reasons))
 
-  return <ReviewQueue items={items} gateWindowStart={sevenDaysAgo} />
+  return (
+    <ReviewQueue
+      items={items}
+      gateWindowStart={sevenDaysAgo}
+      launch={{ ...launchCounts, liveRows: liveScan.length, reachability }}
+    />
+  )
 }
 
 /**

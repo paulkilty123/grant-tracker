@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { landingCutoverTarget, isLandingCutoverOn, LANDING_DOCUMENT } from './landing-cutover'
+import { landingCutoverTarget, isLandingCutoverOn, isLaunchLive, LANDING_DOCUMENT, LAUNCH_DOCUMENT } from './landing-cutover'
 
 const setFlag = (v: string | undefined) => {
   if (v === undefined) delete process.env.LANDING_CUTOVER
@@ -56,4 +56,31 @@ describe('landingCutoverTarget', () => {
       expect(landingCutoverTarget(path, false)).toBeNull()
     },
   )
+})
+
+describe('the launch switch', () => {
+  it('is off when LAUNCH_LIVE is absent, so the waitlist page serves', () => {
+    delete process.env.LAUNCH_LIVE
+    process.env.LANDING_CUTOVER = 'true'
+    expect(isLaunchLive()).toBe(false)
+    expect(landingCutoverTarget('/', false)).toBe(LANDING_DOCUMENT)
+  })
+  it('serves the launch page once LAUNCH_LIVE is true', () => {
+    process.env.LANDING_CUTOVER = 'true'
+    process.env.LAUNCH_LIVE = 'true'
+    expect(landingCutoverTarget('/', false)).toBe(LAUNCH_DOCUMENT)
+    delete process.env.LAUNCH_LIVE
+  })
+  it('rolls back with the same value the other way', () => {
+    process.env.LANDING_CUTOVER = 'true'
+    process.env.LAUNCH_LIVE = 'false'
+    expect(landingCutoverTarget('/', false)).toBe(LANDING_DOCUMENT)
+    delete process.env.LAUNCH_LIVE
+  })
+  it('never serves either page to a signed-in user', () => {
+    process.env.LANDING_CUTOVER = 'true'
+    process.env.LAUNCH_LIVE = 'true'
+    expect(landingCutoverTarget('/', true)).toBeNull()
+    delete process.env.LAUNCH_LIVE
+  })
 })

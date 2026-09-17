@@ -67,6 +67,8 @@ export async function updatePipelineItem(
     | 'grant_url'
     | 'outcome_notes'
     | 'outcome_date'
+    | 'outcome_reason'
+    | 'amount_awarded'
     | 'starred'
   >>
 ): Promise<void> {

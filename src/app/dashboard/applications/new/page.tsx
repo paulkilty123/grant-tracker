@@ -7,13 +7,16 @@
 // point before any generation spend.
 
 import { useEffect, useRef, useState } from 'react'
+import {
+  allowanceExhausted, allowanceRefusalMessage, allowanceStatusLine, type ApplicationAllowance,
+} from '@/lib/builder/allowance'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Search as SearchIcon, X as XIcon, Plus, Trash2, Check, ExternalLink } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { getOrganisationByOwner } from '@/lib/organisations'
 import { emitClientEvent } from '@/lib/events/client'
-import { T, UI, BODY, inputStyle, primaryBtn, forestBtn, ghostBtn } from '@/components/builder/tokens'
+import { T, UI, BODY, DEEP, inputStyle, deepBtn, ghostBtn } from '@/components/builder/tokens'
 import { OUTLINE_TEMPLATE } from '@/lib/builder/types'
 
 interface PickedOpportunity {
@@ -142,6 +145,20 @@ export default function NewApplicationPage() {
   // ── Step 2 state ──
   const [questions, setQuestions] = useState<EditableQuestion[]>([])
   const [creating, setCreating] = useState(false)
+  // How many applications this org may still start (migration 079). Null
+  // until known, and the page never blocks on it: if the read fails the
+  // insert trigger still refuses, and the route's message is shown instead.
+  const [allowance, setAllowance] = useState<ApplicationAllowance | null>(null)
+  useEffect(() => {
+    if (!orgId) return
+    let live = true
+    fetch(`/api/builder/allowance?org_id=${orgId}`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(a => { if (live && a && typeof a.used === 'number') setAllowance(a as ApplicationAllowance) })
+      .catch(() => {})
+    return () => { live = false }
+  }, [orgId])
+  const exhausted = allowance ? allowanceExhausted(allowance) : false
   const [focusedQ, setFocusedQ] = useState<number | null>(null)
 
   useEffect(() => {
@@ -307,7 +324,7 @@ export default function NewApplicationPage() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginBottom: 26 }}>
         <StepDot n={1} label="Set up" active={step === 'setup'} done={step === 'confirm'} />
         <div style={{ flex: '0 0 32px', height: 1, background: T.borderStrong }} />
-        <StepDot n={2} label={mode === 'project' ? 'Describe your project' : 'Check the questions'} active={step === 'confirm'} done={false} />
+        <StepDot n={2} label={mode === 'project' ? 'Structure your application' : 'Check the questions'} active={step === 'confirm'} done={false} />
         <div style={{ flex: '0 0 32px', height: 1, background: T.border }} />
         <StepDot n={3} label="Build" active={false} done={false} />
       </div>
@@ -568,7 +585,7 @@ export default function NewApplicationPage() {
           )}
 
           <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-            <button onClick={handleParse} disabled={parsing} style={forestBtn(parsing)}>
+            <button onClick={handleParse} disabled={parsing} style={deepBtn(parsing)}>
               {parsing ? 'Reading the questions…' : 'Continue'}
             </button>
             {/* Escape hatch for portal-gated / EOI-first funders where the
@@ -594,12 +611,12 @@ export default function NewApplicationPage() {
           <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, padding: '20px 24px' }}>
             <h2 style={{ fontFamily: UI, fontWeight: 600, fontSize: 16, color: T.textPrimary, margin: '0 0 4px' }}>
               {mode === 'project'
-                ? 'Describe your project'
+                ? 'Structure your application'
                 : `${questions.length} ${questions.length === 1 ? 'question' : 'questions'} found, check them over`}
             </h2>
             <p style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary, margin: '0 0 16px', lineHeight: 1.55 }}>
               {mode === 'project'
-                ? 'These are the sections every funder asks about. Click any one to reword it, change its limit, or remove it, then build. You write the answers in the next step, not here.'
+                ? 'These are the sections most funders ask for. Reword any of them, change a limit, or remove one, then build. You write the answers in the next step.'
                 : 'Click any question to fix what the parser got wrong, including word limits, then build. You write the answers in the next step, not here. Word limits the funder stated in characters are shown as approximate words.'}
             </p>
             {questions.length > 12 && (
@@ -633,7 +650,7 @@ export default function NewApplicationPage() {
                     aria-label={`Question ${i + 1}`}
                     style={{
                       ...inputStyle(), flex: 1, background: T.editorBg,
-                      border: `1.5px solid ${focusedQ === i ? T.greenMid : T.borderStrong}`,
+                      border: `1.5px solid ${focusedQ === i ? T.sage : T.borderStrong}`,
                       resize: 'none', overflow: 'hidden', lineHeight: 1.55, fontSize: 15,
                       padding: '12px 14px', minHeight: 48,
                     }}
@@ -672,8 +689,13 @@ export default function NewApplicationPage() {
             <p style={{ fontFamily: BODY, fontSize: 13.5, color: T.coralText, margin: 0 }}>{error}</p>
           )}
 
+          {allowance && exhausted && (
+            <p style={{ fontFamily: BODY, fontSize: 13.5, color: T.coralText, margin: 0 }}>
+              {allowanceRefusalMessage(allowance)}
+            </p>
+          )}
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            <button onClick={handleCreate} disabled={creating} style={primaryBtn(creating)}>
+            <button onClick={handleCreate} disabled={creating || exhausted} style={deepBtn(creating || exhausted)}>
               {creating ? 'Setting up…' : 'Looks right, plan my answers'}
             </button>
             <button
@@ -688,6 +710,11 @@ export default function NewApplicationPage() {
               Back
             </button>
           </div>
+          {allowance && !exhausted && allowanceStatusLine(allowance) && (
+            <p style={{ fontFamily: BODY, fontSize: 13, color: '#5F5E5A', margin: 0 }}>
+              {allowanceStatusLine(allowance)}
+            </p>
+          )}
         </div>
       )}
     </div>

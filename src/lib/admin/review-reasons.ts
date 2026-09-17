@@ -23,6 +23,8 @@
 import { readGrantFlags, type GrantFlag } from '@/lib/grant-flags'
 import { readStamp, PAGE_READ_KEY, AMOUNT_UNSUPPORTED_NOTE, DEADLINE_UNSUPPORTED_NOTE, type FieldEvidence } from '@/lib/field-evidence'
 import { abstainReason } from '@/lib/verification/abstain'
+import { readBlockedByAWall } from '@/lib/verification/page-readable'
+import { badApplyRoute } from './apply-route-hosts'
 import { FEEDBACK_QUEUE_SOURCE } from '@/lib/feedback/triage'
 
 /** Matches cron/reenrich-stale's STALE_AFTER_DAYS. Keep in step. */
@@ -107,6 +109,7 @@ export type ReviewReasonCode =
   | 'amount_pot_suspected'
   | 'amount_under_stated'
   | 'amount_ungrounded'
+  | 'amount_ungrounded_in_prose'
   | 'amount_unsupported'
   | 'deadline_unsupported'
   | 'amount_inverted'
@@ -132,6 +135,13 @@ export type ReviewReasonCode =
   | 'page_says_round_closed'
   | 'page_describes_different_fund'
   | 'no_funder'
+  | 'apply_route_not_applyable'
+  // The row says invitation only and the funder's page confirms it. Paul,
+  // 2026-09-02: "a confirmed no-route". Added the day the gate started exposing
+  // rows on its own: Baring's International Development Programme and Ufi's
+  // VocTech Ignite both had "by invitation only" as their one confirmed line,
+  // and would have been the first two rows the machine ever published.
+  | 'page_says_invite_only'
   | 'never_verified'
   // Both fetch paths have failed twice running, or the link is not a web page.
   // Deliberately NON-BLOCKING: these rows are already blocked by whatever could
@@ -171,6 +181,9 @@ export type ReviewRow = {
   url_quality_score?:        number | null
   amount_min?:               number | null
   amount_max?:               number | null
+  /** The funder states no fixed figure. An affirmative, admin-only flag; when
+   *  true, a missing amount is the truth of the page, not a gap. */
+  amount_undisclosed?:       boolean | null
   deadline?:                 string | null
   is_rolling?:               boolean | null
   next_open_date?:           string | null
@@ -190,6 +203,8 @@ export type ReviewRow = {
   funding_type?: string | null
   /** Where the row sends an applicant. */
   apply_url?: string | null
+  /** Applications by invitation only. Read with the `is_invite_only` stamp. */
+  is_invite_only?: boolean | null
   /** The funder's own index of its funds, banked by the URL-correction pass
    *  (migration 061). When `apply_url` equals it, the row IS the front door. */
   funding_index_url?: string | null
@@ -430,10 +445,13 @@ function plural(n: number, one: string, many: string): string {
  *                  products. Asking whether a fund appears on the page is a
  *                  category error, not a finding. 26 rows carry the note.
  *
- *   apply_url is   Migration 061 banks the funder's own index of its funds. When
- *   the index      a row points AT that index, we have already recorded that it
- *                  is the front door, so "this page is about the funder rather
- *                  than one fund" is the row working as intended. 59 rows.
+ *   the landing    A homepage, or the funder's own index of its funds (banked by
+ *   is a front     migration 061). Neither page is ABOUT one fund, so "this page
+ *   door           does not describe this fund" is what pointing at a front door
+ *                  looks like, not a defect. Paul's ruling of 2026-08-17,
+ *                  reaffirmed 2026-09-01: "a homepage landing is not a defect
+ *                  unless the funder runs separately paged funds we're hiding
+ *                  behind one row." 27 live rows on 1 September.
  *
  * WHAT THIS DELIBERATELY DOES NOT CATCH. A funder that renames or sub-brands a
  * fund still trips the code: Tesco Stronger Starts links to a page headed "Tesco
@@ -448,64 +466,92 @@ function plural(n: number, one: string, many: string): string {
  * the catalogue indefinitely, because nobody can fix what is not broken.
  */
 /**
- * Words that carry no identity of their own.
+ * Does the row's link land on a front door: the site's homepage, or the funding
+ * index we banked for the funder?
  *
- * A title made only of these plus the funder's own name is a front door:
- * "East End Community Foundation — Grants" says nothing "East End Community
- * Foundation" does not. A title with anything left over names something.
- */
-const GENERIC_TITLE_WORDS = new Set([
-  'grant', 'grants', 'fund', 'funds', 'funding', 'programme', 'programmes',
-  'program', 'scheme', 'schemes', 'award', 'awards', 'application',
-  'applications', 'apply', 'trust', 'trusts', 'foundation', 'charity',
-  'the', 'a', 'an', 'and', 'for', 'of', 'to', 'in', 'uk',
-])
-
-/**
- * Does the TITLE name something beyond the funder itself?
+ * HISTORY, because this guard has moved twice and the reasons matter.
  *
- * Tokens, not substrings, because the same organisation is written differently
- * in the two columns: "Access – The Foundation for Social Investment" against
- * "Access — The Foundation for Social Investment" differ by one dash character,
- * and a substring test would call them unrelated.
+ * 2026-08-18: suppressed only when apply_url equalled the banked index.
+ *
+ * 2026-08-27: narrowed so a row whose TITLE named a fund beyond the funder kept
+ * the finding even at the index. Made on "Change We Seek grants" (Tudor Trust),
+ * a row Paul spot-checked and found wrong: £5k to £150k against Tudor's stated
+ * £100k to £1m, on a link that redirected. The narrowing let the code fire on it.
+ *
+ * 2026-09-01: widened back, and to homepages. Paul, splitting "Live and wrong"
+ * by cause: "the page is a front door that doesn't describe this fund" is its
+ * own group and is NOT launch work; "if front doors are still counting as live
+ * and wrong, the section is disagreeing with a rule already made. Fix the
+ * counter, not the rows." So a named fund pointing at its funder's index is a
+ * weak LINK, not a wrong ROW: a fundraiser landing there can find the fund.
+ * The Tudor row was wrong on its AMOUNT, and the amount check is what should
+ * have held it. The 73 bare-homepage index values cleared that same day had
+ * exposed 13 rows whose apply_url is the homepage itself, and with no index
+ * left to compare against the old guard could not see them as front doors.
+ *
+ * The "unless" in Paul's ruling — a funder with several separately paged funds
+ * that we carry as one row — has no detector: it needs the funder's index read
+ * and compared with what we hold, which is a verification change and not a
+ * review-reasons one. Noted for after 11 September.
+ *
+ * WHAT A FRONT DOOR IS HERE, AND IS NOT. The site root, or the banked index. It
+ * is NOT any page whose path merely looks like an index ("/grants" with no index
+ * recorded): the 2026-08-17 lesson is that a URL which looks right can be a
+ * grants-awarded list, so shape alone does not clear a row. Those rows stay in
+ * the queue until an index is banked for the funder.
+ *
+ * Trailing slashes and case are ignored; "https://funder.example/funding/" is
+ * the same page as "https://funder.example/funding".
  */
-function namesAFundBeyondTheFunder(row: ReviewRow): boolean {
-  const tokens = (v: unknown) =>
-    String(v ?? '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().split(' ').filter(Boolean)
+function landsOnAFrontDoor(row: ReviewRow): boolean {
+  const normalise = (u: string) => u.trim().toLowerCase().replace(/\/+$/, '')
+  const apply = row.apply_url ? normalise(String(row.apply_url)) : ''
+  if (!apply) return false
 
-  const funderTokens = new Set(tokens((row as { funder?: unknown }).funder))
-  const residual = tokens((row as { title?: unknown }).title)
-    .filter(t => !funderTokens.has(t) && !GENERIC_TITLE_WORDS.has(t))
+  // The site root: scheme, host, optional port, nothing after it.
+  if (/^https?:\/\/[^/?#]+$/.test(apply)) return true
 
-  return residual.length > 0
+  const index = row.funding_index_url ? normalise(String(row.funding_index_url)) : ''
+  return Boolean(index) && apply === index
 }
 
 function describesADiscreteFund(row: ReviewRow): boolean {
   if ((row.funding_type ?? '').toLowerCase() === 'in_kind') return false
-
-  const normalise = (u: string) => u.trim().toLowerCase().replace(/\/+$/, '')
-  const apply = row.apply_url ? normalise(String(row.apply_url)) : ''
-  const index = row.funding_index_url ? normalise(String(row.funding_index_url)) : ''
-
-  // THE INDEX GUARD ONLY COVERS A ROW THAT IS ACTUALLY FUNDER-LEVEL.
-  //
-  // Narrowed 2026-08-27, on a row Paul spot-checked. "Change We Seek grants"
-  // (Tudor Trust) had both URLs set to the same page, so this returned false and
-  // the engine's verdict — "the page does not describe this fund", recorded on
-  // 17 August — was thrown away. The row stayed live: a framework Tudor
-  // introduces in a film, sold as a fund, at £5k to £150k against their stated
-  // £100k to £1m, on a link that now redirects elsewhere.
-  //
-  // Pointing at the index is the right shape for "Sainsbury Family Charitable
-  // Trusts" and the wrong shape for a row that names a specific fund, and the
-  // original guard could not tell those apart. The title is what tells them
-  // apart, so the title is what decides.
-  //
-  // 63 live rows were being suppressed this way, and most of the first thirty
-  // named a fund rather than a funder.
-  if (apply && index && apply === index && !namesAFundBeyondTheFunder(row)) return false
-
+  if (landsOnAFrontDoor(row)) return false
   return true
+}
+
+/**
+ * Does this figure appear anywhere in the evidence we hold for the row?
+ *
+ * The point of the question is to separate "we assert a number nobody supports"
+ * from "our write-up is untidy about a number the page states". Only the first
+ * misleads anybody, and only the first should block publication.
+ *
+ * Matches the forms a funder actually writes: £25,000, £25000, 25,000, £25k and
+ * £2.5m. Deliberately generous — a false MATCH demotes a finding to info and
+ * leaves it in the queue, while a false MISS blocks a correct row indefinitely,
+ * and the second is the more expensive error.
+ */
+export function figureAppearsInEvidence(figure: number, evidence: unknown): boolean {
+  if (!evidence || typeof evidence !== 'object') return false
+  const quotes: string[] = []
+  for (const stamp of Object.values(evidence as Record<string, unknown>)) {
+    const q = (stamp as { quote?: unknown } | null)?.quote
+    if (typeof q === 'string' && q) quotes.push(q)
+  }
+  if (quotes.length === 0) return false
+  const hay = quotes.join('  ').toLowerCase().replace(/\s+/g, '')
+
+  const forms = new Set<string>([
+    String(figure),
+    figure.toLocaleString('en-GB'),
+  ])
+  if (figure >= 1000 && figure % 1000 === 0) forms.add(`${figure / 1000}k`)
+  if (figure >= 1_000_000 && figure % 100_000 === 0) forms.add(`${figure / 1_000_000}m`)
+  for (const f of Array.from(forms)) forms.add(`£${f}`)
+
+  return Array.from(forms).some(f => hay.includes(f.toLowerCase().replace(/\s+/g, '')))
 }
 
 export function deriveReviewReasons(row: ReviewRow, todayISO?: string): ReviewReason[] {
@@ -548,7 +594,30 @@ export function deriveReviewReasons(row: ReviewRow, todayISO?: string): ReviewRe
   // url_status path already raises it. The existing link and page reasons cover
   // this ground; a second voice saying the same thing only makes the queue look
   // busier than it is.
-  if (pageRead?.note === 'fixable_link: wrong_fund' && describesADiscreteFund(row)) {
+  //
+  // A THIRD GUARD, ADDED 2026-09-01: NOT WHEN NOBODY READ THE PAGE.
+  //
+  // "The page does not describe this fund" is a claim about the FUNDER. It is
+  // only sayable if somebody read the funder's page, and for a row behind a bot
+  // wall nobody has. `verify-row.ts` judged Cloudflare's 268-character
+  // interstitial as page content (its floor was 200 characters, and no
+  // interstitial measured since has been below it), so the model was shown an
+  // interception notice and answered, correctly, that the fund was not on it.
+  //
+  // Measured across the queue on 2026-09-01: 21 of the 87 rows carrying this
+  // reason pointed at a bot wall, and 13 of those already had
+  // `_read_exhausted.reason = 'bot_wall'` recorded against them. The system had
+  // written down that it could not read the page and was blaming the funder in
+  // the same breath.
+  //
+  // The reader is fixed in `verification/bot-wall.ts` so no NEW verdict can be
+  // written this way. This clears the ones already stored, and it withdraws only
+  // the claim about the page: `read_exhausted` still fires, so the row stays
+  // visible under "Nothing more we can do", which is what is actually true
+  // about it.
+  if (pageRead?.note === 'fixable_link: wrong_fund'
+      && describesADiscreteFund(row)
+      && !readBlockedByAWall(row.field_evidence)) {
     reasons.push({
       code: 'page_describes_different_fund', severity: 'critical',
       label: 'The page does not describe this fund',
@@ -567,7 +636,24 @@ export function deriveReviewReasons(row: ReviewRow, todayISO?: string): ReviewRe
   // would have filed a working funder as hopeless and then stopped re-probing it.
   const exhausted = (row.field_evidence as Record<string, unknown> | null | undefined)?.['_read_exhausted'] as
     { reason?: string; consecutive?: number; detail?: string } | undefined
-  if (exhausted && (exhausted.reason === 'not_a_web_url' || Number(exhausted.consecutive ?? 0) >= 2)) {
+  // A DELIBERATE EMAIL-ONLY APPLICATION ROUTE IS NOT AN UNREADABLE PAGE.
+  //
+  // The Paley Trust has no website and takes applications by email. Settled by
+  // Paul on 2026-08-31 as CORRECT, and it kept surfacing anyway: `not_a_web_url`
+  // fires on any `mailto:` apply_url, so a ruling made in conversation was
+  // re-litigated by the queue every day afterwards.
+  //
+  // The ruling is recorded where the code can see it — `raw_data.checks` carries
+  // an `apply_route_accepted` flag — so this is not a special case for one trust
+  // but the general shape: a reviewer decides a non-web route is the real route,
+  // and the queue stops asking. Clearing the flag brings the row back.
+  //
+  // It suppresses only `read_exhausted`. Everything else about the row is still
+  // checked, and a `mailto:` on a row NOBODY has ruled on still surfaces.
+  const routeAccepted = flags.some(f => f.code === 'apply_route_accepted')
+  if (exhausted && exhausted.reason === 'not_a_web_url' && routeAccepted) {
+    // Ruled on. Nothing to say.
+  } else if (exhausted && (exhausted.reason === 'not_a_web_url' || Number(exhausted.consecutive ?? 0) >= 2)) {
     reasons.push({
       code: 'read_exhausted', severity: 'check',
       label: 'Nothing more we can do',
@@ -690,7 +776,13 @@ export function deriveReviewReasons(row: ReviewRow, todayISO?: string): ReviewRe
       label: 'Never enriched',
       detail: 'nothing has been read from the funder’s page yet',
     })
-  } else if (brief.source === 'knowledge_fallback' && !readSinceFallback(row)) {
+  } else if (brief.source === 'knowledge_fallback' && !readSinceFallback(row) && !routeAccepted) {
+    // `!routeAccepted`: a reviewer has ruled that a non-web route (The Paley
+    // Trust's mailto) is the real one. There is no page, so a brief written
+    // without one is the only kind there can be. The flag already silenced
+    // read_exhausted; on 2026-09-02 the row was still "live and wrong" from
+    // this reason and link_unverified, so the ruling was re-litigated by two
+    // more counters. Same flag, all three.
     reasons.push({
       code: 'page_unreadable', severity: 'critical',
       label: 'Page unreadable',
@@ -742,7 +834,8 @@ export function deriveReviewReasons(row: ReviewRow, todayISO?: string): ReviewRe
       label: 'Link dead',
       detail: 'the application link did not resolve to a live page',
     })
-  } else if (row.url_status && row.url_status !== 'ok') {
+  } else if (row.url_status && row.url_status !== 'ok' && !routeAccepted) {
+    // An accepted non-web route (mailto) can never reach url_status 'ok'.
     reasons.push({
       code: 'link_unverified', severity: 'check',
       label: 'Link not verified',
@@ -758,9 +851,75 @@ export function deriveReviewReasons(row: ReviewRow, todayISO?: string): ReviewRe
     })
   }
 
+  // ── Can a fundraiser apply from this link at all? ────────────────────────
+  //
+  // Four LIVE rows pointed at Charity Commission register entries. Every check
+  // the catalogue had said they were fine: the URL was healthy, the page loaded,
+  // the funder was named. A register entry is a public record OF a charity and
+  // never the route TO it, so a fundraiser landing there could do nothing.
+  //
+  // Harford Charitable Trust was not in the review queue at all — no blocking
+  // reason, invisible to this screen — and was found only by sweeping all 961
+  // rows by hand on 2026-09-01. That is the argument for a check rather than a
+  // one-off correction: a defect nothing can detect regrows silently.
+  //
+  // The `mailto:` case is `non_web` and is deliberately NOT raised here. It is
+  // already covered by `read_exhausted`, and the Paley ruling above settles when
+  // it is a real route.
+  const badRoute = badApplyRoute(row.apply_url as string | null)
+  if (badRoute && badRoute.kind !== 'non_web') {
+    reasons.push({
+      code: 'apply_route_not_applyable', severity: 'critical',
+      label: 'Nowhere to apply from this link',
+      detail: badRoute.why,
+    })
+  }
+
+  // The row says invitation only and the page confirms it, in its own words.
+  //
+  // Requires BOTH. The stamp's `agrees` means "the page matched what we hold",
+  // so agrees:true on a row that holds is_invite_only=false is the page
+  // confirming the fund is OPEN (the Law Society Pro Bono Charter reads exactly
+  // that way) and must not fire. An unconfirmed is_invite_only=true is a claim
+  // nothing stands behind and does not fire either; the gate blocks on what the
+  // funder said, not on what a scraper guessed.
+  const inviteStamp = readStamp(row.field_evidence, 'is_invite_only')
+  if (row.is_invite_only === true && inviteStamp?.agrees === true && inviteStamp.quote?.trim()) {
+    reasons.push({
+      code: 'page_says_invite_only', severity: 'critical',
+      label: 'Invitation only, and the page says so',
+      detail: `the funder's page says "${inviteStamp.quote.trim()}", so there is no route in for a fundraiser who finds this`,
+    })
+  }
+
   // ── Amounts ──────────────────────────────────────────────────────────────
+  //
+  // AN IN-KIND OFFER HAS NO AMOUNT, AND ASKING FOR ONE IS A CATEGORY ERROR.
+  //
+  // Same shape as the `in_kind` guard on `page_describes_different_fund` twenty
+  // lines up, and found the same way. Pro bono legal advice, a donated laptop,
+  // a discounted Microsoft 365 tenancy and a desk in someone's office do not
+  // have a per-applicant pound figure, so `no_amount` fires on every one of
+  // them, files the row under "needs reading", and nothing a reader could ever
+  // find on the page will clear it. The row sits in the queue for ever.
+  //
+  // Measured 2026-09-01: 18 of the 46 rows under "Needs reading" were in-kind,
+  // 16 of them carrying `no_amount`, and 17 carrying nothing else that a re-read
+  // could resolve. That is a third of the section, permanently.
+  //
+  // `amount_zero` is suppressed for the same reason and one step worse: £0 to £0
+  // is what a seeder writes when the answer is "there is no figure", and it then
+  // reads back as a defect. TrustLaw and the National Digital Inclusion Network
+  // both carry it.
+  //
+  // Everything that asserts a WRONG figure still fires. An in-kind row claiming
+  // £5,000 the page does not state is misleading in exactly the way a grant row
+  // would be, and none of the amount_* checks below are touched.
+  const isInKind = String(row.funding_type ?? '').toLowerCase() === 'in_kind'
   const min = row.amount_min, max = row.amount_max
-  if (min !== null && min !== undefined && max !== null && max !== undefined && min > max) {
+  if (isInKind && (max === null || max === undefined || (min === 0 && max === 0))) {
+    // No reason at all: there is nothing missing.
+  } else if (min !== null && min !== undefined && max !== null && max !== undefined && min > max) {
     reasons.push({
       code: 'amount_inverted', severity: 'critical',
       label: 'Amounts inverted',
@@ -772,7 +931,13 @@ export function deriveReviewReasons(row: ReviewRow, todayISO?: string): ReviewRe
       label: 'Amount reads £0 to £0',
       detail: 'no usable figure was found on the page',
     })
-  } else if (max === null || max === undefined) {
+  } else if ((max === null || max === undefined) && (min === null || min === undefined) && row.amount_undisclosed !== true) {
+    // A floor with no ceiling ("grants from £10,000") states what an applicant
+    // can ask for; only a row with neither figure states nothing.
+    // A row an admin has marked `amount_undisclosed` is stating a fact about
+    // the funder, not missing one. Before 2026-09-11 the flag was invisible
+    // here, so seven rows whose pages state no figure sat in Needs reading
+    // with nothing a read could add.
     reasons.push({
       code: 'no_amount', severity: 'check',
       label: 'No amount',
@@ -853,18 +1018,41 @@ export function deriveReviewReasons(row: ReviewRow, todayISO?: string): ReviewRe
   }
 
   // Brief-level guards that enrich-grant computes and nothing has ever rendered.
-  if (asArray(brief?._ungrounded_amounts).length > 0) {
-    const n = asArray(brief?._ungrounded_amounts).length
-    reasons.push({
-      code: 'amount_ungrounded', severity: 'check',
-      label: 'Amount not in what we quoted',
-      // "no matching wording on the page" sent a reviewer to the funder's site
-      // to check a figure that was there. The guard never looks at the page: it
-      // compares the write-up against the citation snippet and the stored
-      // description. So the finding is about OUR text, not the funder's, and
-      // saying otherwise costs a site visit per row.
-      detail: `${n} ${plural(n, 'figure', 'figures')} in the write-up ${plural(n, 'is', 'are')} not supported by the quote or description we hold — often a figure the model worked out rather than read`,
-    })
+  //
+  // NARROWED 2026-09-01, and kept BLOCKING. Paul's rule: an unsourced figure is
+  // an unquoted fact, which is the standard the whole catalogue is held to. But
+  // the detector never looks at the funder's page — it compares the write-up
+  // against the citation snippet and the stored description only — so it was
+  // firing on figures that ARE in our evidence, just not in the two strings it
+  // happened to read. Checked against the queue on 2026-09-01: of the rows
+  // blocked on it, the page states the figure on seven.
+  //
+  // So the code now splits on the question that decides whether anybody is
+  // misled. Does the figure appear ANYWHERE in the evidence we hold?
+  //
+  //   nowhere        the write-up asserts a number nothing supports. Blocks.
+  //   somewhere      the write-up is untidy and the number is real. Info.
+  //
+  // The split is on the CODE, not the severity, because the gate reads POLICY by
+  // code and severity has no vote there — a severity branch would let the table
+  // and the gate disagree silently, which publish-gate.ts documents as a bug it
+  // has already had once.
+  const ungroundedFigures = asArray(brief?._ungrounded_amounts)
+    .filter((x): x is number => typeof x === 'number' && Number.isFinite(x))
+  if (ungroundedFigures.length > 0) {
+    const unsupported = ungroundedFigures.filter(n => !figureAppearsInEvidence(n, row.field_evidence))
+    const n = unsupported.length > 0 ? unsupported.length : ungroundedFigures.length
+    reasons.push(unsupported.length > 0
+      ? {
+          code: 'amount_ungrounded', severity: 'critical',
+          label: 'Amount appears nowhere in our evidence',
+          detail: `${n} ${plural(n, 'figure', 'figures')} in the write-up ${plural(n, 'is', 'are')} not in the quote, the description, or anything the page told us — a figure the model worked out rather than read`,
+        }
+      : {
+          code: 'amount_ungrounded_in_prose', severity: 'check',
+          label: 'Amount is real but not in what we quoted',
+          detail: `${n} ${plural(n, 'figure', 'figures')} in the write-up ${plural(n, 'is', 'are')} not supported by the quote we stored, but ${plural(n, 'does', 'do')} appear in what the funder's page told us. The write-up needs tidying, not the figure`,
+        })
   }
   // A past date in the write-up means one of two very different things, and
   // treating them alike is what let the queue say "Nothing looks wrong" beside a
@@ -919,7 +1107,16 @@ export function deriveReviewReasons(row: ReviewRow, todayISO?: string): ReviewRe
       label: 'Deadline passed',
       detail: `closed on ${row.deadline} and no next round is recorded`,
     })
-  } else if (row.deadline && row.deadline > horizonISO(today, DEADLINE_HORIZON_MONTHS)) {
+  } else if (
+    row.deadline && row.deadline > horizonISO(today, DEADLINE_HORIZON_MONTHS)
+    // A date the funder's own page states is a deadline however far off it is.
+    // Paul, 2026-09-02, on A Sinclair Henderson: trustees meet every even year,
+    // the next in June 2028, applications the month before. The page says so
+    // in full and the row was showing as a defect for being right. A confirmed
+    // deadline stamp with a quote is the page's word; nothing else clears this.
+    && !(readStamp(row.field_evidence, 'deadline')?.agrees === true
+         && readStamp(row.field_evidence, 'deadline')?.quote?.trim())
+  ) {
     reasons.push({
       code: 'deadline_implausible', severity: 'critical',
       label: 'Date is not an application deadline',
@@ -948,7 +1145,16 @@ export function deriveReviewReasons(row: ReviewRow, todayISO?: string): ReviewRe
       detail: 'nothing records what this fund is for',
     })
   }
-  if (row.target_beneficiaries?.length === 1 && row.target_beneficiaries[0] === 'general_public') {
+  // "General public" alone is suspicious when it is a default nobody
+  // checked. It is the honest answer for a community fund open to everyone.
+  // The difference is whether anyone determined it: a brief that states who
+  // can apply, on a page the engine has read and passed, is a determination.
+  // Before 2026-09-11 nineteen such rows sat in Needs reading with nothing a
+  // read could add.
+  const whoStated = typeof brief?.who_can_apply === 'string' && brief.who_can_apply.trim().length > 0
+  const readNote  = (row.field_evidence as { _page_read?: { note?: unknown } } | null | undefined)?._page_read?.note
+  const readPassed = typeof readNote === 'string' && readNote.length > 0 && !readNote.includes(':')
+  if (row.target_beneficiaries?.length === 1 && row.target_beneficiaries[0] === 'general_public' && !(whoStated && readPassed)) {
     reasons.push({
       code: 'beneficiaries_generic_only', severity: 'check',
       label: 'Beneficiaries unspecific',

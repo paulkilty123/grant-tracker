@@ -56,12 +56,17 @@
 // reported. A run that ran out of time says so.
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import { getAdminDb } from '@/lib/admin/admin-db'
 import Anthropic from '@anthropic-ai/sdk'
 import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
 import { recordRun } from '@/lib/admin/cron-runs'
 import { verifyRow, type VerifyRow, type VerifyResult } from '@/lib/verification/verify-row'
-import { buildEvidencePatch, recordFieldEvidence, PAGE_READ_KEY } from '@/lib/field-evidence'
+import {
+  shouldSkipHost, recordFailure, hostOf, isHostLevel, backoffHours, type HostState,
+} from '@/lib/verification/host-backoff'
+import type { UnreadableReason } from '@/lib/verification/page-readable'
+import { buildEvidencePatch, recordFieldEvidence, PAGE_READ_KEY, type FieldEvidence } from '@/lib/field-evidence'
 import { computeCadence, previousSilentStreak } from '@/lib/verification/verify-cadence'
 import { withRowBudget } from '@/lib/verification/row-budget'
 
@@ -139,10 +144,7 @@ const REPORT_CAP = 25
 // silently does nothing while the handler reports non-zero counts. That has
 // happened to three crons in this codebase.
 function adminClient(): SupabaseClient {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  )
+  return getAdminDb()
 }
 
 // `next_open_date` and `field_evidence` are here for the cadence, not for the
@@ -160,7 +162,7 @@ function adminClient(): SupabaseClient {
 // One line, not a concatenation: supabase-js parses this string at TYPE level to
 // infer the row shape, and a `+` defeats that parser — it falls back to
 // GenericStringError and every downstream cast becomes a lie.
-const SELECT_COLS = 'id, title, funder, funding_type, apply_url, deadline, deadline_cycle, next_open_date, is_rolling, amount_min, amount_max, max_org_income, min_org_income, is_invite_only, eligible_structures, location_tag, funder_brief, field_evidence'
+const SELECT_COLS = 'id, title, funder, funding_type, apply_url, deadline, deadline_cycle, next_open_date, is_rolling, amount_min, amount_max, max_org_income, min_org_income, is_invite_only, eligible_structures, location_tag, funder_brief, field_evidence, grant_sources, verify_flag'
 
 /**
  * What the row carries for scheduling, on top of what the extraction reads.
@@ -173,6 +175,26 @@ const SELECT_COLS = 'id, title, funder, funding_type, apply_url, deadline, deadl
 type CadenceCols = {
   next_open_date: string | null
   field_evidence: Record<string, unknown> | null
+  /** Set by an outside signal (watchlist, admin). A flagged row is always read
+   *  in full: the unchanged-page skip does not apply. */
+  verify_flag?:   string | null
+}
+
+/**
+ * What the row's last page read left behind, for the unchanged-page skip.
+ * `previousPassed` reads the stamp's note: a passed read stores the bare
+ * outcome ('verified', 'unchanged'); a failed one stores 'outcome: failure'.
+ */
+function lastRead(row: CadenceCols): { previousHash: string | null; previousShape: string | null; previousPassed: boolean; flagged: boolean } {
+  const stamp = (row.field_evidence?.[PAGE_READ_KEY] ?? null) as
+    { page_hash?: unknown; cadence_shape?: unknown; note?: unknown } | null
+  const note = typeof stamp?.note === 'string' ? stamp.note : ''
+  return {
+    previousHash:   typeof stamp?.page_hash === 'string' ? stamp.page_hash : null,
+    previousShape:  typeof stamp?.cadence_shape === 'string' ? stamp.cadence_shape : null,
+    previousPassed: note.length > 0 && !note.includes(':'),
+    flagged:        !!row.verify_flag,
+  }
 }
 
 type QueueCounts = {
@@ -346,16 +368,47 @@ export async function GET(req: NextRequest) {
      *  the extraction is the problem, not the schedule. */
     const shapes:     Record<string, number> = {}
     const tally = { confirmed: 0, contradicted: 0, silent: 0, unquoted: 0 }
+    /** Rows whose page matched its last hash: fetched, not read. The saving
+     *  this run made, reported so it can be watched. */
+    let unchanged = 0
     const proposals: unknown[]    = []
     const fixable:   unknown[]    = []
     const failures:  unknown[]    = []
     let proposalTotal = 0
     let fixableTotal  = 0
 
+    // ONE WALL, ONE DISCOVERY, PER RUN.
+    //
+    // artscouncil.org.uk serves the same Cloudflare interstitial to all eleven
+    // Arts Council rows, london.gov.uk to all four GLA rows. Without this every
+    // one of them fetches it twice — direct, then the proxy — and each arrives
+    // at the same answer independently. The guard is per run and in memory,
+    // which is the whole of what a run needs; the ACROSS-run half is the due
+    // date pushed out below, which persists in the column that already schedules
+    // reads rather than in a new table.
+    const hostState = new Map<string, HostState>()
+    const skippedHosts: Record<string, number> = {}
+    const hostGuard = {
+      skip: (url: string) => {
+        const s = shouldSkipHost(hostState.get(hostOf(url)))
+        if (s) skippedHosts[hostOf(url)] = (skippedHosts[hostOf(url)] ?? 0) + 1
+        return s ? { reason: s.reason, hoursLeft: s.hoursLeft } : null
+      },
+      record: (url: string, reason: UnreadableReason | null) => {
+        const h = hostOf(url)
+        if (!h) return
+        // A success clears the entry outright rather than decrementing it, so a
+        // funder who drops their WAF is read normally on the next row instead of
+        // serving out the rest of a sentence.
+        if (reason === null || !isHostLevel(reason)) { hostState.delete(h); return }
+        hostState.set(h, recordFailure(hostState.get(h), reason))
+      },
+    }
+
     const { consumed } = await pool(rows, CONCURRENCY, overtime, async row => {
       let result: VerifyResult
       try {
-        result = await withRowBudget(row.id, ROW_BUDGET_MS, verifyRow(row, anthropic))
+        result = await withRowBudget(row.id, ROW_BUDGET_MS, verifyRow(row, anthropic, { hostGuard, unchanged: lastRead(row) }))
       } catch (e) {
         failures.push({ id: row.id, title: row.title, error: e instanceof Error ? e.message : String(e) })
         return
@@ -382,13 +435,22 @@ export async function GET(req: NextRequest) {
       // pre-run evidence would key the schedule off the previous read, which is
       // the mistake the whole change exists to remove.
       const { patch: fieldPatch, unquoted } = buildEvidencePatch(result.evidence, { by: VERIFIER })
+      if (result.unchanged) unchanged++
+      // AN UNCHANGED PAGE KEEPS ITS OLD EVIDENCE, AND THE CADENCE IT IMPLIED.
+      //
+      // The model was not called, so this run produced no stamps. Deriving the
+      // cadence from an empty patch would call every unchanged page "silent"
+      // and walk it up the backoff ladder for having said nothing, when it
+      // said exactly what it said last time. The page is byte-identical, so
+      // the previous stamps are still what the page says: the cadence is
+      // computed against them.
       const cadence = computeCadence({
         deadline:       typeof row.deadline === 'string' ? row.deadline : null,
         next_open_date: typeof row.next_open_date === 'string' ? row.next_open_date : null,
         deadline_cycle: Array.isArray(row.deadline_cycle)
           ? (row.deadline_cycle as { day: number; month: number; label?: string }[])
           : null,
-        evidence: fieldPatch,
+        evidence: result.unchanged ? (row.field_evidence as FieldEvidence | null) : fieldPatch,
       }, {
         checkedAt,
         previousStreak: previousSilentStreak(row.field_evidence),
@@ -399,8 +461,11 @@ export async function GET(req: NextRequest) {
         {
           field: PAGE_READ_KEY, agrees: null, quote: null,
           source_url: result.followedUrl ?? row.apply_url,
-          note: result.gate.pass ? result.outcome : `${result.outcome}: ${gate.failure ?? 'gate failed'}`,
+          note: result.unchanged ? 'unchanged' : result.gate.pass ? result.outcome : `${result.outcome}: ${gate.failure ?? 'gate failed'}`,
           silent_streak: cadence.silentStreak,
+          hops: result.notes,
+          ...(result.pageHash ? { page_hash: result.pageHash } : {}),
+          cadence_shape: cadence.shape,
         },
       ], { by: VERIFIER, checkedAt })
       tally.unquoted += unquoted.length
@@ -429,8 +494,32 @@ export async function GET(req: NextRequest) {
       // `verify_flag` is cleared in the same statement. Whatever made this row
       // jump the queue has now been answered by an actual read, and a flag left
       // set would pin it to band 0 for ever.
+      // A HOST THAT WOULD NOT BE READ SETS ITS OWN DUE DATE.
+      //
+      // The in-memory guard above only lasts a run. Across runs the row is due
+      // again on the cadence the PAGE implies — except no page was read, so the
+      // cadence is derived from nothing and the row comes straight back. That is
+      // the loop: `no_content` is retryable by design, so a walled row spends two
+      // fetches per visit and resolves nothing, for ever.
+      //
+      // So a host-level read failure schedules on the backoff ladder instead,
+      // keyed off the row's own consecutive count, which `_read_exhausted`
+      // already maintains. The ladder is capped, so a wall is never a permanent
+      // skip: a permanent skip is a silent removal from verification.
+      const hostFailure = (result.gate as { failure?: string }).failure === 'no_content'
+        ? (result.gate as { detail?: string }).detail?.split(':')[0] as UnreadableReason | undefined
+        : undefined
+      const backedOff = hostFailure && isHostLevel(hostFailure)
+        ? backoffHours(1 + Number(
+            (row.field_evidence as Record<string, { consecutive?: number }> | null)
+              ?.['_read_exhausted']?.consecutive ?? 0))
+        : 0
+      const dueAt = backedOff > 0
+        ? new Date(Date.now() + backedOff * 3_600_000)
+        : cadence.dueAt
+
       const { error: dueErr } = await db.from('scraped_grants')
-        .update({ verify_due_at: cadence.dueAt.toISOString(), verify_flag: null })
+        .update({ verify_due_at: dueAt.toISOString(), verify_flag: null })
         .eq('id', row.id)
       if (dueErr) {
         failures.push({ id: row.id, title: row.title, error: `verify_due_at: ${dueErr.message}` })
@@ -457,6 +546,7 @@ export async function GET(req: NextRequest) {
       armed,
       ranWork: true,
       checked: consumed,
+      unchanged,
       requested: rows.length,
       stoppedEarly,
       remaining: Math.max(0, rows.length - consumed),
@@ -465,6 +555,10 @@ export async function GET(req: NextRequest) {
       verify: {
         outcomes,
         cadence: shapes,
+        /** Hosts skipped inside their read backoff, and how many rows each
+         *  covered. Reported for the same reason shape C's count is: a deferred
+         *  read must never read as a completed one. */
+        hostsBackedOff: skippedHosts,
         evidence: tally,
         proposals: proposalTotal,
         fixableLinks: fixableTotal,

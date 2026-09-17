@@ -6,6 +6,9 @@ import LogoMark from '@/components/icons/LogoMark'
 export const metadata = {
   title: 'Apply to join the founding cohort — Shoots',
   description: 'Join the Shoots founding cohort. Around 20–30 organisations who help shape the product and get free access during beta.',
+  // The cohort is closed. The page stays live for direct links only and must
+  // not be findable: noindex here, and it is left out of sitemap.ts.
+  robots: { index: false, follow: false },
 }
 
 const UI = "var(--font-space-grotesk), Space Grotesk, sans-serif"

@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { track } from '@/lib/analytics'
 import { createClient } from '@/lib/supabase/client'
 import LogoMark from '@/components/icons/LogoMark'
-import '@/styles/shoots-band-a.css'
+import './signup.css'
 
 /* Band A direction B — split canvas. Deep panel left, form right on cream.
    ============================================================
@@ -36,28 +36,16 @@ function isExistingUserSignupResponse(data: { user: { identities?: { id: string 
   return !!(data.user && (data.user.identities?.length ?? 0) === 0)
 }
 
-const BENEFITS: { title: string; body: string; dropOnMobile: boolean }[] = [
-  {
-    title: 'Only what you’re eligible for',
-    body: 'Every opportunity checked against your legal structure, location and funding stage, before you spend an hour on it.',
-    dropOnMobile: false,
-  },
-  {
-    title: 'Not just grants',
-    body: 'Social investment, programmes and in-kind support alongside grants, the funding you didn’t know to look for.',
-    dropOnMobile: true,
-  },
-  {
-    title: 'One pipeline, not a stale spreadsheet',
-    body: 'Track every application from matched through drafting to won, with every deadline in view.',
-    dropOnMobile: false,
-  },
-  {
-    title: 'Applications in your own voice',
-    body: 'Turn one project into tailored, fundable applications per funder. The voice stays yours.',
-    dropOnMobile: true,
-  },
+/* The five points on the pitch panel: the landing page's own claims, one
+   line each. */
+const POINTS = [
+  'Only what you\u2019re eligible for',
+  'Grants, social investment, programmes and in-kind support',
+  'One pipeline, every deadline in view',
+  'Applications in your own voice',
+  'Works with Claude, through our connector',
 ]
+
 
 function AlertIcon() {
   return (
@@ -68,14 +56,6 @@ function AlertIcon() {
   )
 }
 
-function Tick() {
-  return (
-    <svg className="tick" width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"
-         style={{ display: 'inline-block', verticalAlign: '-2px' }}>
-      <path d="M3 8.4l3.2 3.2L13 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
-}
 
 export default function SignupPage() {
   const router = useRouter()
@@ -137,67 +117,55 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="shoots-a">
+    <div className="su">
       <div className="split">
 
-        {/* Left: the brand panel. */}
-        <aside className="panel on-deep">
-          <Link href="/" className="brand on-deep">
-            <LogoMark size={28} variant="onInk" />
-            <span>shoots</span>
-          </Link>
-
-          <h2 className="panel-head">
-            Funding you can <span className="hl">actually win</span>
-          </h2>
-
-          <ul className="benefits">
-            {BENEFITS.map(b => (
-              <li key={b.title} className={b.dropOnMobile ? 'benefit-drop' : undefined}>
-                <p className="benefit-t"><Tick />{b.title}</p>
-                <p className="benefit-b">{b.body}</p>
-              </li>
-            ))}
-          </ul>
-
-          <div className="proof">
-            <div><b>600+</b><span>Verified opportunities</span></div>
-            <div><b>4</b><span>Funding types</span></div>
-            <div><b>3 min</b><span>To first matches</span></div>
+        {/* Left: the pitch. Logo anchored top, quote bottom, the headline and
+            points floating between, so the height is used rather than pooling
+            at the bottom (Paul's design, 9 Sept 2026). */}
+        <section className="col pitch">
+          <div className="inner">
+            <Link href="/" className="brand">
+              <LogoMark size={26} variant="onInk" />
+              <span>shoots</span>
+            </Link>
+            <div className="mid">
+              <h1>Find funding you can <span className="hl">actually win</span></h1>
+              <ul className="points">
+                {POINTS.map(t => <li key={t}><svg width="17" height="17" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 10.5l4 4 8-9" stroke="#9BCA9D" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" /></svg>{t}</li>)}
+              </ul>
+            </div>
+            <blockquote className="quote">
+              <p className="built">Built with UK charities, CICs and social enterprises</p>
+              <p>&ldquo;Shoots has become our go-to funding research platform. Its eligibility matching is remarkably accurate.&rdquo;</p>
+              <cite><b>David Agar</b>CEO, BankAbility UK CIC</cite>
+            </blockquote>
           </div>
-        </aside>
+        </section>
 
-        {/* Right: the form, on cream, no card. */}
-        <main className="formside">
-          <div className="formside-top">
-            <span className="t-meta">
-              Already have an account?{' '}
-              <Link href="/auth/login" className="navlink">Sign in</Link>
-            </span>
-          </div>
+        {/* Right: the form, directly on the ground, no card. */}
+        <section className="col signup">
+          <div className="inner">
+            <p className="toplink">Already have an account? <Link href="/auth/login">Sign in</Link></p>
 
-          <div className="formbox">
             {checkEmail ? (
               <>
-                <h1 className="t-title">Check your email</h1>
-                <p className="t-body" style={{ marginTop: 10 }}>
+                <h2>Check your email</h2>
+                <p className="lead">
                   We&apos;ve sent a confirmation link to <strong style={{ color: 'var(--deep)' }}>{email.trim().toLowerCase()}</strong>.
                   Click it to activate your account and finish setting up.
                 </p>
-                <p className="t-meta" style={{ marginTop: 18 }}>
+                <p className="help">
                   Can&apos;t find it? Check your spam folder, or email{' '}
-                  <a href="mailto:hello@shootsfunding.co.uk" className="link" style={{ fontSize: 12.8 }}>hello@shootsfunding.co.uk</a>.
+                  <a href="mailto:hello@shootsfunding.co.uk" style={{ fontWeight: 600, color: 'var(--deep)' }}>hello@shootsfunding.co.uk</a>.
                 </p>
               </>
             ) : (
               <>
-                <h1 className="t-title">Create your account</h1>
-                <p className="t-body" style={{ marginTop: 10 }}>
-                  Tell us about your organisation and see what fits, in about three minutes.
-                </p>
+                <h2>Create your account</h2>
+                <p className="lead">Tell us about your organisation and see what fits, in about five minutes.</p>
 
-                <form onSubmit={handleSignup} style={{ display: 'flex', flexDirection: 'column', gap: 18, marginTop: 28 }}>
-
+                <form onSubmit={handleSignup}>
                   {error && (
                     <div className="banner" role="alert">
                       <AlertIcon />
@@ -206,39 +174,20 @@ export default function SignupPage() {
                   )}
 
                   <div className="field">
-                    <label htmlFor="name">Your name</label>
-                    <input
-                      id="name"
-                      className="input"
-                      type="text"
-                      value={name}
-                      onChange={e => setName(e.target.value)}
-                      placeholder="Jo Patel"
-                      autoComplete="name"
-                      required
-                    />
+                    <label className="f" htmlFor="name">Your name</label>
+                    <input id="name" className="in" type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Jo Patel" autoComplete="name" required />
                   </div>
 
                   <div className="field">
-                    <label htmlFor="email">Work email</label>
-                    <input
-                      id="email"
-                      className="input"
-                      type="email"
-                      value={email}
-                      onChange={e => setEmail(e.target.value)}
-                      placeholder="you@organisation.org"
-                      autoComplete="email"
-                      required
-                    />
+                    <label className="f" htmlFor="email">Email</label>
+                    <input id="email" className="in" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@organisation.org" autoComplete="email" required />
                   </div>
 
                   <div className="field">
-                    <label htmlFor="password">Password</label>
+                    <label className="f" htmlFor="password">Password</label>
                     <div className="pw">
                       <input
                         id="password"
-                        className="input"
                         type={showPw ? 'text' : 'password'}
                         value={password}
                         onChange={e => setPassword(e.target.value)}
@@ -246,32 +195,27 @@ export default function SignupPage() {
                         aria-describedby="pw-help"
                         required
                       />
-                      <button
-                        type="button"
-                        className="reveal"
-                        onClick={() => setShowPw(v => !v)}
-                        aria-label={showPw ? 'Hide password' : 'Show password'}
-                      >
+                      <button type="button" onClick={() => setShowPw(v => !v)} aria-label={showPw ? 'Hide password' : 'Show password'}>
                         {showPw ? 'Hide' : 'Show'}
                       </button>
                     </div>
-                    <p className="helpmsg" id="pw-help">Use at least 8 characters.</p>
+                    <p className="help" id="pw-help">Use at least 8 characters.</p>
                   </div>
 
-                  <button type="submit" className="btn btn-primary btn-block" disabled={loading} style={{ marginTop: 4 }}>
+                  <p className="trial"><b>14 days of full access, no card needed.</b> You choose a plan at the end.</p>
+
+                  <button type="submit" className="btn" disabled={loading}>
                     {loading ? <><span className="spin" />Creating account…</> : 'Create account'}
                   </button>
                 </form>
 
-                <p className="t-meta" style={{ marginTop: 20 }}>
-                  By creating an account you agree to our{' '}
-                  <Link href="/terms" className="link" style={{ fontSize: 12.8 }}>Terms</Link> and{' '}
-                  <Link href="/privacy" className="link" style={{ fontSize: 12.8 }}>Privacy policy</Link>.
+                <p className="legal">
+                  By creating an account you agree to our <Link href="/terms">Terms</Link> and <Link href="/privacy">Privacy policy</Link>.
                 </p>
               </>
             )}
           </div>
-        </main>
+        </section>
 
       </div>
     </div>

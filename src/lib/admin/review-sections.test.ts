@@ -239,3 +239,19 @@ describe('unblocked is not the same claim as ready to publish', () => {
     expect(rootCauseOf(['no_deadline'])).toBeNull()
   })
 })
+
+describe('sectionOf — an unreadable row is never sent to be read', () => {
+  it('files an unblocked row with GAPS under exhausted, not reading', () => {
+    // The gaps are real and a read would fill them — but nothing can read this
+    // page, so "Needs reading" is an instruction that cannot be followed.
+    expect(sectionOf([], ['no_amount', 'no_deadline'])).toBe('reading')
+    expect(sectionOf([], ['no_amount', 'no_deadline', 'read_exhausted'])).toBe('exhausted')
+  })
+
+  it('leaves the no-gaps case exactly as it was', () => {
+    // Pinned by the existing decision above: nothing blocking and nothing
+    // missing is ready, re-readable or not.
+    expect(sectionOf([], ['read_exhausted'])).toBe('ready')
+    expect(sectionOf([], ['read_exhausted', 'link_unverified'])).toBe('ready')
+  })
+})

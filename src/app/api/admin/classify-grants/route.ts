@@ -25,7 +25,8 @@ import { mergeGrantUpdate } from '@/lib/grant-merge'
 // impact_sectors, funding_type, eligible_structures, target_beneficiaries.
 // Citations flow through the merger into field_provenance for review UI.
 // v2 (2026-05-24): added SECONDARY-OUTCOME crossover rule.
-const CLASSIFIER_VERSION = 'v3'
+// v4 (2026-09-16): beneficiary order carries meaning and padding is out; who_can_apply is read.
+const CLASSIFIER_VERSION = 'v4'
 const PROVENANCE_SOURCE  = `ai_classifier:${CLASSIFIER_VERSION}`
 
 // Single classify pass — fetches `limit` unclassified rows, runs Claude, writes
@@ -53,6 +54,7 @@ async function classifyOnce(supabase: SupabaseClient<any>, limit: number): Promi
         ...g,
         what_they_fund: typeof fb?.what_they_fund === 'string' ? fb.what_they_fund : undefined,
         priorities:     typeof fb?.priorities     === 'string' ? fb.priorities     : undefined,
+        who_can_apply:  typeof fb?.who_can_apply  === 'string' ? fb.who_can_apply  : undefined,
       }
     })
     const results = await classifyBatch(enrichedBatch as GrantInput[])

@@ -582,6 +582,18 @@ export function grantMatchesLocationText(locationTag: string | null | undefined,
   if (!text.trim()) return true
   const c = classifyLocationTag(locationTag)
   if (c.kind === 'national' || c.kind === 'unknown' || c.kind === 'multi') return true
+  // A nation tag ("England & Wales", "Scotland") is not a region: the org's
+  // location text is a town or a county, so string-matching "Leeds" against
+  // "England & Wales" fails and every England-and-Wales funder vanished from
+  // Find Funding for a Leeds organisation (Yapp, Albert Gubay; Paul, from the
+  // demo, 2026-09-04). Decide by nation, the same way the scorer does: the
+  // text names Scotland, Wales or Northern Ireland, or it is in England.
+  if (c.nations && c.nations.length > 0) {
+    const t = text.toLowerCase()
+    const orgNation: UKNation =
+      t.includes('scotland') ? 'scotland' : t.includes('wales') ? 'wales' : t.includes('northern ireland') ? 'ni' : 'england'
+    return c.nations.includes(orgNation)
+  }
   return orgMatchesRegionalTag(locationTag ?? '', text)
 }
 
@@ -690,7 +702,7 @@ function sectorDisplayLabel(s: string): string {
   return MAP[s] ?? s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
 }
 
-function normalizeStructureTokens(s: string): string[] {
+export function normalizeStructureTokens(s: string): string[] {
   const sl = s.toLowerCase().trim()
   switch (sl) {
     case 'cic_guarantee':
@@ -764,6 +776,101 @@ function normalizeStructureTokens(s: string): string[] {
  * here. Read the surface.
  */
 const INDIVIDUAL_ONLY_SCORE_CAP = 5
+
+/**
+ * A sport is not a theme, it is a gate. The Football Foundation funds
+ * football and nothing else, and on 14 Sept 2026 Bridlington Cricket
+ * Foundation was shown it at 89: both sides said "sport", and the niche
+ * overlap on disability_sport and women_in_sport earned a bonus that
+ * outweighed the football-versus-cricket conflict the mismatch rule would
+ * otherwise have applied. These tags name a discipline; when the funder
+ * names one and the organisation names a different one, the row is out.
+ * Cross-cutting sport tags (disability_sport, women_in_sport) are not here.
+ */
+const SPORT_DISCIPLINE_TAGS = new Set(['football', 'cricket', 'rugby', 'basketball', 'swimming', 'athletics', 'tennis', 'cycling', 'martial_arts'])
+const SPORT_DISCIPLINE_SCORE_CAP = 30
+
+/**
+ * A grant's primary beneficiary group is a gate, not a theme.
+ *
+ * Found 2026-09-16 on the first signup after launch to be checked in detail
+ * (a Bournemouth fertility-support CIC, beneficiaries women and girls,
+ * families). Its top fifteen carried the Army Benevolent Fund at 72, Cash for
+ * Kids and 7Stars at 66, funds for veterans and children. Each reached the
+ * list on broad sector overlap (health, mental health, community are the
+ * three commonest tags in the catalogue) plus the 30 points every eligible
+ * grant collects for size, funder type and eligibility, while the beneficiary
+ * dimension only scored the mismatch DOWN to 4 or 8 of 20. Nothing said "this
+ * fund is for someone else".
+ *
+ * The rule: on a grant, when the funder names a specific primary group, the
+ * organisation does not serve it, the organisation's own primary group is
+ * not on the funder's list, AND either the two lists share nothing at all or
+ * the funder's list is short (two groups: a fund that names veterans and
+ * families is a veterans' fund), the score is capped below the shown floor.
+ * Children and young people count as each other. general_public on either
+ * side means no gate: the fund, or the organisation, is for everyone.
+ * The first draft capped on the primary alone and took the Rayne Foundation
+ * (young people, refugees, older people, carers) off a homelessness charity
+ * that serves refugees; a funder with several named groups is a broad
+ * funder, and one shared group is enough to keep it in view.
+ * Org-centred types (programmes, investment, in-kind) are untouched: they
+ * pick on the organisation, not its end users, as the weights already say.
+ *
+ * A CAP, not a filter, like every gate in this file: the row stays browsable
+ * and the reason says why it sits where it does.
+ */
+const BENEFICIARY_PRIMARY_SCORE_CAP = 49
+const BENEFICIARY_GATE_LABELS: Record<string, string> = {
+  young_people: 'young people', children: 'children', people_in_poverty: 'people in poverty',
+  mental_health: 'people with mental health conditions', disabled_people: 'disabled people',
+  older_people: 'older people', women_girls: 'women and girls', men_boys: 'men and boys', families: 'families',
+  refugees_migrants: 'refugees and migrants', homeless: 'people experiencing homelessness',
+  rural_communities: 'rural communities', lgbtq: 'LGBTQ+ people', ethnic_minorities: 'people from ethnic minorities',
+  carers: 'carers', veterans: 'veterans', ex_offenders: 'ex-offenders',
+}
+const BENEFICIARY_UNIVERSAL = new Set(['general_public', 'social_impact_orgs'])
+const BENEFICIARY_NEIGHBOURS: Record<string, string[]> = { children: ['young_people'], young_people: ['children'] }
+
+export function beneficiaryPrimaryGate(
+  grantGroups: readonly string[] | null | undefined,
+  orgGroups: readonly string[] | null | undefined,
+  fundingType: string | null | undefined,
+): { capped: boolean; primary: string | null } {
+  if (fundingType && fundingType !== 'grant') return { capped: false, primary: null }
+  const g = (grantGroups ?? []).filter(Boolean)
+  const o = (orgGroups ?? []).filter(Boolean)
+  if (!g.length || !o.length) return { capped: false, primary: null }
+  const primary = g[0]
+  if (BENEFICIARY_UNIVERSAL.has(primary) || g.some(x => BENEFICIARY_UNIVERSAL.has(x)) || o.some(x => BENEFICIARY_UNIVERSAL.has(x))) {
+    return { capped: false, primary }
+  }
+  const near = (a: string, b: string) => a === b || (BENEFICIARY_NEIGHBOURS[a] ?? []).includes(b)
+  const orgServesPrimary = o.some(x => near(x, primary))
+  const grantListsOrgPrimary = g.some(x => near(x, o[0]))
+  if (orgServesPrimary || grantListsOrgPrimary) return { capped: false, primary }
+  const shareAnything = g.some(x => o.some(y => near(x, y)))
+  return { capped: !shareAnything || g.length <= 2, primary }
+}
+
+/** Ceiling for an in-kind offer with no restriction the matcher can score. One
+ *  below MATCH_TIER_GOOD, so it reads Partial and sits under every scored grant. */
+export const UNRESTRICTED_IN_KIND_SCORE_CAP = 60
+
+/**
+ * True when nothing on the row narrows who may take it up: not local, no
+ * income band, and either no structure list or one wide enough to admit every
+ * common form. Beneficiary and sector tags are deliberately NOT consulted:
+ * on in-kind rows they describe who the offer is about, not who is barred,
+ * and the first cut of this guard let StreetGames membership and Buddle
+ * through at 90 on a young_people tag.
+ */
+export function isUnrestrictedOffer(grant: GrantOpportunity): boolean {
+  if (grant.isLocal) return false
+  if (grant.minOrgIncome != null || grant.maxOrgIncome != null) return false
+  const structures = grant.eligibleStructures ?? []
+  return structures.length === 0 || structures.length >= 5
+}
 
 /**
  * Is the applicant a person rather than an organisation?
@@ -1087,10 +1194,17 @@ export function computeMatchScore(
       'food', 'animal_welfare', 'faith',
     ]
     const grantPrimaryDomains = grantImpactSectors.filter(s => PRIMARY_DOMAINS.includes(s))
+    // A grant whose FIRST sector is the organisation's FIRST sector is about
+    // the same thing they are, whatever else it lists. Doc Society's
+    // documentary fund is tagged creative, justice, environment, health; for
+    // a documentary production house (creative first) the environment tag
+    // fired this veto and the fund scored 44 (16 Sept 2026). The veto exists
+    // for a football grant reaching a theatre, not for that.
+    const samePrimarySector = orgImpactSectors[0] !== undefined && grantImpactSectors[0] === orgImpactSectors[0]
     if (grantPrimaryDomains.length > 0) {
       const orgCoversDomain = grantPrimaryDomains.some(s => orgImpactSectors.includes(s))
       // See generalist-grant comment near the top of this fn.
-      if (!orgCoversDomain && !isGeneralistGrant) {
+      if (!orgCoversDomain && !isGeneralistGrant && !samePrimarySector) {
         primaryDomainMismatch = true
         themesScore = Math.min(themesScore, 5)
       }
@@ -1925,6 +2039,15 @@ export function computeMatchScore(
     score = Math.min(score, 45)
   }
 
+  // ── Primary beneficiary gate (see beneficiaryPrimaryGate) ─────────────────
+  const benGate = beneficiaryPrimaryGate(grant.beneficiaryGroups, org.beneficiary_groups, grant.fundingType)
+  if (benGate.capped && benGate.primary) {
+    score = Math.min(score, BENEFICIARY_PRIMARY_SCORE_CAP)
+    const who = BENEFICIARY_GATE_LABELS[benGate.primary] ?? benGate.primary.replace(/_/g, ' ')
+    // "not match" is what the reason splitter files as a warning.
+    reasons.push(`This fund is for ${who}; your profile does not match that group`)
+  }
+
   // ── Individual-applicant funds ─────────────────────────────────────────────
   // A fund whose eligibility is drawn ENTIRELY from individual-applicant
   // structures cannot be won by an organisation, so a 45 cap is not enough:
@@ -1956,6 +2079,15 @@ export function computeMatchScore(
   // list while staying browsable. (Previously described as being below a 60%
   // "Other matches" floor on Find Funding. No such floor exists; see the note
   // on INDIVIDUAL_ONLY_SCORE_CAP.)
+  {
+    const grantDisciplines = (grant.nicheTags ?? []).map(t => t.toLowerCase()).filter(t => SPORT_DISCIPLINE_TAGS.has(t))
+    const orgDisciplines   = (org.niche_tags   ?? []).map(t => t.toLowerCase()).filter(t => SPORT_DISCIPLINE_TAGS.has(t))
+    if (grantDisciplines.length && orgDisciplines.length && !grantDisciplines.some(t => orgDisciplines.includes(t))) {
+      score = Math.min(score, SPORT_DISCIPLINE_SCORE_CAP)
+      reasons.push(`This funder is for ${grantDisciplines[0].replace(/_/g, ' ')}, not ${orgDisciplines[0].replace(/_/g, ' ')}`)
+    }
+  }
+
   if (sizeFloorTriggered) {
     score = Math.min(score, SIZE_FLOOR_SCORE_CAP)
   }
@@ -2022,6 +2154,21 @@ export function computeMatchScore(
   // highly for a theatre, even if both work with young people.
   if (primaryDomainMismatch) {
     score = Math.min(score, 44)
+  }
+
+  // ── Unrestricted in-kind offers ────────────────────────────────────────────
+  // An in-kind row open to any organisation anywhere, with no structure, income
+  // or beneficiary restriction, gives the matcher nothing to mark it down on,
+  // so it scores near the top for every organisation and outranks real grants.
+  // On 2026-09-11 NCVO's paid training courses scored 91 and 84 for two fresh
+  // signups and sat first and second in both lists, above Sported and the
+  // Football Foundation for a cricket charity. Paul: show them, but never above
+  // a scored grant. The cap sits just under the Good band, so an unrestricted
+  // offer can be Partial at best. A targeted in-kind offer (a place, a
+  // beneficiary group, an income band) is left alone: FareShare for food
+  // charities is a real match and should score like one.
+  if (grant.fundingType === 'in_kind' && isUnrestrictedOffer(grant)) {
+    score = Math.min(score, UNRESTRICTED_IN_KIND_SCORE_CAP)
   }
 
   // Build a narrative sentence rather than a flat bullet list
@@ -2254,10 +2401,13 @@ export function scoreColour(score: number): { bg: string; text: string; bar: str
 export const MATCH_TIER_STRONG = 80
 export const MATCH_TIER_GOOD   = 65
 
+// Dots were #639922 / #8ECB3C / #C0DD97 until 2026-09-02: 1.33, 1.71 and
+// 2.30 against a 3:1 floor for non-text. They now take the ink the search
+// page already uses for the same three bands (6.1, 5.7, 6.5 on cream).
 export const MATCH_TIER = {
-  strong:  { label: 'Strong',  bg: '#C0DD97', color: '#173404', dot: '#639922' },
-  good:    { label: 'Good',    bg: '#EAF3DE', color: '#3B6D11', dot: '#8ECB3C' },
-  partial: { label: 'Partial', bg: '#F5F1E8', color: '#5F5E5A', dot: '#C0DD97' },
+  strong:  { label: 'Strong',  bg: '#C0DD97', color: '#173404', dot: '#1B6B3D' },
+  good:    { label: 'Good',    bg: '#EAF3DE', color: '#3B6D11', dot: '#7A5E11' },
+  partial: { label: 'Partial', bg: '#F5F1E8', color: '#5F5E5A', dot: '#5F5E5A' },
 } as const
 
 /** Score -> tier colours. Reads the shared boundaries above so this cannot

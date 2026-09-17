@@ -52,6 +52,8 @@ export interface ScaffoldSection {
   heading: string
   guidance: string          // written TO the user, never AS the user
   suggested_order: number
+  /** Ticked by the user once their answer covers this point. Persists with the question. */
+  covered?: boolean
 }
 
 export interface MappedBlock {

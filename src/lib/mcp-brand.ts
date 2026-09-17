@@ -229,6 +229,51 @@ export const EMAIL_BRAND_HOST = MCP_APP_HOST.replace(/^www\./, '')
  *  the mail provider, or the receiving domain's DMARC policy will act on it. */
 export const EMAIL_FROM = readString('ALERT_FROM_EMAIL', `alerts@${EMAIL_BRAND_HOST}`)
 
+/**
+ * The name a recipient sees in their inbox.
+ *
+ * DELIBERATELY not MCP_BRAND_NAME. The wordmark is "Shoots" and stays "Shoots"
+ * everywhere it appears beside the mark, where the logo carries the context.
+ * A sender name has no logo next to it — it sits in a list of forty other
+ * senders, frequently in the Promotions tab, next to a truncated subject. There
+ * "Shoots" says nothing about what the email is; "Shoots Funding" says it in
+ * one extra word and matches the domain it arrives from.
+ *
+ * A constant rather than `${MCP_BRAND_NAME} Funding`, because deriving it would
+ * silently produce "Shoots Funding Funding" if the brand name ever absorbed the
+ * second word.
+ */
+export const EMAIL_FROM_NAME = readString('EMAIL_FROM_NAME', 'Shoots Funding')
+
+/**
+ * The From header, with a display name.
+ *
+ * A bare address makes every client show the LOCAL PART as the sender, so the
+ * weekly digest was arriving from "alerts" — a word that appears nowhere in the
+ * product and tells a reader nothing about who is writing. The sender name is
+ * where "who is this" belongs; the subject is for what is urgent.
+ *
+ * If the env var already carries a display name, it is left alone.
+ */
+export const EMAIL_FROM_HEADER = EMAIL_FROM.includes('<')
+  ? EMAIL_FROM
+  : `${EMAIL_FROM_NAME} <${EMAIL_FROM}>`
+
+/**
+ * Where a reply goes.
+ *
+ * `EMAIL_FROM` is alerts@, which nobody reads. Any email that INVITES a reply
+ * has to carry this, or the invitation is a lie told in our own voice, and the
+ * person who took us up on it concludes we ignored them. Paul confirmed on
+ * 2026-09-05 that this address is monitored.
+ *
+ * The rule, from the first-run spec: if an email says "reply to this", it sets
+ * a reply-to. If nobody will read the replies, the LINE gets cut rather than
+ * the header quietly omitted. Sending an uninvited reply into a black hole is
+ * the smaller harm; sending an invited one is the larger.
+ */
+export const EMAIL_REPLY_TO = readString('EMAIL_REPLY_TO', `paul@${EMAIL_BRAND_HOST}`)
+
 /** Where internal notifications land: the contact form and in-app feedback. */
 export const EMAIL_NOTIFY_TO = readString('FEEDBACK_NOTIFY_EMAIL', MCP_CONTACT_EMAIL)
 

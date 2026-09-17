@@ -8,11 +8,13 @@ import { ArrowLeft, ArrowRight, ChevronRight, Check, Globe, Pencil, X } from 'lu
 import { createClient } from '@/lib/supabase/client'
 import { getOrganisationByOwner, createOrganisation, updateOrganisation, writeActiveOrgCookie } from '@/lib/organisations'
 import { track } from '@/lib/analytics'
-import { computeMatchScore, MATCH_FLOOR } from '@/lib/matching'
+import { computeMatchScore, MATCH_FLOOR, grantMatchesLocationText } from '@/lib/matching'
 import { columnFor, normaliseNumber, detectRegister, registerLabel, isRecognisedNumber, expectedRegisterFor } from '@/lib/registered-number'
 import { normaliseScrapedGrant } from '@/lib/grants-normalise'
-import type { LegalStructure, ImpactSector, BeneficiaryGroup, FundingType, SpendNeed } from '@/types'
+import type { LegalStructure, ImpactSector, BeneficiaryGroup, FundingType, SpendNeed, Organisation } from '@/types'
 import Button from '@/components/ui/Button'
+import { checkProfile, type ProfileFinding } from '@/lib/profile-check'
+import { suggestTags, IMPACT_SECTOR_OPTIONS, BENEFICIARY_OPTIONS, SECTOR_SYNONYMS, BENEFICIARY_SYNONYMS } from '@/lib/tag-suggestions'
 import LogoMark from '@/components/icons/LogoMark'
 
 /* ═══════════════════════════════════════════════
@@ -64,11 +66,14 @@ const INCOME_BANDS = [
   '£1 million–£5 million', 'Over £5 million',
 ]
 
+// Answers to "Where do the people you help live?" (Paul, 14 Sept 2026: the
+// old labels mixed two ideas, "Regional + national", and nobody knew which
+// to pick). Same four values underneath, so matching is unchanged.
 const GEOGRAPHIC_REACH_OPTIONS = [
-  { value: 'local',         label: 'Local only',              hint: 'One town, borough, or district' },
-  { value: 'regional',      label: 'Regional + national',     hint: 'County, region, or UK-wide' },
-  { value: 'national',      label: 'National only',           hint: 'UK-wide programmes' },
-  { value: 'international', label: 'UK-wide + international', hint: 'Includes overseas work' },
+  { value: 'local',         label: 'One town or area',   hint: 'A borough, town or district' },
+  { value: 'regional',      label: 'A county or region', hint: 'For example the South West or Greater Manchester' },
+  { value: 'national',      label: 'Across the UK',      hint: 'Anywhere in the country' },
+  { value: 'international', label: 'Overseas as well',   hint: 'Some or all of your work is outside the UK' },
 ]
 
 const LEGAL_STRUCTURE_OPTIONS: { value: LegalStructure; label: string }[] = [
@@ -93,13 +98,13 @@ const IMPACT_SECTORS: { value: ImpactSector; label: string }[] = [
   { value: 'housing',           label: 'Housing & Homelessness' },
   { value: 'education',         label: 'Education & Skills' },
   { value: 'employment',        label: 'Employment & Livelihoods' },
-  { value: 'disability',        label: 'Disability' },
-  { value: 'older_people',      label: 'Older People' },
+  { value: 'disability',        label: 'Disability services' },
+  { value: 'older_people',      label: 'Older people\u2019s services' },
   { value: 'environment',       label: 'Environment & Climate' },
   { value: 'creative',          label: 'Arts & Creative Industries' },
   { value: 'heritage',          label: 'Heritage & Conservation' },
   { value: 'sport',             label: 'Sport & Physical Activity' },
-  { value: 'women',             label: 'Women & Gender Equality' },
+  { value: 'women',             label: 'Women\u2019s organisations & gender equality' },
   { value: 'justice',           label: 'Human Rights, Justice & Democracy' },
   { value: 'tech',              label: 'Tech for Good' },
   { value: 'financial',         label: 'Financial Inclusion' },
@@ -183,11 +188,32 @@ const UNCOLLECTED_ON_CREATE = {
   key_outcomes:                [],
 }
 
-type WizardStep = 'entry' | 'review' | 'manual' | 'sectors' | 'beneficiaries' | 'location' | 'reveal'
+type WizardStep = 'entry' | 'review' | 'manual' | 'sectors' | 'beneficiaries' | 'location' | 'check' | 'reveal'
+
+/** Who is signing up. Recorded on the organisation row; see migration 080. */
+type SignupRole = 'organisation' | 'consultant' | 'network'
+/** Browse path: consultant bands, or network bands (migration 083). */
+type ClientBand = '' | '1-2' | '3-5' | '6+' | '<20' | '20-100' | '100+'
 
 const STEP_DOT_POS: Record<WizardStep, number> = {
-  entry: 1, review: 2, manual: 2, sectors: 3, beneficiaries: 4, location: 5, reveal: 6,
+  // Who you serve comes before what you focus on (Paul, 8 Sept 2026, after
+  // a tester went looking for "children and young people" under sectors):
+  // charities describe themselves by audience first, and so do funder briefs.
+  // The check (Paul, 13 Sept 2026) sits between the last question and the
+  // reveal: it reads the profile back the way a funder would and says what
+  // is pulling the matches off course, with the edit right there.
+  // The mission step went on 16 Sept 2026 (Paul, after four of six confirmed
+  // signups left without a profile, two of them on that screen). The website
+  // scan already reads the mission, sectors and beneficiaries; the mission is
+  // now an editable box on the review step (or the manual step), the scanned
+  // tags arrive pre-ticked, and the profile is saved from the review step on
+  // so a drop after it still leaves something to follow up.
+  entry: 1, review: 2, manual: 2, beneficiaries: 3, sectors: 4, location: 5, check: 6, reveal: 6,
 }
+const STEP_TOTAL = 6
+
+/** Two lines minimum for the mission, whichever box it is typed into. */
+const MISSION_MIN = 40
 
 type FieldConfidence = 'confident' | 'uncertain' | 'missing'
 
@@ -286,6 +312,14 @@ interface WizardState {
    * changes is that somebody saw it.
    */
   alertsEnabled:    boolean
+  /** Who is signing up. Defaults to the organisation itself. */
+  signupRole:       SignupRole
+  /** Browse path only: how many organisations they work with, and one of them. */
+  clientCountBand:  ClientBand
+  exampleClient:    string
+  /** Consultant or network building a client profile: their own name or practice, and website. */
+  practiceName:     string
+  practiceWebsite:  string
 }
 
 const EMPTY_STATE: WizardState = {
@@ -299,6 +333,11 @@ const EMPTY_STATE: WizardState = {
   nicheTags: [],
   excludedNicheTags: [],
   alertsEnabled: true,
+  signupRole: 'organisation',
+  clientCountBand: '',
+  exampleClient: '',
+  practiceName: '',
+  practiceWebsite: '',
 }
 
 /** Derive the three boolean eligibility flags from the legal structure.
@@ -430,7 +469,7 @@ const ACTIONS_STYLE: React.CSSProperties = {
  * hard to count at a glance. The text carries the state and the dots become
  * decorative, which is where they belong, so they are aria-hidden.
  */
-function StepDots({ active, total = 6 }: { active: number; total?: number }) {
+function StepDots({ active, total = STEP_TOTAL }: { active: number; total?: number }) {
   return (
     <div style={{ display: 'flex', gap: 11, alignItems: 'center' }}>
       <span style={{
@@ -505,6 +544,24 @@ function SkipAction({ onClick, children }: { onClick: () => void; children: Reac
  * Field wrapper — label, optional inline hint, children input, optional help text below.
  * The hint and help are separate elements so the asterisk never wraps near a select arrow.
  */
+/**
+ * Sole trader / individual practitioner.
+ *
+ * Shoots matches funding to organisations. Most funders will not fund an
+ * individual, so someone who picks this structure will see few or no matches,
+ * and the usual "one detail unlocks your matches" nudge would be misleading.
+ * Say so plainly at the point they choose it, and again on the reveal.
+ */
+function IndividualNotice({ compact }: { compact?: boolean }) {
+  return (
+    <div style={{ background: T.amberBgSoft, border: '1px solid rgba(133,79,11,0.22)', borderRadius: 12, padding: compact ? '10px 14px' : '14px 18px', marginTop: compact ? 10 : 0 }}>
+      <p style={{ margin: 0, fontFamily: 'var(--font-dm-sans)', fontSize: 13.5, lineHeight: 1.55, color: T.textPrimary }}>
+        Shoots matches funding to organisations. Most funders do not fund individuals, so you will see few or no matches as a sole trader. You are welcome to browse the catalogue and save anything worth watching. If you set up a constituted group or a company, change your structure here and the matches open up.
+      </p>
+    </div>
+  )
+}
+
 function Field({
   label, required, hint, help, children,
 }: {
@@ -582,8 +639,7 @@ function PickerChip({
       onMouseLeave={() => setHov(false)}
       style={{
         position: 'relative',
-        width: '100%',
-        padding: '9px 12px',
+        padding: '11px 17px',
         // Three treatments, loudest = most important: primary is the deep
         // fill, also-selected is the sage tint, unselected is a ghost outline.
         // The star is the extra mark that says "primary is a different KIND of
@@ -594,18 +650,21 @@ function PickerChip({
         // The loudest chip on screen was the less important one; and inside a
         // confident review field, whose own background is sage tint, the
         // primary chip became fill-on-fill and vanished entirely.
-        border: `1.5px solid ${isPrimary || isSecondary || showHover ? T.greenDeep : 'var(--border-ghost)'}`,
+        // Design of 9 Sept 2026: pills that size to their text. Unselected is
+        // deep text on white (the pale text read as disabled), selected is the
+        // pale green tint, primary is the deep fill. Nothing is dimmed at the
+        // cap; the running count above says why a fifth click does nothing.
+        border: `1px solid ${isPrimary ? T.greenDeep : isSecondary ? '#B9D9C7' : showHover ? 'rgba(29,60,62,.42)' : 'rgba(29,60,62,.18)'}`,
         borderRadius: 999,
-        background: isPrimary ? T.greenDeep : isSecondary || showHover ? T.greenCream : 'transparent',
-        color: isPrimary ? T.onDeep : T.greenTextDeep,
-        fontSize: 12,
-        fontWeight: isPrimary || isSecondary ? 500 : 400,
+        background: isPrimary ? T.greenDeep : isSecondary ? '#E4F1EA' : '#fff',
+        color: isPrimary ? T.onDeep : isSecondary ? '#1B6B3D' : T.greenDeep,
+        fontSize: 14.5,
+        fontWeight: 500,
         cursor: dimmed ? 'default' : 'pointer',
-        textAlign: 'center' as const,
-        fontFamily: 'var(--font-dm-sans)',
-        lineHeight: 1.3,
+        textAlign: 'left' as const,
+        fontFamily: 'var(--font-space-grotesk)',
+        lineHeight: 1,
         transition: 'all 120ms ease',
-        opacity: dimmed ? 0.38 : 1,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -649,10 +708,9 @@ function PickerChip({
 
 /** Card wrapper for steps 2–5 */
 function CardShell({
-  step, showSkip = true, children,
+  step, children,
 }: {
   step: number
-  showSkip?: boolean
   children: React.ReactNode
 }) {
   const isMobile = useIsMobile()
@@ -687,18 +745,9 @@ function CardShell({
             {children}
           </div>
         </div>
-        {showSkip && (
-          <div style={{ textAlign: 'center', marginTop: 4 }}>
-            <Link
-              href="/dashboard/profile"
-              style={{ fontSize: 13, color: T.textTertiary, fontFamily: 'var(--font-space-grotesk)', padding: '12px 16px', display: 'inline-block', textDecoration: 'none' }}
-              onMouseEnter={e => (e.currentTarget.style.color = T.textSecondary)}
-              onMouseLeave={e => (e.currentTarget.style.color = T.textTertiary)}
-            >
-              Set up later
-            </Link>
-          </div>
-        )}
+        {/* "Set up later" removed (Paul, 8 Sept 2026): a profile is the
+            product, and the browse-without-a-profile path now exists for the
+            people who genuinely cannot fill one in. */}
       </div>
     </div>
   )
@@ -776,6 +825,7 @@ export default function OnboardingWizardPage() {
           annualIncomeBand: org.annual_income_band ?? '',
           geographicReach:  org.geographic_reach ?? '',
           mission:          org.mission ?? '',
+         
           impactSectors:    ((org.impact_sectors as ImpactSector[]) ?? []).filter(s => IMPACT_SECTORS.some(o => o.value === s)).slice(0, 4),
           beneficiaryGroups: (org.beneficiary_groups as BeneficiaryGroup[]) ?? [],
           // Store raw digits; fmtThousands() formats on display
@@ -798,7 +848,21 @@ export default function OnboardingWizardPage() {
           // Read back rather than defaulted, so a second pass through the
           // wizard cannot silently re-subscribe somebody who turned alerts off.
           alertsEnabled:    org.alerts_enabled ?? true,
+          signupRole:       (org.signup_role as SignupRole | null | undefined) ?? 'organisation',
+          clientCountBand:  (org.client_count_band as ClientBand | null | undefined) ?? '',
+          exampleClient:    org.example_client ?? '',
+          practiceName:     org.signup_practice_name ?? '',
+          practiceWebsite:  org.signup_practice_website ?? '',
         })
+        // Resume where the profile stops. A row saved from the review step
+        // has the facts and the mission and nothing else; sending that
+        // reader back to the URL box would ask for what they already gave.
+        const hasFacts = !!(org.name?.trim() && org.legal_structure)
+        if (!hasFacts) setStep('entry')
+        else if ((org.mission ?? '').trim().length < MISSION_MIN) setStep('manual')
+        else if (!(org.beneficiary_groups?.length)) setStep('beneficiaries')
+        else if (!(org.impact_sectors?.length)) setStep('sectors')
+        else setStep('location')
       }
       setLoading(false)
     }
@@ -876,12 +940,17 @@ export default function OnboardingWizardPage() {
         ext.name, ext.registeredNumber, ext.legalStructure, ext.primaryLocation,
         ext.annualIncomeBand, ext.mission,
       ].filter(Boolean).length + (ext.impactSectors.length > 0 ? 1 : 0) + (ext.beneficiaryGroups.length > 0 ? 1 : 0)
-      if (foundCount === 0) {
-        setFetchError('We couldn’t pick anything up from that site. Fill the details in below.')
+      if (foundCount === 0 || data.unreadable) {
+        // The site could not be read, or read as nothing. The route no longer
+        // guesses from the domain, so this is the honest branch: say so, and
+        // carry the one thing it may have found (a registration number).
+        setFetchError(data.message ?? 'We couldn’t pick anything up from that site. Fill the details in below.')
+        if (ext.registeredNumber) setState(prev => ({ ...prev, registeredNumber: ext.registeredNumber ?? prev.registeredNumber }))
         setStep('manual')
         return
       }
       setExtracted(ext)
+      setMissionFromSite(!!ext.mission && !state.mission.trim())
       setState(prev => ({
         ...prev,
         name:              ext.name ?? prev.name,
@@ -889,9 +958,13 @@ export default function OnboardingWizardPage() {
         legalStructure:    (ext.legalStructure as LegalStructure) ?? prev.legalStructure,
         primaryLocation:   ext.primaryLocation ?? prev.primaryLocation,
         annualIncomeBand:  ext.annualIncomeBand ?? prev.annualIncomeBand,
-        mission:           ext.mission ?? prev.mission,
-        impactSectors:     ext.impactSectors.length > 0 ? ext.impactSectors.filter(s => IMPACT_SECTORS.some(o => o.value === s)).slice(0, 4) : prev.impactSectors,
-        beneficiaryGroups: ext.beneficiaryGroups.length > 0 ? ext.beneficiaryGroups : prev.beneficiaryGroups,
+        // The scanned mission goes into the box on the review step, labelled
+        // as from the website and edited freely; it is read there before it
+        // is saved. Sectors and beneficiary groups stay in `extracted` and
+        // arrive pre-ticked on their own steps, where they are read too.
+        // Until 13 Sept 2026 all three were written unread; until 16 Sept the
+        // mission had a step of its own, which is where people left.
+        mission:           prev.mission.trim() ? prev.mission : (ext.mission ?? ''),
       }))
       const autoConfirmed = new Set<string>()
       ;(Object.keys(conf) as Array<keyof ExtractedData['confidence']>).forEach(f => {
@@ -933,7 +1006,20 @@ export default function OnboardingWizardPage() {
       .map(k => LABELS[k] ?? k)
   }
 
+  const [numberError, setNumberError] = useState<string | null>(null)
   function confirmField(field: string, value?: string) {
+    if (field === 'registeredNumber' && value !== undefined) {
+      const v = value.trim()
+      // A wrong number is worse than none: it drives the eligibility gate. So a
+      // value that no register recognises cannot be saved, and an empty value
+      // is an explicit "no registered number" rather than a blank tick.
+      if (v && !isRecognisedNumber(v)) {
+        setNumberError('That does not look like a charity, company or mutuals number. Check it, or leave it blank if you have none.')
+        return
+      }
+      setNumberError(null)
+      value = v
+    }
     if (value !== undefined) {
       const key = field as keyof WizardState
       if (key in EMPTY_STATE) setState(prev => ({ ...prev, [key]: value }))
@@ -1011,6 +1097,242 @@ export default function OnboardingWizardPage() {
         ? prev.fundingTypes.filter(x => x !== t)
         : [...prev.fundingTypes, t],
     }))
+  }
+
+  /**
+   * Browse without a profile (Paul, 8 Sept 2026). A consultant or network
+   * that cannot honestly answer "what is your organisation?" gets a row under
+   * their own name so the app works, with nothing to match against. Every
+   * matching field is empty on purpose: the dashboard hides the matches card
+   * and the digest leaves them out on `profile_skipped`, and Find Funding says
+   * so in one line. Saving a profile later flips the flag back.
+   */
+  async function handleBrowseFinish() {
+    setSaving(true); setSaveError(null)
+    try {
+      const payload = {
+        name:                         state.practiceName.trim() || 'My practice',
+        org_type:                     'other' as const,
+        legal_structure:              null,
+        org_stage:                    null,
+        social_mission_declared:      false,
+        articles_restrict_profit:     false,
+        impact_sectors:               [],
+        beneficiary_groups:           [],
+        niche_tags:                   [],
+        excluded_niche_tags:          [],
+        annual_income_band:           null,
+        primary_location:             null,
+        geographic_reach:             null,
+        themes:                       [],
+        areas_of_work:                [],
+        beneficiaries:                [],
+        mission:                      null,
+        years_operating:              null,
+        min_grant_target:             null,
+        max_grant_target:             null,
+        funding_type_preferences:     ['grant', 'programme', 'investment', 'in_kind'] as FundingType[],
+        spend_restriction_preferences: [],
+        has_asset_lock:               null,
+        owner_id:                     userId,
+        alerts_enabled:               false,
+        alert_frequency:              'weekly',
+        alert_min_score:              70,
+        website_url:                  state.practiceWebsite.trim() ? (state.practiceWebsite.trim().startsWith('http') ? state.practiceWebsite.trim() : 'https://' + state.practiceWebsite.trim()) : null,
+        client_count_band:            state.clientCountBand || null,
+        example_client:               state.exampleClient.trim() || null,
+        signup_practice_name:         state.practiceName.trim() || null,
+        signup_practice_website:      state.practiceWebsite.trim() ? (state.practiceWebsite.trim().startsWith('http') ? state.practiceWebsite.trim() : 'https://' + state.practiceWebsite.trim()) : null,
+        signup_role:                  state.signupRole,
+        profile_skipped:              true,
+      }
+      let currentOrgId = orgId
+      if (orgId) {
+        // An organisation already exists for this account. Browsing without a
+        // profile must not wipe it: Paul's own test on 8 Sept emptied a real
+        // row's sectors, beneficiaries, location and mission through this
+        // path. Only the flags change; the profile stays as it was.
+        await updateOrganisation(orgId, {
+          signup_role: state.signupRole,
+          profile_skipped: true,
+          alerts_enabled: false,
+          client_count_band: state.clientCountBand || null,
+          example_client: state.exampleClient.trim() || null,
+          signup_practice_name: state.practiceName.trim() || null,
+        })
+      } else {
+        const created = await createOrganisation({ ...UNCOLLECTED_ON_CREATE, ...payload } as Parameters<typeof createOrganisation>[0])
+        currentOrgId = created.id
+        setOrgId(created.id)
+      }
+      if (currentOrgId) writeActiveOrgCookie(currentOrgId)
+      track('onboarding_browse_without_profile', { role: state.signupRole })
+      router.push('/dashboard/search')
+      router.refresh()
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Could not save. Please try again.')
+      setSaving(false)
+    }
+  }
+
+  /* ── Mission first, tags proposed from it ───────────────────────────────
+     The mission is the truest signal the matcher has, so it is asked before
+     any list. Leaving the mission step proposes beneficiary groups and
+     sectors from its words (the same word-and-synonym rules the profile
+     check uses), ticked, only when the reader has not chosen any yet. They
+     can untick or add; the note on the step says where the ticks came from. */
+  const [suggestedNote, setSuggestedNote] = useState<{ beneficiaries: string | null; sectors: string | null; reach: string | null }>({ beneficiaries: null, sectors: null, reach: null })
+  const SUGGESTED = 'Selected from your website and description. Untick anything that is not right, and add what is missing.'
+  /* Once the mission-check model's proposals; since 16 Sept nothing fills
+     this, and the website scan's reading in `extracted` takes its place. Kept
+     as a null constant so the fallbacks below read the same. */
+  const proposals: { sectors: string[]; beneficiaries: string[]; niche: string[]; reach?: string | null } | null = null
+
+  /* ── Save from the review step on ───────────────────────────────────────
+     Until 16 Sept 2026 nothing reached the database before the last button,
+     so a drop on step three left no trace and nothing to follow up. The
+     facts and the mission are saved as soon as they have been read; the
+     lists and the location are added by handleFinish. A partial row is
+     still "incomplete" to isOnboardingComplete (no sectors yet), so the next
+     visit resumes the wizard at the right step rather than skipping it. */
+  const [missionFromSite, setMissionFromSite] = useState(false)
+  async function saveDraft(): Promise<void> {
+    setSaveError(null)
+    const eligibilityFlags = deriveEligibilityFlags(state.legalStructure)
+    const num = state.registeredNumber.trim()
+    const col = num ? columnFor(num, state.legalStructure) : null
+    const payload = {
+      name:                     state.name.trim() || 'My Organisation',
+      ...(col ? { [col]: normaliseNumber(num) } : {}),
+      org_type:                 legalStructureToOrgType(state.legalStructure) as 'cic' | 'registered_charity' | 'social_enterprise' | 'community_group' | 'other',
+      legal_structure:          state.legalStructure || null,
+      social_mission_declared:  eligibilityFlags.social_mission_declared,
+      articles_restrict_profit: eligibilityFlags.articles_restrict_profit,
+      annual_income_band:       state.annualIncomeBand || null,
+      primary_location:         state.primaryLocation.trim() || null,
+      mission:                  state.mission.trim() || null,
+      ...(url.trim() ? { website_url: url.trim().startsWith('http') ? url.trim() : 'https://' + url.trim() } : {}),
+      signup_role:              state.signupRole,
+      profile_skipped:          false,
+    }
+    try {
+      if (orgId) {
+        await updateOrganisation(orgId, payload)
+      } else {
+        // Lists come later in the wizard; empty on create, and never touched
+        // on the update branch, so a second pass cannot wipe what was chosen.
+        const created = await createOrganisation({
+          ...UNCOLLECTED_ON_CREATE,
+          impact_sectors: [], beneficiary_groups: [], niche_tags: [], excluded_niche_tags: [],
+          themes: [], areas_of_work: [], geographic_reach: null, org_stage: null,
+          ...payload,
+        } as unknown as Parameters<typeof createOrganisation>[0])
+        setOrgId(created.id)
+        writeActiveOrgCookie(created.id)
+        if (typeof window !== 'undefined') localStorage.setItem('gt_active_org_id', created.id)
+      }
+    } catch (err) {
+      // The draft is a safety net, not a gate: say so and carry on. The
+      // final save retries the create with everything.
+      setSaveError(err instanceof Error ? err.message : 'Could not save yet. Carry on, it will be saved at the end.')
+    }
+  }
+  async function continueFromFacts() {
+    await saveDraft()
+    goToBeneficiaries()
+  }
+
+  function goToBeneficiaries() {
+    if (state.beneficiaryGroups.length === 0 && state.mission.trim()) {
+      const allowed = new Set(BENEFICIARY_GROUPS.map(b => b.value as string))
+      // The website scan's reading first, then the word rules on the mission.
+      const fromModel = ((proposals?.beneficiaries?.length ? proposals.beneficiaries : extracted?.beneficiaryGroups) ?? []).filter(v => allowed.has(v))
+      const picks = (fromModel.length ? fromModel : suggestTags(BENEFICIARY_OPTIONS, [], state.mission, BENEFICIARY_SYNONYMS).missing.filter(v => allowed.has(v))).slice(0, 4) as BeneficiaryGroup[]
+      if (picks.length) { update('beneficiaryGroups', picks); setSuggestedNote(n => ({ ...n, beneficiaries: SUGGESTED })) }
+    }
+    setStep('beneficiaries')
+  }
+
+  function goToSectors() {
+    if (state.impactSectors.length === 0 && state.mission.trim()) {
+      const allowed = new Set(IMPACT_SECTORS.map(o => o.value as string))
+      const fromModel = ((proposals?.sectors?.length ? proposals.sectors : extracted?.impactSectors) ?? []).filter(v => allowed.has(v))
+      const picks = (fromModel.length ? fromModel : suggestTags(IMPACT_SECTOR_OPTIONS, [], state.mission, SECTOR_SYNONYMS).missing.filter(v => allowed.has(v))).slice(0, 4) as ImpactSector[]
+      if (picks.length) {
+        update('impactSectors', picks)
+        // Specialisms too, but only from the model and only within those sectors.
+        if (state.nicheTags.length === 0 && proposals?.niche.length) {
+          const valid = validNicheTagsFor(picks)
+          const niche = proposals.niche.filter(v => valid.has(v)).slice(0, 5)
+          if (niche.length) update('nicheTags', niche)
+        }
+        setSuggestedNote(n => ({ ...n, sectors: SUGGESTED }))
+      }
+    }
+    setStep('sectors')
+  }
+
+  function goToLocation() {
+    if (!state.geographicReach && proposals?.reach) {
+      update('geographicReach', proposals.reach)
+      setSuggestedNote(n => ({ ...n, reach: SUGGESTED }))
+    }
+    setStep('location')
+  }
+
+  /* ── The profile check ──────────────────────────────────────────────────
+     Rules run on the in-memory state, so nothing is written until the reader
+     has seen what the profile says about them. A profile with nothing to say
+     goes straight to the matches; the step only appears when it has a line
+     worth reading. The model read (/api/profile/review) is asked for in the
+     background and folded in if it answers in time; the step never waits on
+     it and never fails because of it. */
+  const [checkFindings, setCheckFindings] = useState<ProfileFinding[]>([])
+  const [reviewing, setReviewing] = useState(false)
+
+  function orgForCheck(): Organisation {
+    return {
+      ...(UNCOLLECTED_ON_CREATE as unknown as Organisation),
+      id: '', created_at: '', owner_id: '',
+      name: state.name, mission: state.mission || null,
+      legal_structure: (state.legalStructure || null) as Organisation['legal_structure'],
+      impact_sectors: state.impactSectors, niche_tags: state.nicheTags, excluded_niche_tags: state.excludedNicheTags,
+      beneficiary_groups: state.beneficiaryGroups,
+      annual_income_band: state.annualIncomeBand || null, primary_location: state.primaryLocation || null,
+      geographic_reach: state.geographicReach || null,
+      min_grant_target: state.minGrantTarget ? parseInt(state.minGrantTarget, 10) : null,
+      max_grant_target: state.maxGrantTarget ? parseInt(state.maxGrantTarget, 10) : null,
+    }
+  }
+
+  async function goToCheck() {
+    const labels: Record<string, string> = {}
+    for (const list of Object.values(NICHE_TAGS_BY_SECTOR)) for (const t of list ?? []) labels[t.value] = t.label
+    // The tag-versus-mission findings stay out of the wizard: the mission
+    // step now reads meaning and proposes the tags, and a word rule raising
+    // "your mission does not mention People in Poverty" against a mission
+    // that says "families on low incomes" contradicts it (Paul, 14 Sept).
+    // They still drive the weekly email nudge, with fuller synonyms.
+    const rules = checkProfile(orgForCheck(), { nicheLabels: labels, skip: ['grant_range_missing', 'beneficiaries_too_many', 'beneficiaries_unmentioned', 'niche_unmentioned'] })
+    if (rules.length === 0) { await handleFinish(); return }
+    setCheckFindings(rules)
+    setStep('check')
+    track('profile_check_shown', { findings: rules.map(f => f.id) })
+    // Model read, folded in only if it adds something the rules did not.
+    setReviewing(true)
+    try {
+      const res = await fetch('/api/profile/review', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mission: state.mission, impact_sectors: state.impactSectors, niche_tags: state.nicheTags, niche_labels: labels, beneficiary_groups: state.beneficiaryGroups, name: state.name }),
+      })
+      if (res.ok) {
+        const data = await res.json() as { findings?: ProfileFinding[] }
+        if (Array.isArray(data.findings) && data.findings.length) {
+          setCheckFindings(prev => [...prev, ...data.findings!.filter(f => !prev.some(p => p.id === f.id))])
+        }
+      }
+    } catch { /* the rules stand on their own */ }
+    finally { setReviewing(false) }
   }
 
   async function handleFinish() {
@@ -1092,6 +1414,17 @@ export default function OnboardingWizardPage() {
         alert_frequency:              'weekly',
         alert_min_score:              70,
         website_url:                  url.trim() ? (url.trim().startsWith('http') ? url.trim() : 'https://' + url.trim()) : null,
+        // Consultant or network building a client profile (migration 084): who
+        // they are sits beside the role, since the row itself is the client's.
+        signup_practice_name:         state.signupRole !== 'organisation' ? (state.practiceName.trim() || null) : null,
+        signup_practice_website:      state.signupRole !== 'organisation' && state.practiceWebsite.trim()
+                                        ? (state.practiceWebsite.trim().startsWith('http') ? state.practiceWebsite.trim() : 'https://' + state.practiceWebsite.trim())
+                                        : null,
+        client_count_band:            state.signupRole !== 'organisation' ? (state.clientCountBand || null) : null,
+        example_client:               state.signupRole !== 'organisation' ? (state.exampleClient.trim() || null) : null,
+        signup_role:                  state.signupRole,
+        // A saved profile ends the browse-only state, whoever they are.
+        profile_skipped:              false,
       }
 
       let currentOrgId = orgId
@@ -1169,16 +1502,24 @@ export default function OnboardingWizardPage() {
             setStructureBlock({ openNow, ifConstituted })
           }
 
+          // The same location default Find Funding applies, so the first
+          // screen and the second agree: Find Funding pre-fills its location
+          // box with the organisation's own location, and a tag like
+          // "England & Wales, Isle of Man & Ireland" fails it. Invite-only
+          // rows are NOT hidden: Find Funding shows them by default.
+          const revealLocation = payload.primary_location ?? ''
           const scored = rows
+            .filter(grant => grantMatchesLocationText(grant.locationTag, revealLocation))
             .map(grant => {
               const result = computeMatchScore(grant, orgForMatching as Parameters<typeof computeMatchScore>[1])
               return { grant, score: result.score }
             })
-            // All four funding types, not grants only. Hiding programmes,
-            // investment and in-kind here meant onboarding concealed the
-            // non-grant breadth at the exact moment the product is meant to
-            // prove itself. 113 of the 639 live rows are non-grant.
-            .filter(x => x.score >= MATCH_FLOOR)
+            // Grants only, to match the tab Find Funding opens on (Paul, 14
+            // Sept 2026: most people look for funding first and consider
+            // programmes, investment and in-kind later). This reverses the
+            // earlier decision to show all four types here; the breadth is one
+            // tab away and the first screen must agree with the second.
+            .filter(x => x.score >= MATCH_FLOOR && (x.grant.fundingType ?? 'grant') === 'grant')
             .sort((a, b) => b.score - a.score)
 
           setRevealCount(scored.length)
@@ -1226,7 +1567,9 @@ export default function OnboardingWizardPage() {
 
   const sectorsValid      = state.impactSectors.length > 0
   const beneficiariesValid = state.beneficiaryGroups.length > 0
-  const locationValid = !!(state.name.trim() && state.legalStructure)
+  // Where they are and how far the work reaches drive the location score,
+  // the heaviest dimension after structure; both were skippable until 16 Sept.
+  const locationValid = !!(state.name.trim() && state.legalStructure && state.primaryLocation.trim() && state.geographicReach)
 
   if (loading) {
     return (
@@ -1253,16 +1596,28 @@ export default function OnboardingWizardPage() {
           error={fetchError}
           onAutoFill={handleAutoFill}
           onManual={() => { setExtracted(null); setStep('manual') }}
+          role={state.signupRole}
+          setRole={r => update('signupRole', r)}
+          onBrowse={handleBrowseFinish}
+          practiceName={state.practiceName}
+          setPracticeName={v => update('practiceName', v)}
+          practiceWebsite={state.practiceWebsite}
+          setPracticeWebsite={v => update('practiceWebsite', v)}
+          band={state.clientCountBand}
+          setBand={v => update('clientCountBand', v)}
+          example={state.exampleClient}
+          setExample={v => update('exampleClient', v)}
         />
       </CardShell>
     )
   }
 
+
   /* ── Steps 2–5: card layout ── */
   const cardStep = STEP_DOT_POS[step]
 
   return (
-    <CardShell step={cardStep} showSkip={step !== 'reveal'}>
+    <CardShell step={cardStep}>
 
       {step === 'review' && extracted && (
         <StepReview
@@ -1272,10 +1627,15 @@ export default function OnboardingWizardPage() {
           setEditingField={setEditingField}
           confirmField={confirmField}
           canContinue={reviewCanContinue()}
+          numberError={numberError}
           blockers={reviewBlockers()}
           onBack={() => setStep('entry')}
-          onSkip={() => setStep('sectors')}
-          onContinue={() => setStep('sectors')}
+          onContinue={continueFromFacts}
+          mission={state.mission}
+          setMission={v => { update('mission', v); if (missionFromSite) setMissionFromSite(false) }}
+          missionFromSite={missionFromSite}
+          clearMission={() => { update('mission', ''); setMissionFromSite(false) }}
+          saveError={saveError}
           wizardState={state}
           toggleSector={toggleSector}
           makePrimarySector={makePrimarySector}
@@ -1288,8 +1648,10 @@ export default function OnboardingWizardPage() {
         <StepManual
           state={state}
           update={update}
-          onBack={() => setStep('entry')}
-          onContinue={() => setStep('sectors')}
+          notice={fetchError}
+          onBack={() => { setFetchError(null); setStep('entry') }}
+          onContinue={continueFromFacts}
+          saveError={saveError}
         />
       )}
 
@@ -1301,8 +1663,9 @@ export default function OnboardingWizardPage() {
           toggleSector={toggleSector}
           makePrimarySector={makePrimarySector}
           cycleNicheTag={cycleNicheTag}
-          onBack={() => setStep(extracted ? 'review' : 'manual')}
-          onContinue={() => setStep('beneficiaries')}
+          suggestedNote={suggestedNote.sectors}
+          onBack={() => setStep('beneficiaries')}
+          onContinue={goToLocation}
           canContinue={sectorsValid}
         />
       )}
@@ -1312,8 +1675,9 @@ export default function OnboardingWizardPage() {
           beneficiaryGroups={state.beneficiaryGroups}
           toggleBeneficiary={toggleBeneficiary}
           makePrimaryBeneficiary={makePrimaryBeneficiary}
-          onBack={() => setStep('sectors')}
-          onContinue={() => setStep('location')}
+          suggestedNote={suggestedNote.beneficiaries}
+          onBack={() => setStep(extracted ? 'review' : 'manual')}
+          onContinue={goToSectors}
           canContinue={beneficiariesValid}
         />
       )}
@@ -1327,7 +1691,21 @@ export default function OnboardingWizardPage() {
           saving={saving}
           saveError={saveError}
           canContinue={locationValid}
-          onBack={() => setStep('beneficiaries')}
+          reachNote={suggestedNote.reach}
+          onBack={() => setStep('sectors')}
+          onFinish={goToCheck}
+        />
+      )}
+
+      {step === 'check' && (
+        <StepCheck
+          state={state}
+          update={update}
+          findings={checkFindings}
+          reviewing={reviewing}
+          saving={saving}
+          saveError={saveError}
+          onBack={() => setStep('location')}
           onFinish={handleFinish}
         />
       )}
@@ -1339,6 +1717,7 @@ export default function OnboardingWizardPage() {
           structureBlock={structureBlock}
           topMatches={revealMatches}
           hasMission={!!state.mission.trim()}
+          isIndividual={state.legalStructure === 'sole_trader'}
           onExplore={() => router.push('/dashboard/search')}
           onAddMission={() => router.push('/dashboard/profile?section=mission')}
         />
@@ -1352,20 +1731,103 @@ export default function OnboardingWizardPage() {
    Step 1 — Entry (rendered inside hero page)
    ═══════════════════════════════════════════════ */
 
-function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual }: {
+const SIGNUP_ROLES: { value: SignupRole; label: string }[] = [
+  { value: 'organisation', label: 'An organisation' },
+  { value: 'consultant',   label: 'A fundraiser or consultant working with several' },
+  { value: 'network',      label: 'A network or membership body' },
+]
+
+function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual, role, setRole, onBrowse, practiceName, setPracticeName, practiceWebsite, setPracticeWebsite, band, setBand, example, setExample }: {
   url: string; setUrl: (v: string) => void
   fetching: boolean; error: string | null
   onAutoFill: () => void; onManual: () => void
+  role: SignupRole; setRole: (r: SignupRole) => void
+  onBrowse: () => void
+  practiceName: string; setPracticeName: (v: string) => void
+  practiceWebsite: string; setPracticeWebsite: (v: string) => void
+  band: ClientBand; setBand: (v: ClientBand) => void
+  example: string; setExample: (v: string) => void
 }) {
   const [hov, setHov] = useState(false)
+  const several = role !== 'organisation'
+  // The fork for consultants and networks. Until they choose, the website box
+  // and its links stay hidden: four ways forward on one screen was confusing
+  // (Paul, 8 Sept). Picking "one organisation" brings the normal step back.
+  // The fork (set up a profile / browse) is gone (Paul, 9 Sept 2026): both
+  // paths collect the same "about you" facts, so the profile path is the
+  // default and browsing is a quiet link beside "fill in manually".
+  const showProfileTools = true
   return (
     <>
       <h1 style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 40, fontWeight: 600, color: T.textPrimary, margin: '0 0 14px', lineHeight: 1.15, letterSpacing: '-0.02em' }}>
         Let&rsquo;s build your profile
       </h1>
-      <p style={{ fontSize: 16, color: T.textSecondary, lineHeight: 1.5, margin: '0 0 36px', maxWidth: 460, fontFamily: 'var(--font-dm-sans)' }}>
-        Drop in your website and we&rsquo;ll do the heavy lifting. You can review and refine everything in the next step.
+      <p style={{ fontSize: 16, color: T.textSecondary, lineHeight: 1.5, margin: '0 0 24px', maxWidth: 460, fontFamily: 'var(--font-dm-sans)' }}>
+        {several
+          ? <>A profile is built for one organisation at a time, and its details drive the matches you see.</>
+          : <>Drop in your website and we&rsquo;ll do the heavy lifting. You can review and refine everything in the next step.</>}
       </p>
+
+      {/* Who is signing up. Recorded on the row (migration 080). The default
+          path is unchanged; the other two open the fork below. */}
+      <fieldset style={{ border: 'none', padding: 0, margin: '0 0 24px' }}>
+        <legend style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 14, fontWeight: 600, color: T.textPrimary, marginBottom: 8 }}>I am signing up as</legend>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {SIGNUP_ROLES.map(r => (
+            <label key={r.value} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: T.textPrimary, fontFamily: 'var(--font-dm-sans)', cursor: 'pointer' }}>
+              <input type="radio" name="signup-role" value={r.value} checked={role === r.value} onChange={() => setRole(r.value)} />
+              {r.label}
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
+      {showProfileTools && (<>
+      {several && (
+        <div style={{ margin: '0 0 22px', maxWidth: 520 }}>
+          {/* Who they are (migration 084): the profile below belongs to a
+              client, so the person disappears from the record otherwise. */}
+          <p style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 15, fontWeight: 600, color: T.textPrimary, margin: '0 0 10px' }}>About you</p>
+          <label style={{ display: 'block', fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: T.textPrimary, margin: '0 0 6px' }}>
+            Your name or {role === 'network' ? 'network' : 'practice'}<span style={{ color: T.coralText, marginLeft: 2 }}>*</span>
+          </label>
+          <input type="text" value={practiceName} onChange={e => setPracticeName(e.target.value)} placeholder={role === 'network' ? 'e.g. Impact Hub Brighton' : 'e.g. Jane Smith Fundraising'} style={{ ...INPUT_STYLE, boxSizing: 'border-box' }} />
+          <label style={{ display: 'block', fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: T.textPrimary, margin: '14px 0 6px' }}>
+            Your website, if you have one
+          </label>
+          <input type="url" value={practiceWebsite} onChange={e => setPracticeWebsite(e.target.value)} placeholder={role === 'network' ? 'https://yournetwork.org.uk' : 'https://yourpractice.co.uk'} style={{ ...INPUT_STYLE, boxSizing: 'border-box' }} />
+          <p style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: T.textPrimary, margin: '14px 0 8px' }}>
+            Roughly how many organisations do you {role === 'network' ? 'support' : 'work with'}?<span style={{ color: T.coralText, marginLeft: 2 }}>*</span>
+          </p>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {((role === 'network' ? ['<20', '20-100', '100+'] : ['1-2', '3-5', '6+']) as ClientBand[]).map(b => (
+              <button key={b} type="button" onClick={() => setBand(b)} style={{
+                fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 13.5, padding: '8px 16px', borderRadius: 999, cursor: 'pointer',
+                background: band === b ? '#F1F7E4' : '#fff', color: band === b ? '#3B6D11' : T.textSecondary,
+                border: `1px solid ${band === b ? '#3B6D11' : 'rgba(44,44,42,0.25)'}`,
+              }}>
+                {b === '6+' ? '6 or more' : b === '<20' ? 'Under 20' : b === '20-100' ? '20 to 100' : b === '100+' ? '100 or more' : b}
+              </button>
+            ))}
+          </div>
+          <label style={{ display: 'block', fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: T.textPrimary, margin: '14px 0 6px' }}>
+            One organisation you {role === 'network' ? 'support' : 'work with'}, if you like
+          </label>
+          <input type="text" value={example} onChange={e => setExample(e.target.value)} placeholder="e.g. Bramble Arts Collective" style={{ ...INPUT_STYLE, boxSizing: 'border-box' }} />
+        </div>
+      )}
+      {several && (
+        <div style={{ margin: '0 0 12px', maxWidth: 520 }}>
+          <p style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 15, fontWeight: 600, color: T.textPrimary, margin: '0 0 4px' }}>
+            Which organisation shall we start with?
+          </p>
+          <p style={{ fontSize: 13.5, color: T.textSecondary, lineHeight: 1.5, margin: 0, fontFamily: 'var(--font-dm-sans)' }}>
+            {role === 'network'
+              ? <>Matches are built for one organisation at a time. Pick one member organisation to start with, and enter its website. We build its profile and show what it could apply for. If it works for your members, ask us about partner plans for networks.</>
+              : <>Matches are built for one organisation at a time. Pick one client to start with, and enter its website. We build its profile and show what it could apply for. Profiles for more clients come with Team.</>}
+          </p>
+        </div>
+      )}
 
       {/* URL input + CTA */}
       <div style={{ display: 'flex', gap: 8, width: '100%', maxWidth: 520 }}>
@@ -1376,11 +1838,11 @@ function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual }: {
             value={url}
             onChange={e => setUrl(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && !fetching && url.trim() && onAutoFill()}
-            placeholder="https://yourorganisation.co.uk"
+            placeholder={several ? 'https://the-organisation.org.uk' : 'https://yourorganisation.co.uk'}
             style={{ ...INPUT_STYLE, padding: '0 14px 0 34px', boxSizing: 'border-box' }}
           />
         </div>
-        <Button variant="primary" size="lg" onClick={onAutoFill} disabled={fetching}>
+        <Button variant="primary" size="lg" onClick={onAutoFill} disabled={fetching || !url.trim() || (several && (!practiceName.trim() || !band))}>
           {fetching ? (
             <span className="inline-flex items-center gap-2">
               <span className="dot-bounce inline-flex gap-0.5"><span/><span/><span/></span>
@@ -1391,11 +1853,19 @@ function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual }: {
       </div>
 
       {error && <p style={{ fontSize: 13, color: T.coralText, marginTop: 8 }}>{error}</p>}
+      {several && (!practiceName.trim() || !band) && (
+        /* Three dead buttons with nothing saying why is how this card trapped
+           consultants; name what they want, the way the review step does. */
+        <p style={{ fontSize: 12, color: T.amberMid, marginTop: 8, fontFamily: 'var(--font-dm-sans)' }}>
+          Add {[!practiceName.trim() ? 'your name or practice' : null, !band ? 'how many organisations you work with' : null].filter(Boolean).join(' and ')} above to carry on.
+        </p>
+      )}
 
       {/* Manual alternative */}
       <div style={{ paddingTop: 24 }}>
         <button
           onClick={onManual}
+          disabled={several && (!practiceName.trim() || !band)}
           onMouseEnter={() => setHov(true)}
           onMouseLeave={() => setHov(false)}
           style={{
@@ -1410,6 +1880,24 @@ function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual }: {
           No website? Fill in manually
         </button>
       </div>
+      {several && (
+        <p style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.55, margin: '14px 0 0 12px', maxWidth: 520, fontFamily: 'var(--font-dm-sans)' }}>
+          Not ready to pick one organisation?{' '}
+          <button
+            onClick={onBrowse}
+            disabled={!practiceName.trim() || !band}
+            style={{
+              background: 'transparent', border: 'none', color: T.textPrimary, padding: 0,
+              fontFamily: 'var(--font-dm-sans)', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+              textDecoration: 'underline', textDecorationColor: 'rgba(29,60,62,0.35)', textUnderlineOffset: 3,
+            }}
+          >
+            Browse without a profile for now
+          </button>
+          . You can search everything, and add a profile later for matches.
+        </p>
+      )}
+      </>)}
     </>
   )
 }
@@ -1418,7 +1906,7 @@ function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual }: {
    Step 2A — Review extracted data
    ═══════════════════════════════════════════════ */
 
-function StepReview({ extracted, confirmed, editingField, setEditingField, confirmField, canContinue, blockers, onBack, onSkip, onContinue, wizardState, toggleSector, makePrimarySector, toggleBeneficiary, makePrimaryBeneficiary }: {
+function StepReview({ extracted, confirmed, editingField, setEditingField, confirmField, canContinue, blockers, numberError, onBack, onContinue, mission, setMission, missionFromSite, clearMission, saveError, wizardState, toggleSector, makePrimarySector, toggleBeneficiary, makePrimaryBeneficiary }: {
   extracted: ExtractedData
   confirmed: Set<string>
   editingField: string | null
@@ -1426,7 +1914,10 @@ function StepReview({ extracted, confirmed, editingField, setEditingField, confi
   confirmField: (field: string, value?: string) => void
   canContinue: boolean
   blockers: string[]
-  onBack: () => void; onSkip: () => void; onContinue: () => void
+  numberError?: string | null
+  onBack: () => void; onContinue: () => void
+  mission: string; setMission: (v: string) => void; missionFromSite: boolean; clearMission: () => void
+  saveError?: string | null
   wizardState: WizardState
   toggleSector: (s: ImpactSector) => void
   makePrimarySector: (s: ImpactSector) => void
@@ -1462,17 +1953,21 @@ function StepReview({ extracted, confirmed, editingField, setEditingField, confi
     // one for a company number and then saying "we couldn't find this" tells
     // them something is wrong when nothing is. Never blocks either way.
     { key: 'registeredNumber',  label: numberExpectation.label, value: extracted.registeredNumber, stateKey: 'registeredNumber',  type: 'text',
-      emptyText: numberExpectation.emptyText,
-      hint: extracted.registeredNumber
+      emptyText: confirmed.has('registeredNumber') && !extracted.registeredNumber ? 'No registered number' : numberExpectation.emptyText,
+      hint: numberError ? numberError : extracted.registeredNumber
         ? (isRecognisedNumber(extracted.registeredNumber)
-            ? `Recognised as ${registerLabel(detectRegister(extracted.registeredNumber))}. We use it to check eligibility, so your matches are right.`
+            ? `Recognised as ${registerLabel(detectRegister(extracted.registeredNumber))}.`
             : 'We don\u2019t recognise that format. Leave it if it\u2019s right, or correct it.')
         : numberExpectation.hint },
     { key: 'legalStructure',    label: 'Legal structure',   value: LEGAL_STRUCTURE_OPTIONS.find(o => o.value === extracted.legalStructure)?.label ?? extracted.legalStructure, stateKey: 'legalStructure', type: 'select', options: LEGAL_STRUCTURE_OPTIONS },
     { key: 'primaryLocation',   label: 'Primary location',  value: extracted.primaryLocation,  stateKey: 'primaryLocation',   type: 'text' },
     { key: 'annualIncomeBand',  label: 'Annual income',     value: extracted.annualIncomeBand, stateKey: 'annualIncomeBand',  type: 'select', options: INCOME_BANDS.map(b => ({ value: b, label: b })) },
   ]
-  const foundCount = fields.filter(f => f.value).length
+  // The registered number is shown only when auto-fill found one (Paul,
+  // 9 Sept 2026): it is not used by matching or eligibility, so asking for it
+  // on a first run is friction for nothing. The profile page can nudge later.
+  const visibleFields = fields.filter(f => f.key !== 'registeredNumber' || !!extracted.registeredNumber)
+  const foundCount = visibleFields.filter(f => f.value).length
 
   return (
     <>
@@ -1482,12 +1977,12 @@ function StepReview({ extracted, confirmed, editingField, setEditingField, confi
 
       {/* Extract summary */}
       <div style={{ background: T.cream1, borderRadius: 10, padding: '14px 18px', marginBottom: 20, fontSize: 13, color: T.textPrimary, fontFamily: 'var(--font-dm-sans)', lineHeight: 1.5 }}>
-        <strong style={{ fontWeight: 500 }}>We found {foundCount} of {fields.length} fields</strong> from <span style={{ color: T.textSecondary }}>{hostname}</span>
-        {foundCount < fields.length && `. ${fields.length - foundCount} couldn't be inferred — you'll add ${fields.length - foundCount === 1 ? 'it' : 'them'} in a moment.`}
+        <strong style={{ fontWeight: 500 }}>We found {foundCount} of {visibleFields.length} fields</strong> from <span style={{ color: T.textSecondary }}>{hostname}</span>
+        {foundCount < visibleFields.length && `. ${visibleFields.length - foundCount} couldn't be inferred — you'll add ${visibleFields.length - foundCount === 1 ? 'it' : 'them'} in a moment.`}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {fields.map(field => (
+        {visibleFields.map(field => (
           <ReviewField
             key={field.key}
             label={field.label}
@@ -1511,19 +2006,31 @@ function StepReview({ extracted, confirmed, editingField, setEditingField, confi
         ))}
       </div>
 
+      <MissionBox value={mission} onChange={setMission} fromSite={missionFromSite} onClear={clearMission} />
+
+      {saveError && (
+        <div role="status" style={{ background: T.amberBgSoft, color: T.textPrimary, padding: '10px 14px', borderRadius: 10, fontSize: 13, margin: '12px 0 0', fontFamily: 'var(--font-dm-sans)' }}>
+          {saveError}
+        </div>
+      )}
+
       <div style={ACTIONS_STYLE}>
-        <SkipAction onClick={onSkip}>I&rsquo;ll refine these later</SkipAction>
+        {/* "I'll refine these later" removed (Paul, 9 Sept 2026): the flagged
+            fields are the ones that decide eligibility, so they get confirmed here. */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
-          <Button variant="primary" onClick={onContinue} disabled={!canContinue}>
+          <Button variant="primary" onClick={onContinue} disabled={!canContinue || mission.trim().length < MISSION_MIN}>
             Continue <ArrowRight size={14} />
           </Button>
           {/* A greyed-out Continue with nothing saying why is exactly how this
               page trapped people. If it is disabled, name what it wants. */}
-          {!canContinue && blockers.length > 0 && (
+          {(!canContinue && blockers.length > 0) || mission.trim().length < MISSION_MIN ? (
             <p style={{ fontSize: 11.5, color: T.amberMid, margin: 0, fontFamily: 'var(--font-dm-sans)', textAlign: 'right' as const }}>
-              Confirm {blockers.join(', ')} to carry on
+              {[
+                !canContinue && blockers.length > 0 ? `Confirm ${blockers.join(', ')}` : null,
+                mission.trim().length < MISSION_MIN ? 'add two lines on what you do' : null,
+              ].filter(Boolean).join(', and ')} to carry on
             </p>
-          )}
+          ) : null}
         </div>
       </div>
     </>
@@ -1691,15 +2198,24 @@ function ReviewField({ label, value, hint, emptyText, fieldState: fState, isConf
    Step 2B — Manual entry
    ═══════════════════════════════════════════════ */
 
-function StepManual({ state, update, onBack, onContinue }: {
+function StepManual({ state, update, notice, saveError, onBack, onContinue }: {
   state: WizardState
   update: <K extends keyof WizardState>(k: K, v: WizardState[K]) => void
+  /** Why the reader is here rather than on the review step: the site could not be read. Shown, or a user is left wondering what autofill did (Paul, 13 Sept). */
+  notice?: string | null
+  saveError?: string | null
   onBack: () => void; onContinue: () => void
 }) {
-  const valid = !!(state.name.trim() && state.legalStructure)
+  const missionOk = state.mission.trim().length >= MISSION_MIN
+  const valid = !!(state.name.trim() && state.legalStructure) && missionOk
   return (
     <>
       <BackLink onClick={onBack} />
+      {notice && (
+        <div role="status" style={{ background: T.amberBgSoft, color: T.textPrimary, padding: '12px 16px', borderRadius: 12, fontSize: 14, lineHeight: 1.5, margin: '0 0 18px', fontFamily: 'var(--font-dm-sans)' }}>
+          {notice}
+        </div>
+      )}
       <h1 style={H1_STYLE}>Tell us about your organisation</h1>
       <p style={SUBTITLE_STYLE}>We use this to check eligibility on the funders we match you with.</p>
 
@@ -1710,6 +2226,7 @@ function StepManual({ state, update, onBack, onContinue }: {
 
         <Field label="What kind of organisation are you?" required help="Drives which funders you're eligible for.">
           <SelectInput value={state.legalStructure} onChange={v => update('legalStructure', v as LegalStructure | '')} options={LEGAL_STRUCTURE_OPTIONS} placeholder="Select your legal structure…" />
+          {state.legalStructure === 'sole_trader' && <IndividualNotice compact />}
         </Field>
 
         <Field label="Annual income" hint="approximate band is fine" help="Many funders have income caps — we use this to filter those out.">
@@ -1717,11 +2234,26 @@ function StepManual({ state, update, onBack, onContinue }: {
         </Field>
       </div>
 
+      <MissionBox value={state.mission} onChange={v => update('mission', v)} fromSite={false} onClear={() => update('mission', '')} />
+
+      {saveError && (
+        <div role="status" style={{ background: T.amberBgSoft, color: T.textPrimary, padding: '10px 14px', borderRadius: 10, fontSize: 13, margin: '12px 0 0', fontFamily: 'var(--font-dm-sans)' }}>
+          {saveError}
+        </div>
+      )}
+
       <div style={ACTIONS_STYLE}>
         <SkipAction onClick={onBack}>← Back</SkipAction>
-        <Button variant="primary" onClick={onContinue} disabled={!valid}>
-          Continue <ArrowRight size={14} />
-        </Button>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
+          <Button variant="primary" onClick={onContinue} disabled={!valid}>
+            Continue <ArrowRight size={14} />
+          </Button>
+          {!valid && (
+            <p style={{ fontSize: 11.5, color: T.amberMid, margin: 0, fontFamily: 'var(--font-dm-sans)', textAlign: 'right' as const }}>
+              {[!state.name.trim() ? 'your name' : null, !state.legalStructure ? 'your legal structure' : null, !missionOk ? 'two lines on what you do' : null].filter(Boolean).join(', ')} to carry on
+            </p>
+          )}
+        </div>
       </div>
     </>
   )
@@ -1899,13 +2431,14 @@ function validNicheTagsFor(sectors: ImpactSector[]): Set<string> {
    Step 3a — Sectors + sub-tags
    ═══════════════════════════════════════════════ */
 
-function StepSectors({ impactSectors, nicheTags, excludedNicheTags, toggleSector, makePrimarySector, cycleNicheTag, onBack, onContinue, canContinue }: {
+function StepSectors({ impactSectors, nicheTags, excludedNicheTags, toggleSector, makePrimarySector, cycleNicheTag, suggestedNote, onBack, onContinue, canContinue }: {
   impactSectors: ImpactSector[]
   nicheTags: string[]
   excludedNicheTags: string[]
   toggleSector: (s: ImpactSector) => void
   makePrimarySector: (s: ImpactSector) => void
   cycleNicheTag: (tag: string) => void
+  suggestedNote?: string | null
   onBack: () => void; onContinue: () => void; canContinue: boolean
 }) {
   const sectorMax = impactSectors.length >= 4
@@ -1925,39 +2458,25 @@ function StepSectors({ impactSectors, nicheTags, excludedNicheTags, toggleSector
       <BackLink onClick={onBack} />
       <h1 style={H1_STYLE}>What do you focus on?</h1>
       <p style={SUBTITLE_STYLE}>Pick your primary focus first. That&rsquo;s what we&rsquo;ll weight most in matching.</p>
+      {suggestedNote && <SuggestedNote text={suggestedNote} />}
 
-      {/* Impact sectors */}
-      <div style={{ marginBottom: 6, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' as const }}>
-        <span style={{ fontSize: 13, fontWeight: 500, color: T.textPrimary, fontFamily: 'var(--font-space-grotesk)' }}>Your impact sector</span>
-        {sectorMax && <span style={{ fontSize: 11, color: T.textTertiary, fontFamily: 'var(--font-space-grotesk)', letterSpacing: '0.04em', textTransform: 'uppercase' as const }}>Max reached</span>}
+      {/* Impact sectors (design of 9 Sept 2026). A 20px question with a
+          running count rather than a MAX REACHED flag: four of four is
+          success, not an error. One instruction line, chips that size to
+          their text and wrap, deep text on white for the unselected ones. */}
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' as const, margin: '0 0 6px' }}>
+        <h2 style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 20, fontWeight: 600, letterSpacing: '-0.4px', color: T.greenDeep, margin: 0 }}>Your impact sector</h2>
+        {impactSectors.length > 0 && (
+          <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: '#7a857e', whiteSpace: 'nowrap' }}>{impactSectors.length} of 4 chosen</span>
+        )}
       </div>
-      <div style={{ marginBottom: 12, fontSize: 12.5, color: T.textSecondary, fontFamily: 'var(--font-dm-sans)', lineHeight: 1.55, display: 'flex', flexDirection: 'column' as const, gap: 4 }}>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' as const }}>
-          Pick 1
-          <span aria-label="primary" style={{
-            display: 'inline-flex', alignItems: 'center', gap: 4,
-            background: T.greenDeep, color: T.onDeep,
-            padding: '2px 8px', borderRadius: 99,
-            fontSize: 11, fontWeight: 500,
-            fontFamily: 'var(--font-space-grotesk)',
-            lineHeight: 1.2,
-          }}>
-            {/* Cream, not T.lime. lime now resolves to --deep and this pill's
-                background is --deep, so the star was deep on deep and simply
-                could not be seen. It has to match the star on the chip it is
-                describing. */}
-            <span style={{ color: T.onDeep, fontSize: 10 }}>★</span>
-            primary
-          </span>
-          plus up to 3 others. Tap a
-          <span style={{ color: T.greenMid, fontSize: 13, lineHeight: 1 }}>☆</span>
-          on a chip to change which is primary.
-        </span>
-        <span style={{ color: T.textTertiary, fontSize: 12 }}>
-          Not sure between two similar sectors? Pick the closest fit. You can always change it later.
-        </span>
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginBottom: 12 }}>
+      <p style={{ fontSize: 14.5, lineHeight: 1.6, color: '#5f6b64', margin: '0 0 4px', maxWidth: '52em', fontFamily: 'var(--font-dm-sans)' }}>
+        Pick one primary sector, plus up to three others. Tap the star on any chip to make it the primary one.
+      </p>
+      <p style={{ fontSize: 14.5, lineHeight: 1.6, color: '#7a857e', margin: '0 0 18px', maxWidth: '52em', fontFamily: 'var(--font-dm-sans)' }}>
+        Not sure between two similar sectors? Pick the closest fit, you can change it later.
+      </p>
+      <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 9, marginBottom: 20 }}>
         {IMPACT_SECTORS.map(opt => {
           const cs = chipStateFor(impactSectors, opt.value)
           return (
@@ -1989,80 +2508,80 @@ function StepSectors({ impactSectors, nicheTags, excludedNicheTags, toggleSector
         </div>
       )}
 
-      {/* Sub-tag panel — tri-state chips, mirrors the profile editor.
-          Click cycles: neutral → include (green) → exclude (coral strikethrough) → neutral */}
-      {nicheSectors.length > 0 && (
-        <div style={{
-          background: T.cream1,
-          borderLeft: `3px solid ${T.greenDeep}`,
-          borderRadius: 8,
-          padding: '12px 14px',
-          marginBottom: 20,
-        }}>
-          {/* Tip callout — explains the tri-state cycle */}
-          <div style={{
-            fontFamily: 'var(--font-space-grotesk)',
-            fontSize: 12.5,
-            fontWeight: 500,
-            color: T.textPrimary,
-            marginBottom: 14,
-            padding: '10px 12px',
-            background: 'rgba(255,255,255,0.75)',
-            borderLeft: `3px solid ${T.greenDeep}`,
-            borderRadius: 4,
-            lineHeight: 1.5,
+      {/* Specialisms (design of 9 Sept 2026). Same white ground as the
+          sector picker, a hairline above, pill chips that size to their
+          text, and three visible states: added (pale green), excluded (warm
+          terracotta with a diagonal strike), not set (outline). The strike is
+          the non-colour marker for "excluded" and must stay; the chips also
+          carry aria-pressed and a visually hidden state word. */}
+      {nicheSectors.length > 0 && (() => {
+        const ADD_BG = '#E4F1EA', ADD_BR = '#B9D9C7', ADD_FG = '#1B6B3D'
+        const EXC_BG = '#F2E8E5', EXC_FG = '#7A331F'
+        const LINE = 'rgba(29,60,62,.18)', HAIR = 'rgba(29,60,62,.10)'
+        const srOnly: React.CSSProperties = { position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap', border: 0 }
+        const strike = (inset: number, h: number) => (
+          <span aria-hidden="true" style={{ position: 'absolute', left: inset, right: inset, top: '50%', height: h, borderRadius: 2, background: EXC_FG, transform: 'translateY(-50%) rotate(-6deg)' }} />
+        )
+        const mini = (label: string, state: 'added' | 'excluded' | 'none') => (
+          <span style={{
+            position: 'relative', display: 'inline-block', fontFamily: 'var(--font-space-grotesk)', fontSize: 12, fontWeight: 500, lineHeight: 1,
+            padding: '6px 12px', borderRadius: 999,
+            border: `1px solid ${state === 'added' ? ADD_BR : state === 'excluded' ? 'transparent' : LINE}`,
+            background: state === 'added' ? ADD_BG : state === 'excluded' ? EXC_BG : 'transparent',
+            color: state === 'added' ? ADD_FG : state === 'excluded' ? EXC_FG : '#5f6b64',
           }}>
-            <strong style={{ color: T.greenTextDeep, fontWeight: 700, letterSpacing: '0.01em' }}>Tip</strong>
-            <span style={{ color: T.greenTextDeep }}> · </span>
-            Click once to mark as a specialism. Click again to <strong>exclude</strong> (we won&apos;t show grants targeting it). Click a third time to reset.
+            {label}{state === 'excluded' && strike(10, 1.2)}
+          </span>
+        )
+        return (
+          <div style={{ borderTop: `1px solid ${HAIR}`, paddingTop: 26, marginBottom: 20 }}>
+            <h2 style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 20, fontWeight: 600, letterSpacing: '-0.4px', color: T.greenDeep, margin: '0 0 8px' }}>Sharpen your matches</h2>
+            <p style={{ fontSize: 14.5, lineHeight: 1.6, color: '#5f6b64', margin: '0 0 16px', maxWidth: '52em', fontFamily: 'var(--font-dm-sans)' }}>
+              Optional. Click once to add a specialism and funders in that area rank higher. Click again to <b style={{ fontFamily: 'var(--font-space-grotesk)', color: T.greenDeep, fontWeight: 600 }}>exclude</b> it and we keep those grants out of your matches. A third click clears it.
+            </p>
+            <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center', margin: '0 0 30px' }}>
+              {mini('Added', 'added')}{mini('Excluded', 'excluded')}{mini('Not set', 'none')}
+            </div>
+            {nicheSectors.map((sector, gi) => {
+              const opts = NICHE_TAGS_BY_SECTOR[sector]!
+              const label = IMPACT_SECTORS.find(o => o.value === sector)?.label ?? sector
+              const isPrimary = impactSectors[0] === sector
+              return (
+                <div key={sector} style={{ marginBottom: gi < nicheSectors.length - 1 ? 28 : 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 9, margin: '0 0 13px', flexWrap: 'wrap' }}>
+                    <h3 style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 16, fontWeight: 600, color: T.greenDeep, margin: 0 }}>{label}</h3>
+                    {isPrimary && <em style={{ fontStyle: 'normal', fontSize: 12.5, color: '#7a857e', fontFamily: 'var(--font-dm-sans)' }}>primary sector</em>}
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 9 }}>
+                    {opts.map(opt => {
+                      const state = nicheTags.includes(opt.value) ? 'added' : excludedNicheTags.includes(opt.value) ? 'excluded' : 'none'
+                      return (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => cycleNicheTag(opt.value)}
+                          aria-pressed={state === 'added'}
+                          style={{
+                            position: 'relative', fontFamily: 'var(--font-space-grotesk)', fontSize: 14.5, fontWeight: 500, lineHeight: 1,
+                            padding: '11px 17px', borderRadius: 999, cursor: 'pointer',
+                            border: `1px solid ${state === 'added' ? ADD_BR : state === 'excluded' ? 'transparent' : LINE}`,
+                            background: state === 'added' ? ADD_BG : state === 'excluded' ? EXC_BG : '#fff',
+                            color: state === 'added' ? ADD_FG : state === 'excluded' ? EXC_FG : T.greenDeep,
+                          }}
+                        >
+                          {opt.label}
+                          {state !== 'none' && <span style={srOnly}>, {state}</span>}
+                          {state === 'excluded' && strike(13, 1.5)}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })}
           </div>
-          {nicheSectors.map(sector => {
-            const opts = NICHE_TAGS_BY_SECTOR[sector]!
-            const label = IMPACT_SECTORS.find(o => o.value === sector)?.label ?? sector
-            return (
-              <div key={sector} style={{ marginBottom: nicheSectors.indexOf(sector) < nicheSectors.length - 1 ? 14 : 0 }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: T.textSecondary, fontFamily: 'var(--font-space-grotesk)', marginBottom: 8, letterSpacing: '0.03em' }}>
-                  Specialisms in {label} <span style={{ fontWeight: 400, color: T.textTertiary }}>(optional)</span>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 5 }}>
-                  {opts.map(opt => {
-                    const isIncluded = nicheTags.includes(opt.value)
-                    const isExcluded = excludedNicheTags.includes(opt.value)
-                    const borderCol = isIncluded ? T.greenDeep : isExcluded ? T.coralText : 'var(--border-ghost)'
-                    const bgCol     = isIncluded ? T.greenCream : isExcluded ? T.coralBg : 'transparent'
-                    const txtCol    = isIncluded ? T.greenTextDeep : isExcluded ? T.coralText : T.textSecondary
-                    return (
-                      <button
-                        key={opt.value}
-                        onClick={() => cycleNicheTag(opt.value)}
-                        title={isIncluded ? 'Specialism — click to exclude' : isExcluded ? 'Excluded — click to reset' : 'Click to mark as specialism'}
-                        style={{
-                          fontSize: 11,
-                          fontFamily: 'var(--font-dm-sans)',
-                          padding: '5px 8px',
-                          borderRadius: 6,
-                          border: `1.5px solid ${borderCol}`,
-                          background: bgCol,
-                          color: txtCol,
-                          cursor: 'pointer',
-                          fontWeight: (isIncluded || isExcluded) ? 600 : 400,
-                          transition: 'all 0.12s',
-                          textAlign: 'left' as const,
-                          lineHeight: 1.3,
-                          textDecoration: isExcluded ? 'line-through' : 'none',
-                        }}
-                      >
-                        {isExcluded && <span style={{ marginRight: 4 }}>✕</span>}
-                        {opt.label}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      )}
+        )
+      })()}
 
       <div style={ACTIONS_STYLE}>
         <BackLink onClick={onBack} />
@@ -2078,10 +2597,11 @@ function StepSectors({ impactSectors, nicheTags, excludedNicheTags, toggleSector
    Step 3b — Beneficiaries
    ═══════════════════════════════════════════════ */
 
-function StepBeneficiaries({ beneficiaryGroups, toggleBeneficiary, makePrimaryBeneficiary, onBack, onContinue, canContinue }: {
+function StepBeneficiaries({ beneficiaryGroups, toggleBeneficiary, makePrimaryBeneficiary, suggestedNote, onBack, onContinue, canContinue }: {
   beneficiaryGroups: BeneficiaryGroup[]
   toggleBeneficiary: (b: BeneficiaryGroup) => void
   makePrimaryBeneficiary: (b: BeneficiaryGroup) => void
+  suggestedNote?: string | null
   onBack: () => void; onContinue: () => void; canContinue: boolean
 }) {
   const beneficiaryMax = beneficiaryGroups.length >= 4
@@ -2098,6 +2618,7 @@ function StepBeneficiaries({ beneficiaryGroups, toggleBeneficiary, makePrimaryBe
       <BackLink onClick={onBack} />
       <h1 style={H1_STYLE}>Who do you serve?</h1>
       <p style={SUBTITLE_STYLE}>Pick your primary beneficiary group first. That&rsquo;s what we&rsquo;ll weight most in matching.</p>
+      {suggestedNote && <SuggestedNote text={suggestedNote} />}
 
       <div style={{ marginBottom: 6, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' as const }}>
         <span style={{ fontSize: 13, fontWeight: 500, color: T.textPrimary, fontFamily: 'var(--font-space-grotesk)' }}>Who you serve</span>
@@ -2149,8 +2670,7 @@ function StepBeneficiaries({ beneficiaryGroups, toggleBeneficiary, makePrimaryBe
       {beneficiaryGroups.length > 0 && (
         <div style={{ background: T.pageBg, padding: '12px 14px', borderRadius: 10, marginBottom: 16, fontSize: 12, color: T.textSecondary, fontFamily: 'var(--font-dm-sans)' }}>
           <strong style={{ color: T.textPrimary, fontWeight: 500 }}>For:</strong>{'  '}
-          {BENEFICIARY_GROUPS.find(o => o.value === beneficiaryGroups[0])?.label}
-          {beneficiaryGroups.length > 1 && ` + ${beneficiaryGroups.length - 1} more`}
+          {beneficiaryGroups.map(v => BENEFICIARY_GROUPS.find(o => o.value === v)?.label ?? v).join(', ')}
         </div>
       )}
 
@@ -2168,114 +2688,115 @@ function StepBeneficiaries({ beneficiaryGroups, toggleBeneficiary, makePrimaryBe
    Step 4 — Location, size, funding types
    ═══════════════════════════════════════════════ */
 
-function StepLocation({ state, update, toggleFundingType, toggleSpendNeed, saving, saveError, canContinue, onBack, onFinish }: {
+function StepLocation({ state, update, toggleFundingType, toggleSpendNeed, saving, saveError, canContinue, reachNote, onBack, onFinish }: {
   state: WizardState
   update: <K extends keyof WizardState>(k: K, v: WizardState[K]) => void
   toggleFundingType: (t: FundingType) => void
   toggleSpendNeed: (r: SpendNeed) => void
   saving: boolean; saveError: string | null; canContinue: boolean
+  reachNote?: string | null
   onBack: () => void; onFinish: () => void
 }) {
   return (
     <>
       <BackLink onClick={onBack} />
       <h1 style={H1_STYLE}>Location and funding</h1>
-      <p style={SUBTITLE_STYLE}>Last stretch. These help us filter out what isn&rsquo;t relevant to where and how you work.</p>
+      <p style={SUBTITLE_STYLE}>Last stretch. These help us rank what fits where and how you work.</p>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 18, marginBottom: 8 }}>
+      {/* Design of 9 Sept 2026: each question is a 20px heading in its own
+          hairline-ruled section, helper text at 14px, inputs at radius 12,
+          selectable cards at radius 16 with a tick circle, and the Weekly
+          Funding Update as a plain row rather than a cream box. */}
+      {(!state.name.trim() || !state.legalStructure) && (
+        <Q first>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '22px 24px' }}>
+            {!state.name.trim() && (
+              <div>
+                <QLabel required>Organisation name</QLabel>
+                <input type="text" value={state.name} onChange={e => update('name', e.target.value)} placeholder="e.g. AudioActive" style={INPUT_STYLE} />
+              </div>
+            )}
+            {!state.legalStructure && (
+              <div>
+                <QLabel required>Legal structure</QLabel>
+                <SelectInput value={state.legalStructure} onChange={v => update('legalStructure', v as LegalStructure | '')} options={LEGAL_STRUCTURE_OPTIONS} placeholder="Select your structure…" />
+              </div>
+            )}
+            {state.legalStructure === 'sole_trader' && <IndividualNotice compact />}
+          </div>
+        </Q>
+      )}
 
-        {/* Only show name/structure if not already captured */}
-        {!state.name.trim() && (
-          <Field label="Organisation name" required>
-            <input type="text" value={state.name} onChange={e => update('name', e.target.value)} placeholder="e.g. AudioActive" style={INPUT_STYLE} />
-          </Field>
-        )}
-        {!state.legalStructure && (
-          <Field label="Legal structure" required>
-            <SelectInput value={state.legalStructure} onChange={v => update('legalStructure', v as LegalStructure | '')} options={LEGAL_STRUCTURE_OPTIONS} placeholder="Select your structure…" />
-          </Field>
-        )}
-
-        {/* Location row */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <Field label="Where are you based?" help='For London orgs, include borough — e.g. "Hackney, London"'>
-            <input type="text" value={state.primaryLocation} onChange={e => update('primaryLocation', e.target.value)} placeholder="e.g. Brighton, Sussex" style={INPUT_STYLE} />
-          </Field>
-          <Field label="Geographic reach" help="We'll score local grants highest if you're place-based.">
-            <SelectInput value={state.geographicReach} onChange={v => update('geographicReach', v)} options={GEOGRAPHIC_REACH_OPTIONS} placeholder="Select reach…" />
-          </Field>
+      <Q first={!!state.name.trim() && !!state.legalStructure}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '22px 24px' }}>
+          <div>
+            <QLabel htmlFor="wiz-based">Where are you based?</QLabel>
+            <input id="wiz-based" type="text" value={state.primaryLocation} onChange={e => update('primaryLocation', e.target.value)} placeholder="e.g. Brighton, Sussex" style={INPUT_STYLE} />
+            <QHelp>Your town or council area. For London, include the borough, for example &ldquo;Hackney, London&rdquo;.</QHelp>
+          </div>
         </div>
+      </Q>
 
-        {/* Grant size — thousand-separator formatting on display */}
-        <Field label="Grant size range" hint="optional — leave blank to see all" help="The most important field for size matching — grants outside this range will score lower.">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <div style={{ position: 'relative' }}>
-              <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: T.textTertiary, fontSize: 14, pointerEvents: 'none' }}>£</span>
-              <input
-                type="text" inputMode="numeric"
-                value={fmtThousands(state.minGrantTarget)}
-                onChange={e => update('minGrantTarget', e.target.value.replace(/[^\d]/g, ''))}
-                placeholder="10,000"
-                style={{ ...INPUT_STYLE, paddingLeft: 24 }}
-              />
-            </div>
-            <div style={{ position: 'relative' }}>
-              <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: T.textTertiary, fontSize: 14, pointerEvents: 'none' }}>£</span>
-              <input
-                type="text" inputMode="numeric"
-                value={fmtThousands(state.maxGrantTarget)}
-                onChange={e => update('maxGrantTarget', e.target.value.replace(/[^\d]/g, ''))}
-                placeholder="250,000"
-                style={{ ...INPUT_STYLE, paddingLeft: 24 }}
-              />
-            </div>
+      <Q title="Where does your work reach?">
+        {reachNote && <SuggestedNote text={reachNote} />}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          {GEOGRAPHIC_REACH_OPTIONS.map(o => (
+            <FundingTypeChip key={o.value} label={o.label} desc={o.hint} active={state.geographicReach === o.value} onClick={() => update('geographicReach', o.value)} />
+          ))}
+        </div>
+        <QHelp>Local funders score highest when your work is in one place, so pick the smallest that is true.</QHelp>
+      </Q>
+
+      <Q title="Grant size range" optional>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '22px 24px' }}>
+          <div style={{ position: 'relative' }}>
+            <label htmlFor="wiz-min" style={SR_ONLY}>Smallest amount</label>
+            <span aria-hidden="true" style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: '#7a857e', fontSize: 16, fontFamily: 'var(--font-space-grotesk)', pointerEvents: 'none' }}>£</span>
+            <input id="wiz-min" type="text" inputMode="numeric" value={fmtThousands(state.minGrantTarget)} onChange={e => update('minGrantTarget', e.target.value.replace(/[^\d]/g, ''))} placeholder="10,000" style={{ ...INPUT_STYLE, paddingLeft: 34 }} />
           </div>
-        </Field>
-
-        {/* Funding types — neutral picker-chips, same style as sector chips */}
-        <Field label="Funding types you're open to" help="You can adjust this per-search later on the Find Funding page.">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginTop: 4 }}>
-            {FUNDING_TYPES.map(t => {
-              const active = state.fundingTypes.includes(t.value)
-              return <FundingTypeChip key={t.value} label={t.label} desc={t.desc} active={active} onClick={() => toggleFundingType(t.value)} />
-            })}
+          <div style={{ position: 'relative' }}>
+            <label htmlFor="wiz-max" style={SR_ONLY}>Largest amount</label>
+            <span aria-hidden="true" style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: '#7a857e', fontSize: 16, fontFamily: 'var(--font-space-grotesk)', pointerEvents: 'none' }}>£</span>
+            <input id="wiz-max" type="text" inputMode="numeric" value={fmtThousands(state.maxGrantTarget)} onChange={e => update('maxGrantTarget', e.target.value.replace(/[^\d]/g, ''))} placeholder="250,000" style={{ ...INPUT_STYLE, paddingLeft: 34 }} />
           </div>
-        </Field>
+        </div>
+        <QHelp>Grants outside this range rank lower. Leave it blank and size is ignored.</QHelp>
+      </Q>
 
-        {/* What the money can be spent on — a different question from the type
-            of funding, and the one small charities most often get caught by.
-            Optional: leaving it blank means no preference, not "wants nothing". */}
-        <Field label="What do you need the money for?" help="Optional. Leave blank if you're open to any of these.">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginTop: 4 }}>
-            {SPEND_RESTRICTIONS.map(r => {
-              const active = state.spendRestrictions.includes(r.value)
-              return <FundingTypeChip key={r.value} label={r.label} desc={r.desc} active={active} onClick={() => toggleSpendNeed(r.value)} />
-            })}
-          </div>
-        </Field>
-      </div>
+      <Q title="Funding types you're open to">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          {FUNDING_TYPES.map(t => {
+            const active = state.fundingTypes.includes(t.value)
+            return <FundingTypeChip key={t.value} label={t.label} desc={t.desc} active={active} onClick={() => toggleFundingType(t.value)} />
+          })}
+        </div>
+        <QHelp>Untick any you would never take. Ticked types rank higher, you still see all of them, and you can change the mix on any search.</QHelp>
+      </Q>
 
-      {/* Email alerts, stated rather than assumed.
-          Ticked by default, which is the same behaviour as before. The point
-          of putting it here is that it is now a line somebody read on their
-          way past, so nobody arrives at their first alert email wondering how
-          they were signed up. */}
-      <label
-        style={{
-          display: 'flex', alignItems: 'flex-start', gap: 11, marginTop: 22,
-          padding: '14px 16px', background: T.cream1, borderRadius: 12,
-          cursor: 'pointer',
-        }}
-      >
+      <Q title="What do you need the money for?" optional>
+        <p style={{ margin: '-8px 0 14px', fontFamily: 'var(--font-dm-sans)', fontSize: 14, lineHeight: 1.5, color: '#7a857e' }}>Leave blank if you&rsquo;re open to any of these.</p>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          {SPEND_RESTRICTIONS.map(r => {
+            const active = state.spendRestrictions.includes(r.value)
+            return <FundingTypeChip key={r.value} label={r.label} desc={r.desc} active={active} onClick={() => toggleSpendNeed(r.value)} />
+          })}
+        </div>
+      </Q>
+
+      {/* The Weekly Funding Update, stated rather than assumed, as a plain
+          row above the footer rule. Ticked by default; the unsubscribe is in
+          every email and on the profile page. */}
+      <label style={{ display: 'flex', alignItems: 'flex-start', gap: 14, margin: '30px 0 0', padding: '26px 0 0', borderTop: '1px solid rgba(29,60,62,.10)', cursor: 'pointer' }}>
         <input
           type="checkbox"
           checked={state.alertsEnabled}
           onChange={e => update('alertsEnabled', e.target.checked)}
-          style={{ marginTop: 2, width: 16, height: 16, accentColor: T.greenDeep, cursor: 'pointer', flexShrink: 0 }}
+          style={{ marginTop: 2, width: 20, height: 20, accentColor: T.greenDeep, cursor: 'pointer', flexShrink: 0 }}
         />
-        <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 13.5, lineHeight: 1.55, color: T.textSecondary }}>
-          Email me when new funding opens that matches us. At most once a week,
-          and you can turn it off any time from your profile.
+        <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 15, lineHeight: 1.6, color: '#5f6b64' }}>
+          Send me the Weekly Funding Update: what is closing, what is moving,
+          and new funding that matches us. One email a week, and you can turn it
+          off any time from your profile.
         </span>
       </label>
 
@@ -2287,7 +2808,256 @@ function StepLocation({ state, update, toggleFundingType, toggleSpendNeed, savin
 
       <div style={{ ...ACTIONS_STYLE, marginTop: 24 }}>
         <BackLink onClick={onBack} />
-        <Button variant="primary" onClick={onFinish} disabled={saving || !canContinue}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
+          <Button variant="primary" onClick={onFinish} disabled={saving || !canContinue}>
+            {saving ? 'Saving…' : <><span>Show me my matches</span> <ArrowRight size={14} /></>}
+          </Button>
+          {!canContinue && !saving && (
+            <p style={{ fontSize: 11.5, color: T.amberMid, margin: 0, fontFamily: 'var(--font-dm-sans)', textAlign: 'right' as const }}>
+              {[!state.name.trim() ? 'your name' : null, !state.legalStructure ? 'your legal structure' : null, !state.primaryLocation.trim() ? 'where you are based' : null, !state.geographicReach ? 'where your work reaches' : null].filter(Boolean).join(', ')} to carry on
+            </p>
+          )}
+        </div>
+      </div>
+    </>
+  )
+}
+
+/** Selectable card (design of 9 Sept 2026): radius 16, a tick circle at the
+    right that fills deep when pressed, pale green tint when selected. */
+function FundingTypeChip({ label, desc, active, onClick }: { label: string; desc: string; active: boolean; onClick: () => void }) {
+  const [hov, setHov] = useState(false)
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        position: 'relative', textAlign: 'left' as const,
+        background: active ? '#E4F1EA' : '#fff',
+        border: `1px solid ${active ? '#1B6B3D' : hov ? 'rgba(29,60,62,.42)' : 'rgba(29,60,62,.18)'}`,
+        borderRadius: 16, padding: '16px 52px 16px 18px', cursor: 'pointer',
+        fontFamily: 'var(--font-dm-sans)', transition: 'border-color 120ms ease, background 120ms ease',
+      }}
+    >
+      <b style={{ display: 'block', fontFamily: 'var(--font-space-grotesk)', fontSize: 15.5, fontWeight: 600, color: T.greenDeep, margin: '0 0 3px' }}>{label}</b>
+      <em style={{ fontStyle: 'normal', fontSize: 14, color: '#5f6b64' }}>{desc}</em>
+      <span aria-hidden="true" style={{
+        position: 'absolute', top: '50%', right: 18, transform: 'translateY(-50%)', width: 24, height: 24, borderRadius: '50%',
+        border: `1.5px solid ${active ? T.greenDeep : 'rgba(29,60,62,.18)'}`, background: active ? T.greenDeep : 'transparent',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        {active && <Check size={13} color={T.onDeep} strokeWidth={2.5} />}
+      </span>
+    </button>
+  )
+}
+
+/* Question section for the location step: hairline above (except the first),
+   20px heading with an optional tag, helper text at 14px. */
+const SR_ONLY: React.CSSProperties = { position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap', border: 0 }
+function Q({ title, optional, first, children }: { title?: string; optional?: boolean; first?: boolean; children: React.ReactNode }) {
+  return (
+    <section style={{ padding: first ? '8px 0 0' : '30px 0 0', margin: first ? '26px 0 0' : '30px 0 0', borderTop: first ? 'none' : '1px solid rgba(29,60,62,.10)' }}>
+      {title && (
+        <h2 style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 20, fontWeight: 600, letterSpacing: '-0.4px', color: T.greenDeep, margin: '0 0 18px' }}>
+          {title}{optional && <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 14, fontWeight: 400, color: '#7a857e', letterSpacing: 0, marginLeft: 8 }}>optional</span>}
+        </h2>
+      )}
+      {children}
+    </section>
+  )
+}
+function QLabel({ children, required, htmlFor }: { children: React.ReactNode; required?: boolean; htmlFor?: string }) {
+  return (
+    <label htmlFor={htmlFor} style={{ display: 'block', fontFamily: 'var(--font-space-grotesk)', fontSize: 14.5, fontWeight: 600, color: T.greenDeep, margin: '0 0 7px' }}>
+      {children}{required && <span style={{ color: T.coralText, marginLeft: 2 }}>*</span>}
+    </label>
+  )
+}
+function QHelp({ children }: { children: React.ReactNode }) {
+  return <p style={{ fontSize: 14, lineHeight: 1.55, color: '#7a857e', margin: '8px 0 0', fontFamily: 'var(--font-dm-sans)' }}>{children}</p>
+}
+
+/* ═══════════════════════════════════════════════
+   Step 3 — The mission, in their words
+   ═══════════════════════════════════════════════ */
+
+function SuggestedNote({ text }: { text: string }) {
+  return (
+    <div role="status" style={{ background: T.greenCream, color: T.textPrimary, padding: '10px 14px', borderRadius: 12, fontSize: 13.5, lineHeight: 1.5, margin: '-14px 0 18px', fontFamily: 'var(--font-dm-sans)' }}>
+      {text}
+    </div>
+  )
+}
+
+/* ── The mission box ──────────────────────────────────────────────────────
+   Was a step of its own with a model-graded checklist (13 to 16 Sept 2026).
+   Two of the four launch-week drops happened on it: three coral circles and
+   "Two things still to add" read as a validation failure even though
+   Continue was never blocked. Now one box on the review step (or the manual
+   step), pre-filled from the website scan where there was one. The checker
+   routes (/api/profile/mission-check, mission-weave) are kept for the
+   profile page, which does not use them yet. */
+function MissionBox({ value, onChange, fromSite, onClear }: {
+  value: string; onChange: (v: string) => void; fromSite: boolean; onClear: () => void
+}) {
+  const showTag = fromSite && !!value.trim()
+  return (
+    <div style={{ marginTop: 22 }}>
+      <p style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 15, fontWeight: 600, color: T.textPrimary, margin: '0 0 4px' }}>What you do</p>
+      <p style={{ fontSize: 13.5, color: T.textSecondary, lineHeight: 1.5, margin: '0 0 10px', fontFamily: 'var(--font-dm-sans)' }}>
+        Two or three sentences: who you help, what you do, and where. It suggests your sectors and beneficiaries on the next screens, and the matching reads it.
+      </p>
+      <div style={{ position: 'relative' }}>
+        <textarea
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          rows={4}
+          placeholder="Paste the description you use on your website or in a funding bid, or write two sentences here."
+          style={{ ...INPUT_STYLE, height: 'auto', padding: showTag ? '38px 16px 14px' : '14px 16px', resize: 'vertical', lineHeight: 1.55 }}
+        />
+        {showTag && (
+          <div style={{ position: 'absolute', top: 10, left: 14, right: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontFamily: 'var(--font-space-grotesk)', fontSize: 12, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: T.textTertiary }}>
+            <span>From your website, edit freely</span>
+            <button type="button" onClick={onClear}
+              style={{ background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', font: 'inherit', color: T.greenDeep, letterSpacing: 'inherit', textTransform: 'inherit' }}>
+              Clear
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function StepCheck({ state, update, findings, reviewing, saving, saveError, onBack, onFinish }: {
+  state: WizardState
+  update: <K extends keyof WizardState>(k: K, v: WizardState[K]) => void
+  findings: ProfileFinding[]
+  reviewing: boolean
+  saving: boolean; saveError: string | null
+  onBack: () => void; onFinish: () => void
+}) {
+  const fixes = findings.filter(f => f.severity === 'fix')
+  const considers = findings.filter(f => f.severity === 'consider')
+  const nicheLabel = (v: string) => {
+    for (const list of Object.values(NICHE_TAGS_BY_SECTOR)) { const t = (list ?? []).find(x => x.value === v); if (t) return t.label }
+    return v
+  }
+  const benLabel = (v: string) => BENEFICIARY_GROUPS.find(b => b.value === v)?.label ?? v
+
+  const missionBox = (
+    <div style={{ marginTop: 14 }}>
+      <QLabel>Your mission</QLabel>
+      <textarea value={state.mission} onChange={e => update('mission', e.target.value)} rows={3} placeholder="Who you help, what changes for them, and where." style={{ ...INPUT_STYLE, height: 'auto', padding: '12px 15px', resize: 'vertical', lineHeight: 1.5 }} />
+    </div>
+  )
+  /* Two rows of chips: the ones the mission already mentions, and the ones it
+     does not yet. Nothing is removed unless tapped; the words in the mission
+     are the only thing we know, so the first fix offered is to add to them. */
+  function chipRows(all: string[], unmentioned: string[], label: (v: string) => string, remove: (v: string) => void) {
+    const mentioned = all.filter(v => !unmentioned.includes(v))
+    const row = (title: string, vals: string[]) => vals.length ? (
+      <div style={{ marginBottom: 8 }}>
+        <p style={{ margin: '0 0 6px', fontFamily: 'var(--font-space-grotesk)', fontSize: 12, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: T.textTertiary }}>{title}</p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+          {vals.map(v => <PickerChip key={v} label={label(v)} chipState="primary" onClick={() => remove(v)} />)}
+        </div>
+      </div>
+    ) : null
+    return (
+      <div>
+        {row('Not in your mission yet', unmentioned)}
+        {row('In your mission', mentioned)}
+        <QHelp>Tap one to untick it. Or say it in the mission below and keep it.</QHelp>
+        {missionBox}
+      </div>
+    )
+  }
+  const nichePicker = (() => {
+    const opts = state.impactSectors.flatMap(sec => NICHE_TAGS_BY_SECTOR[sec] ?? [])
+    if (!opts.length) return <QHelp>Add specialisms later from your profile.</QHelp>
+    return (
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+        {opts.map(o => {
+          const on = state.nicheTags.includes(o.value)
+          return <PickerChip key={o.value} label={o.label} chipState={on ? 'primary' : 'unselected'}
+            onClick={() => update('nicheTags', on ? state.nicheTags.filter(x => x !== o.value) : [...state.nicheTags, o.value])} />
+        })}
+      </div>
+    )
+  })()
+
+  /* Each finding renders its sentence and, under it, the one control that
+     resolves it. A chip row for tags, a select for income and reach, a
+     textarea for the mission. Controls act on the wizard state directly, so
+     the finding is already resolved by the time the profile is saved. */
+  function control(f: ProfileFinding) {
+    const a = f.action
+    switch (a.kind) {
+      case 'set_income':
+        return <SelectInput value={state.annualIncomeBand} onChange={v => update('annualIncomeBand', v)} options={INCOME_BANDS.map(b => ({ value: b, label: b }))} placeholder="Select a band…" />
+      case 'set_reach':
+        return <SelectInput value={state.geographicReach} onChange={v => update('geographicReach', v)} options={GEOGRAPHIC_REACH_OPTIONS} placeholder="Select reach…" />
+      case 'remove_beneficiaries':
+        return chipRows(state.beneficiaryGroups, a.values as string[], benLabel, v => update('beneficiaryGroups', state.beneficiaryGroups.filter(x => x !== v)))
+      case 'remove_niche':
+        return chipRows(state.nicheTags, a.values, nicheLabel, v => update('nicheTags', state.nicheTags.filter(x => x !== v)))
+      case 'edit_mission':
+        return <textarea value={state.mission} onChange={e => update('mission', e.target.value)} rows={4} placeholder="Who you help, what changes for them, and where." style={{ ...INPUT_STYLE, height: 'auto', padding: '12px 15px', resize: 'vertical', lineHeight: 1.5 }} />
+      case 'set_grant_range':
+        return (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <input type="text" inputMode="numeric" value={state.minGrantTarget} onChange={e => update('minGrantTarget', e.target.value.replace(/[^0-9]/g, ''))} placeholder="Minimum, e.g. 1000" style={INPUT_STYLE} />
+            <input type="text" inputMode="numeric" value={state.maxGrantTarget} onChange={e => update('maxGrantTarget', e.target.value.replace(/[^0-9]/g, ''))} placeholder="Maximum, e.g. 25000" style={INPUT_STYLE} />
+          </div>
+        )
+      case 'add_niche':
+        return nichePicker
+      default:
+        return null
+    }
+  }
+
+  function card(f: ProfileFinding) {
+    const fix = f.severity === 'fix'
+    return (
+      <div key={f.id} style={{ background: '#fff', border: `1px solid ${fix ? 'rgba(180,120,40,.35)' : 'rgba(29,60,62,.14)'}`, borderLeft: `4px solid ${fix ? T.amberMid : 'rgba(29,60,62,.25)'}`, borderRadius: 14, padding: '16px 18px', marginBottom: 10 }}>
+        <p style={{ margin: '0 0 4px', fontFamily: 'var(--font-space-grotesk)', fontSize: 16, fontWeight: 600, color: T.greenDeep, lineHeight: 1.3 }}>{f.title}</p>
+        <p style={{ margin: '0 0 12px', fontFamily: 'var(--font-dm-sans)', fontSize: 13.5, lineHeight: 1.5, color: T.textSecondary }}>{f.body}</p>
+        {control(f)}
+      </div>
+    )
+  }
+
+  return (
+    <>
+      <BackLink onClick={onBack} />
+      <h1 style={H1_STYLE}>One look before your matches</h1>
+      <p style={SUBTITLE_STYLE}>
+        {fixes.length ? `${fixes.length === 1 ? 'One thing is' : `${fixes.length} things are`} holding your matches back.` : 'A couple of things could make your matches sharper.'} Change what you want here, or skip straight to your matches.
+      </p>
+
+      {fixes.map(card)}
+      {considers.length > 0 && fixes.length > 0 && (
+        <p style={{ margin: '22px 0 10px', fontFamily: 'var(--font-space-grotesk)', fontSize: 13, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: T.textTertiary }}>Worth a look</p>
+      )}
+      {considers.map(card)}
+
+      {reviewing && (
+        <p style={{ margin: '6px 0 0', fontFamily: 'var(--font-dm-sans)', fontSize: 13, color: T.textTertiary }}>Reading your mission for anything else…</p>
+      )}
+
+      {saveError && (
+        <div style={{ background: T.coralBg, color: T.coralText, padding: '10px 14px', borderRadius: 10, fontSize: 13, marginTop: 8, fontFamily: 'var(--font-dm-sans)' }}>{saveError}</div>
+      )}
+
+      <div style={{ ...ACTIONS_STYLE, marginTop: 24 }}>
+        <BackLink onClick={onBack} />
+        <Button variant="primary" onClick={onFinish} disabled={saving}>
           {saving ? 'Saving…' : <><span>Show me my matches</span> <ArrowRight size={14} /></>}
         </Button>
       </div>
@@ -2295,44 +3065,12 @@ function StepLocation({ state, update, toggleFundingType, toggleSpendNeed, savin
   )
 }
 
-/** Funding type chip — neutral selector, same visual logic as PickerChip secondary state */
-function FundingTypeChip({ label, desc, active, onClick }: { label: string; desc: string; active: boolean; onClick: () => void }) {
-  const [hov, setHov] = useState(false)
-  return (
-    <button
-      onClick={onClick}
-      onMouseEnter={() => setHov(true)}
-      onMouseLeave={() => setHov(false)}
-      style={{
-        padding: '10px 12px',
-        textAlign: 'left' as const,
-        background: active || hov ? T.greenCream : '#fff',
-        border: `${active ? '1.5px' : '0.5px'} solid ${active || hov ? T.greenMid : T.borderInput}`,
-        borderRadius: 8,
-        cursor: 'pointer',
-        transition: 'all 120ms ease',
-        display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8,
-      }}
-    >
-      <div>
-        <p style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 12, fontWeight: 500, color: active ? T.greenTextDeep : T.textPrimary, margin: 0 }}>{label}</p>
-        <p style={{ fontSize: 11, color: active ? T.greenTextDeep : T.textSecondary, margin: '2px 0 0', fontFamily: 'var(--font-dm-sans)', opacity: 0.85 }}>{desc}</p>
-      </div>
-      {active && (
-        <div style={{ width: 16, height: 16, borderRadius: '50%', background: T.lime, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
-          <Check size={9} color={T.onDeep} strokeWidth={3} />
-        </div>
-      )}
-    </button>
-  )
-}
-
 /* ═══════════════════════════════════════════════
    Step 5 — The reveal
    ═══════════════════════════════════════════════ */
 
-function StepReveal({ matchCount, failed, structureBlock, topMatches, hasMission, onExplore, onAddMission }: {
-  matchCount: number | null; failed: boolean
+function StepReveal({ matchCount, failed, structureBlock, topMatches, hasMission, isIndividual, onExplore, onAddMission }: {
+  matchCount: number | null; failed: boolean; isIndividual: boolean
   structureBlock: { openNow: number; ifConstituted: number } | null
   topMatches: RevealMatch[] | null
   hasMission: boolean; onExplore: () => void; onAddMission: () => void
@@ -2417,6 +3155,21 @@ function StepReveal({ matchCount, failed, structureBlock, topMatches, hasMission
     )
   }
 
+  if (isIndividual && matchCount === 0) {
+    return (
+      <>
+        <div style={{ textAlign: 'center', padding: '24px 0 16px' }}>
+          <div style={{ fontSize: 40, marginBottom: 12 }}>🌱</div>
+          <h1 style={{ ...H1_STYLE, fontSize: 22 }}>Your profile is saved</h1>
+        </div>
+        <div style={{ maxWidth: 460, margin: '0 auto' }}><IndividualNotice /></div>
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 24 }}>
+          <Button variant="primary" size="lg" onClick={onExplore}>Browse all funding <ArrowRight size={15} /></Button>
+        </div>
+      </>
+    )
+  }
+
   if (matchCount === 0) {
     return (
       <>
@@ -2455,13 +3208,13 @@ function StepReveal({ matchCount, failed, structureBlock, topMatches, hasMission
       {topMatches && topMatches.length > 0 && (
         <>
           <div style={{ fontSize: 13, fontWeight: 500, color: T.textPrimary, fontFamily: 'var(--font-space-grotesk)', marginBottom: 10 }}>
-            Your top {Math.min(topMatches.length, 3)} matches
+            Your top {Math.min(topMatches.length, 3)} grant matches
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
             {topMatches.map(m => (
               <Link
                 key={m.id}
-                href="/dashboard/profile"
+                href={`/dashboard/search?grant=${encodeURIComponent(m.id)}`}
                 style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: T.pageBg, border: `0.5px solid ${T.borderLight}`, borderRadius: 10, textDecoration: 'none', cursor: 'pointer', transition: 'background 120ms ease' }}
                 onMouseEnter={e => (e.currentTarget.style.background = T.cream1)}
                 onMouseLeave={e => (e.currentTarget.style.background = T.pageBg)}

@@ -33,6 +33,32 @@ describe('excerptWithMeta', () => {
     expect(out.text).toContain('Who can apply')
   })
 
+  /**
+   * The JJ Charitable Trust shape (2026-09-02). A page 834 characters over the
+   * cap, whose "Timeline" says "we make grants three times per year", "cut-off
+   * points" and "applications by 4th March 2026". None of those words scored,
+   * so the one window with the dates was the one dropped, and the brief said
+   * the source states no application windows. Every other window carries a
+   * £ figure so it outscores the timeline whatever the budget.
+   */
+  it('keeps a round timetable phrased as "applications by" and "grant round"', () => {
+    const PROSE = 'The trust supports literacy work in primary and secondary schools for children with learning difficulties. '
+    const head = PROSE.repeat(40).slice(0, 3000)
+    const timeline = 'Timeline. The programme is open to applications at any time, but we make grants three times per year. '
+      + 'These are the cut-off points for us to consider your application: '
+      + 'Spring grant round: applications by 4th March 2026. Summer grant round: applications by 3rd June 2026. '
+      + 'Autumn grant round: applications by 1st October 2026. You will receive a decision within eight weeks of these dates. '
+    const timelineWindow = (timeline + PROSE.repeat(20)).slice(0, 1500)
+    const moneyWindow = ('Past grants have ranged from £1,000 upward. ' + PROSE.repeat(40)).slice(0, 1500)
+    const page = head + timelineWindow + moneyWindow.repeat(6)
+    expect(page.length).toBeGreaterThan(PAGE_CAP)      // precondition: it must be cut at all
+    expect(page.length).toBeLessThan(PAGE_CAP + 2000)  // and only just, as JJ was
+
+    const out = excerptWithMeta(page)
+    expect(out.capped).toBe(true)
+    expect(out.text).toContain('Autumn grant round: applications by 1st October 2026')
+  })
+
   it('marks where text was dropped, so a quote is never stitched across a gap', () => {
     const out = excerptWithMeta(filler(15_000) + TERMS + filler(50_000))
     expect(out.text).toContain('[…]')

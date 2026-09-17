@@ -61,7 +61,7 @@ const POLICIES: Policy[] = [
   {
     name: 'C. Wrong blocks, missing does not',
     note: 'block invented/incorrect data; let honest gaps publish',
-    blocks: rs => rs.some(isWrong),
+    blocks: rs => rs.some(r => isWrong(r)),
   },
   {
     name: 'D. Only user-visible harm blocks',
@@ -132,7 +132,7 @@ async function main() {
   }
 
   console.log(`\nALREADY live (${isLive.length}) — these are in front of users NOW.`)
-  const wrongLive = isLive.filter(s => s.rs.some(isWrong))
+  const wrongLive = isLive.filter(s => s.rs.some(r => isWrong(r)))
   console.log(`  carrying a "wrong data" reason:  ${wrongLive.length}  <- candidates to RETRACT, not to hold`)
   console.log(`  only incomplete / unconfirmed:   ${isLive.length - wrongLive.length}  <- holding these achieves nothing`)
   const wt = new Map<string, number>()

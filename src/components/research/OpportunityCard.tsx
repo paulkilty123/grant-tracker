@@ -182,7 +182,7 @@ export default function OpportunityCard({ data, actions }: { data: OpportunityCa
   }
 
   const isCatalogue = data.variant === 'catalogue'
-  const amountLabel = isCatalogue ? formatRange(data.amount_min, data.amount_max, data.amount_undisclosed) : null
+  const amountLabel = isCatalogue ? formatRange(data.amount_min, data.amount_max, data.amount_undisclosed, data.funding_type) : null
   // v1.1 §7 fix B: the tag is a real catalogue check frozen at hydration
   // (loop.ts), never a guess from which tool produced the card — a
   // cache_researched_funder card that DOES match an active catalogue

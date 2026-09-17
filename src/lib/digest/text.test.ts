@@ -21,10 +21,15 @@ describe('plurals', () => {
     expect(`${plural(3, 'grant')} that ${verb(3, 'matches', 'match')}`).toBe('3 grants that match')
   })
 
-  it('spells small numbers and leaves large ones as numerals', () => {
+  it('spells up to twenty and leaves larger ones as numerals', () => {
+    // Twenty rather than ten because the week-one lead spells its match total
+    // ("Nineteen opportunities are open to you") and a filled profile lands in
+    // the teens.
     expect(spell(1)).toBe('one')
     expect(spell(10)).toBe('ten')
-    expect(spell(11)).toBe('11')
+    expect(spell(19)).toBe('nineteen')
+    expect(spell(20)).toBe('twenty')
+    expect(spell(21)).toBe('21')
     expect(spellCap(3)).toBe('Three')
   })
 })

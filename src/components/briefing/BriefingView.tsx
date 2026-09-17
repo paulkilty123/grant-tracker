@@ -24,7 +24,11 @@ const todayIso = () => new Date().toISOString().slice(0, 10)
 
 type FitCard = Extract<BriefingPayload, { has_goal: true }>['top_candidates'][number]
 
-function amountLine(c: { amount_min: number | null; amount_max: number | null; amount_undisclosed: boolean }): string {
+// `funding_type` is load-bearing on the no-amount branch: an in-kind offer has
+// no cash award, so "not disclosed" and "unspecified" are both false of it. Same
+// rule as formatRange in lib/utils.ts, which carries the reasoning.
+function amountLine(c: { amount_min: number | null; amount_max: number | null; amount_undisclosed: boolean; funding_type?: string }): string {
+  if (!c.amount_min && !c.amount_max && c.funding_type === 'in_kind') return 'support in kind, not cash'
   if (c.amount_undisclosed) return 'amount not disclosed'
   if (c.amount_min && c.amount_max && c.amount_min !== c.amount_max) return `${gbp(c.amount_min)} to ${gbp(c.amount_max)}`
   if (c.amount_max) return `up to ${gbp(c.amount_max)}`
@@ -45,6 +49,7 @@ function candidateChar(fundingType: string): string {
   return 'project' // grants and programmes are project cash by default
 }
 function candidateAmountLabel(c: FitCard): string {
+  if (!c.amount_min && !c.amount_max && c.funding_type === 'in_kind') return 'in-kind'
   if (c.amount_undisclosed) return 'amount TBC'
   const rk = (n: number) => Math.round(n / 1000)
   if (c.amount_max != null && c.amount_max > 0 && c.amount_max <= 20000) return 'quick win'

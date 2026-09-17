@@ -7,8 +7,9 @@
 // for 2+ DD Month patterns and advances `deadline` to the next future
 // occurrence, so the grant stays in the catalogue between rounds without
 // admin intervention.
+import { reopensWithinLead } from '@/lib/reopening-lead'
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { getAdminDb } from '@/lib/admin/admin-db'
 import { mergeGrantUpdate } from '@/lib/grant-merge'
 import { recordRun } from '@/lib/admin/cron-runs'
 import { nextCycleDeadline, type CycleEntry } from '@/lib/deadline-cycle'
@@ -23,10 +24,7 @@ export const dynamic = 'force-dynamic'
 // the handler reported non-zero counts. Diagnosed 2026-07-25: provenance
 // source `system:expire_grants:*` appeared on 0 of 1,729 rows.
 function getAdminClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  )
+  return getAdminDb()
 }
 
 // Bump if the roll-forward parser or between-rounds behaviour changes materially.
@@ -124,7 +122,7 @@ export async function GET(req: NextRequest) {
     // Find every grant whose deadline has passed
     const { data: candidates, error: fetchErr } = await supabase
       .from('scraped_grants')
-      .select('id, external_id, title, deadline, next_open_date, funder_brief, deadline_cycle')
+      .select('id, external_id, title, deadline, next_open_date, next_open_date_parsed, funder_brief, deadline_cycle')
       .eq('is_active', true)
       .not('is_rolling', 'is', true)
       .not('deadline', 'is', null)
@@ -197,13 +195,18 @@ export async function GET(req: NextRequest) {
       // state that exists for exactly this and which the admin "Between rounds"
       // tab reads. It does NOT go to Needs Review.
       const existingNextOpen = (g.next_open_date as string | null) ?? null
+      // Paul, 2026-09-07: a closed fund is shown from one month before it
+      // reopens. A known date further out than that parks the row; the
+      // check-coming-soon cron brings it back a month before the day.
+      const parsedNextOpen = (g.next_open_date_parsed as string | null) ?? null
+      const showWhileClosed = !!existingNextOpen && reopensWithinLead(parsedNextOpen, today)
       try {
         const r = await mergeGrantUpdate({
           id:     g.id as string,
           fields: {
             deadline:       null,
             next_open_date: existingNextOpen ?? 'Closed — next round TBC',
-            ...(existingNextOpen ? {} : { is_active: false }),
+            ...(showWhileClosed ? {} : { is_active: false }),
           },
           source: PROVENANCE_SOURCE,
           pinned: false,

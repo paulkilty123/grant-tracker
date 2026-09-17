@@ -59,6 +59,8 @@ export interface GrantInput {
   // and to fall back to description-only when both are missing.
   what_they_fund?: string
   priorities?: string
+  /** The funder's own eligibility text, which is where "the Army family" lives. */
+  who_can_apply?: string
 }
 
 export interface ClassificationCitation {
@@ -98,6 +100,8 @@ export async function classifyBatch(grants: GrantInput[]): Promise<Classificatio
     description: (g.description ?? '').slice(0, 1500),
     ...(g.what_they_fund && g.what_they_fund.trim().length > 0
       ? { what_they_fund: g.what_they_fund.trim().slice(0, 2000) } : {}),
+    ...(g.who_can_apply && g.who_can_apply.trim().length > 0
+      ? { who_can_apply: g.who_can_apply.trim().slice(0, 1200) } : {}),
     ...(g.priorities && g.priorities.trim().length > 0
       ? { priorities: g.priorities.trim().slice(0, 2000) } : {}),
   }))
@@ -113,7 +117,7 @@ OUTPUT FORMAT — return ONLY a JSON array, no markdown, no explanation:
     "impact_sectors": ["<2 to 4 sector values, OR 1 if genuinely single-purpose>"],
     "funding_type": "<exactly one funding type value>",
     "eligible_structures": ["<legal structure values, or empty array []>"],
-    "target_beneficiaries": ["<2 to 4 beneficiary group values, OR 1 if genuinely single-audience>"],
+    "target_beneficiaries": ["<FIRST the group the funder says the money is for; then only groups the funder names; general_public first when open to all; 1 is common>"],
     "niche_tags": ["<0 to 4 sub-sector specialism tags, or empty array []>"],
     "_citations": {
       "impact_sectors":       {"snippet": "50-300 chars verbatim from what_they_fund/priorities/description that supports the sector set", "confidence": "high"},
@@ -250,10 +254,27 @@ international  international development, global south, fair trade, migration, r
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 FUNDING TYPE TAXONOMY — choose exactly one:
 
-grant       Non-repayable cash: grants, awards, bursaries, prizes, diversity funds, challenge prizes
-programme   Structured support that may include cash: accelerators, fellowships, incubators, support programmes, cohort programmes, capacity building, CPD, mentoring
-investment  Repayable finance: loans, patient capital, social investment, blended finance (part-grant part-loan), community shares
-in_kind     Non-cash support only: software credits, ad grants, free workspace, pro bono services, tax relief
+Decide by what the applicant PRIMARILY RECEIVES, not by what the fund is
+called. Many grants are named "... Programme" or "... Fund", and many
+programmes hand out some cash. The name is not the answer.
+
+The test: would a successful applicant say "we got £X", or "we got onto X"?
+Money first is a grant. A place first is a programme.
+
+grant       Non-repayable cash is the main thing on offer: grants, awards,
+            bursaries, prizes, diversity funds, challenge prizes. Advice,
+            mentoring or networking bundled alongside the money does NOT make
+            it a programme — unrestricted funding with optional support is a
+            grant.
+programme   The STRUCTURED SUPPORT is the offer: accelerators, fellowships,
+            incubators, cohort programmes, capacity building, CPD, mentoring.
+            Cash may come with a place, but the place is the point. If there is
+            no cohort, curriculum, term or selection into something to take
+            part in, it is not a programme.
+investment  Repayable finance: loans, patient capital, social investment,
+            blended finance (part-grant part-loan), community shares
+in_kind     Non-cash support only: software credits, ad grants, free workspace,
+            pro bono services, tax relief
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ELIGIBLE STRUCTURES — legal structures the source EXPLICITLY lists as eligible.
@@ -401,12 +422,22 @@ digital_literacy    digital skills, online inclusion, basic digital, internet ac
 Return ONLY tags from the lists above, exactly as written. Return [] if none apply clearly.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-TARGET BENEFICIARIES — who does this grant primarily serve?
-DEFAULT: 2 to 4 groups (most funders serve multiple demographics). Single
-group is correct ONLY if the grant is genuinely targeting one demographic
-(e.g. a veterans-only mental health fund, a women-only enterprise fund).
-
-Use "general_public" ONLY if the grant genuinely has no specific beneficiary focus.
+TARGET BENEFICIARIES — who does the funder say the money is for?
+ORDER MATTERS. The FIRST value is the group the funder names as who the
+money is for; the matcher treats it as the fund's primary audience and treats
+the length of the list as how broad the fund is. So:
+- Put "general_public" FIRST, on its own or ahead of any named priorities,
+  when the fund is open to any community benefit or names no group. Most
+  community foundations, lottery small grants and general trusts are this.
+- Add a group ONLY when the funder names it as who they fund, in
+  who_can_apply, what_they_fund or priorities. Never from a passing phrase,
+  never to pad the list. One group is common and correct.
+- "families" means the family is the unit being supported (family support,
+  parenting). A fund for veterans that mentions "military families" is
+  ["veterans"], not ["veterans", "families"]. A children's fund that says
+  "families in need" may carry "families" second, never first.
+- "mental_health" here means people with mental health needs are who the
+  money is for, not that wellbeing is mentioned.
 
 children            children under 16, early years, nursery, primary school
 young_people        young people 16-25, youth, teenagers, young adults, NEETs
@@ -441,8 +472,9 @@ Example 1 — Community foundation (multi-sector):
                   wellbeing for young people; environmental projects."
   CORRECT:
     impact_sectors:       ["community", "education", "health", "mental_health"]
-    target_beneficiaries: ["children", "young_people", "people_in_poverty", "general_public"]
-  COMMON ERROR: tagging only ["community"] from the funder name.
+    target_beneficiaries: ["general_public", "people_in_poverty", "young_people"]
+  COMMON ERROR: tagging only ["community"] from the funder name; putting a
+  priority group first when the fund is open to all.
 
 Example 2 — Family trust (multi-sector):
   Funder: Sainsbury Family Charitable Trusts
@@ -450,8 +482,9 @@ Example 2 — Family trust (multi-sector):
                   learning, and social change."
   CORRECT:
     impact_sectors:       ["creative", "environment", "education", "heritage"]
-    target_beneficiaries: ["children", "families", "general_public"]
-  COMMON ERROR: tagging only ["creative"] or only ["families"].
+    target_beneficiaries: ["general_public"]
+  COMMON ERROR: tagging only ["creative"]; inventing "children" and "families"
+  from "education" and "family trust" when the funder names no group.
 
 Example 3 — Arts foundation (multi-sector — counters "Arts" name bias):
   Funder: Rayne Foundation
@@ -461,8 +494,9 @@ Example 3 — Arts foundation (multi-sector — counters "Arts" name bias):
                   research in the arts; mental wellbeing of young people."
   CORRECT:
     impact_sectors:       ["creative", "mental_health", "education", "community"]
-    target_beneficiaries: ["children", "young_people", "mental_health", "people_in_poverty"]
-  COMMON ERROR: tagging only ["creative"] from "Arts Foundation" in the name.
+    target_beneficiaries: ["people_in_poverty", "young_people"]
+  COMMON ERROR: tagging only ["creative"] from "Arts Foundation" in the name;
+  adding "children" and "mental_health" the funder does not name as who it funds.
 
 Example 4 — Genuinely single-purpose (single sector IS correct):
   Funder: Sport England

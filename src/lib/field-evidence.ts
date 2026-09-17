@@ -86,6 +86,11 @@ export type EvidenceStamp = {
    * visit by the one code path that knows the answer.
    */
   silent_streak?: number
+  hops?: string[]
+  /** Page-read stamp only: fingerprint of the page text at this read. */
+  page_hash?: string
+  /** Page-read stamp only: the cadence shape this read decided. */
+  cadence_shape?: string
 }
 
 export type FieldEvidence = Record<string, EvidenceStamp>
@@ -196,6 +201,7 @@ function stampOf(evidence: FieldEvidence | null | undefined, field: string): Evi
     ...(typeof stamp.note === 'string' ? { note: stamp.note } : {}),
     ...(typeof stamp.silent_streak === 'number' && Number.isFinite(stamp.silent_streak)
       ? { silent_streak: stamp.silent_streak } : {}),
+    ...(Array.isArray(stamp.hops) && stamp.hops.length > 0 ? { hops: stamp.hops } : {}),
   }
 }
 
@@ -293,6 +299,17 @@ export type EvidenceInput = {
   note?:      string
   /** Consecutive silent reads. Page-read stamp only. See `EvidenceStamp`. */
   silent_streak?: number
+  /** What the engine did after the first page: which pages it followed and why
+   *  a hop was kept or dropped. Page-read stamp only. Added 2026-09-05 after a
+   *  dropped hop could only be diagnosed by guessing. */
+  hops?: string[]
+  /** SHA-256 of the whole page text at this read. Page-read stamp only. The
+   *  next read compares against it and skips the model when nothing moved.
+   *  Added 2026-09-11; see verification/page-hash.ts. */
+  page_hash?: string
+  /** The cadence shape this read decided (dated, always_open, silent), so the
+   *  next read knows whether it is at a dated checkpoint. Page-read stamp only. */
+  cadence_shape?: string
 }
 
 export type BuiltPatch = {
@@ -340,6 +357,9 @@ export function buildEvidencePatch(
       // Zero is meaningful — it is how "the page answered, start the backoff
       // over" is recorded — so this tests for a number rather than truthiness.
       ...(typeof input.silent_streak === 'number' ? { silent_streak: input.silent_streak } : {}),
+      ...(Array.isArray(input.hops) && input.hops.length > 0 ? { hops: input.hops } : {}),
+      ...(typeof input.page_hash === 'string' ? { page_hash: input.page_hash } : {}),
+      ...(typeof input.cadence_shape === 'string' ? { cadence_shape: input.cadence_shape } : {}),
     }
   }
 

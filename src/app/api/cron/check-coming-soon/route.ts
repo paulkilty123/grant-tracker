@@ -28,21 +28,20 @@
 // to 'tagged_awaiting_review' explicitly instead. Bug 2 stays fixed, since
 // next_open_date still goes through the trust ladder.
 
+import { leadCutoff } from '@/lib/reopening-lead'
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { getAdminDb } from '@/lib/admin/admin-db'
 import { mergeGrantUpdate } from '@/lib/grant-merge'
 import { recordRun } from '@/lib/admin/cron-runs'
 import { detectReopening } from '@/lib/verification/reopening'
+import { resurfaceDecision } from '@/lib/reopening-resurface'
 
 export const dynamic = 'force-dynamic'
 
 const PROVENANCE_SOURCE = 'system:check_coming_soon:v2'
 
 function getAdminClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  )
+  return getAdminDb()
 }
 
 export async function GET(req: NextRequest) {
@@ -61,10 +60,16 @@ export async function GET(req: NextRequest) {
     // Find grants whose "opens" date has arrived or passed
     const { data: dueGrants, error: fetchErr } = await db
       .from('scraped_grants')
-      .select('id, title, funder, next_open_date')
+      .select('id, title, funder, next_open_date, is_active, pipeline_state')
       .not('next_open_date', 'is', null)
       .not('next_open_date_parsed', 'is', null)
-      .lte('next_open_date_parsed', today)
+      // A date must never drag a rejected or archived fund back into review.
+      // Before 2026-09-10 nothing excluded them; the Ford of Britain small
+      // grants row sat rejected with a September date and was listed daily.
+      .not('pipeline_state', 'in', '("rejected","archived")')
+      // A month's lead: the row surfaces for a look before the fund opens, so
+      // it is live when the round starts, not a week into it. Paul, 2026-09-07.
+      .lte('next_open_date_parsed', leadCutoff(today))
 
     if (fetchErr) {
       console.error('check-coming-soon fetch error:', fetchErr)
@@ -88,6 +93,7 @@ export async function GET(req: NextRequest) {
     // internally inconsistent (badge text present, parsed date gone).
     const processed: string[] = []
     const skippedPinned: string[] = []
+    const resurfaced: string[] = []
     const failed: { id: string; error: string }[] = []
 
     for (const g of dueList) {
@@ -101,8 +107,28 @@ export async function GET(req: NextRequest) {
         })
 
         if (probe.rejected.some(r => r.field === 'next_open_date')) {
-          // Admin pinned the badge. Respect it, and don't desync the pair.
-          skippedPinned.push(label)
+          // A human wrote the badge (user_verified at 70 or admin at 100
+          // outranks this cron at 50). Respect it, and don't desync the pair.
+          //
+          // BUT A REFUSED BADGE CLEAR IS NOT A REASON TO IGNORE THE ROW. Until
+          // 2026-09-10 this branch was a bare `continue`, and because nearly
+          // every reopening date is written by a human, it swallowed 28 of the
+          // 28 rows due that morning. The Elephant Trust, hidden since April
+          // and reopening on 18 September, was listed as "skipped" every day
+          // and reached nobody. The badge stays; a hidden row still goes to
+          // review. See src/lib/reopening-resurface.ts.
+          const decision = resurfaceDecision(g)
+          if (decision === 'route') {
+            await mergeGrantUpdate({
+              id:     g.id,
+              fields: { pipeline_state: 'tagged_awaiting_review' },
+              source: PROVENANCE_SOURCE,
+              db,
+            })
+            resurfaced.push(label)
+          } else {
+            skippedPinned.push(`${label} [${decision}]`)
+          }
           continue
         }
 
@@ -170,11 +196,22 @@ export async function GET(req: NextRequest) {
     // A REVIEW, NEVER A PUBLICATION. `is_active` is untouched, exactly as in the
     // pass above: the row joins the queue and a human — or auto-publish, on a
     // clean gate — decides what users see.
+    // WIDENED 2026-09-11 TO HIDDEN ROWS STILL MARKED PUBLISHED.
+    //
+    // A row that expired while live stays `published` with is_active=false
+    // (expire-grants hides, it does not re-file), and the nightly read keeps
+    // re-reading it and banking what the page says. This pass only looked at
+    // `between_rounds_scheduled`, so 141 such rows were read every month and
+    // never acted on. On the day this was widened, eight of them carried a
+    // future closing date on the funder's own page: Theatres Trust to 31 Jan
+    // 2027, Hugh Fraser to 30 Oct 2026, Nature Networks to 3 Nov 2026. Still a
+    // review, never a publication: is_active is untouched.
     const reopened: string[] = []
     const { data: hidden, error: hiddenErr } = await db
       .from('scraped_grants')
-      .select('id, title, funder, deadline, field_evidence')
-      .eq('pipeline_state', 'between_rounds_scheduled')
+      .select('id, title, funder, deadline, field_evidence, pipeline_state')
+      .eq('is_active', false)
+      .in('pipeline_state', ['between_rounds_scheduled', 'published'])
       .limit(1000)
 
     if (hiddenErr) {
@@ -202,6 +239,7 @@ export async function GET(req: NextRequest) {
 
     console.log(
       `[check-coming-soon] ${today} — moved ${processed.length} to review, ` +
+      `${resurfaced.length} resurfaced with a human-written badge, ` +
       `${reopened.length} reopened by evidence, ` +
       `skipped ${skippedPinned.length} (admin-pinned), failed ${failed.length}`
     )
@@ -209,10 +247,12 @@ export async function GET(req: NextRequest) {
     return {
       ok: failed.length === 0,
       processed: processed.length,
+      resurfaced: resurfaced.length,
       reopened: reopened.length,
       skippedPinned: skippedPinned.length,
       failed: failed.length,
       grants: processed,
+      resurfacedGrants: resurfaced,
       reopenedGrants: reopened,
       skippedGrants: skippedPinned,
       failures: failed,

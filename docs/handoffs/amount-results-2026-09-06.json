@@ -1,0 +1,1447 @@
+{
+ "batches": [
+  {
+   "batch": 1,
+   "written": [
+    {
+     "id": "d83e1ad9-b8d5-4367-8a26-0fed8b5698f4",
+     "amount_max": 150000,
+     "prose_only": false
+    },
+    {
+     "id": "e6379d1a-0437-4ea5-9bca-06385dfd7c08",
+     "prose_only": true
+    },
+    {
+     "id": "62a1da4a-2c8c-4a2e-be7d-da543578d3d1",
+     "prose_only": true
+    },
+    {
+     "id": "61220eaf-37b3-4662-891d-121633deabd4",
+     "prose_only": true
+    }
+   ],
+   "report": [
+    {
+     "id": "1d6af16c-0060-45b4-8f1e-051888785890",
+     "title": "A Sinclair Henderson Trust",
+     "why": "listing_only",
+     "quote": "Fund award sizes. Average: Premium information. Annually awarded: Premium information. Notes on award amounts: Premium information.",
+     "url": "https://funding.scot/funds/a0Rb0000003iiAXEAY/a-sinclair-henderson-trust",
+     "note": "The trust has no site of its own — applications go to Thorntons solicitors by email — so funding.scot is the only page there is. It has an award-sizes section and every figure in it is behind SCVO membership. A listing with the number paywalled is the one case where following the brief's listing rule leaves nothing at all."
+    },
+    {
+     "id": "5ed056e6-d5dd-4a82-b845-65c27a9a9eb5",
+     "title": "Accelerate",
+     "why": "not_stated",
+     "quote": "The programme offers up to 6 days of flexible 1:1 support, tailored to each organisation's needs.",
+     "url": "https://communityenterprise.co.uk/accelerate",
+     "note": "Free consultancy days rather than money. The only \"up to\" on the page counts days."
+    },
+    {
+     "id": "6621aeb1-5ca6-414f-92a9-355b86dac4a7",
+     "title": "Accelerated Growth Programme — Business Wales",
+     "why": "not_stated",
+     "quote": "Accelerating success: How the Accelerated Growth Programme helped tech recruitment specialist Accelero break through £1m and scale strategically",
+     "url": "https://businesswales.gov.wales/topics-and-guidance/accelerated-growth-programme/accelerated-growth-programme",
+     "note": "Advisory support, not a grant. Every pound on the page is a case-study outcome — a company reaching £1m turnover, another raising £700,000 — and none is anything a participant receives."
+    },
+    {
+     "id": "9d9da328-3680-4c33-9da2-4e7cdcbaca8c",
+     "title": "Albert Gubay Charitable Foundation Grants",
+     "why": "pot_only",
+     "quote": "Since 2016, the Albert Gubay Charitable Foundation has awarded over £100 million to registered charities in England, the Isle of Man, Republic of Ireland, and Wales.",
+     "url": "https://www.albertgubayfoundation.org/",
+     "note": "Cumulative giving since 2016, alongside a \"£90 Million Given In Grants\" banner and the £700 million Albert Gubay's businesses were worth. No per-grant figure anywhere."
+    },
+    {
+     "id": "aac5e1fe-dbd1-4428-8eab-efcc9cff30dd",
+     "title": "Albert Hunt Trust",
+     "why": "not_stated",
+     "quote": "We are committed to providing unrestricted core funding to help with your general running costs for example towards your bills or rent and towards your overall salary bill.",
+     "url": "https://www.alberthunttrust.org.uk/faq/",
+     "note": "A full FAQ covering eligibility, timing, reapplication and the trust's spend-down to 2029, with no figure of any kind. The quote is the closest it comes to describing what a grant covers."
+    },
+    {
+     "id": "5b7a141a-5ee2-4f80-80d6-fa6937cff37b",
+     "title": "Arnold Clark Community Fund",
+     "why": "not_stated",
+     "quote": "The Arnold Clark Community Fund welcomes applications from registered charities and community groups located within 50 miles of an Arnold Clark branch.",
+     "url": "https://www.arnoldclark.com/community-fund",
+     "note": "The fund page carries no pound sign at all — the quote is eligibility rather than money, because there is no money sentence to quote. Three funding categories are named without amounts."
+    },
+    {
+     "id": "040888ac-bdd1-4a22-9f33-cc841f9b5cbb",
+     "title": "Backstage Trust performing arts grants",
+     "why": "listing_only",
+     "quote": "There is no specified minimum or maximum amount you can apply for.",
+     "url": "https://fundingforall.org.uk/funds/backstage-trust/",
+     "note": "The row the brief names. Funding for All prints \"Up to: £500000\" in its own header field and the trust's own words on the same page are the quote above. The trust does not operate a website, so there is no funder page to go to. Nothing written."
+    },
+    {
+     "id": "0f6795e2-bdd9-4746-b1d8-88a6ea469824",
+     "title": "Barbara Ward Children's Foundation",
+     "why": "pot_only",
+     "quote": "Since then the Trustees have reviewed more than 7600 grant requests and authorised grants of over £12 million to more than 465 organisations.",
+     "url": "https://www.bwcf.org.uk/",
+     "note": "Cumulative since 2001. £12 million over 465 organisations averages around £26,000, but an average of a lifetime total is not a figure the foundation states and is not written."
+    },
+    {
+     "id": "7e2f1cd7-bc26-4028-afbd-5a42d5438322",
+     "title": "Barrow Cadbury Trust Grants",
+     "why": "not_stated",
+     "quote": "If, following submission of your enquiry form, you are invited to make a full application, the assessment and decision process at the application form stage may take up to four months.",
+     "url": "https://barrowcadbury.org.uk/our-work/applying-for-funding/",
+     "note": "The applying-for-funding page has no figure. The only \"up to\" on it counts months."
+    },
+    {
+     "id": "7430666a-27b7-4f34-884a-f293d438c5a7",
+     "title": "BCG UK Social Enterprise Award",
+     "why": "not_stated",
+     "quote": "Every organisation that makes it to the semi-final will receive coaching from BCG employees in the lead-up to our pitching events.",
+     "url": "https://www.bcg.com/united-kingdom/bcg-uk-social-enterprise-award",
+     "note": "The award is a consulting engagement rather than cash. The £500k on the page is a turnover floor for applicants, which belongs in min_org_income and not here."
+    },
+    {
+     "id": "201613fa-1907-41cf-b7d6-d555f1f9ca56",
+     "title": "Bernard Sunley Foundation — Capital Grants",
+     "why": "not_stated",
+     "quote": "Project costs between £10,000 and £5 million.",
+     "url": "https://bernardsunley.org/our-grant-giving/",
+     "note": "See the header note. The quote is the size of PROJECT the foundation considers, not the size of grant, and is deliberately not written to the columns. The three grant bands (large £25,000 and above, medium up to £20,000, small £5,000 and under) exist only inside a JavaScript data attribute and never as page text, so they cannot carry a citation the checker could match. Worth someone reading the site in a browser and setting these by hand."
+    },
+    {
+     "id": "c51eaae1-2007-4930-a45a-4da9f7542c1c",
+     "title": "Bernard Sunley Foundation — Social Welfare Grants",
+     "why": "not_stated",
+     "quote": "Project costs between £10,000 and £5 million.",
+     "url": "https://bernardsunley.org/our-grant-giving/",
+     "note": "Second row on the same foundation and the same problem. apply_url here is the social-welfare page, which renders its grant table in JavaScript and reads as a list of categories with nothing under them."
+    },
+    {
+     "id": "be4d0b34-6e72-4e52-9301-cffdf0d1098f",
+     "title": "BlueSpark Foundation",
+     "why": "not_stated",
+     "quote": "We are a registered charity providing grants for educational, cultural, sporting and other projects.",
+     "url": "https://www.bluesparkfoundation.org.uk/",
+     "note": "A 178KB site describing the kinds of project it funds, with no pound sign anywhere on the home page and no separate how-much page."
+    },
+    {
+     "id": "3ca96f8d-8d53-4be5-99d8-f3a637d1fc5e",
+     "title": "British Record Industry Trust (Brit Trust)",
+     "why": "not_stated",
+     "quote": "The BRIT Trust Grant application window for 2026 is now closed. Applications for 2027 will open towards the end of this year.",
+     "url": "https://brittrust.co.uk/brit-trust-grants/",
+     "note": "An 11KB page that says when the round runs and nothing about how much."
+    },
+    {
+     "id": "31feb54d-ca5e-4291-b1c6-e08b59dee810",
+     "title": "Cadent Foundation — Community Grants",
+     "why": "pot_only",
+     "quote": "This is made possible each year by Cadent who help to fund the Cadent Foundation by committing £3 million annually of post-tax profits.",
+     "url": "https://cadentgas.com/foundation",
+     "note": "Two pots on one page, £3 million a year into the foundation and a £1m Warm Fund inside it, and no per-grant figure. Grants are administered by Charities Trust, which may hold the figure."
+    },
+    {
+     "id": "1df738d5-d952-425c-bfa6-a4c2b4057f61",
+     "title": "CAF Venturesome Impact Fund",
+     "why": "pot_only",
+     "quote": "Since 2002 we have lent more than £65 million to over 500 charities, social enterprises and community groups.",
+     "url": "https://www.cafonline.org/services-for-charities/funding-for-charities/social-investment",
+     "note": "Cumulative lending since 2002. An investment row, so a ticket range would be the figure to hold, and the page states none."
+    }
+   ]
+  },
+  {
+   "batch": 2,
+   "written": [
+    {
+     "id": "c32ecdba-2fab-4131-a430-69bf1e6a1cae",
+     "amount_min": 10000,
+     "amount_max": 75000,
+     "prose_only": false
+    }
+   ],
+   "report": [
+    {
+     "id": "b12c394d-346d-4246-a254-06ca5bbadd08",
+     "title": "Calouste Gulbenkian Foundation UK Branch — Grants",
+     "why": "not_stated",
+     "quote": "The UK Branch aims to strengthen arts and civil society ecosystems by supporting transnational exchange, reciprocal capacity development and knowledge sharing between Portugal and the UK.",
+     "url": "https://gulbenkian.pt/uk-branch/our-work/our-grant-making/",
+     "note": "No pound sign on the page. Same row reported as not_stated in the timing job for the same reason: the grant-making page describes what the branch funds and nothing about how much or when."
+    },
+    {
+     "id": "856cbdaf-7e60-4c78-8ad2-e7c0b6fddbd8",
+     "title": "Camden Climate Fund",
+     "why": "unreadable",
+     "quote": "Just a moment...",
+     "url": "https://www.camden.gov.uk/camden-climate-fund",
+     "note": "HTTP 403 behind a Cloudflare interstitial, as in the timing job."
+    },
+    {
+     "id": "e53c6f5a-bd7a-4ae1-8d37-e3e2333c569e",
+     "title": "Canva for Nonprofits",
+     "why": "unreadable",
+     "quote": "Client Challenge. A required part of this site couldn't load.",
+     "url": "https://www.canva.com/nonprofits/",
+     "note": "A bot wall that returns HTTP 200 with a 3KB challenge page. Distinct from a 403 and easy to mistake for a thin page."
+    },
+    {
+     "id": "91737208-0bd3-45c4-8866-ec6256e85a58",
+     "title": "Cash for Kids - Cost of Living Grants",
+     "why": "index_over_programmes",
+     "quote": "Please check the specific Eligibility Criteria for the grant you are applying for.",
+     "url": "https://cashforkids.org.uk/grants/",
+     "note": "Grants are run by Local Executive Boards area by area, each with its own criteria and its own money, and the national page states no figure for any of them."
+    },
+    {
+     "id": "6a57acbc-0c38-45f4-ad35-17a79c059f5b",
+     "title": "Cash for Kids - General Grant",
+     "why": "index_over_programmes",
+     "quote": "Please check the specific Eligibility Criteria for the grant you are applying for.",
+     "url": "https://cashforkids.org.uk/grants/",
+     "note": "Second Cash for Kids row pointing at the identical URL as the Cost of Living row above. Worth checking whether these are two funds or one row duplicated."
+    },
+    {
+     "id": "86a561b4-8487-44e8-8a20-33f772a5055c",
+     "title": "CAST — Free Digital and AI Support for Charities",
+     "why": "not_stated",
+     "quote": "What you talk about will be entirely up to you and your match: it could be a challenge you need help with, advice you'd like to share, or just a general chat about digital, data or design.",
+     "url": "https://www.wearecast.org.uk/our-work/programmes-and-initiatives/",
+     "note": "Peer matching and programmes rather than money."
+    },
+    {
+     "id": "ff8d9d64-f661-44bf-b07f-42b4bb66deab",
+     "title": "Chalk Cliff Trust — Grants for East Sussex",
+     "why": "not_stated",
+     "quote": "The Chalk Cliff Trust is a foundation set up to provide grants and donations to charities, action groups and benevolent organisations predominantly in the East Sussex area.",
+     "url": "https://www.chalkclifftrust.org/home",
+     "note": "A 141KB site with a single sentence about what it does and no figure anywhere."
+    },
+    {
+     "id": "ba33eb0c-e6d9-453c-b57e-21f23e925738",
+     "title": "Champions for Children — Match Fundraising Programme",
+     "why": "not_stated",
+     "quote": "We use the Big Give's pledge model of funding for our two match-funding programmes. Our model enhances donations made by the public on the Big Give platform, helping charities to raise even more funds.",
+     "url": "https://childhoodtrust.org.uk/grants/grant-making-programmes/",
+     "note": "Match funding, which the brief excludes from the columns by name: what a charity receives depends on what it raises. The £5.8 million on the page is the 2024 campaign total across almost 170,000 children, and the £500,000 is an income ceiling for the entry-level strand. The amount columns are also admin-pinned here, so nothing would have been written in any case."
+    },
+    {
+     "id": "99a71fd2-fccc-4947-a4fd-4fdd81b58bd0",
+     "title": "Charity Digital Skills Programme",
+     "why": "not_stated",
+     "quote": "Join us for a one-hour session to master AI prompts. For just £20, you'll supercharge your productivity.",
+     "url": "https://charitydigital.org.uk/",
+     "note": "The only pounds on the page are a course fee the charity pays, and the only \"up to\" counts free Adobe Express licences. Money flowing the wrong way, like Clore below."
+    },
+    {
+     "id": "5067b65b-6595-4a7b-b764-2f821a4584fa",
+     "title": "Charterpath Pro Bono Accountancy for Charities",
+     "why": "not_stated",
+     "quote": "For non-profits",
+     "url": "https://www.charterpath.org.uk/for-non-profits",
+     "note": "A 998KB Wix page whose readable text is navigation. Pro bono accountancy rather than money, and no pound sign in what renders."
+    },
+    {
+     "id": "4db45a85-2ff4-4cac-bca6-51a44bd56fe1",
+     "title": "Church and Communities Programme",
+     "why": "pot_only",
+     "quote": "In 2024-25 our Church & Communities programme awarded £3.4 million over 70 grants to 57* organisations in Greater London, Lincolnshire, Norfolk and the North East of England.",
+     "url": "https://www.mercers.co.uk/philanthropy/church-and-communities",
+     "note": "A programme total. It divides to roughly £49,000 a grant, which is exactly the sort of arithmetic the brief rules out: the foundation states no per-applicant figure and a derived average would be a number nobody published."
+    },
+    {
+     "id": "014ccbcd-cd35-4447-8467-d25fb34db0d2",
+     "title": "Civitates — Pooled Fund for European Democracy",
+     "why": "pot_only",
+     "quote": "Since then, our pooled fund has supported more than 90 organisations to defend the key pillars of democracy in 20+ European countries with a total of €20 million, and growing.",
+     "url": "https://civitates-eu.org/",
+     "note": "A cumulative total, and in euros. Nothing per applicant."
+    },
+    {
+     "id": "ed047490-107e-4805-8ea2-6cd85520b3ae",
+     "title": "Clore Social Leadership Programme",
+     "why": "not_stated",
+     "quote": "£1,995 Early Bird",
+     "url": "https://cloresocialleadership.org.uk/",
+     "note": "See the header note. The three figures on this page (£1,995, £2,395 and £3,550 Early Bird) are course fees the participant pays, sitting in exactly the place an amount scraper would look for an award. Nothing is given."
+    },
+    {
+     "id": "16bfa48f-f9e6-4f32-a431-23e2b732c3e7",
+     "title": "Commissioned Rehabilitative Services General Grant Scheme",
+     "why": "not_stated",
+     "quote": "Each of these regions has access to a budget per financial year that can be used to commission rehabilitative services.",
+     "url": "https://www.find-government-grants.service.gov.uk/grants/commissioned-rehabilitative-services-general-grant-scheme-1",
+     "note": "A Find a grant listing with Summary, Eligibility, Objectives, Dates and How to apply sections and no value field filled in. The budget referred to is a probation region's, not an award."
+    },
+    {
+     "id": "fafa223d-1008-46c6-8019-585afd5014b7",
+     "title": "Community Energy GO!",
+     "why": "not_stated",
+     "quote": "We're a key player in this £5m initiative, working with communities to speed up Bristol and the West of England's transition to net zero.",
+     "url": "https://www.cse.org.uk/my-community/",
+     "note": "The £5m belongs to a different CSE initiative on the same page, not to Community Energy GO, which is free advisory support with no grant attached."
+    },
+    {
+     "id": "a8a34a8e-4570-4fbd-9260-cbbcc8926637",
+     "title": "Community Grants (The Old Enfield Charitable Trust)",
+     "why": "pot_only",
+     "quote": "In a typical year The Old Enfield Charitable Trust administers around £250K in discretionary grants to families, individuals and community groups.",
+     "url": "https://thetrustenfield.org.uk/grants/",
+     "note": "An annual total spread across three kinds of recipient, so it will not even divide meaningfully. Amount columns are admin-pinned on this row."
+    },
+    {
+     "id": "3665afff-c092-41c1-83e9-fb67b8d4d563",
+     "title": "Community Grants (Hampton Fund)",
+     "why": "not_stated",
+     "quote": "Our Trustees meet four times a year – in March, June, September and December - to assess applications and approve grants.",
+     "url": "https://www.hamptonfund.co.uk/community-grants/",
+     "note": "No pound sign on the page. The same row was reported in the timing job because its deadlines are \"available on request\"; the amounts are not published either. Amount columns admin-pinned."
+    },
+    {
+     "id": "49a1fffd-2412-4105-8897-8a5af286b797",
+     "title": "Continuo Foundation Project Grants",
+     "why": "pot_only",
+     "quote": "From the outset, Continuo Foundation has been offering a minimum of £200,000 per year in project grants across two rounds.",
+     "url": "https://www.continuofoundation.co.uk/our-grants",
+     "note": "A floor on the fund's annual giving, not a floor on an award. The nearest trap in the batch: \"a minimum of £200,000\" reads like amount_min and is the opposite of one."
+    },
+    {
+     "id": "523da313-e449-46a1-8647-c5a51e58b304",
+     "title": "Cornwall Community Foundation — Community Grants",
+     "why": "index_over_programmes",
+     "quote": "Grant value: Organisations may apply for up to £3,000",
+     "url": "https://cornwallcommunityfoundation.com/cornwall-charity-grants/grants/",
+     "note": "A rich index: at least seven named funds each printing its own \"Grant value\" line, ranging from £250 to £5,000, plus one offering mentoring with a grant of up to £1,000. Every figure on the page belongs to a specific fund and none to this funder-level row."
+    }
+   ]
+  },
+  {
+   "batch": 3,
+   "written": [
+    {
+     "id": "0316480d-5a0d-41c7-9c46-8695cb7d8465",
+     "amount_min": 1000,
+     "amount_max": 5000,
+     "prose_only": false
+    },
+    {
+     "id": "af98107b-eda0-4294-9fcb-0e125e2733ff",
+     "amount_min": 30000,
+     "prose_only": false
+    },
+    {
+     "id": "732a41ad-8df9-405f-a74f-cd25be2b64c2",
+     "amount_min": 30000,
+     "prose_only": false
+    },
+    {
+     "id": "6bee86de-f50a-4c01-b409-d72a6f4ed686",
+     "amount_min": 30000,
+     "prose_only": false
+    }
+   ],
+   "report": [
+    {
+     "id": "0967c01b-4171-4082-903d-d80774586dc3",
+     "title": "Cranfield Trust — Pro Bono Management Consultancy",
+     "why": "not_stated",
+     "quote": "Pro bono charity support",
+     "url": "https://www.cranfieldtrust.org/",
+     "note": "Volunteer management consultancy. No pound sign on the home page."
+    },
+    {
+     "id": "094397c0-1d2c-47dc-b112-c15d3d14bfd4",
+     "title": "Cumbria Community Foundation — Community Grants",
+     "why": "index_over_programmes",
+     "quote": "Before applying, we strongly encourage you to read the guidance the fund you are interested in.",
+     "url": "https://www.cumbriafoundation.org/apply-for-a-grant/",
+     "note": "Funder-level page over many funds, each with its own amount. Reported for the same reason in the timing job, where it says as plainly that the deadlines belong to the individual funds."
+    },
+    {
+     "id": "50343bc9-4d8e-4416-8aad-c9e3ed2300ac",
+     "title": "Data First Aid",
+     "why": "not_stated",
+     "quote": "Approximately 1-6 days over a period of up to 5 months.",
+     "url": "https://pbe.co.uk/our-services/data-first-aid/",
+     "note": "Pro bono analyst time. The only quantity on the page counts days."
+    },
+    {
+     "id": "94b05b92-fde2-48fd-931c-a5b969279a44",
+     "title": "Didymus Fund",
+     "why": "not_stated",
+     "quote": "Annual income between £20,000 and £1 million for each of the past 3 years.",
+     "url": "https://didymus-charity.org.uk/how-to-apply/",
+     "note": "The only range on the page is an eligibility band on the applicant's income, which belongs in min_org_income and max_org_income rather than here. Nothing about grant size."
+    },
+    {
+     "id": "3e92d23a-b238-4fb4-8d4f-75dc9793d8bd",
+     "title": "Doit Life Volunteer Matching Platform",
+     "why": "not_stated",
+     "quote": "The Doit Life volunteering platform is a joint enterprise between Doit Life and the Doit Foundation, provided completely free to charities and members of the public.",
+     "url": "https://www.doit.life/non-profits",
+     "note": "A free platform. The quote is the closest the page comes to a price and it is zero."
+    },
+    {
+     "id": "2df4a8ac-2902-4ffb-9a86-e945b1dbc23b",
+     "title": "Domestic Pro Bono Resources / LawWorks Referral Network",
+     "why": "not_stated",
+     "quote": "Domestic pro bono resources",
+     "url": "https://www.lawsociety.org.uk/topics/pro-bono/domestic-pro--bono-resources",
+     "note": "A Law Society resource index for solicitors. No pound sign, and nothing a charity applies to for money."
+    },
+    {
+     "id": "67f13b86-837d-4202-a94c-6e638eb6f14f",
+     "title": "Donate Computers Programme",
+     "why": "not_stated",
+     "quote": "If your devices are not within the minimum requirements as detailed on our Call for Equipment, but they are still in great condition, please fill in one of the forms below.",
+     "url": "https://turingtrust.co.uk/give-computers/",
+     "note": "Worth a look beyond amounts: apply_url is the page for GIVING equipment to the Turing Trust, not for receiving it. Nothing here for a fundraiser to ask for."
+    },
+    {
+     "id": "574fc073-bca6-4b01-95c0-a7dc8627c3e0",
+     "title": "Dulverton Trust Grants",
+     "why": "pot_only",
+     "quote": "We're excited to share that we awarded £777,519 in grants to 19 charities at our February Board meeting.",
+     "url": "https://www.dulverton.org/",
+     "note": "One board meeting's total. It divides to about £41,000 and the trust states no per-grant figure, so nothing is written."
+    },
+    {
+     "id": "a7b1e535-b639-471c-9231-1d87cff07489",
+     "title": "DWF Foundation",
+     "why": "pot_only",
+     "quote": "As of December 2025, the Foundation had distributed grants totalling over £1.5million to good causes.",
+     "url": "https://dwfgroup.com/en/about-us/dwf-foundation",
+     "note": "The same £1.5 million appears three times on the page as a ten-year cumulative total. No per-grant figure on either the foundation page or its Grant Giving page."
+    },
+    {
+     "id": "0d90187a-15da-4625-8739-34ae7134aecd",
+     "title": "East End Community Foundation — Grants",
+     "why": "index_over_programmes",
+     "quote": "To get all the latest information on applying for grants just sign up to our Newsletter.",
+     "url": "https://eastendcf.org/grants/",
+     "note": "Funder-level page over its own funds and the programmes it runs for partners, with no figure at this level. Reported the same way in the timing job."
+    },
+    {
+     "id": "a0e69102-abcd-4bb0-a11c-840ad6a3e433",
+     "title": "Emerton-Christie Charity",
+     "why": "not_stated",
+     "quote": "Welcome to the Emerton-Christie Charity Website",
+     "url": "https://www.emertonchristie.org/",
+     "note": "A 308KB Wix site whose rendered text contains no pound sign at all, checked against the raw HTML as well as the stripped text."
+    },
+    {
+     "id": "21f84400-4330-4267-9a62-4540617a573d",
+     "title": "Eranda Rothschild Foundation",
+     "why": "not_stated",
+     "quote": "The Eranda Rothschild Foundation is a UK registered charitable trust and makes donations to registered charities working in the fields of medical research, education and the arts.",
+     "url": "https://erandarothschild.org/",
+     "note": "A four-page site with no how-to-apply section, no date and no figure. Reported as not_stated in the timing job for the same reason."
+    },
+    {
+     "id": "eae4707d-3f42-41e9-b31a-48618b09b2f8",
+     "title": "Ethical Property Affordable Charity Workspace",
+     "why": "not_stated",
+     "quote": "GET 2 MONTHS RENT-FREE when you lease your workspace by 30th September 2026.",
+     "url": "https://www.ethicalproperty.co.uk/",
+     "note": "Discounted workspace rather than a grant. The offer on the page is two months of rent, which is a discount on something the charity pays for and not an award."
+    },
+    {
+     "id": "7e5b73df-1210-42a9-9c24-fafeb8357cef",
+     "title": "Family Fund — Grants for Families with Disabled Children",
+     "why": "not_stated",
+     "quote": "Play the Family Fund lottery from £1 per week, for your chance to win up to £25,000 whilst supporting our work",
+     "url": "https://www.familyfund.org.uk/",
+     "note": "The only figures on the home page are a lottery ticket price and a lottery prize, neither of them a grant. Grants go to families rather than organisations, which is a separate question for the audience rule."
+    },
+    {
+     "id": "1b62fbe2-6a97-45bd-9f40-63a8b59dc7eb",
+     "title": "FareShare Greater Manchester — Community Food Membership",
+     "why": "not_stated",
+     "quote": "From fresh to dairy to chilled foods, catering, ambient and frozen items, the cost for the food from FareShare is on average 80-90% cheaper than buying from a low-cost supermarket.",
+     "url": "https://faresharegm.org.uk/get-support/join-our-community-membership/",
+     "note": "A discount rate rather than an award, and a percentage at that, which the brief excludes from the columns by name."
+    },
+    {
+     "id": "65032b04-e949-4d96-b34c-3049d4915a8c",
+     "title": "Farmer Welfare Grant",
+     "why": "pot_only",
+     "quote": "Defra are launching a Farmer Welfare Grant with a total value of £1.5m which will run from November 2026 to March 2029.",
+     "url": "https://www.find-government-grants.service.gov.uk/grants/farmer-welfare-grant-1",
+     "note": "The whole Find a grant listing was read: objectives, criteria, dates and application process are all set out and the £1.5m programme total is the only figure on it."
+    }
+   ]
+  },
+  {
+   "batch": 4,
+   "written": [
+    {
+     "id": "d33aa458-0eb8-473a-8b28-547cd8557a71",
+     "amount_min": 20000,
+     "amount_max": 50000,
+     "prose_only": false
+    },
+    {
+     "id": "e60c8be4-21ae-4645-8d24-c54a865cf9dd",
+     "amount_min": 1000,
+     "amount_max": 20000,
+     "prose_only": false
+    },
+    {
+     "id": "85f9af1e-b1cb-4796-8a7c-163aabec2037",
+     "prose_only": true
+    }
+   ],
+   "report": [
+    {
+     "id": "c1ca1f42-98fa-471c-ad65-b078bf97c20c",
+     "title": "Ffilm Cymru Wales — Film Funding",
+     "why": "pot_only",
+     "quote": "Ffilm Cymru Wales has awarded over £77,000 to 13 independent cinemas, film festivals and community pop-up screenings across Wales.",
+     "url": "https://ffilmcymruwales.com/funding-and-training/cinemas-film-festivals-pop-ups",
+     "note": "A funding round's total across 13 recipients. The row's amounts were already nulled on 5 September by the live-and-wrong pass for the same reason; this confirms it against the page rather than changing it."
+    },
+    {
+     "id": "e0c1a655-d377-481b-b806-0c171095f7be",
+     "title": "Financial Futures Fund",
+     "why": "pot_only",
+     "quote": "The Financial Futures Fund opens for applications twice a year, with up to £3 million in grants awarded annually.",
+     "url": "https://www.avivafoundation.org.uk/financial-futures-fund/",
+     "note": "The £3 million is the annual pot across the whole fund, which is exactly what the 5 September pass concluded. The £1 million on the page is an income floor for applicants."
+    },
+    {
+     "id": "f14ca7b1-4e12-48b0-b59c-31b64e602b61",
+     "title": "Forever Manchester — Community Grants",
+     "why": "index_over_programmes",
+     "quote": "We manage and administer a number of funds. For support and guidance on the best fund to apply to, please call us before making an application.",
+     "url": "https://forevermanchester.com/funding/",
+     "note": "Funder-level page over named funds (Zuto Make A Difference, Together Fund, NHS Charities Together partnership grants and others), none of them costed at this level."
+    },
+    {
+     "id": "09b093ef-17a6-415d-bc6f-659c614d0f78",
+     "title": "Forsters for Good – Pro Bono Legal Support",
+     "why": "not_stated",
+     "quote": "Forsters is proud to have supported St Andrew's Youth Club, providing fun and educational activities for young people from the ages of five to adulthood, from 2019 – 2023.",
+     "url": "https://www.forsters.co.uk/forsters-for-good/communities",
+     "note": "A law firm's community pages. Pro bono time and volunteering rather than money, and the only figures are dates and headcounts."
+    },
+    {
+     "id": "3b836a87-fd0e-4d5c-bfdc-b44f7c793eb1",
+     "title": "Gatsby Charitable Foundation",
+     "why": "pot_only",
+     "quote": "Since 1967, we have committed over £1.7 billion in philanthropic giving.",
+     "url": "https://www.gatsby.org.uk/",
+     "note": "Nearly sixty years of cumulative giving. The foundation commissions rather than receives applications, which the timing job also found, so there is no award to size. Amount columns admin-pinned."
+    },
+    {
+     "id": "5dca172c-1c80-4f3e-9f89-0ba7f574e9a1",
+     "title": "General Grantmaking Programme",
+     "why": "not_stated",
+     "quote": "We will send an email to notify you of the Trustees' decision but timescales will vary depending on when you submit your application and when Trustees are next due to meet.",
+     "url": "https://29may1961charity.org.uk/how-to-apply",
+     "note": "A full how-to-apply page with no pound sign. Past grants are published as lists rather than as a range."
+    },
+    {
+     "id": "ca27a805-4ee8-437d-9ae6-a90cc9e66739",
+     "title": "Glasspool — Flexible Frontline Fund",
+     "why": "pot_only",
+     "quote": "£2.2m distributed across the UK",
+     "url": "https://www.glasspool.org.uk/",
+     "note": "A distribution total. The fund reaches individuals through frontline partner organisations, and partner recruitment is closed until at least 2027, so there is no per-applicant award to state."
+    },
+    {
+     "id": "a4ee2034-0ec1-40d4-9a8b-a4b745916b5b",
+     "title": "GLL Social Enterprise Accelerator",
+     "why": "not_stated",
+     "quote": "£20M worth of business with social enterprise supply partners in 2025",
+     "url": "https://www.gll.org/services-and-impact/business-support/social-enterprise-accelerator",
+     "note": "Both figures on the page are corporate impact statistics — procurement spend and social value generated — not awards. The accelerator is support rather than cash."
+    },
+    {
+     "id": "0d4ec360-0e88-4ac8-aa6f-524339515e4b",
+     "title": "Google.org — Nonprofit Tech Grants & Ad Credits",
+     "why": "not_stated",
+     "quote": "Google for Nonprofits: no-cost and discounted AI tools",
+     "url": "https://www.google.com/nonprofits/",
+     "note": "The landing page states no figure. Ad Grants are usually quoted as a monthly ad-credit allowance, which is a spending cap on a Google product rather than money received, and it is not on this page in any case."
+    },
+    {
+     "id": "3d6656f0-6f74-4635-8c87-0406ded69be2",
+     "title": "Gordon Fraser Charitable Trust",
+     "why": "not_stated",
+     "quote": "Home | History | Trustees | Login | Contact",
+     "url": "https://www.gfct.org.uk/",
+     "note": "A 15KB site of four pages, none of which carries a figure. The quote is the navigation because there is no prose to quote."
+    },
+    {
+     "id": "6668064b-bbdd-4e6e-87b6-34a6e7e3257a",
+     "title": "Grant Funding (The Mohn Westlake Foundation)",
+     "why": "not_stated",
+     "quote": "Grant sizes vary but usually don't exceed more than 20% of an organisation's annual income.",
+     "url": "https://www.themohnwestlakefoundation.co.uk/our-grant-making-approach/",
+     "note": "The best-explained silence in the batch: the foundation has a real policy and it is a percentage of the applicant's income, which the brief excludes from the columns. A charity with £500,000 income reads this as up to £100,000, and one with £50,000 reads it as up to £10,000, so no single figure is right. Amount columns admin-pinned."
+    },
+    {
+     "id": "7873fc4e-1763-4f49-9121-40cbfdb2916c",
+     "title": "Grants for Disability and Vulnerable People",
+     "why": "not_stated",
+     "quote": "We award grants for revenue costs (running costs), projects or capital projects.",
+     "url": "https://www.eveson.org.uk/",
+     "note": "The Eveson Trust states what it will pay for and never how much."
+    },
+    {
+     "id": "2f92be71-fc16-4992-b73e-84c2a7e023bd",
+     "title": "Grants for Organisations (Gateway, Project & Core)",
+     "why": "not_stated",
+     "quote": "Application - Richmond Foundation",
+     "url": "https://www.richmondfoundation.org.uk/our-funding/apply/",
+     "note": "Three named grant types in the row title (Gateway, Project and Core) and no figure against any of them on the application page. Amount columns admin-pinned."
+    },
+    {
+     "id": "e0dddc2b-3275-41cd-9daf-982aed9798b8",
+     "title": "Hampstead Wells and Camden Trust",
+     "why": "not_stated",
+     "quote": "Provides smaller grants for community-led activities and local projects that benefit residents within our Area of Benefit. This fund is currently closed to new applications.",
+     "url": "https://hwct.org.uk/grants-for-organisations/",
+     "note": "Two organisational programmes, both currently closed, and \"smaller grants\" is as close as the page comes to a figure."
+    },
+    {
+     "id": "d51e7f33-1464-4181-a535-8265fd923587",
+     "title": "Hargreaves Foundation",
+     "why": "not_stated",
+     "quote": "The Hargreaves Foundation | Transforming Young Lives Through Sport and Education",
+     "url": "https://www.thehargreavesfoundation.org/",
+     "note": "A 12KB site with an application process page and no figure on it."
+    },
+    {
+     "id": "acbff6c1-4f2f-47a7-8f98-58d0f2072410",
+     "title": "Hatch Enterprise Business Support Programme",
+     "why": "index_over_programmes",
+     "quote": "Suitable for founders with a business that has an annual turnover of at least £5k.",
+     "url": "https://hatchenterprise.org/our-programmes/",
+     "note": "Five programmes with their own intakes, reported the same way in the timing job. The only figure on the index is a turnover floor for applicants, not an award."
+    },
+    {
+     "id": "8f57f2a0-685d-489f-9267-ac9f79b073a7",
+     "title": "Herefordshire Community Foundation — Community Grants (Community Chest)",
+     "why": "index_over_programmes",
+     "quote": "The main form below is used for all funding applications, with the exception of the Small Sparks Fund and HCF Emergency Relief Fund which have their own application forms.",
+     "url": "https://www.herefordshirecf.org/apply-for-a-grant/",
+     "note": "A shared application form across many named funds, with no figure at this level and none against the Community Chest the row names."
+    }
+   ]
+  },
+  {
+   "batch": 5,
+   "written": [
+    {
+     "id": "8f8bc717-1cbb-44de-abc1-fe04e0efcce2",
+     "amount_min": 20000,
+     "amount_max": 80000,
+     "prose_only": false
+    },
+    {
+     "id": "142d3163-b0a5-441b-9f8c-b306bd4b1ddd",
+     "prose_only": true
+    }
+   ],
+   "report": [
+    {
+     "id": "d4c4eceb-c3f6-482c-af93-8023bd0d05ff",
+     "title": "Historic England — Listed Places of Worship Grant Scheme",
+     "why": "unreadable",
+     "quote": "Just a moment...",
+     "url": "https://historicengland.org.uk/advice/grants/what-we-fund/",
+     "note": "HTTP 403 behind a Cloudflare interstitial. Second Historic England row blocked this way; the timing job hit the same wall on their grants index."
+    },
+    {
+     "id": "86990306-2e6d-4561-901e-a4d0393941da",
+     "title": "Hobson Charity — Grants for Relief of Poverty and Distress",
+     "why": "not_stated",
+     "quote": "Safeguarding. (part of registration but should be kept up to date)",
+     "url": "https://hobsoncharity.org.uk/how-to-apply/",
+     "note": "A 117KB how-to-apply page listing the documents required and no figure. The quote is a checklist item because there is no money sentence on the page."
+    },
+    {
+     "id": "12bbaf28-20aa-445b-867b-1958ebcef1ef",
+     "title": "Hollick Family Charitable Trust",
+     "why": "not_stated",
+     "quote": "The Hollick Family Charitable Trust does not maintain a website. Groups should write to the Trust for further information on how to apply.",
+     "url": "https://youngcamdenfoundation.org.uk/funding/hollick-family-charitable-trust",
+     "note": "See the header note. The page prints \"£50,000\" twice and \"£5,000\" once and every one of them belongs to a different fund in a related-funds list below the entry. Directory pages that append other funders' listings are a shape worth watching for across this catalogue: Adint and Dixie Rose Findlay come from the same site."
+    },
+    {
+     "id": "738638ce-af2f-4052-b428-213248d9312a",
+     "title": "Hugh & Mary Miller Bequest",
+     "why": "listing_only",
+     "quote": "Fund award sizes. Minimum: Premium information. Maximum: Premium information. Average: Premium information.",
+     "url": "https://funding.scot/funds/a0Rb00000096myaEAA/hugh-mary-miller-bequest",
+     "note": "Second row in this job whose only page is funding.scot with every award figure behind SCVO membership, after A Sinclair Henderson Trust. The bequest has no site of its own."
+    },
+    {
+     "id": "a7540da6-3414-4feb-8a45-c0c6cbcbd0c8",
+     "title": "Hyde Foundation Community Investment",
+     "why": "not_stated",
+     "quote": "Hyde Foundation | The Hyde Group",
+     "url": "https://www.hyde-housing.co.uk/the-hyde-group/our-social-purpose/hyde-foundation/",
+     "note": "No application route and no figure, as the timing job also found. Every date and number on the page belongs to a strategy or a report."
+    },
+    {
+     "id": "5e62ecae-3f4e-458c-9fdf-013e6f018c73",
+     "title": "In Kind Direct — Charity Network Membership",
+     "why": "not_stated",
+     "quote": "In 2021, every £1 spent delivering our work unlocked at least £14.05 of social value for our charitable network.",
+     "url": "https://www.inkinddirect.org/with-charitable-organisations",
+     "note": "A social-value ratio, not an award. Members receive donated products at a handling fee rather than money."
+    },
+    {
+     "id": "d38779a7-0873-4f2f-91e2-638739a2eb64",
+     "title": "Inman Charity",
+     "why": "pot_only",
+     "quote": "The Trustees operate a grant giving policy with a view to making annual grants of £350,000.",
+     "url": "http://www.inmancharity.org/",
+     "note": "An annual giving target across the whole charity. A 6.5KB site with no per-grant figure."
+    },
+    {
+     "id": "f2e16253-0b5f-4aac-8415-0cfb00771d81",
+     "title": "Innovate UK Growth Catalyst — Investor Partnerships",
+     "why": "pot_only",
+     "quote": "£168m ... £448m ... £1.36bn",
+     "url": "https://iuk-business-connect.org.uk/programme/investor-partnerships/",
+     "note": "Three programme aggregates on a stats panel — grant funding committed, investment aligned, and total value leveraged — none of them an award to a single applicant. Amount columns admin-pinned."
+    },
+    {
+     "id": "1981a846-3cce-48d2-b568-033df30ca589",
+     "title": "Integrate Donated Office Space",
+     "why": "not_stated",
+     "quote": "Charities — Integrate",
+     "url": "https://integratespace.co/charities",
+     "note": "A 313KB Squarespace site matching charities to donated office space, with no pound sign in the rendered text."
+    },
+    {
+     "id": "a96867a7-f5af-4805-8f34-4f34feda2554",
+     "title": "Inverurie Youth Sports Foundation",
+     "why": "not_stated",
+     "quote": "Inverurie Youth Sports Foundation (IYSF) | Home | How We Help | How To Apply",
+     "url": "https://www.iysf.org.uk/",
+     "note": "A How To Apply page exists and carries no figure; nothing on the site does."
+    },
+    {
+     "id": "ed3f6ba2-c76c-4b44-9bf4-5846f4ad4bed",
+     "title": "James Ahern Foundation",
+     "why": "not_stated",
+     "quote": "The James Ahern Foundation. \"Enabling the pursuit of passion\"",
+     "url": "https://www.jamesahernfoundation.org/",
+     "note": "A 377KB Wix site with no pound sign in the rendered text."
+    },
+    {
+     "id": "843e2992-bed2-4525-b29f-b48d98be2364",
+     "title": "John Lyon's Charity Grants",
+     "why": "unreadable",
+     "quote": "Just a moment...",
+     "url": "https://www.jlc.london/grants/",
+     "note": "HTTP 403 behind a Cloudflare interstitial, as in the timing job."
+    },
+    {
+     "id": "600db8c5-dc40-43c4-9b2c-e812b018bdad",
+     "title": "Joseph Rank Trust",
+     "why": "not_stated",
+     "quote": "There is no typical grant as each application is considered on its own merits.",
+     "url": "https://www.ranktrust.org/rank-trust-grants.htm",
+     "note": "The clearest not_stated in the job: the trust anticipates the question and declines to answer it. Nothing to write and nothing to chase."
+    },
+    {
+     "id": "6344f1bf-cc8a-4410-a4b6-f15e200559f5",
+     "title": "JRCT — Power & Accountability Programme",
+     "why": "not_stated",
+     "quote": "develops and promotes mechanisms which ensure an accountable, transparent and proportionate relationship between the private sector and government",
+     "url": "https://www.jrct.org.uk/power-and-accountability",
+     "note": "No pound sign on the page. Its sibling Rights & Justice row publishes a £20,000 to £80,000 range for its current call and that range is deliberately not borrowed here: same trust, same process, same calendar, different programme."
+    },
+    {
+     "id": "a89ee8f2-cdc6-4673-958c-786a135792c9",
+     "title": "Just Enterprise (Scotland)",
+     "why": "not_stated",
+     "quote": "Just Enterprise - Business Support for Social Enterprises in Scotland",
+     "url": "https://justenterprise.org/",
+     "note": "Free business support funded by the Scottish Government. No money passes to the organisation."
+    },
+    {
+     "id": "5a368644-3211-4a40-9447-d5594938a519",
+     "title": "Lambeth Community Connections Fund",
+     "why": "unreadable",
+     "quote": "Sign up to receive local updates",
+     "url": "https://www.lambeth.gov.uk/community-connections-fund",
+     "note": "HTTP 200 with the fund content inside accordions that render only in a browser — the same shape the timing job hit on this row. Section headings with nothing under them, and no figure in what is served."
+    },
+    {
+     "id": "c8c96218-4a00-411c-b015-c2caf632f837",
+     "title": "Make a Difference Locally (MADL)",
+     "why": "not_stated",
+     "quote": "Our Community | Nisa Locally",
+     "url": "https://www.nisalocally.co.uk/community/",
+     "note": "A 244KB retail site whose community page states no figure. Grants are made by individual Nisa stores from local fund balances."
+    },
+    {
+     "id": "83377536-631c-4d17-9554-58516596b6d4",
+     "title": "Maudsley Charity - Building Brighter Futures",
+     "why": "not_stated",
+     "quote": "Explore some of the projects we have funded, from multi-million pound clinical and research initiatives, to small scale services supporting people in the community.",
+     "url": "https://maudsleycharity.org/grants/",
+     "note": "The range described is of past projects rather than of grants on offer, and the programme this row names ran its round in 2024-25 and has closed, as the timing job found."
+    }
+   ]
+  },
+  {
+   "batch": 6,
+   "written": [
+    {
+     "id": "348351e9-432d-45f4-a51a-9763ef4bfd6d",
+     "amount_max": 50000,
+     "prose_only": false
+    },
+    {
+     "id": "7f9dfb2d-b9f0-4e5f-8d6b-2fd30a1a2984",
+     "amount_max": 50000,
+     "prose_only": false
+    },
+    {
+     "id": "0c6e62c9-7eab-4494-8cb4-f3801a36c8e7",
+     "amount_max": 50000,
+     "prose_only": false
+    }
+   ],
+   "report": [
+    {
+     "id": "af62f99d-c5c0-44bf-a653-27bdc8a69081",
+     "title": "Music Venue Trust Liveline Fund",
+     "why": "not_stated",
+     "quote": "Supports individual shows or a tour by covering up to 80% of losses.",
+     "url": "https://livelinefund.uk/funding-overview",
+     "note": "The fund underwrites a percentage of a show's losses, so what an applicant receives depends entirely on what they lose. A percentage of cost, which the brief excludes, and no cap stated alongside it."
+    },
+    {
+     "id": "469b52bf-f8b9-4b4a-b8cd-54789928562e",
+     "title": "National Digital Inclusion Network membership",
+     "why": "not_stated",
+     "quote": "The National Digital Inclusion Network is designed for organisations.",
+     "url": "https://www.goodthingsfoundation.org/network",
+     "note": "Free membership giving access to devices, data and training. No figure and no money passing to the member."
+    },
+    {
+     "id": "0ebb775d-0ff1-44cd-880b-5853f73b060f",
+     "title": "NCVO Learning & Development Programmes",
+     "why": "unreadable",
+     "quote": "",
+     "url": "https://www.ncvo.org.uk/training-events/",
+     "note": "The host did not answer on repeated attempts, the same shape as the Weavers' Company in the timing job. Nothing came back at all, so this is unread rather than silent."
+    },
+    {
+     "id": "d5da3c99-fdf2-4a8d-9778-ff5935fb747c",
+     "title": "Neighbourly — Surplus Food, Product Donations and Corporate Grant Funds",
+     "why": "unreadable",
+     "quote": "A new version of Neighbourly was detected, we need to refresh the page before you can continue.",
+     "url": "https://www.neighbourly.com/goodcause/new",
+     "note": "A JavaScript application that renders nothing without a browser. The timing job hit the same wall on Neighbourly pages linked from the B&Q Foundation row."
+    },
+    {
+     "id": "f7e51198-d22b-484a-bec3-aadbe08fb748",
+     "title": "Network Membership (StreetGames)",
+     "why": "pot_only",
+     "quote": "Direct Investment: In 2024/25, £9.84 million was passed through StreetGames to 515 community partners.",
+     "url": "https://www.streetgames.org/partner-with-us/join-the-network/",
+     "note": "Membership is free and money reaches partners through StreetGames' own programmes rather than as an award applied for here. The £9.84 million is the whole flow across 515 partners. Amount columns admin-pinned; the funder_brief already carries this sentence from the 5 September pass."
+    },
+    {
+     "id": "b9529231-32c7-4260-a38a-f498fb13596f",
+     "title": "NFU Mutual Charitable Trust — December 2026 Funding Round",
+     "why": "not_stated",
+     "quote": "Applications for Funding | Charitable Trust | NFU Mutual",
+     "url": "https://www.nfumutual.co.uk/about-us/charitable-trust/applications-for-funding/",
+     "note": "A 153KB insurer page whose applications section carries no pound sign anywhere in the rendered text."
+    },
+    {
+     "id": "fc84cf7f-1b48-4f28-86dd-71de69cd3354",
+     "title": "NHS Charities Together — Community Grants",
+     "why": "pot_only",
+     "quote": "In 2024 we awarded £426,000 to projects led by ambulance charities with a focus on community responses to out-of-hospital cardiac arrest.",
+     "url": "https://nhscharitiestogether.co.uk/about-us/our-programmes/",
+     "note": "Two programme totals on the page, £2.7 million distributed through the Greener Communities Fund and £426,000 across ambulance charity projects, and no per-applicant figure. Grants reach charities through member NHS charities rather than an open call here."
+    },
+    {
+     "id": "6e334966-0173-4437-9a44-19955c2a2ba6",
+     "title": "Oglesby Charitable Trust",
+     "why": "not_stated",
+     "quote": "Our Approach - The Oglesby Charitable Trust",
+     "url": "https://oglesbycharitabletrust.org.uk/our-approach/",
+     "note": "A 50KB approach page with no pound sign in the rendered text."
+    },
+    {
+     "id": "57c520fd-c715-478b-8a6e-7c9907044d2a",
+     "title": "Older People and Housing Programme",
+     "why": "pot_only",
+     "quote": "In 2024-2025 the Older People & Housing programme awarded £2.6 million over 28 grants to 28 not-for-profit, community-led organisations in Greater London and Norfolk.",
+     "url": "https://www.mercers.co.uk/philanthropy/older-people-and-housing",
+     "note": "Second Mercers programme in this job with the same shape as Church and Communities in batch 2: a yearly total and a grant count, and no stated per-applicant figure. It divides to about £93,000, which is not written."
+    },
+    {
+     "id": "93e4b316-cb4b-45fb-b8a8-b74f5fb6b831",
+     "title": "Open Society Foundations — Europe & UK Programmes",
+     "why": "not_stated",
+     "quote": "Open Society Foundations | Voices | Who We Are | How We Work | What We Do",
+     "url": "https://www.opensocietyfoundations.org/",
+     "note": "No pound sign on the home page. The grants index the timing job read is an index of separate calls, each with its own terms."
+    },
+    {
+     "id": "2b5e34e5-ad7a-4b18-9182-e05a33abf795",
+     "title": "People and Research",
+     "why": "not_stated",
+     "quote": "The research funding from this scheme helps us to know what our historic environment comprises, which aspects of it are the most signficant, how people value and interact with it.",
+     "url": "https://www.find-government-grants.service.gov.uk/grants/people-and-research-1",
+     "note": "A Find a grant listing with no value field filled in, the same as the Commissioned Rehabilitative Services listing in batch 2. Worth knowing that this service does not require a figure."
+    },
+    {
+     "id": "3fe7c722-1434-4bdb-8d66-48749104b5e3",
+     "title": "People's Health Trust — Health Justice Fund",
+     "why": "not_stated",
+     "quote": "Homes for Health is a pilot programme delivered through collaboration between the Trust and experts from housing, community, and racial justice civil society organisations.",
+     "url": "https://www.peopleshealthtrust.org.uk/funding/health-justice-fund",
+     "note": "Describes the fund and the programmes inside it with no figure, as the timing job also found for its dates."
+    },
+    {
+     "id": "facf81cb-733c-439c-a73a-d98ed6361d8e",
+     "title": "Pilgrim Trust — Preservation & Scholarship",
+     "why": "not_stated",
+     "quote": "Explore the type of projects and work we've funded. Our featured projects will give you an in-depth look at a selection of successful grant applications and projects.",
+     "url": "https://www.thepilgrimtrust.org.uk/grants-awarded/",
+     "note": "apply_url redirects to grants-awarded, a showcase of past projects. The trust lists named programmes (preservation and conservation, historic buildings, places of worship, archives) without a figure against any of them, and the apply-for-funding path returns 404."
+    },
+    {
+     "id": "c1a86516-b4be-4535-90cc-4a672750d652",
+     "title": "Pilotlight — Pro Bono Support Matching",
+     "why": "not_stated",
+     "quote": "Charities who participate in our Pilotlight 360 programme increase their income by an average of 48% (two years after working with us).",
+     "url": "https://www.pilotlight.org.uk/",
+     "note": "An outcome statistic about the charity's own income, not an award. Pilotlight matches business volunteers rather than giving money."
+    },
+    {
+     "id": "38f3cae0-7d56-422a-aa1f-8691c2540fc9",
+     "title": "Pro Bono Economics Advisory",
+     "why": "not_stated",
+     "quote": "This type of project might allow the charity to say: \"For every £1 spent, we generate £X of benefits to society.\"",
+     "url": "https://pbe.co.uk/our-services/",
+     "note": "The only pound signs on the page are inside an example sentence a charity might one day write about itself. Volunteer economist time rather than money."
+    },
+    {
+     "id": "8687dd37-8bc0-4c35-9830-aa31f9b6eeb3",
+     "title": "Rayne Foundation",
+     "why": "not_stated",
+     "quote": "Sign up to our mailing list for updates",
+     "url": "https://www.raynefoundation.org.uk/",
+     "note": "No figure and, as the timing job found, no working application route: the how-to-apply and apply-for-a-grant paths both return 404 and the foundation is moving to targeted calls."
+    },
+    {
+     "id": "25466243-4af6-453a-9ea4-5f471919fa30",
+     "title": "Resolution Foundation Workertech Partnership",
+     "why": "not_stated",
+     "quote": "Our Ventures activity spans social investment, creating communities and networks of ventures and stakeholders in the areas we care about, and pioneering action-oriented research.",
+     "url": "https://www.resolutionfoundation.org/ventures/",
+     "note": "An investment row whose page states no ticket size, no range and no total."
+    }
+   ]
+  },
+  {
+   "batch": 7,
+   "written": [
+    {
+     "id": "200ad44b-7a81-48e0-9ce5-1118aaaba9f0",
+     "amount_max": 10000,
+     "prose_only": false
+    },
+    {
+     "id": "dc68dcb0-e614-4229-a4fd-8f5b609b7143",
+     "prose_only": true
+    }
+   ],
+   "report": [
+    {
+     "id": "957a8b0a-3983-4f66-bc52-58b66f58faf2",
+     "title": "Resonance — Community Investment Fund",
+     "why": "not_stated",
+     "quote": "Depending on the type of finance you need, you may find we manage an investment fund that might be suitable for your ambitions, see below.",
+     "url": "https://resonance.ltd.uk/get-investment/overview",
+     "note": "apply_url redirects to an overview that points at the individual funds without costing any of them."
+    },
+    {
+     "id": "ebe92869-c346-408b-a466-1c28861986e6",
+     "title": "Resonance — National Homelessness Property Fund",
+     "why": "not_stated",
+     "quote": "Impact Property Funds - Resonance",
+     "url": "https://resonance.ltd.uk/impact-property-funds",
+     "note": "No pound sign in the rendered text. These funds buy property to lease to homelessness charities rather than lending to them, so a per-applicant figure may not exist at all."
+    },
+    {
+     "id": "5ccc0ee4-504b-4901-84e7-212e0bf975e6",
+     "title": "Resonance Community Developers (RCD)",
+     "why": "pot_only",
+     "quote": "an initial investment of over £8 million from Big Society Capital and Access Foundation, and an initial target fund size of £40 million by the end of 2026",
+     "url": "https://resonance.ltd.uk/news/news/resonance-launches-new-8-million-social-impact-investment-fund",
+     "note": "apply_url is a launch press release. Every figure on it sizes the fund — £8 million initial, £40 million target, £100 million ambition — and none sizes an investment. The Resonance Enterprise Investment Fund row was corrected on 5 September for exactly this confusion between a fund and an award."
+    },
+    {
+     "id": "53dd63b0-f850-4a8e-a28f-6b84704e810f",
+     "title": "Salesforce Power of Us Program",
+     "why": "not_stated",
+     "quote": "Source: 2025 Salesforce Success Metrics Industry Highlights. Data is aggregated from 153 customers.",
+     "url": "https://www.salesforce.com/nonprofit/",
+     "note": "Donated and discounted licences. A 555KB marketing page whose only numbers are product metrics."
+    },
+    {
+     "id": "25f3db7e-802d-4649-8fb5-8e682b2a6d40",
+     "title": "Samworth Brothers Community Opportunity Fund",
+     "why": "pot_only",
+     "quote": "During the year, a record £577,000 was awarded to around 60 organisations.",
+     "url": "https://www.samworthbrothers.co.uk/community-opportunity-fund/",
+     "note": "A year's total across around 60 recipients, from the fund's annual report summary."
+    },
+    {
+     "id": "5da1bb15-e93e-4949-a91b-c886ecd75294",
+     "title": "Scottish Schools Pipes and Drums Trust — Funding and Bagpipe Loans",
+     "why": "not_stated",
+     "quote": "SSPDT Funding and Bagpipe Loans",
+     "url": "https://sspdt.org.uk/funding/",
+     "note": "Instrument loans and tuition funding, with no figure on the funding page."
+    },
+    {
+     "id": "dd88b889-6926-42e8-9e8f-954b3b9e5af4",
+     "title": "Sigrid Rausing Trust — Grants",
+     "why": "invite_only",
+     "quote": "Please note that we do not accept unsolicited applications.",
+     "url": "https://www.sigrid-rausing-trust.org/",
+     "note": "The two figures on the page, £591m given since 1995 and an endowment of over £300 million, are both totals. Reported as invite_only rather than pot_only because there is no application to size in the first place."
+    },
+    {
+     "id": "b5814b20-cfd4-46db-a8dd-3e623ed1c9fd",
+     "title": "Sir Jules Thorn Charitable Trust — General Grants",
+     "why": "index_over_programmes",
+     "quote": "Programmes: Medical Research, The Sir Jules Thorn Award for Biomedical Research, The Research Infrastructure Fund, Scaling Impact in Health and Care Fund, Funding for Hospices, Ann Rylands Small Donations",
+     "url": "https://julesthorntrust.org.uk/",
+     "note": "Six named programmes and no general route, reported the same way in the timing job. No figure on the index."
+    },
+    {
+     "id": "763f13e2-f1aa-4b50-88be-7d31a9a08bc0",
+     "title": "Slack for Nonprofits",
+     "why": "not_stated",
+     "quote": "Apply for the Slack for Charities discount",
+     "url": "https://slack.com/intl/en-gb/help/articles/204368833-Apply-for-the-Slack-for-Charities-discount",
+     "note": "A discount on a product the charity pays for. The help article states the eligibility rules and no price."
+    },
+    {
+     "id": "d881ca00-a65b-4326-a918-34e75ea648a0",
+     "title": "Social Firms Wales",
+     "why": "not_stated",
+     "quote": "Social Firms Wales",
+     "url": "https://www.socialfirmswales.co.uk/",
+     "note": "A membership and support body. No pound sign in the rendered text."
+    },
+    {
+     "id": "759177bd-20e8-4141-821a-93f5ebe820dd",
+     "title": "Social Investment (Esmée Fairbairn)",
+     "why": "pot_only",
+     "quote": "Since making our first social investment in 1997, we have approved over £80m in 200 plus social investments.",
+     "url": "https://esmeefairbairn.org.uk/our-support/social-investment/",
+     "note": "Cumulative since 1997. Note this is NOT the £30,000 minimum written to the three Esmée grant rows in batch 3: that sentence is on the grants apply page and is explicitly about grants, and the social investment page states no ticket size of its own."
+    },
+    {
+     "id": "05fcaae0-a3d3-43b7-87b8-69d951b45c24",
+     "title": "Somerset Community Foundation Grants",
+     "why": "index_over_programmes",
+     "quote": "Grant size Around £40,000 to £80,000 per year",
+     "url": "https://www.somersetcf.org.uk/grants-and-funding/grants-and-funding-for-groups/",
+     "note": "The richest index in the job for amounts as well as for dates: at least fourteen funds each printing its own Grant size line, from \"Up to £500\" to \"Around £40,000 to £80,000 per year\", plus several typical-grant figures. Every one belongs to a named fund and none to this funder-level row."
+    },
+    {
+     "id": "8ce6d37f-0c85-44aa-a8ff-faa71ed8ab2e",
+     "title": "South Yorkshire's Community Foundation — Grants",
+     "why": "index_over_programmes",
+     "quote": "Search our Grants | South Yorkshire's Community Foundation",
+     "url": "https://www.sycf.org.uk/apply/search-our-grants",
+     "note": "A grant search over the foundation's programmes. The results render in JavaScript, so no figure is served, and none would belong to this funder-level row in any case."
+    },
+    {
+     "id": "aa3d0b6c-2048-4007-beb2-25d400085dfe",
+     "title": "Southover Manor Trust",
+     "why": "not_stated",
+     "quote": "Please note that grants for schools/organisations are generally not awarded for:",
+     "url": "https://southovermanortrust.org.uk/eligibility/",
+     "note": "A full eligibility page setting out who may apply and what will not be funded, with no figure on it or on the home page."
+    },
+    {
+     "id": "f1cd5881-e810-4928-875c-17071197523f",
+     "title": "Sported — Funding Programmes",
+     "why": "not_stated",
+     "quote": "Current Programmes - Sported",
+     "url": "https://sported.org.uk/sported-programmes/",
+     "note": "No pound sign in the rendered text. Sported gives support and small grants through named programmes that come and go."
+    },
+    {
+     "id": "57c4802f-2d34-4d89-969e-a21f9ef397db",
+     "title": "SSE — All Programmes",
+     "why": "not_stated",
+     "quote": "Application-based, longer-term support up to a year",
+     "url": "https://www.the-sse.org/learning-support/programmes/",
+     "note": "The only \"up to\" on the page counts time. SSE programmes sometimes carry a Match Trading grant, which is a match rather than a fixed amount."
+    },
+    {
+     "id": "6d512c2b-f3b9-43d2-9b9d-83399dc49d0c",
+     "title": "SSE Match Trading Grant",
+     "why": "not_stated",
+     "quote": "We are keen to test the parameters of Match Trading: what are the minimum and maximum grant amounts that could be offered?",
+     "url": "https://www.matchtrading.com/",
+     "note": "A rare case of a page saying in terms that the answer does not exist yet. Match Trading matches an increase in trading income pound for pound, so the award is a function of the applicant's own growth."
+    },
+    {
+     "id": "ddc93bb0-b74d-42e7-86a7-172f9a39913c",
+     "title": "SSE Start Up Programme",
+     "why": "not_stated",
+     "quote": "Application-based, longer-term support up to a year",
+     "url": "https://www.the-sse.org/learning-support/programmes/",
+     "note": "apply_url redirects to the same programmes index as the SSE All Programmes row above, and states no figure."
+    }
+   ]
+  },
+  {
+   "batch": 8,
+   "written": [],
+   "report": [
+    {
+     "id": "59b7e30c-4018-4d22-9e7a-074a5f19ae24",
+     "title": "Steel Charitable Trust",
+     "why": "not_stated",
+     "quote": "Suite 2, Hart House Business Centre, Kimpton Road, Luton, Bedfordshire, LU2 0LA",
+     "url": "https://steelcharitabletrust.org.uk/",
+     "note": "A 167KB site whose rendered text carries no pound sign, and whose /apply/ path returns 404. The quote is the contact block because there is no money sentence to quote."
+    },
+    {
+     "id": "aafb0cc7-0698-4659-97ee-659579042ec1",
+     "title": "Stobart Sustainability Fund",
+     "why": "not_stated",
+     "quote": "Our newly created Stobart Sustainability Fund has been set up to support community groups, educational facilities and small businesses with their projects and initiatives to create a green, more sustainable world.",
+     "url": "https://eddiestobart.com/corporate-social-responsibility/",
+     "note": "apply_url redirects to the company's CSR page. The fund gets one paragraph and no figure; the percentages on the page are haulage efficiency statistics."
+    },
+    {
+     "id": "32949533-a7ae-4c48-a7a6-57368e083dee",
+     "title": "Strategic Legal Fund for Vulnerable Young Migrants",
+     "why": "not_stated",
+     "quote": "A minimum of three Expert Panel members will consider the applications and meet to agree on recommendations for funding.",
+     "url": "https://strategiclegalfund.org.uk/how-to-apply/",
+     "note": "A detailed how-to-apply page covering eligibility, closing dates and assessment, with no figure. The only \"minimum\" on it counts panel members."
+    },
+    {
+     "id": "895556e0-623d-4661-b245-ad0870a7869a",
+     "title": "Superhighways Digital Support for London VCSEs",
+     "why": "not_stated",
+     "quote": "training, tech tips, resources and opportunities for small charities and community groups in London",
+     "url": "https://superhighways.org.uk/training-advice-and-technical/",
+     "note": "Training and technical advice rather than money."
+    },
+    {
+     "id": "b1b1990e-368f-4080-bcd2-e65033a9b65e",
+     "title": "Sussex Community Foundation — The Chagossian Fund",
+     "why": "pot_only",
+     "quote": "The Chagossian Community Fund at Sussex Community Foundation has now given out over £680,000 in grants to 17 organisations.",
+     "url": "https://sussexcommunityfoundation.org/grants/how-to-apply/additional-grants/the-chagossian-fund/",
+     "note": "A cumulative total across 17 organisations. The fund's own page states no per-applicant figure."
+    },
+    {
+     "id": "24a624c6-27a3-413f-baa7-742d1cb02c60",
+     "title": "Sussex Crisis Fund — Sussex Community Foundation",
+     "why": "index_over_programmes",
+     "quote": "ESTEEM supports over 200 young adults across Sussex each year, aged 14–26, who are facing an average of three to four interconnected challenges.",
+     "url": "https://sussexcommunityfoundation.org/grants/",
+     "note": "apply_url is the foundation's grants index rather than the Crisis Fund, and nothing on the index names a Crisis Fund — the same finding as the timing job, where it was flagged for a relink. The quote is a grantee case study, which is the closest the page comes to a number."
+    },
+    {
+     "id": "5cbdb2dd-d274-4619-b468-8dd5bfe54154",
+     "title": "Taproot Foundation Pro Bono Consulting",
+     "why": "not_stated",
+     "quote": "We're looking for a pro bono consultant with report or brochure design expertise to help us create a polished annual impact report, up to twelve pages.",
+     "url": "https://taprootfoundation.org/",
+     "note": "Skilled volunteer matching. The only \"up to\" on the page counts pages of a brochure."
+    },
+    {
+     "id": "0ce8470d-9557-40a3-a8d2-ef01daba3f09",
+     "title": "Tech for Good Programme",
+     "why": "not_stated",
+     "quote": "We invest in ambitious early-stage tech for good founders. Applications for our next programme will re-open in May 2026.",
+     "url": "https://bethnalgreenventures.com/",
+     "note": "An investment row with no ticket size on the site; /programme returns 404. The £4.5M on the page is what one portfolio company later raised from other investors."
+    },
+    {
+     "id": "b98c7493-ff5c-42f4-ab1d-b205940e550c",
+     "title": "TechSoup UK Donated & Discounted Technology",
+     "why": "unreadable",
+     "quote": "",
+     "url": "https://www.techsoup.uk/product-catalog",
+     "note": "HTTP 200 with a 205-byte body — an empty shell that renders its catalogue in JavaScript. Read as unread rather than as silent, per the standing rule from the brotli finding."
+    },
+    {
+     "id": "1a99b534-f6f5-4792-937d-361f6a0ba067",
+     "title": "The Access Foundation",
+     "why": "not_stated",
+     "quote": "Home | About | Contact | Nominate a Charity | News | Annual Reports",
+     "url": "https://theaccessgroupfoundation.com/",
+     "note": "No pound sign in the rendered text and the nominate-a-charity path returns 404. Grants appear to reach charities by employee nomination rather than open application."
+    },
+    {
+     "id": "05d6dbdf-d370-4d34-9a5b-80540e3b06fa",
+     "title": "The Alan and Babette Sainsbury Charitable Fund",
+     "why": "invite_only",
+     "quote": "WE DO NOT ACCEPT UNSOLICITED APPLICATIONS",
+     "url": "https://abscharitablefund.org.uk/",
+     "note": "The page carries fourteen figures from £3,000 to £50,000 and every one of them is a line in a past grants list, not a stated range. With no application accepted there is nothing for a fundraiser to size, so the list is not turned into a range."
+    },
+    {
+     "id": "8797b0c0-e49a-4b33-b82c-1dc0657254a3",
+     "title": "The Bothwell Charitable Trust",
+     "why": "pot_only",
+     "quote": "The Trust provides around £350,000 each year in grants. The total amount fluctuates depending on their investments.",
+     "url": "https://youngcamdenfoundation.org.uk/funding/the-bothwell-charitable-trust",
+     "note": "See the header note. The £10,000 on this page belongs to a different funder under \"Other grants to consider\", and the sentence carrying it describes charities \"in England, Scotland or Wales\", which fits Bothwell well enough to be convincing. Bothwell's own entry states only the annual total and that the trust has no website."
+    },
+    {
+     "id": "111ced72-612a-47c1-8043-c9b75455fc0b",
+     "title": "The Dodgson Foundation",
+     "why": "not_stated",
+     "quote": "Our funding takes two main forms, being, Annual Grants, and Individual Donations.",
+     "url": "https://dodgson.org.uk/applying-for-a-grant/",
+     "note": "Two named forms of funding and no figure against either. The grant-making policy is a download the page links to."
+    },
+    {
+     "id": "d1a4d7c2-dc0a-4f97-a910-52ab5d64d355",
+     "title": "The Headley Trust",
+     "why": "not_stated",
+     "quote": "The Headley Trust – The Sainsbury Family Charitable Trusts",
+     "url": "https://www.sfct.org.uk/the-headley-trust/",
+     "note": "First of three Sainsbury Family Charitable Trusts rows in this batch. No pound sign on the page."
+    },
+    {
+     "id": "88a1a617-b9b6-4ccd-9f4b-08a30e622cee",
+     "title": "The Health Lottery Foundation",
+     "why": "not_stated",
+     "quote": "Grant information - The Health Lottery Foundation",
+     "url": "https://thehealthlotteryfoundation.org.uk/grants/grant-information/",
+     "note": "A page titled Grant information that contains no figure. This is the row whose reopening date the orchestrating session repaired during the timing job."
+    },
+    {
+     "id": "47ffb17f-f14e-4955-b512-7344ddf294f1",
+     "title": "The Hygiene Bank — Products for Organisations",
+     "why": "not_stated",
+     "quote": "Sign up to our newsletter",
+     "url": "https://thehygienebank.com/",
+     "note": "Donated hygiene products distributed through partner organisations. No pound sign in the rendered text."
+    },
+    {
+     "id": "1dcfec77-f432-4bc6-8cf4-bf553ea73e4e",
+     "title": "The Indigo Trust",
+     "why": "invite_only",
+     "quote": "Submission of proposals is by invitation only.",
+     "url": "https://www.sfct.org.uk/indigo-trust/",
+     "note": "Second Sainsbury Family trust. No figure, and no unsolicited route to size one against."
+    },
+    {
+     "id": "50203489-dcd2-44ec-9a3e-7035b825b4fb",
+     "title": "The Percy Bilton Charity",
+     "why": "not_stated",
+     "quote": "Charities assisting disadvantaged youth, people with disabilities, people with mental health problems and older people may apply for grants towards furnishings and equipment (excluding office items).",
+     "url": "https://www.percy-bilton-charity.org/",
+     "note": "The whole site is 3.5KB and reads as a holding page: two sentences of criteria, a trustee obituary, and no figure. Worth a look beyond amounts — this may not be the charity's live site."
+    },
+    {
+     "id": "5bb5658f-c526-4fc2-8dbc-a8162056574d",
+     "title": "The Tedworth Charitable Trust",
+     "why": "invite_only",
+     "quote": "Unsolicited applications are unlikely to be successful, even if they fall within an area in which the Trustees are interested.",
+     "url": "https://www.sfct.org.uk/the-tedworth-charitable-trust/",
+     "note": "Third Sainsbury Family trust. No figure on the page."
+    },
+    {
+     "id": "036a2937-bb8f-4f9e-9840-33a4bd450b33",
+     "title": "Tim Parry Johnathan Ball Foundation Grants",
+     "why": "not_stated",
+     "quote": "they successfully commissioned a £3.3m building, which was named the \"Tim Parry Johnathan Ball Peace Centre\".",
+     "url": "https://timparryjohnathanballfoundation.org.uk/",
+     "note": "The only figure on the site is the cost of a building the foundation put up in 2000 and has since sold. It became a grant-maker in March 2025 and its site is still its history, as the timing job also found."
+    }
+   ]
+  },
+  {
+   "batch": 9,
+   "written": [
+    {
+     "id": "31f56c84-447a-478b-a15a-fcb19469c1aa",
+     "prose_only": true
+    }
+   ],
+   "report": [
+    {
+     "id": "3f9c1fc3-6a19-4cde-affe-6e7f83077c99",
+     "title": "Travers Smith Pro Bono Programme",
+     "why": "not_stated",
+     "quote": "Pro Bono | Travers Smith",
+     "url": "https://www.traverssmith.com/all-services/pro-bono/",
+     "note": "A law firm's pro bono page. No pound sign in the rendered text and no money passing to a charity."
+    },
+    {
+     "id": "60206220-abaa-45e2-9534-bc6d41e94940",
+     "title": "Trust for London — Poverty & Inequality Grants",
+     "why": "not_stated",
+     "quote": "Sign up to our newsletters",
+     "url": "https://trustforlondon.org.uk/funding/",
+     "note": "A full funding section covering aims, eligibility, priorities and guidance, with no figure. The timing job found the same page states no deadline either."
+    },
+    {
+     "id": "0e506d16-9e5c-47e0-aae9-7f3444b3646c",
+     "title": "TrustLaw — Pro Bono Legal Programme",
+     "why": "not_stated",
+     "quote": "Sign up to our newsletter",
+     "url": "https://www.trust.org/trustlaw/",
+     "note": "A membership network connecting organisations with pro bono lawyers. Free at the point of use and no figure on the page."
+    },
+    {
+     "id": "f4cc6956-affd-496c-9954-09c189ddea02",
+     "title": "Ulverscroft Foundation",
+     "why": "not_stated",
+     "quote": "Ulverscroft Foundation | Serving the Needs of Visually Impaired People | Grants",
+     "url": "https://www.ulverscroft-foundation.org.uk/grants/",
+     "note": "The grants page sets out how to apply in full and never how much, which is what the timing job found about its dates."
+    },
+    {
+     "id": "60e2144a-4955-43fe-893c-1956785946f1",
+     "title": "Utilita Football Rebooted Grassroots Fund",
+     "why": "not_stated",
+     "quote": "£ 0.00",
+     "url": "https://www.teamgrassroots.co.uk/fund/",
+     "note": "The only pound sign on a 318KB page is an empty basket total. Worth knowing for any amount sweep: a shopping cart renders as a money figure."
+    },
+    {
+     "id": "7b37ff2e-13f0-4b71-87bf-24b0b6fdcd80",
+     "title": "Virgin Money Foundation",
+     "why": "not_stated",
+     "quote": "Make £5 Grow",
+     "url": "https://www.virginmoneyfoundation.org.uk/",
+     "note": "The only pound sign is the name of a separate Virgin Money scheme in the site footer. No application route or figure on the foundation site, as the timing job also found."
+    },
+    {
+     "id": "fd7d2b8b-4946-43a8-be8b-1ef9b63ce244",
+     "title": "Wakeham Trust",
+     "why": "not_stated",
+     "quote": "The Wakeham Trust | Supporting Small Scale Change",
+     "url": "https://thewakehamtrust.org/2020/05/05/how-to-apply/",
+     "note": "A how-to-apply post from 2020 with no figure. \"Small scale change\" is the strapline rather than a stated size."
+    },
+    {
+     "id": "05aa2cda-e64d-4f21-8b89-0727637d5515",
+     "title": "Waterloo Foundation Grant Programmes",
+     "why": "index_over_programmes",
+     "quote": "About Us | Investments | Reports and Publications",
+     "url": "https://waterloofoundation.org.uk/",
+     "note": "Each programme keeps its own Active Calls and Deadlines page, as the timing job found. The home page carries no figure for any of them."
+    },
+    {
+     "id": "3f5d135b-c001-4cc3-8ae3-049a9b85baef",
+     "title": "Whirlwind Charitable Trust",
+     "why": "not_stated",
+     "quote": "GUIDELINES - Whirlwind25",
+     "url": "https://www.whirlwind.org.uk/guidelines/",
+     "note": "A guidelines page with no pound sign in the rendered text."
+    },
+    {
+     "id": "166aa0c7-b17a-4f45-897d-ef7b9e768a48",
+     "title": "Wickes Community Programme — Materials Donations",
+     "why": "not_stated",
+     "quote": "Donations are typically limited to products only. If installation services are included in a donation, this is a rare exception and will be explicitly confirmed by Wickes.",
+     "url": "https://www.wickes.co.uk/community-programme",
+     "note": "Donated materials rather than money. The per-square-metre prices on the page (\"£15 to £20 per m2\") are retail flooring prices from the surrounding shop, not the programme."
+    },
+    {
+     "id": "229988e1-2796-4b0c-9df6-68c741df674b",
+     "title": "Wolfson Foundation — Capital Grants",
+     "why": "not_stated",
+     "quote": "Our main grants programme provides support for places. These grants are for capital initiatives, i.e. buildings (new build or refurbishment) and equipment.",
+     "url": "https://www.wolfson.org.uk/funding/funding-for-places/",
+     "note": "The clearest silence in the batch. A capital funder with a 453-line apply-for-funding section covering guidance, stage one questions and the review process, containing zero pound signs; the funding-for-places page is the same. Checked by counting £ in the fetched text, not by eye."
+    },
+    {
+     "id": "70c2c973-e718-4d50-9394-8ff7d1092da6",
+     "title": "Wooden Spoon Charity",
+     "why": "pot_only",
+     "quote": "Since 1983, we have committed in excess of £32 million to 1,626 projects.",
+     "url": "https://woodenspoon.org.uk/apply-for-a-grant/",
+     "note": "Forty years of cumulative giving on the apply page, and no per-project figure."
+    },
+    {
+     "id": "4c6acc32-d648-451c-931b-17da273ab598",
+     "title": "Worthing Community Chest — Seed Grants",
+     "why": "not_stated",
+     "quote": "PLAY OUR LOTTERY £25K jackpot!",
+     "url": "https://worthingcommunitychest.org/grants/seed-grants/",
+     "note": "Every figure on the seed grants page belongs to the charity's own fundraising lottery — a £25,000 jackpot and £1 or £5 monthly donations. Money flowing the wrong way, as with Clore and Charity Digital in batch 2, and on a page about grants."
+    },
+    {
+     "id": "f0dd61fe-c828-4ff4-9c25-d738e33032db",
+     "title": "Youth Endowment Fund",
+     "why": "pot_only",
+     "quote": "The Youth Endowment Fund was established in March 2019 by children's charity Impetus, with a £200m endowment and ten year mandate from the Home Office.",
+     "url": "https://youthendowmentfund.org.uk/funding/",
+     "note": "Three pots on the site and no award: a £200m endowment, £5 to 10 million allocated over three years to black, Asian and minority-ethnic led charities, and £3m to one CBT programme reported as news."
+    },
+    {
+     "id": "581fab6f-e73b-4584-82fd-d0ab9f355aed",
+     "title": "Zochonis Charitable Trust — Grants",
+     "why": "not_stated",
+     "quote": "The Zochonis Charitable Trust is only able to consider applications from charities registered with the Charity Comission of England and Wales, or Scotland's equivalent.",
+     "url": "https://www.zochonischaritabletrust.com/how-to-apply/",
+     "note": "A how-to-apply page of thirty lines whose only periods are the funding year and the reapplication wait, as the timing job also found."
+    }
+   ]
+  }
+ ],
+ "pins_outlived": [],
+ "summary": {
+  "rows_in_list": 176,
+  "batches": 9,
+  "column_writes": 13,
+  "prose_writes": 7,
+  "reported_rows": 156,
+  "reported_by_reason": {
+   "listing_only": 3,
+   "not_stated": 101,
+   "pot_only": 27,
+   "unreadable": 8,
+   "index_over_programmes": 13,
+   "invite_only": 4
+  },
+  "at_close": {
+   "no_amount": 158,
+   "with_a_figure": 13,
+   "no_longer_live_and_published": 5,
+   "reconciles": true
+  },
+  "what_the_pounds_on_a_funder_page_usually_are": [
+   "A total: lifetime, annual or per round. The single commonest figure in this job and never an award.",
+   "A cap on the applicant rather than on the grant: an income band, a turnover floor.",
+   "A percentage: of project cost, of losses, of the applicant's own income. Legitimately unwriteable — Mohn Westlake, Music Venue Trust, and the 75% cap on the three Postcode trusts.",
+   "Money flowing the other way: a course fee (Clore, Charity Digital), a lottery ticket or jackpot (Worthing, Family Fund), an empty shopping basket (Utilita).",
+   "A neighbouring fund's figure on the row's own page: Hollick and Bothwell from the same directory, the Community Builders Fund on Fredericks' page, Suffolk's other 136 funds on the Sizewell C page."
+  ],
+  "rules_that_earned_their_keep": [
+   "Read one page on. Four column writes came from a linked guidelines, funding-guide or apply page whose row pointed at a page with no pound sign on it: Eleanor Rathbone, Esmée, Fredericks, and all three Postcode trusts.",
+   "A quote must be about THIS fund, even when it is verbatim and on the row's own apply_url. Two directory rows and one funder page would have been written wrong without it.",
+   "Never divide a pot by a grant count. Mercers twice, Barbara Ward, Dulverton and Wooden Spoon all offer a plausible average that nobody published.",
+   "Understating a ceiling costs an application; overstating one wastes one. Where a programme has a capped strand and an uncapped one (Sizewell C, BOOST, Bernard Sunley), the columns stay empty and prose carries both."
+  ]
+ }
+}

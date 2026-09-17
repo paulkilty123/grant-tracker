@@ -7,7 +7,8 @@
 // Auth: ADMIN_SECRET bearer token or authenticated admin session
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import { getAdminDb } from '@/lib/admin/admin-db'
 import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
 import { stampNewGrant, mergeGrantUpdate } from '@/lib/grant-merge'
 import { VALID_SECTORS } from '@/lib/classify'
@@ -32,10 +33,7 @@ async function isAuthorised(req: NextRequest): Promise<boolean> {
 }
 
 function getAdminClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  )
+  return getAdminDb()
 }
 
 interface QueueItem {

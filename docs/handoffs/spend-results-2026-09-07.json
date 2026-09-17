@@ -1,0 +1,976 @@
+{
+ "batches": [
+  {
+   "batch": 1,
+   "written": [
+    {
+     "id": "1d6af16c-0060-45b4-8f1e-051888785890",
+     "spendTypes": [
+      "capital",
+      "revenue"
+     ],
+     "subtypes": [
+      "capital"
+     ]
+    },
+    {
+     "id": "5eff1abd-978d-442e-8f7c-01d59b541f42",
+     "spendTypes": [
+      "capital",
+      "revenue"
+     ],
+     "subtypes": [
+      "capital"
+     ]
+    },
+    {
+     "id": "f8a83056-ccaf-4b10-8b45-aa7b7b01a080",
+     "restriction": "restricted",
+     "subtypes": [
+      "restricted"
+     ]
+    },
+    {
+     "id": "2fc1c173-7762-437e-b9cd-b8cccf7b4a79",
+     "restriction": "unrestricted",
+     "spendTypes": [
+      "revenue"
+     ],
+     "subtypes": [
+      "unrestricted"
+     ]
+    },
+    {
+     "id": "13837671-a3eb-4045-a5e7-2a7bf2951f4d",
+     "restriction": "restricted",
+     "subtypes": [
+      "restricted"
+     ]
+    },
+    {
+     "id": "df623476-199d-402d-8782-1837fb1d4692",
+     "restriction": "restricted",
+     "spendTypes": [
+      "revenue"
+     ],
+     "subtypes": [
+      "restricted"
+     ]
+    },
+    {
+     "id": "fb9e0451-cae6-4bfc-92dc-962afffbae9f",
+     "restriction": "restricted",
+     "subtypes": [
+      "restricted"
+     ]
+    }
+   ],
+   "report": [
+    {
+     "id": "86380b2e-1c74-4cd3-b560-663a021bc097",
+     "title": "Adint Charitable Trust",
+     "why": "not_stated",
+     "quote": "The grants are to be used for general charitable work.",
+     "url": "https://youngcamdenfoundation.org.uk/funding/adint-charitable-trust"
+    },
+    {
+     "id": "475e745e-25cb-49c4-b397-fcdfee970df1",
+     "title": "AF3: Supporting Partners programme",
+     "why": "not_stated",
+     "quote": "The Supporting Partners programme aims to strengthen support for partners of serving military personnel, including reservists, by improving access to services, building on skills and experience, enabling informal support networks and promoting mental health and wellbeing.",
+     "url": "https://covenantfund.org.uk/programme/af3-supporting-partners-programme/"
+    },
+    {
+     "id": "c40dc901-c460-4358-9a86-bd5a13878966",
+     "title": "AI For All",
+     "why": "not_stated",
+     "quote": "Each participating organisation is matched with a mentor whose expertise aligns with its goals and challenges.",
+     "url": "https://www.thedifferent.foundation/ai-for-all"
+    },
+    {
+     "id": "9d9da328-3680-4c33-9da2-4e7cdcbaca8c",
+     "title": "Albert Gubay Charitable Foundation Grants",
+     "why": "not_stated",
+     "quote": "Since 2016, the Albert Gubay Charitable Foundation has awarded over £100 million to registered charities in England, the Isle of Man, Republic of Ireland, and Wales.",
+     "url": "https://www.albertgubayfoundation.org/"
+    },
+    {
+     "id": "8c168203-e428-44f5-a1f7-e1c8268a83c5",
+     "title": "An Official Oral History of Women Veterans in the UK",
+     "why": "not_stated",
+     "quote": "An official oral history project documenting the lived experiences of women veterans in the UK.",
+     "url": "https://www.find-government-grants.service.gov.uk/grants/an-official-oral-history-of-women-veterans-in-the-uk-1"
+    },
+    {
+     "id": "b774d28f-4f07-4ebd-8702-8f3c3e0cfe5a",
+     "title": "Arts Council of Wales — Have a Go",
+     "why": "not_stated",
+     "quote": "We recommend reading the full guidelines before submitting your application.",
+     "url": "https://arts.wales/funding/creative-learning/have-a-go"
+    },
+    {
+     "id": "0f6795e2-bdd9-4746-b1d8-88a6ea469824",
+     "title": "Barbara Ward Children's Foundation",
+     "why": "not_stated",
+     "quote": "Since then the Trustees have reviewed more than 7600 grant requests and authorised grants of over £12 million to more than 465 organisations (see Grant List).",
+     "url": "https://www.bwcf.org.uk/"
+    },
+    {
+     "id": "2b0fb0f0-6bb6-4803-baf7-8a289b115976",
+     "title": "Baring Foundation — Strengthening Civil Society Programme",
+     "why": "not_stated",
+     "quote": "This programme is currently closed. Future open round opportunities will be posted on this website, as well as in our e-newsletter and on our social media.",
+     "url": "https://baringfoundation.org.uk/programme/strengthening-civil-society/"
+    },
+    {
+     "id": "9891bd8a-798b-4c2c-98d5-f25ba9b10faf",
+     "title": "BE:IMPACT Prize 2026",
+     "why": "unreadable",
+     "quote": "Loading content...",
+     "url": "https://blueearthsummit.com/impact-prize"
+    },
+    {
+     "id": "d83e1ad9-b8d5-4367-8a26-0fed8b5698f4",
+     "title": "Beinneun Community Fund",
+     "why": "not_stated",
+     "quote": "Foundation Scotland maintains a standard list of exclusions which cannot be funded.",
+     "url": "https://foundationscotland.org.uk/beinneun-community"
+    },
+    {
+     "id": "c51eaae1-2007-4930-a45a-4da9f7542c1c",
+     "title": "Bernard Sunley Foundation — Social Welfare Grants",
+     "why": "unreadable",
+     "quote": "(client-rendered category table; no prose survives a text read)",
+     "url": "https://bernardsunley.org/our-grant-giving/social-welfare/"
+    },
+    {
+     "id": "ef68a7d7-4448-4a2e-8f44-341ef2c3148b",
+     "title": "Bolton Housing Partnership — Community Investment Grants",
+     "why": "not_stated",
+     "quote": "Find examples of projects that have previously been funded through Bolton CVS managed grants here.",
+     "url": "https://www.boltoncvs.org.uk/funding/bolton-housing-partnership-grants/"
+    },
+    {
+     "id": "0346c786-fb9c-4df9-9307-205a4337acab",
+     "title": "C B & H H Taylor 1984 Trust — Grants",
+     "why": "not_stated",
+     "quote": "The CB & HH Taylor Trust provides support to charitable organisations serving the West Midlands county (Birmingham, Coventry, Wolverhampton, Dudley, Sandwell, Solihull & Walsall).",
+     "url": "http://www.cbandhhtaylortrust.com/guidelines-for-grant-programmes"
+    }
+   ]
+  },
+  {
+   "batch": 2,
+   "written": [
+    {
+     "id": "ae6a6a3c-a0bb-4be9-a1fc-ee1b58c62739",
+     "restriction": "unrestricted",
+     "spendTypes": [
+      "revenue"
+     ],
+     "subtypes": [
+      "unrestricted"
+     ]
+    },
+    {
+     "id": "b3d10128-b913-4815-8e7d-5d8118698c14",
+     "restriction": "restricted",
+     "spendTypes": [
+      "revenue"
+     ],
+     "subtypes": [
+      "restricted"
+     ]
+    },
+    {
+     "id": "bfaa140a-ed84-4862-a455-6e48ca22e906",
+     "restriction": "unrestricted",
+     "subtypes": [
+      "unrestricted"
+     ]
+    },
+    {
+     "id": "58982bd3-de15-4000-9c4b-a4f7a767a64d",
+     "spendTypes": [
+      "revenue"
+     ],
+     "subtypes": []
+    }
+   ],
+   "report": [
+    {
+     "id": "6aa5d536-2a0f-4e65-b45b-892b8acdc352",
+     "title": "Chichester District Council — Community Grants Programme",
+     "why": "unreadable",
+     "quote": "Just a moment...",
+     "url": "https://www.chichester.gov.uk/grantprogramme"
+    },
+    {
+     "id": "90da13dd-fdc8-4246-8f63-00a8cb80c4e5",
+     "title": "Childs Charitable Trust",
+     "why": "not_stated",
+     "quote": "The Trust does NOT currently accept applications in the categories listed below: Any building work/repairs/refurbishment/fixtures and fittings or restoration projects ... Funding for Youth Worker salaries",
+     "url": "https://childscharitabletrust.org/funding/"
+    },
+    {
+     "id": "1805dc7a-5123-42d2-b283-dce6b6098556",
+     "title": "City Bridge Foundation Communities Building Economic Change",
+     "why": "not_stated",
+     "quote": "Full funding information will be published on our website on Monday 14 September 2026, including eligibility guidance and application details.",
+     "url": "https://www.citybridgefoundation.org.uk/funding/economic-justice"
+    },
+    {
+     "id": "da34170c-1a2a-43ab-9b5c-7cbbf924a4c2",
+     "title": "Comic Relief Community Fund England",
+     "why": "unreadable",
+     "quote": "Just a moment... Checking your browser...",
+     "url": "https://www.groundwork.org.uk/comic-relief/"
+    },
+    {
+     "id": "523da313-e449-46a1-8647-c5a51e58b304",
+     "title": "Cornwall Community Foundation — Community Grants",
+     "why": "index_over_programmes",
+     "quote": "Grant type: Select option — Show all — Core & project costs, Project costs, Unrestricted",
+     "url": "https://cornwallcommunityfoundation.com/cornwall-charity-grants/grants/",
+     "note": "The front door over several concurrently-open funds, each tagged with a different type in the page's own filter. A single spend_restriction cannot honestly stand for all of them."
+    },
+    {
+     "id": "4e4060c3-e8f0-4aba-8877-0f41f509f78d",
+     "title": "Cuthbert Horn Trust",
+     "why": "not_stated",
+     "quote": "Costs associated with eligible projects.",
+     "url": "https://youngcamdenfoundation.org.uk/funding/cuthbert-horn-trust"
+    },
+    {
+     "id": "ca53ae09-15ca-41a3-bd09-70d97d1b068f",
+     "title": "Dixie Rose Findlay Charitable Trust",
+     "why": "not_stated",
+     "quote": "Costs associated with eligible projects.",
+     "url": "https://youngcamdenfoundation.org.uk/funding/dixie-rose-findlay-charitable-trust"
+    },
+    {
+     "id": "91873653-fafe-475a-b8ff-1584187c6f4c",
+     "title": "Education Foundation For John Vaughan",
+     "why": "not_stated",
+     "quote": "The Educational Foundation of John Vaughan was established for those resident in the parish of Llangynog, Carmarthenshire.",
+     "url": "https://communityfoundationwales.org.uk/grants/education-foundation-for-john-vaughan/"
+    },
+    {
+     "id": "0316480d-5a0d-41c7-9c46-8695cb7d8465",
+     "title": "Eleanor Rathbone Charitable Trust — General Grants",
+     "why": "not_stated",
+     "quote": "Grants are made in the range £1000 to £3,000 for national and international grants, and up to £5,000 for merseyside grants.",
+     "url": "https://eleanorrathbonetrust.org.uk/guidelines.html"
+    },
+    {
+     "id": "a0e69102-abcd-4bb0-a11c-840ad6a3e433",
+     "title": "Emerton-Christie Charity",
+     "why": "not_stated",
+     "quote": "The Emerton-Christie charity is a grant-making trust donating to other UK-registered charities.",
+     "url": "https://www.emertonchristie.org/"
+    },
+    {
+     "id": "21f84400-4330-4267-9a62-4540617a573d",
+     "title": "Eranda Rothschild Foundation",
+     "why": "not_stated",
+     "quote": "The Eranda Rothschild Foundation is a UK registered charitable trust and makes donations to registered charities working in the fields of medical research, education and the arts.",
+     "url": "https://erandarothschild.org/"
+    },
+    {
+     "id": "b6add755-6f1c-453b-9cfe-54e6b88b3f6d",
+     "title": "Ernest Kleinwort Charitable Trust Medium Grants",
+     "why": "not_stated",
+     "quote": "Please read the information on the Grants page to understand what is and is not funded.",
+     "url": "https://ekct.org.uk/apply/"
+    },
+    {
+     "id": "af98107b-eda0-4294-9fcb-0e125e2733ff",
+     "title": "Esmée Fairbairn Foundation — A Fairer Future",
+     "why": "not_stated",
+     "quote": "Organisations working towards social change across four priority areas.",
+     "url": "https://esmeefairbairn.org.uk/apply-for-a-grant/a-fairer-future-guidance/"
+    },
+    {
+     "id": "65032b04-e949-4d96-b34c-3049d4915a8c",
+     "title": "Farmer Welfare Grant",
+     "why": "not_stated",
+     "quote": "Defra are launching a Farmer Welfare Grant with a total value of £1.5m which will run from November 2026 to March 2029 for projects which support the mental health and wellbeing of those in the agricultural industry.",
+     "url": "https://www.find-government-grants.service.gov.uk/grants/farmer-welfare-grant-1"
+    },
+    {
+     "id": "2d2d4bc6-1c4e-43e8-8357-e14b85dd3510",
+     "title": "Fitton Trust",
+     "why": "not_stated",
+     "quote": "Costs associated with eligible projects.",
+     "url": "https://youngcamdenfoundation.org.uk/funding/fitton-trust"
+    },
+    {
+     "id": "f14ca7b1-4e12-48b0-b59c-31b64e602b61",
+     "title": "Forever Manchester — Community Grants",
+     "why": "not_stated",
+     "quote": "We manage and administer a number of funds. For support and guidance on the best fund to apply to, please call us before making an application.",
+     "url": "https://forevermanchester.com/funding/"
+    }
+   ]
+  },
+  {
+   "batch": 3,
+   "written": [
+    {
+     "id": "a9ebac9e-738f-4917-bf81-73e8cf0fc3ba",
+     "restriction": "unrestricted",
+     "spendTypes": [
+      "capital",
+      "revenue"
+     ],
+     "subtypes": [
+      "unrestricted",
+      "capital"
+     ]
+    },
+    {
+     "id": "738638ce-af2f-4052-b428-213248d9312a",
+     "spendTypes": [
+      "capital",
+      "revenue"
+     ],
+     "subtypes": [
+      "capital"
+     ]
+    },
+    {
+     "id": "3133f461-9fd4-4d13-a4eb-52f8bb7d69e3",
+     "restriction": "unrestricted",
+     "subtypes": [
+      "unrestricted"
+     ]
+    },
+    {
+     "id": "d38779a7-0873-4f2f-91e2-638739a2eb64",
+     "restriction": "unrestricted",
+     "subtypes": [
+      "unrestricted"
+     ]
+    },
+    {
+     "id": "5a368644-3211-4a40-9447-d5594938a519",
+     "spendTypes": [
+      "capital",
+      "revenue"
+     ],
+     "subtypes": [
+      "capital"
+     ]
+    },
+    {
+     "id": "06a3f5a0-e90d-451b-a829-0d3b895aac72",
+     "restriction": "unrestricted",
+     "spendTypes": [
+      "revenue"
+     ],
+     "subtypes": [
+      "unrestricted"
+     ]
+    },
+    {
+     "id": "f79aada3-721e-487c-9e97-35097aa87ee0",
+     "restriction": "unrestricted",
+     "spendTypes": [
+      "revenue"
+     ],
+     "subtypes": [
+      "unrestricted"
+     ]
+    },
+    {
+     "id": "0d4a2ffd-1aeb-43ca-b1e9-469c2066b968",
+     "spendTypes": [
+      "capital",
+      "revenue"
+     ],
+     "subtypes": [
+      "capital"
+     ]
+    }
+   ],
+   "report": [
+    {
+     "id": "3b836a87-fd0e-4d5c-bfdc-b44f7c793eb1",
+     "title": "Gatsby Charitable Foundation",
+     "why": "homepage_only",
+     "quote": "The Gatsby Charitable Foundation was set up by David Sainsbury to realise his charitable objectives.",
+     "url": "https://www.gatsby.org.uk/"
+    },
+    {
+     "id": "3d6656f0-6f74-4635-8c87-0406ded69be2",
+     "title": "Gordon Fraser Charitable Trust",
+     "why": "not_stated",
+     "quote": "Applicants must be organisations which are registered either with the Charity Commission in England and Wales or with the Office of the Scottish Charity Regulator.",
+     "url": "https://www.gfct.org.uk/"
+    },
+    {
+     "id": "2b5a4026-5608-4b72-8849-137631789a90",
+     "title": "Grassroots Grants",
+     "why": "not_stated",
+     "quote": "This fund is designed to be flexible and accessible, supporting a wide range of local projects and activities.",
+     "url": "https://www.berkshirecf.org/available-funding/grassroots-grant-round/"
+    },
+    {
+     "id": "87dae8fd-4313-4dfa-a042-db71857d6105",
+     "title": "Green Community Grants Programme",
+     "why": "unreadable",
+     "quote": "Just a moment...",
+     "url": "https://www.wildlifetrusts.org/green-community-grants-programme"
+    },
+    {
+     "id": "e0dddc2b-3275-41cd-9daf-982aed9798b8",
+     "title": "Hampstead Wells and Camden Trust",
+     "why": "not_stated",
+     "quote": "HWCT currently provides organisational funding through the following organisational grant programmes.",
+     "url": "https://hwct.org.uk/grants-for-organisations/"
+    },
+    {
+     "id": "9732902b-9ddd-491e-bbf2-031afc83ba4d",
+     "title": "Henry Smith Foundation Domestic Abuse Counselling Fund",
+     "why": "not_stated",
+     "quote": "This grant is coming soon.",
+     "url": "https://henrysmith.foundation/grants/domestic-abuse-counselling"
+    },
+    {
+     "id": "8f57f2a0-685d-489f-9267-ac9f79b073a7",
+     "title": "Herefordshire Community Foundation — Community Grants (Community Chest)",
+     "why": "not_stated",
+     "quote": "Herefordshire Community Foundation aims to build stronger communities in the county by giving grants to worthy community and voluntary groups, charities and individuals.",
+     "url": "https://www.herefordshirecf.org/apply-for-a-grant/"
+    },
+    {
+     "id": "12bbaf28-20aa-445b-867b-1958ebcef1ef",
+     "title": "Hollick Family Charitable Trust",
+     "why": "not_stated",
+     "quote": "Costs associated with eligible projects with charitable objectives.",
+     "url": "https://youngcamdenfoundation.org.uk/funding/hollick-family-charitable-trust"
+    },
+    {
+     "id": "ec9f1ec9-426a-49aa-aaea-4a3e1a718afc",
+     "title": "Ian Askew Charitable Trust",
+     "why": "not_stated",
+     "quote": "Costs associated with eligible activities and projects.",
+     "url": "https://youngcamdenfoundation.org.uk/funding/ian-askew-charitable-trust"
+    },
+    {
+     "id": "ed3f6ba2-c76c-4b44-9bf4-5846f4ad4bed",
+     "title": "James Ahern Foundation",
+     "why": "not_stated",
+     "quote": "Grants: we award small grants to young people, to help them pursue their passion in life.",
+     "url": "https://www.jamesahernfoundation.org/"
+    },
+    {
+     "id": "b7d19a10-753c-4294-95ad-ec43ac71595d",
+     "title": "Kusuma Trust UK — Education, Communities & Environment",
+     "why": "homepage_only",
+     "quote": "We're making sure disadvantaged young people from former coal mining areas have the confidence they need to apply for top universities.",
+     "url": "https://www.kusumatrust.org/"
+    },
+    {
+     "id": "97242e7b-33ec-4249-b46b-b54f039818d5",
+     "title": "Lambert Charitable Trust",
+     "why": "not_stated",
+     "quote": "Costs associated with eligible projects.",
+     "url": "https://youngcamdenfoundation.org.uk/funding/lambert-charitable-trust"
+    }
+   ]
+  },
+  {
+   "batch": 4,
+   "written": [
+    {
+     "id": "aff4f25d-a988-4c58-9b46-1512024a4caa",
+     "restriction": "unrestricted",
+     "spendTypes": [
+      "revenue"
+     ],
+     "subtypes": [
+      "unrestricted"
+     ]
+    },
+    {
+     "id": "d347a083-1c7b-45e6-8e48-537f53c9ce12",
+     "spendTypes": [
+      "capital",
+      "revenue"
+     ],
+     "subtypes": [
+      "capital"
+     ]
+    },
+    {
+     "id": "a2c9cddb-26a2-466e-a1ae-6811368e9813",
+     "restriction": "unrestricted",
+     "spendTypes": [
+      "revenue"
+     ],
+     "subtypes": [
+      "unrestricted"
+     ]
+    },
+    {
+     "id": "e958aa03-860e-4af4-b445-19fbc9507883",
+     "restriction": "restricted",
+     "subtypes": [
+      "restricted"
+     ]
+    }
+   ],
+   "report": [
+    {
+     "id": "9f2bbfca-91ed-4f0e-a3d2-cf9e1486ce8d",
+     "title": "Lush Charity Pot — Grants",
+     "why": "not_stated",
+     "quote": "LUSH Charity Pot grants award funding to 'non-violent direct action' groups for projects that aim to create long-term change, and are unpopular and often overlooked by other funders.",
+     "url": "https://connectedvoice.org.uk/services/support-and-development/funding/lush-charity-pot-animal-protection-environment-and-human",
+     "note": "The directory page is readable and silent; Lush's own linked guidelines page (lush.com/uk/en/a/charity-pot-funding-guidelines) is behind a 403."
+    },
+    {
+     "id": "8ef744d0-2157-4be3-aa94-b276c7b83bb6",
+     "title": "Magdalen Hospital Trust — Vulnerable Children & Young Adults Grants",
+     "why": "not_stated",
+     "quote": "The Trust aims to work with small charities and will rarely support capital projects.",
+     "url": "https://www.magdalentrust.org.uk/"
+    },
+    {
+     "id": "c8c96218-4a00-411c-b015-c2caf632f837",
+     "title": "Make a Difference Locally (MADL)",
+     "why": "not_stated",
+     "quote": "The registered charity or good cause must be transparent and accountable – this means that it must be able to confirm what any donation would be used for on request.",
+     "url": "https://www.nisalocally.co.uk/community/"
+    },
+    {
+     "id": "29a300bd-3f90-4ea8-b5b4-80dbc2c21563",
+     "title": "Moondance Foundation — General Funding",
+     "why": "not_stated",
+     "quote": "Our Trustees are experienced grant-makers and will use their judgement as to what amount of funding they feel is appropriate and are able to grant to a charity.",
+     "url": "https://moondancefoundation.org.uk/funding-faqs"
+    },
+    {
+     "id": "120e1d2a-d2ef-4663-8934-c0e091138818",
+     "title": "Movement for Good — £1,000 Draws",
+     "why": "not_stated",
+     "quote": "Enter your favourite charities for the chance to win £1,000.",
+     "url": "https://movementforgood.com/"
+    },
+    {
+     "id": "d4f9cf52-1ec4-490b-aef8-8f5b803708fd",
+     "title": "Museum Transformation Programme",
+     "why": "unreadable",
+     "quote": "Just a moment...",
+     "url": "https://www.artscouncil.org.uk/museum-transformation-programme"
+    },
+    {
+     "id": "79b3cc06-49f8-4e14-b930-0504bfdcf575",
+     "title": "National Lottery Project Grants",
+     "why": "unreadable",
+     "quote": "Just a moment...",
+     "url": "https://www.artscouncil.org.uk/ProjectGrants"
+    },
+    {
+     "id": "b7b435e3-33de-40cf-973e-e43b9f2a95fd",
+     "title": "National Portfolio Investment Programme 2028-33",
+     "why": "unreadable",
+     "quote": "Just a moment...",
+     "url": "https://www.artscouncil.org.uk/national-portfolio-investment-programme-2028-33"
+    },
+    {
+     "id": "b9529231-32c7-4260-a38a-f498fb13596f",
+     "title": "NFU Mutual Charitable Trust — December 2026 Funding Round",
+     "why": "unreadable",
+     "quote": "(the page loads but is entirely insurance-site navigation; the charitable trust content is client-rendered)",
+     "url": "https://www.nfumutual.co.uk/about-us/charitable-trust/applications-for-funding/"
+    },
+    {
+     "id": "2dd171df-c033-4b4f-972f-5e1860581b2c",
+     "title": "Oake Sunshine Fund",
+     "why": "not_stated",
+     "quote": "The Fund is deliberately broad in scope, and will consider requests for most activities benefitting local residents.",
+     "url": "https://www.somersetcf.org.uk/grants-funding/details/oake-sunshine-fund/",
+     "note": "A \"project costs... or capital costs\" sentence on this page belongs to sibling funds (Gooch Charitable Fund, Waste Not Somerset Fund) listed further down, not to Oake Sunshine."
+    },
+    {
+     "id": "b57b4b82-8fc5-4a5c-8aa9-9563293c8823",
+     "title": "One Stop Community Partnership Programme",
+     "why": "unreadable",
+     "quote": "Just a moment... Checking your browser...",
+     "url": "https://www.groundwork.org.uk/one-stop-community-partnership/"
+    },
+    {
+     "id": "93e4b316-cb4b-45fb-b8a8-b74f5fb6b831",
+     "title": "Open Society Foundations — Europe & UK Programmes",
+     "why": "homepage_only",
+     "quote": "Every year, the Open Society Foundations give grants to a diverse array of groups and individuals who promote our values—through a unique network that is guided by local voices and global expertise.",
+     "url": "https://www.opensocietyfoundations.org/"
+    },
+    {
+     "id": "322ac2dc-ab9c-4d23-9016-75d98919dfc9",
+     "title": "Places of Worship Renewal Fund",
+     "why": "unreadable",
+     "quote": "Just a moment...",
+     "url": "https://historicengland.org.uk/advice/grants/what-we-fund/places-of-worship-renewal-fund/"
+    },
+    {
+     "id": "07aaea97-8dc4-4650-915a-652c38f9fead",
+     "title": "Reveal and Respond programme",
+     "why": "not_stated",
+     "quote": "This project supports partners of serving personnel in raising their aspirations, building their confidence, and developing the skills necessary to secure fulfilling employment.",
+     "url": "https://covenantfund.org.uk/programme/reveal-and-respond-programme/"
+    },
+    {
+     "id": "e9d845c7-8138-43f3-b4bf-88e3adad003a",
+     "title": "Salford CVS — Grants Programmes",
+     "why": "not_stated",
+     "quote": "Over the last 10 years Salford CVS' grants programme has evolved and grown significantly into one of the largest VCSE focussed grants programme led by a local infrastructure organisation in Greater Manchester.",
+     "url": "https://www.salfordcvs.co.uk/funding"
+    },
+    {
+     "id": "f635ceba-ed4a-4d76-8260-fe10bf6adf0e",
+     "title": "Shoosmiths Foundation",
+     "why": "unreadable",
+     "quote": "406 Not Acceptable",
+     "url": "https://www.shoosmiths.com/impact/responsible-business/shoosmiths-foundation"
+    }
+   ]
+  },
+  {
+   "batch": 5,
+   "written": [
+    {
+     "id": "59b7e30c-4018-4d22-9e7a-074a5f19ae24",
+     "spendTypes": [
+      "capital",
+      "revenue"
+     ],
+     "subtypes": [
+      "capital"
+     ]
+    },
+    {
+     "id": "ca66d932-e36c-43cb-8f11-629c0191eb04",
+     "spendTypes": [
+      "capital"
+     ],
+     "subtypes": [
+      "capital"
+     ]
+    },
+    {
+     "id": "f5c454d7-728e-4f11-b7f1-1dc139393d3e",
+     "restriction": "restricted",
+     "spendTypes": [
+      "capital"
+     ],
+     "subtypes": [
+      "restricted",
+      "capital"
+     ]
+    },
+    {
+     "id": "6c091760-ee77-4a23-b1dd-36a780751eb7",
+     "restriction": "unrestricted",
+     "spendTypes": [
+      "capital",
+      "revenue"
+     ],
+     "subtypes": [
+      "unrestricted",
+      "capital"
+     ]
+    },
+    {
+     "id": "db97dbb6-63b5-4604-8ccb-10a4722ea2b1",
+     "restriction": "unrestricted",
+     "spendTypes": [
+      "capital",
+      "revenue"
+     ],
+     "subtypes": [
+      "unrestricted",
+      "capital"
+     ]
+    },
+    {
+     "id": "c2cbe217-c515-4c4b-b7ad-e719621c598f",
+     "restriction": "unrestricted",
+     "spendTypes": [
+      "revenue"
+     ],
+     "subtypes": [
+      "unrestricted"
+     ]
+    },
+    {
+     "id": "e0055d56-8e59-49fb-bece-8cd38a91cea1",
+     "restriction": "unrestricted",
+     "subtypes": [
+      "unrestricted"
+     ]
+    },
+    {
+     "id": "d6f2fc61-1403-4f13-9d06-e3b47e6c4f4c",
+     "restriction": "restricted",
+     "spendTypes": [
+      "capital"
+     ],
+     "subtypes": [
+      "restricted",
+      "capital"
+     ]
+    },
+    {
+     "id": "da11a3e8-998c-464c-82f2-bf3983008847",
+     "restriction": "restricted",
+     "subtypes": [
+      "restricted"
+     ]
+    }
+   ],
+   "report": [
+    {
+     "id": "dd88b889-6926-42e8-9e8f-954b3b9e5af4",
+     "title": "Sigrid Rausing Trust — Grants",
+     "why": "not_stated",
+     "quote": "Our grant-making is organised into three main programmes: Human Rights and the Rule of Law, Open Societies, and the Environment.",
+     "url": "https://www.sigrid-rausing-trust.org/"
+    },
+    {
+     "id": "8ce6d37f-0c85-44aa-a8ff-faa71ed8ab2e",
+     "title": "South Yorkshire's Community Foundation — Grants",
+     "why": "not_stated",
+     "quote": "Use our Grants Wizard to find the funding you're looking for.",
+     "url": "https://www.sycf.org.uk/apply/search-our-grants",
+     "note": "A JS-driven \"Grants Wizard\" over an unstated number of programmes; no static filter or per-fund type data reaches the text."
+    },
+    {
+     "id": "aafb0cc7-0698-4659-97ee-659579042ec1",
+     "title": "Stobart Sustainability Fund",
+     "why": "not_stated",
+     "quote": "We will now lever that offering to become the most sustainable and prosperous haulier in the UK, protecting the environment, our people, our partners and the communities around us.",
+     "url": "https://eddiestobart.com/sustainability-projects/",
+     "note": "apply_url redirects to a general sustainability page about Stobart's own operations; no separate grants page could be found."
+    },
+    {
+     "id": "853a4569-c998-4f24-8450-5830a891efc6",
+     "title": "Stronger Communities Fund",
+     "why": "not_stated",
+     "quote": "We're always looking for new causes and groups to support in projects that fit the themes of our Stronger Communities Fund.",
+     "url": "https://www.welovemcrcharity.org/apply-for-funding"
+    },
+    {
+     "id": "24a624c6-27a3-413f-baa7-742d1cb02c60",
+     "title": "Sussex Crisis Fund — Sussex Community Foundation",
+     "why": "not_stated",
+     "quote": "Sussex Community Foundation is a registered charity that exists to make Sussex a fairer and more equal place.",
+     "url": "https://sussexcommunityfoundation.org/grants/"
+    },
+    {
+     "id": "1a99b534-f6f5-4792-937d-361f6a0ba067",
+     "title": "The Access Foundation",
+     "why": "not_stated",
+     "quote": "We're focused on making a real difference to people's lives by awarding grants to charities which make a valuable and measurable positive impact.",
+     "url": "https://theaccessgroupfoundation.com/"
+    },
+    {
+     "id": "8797b0c0-e49a-4b33-b82c-1dc0657254a3",
+     "title": "The Bothwell Charitable Trust",
+     "why": "not_stated",
+     "quote": "Costs associated with eligible projects.",
+     "url": "https://youngcamdenfoundation.org.uk/funding/the-bothwell-charitable-trust"
+    },
+    {
+     "id": "111ced72-612a-47c1-8043-c9b75455fc0b",
+     "title": "The Dodgson Foundation",
+     "why": "not_stated",
+     "quote": "We can be quite flexible where we perceive there is a need to be so.",
+     "url": "https://dodgson.org.uk/"
+    },
+    {
+     "id": "809e464b-0cdb-46cb-b844-8eca7d4644a9",
+     "title": "The Grocers' Charity — Small Grants",
+     "why": "not_stated",
+     "quote": "We do NOT fund the following activities ... Property purchase, building or refurbishment (except for Heritage charities) ... Senior leadership salary",
+     "url": "https://grocershall.co.uk/the-charity/the-charity-application",
+     "note": "Excludes one specific expense line each for capital and salary, not a general core-costs or project-costs statement, so no restriction call."
+    },
+    {
+     "id": "1dcfec77-f432-4bc6-8cf4-bf553ea73e4e",
+     "title": "The Indigo Trust",
+     "why": "not_stated",
+     "quote": "Submission of proposals is by invitation only. We are unlikely to fund anything outside our focus areas and we do not fund or sponsor individuals or events.",
+     "url": "https://www.sfct.org.uk/indigo-trust/"
+    },
+    {
+     "id": "e38c97ec-04dd-4809-8d51-a42522033adb",
+     "title": "The JJ Charitable Trust — Literacy Programme",
+     "why": "not_stated",
+     "quote": "We do not fund: Individuals, Capital costs, Literacy work outside the UK, Organisations registered outside the UK, English lessons for children learning English as an additional language, Schools - unless this is for additional provision outside of timetabled lessons",
+     "url": "https://sfct.powerappsportals.com/jjapplication/",
+     "note": "Capital is explicitly excluded; nothing on the page states restricted or unrestricted, so no restriction call."
+    }
+   ]
+  },
+  {
+   "batch": 6,
+   "written": [
+    {
+     "id": "7b924e63-a2a6-42f2-9968-4786de21cb47",
+     "restriction": "restricted",
+     "subtypes": [
+      "restricted"
+     ]
+    }
+   ],
+   "report": [
+    {
+     "id": "c94379cc-bd70-482c-a3cd-76d406e9908f",
+     "title": "The Julia Rausing Trust — Grants",
+     "why": "not_stated",
+     "quote": "The Julia Rausing Trust is a charitable fund that honours the memory of Julia Rausing by making grants in her name.",
+     "url": "https://www.juliarausingtrust.org/"
+    },
+    {
+     "id": "554951a7-6058-4837-a6c1-1a635b7aba85",
+     "title": "The Pebble Trust",
+     "why": "not_stated",
+     "quote": "We tend not to give money for professional fees, for example payment for running workshops.",
+     "url": "https://www.pebbletrust.org/donations",
+     "note": "One specific excluded cost line, not a general core-costs statement."
+    },
+    {
+     "id": "5bb5658f-c526-4fc2-8dbc-a8162056574d",
+     "title": "The Tedworth Charitable Trust",
+     "why": "not_stated",
+     "quote": "The Tedworth Charitable Trust supports projects in the following areas: parenting, family welfare and child development; and arts and the environment.",
+     "url": "https://www.sfct.org.uk/the-tedworth-charitable-trust/"
+    },
+    {
+     "id": "1ffe7161-587d-48ce-86a2-39a94a9120ad",
+     "title": "The Weavers' Company Charitable Funds",
+     "why": "unreadable",
+     "quote": "(connection timed out)",
+     "url": "https://www.weavers.org.uk/charity/charitable-grants/guidelines/"
+    },
+    {
+     "id": "40c079d7-5be8-4eaf-9ad0-db4f59d34c71",
+     "title": "The Wyseliot Rose Charitable Trust",
+     "why": "not_stated",
+     "quote": "The funding is for charitable work that addresses the Trust's objectives.",
+     "url": "https://youngcamdenfoundation.org.uk/funding/the-wyseliot-rose-charitable-trust"
+    },
+    {
+     "id": "97352e7c-d16c-4a1c-98a6-ee508bce182b",
+     "title": "Toy Trust",
+     "why": "not_stated",
+     "quote": "The applicants accounts must show a ratio of administration & overhead costs (including wages & salaries) to income of less than 30%",
+     "url": "https://www.toytrust.co.uk/apply/",
+     "note": "About the APPLICANT's financial health, not what the grant may be spent on."
+    },
+    {
+     "id": "cdc9da1a-1c11-428c-8be1-3f9d8cf42c04",
+     "title": "Ufi VocTech Trust — VocTech Activate",
+     "why": "not_stated",
+     "quote": "Projects for which the majority of the costs are equipment purchases.",
+     "url": "https://ufi.co.uk/grant-funding/voctech-activate/",
+     "note": "Under \"Ufi does not grant fund...\" — a majority-of-costs exclusion, not a flat ban, and no core/project-costs statement either way."
+    },
+    {
+     "id": "31f56c84-447a-478b-a15a-fcb19469c1aa",
+     "title": "UK and Ireland Community Tree Planting Grant",
+     "why": "not_stated",
+     "quote": "Every year, ITF supports community groups across the UK and Ireland to bring their tree-planting ambitions to life.",
+     "url": "https://www.internationaltreefoundation.org/uk-grants"
+    },
+    {
+     "id": "fd7d2b8b-4946-43a8-be8b-1ef9b63ce244",
+     "title": "Wakeham Trust",
+     "why": "not_stated",
+     "quote": "What would you spend the money on? Please give a rough breakdown and an overall budget.",
+     "url": "https://thewakehamtrust.org/2020/05/05/how-to-apply/"
+    },
+    {
+     "id": "5f18b678-a15a-48a8-b798-8322a9816b61",
+     "title": "Westminster City Council — Community Grants",
+     "why": "index_over_programmes",
+     "quote": "VCS core funding programme: Core funding up to £30,000 per year is available ... North Paddington Community Capital Grant: Funding is available to support capital projects for community organisations",
+     "url": "https://www.westminster.gov.uk/leisure-libraries-and-community/grant-funding-opportunities",
+     "note": "Over a dozen separately named programmes on one page, at least one explicitly core-funding and another explicitly capital-only."
+    },
+    {
+     "id": "1bc07b39-f953-43ee-8248-db7ccf816f86",
+     "title": "Weston Windfarm Community Fund",
+     "why": "not_stated",
+     "quote": "It can support any type of activity that involves local people through small community organisations, and benefits their community.",
+     "url": "https://www.norfolkfoundation.com/funding-support/grants/groups/weston-windfarm-community-fund/"
+    },
+    {
+     "id": "3f5d135b-c001-4cc3-8ae3-049a9b85baef",
+     "title": "Whirlwind Charitable Trust",
+     "why": "not_stated",
+     "quote": "Donations focused on delivery rather than general overheads.",
+     "url": "https://www.whirlwind.org.uk/guidelines/",
+     "note": "\"Modest organisational overheads and employee salaries\" is listed as one of several things the Trust looks favourably on, alongside a preference for delivery over overheads — too mixed for a clean restriction call."
+    },
+    {
+     "id": "4c6acc32-d648-451c-931b-17da273ab598",
+     "title": "Worthing Community Chest — Seed Grants",
+     "why": "not_stated",
+     "quote": "We do not fund salaries or groups/projects that do not benefit people who live within the Worthing boundary shown in the map above.",
+     "url": "https://worthingcommunitychest.org/grants/seed-grants/",
+     "note": "One specific excluded cost line (salaries), not a general core-costs statement."
+    },
+    {
+     "id": "88fd8569-c9e4-4973-b69f-b85a31425e0c",
+     "title": "York Community Fund",
+     "why": "not_stated",
+     "quote": "We are particularly interested in: Resourcing leadership time for reflection, learning, planning and ways of working exploration.",
+     "url": "https://tworidingscf.org.uk/fund/york-community-fund/"
+    },
+    {
+     "id": "581fab6f-e73b-4584-82fd-d0ab9f355aed",
+     "title": "Zochonis Charitable Trust — Grants",
+     "why": "not_stated",
+     "quote": "Please include a 'Plan on a Page', detailing your current funding requirement, how the money will be spent and the success criteria for which you are aiming.",
+     "url": "https://www.zochonischaritabletrust.com/how-to-apply/"
+    }
+   ]
+  }
+ ],
+ "summary": {
+  "job": "how the money may be spent, on 116 live grants",
+  "brief": "docs/handoffs/sonnet-2026-09-07.md, job 1",
+  "finished": "2026-09-07",
+  "api_spend": "zero — read with node fetch, no @anthropic-ai/sdk, no /api/admin/enrich-grant",
+  "rows": 116,
+  "written": 33,
+  "reported": 83,
+  "restriction_counts": {
+   "unset": 9,
+   "restricted": 10,
+   "unrestricted": 14
+  },
+  "spend_type_counts": {
+   "capital": 13,
+   "revenue": 20
+  },
+  "report_reasons": {
+   "not_stated": 65,
+   "unreadable": 13,
+   "index_over_programmes": 2,
+   "homepage_only": 3
+  },
+  "patterns_worth_acting_on": [
+   "Two funder pages listed as the funder's own site were actually directory listings with a structured \"Type of cost\" field rather than prose (funding.scot, twice) — read at confidence med rather than high, since it is the directory's categorisation rather than the funder's own words.",
+   "The sibling-quote trap from the amounts and verdicts jobs recurred on shared-template trust-directory sites: Young Camden Foundation hosts ten trusts on near-identical pages, each with an \"Other grants to consider\" sidebar naming siblings; Somerset Community Foundation's Oake Sunshine Fund page carries a sentence that belongs to two funds further down the same page. Both caught before writing by reading the specific trust's own named section rather than the first matching sentence on the page.",
+   "A phrase can read as an inclusion or an exclusion purely from its heading: Tesco's \"Running costs and organisation overheads\" sits under \"Projects which are ineligible\", the opposite of what the phrase suggests alone. Every citation in this job was checked against its section heading before being written.",
+   "\"Restricted\" and \"unrestricted\" have a second, unrelated meaning on charity pages — the APPLICANT's own restricted/unrestricted reserves or net assets, an eligibility or financial-health check rather than a statement about this grant's spend rules. Hit twice (Magdalen Hospital Trust, Toy Trust).",
+   "homepage_only and index_over_programmes were split out from not_stated during the job: nine apply_urls turned out to be foundation homepages or multi-fund indexes with no single answer to give, rather than a specific fund's page that happened to say nothing.",
+   "Several rows exclude one specific cost line (a named role's salary, capital costs, professional fees) without a general core-costs or project-costs statement either way; these were left without a restriction call rather than generalised from a single line item, matching the Grocers' Charity and JJ Charitable Trust pattern."
+  ]
+ }
+}

@@ -2,7 +2,7 @@
 // Called from the admin UI in batches (same polling pattern as validate-urls).
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { getAdminDb } from '@/lib/admin/admin-db'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { deepCheckUrl } from '@/lib/url-validator'
 
@@ -25,10 +25,7 @@ async function isAuthorised(req: NextRequest): Promise<boolean> {
 }
 
 function getAdminClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  )
+  return getAdminDb()
 }
 
 async function inBatches<T, R>(items: T[], size: number, fn: (item: T) => Promise<R>): Promise<R[]> {

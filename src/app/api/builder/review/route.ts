@@ -19,7 +19,7 @@ import {
 export const dynamic     = 'force-dynamic'
 export const maxDuration = 60
 
-const REVIEW_MODEL = 'claude-sonnet-4-6'
+const REVIEW_MODEL = 'claude-sonnet-5'   // was claude-sonnet-4-6 until 2026-09-06: newer, and a third cheaper per token
 
 const SYSTEM_PROMPT = `You are an experienced UK grant assessor reviewing ONE answer from a draft funding application by a small charity or social enterprise. Score it and tell the applicant how to improve it.
 

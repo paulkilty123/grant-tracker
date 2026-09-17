@@ -141,6 +141,7 @@ SOURCE REFS — every facts[].source.ref must be exactly one of these keys:
 - "<id>::openStatus"         kind: catalogue_field  (between-rounds funds)
 - "<id>::amount"             kind: catalogue_field  (disclosed amounts)
 - "<id>::amountUndisclosed"  kind: catalogue_field  (undisclosed amounts)
+- "<id>::fundingType"        kind: catalogue_field  (in-kind offers, which carry no cash award)
 - "<id>::brief.what_they_fund" kind: brief_citation (only if a brief snippet is shown)
 - "arithmetic::gap" / "arithmetic::concentration" kind: catalogue_field (for flag facts)
 where <id> is the bracketed id of a candidate. Every recommendation's opportunity_id must be a candidate id (or null for pure rebalance/relationship advice).
@@ -158,6 +159,11 @@ function timingLine(c: PackCandidate): string {
   return `no deadline stated [ref ${c.id}::isRolling]`
 }
 function amountLine(c: PackCandidate): string {
+  // An in-kind offer has no cash award. "Not disclosed" would have the adviser
+  // tell a fundraiser the funder is withholding a figure that does not exist.
+  if (c.amountMin == null && c.amountMax == null && c.fundingType === 'in_kind') {
+    return `support in kind, not cash [ref ${c.id}::fundingType]`
+  }
   if (c.amountUndisclosed) return `amount not disclosed [ref ${c.id}::amountUndisclosed]`
   const f = (n: number) => `£${n.toLocaleString('en-GB')}`
   const v = c.amountMin != null && c.amountMax != null ? `${f(c.amountMin)}–${f(c.amountMax)}`

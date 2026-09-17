@@ -55,6 +55,7 @@ import {
   type ReviewReasonCode,
   type ReviewRow,
 } from './review-reasons'
+import { summariseEvidence } from './evidence-summary'
 
 /**
  * Bump when the blocking set changes, so `publish_gate_decisions` rows stay
@@ -74,7 +75,17 @@ import {
  * Per the standing rule in the merge digest, a policy-version change should
  * force a dry run before the first armed run under the new version.
  */
-export const GATE_POLICY_VERSION = 'c2.3'
+/**
+ * `c2.4`, 2026-09-02: the blocking set is unchanged, but a row the gate would
+ * publish now ALSO has to pass `pageStanding` before the machine will expose it
+ * (see below), and a republish of an already-live row no longer takes a slot.
+ * Decisions either side of that are not comparable, so the version moves.
+ *
+ * `c2.5`, 2026-09-02: page_says_invite_only added as `withhold` (holds a
+ * not-live row, informational on a live one); deadline_implausible yields to a
+ * page-confirmed date.
+ */
+export const GATE_POLICY_VERSION = 'c2.5'
 
 /**
  * Every reason code, classified. `block` = the row asserts something wrong or
@@ -92,7 +103,15 @@ export const GATE_POLICY_VERSION = 'c2.3'
  * silently ignored by the gate. That is the exact failure this layer exists to
  * stop, so it must not be possible to reintroduce by omission.
  */
-const POLICY: Record<ReviewReasonCode, 'block' | 'info'> = {
+/**
+ * A third class, added 2026-09-02: `withhold`. The row must not be EXPOSED by
+ * the machine, but a live row carrying it is not wrong. Paul, on the five
+ * invitation-only trusts that were flagged invite-only on 17 August and whose
+ * pages confirm it: "Page confirms invite-only, row says invite-only: that's a
+ * confirmation, not a defect." So the code holds a not-live row (Baring, Ufi)
+ * and says nothing about a live one.
+ */
+const POLICY: Record<ReviewReasonCode, 'block' | 'info' | 'withhold'> = {
   // ── Wrong or invented: a user acting on this is misled ──
   no_brief:             'block',  // nothing was ever read; every field is unsourced
   page_unreadable:      'block',  // brief written from the model's memory, not the page
@@ -101,7 +120,12 @@ const POLICY: Record<ReviewReasonCode, 'block' | 'info'> = {
   deadline_passed:      'block',  // sends someone at a round that has closed
   amount_inverted:      'block',  // minimum above maximum — self-evidently wrong
   amount_pot_suspected: 'block',  // whole-fund figure presented as per-applicant
-  amount_ungrounded:    'block',  // £ figure with no matching wording on the page
+  amount_ungrounded:    'block',  // £ figure supported by nothing we hold
+  // The narrowed twin, added 2026-09-01. The figure IS in our evidence and only
+  // the write-up is untidy about it, so nobody is misled by the card and there
+  // is nothing to block. Kept as its own CODE rather than a severity branch on
+  // the one above, because the gate reads this table by code.
+  amount_ungrounded_in_prose: 'info',
   // A fundraiser checked this row against the funder's actual policy and
   // rejected it. Blocking for two reasons: a human reporting a problem is
   // stronger evidence than anything derived from the row, and the feedback
@@ -150,6 +174,20 @@ const POLICY: Record<ReviewReasonCode, 'block' | 'info'> = {
   // Nothing says who is giving the money. Three press releases scraped as funds
   // shared this and nothing else.
   no_funder:              'block',
+
+  // The link resolves, the page is genuine, and it is a Charity Commission
+  // register entry or a third-party directory. Blocking for the same reason
+  // `page_describes_different_fund` blocks: the harm is a fundraiser spending a
+  // click and finding no way in, and it is HARDER to spot than a dead link
+  // because the page loads and names the right funder. Four live rows carried
+  // this on 2026-09-01 and none of them was flagged by anything.
+  apply_route_not_applyable: 'block',
+
+  // The funder's page confirms applications are by invitation. A confirmed
+  // no-route, Paul 2026-09-02. Blocks for the same reason as the code above:
+  // the page loads, names the fund, and there is nowhere for a fundraiser to
+  // go from it.
+  page_says_invite_only:  'withhold',
 
   // A figure on the card that the funder's own page does not state.
   //
@@ -231,7 +269,7 @@ const POLICY: Record<ReviewReasonCode, 'block' | 'info'> = {
 
 /** The blocking set, derived so it can never disagree with POLICY. */
 export const BLOCKING_CODES: readonly ReviewReasonCode[] =
-  (Object.keys(POLICY) as ReviewReasonCode[]).filter(c => POLICY[c] === 'block')
+  (Object.keys(POLICY) as ReviewReasonCode[]).filter(c => POLICY[c] !== 'info')
 
 /** The informational set, derived so it can never disagree with POLICY. */
 export const INFORMATIONAL_CODES: readonly ReviewReasonCode[] =
@@ -253,8 +291,10 @@ export const INFORMATIONAL_CODES: readonly ReviewReasonCode[] =
  * ever needs per-row nuance again, put it in deriveReviewReasons as a distinct
  * CODE, not as a severity branch here.
  */
-export function isBlocking(reason: ReviewReason): boolean {
-  return POLICY[reason.code] === 'block'
+export function isBlocking(reason: ReviewReason, wasLive = false): boolean {
+  const policy = POLICY[reason.code]
+  if (policy === 'withhold') return !wasLive
+  return policy === 'block'
 }
 
 export type GateOutcome =
@@ -302,14 +342,70 @@ export type GateDecision = {
  */
 export function gateDecision(row: ReviewRow, precomputed?: ReviewReason[]): GateDecision {
   const reasons       = precomputed ?? deriveReviewReasons(row)
-  const blocking      = reasons.filter(isBlocking)
-  const informational = reasons.filter(r => !isBlocking(r))
   const wasLive       = row.is_active === true
+  const blocking      = reasons.filter(r => isBlocking(r, wasLive))
+  const informational = reasons.filter(r => !isBlocking(r, wasLive))
 
   const outcome: GateOutcome =
     blocking.length === 0 ? 'publish' : wasLive ? 'attention' : 'hold'
 
   return { outcome, wasLive, blocking, informational, readiness: publishReadiness(reasons) }
+}
+
+/**
+ * What the funder's page said about a row the gate would otherwise publish.
+ *
+ * Paul, 2026-09-02: "auto-publish only rows where the page confirmed at least
+ * one line and contradicted none. Rows the page confirmed nothing on stay for
+ * me by hand." Ten of the sixteen Ready rows that night had been read and
+ * confirmed on nothing, so "no blocking reason" was too loose a bar for a
+ * machine to expose a row on unread.
+ *
+ * This is deliberately NOT a reason code. A row with nothing confirmed is not
+ * wrong, and adding a code would move it out of Ready in the Inbox, where Paul
+ * wants to find it and publish it by hand. It only decides whether the MACHINE
+ * may do that for him. Already-live rows are not asked: republishing one
+ * exposes nothing.
+ *
+ *   confirmed     at least one line the page backs, none it contradicts
+ *   contradicted  the page disagrees with something the row states
+ *   unconfirmed   read but nothing confirmed, or never read at all
+ */
+export type PageStanding = 'confirmed' | 'contradicted' | 'unconfirmed'
+
+export function pageStanding(row: ReviewRow): PageStanding {
+  const s = summariseEvidence(row.field_evidence)
+  if (!s) return 'unconfirmed'
+  if (s.counts.contradicted > 0) return 'contradicted'
+  return s.counts.confirmed > 0 ? 'confirmed' : 'unconfirmed'
+}
+
+/**
+ * May the scheduled run write this decision?
+ *
+ * Two rules on top of the gate, both from 2026-09-02:
+ *   - a not-live row also needs `pageStanding === 'confirmed'`;
+ *   - an already-live row is always allowed, because publishing it changes
+ *     nothing a user sees (see `countsAgainstCap`).
+ */
+export function machineMayPublish(row: ReviewRow, decision: GateDecision): boolean {
+  if (decision.outcome !== 'publish') return false
+  if (decision.wasLive) return true
+  return pageStanding(row) === 'confirmed'
+}
+
+/**
+ * Does applying this decision spend one of the day's publish slots?
+ *
+ * The cap exists to limit EXPOSURE: how many pages become newly visible before
+ * anyone has looked. Republishing a row that is already live exposes nothing,
+ * so it costs nothing. Until 2026-09-02 it did cost a slot, and because the
+ * nightly re-enrich sent changed live rows back to the queue every night, all
+ * five slots went to rows that were already live and nothing new was published
+ * after 13 August.
+ */
+export function countsAgainstCap(decision: GateDecision): boolean {
+  return decision.outcome === 'publish' && !decision.wasLive
 }
 
 /**

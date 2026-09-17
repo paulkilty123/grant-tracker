@@ -13,36 +13,45 @@ const model: DigestModel = {
   lead: 'Two close in the next 6 weeks.',
   closing: [
     { kind: 'pipeline', name: 'Projects for Young People Grants', funder: 'Heathrow Community Trust',
-      deadline: '2026-09-10', days: 10, status: 'In Identified since 25 August.',
+      deadline: '2026-09-10', deadlineLabel: '10 Sep', days: 10,
+      statusPrefix: 'Added 25 Aug · ', statusStrong: 'Identified',
       url: 'https://www.shootsfunding.co.uk/dashboard/search?grant=pfyp', key: 'p1' },
     { kind: 'saved', name: 'A Saved Fund', funder: 'Someone & Co',
-      deadline: '2026-09-17', days: 17, status: 'Saved 3 August, never added to your pipeline.',
+      deadline: '2026-09-17', deadlineLabel: '17 Sep', days: 17,
+      statusPrefix: 'Saved 3 August, never added to your pipeline.', statusStrong: null,
       url: 'https://www.shootsfunding.co.uk/dashboard/search?grant=saved-1', key: 's1' },
   ],
   closingOverflow: 0,
   inProgress: [
-    { name: 'Church and Communities Programme', funder: null, stage: 'Submitted',
-      status: 'In Submitted.', stalled: false, url: 'https://www.shootsfunding.co.uk/dashboard/search?grant=ccp', key: 'ip1' },
+    { name: 'Church and Communities Programme', funder: null, stageLabel: 'Submitted',
+      stalled: false, url: 'https://www.shootsfunding.co.uk/dashboard/search?grant=ccp', key: 'ip1' },
   ],
   inProgressOverflow: 0,
   matches: [
     { title: 'NCVO Learning & Development', funder: 'NCVO', blurb: 'Training programmes.',
-      meta: 'NCVO · rolling', url: 'https://www.shootsfunding.co.uk/dashboard/search?grant=ncvo', key: 'm1' },
+      type: 'in_kind', meta: 'NCVO · rolling', days: null,
+      url: 'https://www.shootsfunding.co.uk/dashboard/search?grant=ncvo', key: 'm1' },
   ],
   matchesOverflow: 0,
   matchTotal: 1,
   matchLabel: 'worth_a_look',
+  newThisWeek: [],
+  structureNotice: null,
   nearMisses: [
-    { title: 'Community Grants Fund', funder: 'X', verdict: 'Ruled out on area.',
-      rule: 'Restricted to Scotland — your org is in England.',
-      condition: 'We read that from their page on 12 June.',
+    { title: 'Network for Social Change — Grants', funder: 'Network for Social Change',
+      type: 'grant', meta: 'Network for Social Change · £25k – £100k',
+      verdict: 'Ruled out on legal structure.',
+      rule: 'They fund companies limited by guarantee, but not CICs. You are both — a CIC limited by guarantee.',
+      condition: 'We read that from their page on 25 June. Funders who write the rule this way have often not considered CICs at all, so it is worth asking.',
       url: 'https://www.shootsfunding.co.uk/dashboard/search?grant=cgf', key: 'nm1' },
   ],
   prompt: { title: 'Get more specific', body: 'Because.', cta: 'Add your specialisms',
             href: 'https://www.shootsfunding.co.uk/dashboard/profile#card-focus' },
   reassurance: 'Nothing else closes before 14 October.',
-  catalogue: { live: 581, addedRecently: 20 },
+  catalogue: { live: 581, addedRecently: 20, addedThisWeek: 9 },
+  edition: null,
   shown: [],
+  debug: { nearMissCandidates: [], nearMissCandidateCount: 0 },
 }
 
 const html = renderDigest(model, {
@@ -89,7 +98,7 @@ describe('email client constraints', () => {
     expect(html).toMatch(/<img[^>]*shoots-logo@2x\.png[^>]*alt="Shoots"/)
   })
   it('gives the logo explicit width and height', () => {
-    expect(html).toMatch(/<img[^>]*shoots-logo@2x\.png[^>]*width="134"[^>]*height="31"/)
+    expect(html).toMatch(/<img[^>]*shoots-logo@2x\.png[^>]*width="146"[^>]*height="43"/)
   })
   it('escapes an ampersand in a funder name', () => {
     expect(html).toContain('Someone &amp; Co')
@@ -109,5 +118,168 @@ describe('honesty rules', () => {
   })
   it('ships the reassurance line', () => {
     expect(html).toContain('Nothing else closes before 14 October.')
+  })
+})
+
+describe('"New this week" is present only when it has rows', () => {
+  it('is absent entirely when empty — it never says there is nothing new', () => {
+    // The catalogue publishes nothing at all in a normal week more often than
+    // not (0 rows in the 7 days before this was built). A section that says
+    // "no new funding this week" every week teaches the reader to skip it.
+    expect(html).not.toContain('New this week')
+    expect(html).not.toMatch(/no new (funding|opportunities)/i)
+  })
+
+  it('is switched off for now even when it has rows: the matcher over-admits (7 Sept 2026)', () => {
+    const withNew = renderDigest({
+      ...model,
+      newThisWeek: [{
+        title: 'A Brand New Fund', funder: 'New Funder', blurb: 'Funds community work.',
+        type: 'grant', meta: 'New Funder · closes 30 Sep', days: 30,
+        url: 'https://www.shootsfunding.co.uk/dashboard/search?grant=new-1', key: 'n1',
+      }],
+    }, { origin: 'https://www.shootsfunding.co.uk', unsubscribeUrl: 'https://www.shootsfunding.co.uk/u', now: new Date('2026-09-07') })
+    expect(withNew).not.toContain('New this week')
+    expect(withNew).not.toContain('A Brand New Fund')
+  })
+})
+
+describe('the catalogue count is a way in', () => {
+  it('links the live count to the Latest Grants view', () => {
+    expect(html).toContain('href="https://www.shootsfunding.co.uk/dashboard/search?entry=live"')
+    expect(html).toContain('581 opportunities live')
+  })
+})
+
+describe('mobile', () => {
+  it('is fluid, not a fixed 600px canvas', () => {
+    // A hard width="600" makes a 375px phone zoom out to fit, which shrinks
+    // every size in the email by a third. This is the whole bug.
+    expect(html).not.toContain('width="600"')
+    // Deliberately a lookbehind: max-width:600px is exactly what we DO want,
+    // and it contains "width:600px" as a substring, so toContain would fail on
+    // the correct markup.
+    expect(html).not.toMatch(/(?<!max-)width:600px/)
+    expect(html).toContain('max-width:600px')
+  })
+
+  it('ships mobile rules that can actually override the inline styles', () => {
+    expect(html).toContain('@media only screen and (max-width: 600px)')
+    // Inline styles beat a stylesheet unless the rule is !important.
+    expect(html).toMatch(/\.gutter\s*\{[^}]*!important/)
+  })
+
+  it('carries the viewport meta', () => {
+    expect(html).toContain('name="viewport"')
+  })
+})
+
+describe('the feedback ask is not footer boilerplate', () => {
+  it('sits on its own cream card with its own button', () => {
+    // As plain grey text at the foot it read as the small print every email
+    // ends with. It asks for the two cheapest sources of improvement there are.
+    // Cream, not the mint of the profile prompt: two mint cards read as one
+    // ask (Paul, 14 Sept 2026).
+    const i = html.indexOf('Seen a funder we are missing')
+    expect(i).toBeGreaterThan(-1)
+    // Generous forward window: inline styles make each element long, and a
+    // short slice lands in the profile prompt's button instead.
+    const block = html.slice(i - 400, i + 1600)
+    expect(block).toContain('#F5F1E8')
+    expect(block).not.toContain('#EDF6F1')
+    expect(block).toContain('>Tell us</a>')
+  })
+})
+
+describe('section labels are structure, not furniture', () => {
+  it('uses one definition for every label', () => {
+    // Three copies of the same declaration is how three labels drift apart.
+    // 20px sentence-case headings since the 7 Sept 2026 design review.
+    const decls = html.match(/font-size:20px;font-weight:600;letter-spacing:-\.4px/g) ?? []
+    const deep = html.match(/font-size:20px;font-weight:600;letter-spacing:-\.4px;color:#1D3C3E/g) ?? []
+    expect(decls.length).toBeGreaterThan(0)
+    expect(deep.length).toBe(decls.length)
+  })
+
+  it('never renders a label in the muted caption colour', () => {
+    expect(html).not.toMatch(/font-size:20px;font-weight:600;letter-spacing:-\.4px;color:#6C6B67/)
+    expect(html).not.toMatch(/letter-spacing:1\.6px;text-transform:uppercase/)
+  })
+})
+
+describe('funding type is a pill, in the app’s own colours', () => {
+  it('draws the tint and foreground for the row’s type', () => {
+    // in_kind on the fixture's match row.
+    expect(html).toContain('background:#F6EFD9')
+    expect(html).toContain('color:#7A5E11')
+    expect(html).toMatch(/>In-kind<\/span>/)
+  })
+
+  it('never uses the saturated rail colours', () => {
+    // Rails belong to the countdown tiles, which are the one signal that has
+    // to shout. Four more competing with them would flatten the urgency.
+    for (const rail of ['#22874C', '#94402A', '#3C79AC', '#B08A20']) {
+      expect(html).not.toContain(rail)
+    }
+  })
+
+  it('labels every opportunity row, grants included', () => {
+    const titles = (html.match(/text-decoration:underline;">[^<]+<\/a>/g) ?? []).length
+    const pills = (html.match(/border-radius:999px;background:#(E4F1EA|F2E8E5|E8EFF5|F6EFD9)/g) ?? []).length
+    expect(pills).toBeGreaterThan(0)
+    expect(titles).toBeGreaterThanOrEqual(pills)
+  })
+})
+
+describe('the promised send day matches the schedule', () => {
+  it('week one says Tuesday, because that is when the catalogue is freshest', () => {
+    // The Monday crawl publishes at 09:00 UTC. A Monday send reports Thursday's
+    // intake; a Tuesday send carries Monday's. The copy has to name the day the
+    // schedule actually uses, or the first email breaks its own promise.
+    const weekOne = renderDigest({ ...model, mode: 'week_one' }, {
+      origin: 'https://www.shootsfunding.co.uk',
+      unsubscribeUrl: 'https://www.shootsfunding.co.uk/api/alerts/unsubscribe?t=tok',
+      now: new Date('2026-09-01T09:00:00Z'),
+    })
+    expect(weekOne).toContain('Next Tuesday this email leads with your deadlines')
+    expect(weekOne).not.toContain('Next Monday')
+  })
+})
+
+describe('a row with no deadline', () => {
+  it('never renders the 999 sort sentinel as a number of days', () => {
+    expect(html).not.toMatch(/>999</)
+  })
+})
+
+describe('edition block', () => {
+  it('is absent outside an edition window', () => {
+    expect(html).not.toContain('This week at Shoots')
+  })
+  it('renders the title, intro and every update inside one', () => {
+    const out = renderDigest({ ...model, edition: {
+      title: 'Your Shoots Funding update',
+      intro: 'Every Tuesday, one email.',
+      updates: ['9 funding opportunities added to the catalogue in the last seven days, 581 open now.', 'Matches are now ranked by fit.'],
+    } }, { origin: 'https://www.shootsfunding.co.uk', unsubscribeUrl: 'https://www.shootsfunding.co.uk/u' })
+    expect(out).toContain('Your Shoots Funding update')
+    expect(out).toContain('Every Tuesday, one email.')
+    expect(out).toContain('This week at Shoots')
+    expect(out).toContain('9 funding opportunities added')
+    expect(out).toContain('Matches are now ranked by fit.')
+    // The ordinary digest still follows it.
+    expect(out).toContain('Upcoming deadlines')
+  })
+})
+
+describe('the sole-trader notice', () => {
+  const notice = 'Shoots matches funding to organisations. Most funders do not fund individuals, so as a sole trader you will see few or no matches. You are welcome to browse the catalogue and save anything worth watching. If you set up a constituted group or a company, change your structure in your profile and the matches open up.'
+  it('renders under the lead with a link to the profile, and nowhere for an organisation', () => {
+    const html = renderDigest({ ...model, structureNotice: notice }, { origin: 'https://www.shootsfunding.co.uk', unsubscribeUrl: 'https://www.shootsfunding.co.uk/u' })
+    expect(html).toContain('Most funders do not fund individuals')
+    expect(html).toContain('href="https://www.shootsfunding.co.uk/dashboard/profile"')
+    expect(html.indexOf('Most funders do not fund')).toBeGreaterThan(html.indexOf(model.lead))
+    const plain = renderDigest(model, { origin: 'https://www.shootsfunding.co.uk', unsubscribeUrl: 'https://www.shootsfunding.co.uk/u' })
+    expect(plain).not.toContain('sole trader')
   })
 })

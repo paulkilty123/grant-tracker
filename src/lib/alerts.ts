@@ -176,6 +176,9 @@ export async function getOrgsWithAlertsEnabled(): Promise<(Organisation & { owne
     .from('organisations')
     .select('*')
     .eq('alerts_enabled', true)
+    // Browsing without a profile (migration 080): nothing to match against,
+    // so no digest, whatever the alerts switch says.
+    .eq('profile_skipped', false)
 
   if (!orgs?.length) return []
 

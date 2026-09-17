@@ -17,8 +17,9 @@ import { emitClientEvent } from '@/lib/events/client'
 import { track } from '@/lib/analytics'
 import { PIPELINE_STAGES, formatDeadline, formatRange, formatCurrency, cn } from '@/lib/utils'
 import type { PipelineItem, PipelineStage, Organisation } from '@/types'
-import { Sparkles, Loader2, Link, ArrowRight, Calendar, AlarmClock, X as XIcon, GripVertical, StickyNote, User as UserIcon, BarChart3, Star } from 'lucide-react'
+import { Sparkles, Loader2, Link, Calendar, AlarmClock, X as XIcon, GripVertical, StickyNote, User as UserIcon, BarChart3, Star } from 'lucide-react'
 import { PipelineModal, STAGE_ICONS, getWritingStage } from '@/components/PipelineModal'
+import { DECLINE_REASONS, declineReasonLabel } from '@/lib/outcomes'
 
 /**
  * The stage ladder.
@@ -256,18 +257,17 @@ function PipelineCard({
       )}
       {stage.id === 'won' && (
         <p className="mt-1.5 text-[10px] font-semibold" style={{ color: '#1B6B3D' }}>
-          {item.outcome_date
-            ? `Awarded ${new Date(item.outcome_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`
-            : 'Awarded'}
+          {item.amount_awarded != null ? `${formatCurrency(item.amount_awarded)} awarded` : 'Awarded'}
+          {item.outcome_date ? ` ${new Date(item.outcome_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}
         </p>
       )}
       {stage.id === 'declined' && (
         <p className="mt-1.5 text-[10px]" style={{ color: '#993C1D' }}>
-          {item.outcome_date
+          {declineReasonLabel(item.outcome_reason) ?? (item.outcome_date
             ? `Closed ${new Date(item.outcome_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`
             : item.deadline
               ? `Closed ${new Date(item.deadline).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`
-              : 'Closed'}
+              : 'Closed')}
         </p>
       )}
 
@@ -313,6 +313,120 @@ function PipelineCard({
 }
 
 // ── Add Modal ─────────────────────────────────
+
+/**
+ * One question at the moment an item is marked won or declined.
+ *
+ * Won: how much, and when. Declined: why, from a short list, and when.
+ * Both are optional and the stage change has already happened by the time
+ * this opens, so skipping costs the user nothing. The answers are what the
+ * central brain learns from, which is why the list is fixed rather than free
+ * text (see src/lib/outcomes.ts).
+ */
+function OutcomeModal({
+  item,
+  stage,
+  onClose,
+  onSave,
+}: {
+  item: PipelineItem
+  stage: 'won' | 'declined'
+  onClose: () => void
+  onSave: (updates: Partial<PipelineItem>) => Promise<void>
+}) {
+  const today = new Date().toISOString().slice(0, 10)
+  const [amount, setAmount] = useState(item.amount_awarded != null ? String(item.amount_awarded) : item.amount_requested != null ? String(item.amount_requested) : '')
+  const [date, setDate] = useState(item.outcome_date ?? today)
+  const [reason, setReason] = useState<string>(item.outcome_reason ?? '')
+  const [note, setNote] = useState(item.outcome_notes ?? '')
+  const [saving, setSaving] = useState(false)
+  const isWon = stage === 'won'
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setSaving(true)
+    const updates: Partial<PipelineItem> = { outcome_date: date || null, outcome_notes: note.trim() || null }
+    if (isWon) updates.amount_awarded = amount ? Number(amount.replace(/[^0-9.]/g, '')) : null
+    else updates.outcome_reason = reason || null
+    await onSave(updates)
+    setSaving(false)
+    onClose()
+  }
+
+  const inputStyle: React.CSSProperties = { width: '100%', border: '1px solid rgba(29,60,62,0.22)', borderRadius: 8, padding: '9px 12px', fontSize: 14, fontFamily: 'inherit', color: '#2C2C2A', background: '#fff' }
+  const labelStyle: React.CSSProperties = { display: 'block', fontFamily: 'var(--font-space-grotesk)', fontSize: 13, fontWeight: 600, color: '#1D3C3E', marginBottom: 6 }
+
+  return (
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white w-full max-w-md rounded-lg overflow-hidden flex flex-col"
+        style={{ boxShadow: '0 16px 64px rgba(26,46,43,0.18)', maxHeight: '90vh' }}
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="px-6 py-5 border-b border-warm flex justify-between items-start flex-shrink-0">
+          <div>
+            <h3 className="text-lg font-bold" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#1D3C3E', letterSpacing: '-0.02em' }}>
+              {isWon ? 'Well done. How much was awarded?' : 'Sorry about that. Do you know why?'}
+            </h3>
+            <p className="text-sm text-mid mt-0.5">
+              {isWon
+                ? 'This keeps your totals honest and helps us show others what funders like this give.'
+                : 'One reason helps us steer you, and others like you, away from the same result.'}
+            </p>
+          </div>
+          <button type="button" onClick={onClose} className="text-light hover:text-mid text-xl leading-none mt-0.5">✕</button>
+        </div>
+
+        <div className="px-6 py-5 space-y-4 overflow-y-auto">
+          <p className="text-sm" style={{ color: '#5F5E5A' }}>{item.grant_name}{item.funder_name ? `, ${item.funder_name}` : ''}</p>
+
+          {isWon ? (
+            <div>
+              <label style={labelStyle} htmlFor="outcome-amount">Amount awarded</label>
+              <div style={{ position: 'relative' }}>
+                <span style={{ position: 'absolute', left: 12, top: 9, fontSize: 14, color: '#8A8986' }}>£</span>
+                <input id="outcome-amount" type="text" inputMode="numeric" value={amount} onChange={e => setAmount(e.target.value)} placeholder="e.g. 5000" style={{ ...inputStyle, paddingLeft: 26 }} autoFocus />
+              </div>
+            </div>
+          ) : (
+            <div>
+              <span style={labelStyle}>Reason</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {DECLINE_REASONS.map(r => (
+                  <label key={r.value} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '8px 10px', borderRadius: 8, border: `1px solid ${reason === r.value ? '#1D3C3E' : 'rgba(29,60,62,0.14)'}`, background: reason === r.value ? '#F1F7E4' : '#fff', cursor: 'pointer' }}>
+                    <input type="radio" name="outcome-reason" value={r.value} checked={reason === r.value} onChange={() => setReason(r.value)} style={{ marginTop: 3 }} />
+                    <span>
+                      <span style={{ display: 'block', fontSize: 14, color: '#2C2C2A' }}>{r.label}</span>
+                      <span style={{ display: 'block', fontSize: 12, color: '#8A8986' }}>{r.help}</span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div>
+            <label style={labelStyle} htmlFor="outcome-date">{isWon ? 'Date awarded' : 'Date of decision'}</label>
+            <input id="outcome-date" type="date" value={date} onChange={e => setDate(e.target.value)} style={inputStyle} />
+          </div>
+
+          <div>
+            <label style={labelStyle} htmlFor="outcome-note">Note <span style={{ fontWeight: 400, color: '#8A8986' }}>(optional)</span></label>
+            <textarea id="outcome-note" value={note} onChange={e => setNote(e.target.value)} rows={2} placeholder={isWon ? 'Anything to remember for the report' : 'What the funder said, in a line'} style={{ ...inputStyle, resize: 'vertical' }} />
+          </div>
+        </div>
+
+        <div className="px-6 py-4 border-t border-warm flex justify-between items-center flex-shrink-0">
+          <button type="button" onClick={onClose} className="text-sm text-mid hover:text-charcoal underline">Skip for now</button>
+          <button type="submit" disabled={saving} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: '#8ECB3C', color: '#173404', opacity: saving ? 0.6 : 1 }}>
+            {saving ? 'Saving' : 'Save'}
+          </button>
+        </div>
+      </form>
+    </div>
+  )
+}
 
 function AddModal({
   orgId,
@@ -414,35 +528,17 @@ function AddModal({
         <div className="px-6 py-5 border-b border-warm flex justify-between items-start flex-shrink-0">
           <div>
             <h3 className="text-lg font-bold" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#1D3C3E', letterSpacing: '-0.02em' }}>Add a fund not listed</h3>
-            <p className="text-sm text-mid mt-0.5">Track a funding opportunity in your pipeline</p>
+            <p className="text-sm text-mid mt-0.5">Track something that is not in the Shoots catalogue yet.</p>
           </div>
           <button onClick={onClose} className="text-light hover:text-mid text-xl leading-none mt-0.5">✕</button>
         </div>
 
         <div className="overflow-y-auto flex-1">
-          {/* Tip: add from funding list */}
-          <div className="mx-6 mt-5 flex items-start gap-3 px-4 py-3 rounded-lg border border-sage/30 bg-sage/5">
-            <Sparkles className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: '#1B6B3D' }} strokeWidth={2} />
-            <div className="text-sm text-[#2C2C2A] leading-relaxed">
-              The fastest way to add a grant is directly from the{' '}
-              <a
-                href="/dashboard/search"
-                className="underline underline-offset-2 font-semibold inline-flex items-center gap-0.5" style={{ color: '#1D3C3E' }}
-              >
-                funding search <ArrowRight className="w-3 h-3" />
-              </a>
-              {' '}— just hit <span className="font-semibold">+ Pipeline</span> on any result.
-            </div>
-          </div>
-
-          {/* Divider */}
-          <div className="flex items-center gap-3 mx-6 mt-5">
-            <div className="flex-1 h-px bg-warm" />
-            <span className="text-xs text-light font-medium uppercase tracking-wider">Or add manually</span>
-            <div className="flex-1 h-px bg-warm" />
-          </div>
-          <p className="text-xs text-mid text-center mt-1.5 mx-6">
-            Found a grant not in our database? Paste the URL below to auto-fill the details, or fill in the form yourself.
+          {/* No "go and use Find Funding instead" tip here. The user clicked
+              "Add a fund not listed", so the catalogue route is the one they
+              could not take. One helper line, then the form. Paul, 2026-09-03. */}
+          <p className="text-xs text-mid text-center mt-5 mx-6">
+            Paste the funder&apos;s page and we will fill in what we can, or type the details yourself.
           </p>
 
           {/* URL auto-fill */}
@@ -548,6 +644,7 @@ export default function PipelinePage() {
   const [loading, setLoading] = useState(true)
   const [selectedItem, setSelectedItem] = useState<PipelineItem | null>(null)
   const [showAdd, setShowAdd] = useState(false)
+  const [outcomePrompt, setOutcomePrompt] = useState<{ item: PipelineItem; stage: 'won' | 'declined' } | null>(null)
   const [showStarredOnly, setShowStarredOnly] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   // Builder bridge: which pipeline items already have an application (id), and
@@ -713,6 +810,7 @@ export default function PipelinePage() {
     emitClientEvent(item.org_id, 'pipeline_stage_changed', {
       opportunity_id: null, pipeline_item_id: id, from_stage: item.stage, to_stage: stageId,
     })
+    if ((stageId === 'won' || stageId === 'declined') && item.stage !== stageId) setOutcomePrompt({ item: { ...item, stage: stageId }, stage: stageId })
     const stageName = PIPELINE_STAGES.find(s => s.id === stageId)?.label ?? stageId
     if (stageId === 'won' && item.stage !== 'won' && await hideWonGrantFromMatches(item)) {
       showToast('🏆 Won — hidden from Find Funding for a year')
@@ -733,6 +831,7 @@ export default function PipelinePage() {
         opportunity_id: null, pipeline_item_id: id, from_stage: beforeItem.stage, to_stage: stage,
       })
     }
+    if ((stage === 'won' || stage === 'declined') && beforeItem && beforeItem.stage !== stage) setOutcomePrompt({ item: { ...beforeItem, stage }, stage })
     const stageLabel = PIPELINE_STAGES.find(s => s.id === stage)?.label
     if (stage === 'won' && beforeItem && beforeItem.stage !== 'won' && await hideWonGrantFromMatches(beforeItem)) {
       showToast('🏆 Won — hidden from Find Funding for a year')
@@ -817,7 +916,7 @@ export default function PipelinePage() {
           {items.length > 0 && (() => {
             const activeItems = items.filter(i => !['won', 'declined'].includes(i.stage))
             const activeTotal = activeItems.reduce((s, i) => s + (i.amount_max ?? i.amount_requested ?? 0), 0)
-            const wonTotal    = items.filter(i => i.stage === 'won').reduce((s, i) => s + (i.amount_requested ?? i.amount_max ?? 0), 0)
+            const wonTotal    = items.filter(i => i.stage === 'won').reduce((s, i) => s + (i.amount_awarded ?? i.amount_requested ?? i.amount_max ?? 0), 0)
             const total       = activeTotal + wonTotal
             // Closer than the others were, but a pipeline total is rarely a
             // round number and one decimal still rounds it. Shared version.
@@ -928,18 +1027,23 @@ export default function PipelinePage() {
                 {/* Count and vocabulary on one line in a pill, rather than
                     stacked. Stacked, the 8px vocabulary line was smaller than
                     anything else on the board and read as a rendering artefact. */}
-                <span className="ml-auto text-[11.5px] font-bold" style={{ color: headerCol, background: 'rgba(255,255,255,0.72)', borderRadius: 999, padding: '2px 9px', fontFamily: 'var(--font-space-grotesk)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                {/* Count only. With the vocabulary word inside the pill the
+                    pill won the width contest and the stage name truncated to
+                    "IDEN…" at ordinary laptop widths. The word survives as the
+                    pill's tooltip. Paul, 2026-09-03. */}
+                <span className="ml-auto text-[11.5px] font-bold" title={`${stageItems.length} ${STAGE_VOCAB[stage.id]}`} style={{ color: headerCol, background: 'rgba(255,255,255,0.72)', borderRadius: 999, padding: '2px 9px', fontFamily: 'var(--font-space-grotesk)', whiteSpace: 'nowrap', flexShrink: 0 }}>
                   {stageItems.length}
-                  <span style={{ fontWeight: 600, opacity: 0.7, marginLeft: 4, letterSpacing: 0 }}>{STAGE_VOCAB[stage.id]}</span>
                 </span>
               </div>
               {stageItems.length === 0 && (() => {
                 /* With nothing anywhere on the board there is nothing TO drag,
-                   so "Drag here" is a dead instruction on every column at once
-                   — exactly when a first-time user is reading them. It becomes
-                   "Add here" instead, and it opens the add form, because a
-                   zone that says Add and does nothing when clicked is worse
-                   than one that says nothing at all. */
+                   so "Drag here" is a dead instruction on every column at once,
+                   exactly when a first-time user is reading them. It becomes
+                   "Find a grant" and goes to Find Funding, where + Pipeline
+                   puts a catalogue grant on the board. It used to open the
+                   "fund not listed" form, which is the route for grants we do
+                   NOT have, the wrong first step for someone with an empty
+                   board. Paul, 2026-09-11. */
                 const boardEmpty = items.length === 0
                 const box: React.CSSProperties = {
                   minHeight: 152, borderRadius: 11, fontSize: 13.5, fontWeight: 500,
@@ -947,11 +1051,11 @@ export default function PipelinePage() {
                   border: `1.5px dashed ${stage.id === 'declined' ? 'rgba(153,60,29,0.24)' : 'rgba(29,60,62,0.20)'}`,
                 }
                 return boardEmpty ? (
-                  <button type="button" onClick={() => setShowAdd(true)}
+                  <a href="/dashboard/search"
                     className="flex items-center justify-center text-center transition-colors hover:bg-[rgba(255,255,255,0.45)]"
-                    style={{ ...box, cursor: 'pointer', fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, color: '#1D3C3E' }}>
-                    + Add here
-                  </button>
+                    style={{ ...box, cursor: 'pointer', fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, color: '#1D3C3E', textDecoration: 'none' }}>
+                    + Find a grant
+                  </a>
                 ) : (
                   <div className="flex items-center justify-center text-center" style={box}>Drag here</div>
                 )
@@ -992,6 +1096,23 @@ export default function PipelinePage() {
         />
       )}
 
+      {outcomePrompt && (
+        <OutcomeModal
+          item={outcomePrompt.item}
+          stage={outcomePrompt.stage}
+          onClose={() => setOutcomePrompt(null)}
+          onSave={async updates => {
+            const id = outcomePrompt.item.id
+            try {
+              await updatePipelineItem(id, updates as Parameters<typeof updatePipelineItem>[1])
+              setItems(prev => prev.map(i => i.id === id ? { ...i, ...updates } : i))
+              showToast(outcomePrompt.stage === 'won' ? 'Outcome saved' : 'Reason saved, thank you')
+            } catch (e) {
+              showToast(describePipelineWriteError(e, 'save the outcome'))
+            }
+          }}
+        />
+      )}
       {showAdd && org && (
         <AddModal
           orgId={org.id}

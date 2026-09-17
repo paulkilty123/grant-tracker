@@ -1,10 +1,18 @@
-// Builder UI tokens — the Grant Tracker design system palette + fonts,
-// shared across builder surfaces so every screen reads from one place.
+// Builder UI tokens, shared across the Applications and Projects surfaces so
+// every screen reads from one place.
+//
+// Band D, 2026-09-02: this file used to be a seventh palette. It carried the
+// three retired colours (lime, mid green, the old grey) and the biggest single
+// accessibility failure in the app: textTertiary at 3.50:1 on white, used 121
+// times across 11 files. Two replacements fixed it without collapsing the
+// three-level text hierarchy:
+//   textTertiary #8A8986 -> #6C6B67  (5.33 white, 4.73 cream, 5.10 pageBg)
+//   greenMid     #639922 -> gone; sage (#3B6D11, 6.21) in its place
+// lime went with primaryBtn(): deep on lime passed (7.03) but lime is not in
+// the palette, and the admin surfaces that justified keeping it never used it.
 
 export const T = {
-  lime:          '#8ECB3C',
   greenDeep:     '#173404',
-  greenMid:      '#639922',
   sage:          '#3B6D11',
   pageBg:        '#FAFAF7',
   cream:         '#F5F1E8',
@@ -13,9 +21,15 @@ export const T = {
   white:         '#FFFFFF',
   textPrimary:   '#2C2C2A',
   textSecondary: '#5F5E5A',
-  textTertiary:  '#8A8986',
+  textTertiary:  '#6C6B67',
   border:        'rgba(23, 52, 4, 0.08)',
   borderStrong:  'rgba(23, 52, 4, 0.16)',
+  // The two places green survives: the tick that means done, and the chip
+  // that means eligible or in progress. 5.58:1 as text on doneBg.
+  done:          '#1B6B3D',
+  doneBg:        '#E4F1EA',
+  // Question-number badge ground (deep text on it, 13:1).
+  mint:          '#EDF6F1',
   greenBg:       '#E8F2D8',
   greenText:     '#3F6018',
   coral:         '#D85A30',
@@ -39,22 +53,10 @@ export function inputStyle(): React.CSSProperties {
   }
 }
 
-/** Primary CTA — lime fill (genuinely primary actions only). */
-export function primaryBtn(disabled = false): React.CSSProperties {
-  return {
-    fontFamily: UI, fontWeight: 600, fontSize: 14, color: T.greenDeep,
-    background: T.lime, border: 'none', padding: '10px 20px', borderRadius: 8,
-    cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.6 : 1,
-  }
-}
-
 /**
- * Deep fill — the band C primary.
- *
- * Separate from primaryBtn() rather than replacing it: that one is lime and is
- * shared with the applications pages and two admin surfaces, where the colour
- * cleanup has not been done. Swapping it here would recolour all of them at
- * once, including admin, whose rebuild is deliberately parked.
+ * Deep fill, the one filled button. Was `primaryBtn()` (lime) beside this
+ * until 2026-09-02; that had six call sites, all in Applications, and the
+ * admin surfaces its comment said shared it never referenced it.
  */
 export function deepBtn(disabled = false): React.CSSProperties {
   return {
@@ -64,13 +66,23 @@ export function deepBtn(disabled = false): React.CSSProperties {
   }
 }
 
-/** Forest fill — utility / navigation (Continue, Done). */
-export function forestBtn(disabled = false): React.CSSProperties {
+/**
+ * Outline, the same shape as deepBtn for the same action where only one row
+ * may be filled (the project match list). Also the underlined-link colour:
+ * links and headings are both deep, so the underline carries the affordance.
+ */
+export const DEEP = '#1D3C3E'
+export function outlineBtn(): React.CSSProperties {
   return {
-    fontFamily: UI, fontWeight: 600, fontSize: 14, color: '#F1F7E4',
-    background: T.greenDeep, border: 'none', padding: '10px 20px', borderRadius: 8,
-    cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.6 : 1,
+    fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: DEEP,
+    background: T.white, border: `1.5px solid ${DEEP}`, padding: '9.5px 18.5px', borderRadius: 999,
+    cursor: 'pointer',
   }
+}
+
+/** Inline link: deep, underlined. */
+export function linkStyle(): React.CSSProperties {
+  return { color: DEEP, fontWeight: 600, textDecoration: 'underline', textUnderlineOffset: 2, cursor: 'pointer' }
 }
 
 /** Ghost/text — lowest-priority supporting actions. */

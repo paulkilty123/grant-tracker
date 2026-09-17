@@ -9,6 +9,8 @@ import { asStructures, asExclusions, compareStructures, newExclusions, namesJuri
 // it was already part of this module's surface.
 import { PAGE_CAP, excerpt } from '../page-excerpt'
 import { htmlToText } from '../page-text'
+import { pageHash, unchangedDecision, type UnchangedInput } from './page-hash'
+import { classifyPage, type UnreadableReason } from './page-readable'
 export { excerpt } from '../page-excerpt'
 
 /**
@@ -92,6 +94,10 @@ export type VerifyRow = {
    *  states is not reported as new when we already carry it. */
   location_tag?:   string | null
   funder_brief?:   Record<string, unknown> | null
+  /** Pages a reviewer or a script has banked as the ones that state this
+   *  fund's terms. Read before any guessed link when a figure we show is
+   *  missing from apply_url: that is where the figure usually is. */
+  grant_sources?:  { url?: string | null; label?: string | null }[] | null
 }
 
 export type GateFailure =
@@ -164,6 +170,12 @@ export type VerifyResult = {
   notes:     string[]
   /** Set on round_closed: the passed date the page states, and its quote. */
   closedRound?: { deadline: string; quote: string }
+  /** Fingerprint of the page text this read fetched. Stored on the page-read
+   *  stamp so the next read can tell whether anything moved. */
+  pageHash?: string
+  /** True when the page matched its last hash and the model was not called.
+   *  The row's previous evidence still stands; nothing new was learned. */
+  unchanged?: boolean
   /** Set when the answer came from a page one level down from apply_url. */
   followedUrl?: string
   /** Every page this run actually read, apply_url first. One URL per row was
@@ -490,18 +502,19 @@ function stripHtml(html: string): string {
 
 export type Fetched =
   /** `source` is the raw page, kept so a later hop can re-score its links for a
-   *  different question. `links` is the funding-biased default. */
-  | { text: string; via: 'direct' | 'proxy'; links: string[]; source: string; url: string }
+   *  different question. `links` is the funding-biased default. `hash` is the
+   *  fingerprint of the WHOLE page text, before the excerpt cap, so a change
+   *  below the cap still registers. */
+  | { text: string; via: 'direct' | 'proxy'; links: string[]; source: string; url: string; hash: string }
   | { error: string }
 
 export async function fetchPage(url: string, forceProxy = false): Promise<Fetched> {
   const shape = (raw: string, via: 'direct' | 'proxy'): Fetched => {
     const isMarkdown = via === 'proxy'
     const links = candidateLinks(raw, url, isMarkdown)
-    const text = isMarkdown
-      ? excerpt(raw.replace(/\s{2,}/g, ' ').trim())
-      : stripHtml(raw)
-    return { text, via, links, source: raw, url }
+    const full = isMarkdown ? raw.replace(/\s{2,}/g, ' ').trim() : htmlToText(raw)
+    const text = excerpt(full)
+    return { text, via, links, source: raw, url, hash: pageHash(full) }
   }
 
   if (!forceProxy) {
@@ -731,12 +744,34 @@ Shape:
  "still_listed":{"value":true,"quote":null},"is_grant":{"value":true,"quote":null}}}`
 }
 
-function parseJson(raw: string): Record<string, unknown> | null {
+export function parseJson(raw: string): Record<string, unknown> | null {
   const cleaned = raw.trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim()
   try { return JSON.parse(cleaned) } catch { /* fall through */ }
-  const match = cleaned.match(/\{[\s\S]*\}/)
-  if (!match) return null
-  try { return JSON.parse(match[0]) } catch { return null }
+  // Greedy first-to-last brace fails when prose follows the object, or when
+  // the model emits two objects. Walk the braces from the first "{" and stop
+  // at the one that balances it, string-aware so a "}" inside a quote does
+  // not close the object early.
+  const start = cleaned.indexOf('{')
+  if (start < 0) return null
+  let depth = 0, inStr = false, esc = false
+  for (let i = start; i < cleaned.length; i++) {
+    const ch = cleaned[i]
+    if (inStr) {
+      if (esc) esc = false
+      else if (ch === '\\') esc = true
+      else if (ch === '"') inStr = false
+      continue
+    }
+    if (ch === '"') inStr = true
+    else if (ch === '{') depth++
+    else if (ch === '}') {
+      depth--
+      if (depth === 0) {
+        try { return JSON.parse(cleaned.slice(start, i + 1)) } catch { return null }
+      }
+    }
+  }
+  return null
 }
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
@@ -824,6 +859,73 @@ export type HopScope = 'timing' | 'any'
  * detail at all is a worse starting point than a page missing one answer, and
  * a multi-fund page is a catalogue finding rather than a data gap.
  */
+/**
+ * Fields we show a figure for that the page read so far did not state.
+ *
+ * THE VERIFIER JUDGED A ROW AGAINST ONE PAGE. Found 2026-09-04: eleven live rows
+ * flagged "we state a figure this page does not", and in every one checked the
+ * figure was real and on another page of the same site. Yapp's £3,000 is on its
+ * homepage while apply_url is how-to-apply; The Fore's £45,000 is on
+ * what-we-offer while apply_url is who-we-fund. The 2 September amount sweep
+ * nulled both on the strength of that one-page read. This is the signal that
+ * turns an unsupported figure into a reason to read further, not a verdict.
+ */
+export function unsupportedFigures(current: Pick<VerifyResult, 'evidence'>): ('amount' | 'deadline')[] {
+  const out = new Set<'amount' | 'deadline'>()
+  for (const e of current.evidence) {
+    if (e.agrees !== null) continue
+    if ((e.field === 'amount_min' || e.field === 'amount_max') && e.note === AMOUNT_UNSUPPORTED_NOTE) out.add('amount')
+    if (e.field === 'deadline' && e.note === DEADLINE_UNSUPPORTED_NOTE) out.add('deadline')
+  }
+  return Array.from(out)
+}
+
+/**
+ * The banked sources worth reading next, on this funder's site, not yet read.
+ *
+ * Same site only: a source on a directory or a news site is context for a
+ * reviewer, not a page this fund's terms can be verified against. Order is the
+ * order they were banked, which is the order somebody thought they mattered.
+ */
+const BANKED_HINT: Record<LinkWant, RegExp> = {
+  funding: /£|amount|grant size|how much|what we offer|award|funding/i,
+  timing:  /deadline|dates?|when|round|apply|timeline|window/i,
+  detail:  /eligib|who can|criteria|what we (do not |don.t )?fund|exclusion/i,
+}
+
+/**
+ * ...ranked by what the hop is looking for. Yapp banks four pages and the
+ * £3,000 is on the fourth, its homepage, labelled "grant size"; the engine
+ * has a three-page budget and spent it on the first two (2026-09-05). A label
+ * or URL that names the thing we lack goes first; banked order breaks ties.
+ */
+export function bankedSourceTargets(
+  row: Pick<VerifyRow, 'apply_url' | 'grant_sources'>,
+  visited: string[],
+  want?: LinkWant,
+): string[] {
+  if (!row.apply_url || !Array.isArray(row.grant_sources)) return []
+  const norm = (u: string) => u.replace(/\/$/, '').split('#')[0]
+  const seen = new Set(visited.map(norm))
+  const host = (u: string): string | null => { try { return new URL(u).hostname } catch { return null } }
+  const applyHost = host(row.apply_url)
+  if (!applyHost) return []
+  const out: { url: string; hinted: boolean; i: number }[] = []
+  row.grant_sources.forEach((s, i) => {
+    const url = typeof s?.url === 'string' ? s.url.trim() : ''
+    if (!/^https?:\/\//i.test(url)) return
+    const h = host(url)
+    if (!h || !sameSite(applyHost, h)) return
+    const n = norm(url)
+    if (seen.has(n)) return
+    seen.add(n)
+    const hint = want ? BANKED_HINT[want] : null
+    const hinted = !!hint && hint.test(`${typeof s?.label === 'string' ? s.label : ''} ${url}`)
+    out.push({ url, hinted, i })
+  })
+  return out.sort((a, b) => Number(b.hinted) - Number(a.hinted) || a.i - b.i).map(o => o.url)
+}
+
 export function decideHop(
   current: Pick<VerifyResult, 'gate' | 'outcome' | 'evidence' | 'fundsOnPage'>,
   rowTitle: string,
@@ -838,6 +940,15 @@ export function decideHop(
     return { want: 'funding', why: 'the page covers several funds and one of them is ours' }
   }
   if (!(current.gate.pass && current.outcome === 'verified')) return null
+
+  // A figure we show that this page did not state is the first reason to read
+  // on. It outranks the timing and detail questions because it is the one that
+  // ends in a wrong null if nobody looks further.
+  const missing = unsupportedFigures(current)
+  if (missing.length > 0) {
+    return { want: missing.includes('amount') ? 'funding' : 'timing',
+             why: `the page did not state the ${missing.join(' and ')} we show` }
+  }
 
   // Stop early when the question is answered. The common case costs nothing
   // extra, which is what makes this affordable at catalogue scale.
@@ -913,8 +1024,24 @@ export async function verifyRow(
   row: VerifyRow,
   anthropic: Anthropic,
   /** `hopOn` defaults to production behaviour. The wider scope is under
-   *  measurement and is passed only by scripts/measure-hop.ts. */
-  opts: { hopOn?: HopScope } = {},
+   *  measurement and is passed only by scripts/measure-hop.ts.
+   *
+   *  `hostGuard` is how a caller stops eleven Arts Council rows each discovering
+   *  the same Cloudflare wall in the same run. It is consulted BEFORE the fetch
+   *  and told the outcome after, so the caller can hold whatever state it likes
+   *  — this module stays stateless. */
+  opts: {
+    hopOn?: HopScope
+    /** What the row's last read recorded, so an unchanged page can skip the
+     *  model. Omit to always read, which is what scripts want. */
+    unchanged?: Omit<UnchangedInput, 'currentHash'>
+    hostGuard?: {
+      /** Non-null means skip: the host is inside its backoff window. */
+      skip: (url: string) => { reason: string; hoursLeft: number } | null
+      /** Told after every read, so the caller can grow or clear the streak. */
+      record: (url: string, reason: UnreadableReason | null) => void
+    }
+  } = {},
 ): Promise<VerifyResult> {
   const base = {
     id: row.id, title: row.title, funder: row.funder, url: row.apply_url,
@@ -924,6 +1051,25 @@ export async function verifyRow(
 
   if (!row.apply_url) {
     return { ...base, outcome: 'fixable_link', gate: { pass: false, failure: 'fetch_failed', detail: 'no apply_url on the row' } }
+  }
+
+  // A HOST INSIDE ITS BACKOFF IS NOT READ AT ALL.
+  //
+  // Without this, classifying a wall as `no_content` — which is retryable, so
+  // the proxy gets its turn — turns a walled host into a loop: the row never
+  // resolves, stays due, and spends two fetches on every visit for ever. 16 of
+  // the 33 walled rows measured on 2026-09-01 read fine hours later, so the
+  // wall is intermittent and the row genuinely never settles.
+  //
+  // The skip is reported as its own gate detail rather than as a generic
+  // failure, because a skip nobody can see is indistinguishable from a host
+  // being read and always passing.
+  const guarded = opts.hostGuard?.skip(row.apply_url)
+  if (guarded) {
+    return { ...base, outcome: 'fixable_link',
+             gate: { pass: false, failure: 'fetch_failed',
+                     detail: `host backed off after ${guarded.reason}, ${guarded.hoursLeft}h left` },
+             notes: [`skipped: this host is inside its read backoff`] }
   }
 
   let usage = { input: 0, output: 0 }
@@ -952,18 +1098,64 @@ export async function verifyRow(
       if (forceProxy) break
       continue
     }
-    if (fetched.text.length < 200) {
-      keep({ ...base, usage, outcome: 'fixable_link', gate: { pass: false, failure: 'no_content', detail: `only ${fetched.text.length} chars of text` } })
+    // NOTHING BUT A PAGE WE ACTUALLY READ MAY REACH THE MODEL.
+    //
+    // This used to be `fetched.text.length < 200`, and a length test cannot do
+    // this job. Cloudflare's interstitial is 268 characters through the proxy
+    // and 491 direct, Imperva's is 678, a soft 404 is 323, a bare directory
+    // index is 133. All of them cleared the floor, went to the model as though
+    // they were the funder's page, and came back — quite correctly — as "this
+    // page does not describe that fund". That was stamped onto the row as
+    // `fixable_link: wrong_fund`, which is a claim about the FUNDER made from a
+    // page nobody read. 21 of the 87 rows carrying it were exactly this.
+    //
+    // `classifyPage` returns a DISCRIMINATED UNION, and that is the safeguard
+    // rather than this comment: `read.text` does not exist on the failure
+    // branch, so the compiler will not let a future edit hand an interception
+    // notice to `runModel`. The old shape was a boolean beside a string, and a
+    // boolean is something you can forget to check.
+    // `fetched.source` is the RAW response — HTML on a direct read, markdown
+    // through the proxy. Passed because the parked-domain stub is invisible
+    // after text extraction: strip the script and nothing is left, so the
+    // classifier would see `empty` and a dead domain would keep being retried.
+    const read = classifyPage(fetched.text, fetched.via === 'direct' ? fetched.source : null)
+    opts.hostGuard?.record(row.apply_url, read.ok ? null : read.reason)
+    if (!read.ok) {
+      // `no_content` rather than `wrong_fund` is what makes this
+      // self-correcting: it is in the retryable set below, so the proxy gets
+      // its turn, and when that is blocked too the row ends as a read failure
+      // instead of as an accusation. It also skips the model call, so a walled
+      // host now costs nothing.
+      keep({ ...base, usage, outcome: 'fixable_link',
+             gate: { pass: false, failure: 'no_content', detail: `${read.reason}: ${read.detail}` } })
       if (forceProxy) break
       continue
     }
 
     if (followedFrom.length === 0) followedFrom = fetched.links
     lastFetched = { source: fetched.source, url: fetched.url, isMarkdown: fetched.via === 'proxy', links: fetched.links }
+
+    // AN UNCHANGED PAGE COSTS A FETCH, NOT A READ.
+    //
+    // 355 of 389 reads in the week to 11 Sept found nothing new. If the whole
+    // page text hashes to what the last passed read stored, and the row is not
+    // flagged or at a dated checkpoint, the previous evidence still stands and
+    // the model is not called. Only on the direct attempt: a proxy re-read is
+    // asked for because the direct one failed its gate, so its hash is new.
+    if (!forceProxy && opts.unchanged) {
+      const decision = unchangedDecision({ ...opts.unchanged, currentHash: fetched.hash })
+      if (decision.skip) {
+        return { ...base, usage, outcome: 'verified', gate: { pass: true, fund_on_page: null },
+                 pageHash: fetched.hash, unchanged: true,
+                 notes: [`unchanged: ${decision.reason}; model not called`] }
+      }
+    }
+
     // The reader proxy is a transport, not a source: the fact still came from
     // the funder's own page, so that is the URL the evidence cites.
     modelCalls++
-    const result = await runModel(row, fetched.text, anthropic, base, row.apply_url)
+    const result = await runModel(row, read.text, anthropic, base, row.apply_url)
+    result.pageHash = fetched.hash
     usage = { input: usage.input + (result.usage?.input ?? 0), output: usage.output + (result.usage?.output ?? 0) }
     result.usage = usage
     if (fetched.via === 'proxy') result.notes = [...result.notes, 'read through the reader proxy']
@@ -990,10 +1182,13 @@ export async function verifyRow(
     if (!decision) break
     const { want, why } = decision
 
+    // Banked sources before guessed links: a page somebody banked as the one
+    // that states the terms beats a link scored by its wording.
+    const banked = bankedSourceTargets(row, visited, want)
     const scored = lastFetched
       ? candidateLinks(lastFetched.source, lastFetched.url, lastFetched.isMarkdown, want, visited)
       : []
-    const target = scored[0] ?? followedFrom.find(l => !visited.includes(norm(l)))
+    const target = banked[0] ?? scored[0] ?? followedFrom.find(l => !visited.includes(norm(l)))
     if (!target) {
       current.notes = [...current.notes, `nothing to follow, though ${why}`]
       break
@@ -1011,14 +1206,16 @@ export async function verifyRow(
     lastFetched = { source: fetched.source, url: fetched.url, isMarkdown: fetched.via === 'proxy', links: fetched.links }
 
     modelCalls++
-    const deeper = await runModel(row, fetched.text, anthropic, base, target)
+    const deeper = await runModel(row, fetched.text, anthropic, base, target, banked.includes(target))
     usage = { input: usage.input + (deeper.usage?.input ?? 0), output: usage.output + (deeper.usage?.output ?? 0) }
 
     if (!deeper.gate.pass) {
       // A hop that lands on the wrong fund is not a finding about our row. Keep
       // what we had and record where we went, rather than downgrading a sound
       // verdict because one link was mis-scored.
-      current.notes = [...current.notes, `followed ${target} because ${why}, and it did not describe this fund`]
+      const g = deeper.gate as { failure?: string; detail?: string }
+      current.notes = [...current.notes,
+        `followed ${target} because ${why}, and it was dropped: ${g.failure ?? 'gate failed'}${g.detail ? ` (${g.detail})` : ''}${banked.includes(target) ? ' [banked]' : ' [scored link]'}`]
       current.usage = usage
       break
     }
@@ -1057,6 +1254,15 @@ async function runModel(
   base: Omit<VerifyResult, 'outcome' | 'gate'>,
   /** The page these facts came from — stamped onto every piece of evidence. */
   sourceUrl: string | null,
+  /**
+   * A page somebody banked on the funder's own site as the one that states
+   * this fund's terms. The "is our fund on this page" gate is skipped for it:
+   * The Fore's what-we-offer page states "Up to £45,000 over one to three
+   * years" without naming the programme the way our row does, and the gate
+   * threw the hop away before any figure was read (2026-09-05). The banking
+   * IS the identification; the model is asked only what the page states.
+   */
+  trusted = false,
 ): Promise<VerifyResult> {
   // One clock read for the whole call: the prompt and the comparison below must
   // agree on what day it is, or a date could be "future" to one and "past" to
@@ -1065,7 +1271,12 @@ async function runModel(
 
   const res = await anthropic.messages.create({
     model: MODEL,
-    max_tokens: 1200,
+    // 2000, not 1200: Sussex Community Foundation's Main Grants page, read as
+    // a banked hop for Lewes Fund on 2026-09-05, came back as unparseable JSON
+    // twice running. The reply was cut at the limit mid-object, and the stamp
+    // said only "unparseable". The stop reason is now in the detail, so a
+    // truncation cannot pass as a model error again.
+    max_tokens: 2000,
     messages: [{ role: 'user', content: buildPrompt(row, pageText, todayISO) }],
   })
   const usage = { input: res.usage.input_tokens, output: res.usage.output_tokens }
@@ -1073,7 +1284,9 @@ async function runModel(
   const parsed = parseJson(text)
 
   if (!parsed) {
-    return { ...base, usage, outcome: 'fixable_link', gate: { pass: false, failure: 'no_content', detail: 'model returned unparseable JSON' } }
+    return { ...base, usage, outcome: 'fixable_link',
+             gate: { pass: false, failure: 'no_content',
+                     detail: `model returned unparseable JSON (stop_reason ${res.stop_reason ?? 'unknown'}, ${usage.output} output tokens; reply began ${JSON.stringify(text.slice(0, 160))})` } }
   }
 
   const g = (parsed.gate ?? {}) as {
@@ -1088,14 +1301,18 @@ async function runModel(
     && fundOnPage !== null
     && (namesMatch(row.title, fundOnPage) || (row.funder ? namesMatch(row.funder, fundOnPage) : false))
 
+  const gateNotes: string[] = []
   if (g.describes_our_fund !== true && !selfContradicted) {
-    return {
-      ...base, usage, outcome: 'fixable_link',
-      gate: { pass: false, failure: 'wrong_fund', fund_on_page: fundOnPage,
-              detail: fundOnPage ? `page describes "${fundOnPage}"` : 'our fund is not on this page' },
+    if (!trusted) {
+      return {
+        ...base, usage, outcome: 'fixable_link',
+        gate: { pass: false, failure: 'wrong_fund', fund_on_page: fundOnPage,
+                detail: fundOnPage ? `page describes "${fundOnPage}"` : 'our fund is not on this page' },
+      }
     }
+    gateNotes.push(`banked page read without the fund-name gate${fundOnPage ? ` (model saw "${fundOnPage}")` : ''}`)
   }
-  if (g.has_funding_detail !== true) {
+  if (g.has_funding_detail !== true && !trusted) {
     return {
       ...base, usage, outcome: 'fixable_link',
       gate: { pass: false, failure: 'no_funding_detail', fund_on_page: fundOnPage,
@@ -1132,7 +1349,7 @@ async function runModel(
   const proposals: Proposal[] = []
   const confirmed: string[] = []
   const notFound: string[] = []
-  const notes: string[] = []
+  const notes: string[] = [...gateNotes]
   const evidence: EvidenceInput[] = []
 
   /**

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { getAdminDb } from '@/lib/admin/admin-db'
 import Anthropic from '@anthropic-ai/sdk'
 import { syncLocationFields, preserveEligibilityFields } from '@/lib/funder-brief'
 import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
@@ -56,10 +56,7 @@ const AMOUNTS_SOURCE = 'ai_extract:amounts:v1'
 // whole set rather than accumulating duplicates.
 const CHECKS_SOURCE = 'system:enrich_checks:v1'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+const supabase = getAdminDb()
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY!,
@@ -303,6 +300,13 @@ export async function POST(req: NextRequest) {
   if (pastedContent && pastedContent.trim().length > 100) {
     sections.push(`Primary source (pasted):\n---\n${pastedContent.trim().slice(0, 10000)}\n---`)
     primaryFetchDebug = 'used pasted content'
+    // A pasted page IS the page. Until 2026-09-02 this path left the flag
+    // false, so a brief written from text a reviewer supplied by hand was
+    // stamped knowledge_fallback, and the queue then raised "page unreadable"
+    // on the very row somebody had just read for it. Three Arts Council rows
+    // came back labelled as written from memory with the page in front of the
+    // model.
+    fetchedFromUrl = true
   } else if (grant.apply_url) {
     const primaryUrl = grant.apply_url
     /**
@@ -399,6 +403,31 @@ export async function POST(req: NextRequest) {
   }
 
   const combinedContent = sections.length > 0 ? sections.join('\n\n') : ''
+  // A BRIEF WRITTEN FROM MEMORY MUST NOT REPLACE ONE WRITTEN FROM THE PAGE.
+  //
+  // When the fetch fails this route still writes, stamping the result
+  // `knowledge_fallback`. On a host that blocks us — Arts Council, Groundwork,
+  // Historic England, several community foundations — every re-enrich would
+  // therefore downgrade a real brief to a remembered one, and the review queue
+  // would then raise "Page unreadable" on a row that was fine an hour earlier.
+  // Nothing stopped that until 2026-09-04, when a 105-row enrichment pass was
+  // about to run across exactly those hosts.
+  //
+  // Refuses the write rather than merging: the two briefs disagree field by
+  // field and there is no way to tell which half came from the page. Placed
+  // BEFORE the model call, so a refusal costs nothing.
+  {
+    const prevSource = (grant.funder_brief as { source?: unknown } | null)?.source
+    if (!fetchedFromUrl && prevSource === 'live_fetch') {
+      console.warn('[enrich-grant] fetch failed; kept the existing live_fetch brief', { grantId, primaryFetchDebug })
+      return NextResponse.json({
+        success: true, skipped: 'fetch_failed_kept_live_brief',
+        detail: 'The page could not be read, and this row already has a brief written from it. Nothing was overwritten.',
+        primaryFetchDebug,
+      })
+    }
+  }
+
   const sourceNote = fetchedFromUrl
     ? 'Content was fetched live from the funder\'s website.'
     : 'The funder\'s website could not be fetched — use your training knowledge about this UK funder to fill in as many fields as possible, and note any uncertainty.'

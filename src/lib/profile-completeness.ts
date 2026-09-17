@@ -143,7 +143,7 @@ export const PROFILE_PROMPTS: ProfilePrompt[] = [
   {
     field: 'Grant size range',
     title: 'How much are you looking for?',
-    body:  'We’re showing you £500 grants and £500,000 grants in the same list. Tell us the range you can use and we’ll drop the rest.',
+    body:  'Tell us the smallest and largest grant you would apply for, and we will only show funding in that range.',
     cta:   'Add the range you need',
     card:  'funding',
     countable: false,

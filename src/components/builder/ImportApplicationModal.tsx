@@ -7,7 +7,7 @@
 
 import { useState } from 'react'
 import { Check, X as XIcon } from 'lucide-react'
-import { T, UI, BODY, inputStyle, ghostBtn } from '@/components/builder/tokens'
+import { T, UI, BODY, inputStyle, deepBtn, ghostBtn } from '@/components/builder/tokens'
 import { BLOCK_TYPES, BLOCK_TYPE_LABELS, type BlockType } from '@/lib/builder/types'
 
 interface ProposedBlock {
@@ -134,8 +134,8 @@ export default function ImportApplicationModal({ orgId, onClose, onImported }: {
                     aria-label={b.keep ? 'Exclude block' : 'Include block'}
                     style={{
                       width: 18, height: 18, borderRadius: 5, flexShrink: 0, marginTop: 2,
-                      border: `1.5px solid ${T.greenMid}`,
-                      background: b.keep ? T.greenMid : 'transparent',
+                      border: `1.5px solid ${T.done}`,
+                      background: b.keep ? T.done : 'transparent',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
                     }}
                   >
@@ -169,9 +169,7 @@ export default function ImportApplicationModal({ orgId, onClose, onImported }: {
             {error && <p style={{ fontFamily: BODY, fontSize: 13, color: T.coralText, margin: '0 0 10px' }}>{error}</p>}
             <div style={{ display: 'flex', gap: 10 }}>
               <button onClick={confirm} disabled={busy} style={{
-                fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: T.greenDeep,
-                background: T.lime, border: 'none', padding: '9px 18px', borderRadius: 8,
-                cursor: busy ? 'wait' : 'pointer', opacity: busy ? 0.7 : 1,
+                ...deepBtn(busy), cursor: busy ? 'wait' : 'pointer',
               }}>
                 {busy ? 'Adding…' : `Add ${proposed.filter(b => b.keep).length} blocks to your material`}
               </button>

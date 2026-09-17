@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next'
 import { getAdminDb } from '@/lib/admin/admin-db'
 import { MCP_APP_ORIGIN } from '@/lib/mcp-brand'
+import { hubCounts, type HubRow } from '@/lib/hubs'
 
 // Built per request, not at build time.
 //
@@ -19,11 +20,12 @@ export const dynamic = 'force-dynamic'
 function staticEntries(now: Date): MetadataRoute.Sitemap {
   // Deliberately NOT listed:
   //   /signup             — reachable by URL but unlinked until launch
+  //   /apply              — closed-cohort recruitment copy; stays live for direct
+  //                         links only and carries noindex (Paul, 2026-09-05)
   //   /cohort-signup-7k9m2x — unlisted path, must not be published anywhere
   //   /dashboard/*, /auth/*, /oauth/*, /onboarding/* — behind the auth gate
   return [
     { url: `${MCP_APP_ORIGIN}/`,          lastModified: now, changeFrequency: 'weekly',  priority: 1.0 },
-    { url: `${MCP_APP_ORIGIN}/apply`,     lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${MCP_APP_ORIGIN}/mcp`,       lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${MCP_APP_ORIGIN}/mcp/terms`, lastModified: now, changeFrequency: 'yearly',  priority: 0.2 },
     { url: `${MCP_APP_ORIGIN}/privacy`,   lastModified: now, changeFrequency: 'yearly',  priority: 0.2 },
@@ -47,7 +49,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const db = getAdminDb()
     const { data, error } = await db
       .from('scraped_grants')
-      .select('id, external_id, last_seen_at, first_seen_at')
+      .select('id, external_id, last_seen_at, first_seen_at, funding_type, location_tag, impact_sectors')
       .eq('is_active', true)
       .eq('pipeline_state', 'published')
 
@@ -69,7 +71,29 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }
     })
 
-    return [...statics, ...grants]
+    // Hub pages: one per sector, region and funding type that has enough rows
+    // for a page (the same threshold the routes 404 below). Computed from the
+    // rows just fetched, so a hub is listed only while it would render.
+    const counts = hubCounts((data ?? []) as unknown as HubRow[])
+    const hub = (path: string): MetadataRoute.Sitemap[number] =>
+      ({ url: `${MCP_APP_ORIGIN}${path}`, lastModified: now, changeFrequency: 'daily' as const, priority: 0.9 })
+    const hubs: MetadataRoute.Sitemap = [
+      hub('/grants'),
+      ...counts.types.map(t => hub(`/grants/type/${t.slug}`)),
+      ...counts.regions.map(r => hub(`/grants/region/${r.slug}`)),
+      ...counts.sectors.map(s => hub(`/grants/sector/${s.slug}`)),
+    ]
+
+    // Grant URLs are deliberately NOT listed (Paul, 17 Sept 2026). A sitemap
+    // of 660 grant pages is also a one-file list of every fund in the
+    // catalogue with its name in the slug, which is exactly what a competitor
+    // would fetch first. Every live grant page is linked from at least one
+    // hub and from other grants' "more like this" blocks, so a crawler still
+    // reaches all of them by following links; a scraper has to walk the site
+    // the same way, and the records are gated. `grants` is still computed
+    // above because the hub list is derived from the same rows.
+    void grants
+    return [...statics, ...hubs]
   } catch (err) {
     // Serve the static pages rather than an empty document. An empty sitemap is
     // worse than a partial one: it is a positive assertion that there is

@@ -5,6 +5,7 @@
 // except for the capture event.
 
 import { NextResponse } from 'next/server'
+import { isFoundingCohort } from '@/lib/founding-cohort'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { emitEvent } from '@/lib/events/emit'
 
@@ -17,6 +18,13 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
     return NextResponse.json({ error: 'Not signed in' }, { status: 401 })
+  }
+  // Export is a paid feature; the founding cohort keeps it (Paul, 8 Sept
+  // 2026). Paying organisations are admitted here with the billing merge.
+  // A copy of anyone's data is still available by email: the right to it is
+  // law, the button is not.
+  if (!isFoundingCohort(user.created_at)) {
+    return NextResponse.json({ error: 'Data export comes with a paid plan. Email hello@shootsfunding.co.uk for a copy of your data.' }, { status: 403 })
   }
 
   const { data: orgs } = await supabase

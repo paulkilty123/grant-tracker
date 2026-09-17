@@ -1,0 +1,1574 @@
+{
+ "f6b2ac5d-3004-452c-81e6-2d2fa32ccae3": {
+  "title": "Microsoft Nonprofit Software Donations Programme",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "rejection_reason": null
+ },
+ "985b3216-a7bb-43ca-b086-3e81c1e69126": {
+  "title": "EY Foundation Programmes for Young People",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "rejection_reason": null
+ },
+ "8e5f63e4-85d9-47db-b278-56263c8ab4f7": {
+  "title": "Severn Trent Community Fund",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "rejection_reason": null
+ },
+ "321ed3d9-0619-4a5b-9a39-cae978857a03": {
+  "title": "Argyll & Bute Council — Supporting Communities Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "1f67aead-7d02-49ad-87ae-77f9f9daece7": {
+  "title": "Theatre and Charitable Grants",
+  "is_active": false,
+  "pipeline_state": "tagged_awaiting_review",
+  "rejection_reason": "review sweep 2026-09-01: no application route. Withheld pending a working link, not rejected."
+ },
+ "0c9aa487-7fe1-459a-802b-89447b3cc3a1": {
+  "title": "Brave Futures",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "1e50dd77-8cd0-46dc-9c53-04065ff01f2a": {
+  "title": "B&Q Foundation Community Grants",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "rejection_reason": null
+ },
+ "d5bd53ee-b341-46b0-8ef1-bf24e2cc735d": {
+  "title": "Autotrader Digital Inclusion Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "56a8cc5f-a0a2-4d6b-af11-fa60b7f0e453": {
+  "title": "Microsoft 365 Nonprofit Cloud Subscription (via Charity Digital)",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "rejection_reason": null
+ },
+ "a71a1786-dc06-4e11-b04d-def0b9538f96": {
+  "title": "Barclays 100x100 UK Community Relief Programme",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "rejection_reason": null
+ },
+ "fb7d23b2-8848-4ace-becc-b28766bc9a7d": {
+  "title": "Big Give - Women and Girls Match Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "ec46883d-f99b-4295-a61c-6b6eb06c2aa1": {
+  "title": "ROCB CDFI Loans",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "rejection_reason": null
+ },
+ "a48f24a5-43b6-43d4-a4b5-093f4718477a": {
+  "title": "Spotlight: Local Climate Action",
+  "is_active": false,
+  "pipeline_state": "captured",
+  "rejection_reason": null
+ },
+ "83f700c0-0081-4609-bb1f-cb35b5346fa1": {
+  "title": "Apply for Investment (Fund Manager Route)",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "rejection_reason": null
+ },
+ "97be169d-2e01-4157-a057-4e974fdfcb8d": {
+  "title": "Employer-Supported Skilled Volunteering Programmes",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "rejection_reason": null
+ },
+ "f57c3373-26f6-4f44-a766-761aec387dcd": {
+  "title": "Charities and Social Enterprises Lending",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "rejection_reason": null
+ },
+ "08a08c30-453d-469f-9ce2-65a2dafbe0d8": {
+  "title": "Peter Kershaw Trust — Ordinary Grants",
+  "is_active": false,
+  "pipeline_state": "tagged_awaiting_review",
+  "rejection_reason": null
+ },
+ "e1ae0341-15ae-4c05-98b5-18fed2989a88": {
+  "title": "Charity and Co-operative Lending Fund",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "rejection_reason": null
+ },
+ "ba76fee4-7d8e-48e5-acac-f9df576c320c": {
+  "title": "Energy Resilience Fund",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "rejection_reason": null
+ },
+ "27f913f2-d5d1-4773-a410-35ceb8eeba18": {
+  "title": "LawWorks Clinics Network",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "rejection_reason": null
+ },
+ "d7afb72d-ddf5-4ec5-a733-2ac876dd3837": {
+  "title": "Calisen Impact Charitable Trust",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "7948612a-70f9-4cce-82a0-c14d9a53e2bd": {
+  "title": "Screwfix Foundation Grants",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "rejection_reason": null
+ },
+ "ea0677ca-1bd9-4499-a56b-b05e18e90468": {
+  "title": "Brighton & Hove — Fairness Fund for Communities 2025/26",
+  "is_active": false,
+  "pipeline_state": "tagged_awaiting_review",
+  "rejection_reason": null
+ },
+ "6f3892eb-3e7f-4976-b60b-8d46ca476573": {
+  "title": "Key Fund Social Investment Loans",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "rejection_reason": null
+ },
+ "ec676c7f-93b3-404c-aaf9-7bb1ec71b83b": {
+  "title": "Postcode Society Trust (South England including London)",
+  "is_active": false,
+  "pipeline_state": "tagged_awaiting_review",
+  "rejection_reason": null
+ },
+ "043634a3-19fa-4636-9a0f-d5449163948c": {
+  "title": "DCR Allen Charitable Trust",
+  "is_active": false,
+  "pipeline_state": "tagged_awaiting_review",
+  "rejection_reason": "review sweep 2026-09-01: no application route. Withheld pending a working link, not rejected."
+ },
+ "93f38ed1-ca74-4b6f-9249-51c95a134006": {
+  "title": "Jobs and Skills Funding Opportunities",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "rejection_reason": null
+ },
+ "014db2eb-c6b5-4575-9e03-ac51822820f4": {
+  "title": "Cambridge 2030 Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "4e7f6bd7-6343-499b-8441-51520f259353": {
+  "title": "CfI: Boosting fathers’ engagement to improve child outcomes",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "8b5c4025-318d-4354-a766-228b361ffba3": {
+  "title": "Trading for Good: Community Business",
+  "is_active": false,
+  "pipeline_state": "tagged_awaiting_review",
+  "rejection_reason": null
+ },
+ "6e6d726e-0b1b-41bb-a282-2eb5c3853ac6": {
+  "title": "Robertson Trust Large Grants",
+  "is_active": false,
+  "pipeline_state": "tagged_awaiting_review",
+  "rejection_reason": null
+ },
+ "9f87b6cf-69ce-48e3-8d21-a17361ae0084": {
+  "title": "Simon Gibson Charitable Trust — Grants",
+  "is_active": false,
+  "pipeline_state": "tagged_awaiting_review",
+  "rejection_reason": null
+ },
+ "cbad88ec-2eed-40b8-a1f2-1c05cb023dbc": {
+  "title": "Angels' Den 2026",
+  "is_active": false,
+  "pipeline_state": "tagged_awaiting_review",
+  "rejection_reason": null
+ },
+ "01aa47c7-4db6-4f51-a129-66ab25e3b548": {
+  "title": "St Giles & St George Education Charity",
+  "is_active": false,
+  "pipeline_state": "tagged_awaiting_review",
+  "rejection_reason": null
+ },
+ "45d5140a-8536-4331-b4d3-57462e108a9f": {
+  "title": "Nationwide Foundation Grants Programme",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "rejection_reason": null
+ },
+ "5afd77c4-190b-4387-9be1-46a05d8bfe7d": {
+  "title": "National Grid Community Grants",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "rejection_reason": null
+ },
+ "7b924e63-a2a6-42f2-9968-4786de21cb47": {
+  "title": "Virgin Media O2 - Apprenticeship Talent Fund",
+  "is_active": false,
+  "pipeline_state": "tagged_awaiting_review",
+  "rejection_reason": null
+ },
+ "324d3776-917a-4498-9537-27888f142f2d": {
+  "title": "Ashoka Fellowship",
+  "is_active": false,
+  "pipeline_state": "tagged_awaiting_review",
+  "rejection_reason": null
+ },
+ "9de97466-69b9-4c0e-a182-83c821b109b8": {
+  "title": "Edward Gostling Foundation Grants",
+  "is_active": false,
+  "pipeline_state": "tagged_awaiting_review",
+  "rejection_reason": null
+ },
+ "0a9e6108-c367-4a93-8df5-d5268d03b7b2": {
+  "title": "Desk Space and Meeting Room Hire for Charities",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "rejection_reason": null
+ },
+ "0b03c55e-32d9-4054-b1cb-353260f01a96": {
+  "title": "Gatwick Foundation Fund (via SCF Main Grants)",
+  "is_active": false,
+  "pipeline_state": "tagged_awaiting_review",
+  "rejection_reason": null
+ },
+ "f2791500-e1cb-4cd3-ae9d-5caa399df3ca": {
+  "title": "Community Housing Fund",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "rejection_reason": null
+ },
+ "f44a6141-5b8f-43b8-81b0-f1d5ba0930da": {
+  "title": "LawWorks Not-for-Profits Programme",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "rejection_reason": null
+ },
+ "cbe84427-1a04-4fbc-8f8c-b09f7af4385d": {
+  "title": "CPCA Social Impact Investment Fund",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "rejection_reason": null
+ },
+ "efb34147-a31c-4088-bd85-f8ab17980990": {
+  "title": "Young Foundation Social Innovation Support Programmes",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "rejection_reason": null
+ },
+ "2506cc66-7ba4-4da7-80fb-070b5961783d": {
+  "title": "Harford Charitable Trust",
+  "is_active": false,
+  "pipeline_state": "tagged_awaiting_review",
+  "rejection_reason": "review sweep 2026-09-01: no application route. Withheld pending a working link, not rejected."
+ },
+ "ded31718-e5bd-4062-b1cd-2ddf5baa47dc": {
+  "title": "Neighbourhood Fund",
+  "is_active": false,
+  "pipeline_state": "tagged_awaiting_review",
+  "rejection_reason": null
+ },
+ "db97dbb6-63b5-4604-8ccb-10a4722ea2b1": {
+  "title": "Supporting the community in the Parish of Shotley Low Quarter",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "rejection_reason": null
+ },
+ "085f3c7e-9021-41cb-a66b-1342830ed886": {
+  "title": "Community Investment Enterprise Facility (CIEF)",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "rejection_reason": null
+ },
+ "29d000d3-e3fa-439e-89f8-e03109af0f44": {
+  "title": "Foundation East CDFI Loans",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "rejection_reason": null
+ },
+ "fdcc973a-c87c-48cf-819c-e921c23fbc73": {
+  "title": "Charity Bank Loans",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "rejection_reason": null
+ },
+ "ef36f740-2f40-40e6-a561-8aa4c72a8a97": {
+  "title": "Brewers Foundation",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "cf29bfb0-3223-4a7d-a279-c6345b495681": {
+  "title": "Henry Smith Foundation — Maternity Equity",
+  "is_active": false,
+  "pipeline_state": "captured",
+  "rejection_reason": null
+ },
+ "3d957bb8-f671-4a9e-90ec-61ab71fb45f1": {
+  "title": "CLA Charitable Trust",
+  "is_active": false,
+  "pipeline_state": "tagged_awaiting_review",
+  "rejection_reason": null
+ },
+ "829751a6-9ad0-409a-818c-e32d62f0d1ad": {
+  "title": "Social Investment Cymru Loan Fund",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "rejection_reason": null
+ },
+ "96c68ed0-0147-4aa1-9b4f-098a80bb7523": {
+  "title": "Macmillan Q Lab — Holistic Cancer Care",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "rejection_reason": null
+ },
+ "f5c454d7-728e-4f11-b7f1-1dc139393d3e": {
+  "title": "Supporting community groups within a 10-mile radius of the Green Rigg Wind Farm",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "rejection_reason": null
+ },
+ "324b95d5-650f-4350-88d0-45f517d15692": {
+  "title": "Big Society Capital Social Investment Wholesale Funding",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "rejection_reason": null
+ },
+ "7f8efdf7-22e9-4d06-aee8-62b18008c247": {
+  "title": "Commonweal Housing — Call for New Ideas",
+  "is_active": false,
+  "pipeline_state": "tagged_awaiting_review",
+  "rejection_reason": null
+ },
+ "3e386cdc-60ab-413e-a348-11f659d3e4fb": {
+  "title": "Tech for Good Accelerator Programme",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "rejection_reason": null
+ },
+ "9e3b71a8-1f2c-40ea-8d03-31bcb0c82e99": {
+  "title": "Horsham District Council — Community Grant",
+  "is_active": false,
+  "pipeline_state": "tagged_awaiting_review",
+  "rejection_reason": null
+ },
+ "6ce1fac3-9818-4f0c-bfde-7186f74320ae": {
+  "title": "Ufi VocTech Trust — VocTech Ignite",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "rejection_reason": null
+ },
+ "41d96aaf-6752-4fb3-98ab-a045ae22fdb5": {
+  "title": "BFI National Lottery Innovation Challenge Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "a91f58e0-5572-4d9b-85ad-d67df0e72e0d": {
+  "title": "Time to Shine Fellowship",
+  "is_active": false,
+  "pipeline_state": "captured",
+  "rejection_reason": null
+ },
+ "5d883343-70fd-4f10-b28b-5b21324cbca5": {
+  "title": "Baring Foundation — International Development Programme",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "rejection_reason": null
+ },
+ "be85b0fc-7d63-4741-97ce-1ce6f37113b5": {
+  "title": "Charity Bank — Green Loans",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "rejection_reason": null
+ },
+ "610f11c7-ba38-431b-ace0-a2613cdc0265": {
+  "title": "Anglian Water Thriving Communities",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "81a25490-24a7-451d-95f8-2f2e00f973ae": {
+  "title": "2026 Grant Applications GB & NI",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "a789db28-6332-42a2-ada2-db51a9bee328": {
+  "title": "Central District Alliance Social and Community Fund 2026",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "64b1d9e1-5e5a-440c-9986-d2acf6ec1602": {
+  "title": "Berkshire Community Foundation Grants",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "9f87e023-012b-4b82-9b36-629d76fd816e": {
+  "title": "Andrew Wainwright Reform Trust — Grants",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "dc33bc71-60d1-4b7a-a88f-67fa9490852d": {
+  "title": "Amazon Sustainability Accelerator",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "d5e32f3e-cc11-4f66-a7f1-320f48f2971a": {
+  "title": "cardfactory Foundation Community Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "75040abd-4796-479d-ba18-2f3596a3e7a8": {
+  "title": "All About Business Entrepreneurs Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "8230b7a2-1212-433d-93e9-59d3cfd11b52": {
+  "title": "Cambridgeshire Community Foundation — Warwick & Dominey (General Grants)",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "d6f36313-3238-4cc4-a5ea-cb59a5875132": {
+  "title": "AI and Social Mobility Challenge Prize",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "cdd31f5e-4fc4-4f98-be98-c452cf0c253f": {
+  "title": "Brighton & Hove Buses Community Support Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "3b2b8d07-3338-4109-a6f3-c06a27d06196": {
+  "title": "Step Change",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "rejection_reason": null
+ },
+ "65961bc8-8648-4c82-9b5e-4a4fd0d2ff68": {
+  "title": "General Grants",
+  "is_active": false,
+  "pipeline_state": "tagged_awaiting_review",
+  "rejection_reason": "review sweep 2026-09-01: no application route. Withheld pending a working link, not rejected."
+ },
+ "5e097507-c0dc-4439-86fd-b54483c82494": {
+  "title": "Borough Council of King's Lynn & West Norfolk Small Grants Scheme",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "0b3d2a8b-3d24-462e-8059-1cb5c5c0d445": {
+  "title": "Caremark - Community Care Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "97949835-da9c-4100-8c98-55cf3e3d865d": {
+  "title": "Better Commissioning Pathways ",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "26029120-6cfa-4346-8834-36f77b0af3b2": {
+  "title": "Social Investment Business Loan & Grant Funds",
+  "is_active": false,
+  "pipeline_state": "tagged_awaiting_review",
+  "rejection_reason": null
+ },
+ "32856768-7d40-446f-a45f-ab905ede96cb": {
+  "title": "Access to Justice Foundation — Legal Support Grant 2026 (England & Wales)",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "37a8f875-7834-495f-8e14-a0fade147ebf": {
+  "title": "Ufi VocTech Trust",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "rejection_reason": null
+ },
+ "42bf79de-416b-455e-822d-2c6478a31ec5": {
+  "title": "Barnsley AI Upskilling Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "4ecd6375-b06c-47af-b249-d1f1080f99f4": {
+  "title": "Blackridge Community Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "5fa1e39d-b4bd-4376-a339-b72b33077a2a": {
+  "title": "Leathersellers' Foundation Main Grants",
+  "is_active": false,
+  "pipeline_state": "tagged_awaiting_review",
+  "rejection_reason": null
+ },
+ "ef11edf5-15dd-4a03-9d73-9d59dbf81595": {
+  "title": "Cartier Women's Initiative",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "dff42471-e15e-4c23-930e-0adfe6f44aec": {
+  "title": "Bellahouston Bequest Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "b4684d67-9022-4707-9dd6-516d280d3860": {
+  "title": "2026 Grant Programme",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "08819057-94cd-4b9c-879f-af3652675886": {
+  "title": "Salesforce Nonprofit Cloud - Power of Us Programme",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "rejection_reason": null
+ },
+ "e31c28ad-10a0-4d7c-9076-33c8f8cf91e9": {
+  "title": "FSI Small Charity Training and Capacity Building Programme",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "rejection_reason": null
+ },
+ "ec70ac6e-bd4e-4891-b54a-f4cff376b797": {
+  "title": "Triodos Bank Business Banking and Loans",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "rejection_reason": null
+ },
+ "27c436ad-babd-45f4-9214-4de4000d234f": {
+  "title": "Better Community Business Network Grant Initiative",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "cfdaf194-6b06-4aab-81fd-2310d31197ba": {
+  "title": "Zoom for Nonprofits Discount Programme",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "rejection_reason": null
+ },
+ "1cf9567c-46b3-494d-823f-b906dead142a": {
+  "title": "Henry Smith Foundation — Career Ready",
+  "is_active": false,
+  "pipeline_state": "tagged",
+  "rejection_reason": null
+ },
+ "b5d02e56-00e8-4119-a60f-9d79a4da247a": {
+  "title": "CfI Improving Outcomes for Children Experiencing Homelessness",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "fa668359-889b-437e-b3a4-e80d24ab5115": {
+  "title": "CfI Improving Outcomes for Children Experiencing Homelessness",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "b1a9dbcd-dce0-45d7-bcd9-9dcaa6a55023": {
+  "title": "Alec Dickson Trust Grant",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "38d502d6-a414-40f5-a72e-405039098abd": {
+  "title": "Green Roots Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "a14b6359-b0c8-45f6-a41d-8f4a0160017c": {
+  "title": "LNER Customer & Community Investment Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "65dd568c-30c8-4e47-ac04-cb779c76a78f": {
+  "title": "Lloyds Bank Foundation — Mental Health Pillar",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "16cda59c-ec63-47b1-b03e-58699d61782a": {
+  "title": "Delamere Dairy Foundation",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "10a2f396-3562-43d6-8841-7d9608ac08e7": {
+  "title": "Nature Networks Fund (round six)",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "5b3b9ba1-88ca-4aa4-85de-0f62f04e49b8": {
+  "title": "Newcastle Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "077f7cf0-20e7-4199-896c-693c3f049c8a": {
+  "title": "Independent Legal Advisors Service",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "1fc7173e-a9af-4efc-bc1d-92c592fd6b2c": {
+  "title": "King Charles III Charitable Fund — Small Grants",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "34c24b63-de1c-480f-93f7-0f0fb4b62403": {
+  "title": "Civil Society Resilience Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "f06351b9-42a7-460c-a9fa-3af50bffb9c2": {
+  "title": "General and Small Grants (Learning Disability)",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "6add973c-430a-482b-98e9-366ecd2e6a7a": {
+  "title": "D'Oyly Carte Charitable Trust",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "6566a492-f6e9-4146-99eb-887aedb4f0a1": {
+  "title": "Large Grants for Charities",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "60dcab53-8d08-4c2d-b5e5-a37fa8c29f10": {
+  "title": "Consumer Led Flexibility for the Clean Energy Superpower Mission",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "c2f62efc-64e7-4635-8a2c-9802e2ea089d": {
+  "title": "Computers 4 Charity — Refurbished Hardware",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "de5286bb-765c-4fcf-8d76-b19a6a657a4d": {
+  "title": "Peter Harrison Foundation — Active Lives",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "270eddd0-674c-4d18-9f96-80f7a6b46b27": {
+  "title": "James Tudor Foundation — Physical Health Grant",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "5c4dccbf-0fe9-4587-a49d-530053bc45fc": {
+  "title": "Postcode Local Trust Grants",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "792c4cce-e971-4544-8f5c-3e4d098bf087": {
+  "title": "Pre-announcement: Gambling harms research grants",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "186c2817-4efa-48c5-827e-8a7ef9f92295": {
+  "title": "HMRC Voluntary and Community Sector (VCS) Grant Funding 2027 to 30",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "f5691225-69b9-491b-a33d-3d5f3346fffd": {
+  "title": "Living Essentials Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "eb46e253-9835-467c-ae2f-867f6c871e0b": {
+  "title": "Good Finance",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "2553fb39-c2ec-46e3-b344-e442ba4840d8": {
+  "title": "Didcot Powerhouse Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "e95c39ec-da7e-4fdc-b111-9fc219fee6e9": {
+  "title": "Innovate 2026",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "35dd731c-d8c2-4715-8439-e39a8d9b8c87": {
+  "title": "Funding opportunity: London LGBT+ Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "df6c6cf5-9747-4324-8bcd-cfd9c68bc53a": {
+  "title": "Green Quarter Community Chest",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "d07619f8-3bfe-4f70-a95f-3db7d8ae6016": {
+  "title": "Ignite Social Impact Competition",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "03d377e7-2196-4fd7-807b-36c47932705d": {
+  "title": "Domestic Abuse Community Innovation Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "e04145cc-d57d-445c-8c92-bb77da0fc4f4": {
+  "title": "Leicestershire & Rutland Community Foundation — Making Local Life Better Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "0d07f6e5-8619-4ccc-9434-307e5644612d": {
+  "title": "Company of Actuaries Charitable Trust",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "adb857d5-43ba-4012-a401-ae6ab5b6c89f": {
+  "title": "Heart Research UK — Healthy Heart Grants",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "277bbe32-d3e9-48a8-b826-ebc8fa354395": {
+  "title": "New Albion Community Wind Farm Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "ca11a595-5a4b-4e00-a926-fadcf4b8c218": {
+  "title": "Child Focused Court IDVA- Cheshire & Merseyside",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "b5b74039-791e-47be-b283-4b03eff238ba": {
+  "title": "Henry Smith Foundation — Christian Grants (Clergy)",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "961ce424-4a7d-4dd5-a73f-d3a3a6d37a5f": {
+  "title": "Grants for Animal Rescue, Rehabilitation, Release and Rehoming",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "33bac7f6-8b8f-44f5-8ab6-55141aac452c": {
+  "title": "Environment & Sustainability Grants",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "14bd601a-0921-41b1-ad4c-3f1ec64b370a": {
+  "title": "Community Wellbeing and Mental Health Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "b351fcc8-a520-41ab-905f-ca746f9ae065": {
+  "title": "Hilden Charitable Fund — Main Grants",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "94447c6d-5fe2-4148-9578-f15c36e97550": {
+  "title": "Energy Resilience Fund — Key Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "1f0b2bab-83e0-45b9-a746-fa621e21be8a": {
+  "title": "Mortgage Advice Bureau Foundation Grant",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "8f0e5171-379b-41c8-a17d-e0caa0867332": {
+  "title": "Healthy Ageing Award",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "1d704e7d-adb2-48fc-a851-12a8e9ab471b": {
+  "title": "Corra Foundation — Alcohol and Drugs Fund: Children, Young People and Families Grants",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "52d4abe9-f60a-465e-8b42-c4b72b175d61": {
+  "title": "Grants for Organisations",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "fa1cc1d5-75fa-4a7e-aa6f-178cc3931770": {
+  "title": "Funding Futures Programme",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "67184349-6518-4ccd-9bd9-1f41704d85f5": {
+  "title": "Lewes Town Council — Community Grants",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "6aec6f51-67e6-4534-a34e-0070d1f2d969": {
+  "title": "Community Hub Project Grants",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "4d1c0308-3198-4fa0-8a0f-309827065227": {
+  "title": "Henry Smith Foundation — Equity in Justice",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "5cec571b-26c2-4a22-b200-f2f7c60cad75": {
+  "title": "Gannochy Trust — Scotland Youth Development Grants",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "48c29df0-33d3-47dd-8a24-1094ef8445d3": {
+  "title": "Corra Foundation — Alcohol and Drugs Fund: Local Support Grants",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "6e32f1bc-2acd-4e86-bbeb-b73980d141dc": {
+  "title": "Community Grants Programme",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "c9692361-16c7-48e7-825b-8a1d94d9e034": {
+  "title": "Constance Travis Community Endowment Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "e17e2817-eeb9-4c89-87e0-e867f3e3b2d2": {
+  "title": "Corra Foundation — Henry Duncan Grants 2026",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "8bb0acde-a49f-4a86-995a-9f19b23115f0": {
+  "title": "JRCT — Sustainable Future Programme",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "3d26a26e-b73e-47f2-8c0d-5b68e6913b92": {
+  "title": "Neighbourhood Fund 2026",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "b8494005-3edb-4f2a-bde5-83e5254a0ac8": {
+  "title": "Grants for Wales",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "ab3b5833-5440-4acc-9d92-1694bc80e994": {
+  "title": "GSK IMPACT Awards",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "d7c556c0-18a6-48e1-b881-46444b7723bd": {
+  "title": "Change Makers Partnership",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "c78ff76b-a8d7-4dc4-98c5-955c6e9add24": {
+  "title": "Corra Foundation — Alcohol and Drugs Fund: Partnership and Delivery Grants",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "999ec426-0dcc-4929-ae8e-013411ab41d5": {
+  "title": "Medworth Community Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "67025b88-4512-44ec-ae3b-d5c9329038b4": {
+  "title": "Focus Foundation",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "c740bb33-f49e-4c9f-b8db-110b767e985f": {
+  "title": "J N Derbyshire Trust",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "6fae7d85-2a40-481a-b192-de96f20593f5": {
+  "title": "Henry Smith Foundation — Proud Homes",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "1e255db9-6e40-41d9-bb1a-01532ac20b2c": {
+  "title": "Democratic Engagement Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "c5e41501-c19d-4184-a701-1eecd4871c5e": {
+  "title": "Chrysalis Programme",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "48dcfee3-ece1-48e5-9b65-41c27cd40e54": {
+  "title": "Heart of Yorkshire Fund for the Selby District",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "9cf129d2-9e1c-43d0-9627-032cf46ba18a": {
+  "title": "HPC Community Fund Small Grants",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "d1d21112-7d49-4578-8922-4aff419e5060": {
+  "title": "Creative Foundations Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "415b3809-c15b-4bd7-9fc3-0a962fee9b67": {
+  "title": "Jack Petchey Foundation - Places & Spaces Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "09b3d42a-e698-4194-9a61-f41062fb46e2": {
+  "title": "Open Application Programme",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "295ea646-11c0-49cf-8ec4-cf4ff025baba": {
+  "title": "CfI: Earlier identification of UK children with SEN",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "45f7e90d-4045-4abb-907c-165d82513c3b": {
+  "title": "IM Properties Stratford 46 Community Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "3ce5848d-9703-4e93-842f-7c80a74ab1c1": {
+  "title": "Mid Sussex District Council — Community Grants",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "cfb56fe7-0ddb-4ac4-ab6f-c04102b8009d": {
+  "title": "Community Action Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "43b1a60d-270a-48da-9d59-774be5847a0f": {
+  "title": "Green Spaces Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "30706aff-5124-4dba-8776-1e15561c6a78": {
+  "title": "Charity Entrepreneurship Incubation Program",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "a0dd3472-4d4f-4987-84c2-fbf919da3c4f": {
+  "title": "Chapman Charitable Trust Grants",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "b3794a4d-7951-4d66-8f16-2b78cbca651e": {
+  "title": "Lloyds Bank Foundation Funding Programmes",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "60d8819c-14c1-47f7-8d65-451624296629": {
+  "title": "Development Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "334ea9cf-ae9c-4df9-ae2d-3c36bff9b8f5": {
+  "title": "Inspiring Lewisham Communities Fund 2026",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "e73119cf-dfb8-493b-bf20-8da65285eca3": {
+  "title": "Hackney — Project Innovation Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "fab5ab12-9098-4e07-8647-722374e2126e": {
+  "title": "Idlewild Trust Conservation Grants",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "0333a9dc-551e-4cff-a27c-3ff8fff74141": {
+  "title": "Henry Smith Foundation — Early Years Parenting",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "e0a27a78-3cfd-44e3-aebf-59d41d576894": {
+  "title": "HCF Grants",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "ee7b5fc6-f705-4852-b411-a1ec89a5c222": {
+  "title": "Commercial Climate Services Call ",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "2de07a97-2272-45e6-a759-c602a607041d": {
+  "title": "Postcode Lottery Dream Fund 2026/27",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "1c9c502a-99a0-4637-9cbf-6d9f0b96712e": {
+  "title": "Local News Fund ",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "e72200b0-f3df-44d2-85bc-a55b5d2aa0a4": {
+  "title": "Harold Hyam Wingate Foundation — Music & Performing Arts",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "26945401-f658-477f-913a-a0e74baae548": {
+  "title": "CultureStep",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "2f8b8ab2-582a-47d9-a034-ba78a9bc7a9f": {
+  "title": "Cheshire Community Foundation — Open Grants Programme",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "e68c5f52-de13-48fd-88bc-347f749d3035": {
+  "title": "Dynamo Digital Inclusion Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "f2a29bb1-d0e6-43b7-864b-1ebd6aadde9d": {
+  "title": "R&D MAP Creative Content Exchange pilot: Early Adopters fund (Grant)",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "e3cdafc8-497c-4ec4-a6e5-916eb2f66bf2": {
+  "title": "Childcare Support Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "c9634fd4-6185-4aa1-9999-205dd589e9a5": {
+  "title": "Henry Smith Foundation Grants",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "5adeb924-3976-4836-a000-007c8e3361ef": {
+  "title": "Havering Community Chest 2026/27",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "959a853b-a16f-4c46-a18d-d841a5fe55fa": {
+  "title": "Music for All — Community Project Funding",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "0d918b6b-84be-4224-88f8-8402394e7f7b": {
+  "title": "Hugh Fraser Foundation — General Grants",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "0b009875-2b19-4b2d-bd66-965cbe3f43d4": {
+  "title": "Noël Coward Foundation — Performing Arts Educational & Development Grants",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "2612d2af-5d84-41d1-87a2-a0d84a2da367": {
+  "title": "Corra Foundation — YoYo Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "963baf0d-5303-43d2-8ab2-31927e558e25": {
+  "title": "Clean Air Solar Farm Community Benefit Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "9605bf45-9c22-467f-92fc-a3a5ba04b6fe": {
+  "title": "Men’s Health Community Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "dd93bbdd-fe6c-497b-b781-b378a87f2cb3": {
+  "title": "Museum Fundamentals",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "bad7f78e-e3ee-4b67-8469-01572928b106": {
+  "title": "Supporting Change - Carers",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "31807e92-d843-484f-bd73-f6524af16e99": {
+  "title": "Wise Music Foundation Grants",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "dc32afec-6ae0-4e3c-aca0-50792a6b9b40": {
+  "title": "Trading for Good: Stockport",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "fb2df025-d6cc-46f9-b878-265a40214da7": {
+  "title": "Trauma Responsive Greater Manchester Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "1c558d41-a3b9-403d-b8ed-e0ffc6e176ae": {
+  "title": "Westminster Community Contribution Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "4c400a67-e826-496b-978c-a20504df041d": {
+  "title": "Westminster Climate Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "fae1af9e-dd6c-4f8b-a0f8-5ee4c6fef64d": {
+  "title": "Young Women in Mind 2026–2028",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "046fb170-b998-4d81-a20a-d768f40a13eb": {
+  "title": "Worthing Community Chest — Grants for Growth",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "b49ef70d-9aaa-43bc-b5fd-bd37abcd7049": {
+  "title": "Sir Halley Stewart Trust — Innovative Project Funding",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "d6c9730d-022b-4ad2-b57b-0e28e2131741": {
+  "title": "Small Grants for Charities",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "fb63af5d-9b6a-4830-afec-27fe74e02d77": {
+  "title": "The NextGen Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "cdf67967-4f45-4b42-abcf-ca25b071a257": {
+  "title": "Theatres Trust Small Grants Programme (Linbury-backed)",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "a54704d3-3cb0-40b3-a351-1c07b3346355": {
+  "title": "The LEGO Foundation Fellowship",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "482cfc54-f0a5-4529-8571-2614a9cd3dac": {
+  "title": "Seed Funding for Social Entrepreneurs",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "23774850-f7bd-4f23-abdd-265d1c1b5690": {
+  "title": "Valour Recognised: Centres Development Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "b2d727c6-ffe5-4cbf-bcf8-91a22dd48db5": {
+  "title": "Sir John Fisher Foundation — Main Grants",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "d7358629-ddba-41f5-b8db-669e5b1dc23e": {
+  "title": "Variety Club - Equipment Grants",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "8599b462-b313-468f-b2c6-72fc0f6c144b": {
+  "title": "The Maypole Fund — Feminist Peace & Anti-Militarism Grants",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "eb625734-ad25-42cf-b2f8-08f0cd6b0ca6": {
+  "title": "Vivensa Academy",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "471c6f5f-3bab-4cd1-b472-a1807f991c10": {
+  "title": "Somerset Crisis and Resilience Alliance",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "15eaab1e-d531-403b-a4da-d7c75c3b113b": {
+  "title": "Trading for Good: Milton Keynes",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "71fcd1d1-2bde-4513-ae91-c8c86d3cea49": {
+  "title": "Trailblazer Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "ba0561c6-155c-4d34-b4c1-70ace3a68b68": {
+  "title": "The Democratic Engagement Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "5520dd51-755e-4695-a348-99463ccab9d6": {
+  "title": "Warwick and Dominey Fund – General",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "2402fd26-f087-4265-a0c6-4170cebea981": {
+  "title": "Resilience Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "b5c373ef-b3a5-41ff-8a1f-8398f837642c": {
+  "title": "Rosa — Stand With Us Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "a06424c3-643c-458c-8f97-a228cef657a6": {
+  "title": "Trading for Good: Bury",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "474dd39e-81f2-4613-bec3-2da7bcae6c11": {
+  "title": "Social Justice Small Grants Programme",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "5b3ee9d2-efea-43ca-b4e6-94005e070a09": {
+  "title": "SSE Social Investment Gateway Programme",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "131181c3-caf3-43f0-b7e5-86e96cd50e00": {
+  "title": "Voicescape Community Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "d360f51b-e3dc-4789-92bc-128092b83e5e": {
+  "title": "Small Grants to Support People with Disabilities to Play Tennis",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "dc4eb9d8-2cae-43e5-b9c6-870b60162446": {
+  "title": "Welcome for Newcomers Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "1ef69197-b551-4da9-860c-645c97acfb09": {
+  "title": "Severn Trent Community Fund — New Project Funding",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "be7faf98-fdd3-48ad-ac98-bf05fafe26c3": {
+  "title": "Souter Charitable Trust — General Grants",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "14469b5f-f30c-44cd-90f4-8414a4f41dff": {
+  "title": "Rusholme Wind Farm Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "b6d72fd6-3fd3-4bc6-971e-624f9cd2f716": {
+  "title": "Safer in Sussex Community Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "dc4ae90b-7c65-4671-950b-43ccfb0315f6": {
+  "title": "Strathnairn Community Benefit Fund — General Grants",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "ba777964-c525-42f2-9a9c-4708ea748470": {
+  "title": "Sterry Family Foundation",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "a1f5fc6e-08ca-4ef2-8c74-8cf5efbcc565": {
+  "title": "TiE Women Program 2026",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "6ab7b061-bd05-4a44-a7c7-8f3ea331627e": {
+  "title": "Richard and Siobhán Coward Foundation — Community Photography Grants",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "8c23420c-99d3-49c9-b13e-f5062b3616a8": {
+  "title": "Trailblazer Community Grants",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "a64ef55b-1003-4d53-bdd3-eaa49835a798": {
+  "title": "Tobacco and Vapes Implementation Grant",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "2d515d44-595b-421a-8d7d-90b2b32b50e8": {
+  "title": "Skinners' Company Charity Programme",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "eef413f5-805b-4919-b54e-f3e5bd1e7e26": {
+  "title": "UnLtd — Awards for Social Entrepreneurs",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "f4225849-0663-4532-b73e-b8720dd67fb2": {
+  "title": "Severn Trent Community Fund New Project Funding",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "a3107c21-e079-4291-95f4-fd4c45c77108": {
+  "title": "The Awesome Foundation — Glasgow Chapter",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "4fa14077-7904-4fd9-ba4f-d8ad7a501bff": {
+  "title": "Social Enterprise Growth Accelerator (SEGA)",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "7f128498-e43b-4578-975a-f1186854bae9": {
+  "title": "The Pargiter Trust Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "34c4a433-9149-4676-acad-7fe0585e96bf": {
+  "title": "The Elephant Trust",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "f47db5b5-af42-49c5-b807-ce993c3bd9fc": {
+  "title": "The Homity Trust",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "f1fdcd6e-152a-403f-a1ac-f7838fbe9ebc": {
+  "title": "sportscotland — Facilities Investment",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "cd0828b8-86de-4690-87f1-a866bafcb3bd": {
+  "title": "The Leeds Digital Inclusion Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "4c5b51d6-8da6-4bba-875c-61085bbb1f0f": {
+  "title": "Somerset Social Investment Programme",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "debe4866-33ef-423e-b456-344af55a7367": {
+  "title": "Reducing Veteran Homelessness programme",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "ac17f2a9-ae1c-44bc-b6ba-a2398bf957fd": {
+  "title": "Youth Matters Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "00a0ee02-a053-4225-9283-5c13278a17e1": {
+  "title": "Somerset Older People's Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "c36678c2-0801-49a3-a1c0-f7fe6c59b784": {
+  "title": "Triton Knoll Offshore Community Wind Farm Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "2b7a6194-4be6-4626-a2dd-d92b2d6b440c": {
+  "title": "The Ringtons Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "5fcc772f-482b-44d2-9afb-ff0c147266aa": {
+  "title": "The Charity Service — Greater Manchester Grants",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "b4dd4488-867a-48c2-9853-1250c43865f6": {
+  "title": "Schroder Charity Trust Grant Programmes",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "876a5299-1b0b-4f07-9bb1-b9c7e36257e1": {
+  "title": "The Mayor's Opportunity Fund",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ },
+ "984ce6c8-50ff-4355-a40f-ce98008c35ad": {
+  "title": "Together for Service: Families Place-Based Grants",
+  "is_active": false,
+  "pipeline_state": "published",
+  "rejection_reason": null
+ }
+}

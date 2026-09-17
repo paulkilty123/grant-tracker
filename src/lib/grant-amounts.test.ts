@@ -159,3 +159,20 @@ describe('applicant project cost is not a grant amount', () => {
     expect(max('Grants of up to £5,000 towards project costs.')).toBe(5000)
   })
 })
+
+describe('a prior-receipt threshold or a budget-line cap is not an award (BFI Development Funding, 16 Sept 2026)', () => {
+  it('drops an accumulated-total threshold', () => {
+    expect(max('If your project has already received an accumulated total of £60,000 funding from the BFI through previous stages, you must be able to articulate a clear route to production in order to access further funding.')).toBeNull()
+    expect(max('We expect that once projects have received an accumulated total of £60,000 funding from the BFI, you should be able to articulate a clear route to production.')).toBeNull()
+  })
+  it('drops fee and overhead caps, per stage or per document', () => {
+    expect(max('Producer fees: Up to £3,000 per stage.')).toBeNull()
+    expect(max('Legal fees up to £3,500 for writer agreement.')).toBeNull()
+    expect(max('Producer overheads – emerging up to £4,000 per stage.')).toBeNull()
+    expect(max('applicants with less than £20,000 in their BFI Locked Box can apply for development funding as normal')).toBeNull()
+  })
+  it('still reads a per-project award and a plain ceiling', () => {
+    expect(max('Grants of up to £3,000 per project.')).toBe(3000)
+    expect(max('Awards of up to £60,000 for feature development.')).toBe(60000)
+  })
+})

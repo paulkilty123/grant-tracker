@@ -1277,8 +1277,14 @@ export default function DeadlinesPage() {
   const filteredAlerts = showPipeline ? alerts : []
   const calDays        = buildCalendarDays(calYear, calMonth, filteredAlerts)
 
-  // Scheduled = all pipeline alerts with deadline, sorted soonest first
-  const scheduledPipeline = [...filteredAlerts]
+  // Scheduled = pipeline alerts with a deadline still ahead, soonest first.
+  // A passed date is dropped: the page is what is coming up, and a missed
+  // deadline is a board decision (decline it, or set the next round's date),
+  // not a countdown. The card keeps its date on the pipeline board. Only a
+  // pipeline item can be overdue here; match and saved rows are queried with
+  // deadline >= today. Paul, 2026-09-11.
+  const scheduledPipeline = filteredAlerts
+    .filter(a => a.urgency !== 'overdue')
     .sort((a, b) => ((a.item.deadline ?? '9999') < (b.item.deadline ?? '9999') ? -1 : 1))
 
   // Visible match rows (exclude already-pipelined)
@@ -1385,7 +1391,10 @@ export default function DeadlinesPage() {
   function renderScheduledRow(row: ScheduledRow, bucket: 'week' | 'month' | 'later', isLast: boolean, rowKey: string) {
     const days      = rowDays(row)
     const isOverdue = days < 0
-    const dayStr    = isOverdue ? 'Overdue' : `${days}d`
+    // A word in the tile sits at 12px, a count at 19px. "Overdue" at 19px is
+    // wider than the 56px tile and spilled out both sides. Paul, 2026-09-11.
+    const dayStr    = isOverdue ? 'Overdue' : days === 0 ? 'Today' : `${days}d`
+    const daySize   = /^\d+d$/.test(dayStr) ? 19 : 12
 
     const dl       = row.kind === 'pipeline' ? row.alert.item.deadline : row.grant.deadline
     const dlLabel  = dateLabel(dl ?? null)
@@ -1544,7 +1553,7 @@ export default function DeadlinesPage() {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             background: ctBg,
           }}>
-            <span style={{ fontFamily: UI_FONT, fontWeight: 700, fontSize: 19, letterSpacing: '-0.01em', color: '#1D3C3E' }}>
+            <span style={{ fontFamily: UI_FONT, fontWeight: 700, fontSize: daySize, letterSpacing: '-0.01em', color: '#1D3C3E', whiteSpace: 'nowrap' }}>
               {dayStr}
             </span>
           </div>
@@ -1914,7 +1923,7 @@ export default function DeadlinesPage() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               {[
-                { label: 'Pipeline',     checked: showPipeline, count: alerts.length,        toggle: () => setShowPipeline(v => !v)  },
+                { label: 'Pipeline',     checked: showPipeline, count: alerts.filter(a => a.urgency !== 'overdue').length, toggle: () => setShowPipeline(v => !v)  },
                 { label: 'Saved grants', checked: showSaved,    count: savedGrantRows.length + savedNoDeadline.length, toggle: () => setShowSaved(v => !v) },
                 { label: 'Live matches', checked: showMatches,  count: matchRows.length,      toggle: () => setShowMatches(v => !v)   },
               ].map(({ label, checked, count, toggle }) => (

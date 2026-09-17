@@ -26,7 +26,7 @@
     },
     {
       "path": "/api/cron/process-pipeline-queue",
-      "schedule": "30 7 * * *"
+      "schedule": "30 3,7,11,15,19,23 * * *"
     },
     {
       "path": "/api/cron/auto-publish",
@@ -34,75 +34,39 @@
     },
     {
       "path": "/api/cron/crawl-grants?batch=1",
-      "schedule": "0 6 * * 1"
+      "schedule": "0 6 * * 1,4"
     },
     {
       "path": "/api/cron/crawl-grants?batch=2",
-      "schedule": "5 6 * * 1"
+      "schedule": "5 6 * * 1,4"
     },
     {
       "path": "/api/cron/crawl-grants?batch=3",
-      "schedule": "10 6 * * 1"
+      "schedule": "10 6 * * 1,4"
     },
     {
       "path": "/api/cron/crawl-grants?batch=4",
-      "schedule": "15 6 * * 1"
+      "schedule": "15 6 * * 1,4"
     },
     {
       "path": "/api/cron/crawl-grants?batch=5",
-      "schedule": "20 6 * * 1"
+      "schedule": "20 6 * * 1,4"
     },
     {
       "path": "/api/cron/crawl-grants?batch=6",
-      "schedule": "25 6 * * 1"
+      "schedule": "25 6 * * 1,4"
     },
     {
       "path": "/api/cron/crawl-grants?batch=7",
-      "schedule": "30 6 * * 1"
+      "schedule": "30 6 * * 1,4"
     },
     {
       "path": "/api/cron/crawl-grants?batch=8",
-      "schedule": "35 6 * * 1"
+      "schedule": "35 6 * * 1,4"
     },
     {
       "path": "/api/cron/crawl-grants?batch=9",
-      "schedule": "40 6 * * 1"
-    },
-    {
-      "path": "/api/cron/crawl-grants?batch=1",
-      "schedule": "0 6 * * 4"
-    },
-    {
-      "path": "/api/cron/crawl-grants?batch=2",
-      "schedule": "5 6 * * 4"
-    },
-    {
-      "path": "/api/cron/crawl-grants?batch=3",
-      "schedule": "10 6 * * 4"
-    },
-    {
-      "path": "/api/cron/crawl-grants?batch=4",
-      "schedule": "15 6 * * 4"
-    },
-    {
-      "path": "/api/cron/crawl-grants?batch=5",
-      "schedule": "20 6 * * 4"
-    },
-    {
-      "path": "/api/cron/crawl-grants?batch=6",
-      "schedule": "25 6 * * 4"
-    },
-    {
-      "path": "/api/cron/crawl-grants?batch=7",
-      "schedule": "30 6 * * 4"
-    },
-    {
-      "path": "/api/cron/crawl-grants?batch=8",
-      "schedule": "35 6 * * 4"
-    },
-    {
-      "path": "/api/cron/crawl-grants?batch=9",
-      "schedule": "40 6 * * 4"
+      "schedule": "40 6 * * 1,4"
     },
     {
       "path": "/api/cron/validate-urls",
@@ -161,12 +125,21 @@
       "schedule": "30 9 * * *"
     },
     {
-      "path": "/api/cron/reconcile-billing",
-      "schedule": "0 6 * * *"
+      "path": "/api/cron/engagement-report",
+      "schedule": "0 7 * * 1"
+    },
+    {
+      "path": "/api/cron/send-digest",
+      "schedule": "0 10 * * 2"
     },
     {
       "path": "/api/cron/expire-access-grants",
       "schedule": "30 5 * * *"
+    },
+    {
+      "path": "/api/cron/reconcile-billing",
+      "schedule": "0 6 * * *"
     }
-  ]
+  ],
+  "ignoreCommand": "bash -c 'echo \"$VERCEL_GIT_COMMIT_MESSAGE\" | grep -q \"\\[deploy\\]\\|\\[preview\\]\" && exit 1 || exit 0'"
 }

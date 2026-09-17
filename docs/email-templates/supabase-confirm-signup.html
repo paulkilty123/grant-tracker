@@ -1,73 +1,93 @@
 <!--
-  Grant Tracker — branded "Confirm signup" email for Supabase Auth.
+  Shoots — "Confirm signup" email for Supabase Auth.
+  Replaces docs/email-templates/supabase-confirm-signup.html (17 June, pre-rebrand).
 
-  WHERE TO PASTE:
-    Supabase Dashboard → Authentication → Email Templates → "Confirm signup"
-      • Subject heading:  Confirm your email — Grant Tracker
-      • Message body (HTML): paste everything BELOW this comment block.
+  WHERE THIS GOES
+    Supabase Dashboard -> Authentication -> Email Templates -> "Confirm signup"
+      Subject heading:  Confirm your Shoots account
+      Message body:     paste everything BELOW this comment block.
 
-  Variable: {{ .ConfirmationURL }} is the confirmation link injected by Supabase.
-  Logo loads from the live site (https://www.granttracker.co.uk/apple-touch-icon.png);
-  the "GrantTracker" wordmark text is the fallback if images are blocked.
-  Table-based + inline styles for broad email-client compatibility (incl. Outlook).
+  SUPABASE VARIABLE
+    {{ .ConfirmationURL }} is the link Supabase injects. It appears twice on
+    purpose: once on the button, once as plain text for clients that strip
+    buttons or for people who copy links by hand.
+
+  THE LOGO URL IS A LITERAL AND HAS TO BE
+    The dashboard cannot read env vars, so MCP_PUBLIC_ORIGIN cannot reach here.
+    This is the one place a hardcoded domain is correct — and therefore the one
+    place a domain move gets missed. The June template pointed at
+    granttracker.co.uk and nothing in the repo caught it.
+
+  EXPIRY WORDING
+    No number, deliberately. Supabase has ONE expiry (mailer_otp_exp) for every
+    link; it was 3600 on 2026-09-05 and Paul was asked to raise it to 86400 for
+    launch. The reset email says nothing either, so both stay true whichever
+    value is set.
 -->
-<div style="display:none;max-height:0;overflow:hidden;opacity:0;">Confirm your email to finish setting up your Grant Tracker account.</div>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F5F1E8;margin:0;padding:0;">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;">One click and your Shoots account is ready.</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#FFFFFF;margin:0;padding:0;">
   <tr>
-    <td align="center" style="padding:32px 16px;">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:480px;background:#FFFFFF;border-radius:14px;overflow:hidden;border:1px solid rgba(0,0,0,0.06);">
-        <!-- Header -->
+    <td align="center" style="padding:32px 16px 44px;">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;">
+
+        <!-- header -->
         <tr>
-          <td style="padding:28px 32px 0 32px;">
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0">
-              <tr>
-                <td style="vertical-align:middle;padding-right:9px;">
-                  <img src="https://www.granttracker.co.uk/apple-touch-icon.png" width="32" height="32" alt="Grant Tracker" style="display:block;border-radius:7px;" />
-                </td>
-                <td style="vertical-align:middle;font-family:'Space Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:20px;font-weight:700;letter-spacing:-0.02em;color:#173404;">
-                  GrantTracker
-                </td>
-              </tr>
-            </table>
+          <td style="padding:0 6px 22px;">
+            <img src="https://www.shootsfunding.co.uk/email/shoots-logo@2x.png" width="146" height="43" alt="Shoots" style="display:block;border:0;outline:none;text-decoration:none;" />
           </td>
         </tr>
-        <!-- Body -->
+
+        <!-- body -->
         <tr>
-          <td style="padding:24px 32px 8px 32px;">
-            <h1 style="margin:0 0 12px 0;font-family:'Space Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:22px;font-weight:600;color:#2C2C2A;letter-spacing:-0.01em;">
-              Confirm your email
+          <td style="background:#FFFFFF;border:1px solid rgba(29,60,62,0.10);border-radius:16px;padding:30px 30px 26px;">
+            <h1 style="margin:0 0 12px;font-family:'Space Grotesk',Helvetica,Arial,sans-serif;font-size:24px;font-weight:600;letter-spacing:-0.4px;line-height:1.25;color:#1D3C3E;">
+              Confirm your email address
             </h1>
-            <p style="margin:0 0 24px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.55;color:#5F5E5A;">
-              Welcome to Grant Tracker — funding matches for UK charities, CICs and social enterprises. Confirm your email to finish setting up your account and see your matches.
+            <p style="margin:0 0 24px;font-family:'Plus Jakarta Sans',Helvetica,Arial,sans-serif;font-size:15.5px;line-height:1.65;color:#2E2E2E;">
+              One click and your Shoots account is ready.
             </p>
-            <!-- Button (bulletproof: bgcolor on cell + padded anchor) -->
+
+            <!-- bulletproof button -->
             <table role="presentation" cellpadding="0" cellspacing="0" border="0">
               <tr>
-                <td align="center" bgcolor="#8ECB3C" style="border-radius:10px;">
+                <td align="center" bgcolor="#1D3C3E" style="border-radius:999px;">
                   <a href="{{ .ConfirmationURL }}" target="_blank"
-                     style="display:inline-block;padding:13px 26px;font-family:'Space Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;font-weight:600;color:#173404;text-decoration:none;border-radius:10px;">
-                    Confirm your email
+                     style="display:inline-block;padding:13px 26px;font-family:'Space Grotesk',Helvetica,Arial,sans-serif;font-size:14.5px;font-weight:600;color:#F6F1E7;text-decoration:none;border-radius:999px;">
+                    Confirm my email
                   </a>
                 </td>
               </tr>
             </table>
-            <p style="margin:22px 0 0 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.5;color:#8A8986;">
-              Or paste this link into your browser:<br />
-              <a href="{{ .ConfirmationURL }}" target="_blank" style="color:#3B6D11;word-break:break-all;">{{ .ConfirmationURL }}</a>
+
+            <p style="margin:22px 0 0;font-family:'Plus Jakarta Sans',Helvetica,Arial,sans-serif;font-size:13.5px;line-height:1.6;color:#5F5E5A;">
+              If this link has expired, ask for a new one from the sign-in page. If the button does not work, paste this into your browser:
             </p>
+            <p style="margin:6px 0 0;font-family:'Plus Jakarta Sans',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.5;">
+              <a href="{{ .ConfirmationURL }}" target="_blank" style="color:#1D3C3E;font-weight:600;word-break:break-all;">{{ .ConfirmationURL }}</a>
+            </p>
+
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:24px;">
+              <tr>
+                <td style="border-top:1px solid rgba(29,60,62,0.10);padding-top:18px;">
+                  <p style="margin:0;font-family:'Plus Jakarta Sans',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.6;color:#5F5E5A;">
+                    If you did not create a Shoots account, ignore this email and nothing happens. The address is not added to anything.
+                  </p>
+                </td>
+              </tr>
+            </table>
           </td>
         </tr>
-        <!-- Footer -->
+
+        <!-- footer -->
         <tr>
-          <td style="padding:24px 32px 28px 32px;border-top:1px solid rgba(0,0,0,0.06);">
-            <p style="margin:0 0 6px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:12px;line-height:1.5;color:#8A8986;">
-              If you didn&rsquo;t create a Grant Tracker account, you can safely ignore this email.
-            </p>
-            <p style="margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:12px;line-height:1.5;color:#8A8986;">
-              Grant Tracker &middot; <a href="https://www.granttracker.co.uk" target="_blank" style="color:#8A8986;">granttracker.co.uk</a>
+          <td style="padding:20px 30px 0;">
+            <p style="margin:0;font-family:'Plus Jakarta Sans',Helvetica,Arial,sans-serif;font-size:12.5px;line-height:1.6;color:#6C6B67;">
+              Shoots &middot; funding for UK charities and social enterprises<br />
+              <a href="https://www.shootsfunding.co.uk" target="_blank" style="color:#1D3C3E;font-weight:600;text-decoration:underline;">shootsfunding.co.uk</a>
             </p>
           </td>
         </tr>
+
       </table>
     </td>
   </tr>

@@ -9,10 +9,11 @@ import { useRouter } from 'next/navigation'
 import { FilePenLine, Plus, ChevronRight, ChevronDown, Trash2, Lightbulb, HelpCircle } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { getOrganisationByOwner } from '@/lib/organisations'
-import { T, UI, BODY } from '@/components/builder/tokens'
+import { T, UI, BODY, linkStyle } from '@/components/builder/tokens'
 import type { ApplicationRecord } from '@/lib/builder/types'
 import { hueMap, PROJECT_HUE_INK, PROJECT_HUE_NONE } from '@/lib/project-hues'
 import { HowItWorksPanel, DisclosureControl } from '@/components/HowItWorksPanel'
+import { useIsMobile } from '@/hooks/useIsMobile'
 
 // The Apply-tier ethos as a few plain principles. Leads with the funder's-eye
 // reframe (the highest-value move for first-time applicants), closes on voice.
@@ -40,12 +41,21 @@ function HowItWorks({ withCta }: { withCta?: boolean }) {
   )
 }
 
+/** "today", "yesterday", "3 days ago", or a short date beyond a fortnight. */
+function relativeDay(iso: string): string {
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000)
+  if (days <= 0) return 'today'
+  if (days === 1) return 'yesterday'
+  if (days < 14) return `${days} days ago`
+  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+}
+
 const STATUS_STYLE: Record<string, { bg: string; color: string; label: string }> = {
   // "In progress" and "Complete" are states of the application, so they take
   // the green that means "this is true". Draft is the absence of one and stays
   // neutral — as does the "Identified" chip on a Ready-to-start row, which is a
   // pipeline stage rather than a state of anything drafted.
-  draft:       { bg: '#F1EDE3',    color: '#5F5E5A',       label: 'Draft' },
+  draft:       { bg: '#F1EDE3',    color: '#5F5E5A',       label: 'Not started' },
   in_progress: { bg: '#E3F0E4',    color: '#1B6B3D',       label: 'In progress' },
   complete:    { bg: '#B4D496',    color: '#1D3C3E',       label: 'Complete' },
 }
@@ -77,6 +87,7 @@ export default function ApplicationsPage() {
   const [howOpen, setHowOpen] = useState(false)
   const [principlesOpen, setPrinciplesOpen] = useState(false)
   const [hoveredId, setHoveredId] = useState<string | null>(null)
+  const isMobile = useIsMobile()
   const [deadlineSoon, setDeadlineSoon] = useState(0)
   const [readyToStart, setReadyToStart] = useState<PipeItem[]>([])
   const [projectNames, setProjectNames] = useState<Record<string, string>>({})
@@ -257,6 +268,17 @@ export default function ApplicationsPage() {
             ))
           })()}
           <Link
+            href="/dashboard/profile#card-story"
+            style={{
+              fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: '#1D3C3E',
+              background: 'transparent', border: '1px solid rgba(29,60,62,0.35)', padding: '10px 18px',
+              borderRadius: 999, textDecoration: 'none', display: 'inline-flex', alignItems: 'center',
+              gap: 7, whiteSpace: 'nowrap', flexShrink: 0,
+            }}
+          >
+            Your material
+          </Link>
+          <Link
             href="/dashboard/applications/new"
             style={{
               fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: '#F6F1E7',
@@ -277,7 +299,10 @@ export default function ApplicationsPage() {
         </DisclosureControl>
         {principlesOpen && (
           <div style={{
-            background: T.softGreen, border: `1px solid ${T.border}`, borderRadius: 12,
+            /* White, not softGreen. The tint is a hair off the cream page and
+               read as a wrong shade rather than as a panel, and the How it
+               works strip below it is white. Paul, 2026-09-04. */
+            background: T.white, border: `1px solid ${T.border}`, borderRadius: 12,
             padding: '18px 20px', marginTop: 10, display: 'flex', flexDirection: 'column', gap: 12,
           }}>
             {STRONG_APPLICATION_PRINCIPLES.map((p, i) => (
@@ -337,6 +362,10 @@ export default function ApplicationsPage() {
                 background: T.white, border: `1px solid ${T.border}`, borderRadius: 12,
                 padding: '14px 18px', textDecoration: 'none',
                 display: 'flex', alignItems: 'center', gap: 14,
+                /* Under 640px the row wraps: the progress block drops to its
+                   own full-width line, and the delete control is always shown
+                   because there is no hover on a touch screen. */
+                flexWrap: isMobile ? 'wrap' : 'nowrap', rowGap: 10,
               }}
             >
               {/* The project's hue, or neutral. Neutral is the honest state,
@@ -362,13 +391,21 @@ export default function ApplicationsPage() {
                     {status.label}
                   </span>
                 </div>
+                {/* One line that tells duplicates apart: three rows called Youth
+                    Fund with the same funder and date were indistinguishable. */}
                 <span style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary }}>
-                  {app.funder_name && app.grant_name
-                    ? app.funder_name
-                    : `${total} ${total === 1 ? 'question' : 'questions'}`}
-                  {(app as { created_at?: string }).created_at
-                    ? ` · ${new Date((app as { created_at: string }).created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
-                    : ''}
+                  {[
+                    app.funder_name && app.grant_name ? app.funder_name : null,
+                    `${total} ${total === 1 ? 'question' : 'questions'}`,
+                    (app as { created_at?: string }).created_at
+                      ? `started ${new Date((app as { created_at: string }).created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
+                      : null,
+                    answered === 0
+                      ? 'nothing written yet'
+                      : (app as { updated_at?: string }).updated_at
+                        ? `last edited ${relativeDay((app as { updated_at: string }).updated_at)}`
+                        : null,
+                  ].filter(Boolean).join(' · ')}
                 </span>
                 {/* Filed, or the control to file it. The affordance is
                     self-cancelling — choose a project and the swatch takes its
@@ -404,35 +441,17 @@ export default function ApplicationsPage() {
                     <button
                       onClick={() => { setAssignError(null); setAssigningId(app.id) }}
                       style={{
-                        fontFamily: UI, fontWeight: 600, fontSize: 11.5, color: T.textSecondary,
-                        background: 'transparent', border: `1px dashed ${T.borderStrong}`,
-                        borderRadius: 999, padding: '4px 10px', cursor: 'pointer',
+                        ...linkStyle(), fontFamily: UI, fontSize: 12,
+                        background: 'transparent', border: 'none', padding: 0,
                       }}
                     >
-                      Assign project
+                      Assign a project
                     </button>
                   )}
                 </span>
               </div>
-              {total > 0 && (
-                <div style={{ width: 132, flexShrink: 0 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                    <span style={{ fontFamily: BODY, fontSize: 11.5, color: T.textSecondary }}>
-                      {answered} of {total} written
-                    </span>
-                    <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: '#1D3C3E' }}>
-                      {Math.round((answered / total) * 100)}%
-                    </span>
-                  </div>
-                  {/* Track was T.cream on a white card — 1.04:1, invisible, so the bar read as a floating stub. Same bug as the Find Funding sort pill. */}
-                  <div style={{ height: 6, background: 'rgba(29,60,62,0.15)', borderRadius: 999, overflow: 'hidden' }}>
-                    <div style={{
-                      height: '100%', width: `${Math.round((answered / total) * 100)}%`,
-                      background: '#1D3C3E', borderRadius: 999, transition: 'width 200ms ease',
-                    }} />
-                  </div>
-                </div>
-              )}
+              {/* Delete sits left of the progress block, away from the chevron:
+                  a tester reached for the arrow and landed on the bin (8 Sept). */}
               {confirmDeleteId === app.id ? (
                 <span style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}
                   onClick={e => { e.preventDefault(); e.stopPropagation() }}>
@@ -462,11 +481,30 @@ export default function ApplicationsPage() {
                   style={{
                     background: 'transparent', border: 'none', cursor: 'pointer',
                     color: T.textTertiary, padding: 6, borderRadius: 6, flexShrink: 0,
-                    opacity: hoveredId === app.id ? 1 : 0, transition: 'opacity 150ms ease',
+                    opacity: isMobile || hoveredId === app.id ? 1 : 0, transition: 'opacity 150ms ease',
                   }}
                 >
                   <Trash2 size={15} />
                 </button>
+              )}
+              {total > 0 && (
+                <div style={isMobile ? { width: '100%', order: 9 } : { width: 132, flexShrink: 0 }}>
+                  {/* One representation of progress: the sentence and the bar.
+                      The percentage that used to sit beside them was the same
+                      number a third time. */}
+                  <div style={{ textAlign: 'right', marginBottom: 5 }}>
+                    <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: answered === 0 ? T.textTertiary : '#1D3C3E' }}>
+                      {answered} of {total} written
+                    </span>
+                  </div>
+                  {/* Track was T.cream on a white card — 1.04:1, invisible, so the bar read as a floating stub. Same bug as the Find Funding sort pill. */}
+                  <div style={{ height: 6, background: 'rgba(29,60,62,0.15)', borderRadius: 999, overflow: 'hidden' }}>
+                    <div style={{
+                      height: '100%', width: `${Math.round((answered / total) * 100)}%`,
+                      background: '#1D3C3E', borderRadius: 999, transition: 'width 200ms ease',
+                    }} />
+                  </div>
+                </div>
               )}
               <ChevronRight size={16} color={T.textTertiary} style={{ flexShrink: 0 }} />
             </Link>
@@ -505,6 +543,7 @@ export default function ApplicationsPage() {
                   <div key={p.id} style={{
                     background: T.white, border: `1px solid ${T.border}`, borderRadius: 12,
                     padding: '13px 16px', display: 'flex', alignItems: 'center', gap: 14,
+                    flexWrap: isMobile ? 'wrap' : 'nowrap', rowGap: 10,
                   }}>
                     <span style={{
                       width: 38, height: 38, borderRadius: 10, flexShrink: 0,
@@ -550,8 +589,12 @@ export default function ApplicationsPage() {
           </div>
         )}
 
-        {/* How it works: full strip for 1-2 applications, collapsed link for 3+ */}
-        {loaded && apps.length > 0 && apps.length <= 2 && <HowItWorks />}
+        {/* How it works: full strip for 0-2 applications, collapsed link for 3+.
+            The zero case here is "nothing drafted but something ready to
+            start"; the fully empty page renders the CTA version above. Without
+            this branch a first-time user with a pipeline saw no guide at all.
+            Paul, 2026-09-04. */}
+        {loaded && apps.length <= 2 && (apps.length > 0 || readyToStart.length > 0) && <HowItWorks />}
         {loaded && apps.length >= 3 && (
           howOpen
             ? <HowItWorks />

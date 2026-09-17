@@ -9,10 +9,10 @@ import {
 } from '@/lib/alerts'
 import type { AlertGrant } from '@/lib/alerts'
 import { recordRun } from '@/lib/admin/cron-runs'
-import { EMAIL_FROM, EMAIL_APP_URL } from '@/lib/mcp-brand'
+import { EMAIL_FROM_HEADER, EMAIL_APP_URL } from '@/lib/mcp-brand'
 import { unsubscribeUrl } from '@/lib/alerts-unsubscribe'
 
-const FROM_EMAIL = EMAIL_FROM
+const FROM_EMAIL = EMAIL_FROM_HEADER
 const APP_URL    = EMAIL_APP_URL
 
 export const dynamic = 'force-dynamic'

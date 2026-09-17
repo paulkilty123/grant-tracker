@@ -35,6 +35,61 @@ the new version.
 
 # Waiting
 
+## `seo/hub-pages` — MERGED 15 September as `c839ccf3`, on Paul's go
+
+**What it does:** the public catalogue gets a front door and hub pages, every
+grant page links to its neighbours, and the public grant record is gated.
+
+Measured that morning: all 660 public grant pages were reachable only from the
+sitemap, no grant page linked to another, the homepage linked to none, and
+Google sent 22 visits a week. Hubs: `/grants`, 21 sector pages, 7 region pages
+(UK-wide, England, London, Scotland, Wales, Northern Ireland, international),
+4 funding-type pages. Fifteen rows per hub, half the soonest deadlines and half
+the most recently checked so rolling rows get links too, then a signup prompt.
+Counts rounded everywhere. The grant page carries a breadcrumb, sector chips
+that link to hubs, and four neighbours (same region first, then same sector).
+
+Logged out, the record keeps chips, title, funder, amount, deadline, About,
+sectors, who-can-apply chips and one line on rounds and area. Eligibility in
+full, exclusions, priorities, typical award and timeline, and the apply link
+are behind the account; a locked block shows a line and a half of each and
+the rest is not in the HTML, JSON-LD or RSC payload. Bottom row links the
+funder's homepage only. Logged in, unchanged.
+
+Also: the expire cron can now roll a deadline along the row's own cycle over
+a user_verified or unpinned admin date (it was refused as lower_trust; 63 live
+rows would have stuck on a passed date as they came due, Achlachan first).
+"0 days left" reads "Closes today". SCIO and Individual chips labelled.
+
+### Deploy gate
+
+```
+Regression: tsc clean. 1292 tests pass across 101 files (33 new: hubs.test.ts
+            27, grant-merge.test.ts 5 cycle-roll cases). eslint clean on every
+            changed file. next build compiled, 70/70 static pages.
+Fixtures:   region bucketing checked row by row for Scotland, Wales and NI on
+            the live data before merge. Three bugs found by the fixture, all
+            fixed before merge: Belfast/Glasgow/Pembrokeshire on the England
+            page; London boroughs missing the London page; "England & Wales"
+            crumbing to Wales.
+Accent:     0 retired brand values in the new surfaces (grep for #8ECB3C,
+            #173404, #639922, #3B6D11, #8A8986, #F1F7E4).
+Free surface: MCP tools/list fingerprint 3014ca4e…c25f70 before and after,
+            identical (5 tools). Note: scripts/agent-eval/mcp-toollist.ts
+            defaults to granttracker.co.uk, which 308s and strips the bearer,
+            so it reports 401; run with MCP_URL=https://www.shootsfunding.co.uk/api/mcp/v1/mcp.
+Live:       /grants 200; Wales, NI, Community hubs 200 with 15 rows; sitemap
+            693 URLs (33 hubs); Achlachan public page: 0 occurrences of the
+            apply URL or the gated prose, "Closes today", SCIO, 4 related rows;
+            landing footer carries Browse funding.
+Rollback:   8a5a752b (before the hubs) or 0901c70e (hubs, ungated record).
+Still to prove on the real path: Achlachan rolls 15 Sep -> 15 Dec at the
+            02:00 UTC expire run on 16 Sept. If it reads "Round closed" that
+            morning, the cycle-roll rule did not fire.
+```
+
+---
+
 ## `exp/white-ground` — MERGED 25 August, on Paul's explicit go
 
 **What it does:** band C. Every dashboard surface moves onto the Shoots brand

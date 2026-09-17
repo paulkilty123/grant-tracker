@@ -33,7 +33,7 @@ export default function PrivacyPage() {
           Privacy policy
         </h1>
         <p style={{ marginTop: 12, marginBottom: 40, fontSize: 14, color: '#5F5E5A' }}>
-          <strong style={{ color: '#2C2C2A' }}>Last updated:</strong> 12 August 2026
+          <strong style={{ color: '#2C2C2A' }}>Last updated:</strong> 9 September 2026
         </p>
         {/* Rename note. Kept at the top, not buried in "Changes to this policy",
             because its job is to reassure a returning user who arrived expecting
@@ -66,7 +66,9 @@ export default function PrivacyPage() {
           <p>We collect the following categories of personal data:</p>
           <p><strong>Account data.</strong> When you create an account, we collect your first name, organisation name, email address, and an encrypted version of your password.</p>
           <p><strong>Profile data.</strong> When you complete your organisation profile, you may provide additional information including your organisation type, sectors and beneficiaries you serve, geographic focus, and information about your funding history. This data is used to match you with relevant funding opportunities.</p>
-          <p><strong>Application data.</strong> If you apply to join the founding cohort, we collect the responses you provide on the application form, including your contact details and the information you share about your organisation and fundraising context.</p>
+          <p><strong>Payment and subscription data.</strong> If you subscribe, our payment provider Stripe collects your card details directly. We never see or store your full card number. We store your plan, billing period, subscription status and dates, the Stripe customer and subscription identifiers, and a record of each payment.</p>
+          <p><strong>Waitlist and enquiry data.</strong> If you join a waitlist, contact us, or send feedback through the service, we keep the details you provide, including your email address and message.</p>
+          <p><strong>Application data.</strong> If you applied to join the founding cohort, we collected the responses you provided on the application form, including your contact details and the information you shared about your organisation and fundraising context.</p>
           <p><strong>Usage data.</strong> We collect aggregate, anonymised data about how the service is used, such as which pages are visited and which features are most useful. We use this to improve the service. We do not use this data to identify individual users.</p>
           <p><strong>Activity data.</strong> We record the actions you take in the service against your organisation&apos;s profile: the searches you run, the opportunities you view, save, or dismiss, changes to your funding pipeline, updates to your profile, and your use of application-building features. See &ldquo;How your activity builds your organisation&apos;s profile&rdquo; below for what this is used for and the promises that come with it.</p>
           <p><strong>Communications data.</strong> If you email us or respond to our messages, we keep a record of the correspondence.</p>
@@ -74,8 +76,9 @@ export default function PrivacyPage() {
 
           <Heading>How we use your data</Heading>
           <p>We use your personal data for the following purposes:</p>
-          <p>To provide the service. This includes creating and managing your account, matching you with funding opportunities based on your profile, sending you alerts about deadlines you have set, and storing the funding pipeline you build.</p>
-          <p>To communicate with you. This includes responding to your questions, sending occasional product updates, and contacting you for monthly cohort check-ins if you are a founding cohort member.</p>
+          <p>To provide the service. This includes creating and managing your account, matching you with funding opportunities based on your profile, storing the opportunities you save and the funding pipeline you build, and running the application tools you use.</p>
+          <p>To take payment and manage your subscription. This includes starting and ending your trial, processing payments through Stripe, sending receipts, and telling you about failed payments, renewals, and price changes.</p>
+          <p>To communicate with you. This includes responding to your questions, sending service emails about your account and subscription, and sending our regular funding newsletter and occasional product updates. Every newsletter and update carries an unsubscribe link, and service emails about your account and payments are sent whether or not you receive the newsletter. If you are a founding cohort member, we may also contact you for cohort check-ins.</p>
           <p>To improve the service. We use anonymised usage data to understand which features are working and where the product needs to improve.</p>
           <p>To comply with our legal obligations. This includes responding to lawful requests from regulators and authorities, and maintaining records where required by law.</p>
 
@@ -101,7 +104,7 @@ export default function PrivacyPage() {
 
           <Heading>Legal basis for processing</Heading>
           <p>Under UK GDPR, we rely on the following legal bases:</p>
-          <p><strong>Contract.</strong> Most of our processing is necessary to provide the service you have signed up for. This covers account management, profile data, and the core matching and tracking functions.</p>
+          <p><strong>Contract.</strong> Most of our processing is necessary to provide the service you have signed up for. This covers account management, profile data, the core matching and tracking functions, the AI-assisted features you choose to use, and taking payment for your subscription.</p>
           <p><strong>Legitimate interests.</strong> We rely on legitimate interests for activities such as improving the service, responding to your enquiries, and contacting cohort members for feedback. We have considered the impact on you and believe these uses are proportionate.</p>
           <p><strong>Consent.</strong> Where you have given consent, for example to receive marketing communications or to allow analytics cookies, we rely on that consent. You can withdraw consent at any time.</p>
           <p><strong>Legal obligation.</strong> Where we are required by law to retain or disclose data, we rely on that legal obligation.</p>
@@ -112,6 +115,9 @@ export default function PrivacyPage() {
           <ul style={{ paddingLeft: 22, margin: '8px 0 16px' }}>
             <li style={{ marginBottom: 8 }}><strong>Supabase</strong> stores your account data, profile data, and pipeline data. Supabase is a data processor acting on our instructions. Their privacy policy is at <a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: '#3B6D11', fontWeight: 600 }}>supabase.com/privacy</a>.</li>
             <li style={{ marginBottom: 8 }}><strong>Vercel</strong> hosts the website and processes the technical requests needed to load pages. Vercel acts as a data processor. Their privacy policy is at <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" style={{ color: '#3B6D11', fontWeight: 600 }}>vercel.com/legal/privacy-policy</a>.</li>
+            <li style={{ marginBottom: 8 }}><strong>Stripe</strong> processes payments and holds your card details. Stripe acts as an independent controller for the payment data it collects, under its own privacy policy at <a href="https://stripe.com/gb/privacy" target="_blank" rel="noopener noreferrer" style={{ color: '#3B6D11', fontWeight: 600 }}>stripe.com/gb/privacy</a>.</li>
+            <li style={{ marginBottom: 8 }}><strong>Anthropic</strong> provides the AI models behind features such as matched search, the application tools, and the adviser. When you use one of these features, the text needed for that request, such as your organisation profile, your project description, or your draft, is sent to Anthropic&apos;s API to generate a response. Anthropic acts as a data processor and does not use API data to train its models. Their privacy policy is at <a href="https://www.anthropic.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: '#3B6D11', fontWeight: 600 }}>anthropic.com/privacy</a>.</li>
+            <li style={{ marginBottom: 8 }}><strong>Resend</strong> delivers the emails we send you, including receipts, account emails, and the newsletter. Resend acts as a data processor. Their privacy policy is at <a href="https://resend.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" style={{ color: '#3B6D11', fontWeight: 600 }}>resend.com/legal/privacy-policy</a>.</li>
             <li><strong>Upstash</strong> provides the rate-limit counters used by our MCP server (see &ldquo;MCP, OAuth, and API access&rdquo; below). Upstash stores short-lived per-IP and per-key request counts; no profile or pipeline data is sent to Upstash. Their privacy policy is at <a href="https://upstash.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: '#3B6D11', fontWeight: 600 }}>upstash.com/privacy</a>.</li>
           </ul>
           <p>We do not sell your personal data to anyone. We do not share your organisation&apos;s data with funders, other organisations, or third parties without your explicit permission.</p>
@@ -122,7 +128,7 @@ export default function PrivacyPage() {
             Shoots operates a Model Context Protocol (MCP) server at <a href="https://www.shootsfunding.co.uk/api/mcp/v1/mcp" style={{ color: '#3B6D11', fontWeight: 600 }}>www.shootsfunding.co.uk/api/mcp/v1/mcp</a>. The MCP lets AI agents, including Claude, ChatGPT, Gemini, and any other MCP-compatible client, use Shoots on your behalf, so that an agent you already work with can answer your funding questions. Connecting an AI agent is opt-in.
           </p>
           <p>
-            All connected accounts can read from our funding catalogue through the MCP. On the Apply and Adviser plans, a connected agent can also make changes on your behalf, limited to your own organisation&apos;s data: adding opportunities to your pipeline, updating their stage, and setting your funding goal and what it is for. On the free plan the connection reads only. An agent can never read or change another organisation&apos;s data, and it can only do what your plan allows.
+            All connected accounts can read from our funding catalogue through the MCP. On the Apply plan and above, a connected agent can also make changes on your behalf, limited to your own organisation&apos;s data: adding opportunities to your pipeline, updating their stage, and setting your funding goal and what it is for. On the Match plan the connection reads only. An agent can never read or change another organisation&apos;s data, and it can only do what your plan allows.
           </p>
           <p>You connect by completing the OAuth 2.0 consent flow that an MCP-compatible client initiates when it adds Shoots as a connector. The client registers itself with us automatically using standard MCP registration mechanisms. If you do not yet have a Shoots account, you can create one during the connection flow; the account data we collect is the same as described in &ldquo;What data we collect&rdquo; above.</p>
           <p>
@@ -143,13 +149,15 @@ export default function PrivacyPage() {
 
           <Heading>How long we keep your data</Heading>
           <p>We keep your account and profile data for as long as your account is active. If you close your account, we will delete or anonymise your personal data within 30 days, except where we are required by law to keep it for longer.</p>
-          <p>Application data from people who applied to the founding cohort but were not accepted is kept for up to 12 months in case future cohort spots open up, and then deleted.</p>
+          <p>If your subscription or trial ends without a new subscription, we keep your account, profile, saved opportunities and pipeline so that you can return. If an account stays without a subscription for 12 months, we may close it after notice by email, and the 30-day deletion rule above then applies.</p>
+          <p>Payment records are kept for six years after the payment, as UK tax law requires.</p>
+          <p>Waitlist entries are deleted within 30 days of you asking to be removed. Application data from people who applied to the founding cohort but were not accepted is kept for up to 12 months and then deleted.</p>
           <p>Email correspondence is kept for up to 24 months unless there is a specific reason to retain it longer.</p>
           <p>OAuth client and token records are kept for as long as the connection is active. After you disconnect an OAuth client, we keep the record for a further 12 months for fraud-prevention and rate-limit-consistency purposes, and then delete it. MCP request logs are kept for up to 12 months and then deleted or anonymised.</p>
 
           <Heading>Cookies and analytics</Heading>
           <p>We use a small number of essential cookies that are necessary for the service to work, such as remembering that you are signed in.</p>
-          <p>We may also use a privacy-respecting analytics tool to understand how the service is used in aggregate. If we do, we will ask for your consent through a cookie banner before any non-essential cookies are set, and you can change your choice at any time.</p>
+          <p>We use Umami, a privacy-respecting analytics tool, to understand how the service is used in aggregate. Umami does not set cookies and does not identify individual visitors, which is why we do not show a cookie banner. If we ever add a tool that sets non-essential cookies, we will ask for your consent first.</p>
           <p>We do not use advertising cookies, third-party trackers, or session recording tools.</p>
 
           <Heading>Your rights</Heading>

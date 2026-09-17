@@ -430,20 +430,74 @@ function structureTokens(s: string): string[] {
   return STRUCTURE_TOKEN_MAP[lc] ?? [lc]
 }
 
+/**
+ * Structures an organisation ALSO satisfies, by containment.
+ *
+ * A CIC limited by guarantee is registered at Companies House as a private
+ * company limited by guarantee; CIC status is an additional regulatory layer
+ * on top of that company form (a community interest statement and an asset
+ * lock, under the Companies (Audit, Investigations and Community Enterprise)
+ * Act 2004). It does not replace the form. So a fund open to companies limited
+ * by guarantee is open to it.
+ *
+ * The catalogue already agrees, almost everywhere: of 396 published rows
+ * listing ltd_guarantee, 391 also list cic_guarantee. Checked all five that do
+ * not, and none is a deliberate exclusion — Network for Social Change's own
+ * "who can apply" reads "Open to registered charities, community interest
+ * companies (CICs), non-profit co-operatives", so its structure list was
+ * simply mis-extracted. That row was generating a near miss for a CIC that
+ * the funder explicitly welcomes.
+ *
+ * DIRECTIONAL, and that is the whole reason this cannot be another shared
+ * token. Containment runs one way: every CIC limited by guarantee is a company
+ * limited by guarantee, and no plain company limited by guarantee is a CIC.
+ * Widening the ORG's tokens preserves that; adding a token to the map would
+ * make the match symmetric and let a non-CIC through a CIC-only fund.
+ */
+const STRUCTURE_SATISFIES: Partial<Record<LegalStructure, LegalStructure[]>> = {
+  cic_guarantee: ['ltd_guarantee'],
+  cic_shares:    ['ltd_shares'],
+  // An unregistered group IS an unincorporated group: a set of people acting
+  // together with no legal form, which is exactly what a fund open to
+  // "unincorporated groups" means. matching.ts's normaliser already treated
+  // the two as one; this file did not, so the blocker here overrode the
+  // matcher and every unregistered group was ruled out of all 313 live funds
+  // that list unincorporated (ASP Belong against Chalk Cliff Trust, 7 Sept
+  // 2026: "Not registered is not in the eligible structures list
+  // (... Unincorporated ...)"). One way only: a fund that names only
+  // "not registered" does not open to formal unincorporated associations.
+  not_registered: ['unincorporated'],
+}
+
 function structureMatches(orgStructure: LegalStructure, allowed: LegalStructure[]): boolean {
   const orgTokens = new Set(structureTokens(orgStructure))
+  for (const also of STRUCTURE_SATISFIES[orgStructure] ?? []) {
+    for (const t of structureTokens(also)) orgTokens.add(t)
+  }
   return allowed.some(s => structureTokens(s).some(t => orgTokens.has(t)))
 }
 
+/**
+ * Structure labels, written so two of them cannot be mistaken for each other.
+ *
+ * `ltd_guarantee` used to render as "Limited by guarantee". A CIC limited by
+ * guarantee reading "they fund Registered charity, CIO, Limited by guarantee"
+ * sees its own structure in the allowed list and the sentence becomes a
+ * contradiction — the matcher is right, the label is what is wrong, and the
+ * whole near-miss section loses its credibility over one word.
+ *
+ * The two forms are now named in full and distinctly: a COMPANY limited by
+ * guarantee, versus a CIC limited by guarantee.
+ */
 function labelStructure(s: LegalStructure): string {
   const labels: Record<LegalStructure, string> = {
-    cic_guarantee:      'CIC (limited by guarantee)',
-    cic_shares:         'CIC (limited by shares)',
+    cic_guarantee:      'CIC limited by guarantee',
+    cic_shares:         'CIC limited by shares',
     cio:                'Charitable Incorporated Organisation',
     scio:               'Scottish Charitable Incorporated Organisation (SCIO)',
     registered_charity: 'Registered charity',
-    ltd_guarantee:      'Limited by guarantee',
-    ltd_shares:         'Limited by shares',
+    ltd_guarantee:      'company limited by guarantee',
+    ltd_shares:         'company limited by shares',
     llp:                'LLP',
     cooperative:        'Co-operative',
     unincorporated:     'Unincorporated',

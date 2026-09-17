@@ -6,32 +6,46 @@ Next.js 14 App Router + Supabase + Tailwind CSS, deployed on Vercel via GitHub a
 - **Live site:** https://www.shootsfunding.co.uk/ (the brand and the domain from 2026-08-27).
   Use shootsfunding for verification, admin calls and anything user-facing.
 
-  > **granttracker.co.uk does NOT redirect.** This line used to say it "308s here".
-  > It does not: as of 2026-08-30 it returns **200** and serves byte-identical
-  > content (checksums compared), so the same site is live on two domains. The
-  > canonical tag on both points at shootsfunding, which is a hint to a crawler
-  > and not a redirect. The fix is a 308 at the domain level in Vercel's project
-  > settings, not in code — flagged to Paul 2026-08-30. It matters more than a
-  > tidy-up because the launch push on 10 September is aimed partly at search and
-  > AI crawlers, and .org already outranks .co.uk. See
+  > **granttracker.co.uk now 308s here, and robots/sitemap are live.** Verified
+  > 2026-09-01 from four host variants: apex and www on BOTH domains return 308
+  > to `https://www.shootsfunding.co.uk`, on `/`, `/robots.txt` and
+  > `/sitemap.xml` alike. `robots.txt` and `sitemap.xml` both return 200 with the
+  > right content types; the sitemap carries 559 grant URLs, filtered to
+  > `is_active AND pipeline_state='published'` since it was created on
+  > 2026-08-30. This paragraph previously said the redirect did not exist and was
+  > flagged to Paul on 2026-08-30; it has been fixed since. See
   > `project_domain_confusion_grant_tracker_org`.
 - **Repo:** https://github.com/paulkilty123/grant-tracker
 - **Supabase project ID:** yrndczlqjqtfgissleev
-- **Pricing (final, set by Paul 2026-08-29):** three tiers, monthly or annual only.
+- **Pricing (set by Paul 2026-09-05):** three tiers, monthly or annual only.
 
-  | Tier | Monthly | Annual | Founding rate |
-  |------|--------:|-------:|--------------:|
-  | Match | £15 | £150 | £12 |
-  | Apply | £25 | £250 | £20 |
-  | Team  | £45 | £450 | £36 |
+  | Tier | List monthly | List annual | Launch price |
+  |------|-------------:|------------:|-------------:|
+  | Match | £19 | £190 | £15 / £150 |
+  | Apply | £35 | £350 | £25 / £250 |
+  | Team  | no price shown, "get in touch" | | none |
 
-  The founding rate is **permanent** for those who take it, applied as its own
-  Stripe price rather than a coupon, and **closes at the end of October**.
+  The **launch price** lasts **12 months from signup**, then moves to list. It is
+  NOT permanent. It is its own Stripe price rather than a coupon, and it
+  **closes to new signups at the end of October**. Call it "launch price" in
+  all public copy, never "founding rate": the founding rate belongs to the
+  founding cohort (20 to 30 orgs), who were promised a permanent rate on the
+  apply and terms pages. What that cohort rate is remains an open question;
+  do not reword those pages until Paul decides.
+
+  Team shows no price at all. It is not built yet, the aim is interest, and
+  every enquiry is a pricing conversation. Keep the description (five people
+  or five organisation profiles) so the right people write in.
+
   Products and prices are created from config, never in the dashboard — the
   repo is the single source of truth and the Stripe dashboard stays empty.
+  **Not yet applied:** `src/config/plans.ts`, `/pricing` ("from £45") and the
+  Stripe sandbox still carry the 29 August numbers below. The 12-month end to
+  the launch price also still needs building on the billing branch.
 
-  Supersedes "Match £12, Apply £18", which superseded "£65/6 months, £115/year".
-  Anything quoting either of those, MCP upgrade copy included, is stale.
+  Supersedes "Match £15, Apply £25, Team £45 with a permanent founding rate of
+  £12/£20/£36" (29 August), which superseded "Match £12, Apply £18", which
+  superseded "£65/6 months, £115/year". Anything quoting those is stale.
 - **Vercel plan: Pro** (team `paulkilty1-3944s-projects`). Verified against the
   Vercel API 2026-08-04. Sub-daily cron schedules (`*/N`) are now permitted.
   Note the API reports the PERSONAL account as `hobby` and the TEAM as `pro`;
@@ -48,6 +62,25 @@ Next.js 14 App Router + Supabase + Tailwind CSS, deployed on Vercel via GitHub a
 
 ## Git
 
+**Deploys are opt-in, set by Paul 2026-09-16.** Vercel bills build CPU minutes:
+493 deployments between 4 and 16 September (every push to every branch
+built) cost $14.69 of the $20 monthly credit, with $5 left for the rest of
+the cycle. `vercel.json` now carries an `ignoreCommand`: **a push builds only
+when the head commit message contains `[deploy]` (main) or `[preview]` (a
+branch)**. Anything else is pushed but not built. So:
+
+- Commit as often as you like. Push a branch as often as you like. Neither
+  costs anything now.
+- When a piece of work is finished and merged to main, make the LAST commit
+  carry `[deploy]` (an empty commit is fine:
+  `git commit --allow-empty -m "deploy: <what> [deploy]"`). One deploy per
+  finished piece, not per commit. Verify on the live site after it.
+- Want Paul to see a branch? Put `[preview]` in the commit you push. Ask
+  yourself first whether a screenshot would do.
+- Budget: about two builds a day for the rest of September. A build is
+  roughly eight CPU-minutes, about 20p.
+
+
 This repo lives at a **plain local path** (`~/dev/grant-tracker`) — **not** inside `~/Documents` or `~/Desktop`. Those are iCloud-synced ("Desktop & Documents Folders"), and syncing a live `.git` corrupts it (stale lock files, broken index/refs, a duplicated object store). Keep the working copy off any synced/cloud location.
 
 Normal git works — no workaround:
@@ -62,6 +95,16 @@ Push auth is a personal-access token embedded in `remote.origin.url` (see `git r
 **After every push:** Vercel auto-deploys from GitHub `main` (~1 min). Verify on the live site.
 
 **Branch discipline for build work:** build work happens on the feature branch (e.g. `agent/v1-core`) — commits and pushes to that branch are Claude's to make freely, no need to check in first. `main` is the production branch Vercel deploys from — treat a push to it as the deploy trigger it is, not a routine save. **Every merge to `main` passes the standing deploy gate, with no exceptions: regression suites, accent check, free-surface fingerprint, named rollback.**
+
+**LAUNCH FREEZE, set by Paul 2026-09-07, in force until launch (Thursday
+10 September) and the days after it.** Nothing a user can see goes live
+without his explicit go, each time: copy, pricing, design, page changes,
+emails. He wants to see it first. Backend work, tests, refactors and anything
+invisible to users merge as normal under the split below. "Each time" means a
+go for one change does not carry to the next. This overrides the split below
+wherever the two disagree. Current holds: the pricing branch
+`launch/landing-pricing` (target Wednesday, after Paul has seen the design;
+signup stays closed when it goes, the flip is Thursday 8am).
 
 **Who decides the merge (revised 2026-08-17).** The gate is what protects production. Paul's approval adds something on top of it only where a judgement is involved that the checks cannot make. So:
 
@@ -123,6 +166,59 @@ to a file in the scratchpad and use `git commit -F <file>`.
 
 ---
 
+## A number I will act on gets a fixture and a second pair of eyes
+
+Set by Paul 2026-09-01, after an evening in which four real bugs were found in
+one analysis script and **none of them came from the tests written alongside it**.
+Those tests passed throughout.
+
+Three came from building a **synthetic fixture in the real data's shape** and
+running the script against it. The fourth came from **another session challenging
+a claim**. Every one was an assumption rather than a slip, which is why a test
+written from the same assumptions could not reach them:
+
+| the bug | the assumption it rested on |
+|---|---|
+| the collector's excerpt cap was 400 and the readability floor was 400, so every readable page read as "too short" | that a stored excerpt is the page |
+| a clear was reported at the first sighting, overstating it by up to one sampling interval | that a bracket is a point |
+| the rung selector took the smallest value ABOVE the p25 while the text promised at-or-below | that the code matched its own comment |
+| Imperva's two products landed in different vendor buckets, so the one comparison the experiment existed for could never happen | that a phrase identifies a vendor |
+
+**Two rules follow, and they apply to any script whose output I will act on —
+a count, a rate, a recommendation, a row list:**
+
+1. **Write a synthetic fixture in the real shape, and predict the answer before
+   running.** Real cadence, real truncation, real vendor mix, real censoring.
+   Include at least one case *engineered to produce a known result*: the
+   simultaneity bug was caught because four hosts were built to clear together
+   and the script said they had not. Assert preconditions inside the fixture so
+   that one drifting fails loudly instead of quietly stopping testing anything.
+
+2. **A headline number gets one independent check before it reaches me.**
+   Re-derive it a different way, from a different field, or have another session
+   look. "The tests pass" is not that check — the tests share the code's
+   assumptions.
+
+**The direction that fails quietly is the one to check hardest.** When two errors
+have asymmetric costs, the one that looks like prudence hides: a backoff set too
+long reads as a system being careful, while too short announces itself as wasted
+retries. Same shape as a watcher with `last_count = 1`, and as an alarm that has
+only ever reported zero. Ask which way a threshold fails silently, and make that
+the direction that has to be argued for.
+
+**A passing local test plus a fresh push means wait, not redesign.** Paul,
+2026-09-01. The 410 for removed grant pages was tested locally (correct), pushed,
+and checked in production seventy seconds later: 404. Because the lookup fails
+open by design, a broken lookup and a deploy that has not reached the edge yet
+look identical from outside, and the next step was very nearly a redesign around
+Edge runtime limits that were never the problem. The deploy finished; the 410
+fired; nothing was wrong. When the local test passes and the push is minutes
+old, the local test is the evidence that wins: wait for the deploy to
+propagate, re-check, and only then start diagnosing. (Pushed ≠ deployed: check
+`/deployments` if in doubt.)
+
+---
+
 ## A passing check is not the same as the thing being right
 
 Twice in two weeks a check has been written against a **proxy** for the property
@@ -157,6 +253,48 @@ And when a metric rests on the proxy, **re-baseline it on the real test even
 though the number drops**. "Names the fund" was 412 of 649; "could actually
 apply" was 368. The 44 in between were the whole problem, and the first number
 was hiding them.
+
+---
+
+## An alarm is not proved until it has fired
+
+Three times in the week of 2026-08-31 the thing being guarded was right and the
+**alarm on it was quietly wrong**. Every one reported nothing, nothing was the
+answer everybody wanted, and nobody looked twice.
+
+| The watcher | What it reported | What was actually true |
+|---|---|---|
+| `billing_incidents`, on webhook refusals | run succeeded | every write failed on an ON CONFLICT the index could not satisfy, and the error was swallowed by design |
+| reconciliation, on expired grants | 11 mismatches | all 11 were permanent grants; `new Date('infinity')` is an Invalid Date and every comparison with one is false |
+| reconciliation, on a paying subscription | 0 mismatches | it asked whether the owner had ANY entitled org, not whether the one the subscription NAMED was; seven unrelated grants answered yes |
+
+The middle one fired wrongly and was found in a day because false alarms are
+loud. The other two reported zero, which is indistinguishable from working, and
+both were found only because somebody asked for a demonstration.
+
+**The rule: an alarm has to be proved by making the thing it watches for
+actually happen. Reporting zero is not evidence until it has reported one.**
+Paul, 2026-08-31.
+
+In practice, for anything that monitors, reconciles, or reports a count:
+
+1. **Create the bad state and watch it complain.** Not a unit test with fixtures
+   — the real path, against real data. Two of the three above had passing unit
+   tests.
+2. **Reaching that state usually means disabling something.** If a trigger
+   repairs the fault on sight, the only way to test the sweeper or the
+   reconciliation is `alter table ... disable trigger`, do the damage, re-enable.
+   That difficulty is the point: the states worth watching for are exactly the
+   ones the system cannot produce on its own.
+3. **Assert the precondition first**, in the same run. "still entitled = 1, must
+   be >0 or this test is void" — otherwise a suite passes just as loudly against
+   a watcher that does nothing at all.
+4. **Then check it goes quiet again** once the fault is fixed. An alarm that
+   cannot stop is as useless as one that cannot start.
+
+Related, and the same family one level down: *A passing check is not the same as
+the thing being right*, and the readiness-probe rule that a fingerprint which is
+already true proves nothing.
 
 ---
 

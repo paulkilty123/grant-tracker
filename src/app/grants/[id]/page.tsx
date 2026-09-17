@@ -3,16 +3,24 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { formatRange, locationLabel } from '@/lib/utils'
 import { notFound } from 'next/navigation'
+import { isPubliclyVisible } from '@/lib/public-visibility'
 import LogoMark from '@/components/icons/LogoMark'
 import { eligibilityStated, ELIGIBILITY_NOT_STATED } from '@/lib/eligibility-disclosure'
 import { FUNDING_TYPE_COLOUR, TYPE_NEUTRAL, type FundingTypeKey } from '@/lib/funding-type-colours'
 import { sectorColour } from '@/lib/sector-colours'
 import {
-  MapPin, Calendar, CheckCircle, Clock, Info, ExternalLink, ArrowRight,
-  Building2, Search, TrendingUp, ShieldCheck,
+  MapPin, Calendar, CheckCircle, Info, ExternalLink, ArrowRight,
+  Building2, Search, TrendingUp, ShieldCheck, Star, Lightbulb, Lock, Check, Ban, Link2,
 } from 'lucide-react'
 import { MCP_BRAND_NAME, MCP_APP_ORIGIN } from '@/lib/mcp-brand'
-import { ctaSupportLine } from '@/lib/trial'
+import { ctaSupportParts } from '@/lib/trial'
+import { leadParagraph } from '@/components/FunderBrief'
+import {
+  IMPACT_SECTOR_LABELS, loadPublicRows, relatedRows, regionHubForRow, sectorSlug, typeHubForRow,
+  type HubRow,
+} from '@/lib/hubs'
+import { Crumbs, GrantRow } from '@/components/public/HubPage'
+import { getAdminDb } from '@/lib/admin/admin-db'
 
 // ── Public bridge page ───────────────────────────────────────────────────────
 // Reached from an MCP link inside someone's AI assistant, or from search. So
@@ -25,8 +33,14 @@ import { ctaSupportLine } from '@/lib/trial'
 // structure chips and a lime button. Rebuilt to the Band C reference
 // (grant-public.html + grant-public-spec.md).
 //
-// Field set: the Q1-confirmed superset. Still excludes funder_brief (that is
-// account-holder value), field_provenance, and the source slug, which leaks
+// Field set: the Q1-confirmed superset, plus (from 14 September 2026, Paul's
+// call) the factual half of the funder brief: what they fund, who can apply,
+// what they will not fund, typical award, where, priorities, decision timeline.
+// Rule 6 in CLAUDE.md wants who_can_apply and exclusions complete on every
+// surface anyway, and a public page that showed seven structure chips and a
+// one-line stub was hiding the catalogue it exists to show off. The judgement
+// half of the brief (what makes a strong application, tips) stays behind the
+// account, along with field_provenance and the source slug, which leaks
 // internal operational names like "catalogue-seed" and "manual_ingest_*".
 //
 // force-dynamic because the countdown is computed per request. A statically
@@ -101,6 +115,8 @@ const STRUCTURE_LABELS: Record<string, string> = {
   cic_guarantee:         'CIC (Ltd by Guarantee)',
   cic_shares:            'CIC (Ltd by Shares)',
   cio:                   'CIO',
+  scio:                  'SCIO',
+  individual:            'Individual',
   registered_charity:    'Registered Charity',
   ltd_guarantee:         'Ltd by Guarantee',
   company_ltd_guarantee: 'Company Ltd by Guarantee',
@@ -112,14 +128,8 @@ const STRUCTURE_LABELS: Record<string, string> = {
   not_registered:        'Pre-registration',
 }
 
-const IMPACT_SECTOR_LABELS: Record<string, string> = {
-  creative: 'Arts & Culture', environment: 'Environment', health: 'Health',
-  education: 'Education', tech: 'Technology', housing: 'Housing',
-  food: 'Food', employment: 'Employment', community: 'Community',
-  justice: 'Justice & Equality', financial: 'Financial Inclusion', international: 'International',
-  heritage: 'Heritage', sport: 'Sport', social_economy: 'Social Economy',
-  mental_health: 'Mental Health',
-}
+// IMPACT_SECTOR_LABELS lives in src/lib/hubs.ts now, shared with the hub
+// pages, and covers all twenty-two live values rather than sixteen.
 
 const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 const MONTHS_LONG  = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
@@ -158,6 +168,38 @@ function money(n: number | null | undefined): string | null {
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 
+/**
+ * The brief fields a stranger sees. An allowlist, so a new internal key cannot
+ * leak by default. who_can_apply and exclusions render inside the eligibility
+ * section; the rest render as facts below it. strong_application and
+ * funder_tips are deliberately absent: they are the judgement, and the reason
+ * to have an account.
+ */
+const PUBLIC_FACT_FIELDS = [
+  ['typical_award',     'Typical award'],
+  ['geographic_focus',  'Where'],
+  ['priorities',        'Current priorities'],
+  ['decision_timeline', 'Decision timeline'],
+  // Programme-shaped answers; absent on grant rows.
+  ['programme_offer',      'What you get'],
+  ['time_commitment',      'Time commitment'],
+  ['cost',                 'Cost'],
+  ['stage_fit',            'Who it is for'],
+  ['cohort_and_selection', 'Places and selection'],
+  ['delivered_by',         'Delivered by'],
+  ['alumni_outcomes',      'Past cohorts'],
+] as const
+
+/** Non-empty string, and not one of the enricher's ways of saying "unknown". */
+function briefText(brief: Record<string, unknown> | null, key: string): string | null {
+  const v = brief?.[key]
+  if (typeof v !== 'string') return null
+  const t = v.trim()
+  if (!t || t === 'unknown') return null
+  if (/^the source does not (state|specify|mention)/i.test(t)) return null
+  return t
+}
+
 async function loadGrant(rawId: string) {
   const id = decodeURIComponent(rawId)
   const supabase = await createClient()
@@ -167,7 +209,7 @@ async function loadGrant(rawId: string) {
     .select('*')
     .eq('external_id', id)
     .maybeSingle()
-  if (byExternal) return { row: byExternal, externalId: id }
+  if (byExternal) return isPubliclyVisible(byExternal) ? { row: byExternal, externalId: id } : null
 
   const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
   if (UUID_RE.test(id)) {
@@ -176,7 +218,7 @@ async function loadGrant(rawId: string) {
       .select('*')
       .eq('id', id)
       .maybeSingle()
-    if (byUuid) return { row: byUuid, externalId: id }
+    if (byUuid) return isPubliclyVisible(byUuid) ? { row: byUuid, externalId: id } : null
   }
   return null
 }
@@ -262,6 +304,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     row.amount_min as number | null,
     row.amount_max as number | null,
     Boolean(row.amount_undisclosed),
+    row.funding_type as string | null,
   )
   const deadlineBit = row.is_rolling
     ? 'rolling deadline'
@@ -299,9 +342,125 @@ export default async function PublicGrantPage({
   if (!result) notFound()
   const { row: grant, externalId } = result
 
+  // ── Who is reading ─────────────────────────────────────────────────────────
+  // Logged out, the record is gated (Paul, 2026-09-15): the facts a stranger
+  // needs to know whether to care stay public, the narrative half of the brief
+  // and the deep link to the application do not. The gated text is not
+  // rendered at all for a logged-out reader, so it is in no HTML, no JSON-LD
+  // and no RSC payload for this page. Logged in, the page is unchanged.
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const signedIn = Boolean(user)
+
+  // The funder's homepage, for the public bottom row: the funders table where
+  // it has one, else the origin of the apply link. A homepage is a fair thing
+  // to hand a stranger; the application and guidance pages are the record.
+  let funderHomepage: string | null = null
+  try {
+    const { data: fw } = await getAdminDb().from('grants_with_funder').select('funder_website').eq('id', grant.id).maybeSingle()
+    const site = fw && typeof fw.funder_website === 'string' ? fw.funder_website.trim() : ''
+    if (/^https?:\/\//i.test(site)) funderHomepage = site
+  } catch { /* fall through to the apply origin */ }
+  if (!funderHomepage && grant.apply_url) {
+    try { funderHomepage = new URL(String(grant.apply_url)).origin } catch { /* no usable link */ }
+  }
+
   const impactSectors: string[]      = Array.isArray(grant.impact_sectors)      ? grant.impact_sectors      : []
   const eligibleStructures: string[] = Array.isArray(grant.eligible_structures) ? grant.eligible_structures : []
   const structuresStated             = eligibilityStated(eligibleStructures)
+  const brief: Record<string, unknown> | null = grant.funder_brief && typeof grant.funder_brief === 'object' ? grant.funder_brief as Record<string, unknown> : null
+  const lead         = leadParagraph(brief, grant.description ? String(grant.description) : null)
+  const whoCanApply  = briefText(brief, 'who_can_apply')
+  const exclusions   = briefText(brief, 'exclusions')
+  const isProgramme  = String(grant.funding_type ?? '') === 'programme'
+  const PROG_FIRST: readonly string[] = ['programme_offer', 'time_commitment', 'cost', 'stage_fit', 'cohort_and_selection', 'delivered_by', 'alumni_outcomes']
+  const facts        = PUBLIC_FACT_FIELDS
+    .map(([key, label]) => [key, label, briefText(brief, key)] as const)
+    .filter((f): f is readonly [typeof f[0], typeof f[1], string] => f[2] !== null)
+    // On a programme row the short facts live in the strip above (cost) or say
+    // the same thing as the strip (typical award: "a place, no cash"), so they
+    // come out of the prose list. The rest lead with what you get.
+    .filter(([key]) => !(isProgramme && (key === 'cost' || key === 'typical_award')))
+    .sort((a, b) => isProgramme ? ((PROG_FIRST.indexOf(a[0]) === -1 ? 99 : PROG_FIRST.indexOf(a[0])) - (PROG_FIRST.indexOf(b[0]) === -1 ? 99 : PROG_FIRST.indexOf(b[0]))) : 0)
+  /**
+   * The one public line about eligibility: how often it opens and where. The
+   * narrative (who_can_apply, exclusions) is behind the account.
+   */
+  const cycle = Array.isArray(grant.deadline_cycle) ? (grant.deadline_cycle as unknown[]) : []
+  const roundsText = Boolean(grant.is_rolling)
+    ? 'Applications are accepted at any time'
+    : cycle.length >= 2
+      ? ({ 2: 'Two rounds a year', 3: 'Three rounds a year', 4: 'Quarterly rounds', 6: 'Six rounds a year', 12: 'Monthly rounds' } as Record<number, string>)[cycle.length] ?? `${cycle.length} rounds a year`
+      : grant.deadline
+        ? 'One round at a time'
+        : null
+  const areaText = locationLabel(grant.is_local, grant.location_tag) ?? 'Across the UK'
+  const eligibilitySummary = [roundsText, areaText].filter(Boolean).join('. ')
+
+  /**
+   * The five cards in the gate, worded for what the row actually is. A
+   * programme has no award and no exclusions list; an investment has terms;
+   * an in-kind offer has a thing you get. Paul, 15 Sept: the grant wording
+   * (the mock) did not fit the other three types.
+   */
+  type LockedCard = { Icon: typeof Check; bg: string; t: string; d: string; wide?: boolean }
+  const eligibilityCard: LockedCard = { Icon: Check, bg: T.sage, t: 'Eligibility in full', d: 'Every condition the funder sets, checked line by line against their own guidance.' }
+  const applyCard: LockedCard = { Icon: Link2, bg: '#C9C2E6', t: 'Apply and guidance', d: 'Where to apply and what to read first, where the funder publishes it.', wide: true }
+  const lockedCardsByType: Record<string, LockedCard[]> = {
+    grants: [
+      eligibilityCard,
+      { Icon: Ban,      bg: T.terra, t: 'What they will not fund',             d: 'The exclusions, so you know before you write a word.' },
+      { Icon: Star,     bg: T.gold,  t: 'Current priorities',                  d: 'What this funder is looking for right now, and what makes an application stand out.' },
+      { Icon: Calendar, bg: T.teal,  t: 'Typical award and decision timeline', d: 'How much they usually give, round dates, and when you will hear back.' },
+      applyCard,
+    ],
+    programmes: [
+      eligibilityCard,
+      { Icon: Star,     bg: T.gold,  t: 'Who it is for',                       d: 'The stage, size and kind of organisation they take, in their own words.' },
+      { Icon: Ban,      bg: T.terra, t: 'What you get',                        d: 'Sessions, mentoring, the cohort, any funding that comes with a place, and the time it takes.' },
+      { Icon: Calendar, bg: T.teal,  t: 'Places, cost and selection',          d: 'How many get in, what it costs, how they choose, and when you will hear back.' },
+      { ...applyCard, t: 'Apply and programme details', d: 'Where to apply, the dates, and what to read first, where the provider publishes it.' },
+    ],
+    investment: [
+      eligibilityCard,
+      { Icon: Ban,      bg: T.terra, t: 'What they will not fund',             d: 'The exclusions, so you know before you write a word.' },
+      { Icon: Star,     bg: T.gold,  t: 'Current priorities',                  d: 'What this investor is looking for right now, and what makes a proposal stand out.' },
+      { Icon: Calendar, bg: T.teal,  t: 'Typical investment and terms',        d: 'How much they usually lend or invest, on what terms, and when you will hear back.' },
+      applyCard,
+    ],
+    'in-kind': [
+      eligibilityCard,
+      { Icon: Ban,      bg: T.terra, t: 'What they will not support',          d: 'The exclusions, so you know before you ask.' },
+      { Icon: Star,     bg: T.gold,  t: 'What you get',                        d: 'What is on offer, how much of it, and for how long.' },
+      { Icon: Calendar, bg: T.teal,  t: 'How to claim it and when',            d: 'Round dates if there are any, how they choose, and when you will hear back.' },
+      { ...applyCard, d: 'Where to apply and what to read first, where the provider publishes it.' },
+    ],
+  }
+  const lockedCards = lockedCardsByType[typeHubForRow({ funding_type: grant.funding_type ? String(grant.funding_type) : null }).slug] ?? lockedCardsByType.grants
+
+  /**
+   * A programme is not a grant with no amount. What someone wants to know is
+   * how long, in what format, when it starts, and whether any money comes with
+   * the place. Rendered only for programme rows, from the prog_* columns.
+   */
+  const MODE_LABEL: Record<string, string> = { remote: 'Online', online: 'Online', in_person: 'In person', hybrid: 'Online, with in-person sessions' }
+  const programme: Array<[string, string]> = []
+  if (String(grant.funding_type ?? '') === 'programme') {
+    const weeks = typeof grant.prog_length_weeks === 'number' ? grant.prog_length_weeks : null
+    if (weeks) programme.push(['Length', `${weeks} week${weeks === 1 ? '' : 's'}`])
+    const mode = grant.prog_location_mode ? MODE_LABEL[String(grant.prog_location_mode)] ?? String(grant.prog_location_mode) : null
+    const city = grant.prog_location_city ? String(grant.prog_location_city) : null
+    if (mode || city) programme.push(['Format', [mode, city].filter(Boolean).join(', ')])
+    const start = humaniseDateLong(grant.prog_next_cohort_start ? String(grant.prog_next_cohort_start) : null)
+    if (start) programme.push(['Next start', start])
+    if (typeof grant.prog_cohort_size === 'number' && grant.prog_cohort_size > 0) programme.push(['Cohort size', String(grant.prog_cohort_size)])
+    const cost = briefText(brief, 'cost')
+    if (cost) programme.push(['Cost', cost.replace(/\.$/, '')])
+    if (grant.prog_includes_funding === true) {
+      const amt = typeof grant.prog_funding_amount === 'number' ? money(grant.prog_funding_amount) : null
+      programme.push(['Includes funding', amt ? `Yes, ${amt}` : 'Yes'])
+    }
+  }
 
   const funderType = String(grant.funder_type ?? 'other')
   const typeLabel  = FUNDER_LABELS[funderType] ?? funderType.replace(/_/g, ' ')
@@ -318,15 +477,43 @@ export default async function PublicGrantPage({
   const urgent         = days !== null && days >= 0 && days <= 7
 
   const lastSeenISO   = grant.last_seen_at ? String(grant.last_seen_at).split('T')[0] : null
-  const lastSeenHuman = humaniseDate(lastSeenISO)
-  const lastSeenDays  = lastSeenISO ? -(daysUntil(lastSeenISO) ?? 0) : null
-  /** Past 30 days the badge stops claiming freshness. It is the page's best
-   *  asset, so it must never testify against itself. (Spec §11.) */
-  const verificationAged = lastSeenDays === null || lastSeenDays > 30
 
   const applyUrl = grant.apply_url ? String(grant.apply_url) : null
   const url      = canonicalFor(externalId)
-  const signupHref = `/auth/signup?return=${encodeURIComponent(`/grants/${externalId}`)}`
+  const amountLoRaw = grant.amount_min as number | null
+  const amountHiRaw = grant.amount_max as number | null
+  // /auth/signup redirects to /apply, the pre-launch waitlist. Signup is open
+  // at /signup since 10 Sept; it does not honour a return param yet.
+  const signupHref = '/signup'
+
+  // ── Neighbours and hubs ────────────────────────────────────────────────────
+  // Until 2026-09-15 this page linked to nothing else in the catalogue, and
+  // nothing but the sitemap linked to it. See src/lib/hubs.ts. The related
+  // block and the breadcrumb are the links a crawler follows; the sector
+  // chips below link to their hubs for the same reason.
+  const hubRow: HubRow = {
+    id: String(grant.id), external_id: grant.external_id ? String(grant.external_id) : null,
+    title: String(grant.title ?? ''), funder: grant.funder ? String(grant.funder) : null,
+    funding_type: grant.funding_type ? String(grant.funding_type) : null,
+    amount_min: amountLoRaw, amount_max: amountHiRaw,
+    amount_undisclosed: Boolean(grant.amount_undisclosed),
+    deadline: deadlineISO, is_rolling: isRolling,
+    location_tag: grant.location_tag ? String(grant.location_tag) : null,
+    is_local: Boolean(grant.is_local), impact_sectors: impactSectors,
+  }
+  const related = relatedRows(hubRow, await loadPublicRows().catch(() => []))
+  const regionHubOfRow = regionHubForRow(hubRow)
+  const typeHubOfRow   = typeHubForRow(hubRow)
+  const primarySector  = impactSectors[0] ?? null
+  const crumbs = [
+    { href: '/grants', label: 'Browse funding' },
+    { href: `/grants/type/${typeHubOfRow.slug}`, label: typeHubOfRow.label },
+    ...(regionHubOfRow ? [{ href: `/grants/region/${regionHubOfRow.slug}`, label: regionHubOfRow.label }] : []),
+    ...(primarySector && IMPACT_SECTOR_LABELS[primarySector]
+      ? [{ href: `/grants/sector/${sectorSlug(primarySector)}`, label: IMPACT_SECTOR_LABELS[primarySector] }]
+      : []),
+  ]
+  const todayISO = new Date().toISOString().slice(0, 10)
 
   // ── JSON-LD ────────────────────────────────────────────────────────────────
   // MonetaryGrant has NO deadline property. Its own are `amount` and `funder`;
@@ -374,7 +561,9 @@ export default async function PublicGrantPage({
               funder: {
                 '@type': 'Organization',
                 name: String(grant.funder),
-                ...(applyUrl ? { url: applyUrl } : {}),
+                // Logged out, the deep link is part of the gated record, so
+                // the funder node carries the homepage instead.
+                ...((signedIn ? applyUrl : funderHomepage) ? { url: signedIn ? applyUrl : funderHomepage } : {}),
                 ...(geography ? { areaServed: geography } : {}),
               },
             }
@@ -399,8 +588,8 @@ export default async function PublicGrantPage({
   }
   const neutralChip: React.CSSProperties = { ...chip, background: T.warm, color: T.deep }
   const sectionH2: React.CSSProperties = {
-    fontFamily: UI, fontSize: 11, fontWeight: 700, letterSpacing: '0.14em',
-    textTransform: 'uppercase', color: T.inkPlace, margin: '0 0 12px',
+    fontFamily: UI, fontSize: 13, fontWeight: 700, letterSpacing: '0.12em',
+    textTransform: 'uppercase', color: T.deep, margin: '0 0 12px',
     display: 'flex', alignItems: 'center', gap: 8,
   }
   const section: React.CSSProperties = {
@@ -416,11 +605,17 @@ export default async function PublicGrantPage({
           link colour out-ranking a button class) cannot happen here. */}
       <nav style={{ background: '#fff', borderBottom: `1px solid ${T.hair}` }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', padding: '16px 26px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 9, fontFamily: UI, fontWeight: 700, fontSize: 21, letterSpacing: '-0.03em', color: T.deep, textDecoration: 'none' }}>
-            <LogoMark size={26} />
+          {/* Same as the landing header (.brand / .brand-svg / .site-header .logo
+              in public/landing/launch.html): 42px mark, 11px gap, wordmark 27px
+              at weight 500 with -0.01em tracking. Paul, 14 Sept: exactly the same. */}
+          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 11, fontFamily: UI, fontWeight: 500, fontSize: 27, letterSpacing: '-0.01em', color: T.deep, textDecoration: 'none' }}>
+            <LogoMark size={42} />
             {MCP_BRAND_NAME.toLowerCase()}
           </Link>
           <span style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+            <Link href="/grants" style={{ fontFamily: UI, fontSize: 14, fontWeight: 500, color: T.inkMuted, textDecoration: 'none' }}>
+              Browse funding
+            </Link>
             <Link href="/auth/login" style={{ fontFamily: UI, fontSize: 14, fontWeight: 500, color: T.inkMuted, textDecoration: 'none' }}>
               Sign in
             </Link>
@@ -432,7 +627,7 @@ export default async function PublicGrantPage({
                 display: 'inline-flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap',
               }}
             >
-              Find funding<span className="hidden md:inline">&nbsp;for your organisation</span>
+              <span>Find funding<span className="hidden md:inline"> for your organisation</span></span>
               <ArrowRight style={{ width: 15, height: 15 }} />
             </Link>
           </span>
@@ -440,6 +635,7 @@ export default async function PublicGrantPage({
       </nav>
 
       <main style={{ maxWidth: 800, margin: '0 auto', padding: '32px 26px 70px' }}>
+        <Crumbs items={crumbs} />
         <div style={{ background: '#fff', border: `1px solid ${T.hair}`, borderRadius: 18, padding: '30px 32px' }}>
 
           {/* Meta chips. No funder-initial avatar: a grey letter in a rounded
@@ -471,7 +667,7 @@ export default async function PublicGrantPage({
             <span>
               <span style={{ display: 'block', fontFamily: UI, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.13em', textTransform: 'uppercase', color: T.inkPlace, marginBottom: 6 }}>Amount</span>
               <span style={{ display: 'block', fontFamily: UI, fontSize: 24, fontWeight: 700, letterSpacing: '-0.025em', color: T.deep, lineHeight: 1.1 }}>
-                {formatRange(grant.amount_min as number | null, grant.amount_max as number | null, Boolean(grant.amount_undisclosed))}
+                {formatRange(grant.amount_min as number | null, grant.amount_max as number | null, Boolean(grant.amount_undisclosed), grant.funding_type as string | null)}
               </span>
             </span>
             <span>
@@ -491,6 +687,13 @@ export default async function PublicGrantPage({
               <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: T.warm, border: `1px solid ${T.ghost}`, borderRadius: 12, padding: '11px 16px', flexShrink: 0 }}>
                 <span style={{ display: 'block', fontFamily: UI, fontWeight: 700, fontSize: 14, letterSpacing: '-0.01em', color: T.deep, lineHeight: 1 }}>Round closed</span>
               </span>
+            ) : days === 0 && !isRolling ? (
+              /* Never "0 days left" on a live record (Paul, 2026-09-15). On
+                 the day itself the round is open until the funder closes it,
+                 and the cron rolls a cycle date forward the next morning. */
+              <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: T.terra, borderRadius: 12, padding: '11px 16px', flexShrink: 0 }}>
+                <span style={{ display: 'block', fontFamily: UI, fontWeight: 700, fontSize: 14, letterSpacing: '-0.01em', color: T.deep, lineHeight: 1 }}>Closes today</span>
+              </span>
             ) : days !== null && !isRolling ? (
               <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: urgent ? T.terra : T.gold, borderRadius: 12, padding: '11px 16px', flexShrink: 0 }}>
                 <span style={{ display: 'block', fontFamily: UI, fontWeight: 700, fontSize: 20, color: T.deep, lineHeight: 1 }}>{days}</span>
@@ -501,11 +704,15 @@ export default async function PublicGrantPage({
             ) : null}
           </div>
 
-          {grant.description && (
+          {lead && (
             <div style={{ ...section, borderTop: 'none', marginTop: 0, paddingTop: 0 }}>
               <h2 style={sectionH2}>About this opportunity</h2>
+              {/* Logged out, the first sentence only (Paul, 17 Sept 2026). The
+                  paragraph is the enricher's own writing, and 660 of them in
+                  one crawl is a dataset; the facts around it are public
+                  anyway. Logged in, the whole thing as before. */}
               <p style={{ fontSize: 16, lineHeight: 1.65, color: T.deep, margin: 0, whiteSpace: 'pre-line' }}>
-                {String(grant.description)}
+                {signedIn ? lead : (lead.match(/^[\s\S]{20,}?[.!?](?=\s|$)/)?.[0] ?? lead.slice(0, 220)).trim()}
               </p>
             </div>
           )}
@@ -516,10 +723,15 @@ export default async function PublicGrantPage({
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
                 {impactSectors.map(s => {
                   const c = sectorColour(s)
-                  return (
-                    <span key={s} style={{ ...chip, background: c.bg, color: c.color }}>
-                      {IMPACT_SECTOR_LABELS[s] ?? s.replace(/_/g, ' ')}
-                    </span>
+                  const label = IMPACT_SECTOR_LABELS[s] ?? s.replace(/_/g, ' ')
+                  // A chip that is also the way to every other row in that
+                  // sector. Same colour, underlined on hover only.
+                  return IMPACT_SECTOR_LABELS[s] ? (
+                    <Link key={s} href={`/grants/sector/${sectorSlug(s)}`} style={{ ...chip, background: c.bg, color: c.color, textDecoration: 'none' }}>
+                      {label}
+                    </Link>
+                  ) : (
+                    <span key={s} style={{ ...chip, background: c.bg, color: c.color }}>{label}</span>
                   )
                 })}
               </div>
@@ -529,17 +741,11 @@ export default async function PublicGrantPage({
           <div style={section}>
             <h2 style={sectionH2}><ShieldCheck style={{ width: 13, height: 13 }} />Who can apply</h2>
             {structuresStated ? (
-              <>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
-                  {eligibleStructures.map(s => (
-                    <span key={s} style={neutralChip}>{STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' ')}</span>
-                  ))}
-                </div>
-                <p style={{ display: 'flex', alignItems: 'flex-start', gap: 9, fontSize: 13.5, lineHeight: 1.55, color: T.inkMuted, margin: '12px 0 0' }}>
-                  <Info style={{ width: 14, height: 14, flexShrink: 0, color: T.inkPlace, marginTop: 2 }} />
-                  If your organisation isn&rsquo;t one of these, this funder can&rsquo;t accept your application. Structure is a hard rule, not a preference.
-                </p>
-              </>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+                {eligibleStructures.map(s => (
+                  <span key={s} style={neutralChip}>{STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' ')}</span>
+                ))}
+              </div>
             ) : (
               /* An empty eligible_structures means nobody has established the
                  funder's rule. It does not mean "open to all", and this is the
@@ -551,35 +757,142 @@ export default async function PublicGrantPage({
                 {ELIGIBILITY_NOT_STATED}
               </p>
             )}
+            {!signedIn && eligibilitySummary && (
+              <p style={{ fontSize: 15, lineHeight: 1.6, color: T.deep, margin: '14px 0 0' }}>{eligibilitySummary}.</p>
+            )}
+            {signedIn && whoCanApply && (
+              <p style={{ fontSize: 15, lineHeight: 1.6, color: T.deep, margin: '14px 0 0', whiteSpace: 'pre-line' }}>{whoCanApply}</p>
+            )}
+            {signedIn && exclusions && (
+              <div style={{ marginTop: 16, padding: '14px 16px', background: '#FBF1EC', borderRadius: 12 }}>
+                <p style={{ fontFamily: UI, fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#993C1D', margin: '0 0 6px' }}>What they will not fund</p>
+                <p style={{ fontSize: 14.5, lineHeight: 1.6, color: T.deep, margin: 0, whiteSpace: 'pre-line' }}>{exclusions}</p>
+              </div>
+            )}
           </div>
+
+          {signedIn && programme.length > 0 && (
+            <div style={section}>
+              <h2 style={sectionH2}>Programme at a glance</h2>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                {programme.map(([label, value]) => (
+                  <div key={label} style={{ background: T.warm, borderRadius: 12, padding: '10px 14px', minWidth: 120 }}>
+                    <p style={{ fontFamily: UI, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.inkMuted, margin: '0 0 3px' }}>{label}</p>
+                    <p style={{ fontFamily: UI, fontSize: 15, fontWeight: 600, color: T.deep, margin: 0, lineHeight: 1.3 }}>{value}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {signedIn && facts.length > 0 && (
+            <div style={section}>
+              <h2 style={sectionH2}>From the funder&rsquo;s own pages</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: isProgramme ? '1fr' : 'repeat(auto-fit, minmax(240px, 1fr))', gap: isProgramme ? 16 : 18 }}>
+                {facts.map(([key, label, text]) => (
+                  <div key={key}>
+                    <p style={{ fontFamily: UI, fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.deep, margin: '0 0 6px' }}>{label}</p>
+                    <p style={{ fontSize: 14.5, lineHeight: 1.6, color: T.deep, margin: 0, whiteSpace: 'pre-line' }}>{text}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {!signedIn && (
+            /* The gate, to Paul's mock (Claude outputs/grant-page-mock.html,
+               15 Sept). Five cards naming what the full record holds, each
+               with a fixed one-line description. None of the record's own
+               text is here, so none of it is in the source. */
+            <div style={{ ...section, background: T.warm, borderRadius: 18, padding: '24px 26px 22px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 16 }}>
+                <h2 style={{ ...sectionH2, margin: 0 }}>The full record</h2>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: UI, fontSize: 12, fontWeight: 600, background: '#fff', borderRadius: 999, padding: '6px 12px', color: T.inkMuted }}>
+                  <Lock style={{ width: 12, height: 12 }} />Sign in to read
+                </span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12 }}>
+                {lockedCards.map(({ Icon, bg, t, d, wide }) => (
+                  <div key={t} style={{ background: '#fff', borderRadius: 14, padding: '16px 18px', display: 'flex', alignItems: 'flex-start', gap: 14, gridColumn: wide ? '1 / -1' : undefined }}>
+                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, borderRadius: 10, background: bg, color: T.deep, flexShrink: 0 }}>
+                      <Icon style={{ width: 18, height: 18 }} />
+                    </span>
+                    <span>
+                      <span style={{ display: 'block', fontFamily: UI, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.deep, marginBottom: 4 }}>{t}</span>
+                      <span style={{ display: 'block', fontSize: 14.5, lineHeight: 1.5, color: T.deep }}>{d}</span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap', marginTop: 18 }}>
+                <Link
+                  href={signupHref}
+                  style={{
+                    fontFamily: UI, fontSize: 15, fontWeight: 600, color: T.cream, background: T.deep,
+                    padding: '13px 24px', borderRadius: 999, textDecoration: 'none',
+                    display: 'inline-flex', alignItems: 'center', gap: 9,
+                  }}
+                >
+                  Read the full record
+                  <ArrowRight style={{ width: 15, height: 15 }} />
+                </Link>
+                <span style={{ fontSize: 14, lineHeight: 1.5, color: T.inkMuted }}>
+                  Free for 14 days, no card needed. Already a member?{' '}
+                  <Link href="/auth/login" style={{ color: T.deep, fontWeight: 600 }}>Sign in</Link>
+                </span>
+              </div>
+            </div>
+          )}
 
           {/* The conversion moment. One panel, mid-card, on a logged-out page
               whose job is conversion, arguing against the question the visitor
-              actually arrived with. */}
+              actually arrived with. Logged out only (Paul, 15 Sept): a
+              signed-in reader already has everything it sells. */}
+          {!signedIn && (
           <div style={{ background: T.deep, borderRadius: 16, padding: '26px 28px', marginTop: 26 }}>
             <h3 style={{ fontFamily: UI, fontSize: 22, fontWeight: 600, letterSpacing: '-0.025em', color: T.cream, margin: '0 0 9px' }}>
               {deadlinePassed ? 'Missed this round?' : 'Is it worth applying?'}
             </h3>
-            <p style={{ fontSize: 15.5, lineHeight: 1.6, color: 'rgba(246,241,231,0.85)', margin: '0 0 20px', maxWidth: '56ch' }}>
+            <p style={{ fontSize: 15.5, lineHeight: 1.6, color: 'rgba(246,241,231,0.85)', margin: '0 0 20px', maxWidth: '62ch' }}>
               {deadlinePassed
                 ? 'There are more in the catalogue. Shoots checks them against your organisation and tells you which ones are open to you now.'
-                : 'Structure is only the first hurdle. Shoots checks this opportunity against your organisation and tells you where you actually stand.'}
+                : signedIn
+                  ? 'Being eligible is not the same as being a good fit. Shoots checks this opportunity against your organisation and tells you where you actually stand.'
+                  : 'Being eligible is not the same as being a good fit. Shoots checks this fund against your organisation, then does the same across every grant, programme and investment in the catalogue, so you spend your time on the ones you can actually win.'}
             </p>
-            <ul style={{ margin: '0 0 22px', padding: 0, listStyle: 'none', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16 }}>
-              {[
-                { bg: T.terra, Icon: CheckCircle, t: 'Whether you qualify', d: 'Every rule this funder sets, checked against your profile, including the ones that rule you out.' },
-                { bg: T.teal,  Icon: TrendingUp,  t: 'How well you match',  d: 'A score against what they fund, who they fund and where, so you know if it is worth the week.' },
-                { bg: T.sage,  Icon: Search,      t: 'What else is open',   d: 'Every opportunity in the catalogue, filtered to the ones your organisation can actually apply for.' },
-              ].map(({ bg, Icon, t, d }) => (
-                <li key={t} style={{ fontSize: 14, lineHeight: 1.55, color: 'rgba(246,241,231,0.85)' }}>
-                  <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 9, marginBottom: 10, background: bg, color: T.deep }}>
-                    <Icon style={{ width: 16, height: 16 }} />
+            {/* What an account adds, across the catalogue. No locks: a padlock
+                reads as a paywall, and the moment is about what the reader gains.
+                All four tiles always show (Paul, 14 Sept): the panel describes the
+                product, and the line beneath says the check runs on every
+                opportunity, so it is not a claim about this one row. */}
+            <ul style={{ margin: '0 0 20px', padding: 0, listStyle: 'none', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
+              {(signedIn ? [
+                { Icon: CheckCircle, bg: T.sage, t: 'Do you qualify?', d: 'The funder\u2019s eligibility rules, checked against your profile.' },
+                { Icon: TrendingUp, bg: T.teal, t: 'Your match score', d: 'How closely you fit what they fund, who they fund and where.' },
+                { Icon: Star, bg: T.terra, t: 'What makes a strong application', d: 'What this funder wants to see.' },
+                { Icon: Lightbulb, bg: T.gold, t: 'Insider tips', d: 'What applicants tend to miss in the guidance.' },
+              ] : [
+                { Icon: CheckCircle, bg: T.sage, t: 'Do you qualify?', d: 'Every funder\u2019s eligibility rules, checked against your profile.' },
+                { Icon: TrendingUp, bg: T.teal, t: 'Your match scores', d: 'How closely you fit each funder, ranked, not just this one.' },
+                { Icon: Star, bg: T.terra, t: 'What makes a strong application', d: 'What each funder wants to see, from their own guidance.' },
+                { Icon: Calendar, bg: T.gold, t: 'Closing soon, for you', d: 'Deadlines that matter to your organisation, in a weekly digest.' },
+              ]).map(({ Icon, bg, t, d }) => (
+                <li key={t} style={{ background: 'rgba(246,241,231,0.06)', border: '1px solid rgba(246,241,231,0.12)', borderRadius: 12, padding: '14px 14px 13px' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 26, height: 26, borderRadius: 8, background: bg, color: T.deep, flexShrink: 0 }}>
+                      <Icon style={{ width: 14, height: 14 }} />
+                    </span>
+                    <b style={{ fontFamily: UI, fontWeight: 600, fontSize: 14, color: T.cream, letterSpacing: '-0.012em', lineHeight: 1.25 }}>{t}</b>
                   </span>
-                  <b style={{ display: 'block', fontFamily: UI, fontWeight: 600, fontSize: 14.5, color: T.cream, marginBottom: 4, letterSpacing: '-0.012em' }}>{t}</b>
-                  {d}
+                  <span style={{ display: 'block', fontSize: 13.5, lineHeight: 1.5, color: 'rgba(246,241,231,0.8)' }}>{d}</span>
                 </li>
               ))}
             </ul>
+            <p style={{ fontSize: 14.5, lineHeight: 1.5, color: 'rgba(246,241,231,0.85)', margin: '0 0 16px' }}>
+              {signedIn
+                ? 'The same check runs on every opportunity in the catalogue.'
+                : 'Every opportunity is verified against the funder\u2019s own pages and checked weekly.'}
+            </p>
             <span style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
               <Link
                 href={signupHref}
@@ -589,24 +902,55 @@ export default async function PublicGrantPage({
                   display: 'inline-flex', alignItems: 'center', gap: 9,
                 }}
               >
-                Check this against your organisation
+                {signedIn ? 'Check this against your organisation' : 'See all your matches'}
                 <ArrowRight style={{ width: 15, height: 15 }} />
               </Link>
               {/* From lib/trial.ts, never a literal: the trial length is a
                   commercial promise and this is the page a stranger reads
-                  before signing up. Today that is the setup time alone. The
-                  trial is Apply-only and not purchasable until 10 September,
-                  and this CTA goes to ordinary signup, which lands on Match,
-                  so the offer would be undeliverable from here twice over. */}
-              <span style={{ fontSize: 13.5, color: 'rgba(246,241,231,0.7)' }}>{ctaSupportLine()}</span>
+                  before signing up. Live since 14 September, because every
+                  ordinary signup starts the 14-day Apply trial. Beside the
+                  button as two stacked lines, one sentence each; body colour,
+                  not the dimmed grey: it is the strongest line on the panel. */}
+              <span style={{ fontSize: 14.5, lineHeight: 1.5, color: 'rgba(246,241,231,0.85)' }}>
+                {ctaSupportParts().map(part => (
+                  <span key={part} style={{ display: 'block', whiteSpace: 'nowrap' }}>{part}</span>
+                ))}
+              </span>
             </span>
           </div>
+          )}
 
           {/* The funder link stays, and stays one click. Hiding it to force a
               signup is the kind of thing that makes people distrust a
               catalogue. "Visit", not "Apply": the link often goes to a
               programme overview rather than an application form. */}
-          {applyUrl && (
+          {!signedIn && funderHomepage && (
+            /* Public: the funder's homepage only, labelled with their name.
+               The application and guidance pages are part of the record. */
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginTop: 22, paddingTop: 22, borderTop: `1px solid ${T.hair}` }}>
+              <span style={{ fontSize: 14.5, lineHeight: 1.55, color: T.inkMuted, maxWidth: '48ch' }}>
+                {deadlinePassed ? (
+                  <>The funder&rsquo;s page may already list the next round. <b style={{ color: T.deep, fontWeight: 600 }}>Worth a look.</b></>
+                ) : (
+                  <>This fund is run by <b style={{ color: T.deep, fontWeight: 600 }}>{String(grant.funder ?? 'the funder')}</b>. {MCP_BRAND_NAME} doesn&rsquo;t sit between you and the application.</>
+                )}
+              </span>
+              <a
+                href={funderHomepage}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  fontFamily: UI, fontSize: 14.5, fontWeight: 500, color: T.deep, background: '#fff',
+                  border: `1px solid ${T.ghost}`, padding: '12px 20px', borderRadius: 999,
+                  textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap',
+                }}
+              >
+                {String(grant.funder ?? 'Funder website')}
+                <ExternalLink style={{ width: 14, height: 14 }} />
+              </a>
+            </div>
+          )}
+          {signedIn && applyUrl && (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginTop: 22, paddingTop: 22, borderTop: `1px solid ${T.hair}` }}>
               <span style={{ fontSize: 14.5, lineHeight: 1.55, color: T.inkMuted, maxWidth: '48ch' }}>
                 {deadlinePassed ? (
@@ -632,29 +976,36 @@ export default async function PublicGrantPage({
           )}
         </div>
 
-        {/* Verification. The strongest trust signal on the page, so it is a
-            chip rather than 13px grey at the bottom, and it degrades past 30
-            days into wording that makes no freshness claim and hands the
-            reader an action instead. */}
+        {related.length > 0 && (
+          <section style={{ background: '#fff', border: `1px solid ${T.hair}`, borderRadius: 18, padding: '26px 32px', marginTop: 22 }}>
+            <h2 style={{ ...sectionH2, marginBottom: 4 }}>More funding like this</h2>
+            <ul style={{ margin: '10px 0 0', padding: 0, borderBottom: `1px solid ${T.hair}` }}>
+              {related.map(r => <GrantRow key={r.id} row={r} todayISO={todayISO} />)}
+            </ul>
+            <p style={{ fontSize: 14, color: T.inkMuted, margin: '14px 0 0', display: 'flex', flexWrap: 'wrap', gap: '4px 16px' }}>
+              {primarySector && IMPACT_SECTOR_LABELS[primarySector] && (
+                <Link href={`/grants/sector/${sectorSlug(primarySector)}`} style={{ color: T.deep, fontWeight: 600 }}>
+                  All {IMPACT_SECTOR_LABELS[primarySector].toLowerCase()} funding
+                </Link>
+              )}
+              {regionHubOfRow && (
+                <Link href={`/grants/region/${regionHubOfRow.slug}`} style={{ color: T.deep, fontWeight: 600 }}>
+                  {regionHubOfRow.slug === 'uk' ? 'All UK-wide funding' : `All funding ${regionHubOfRow.phrase}`}
+                </Link>
+              )}
+              <Link href={signedIn ? '/dashboard' : signupHref} style={{ color: T.deep, fontWeight: 600 }}>See all your matches</Link>
+            </p>
+          </section>
+        )}
+
+        {/* Catalogue note. The "Last checked" chip that sat above this
+            quoted last_seen_at, a scraper stamp, not the URL check, so it
+            showed dates months old on rows verified the night before.
+            Removed 2026-09-10 on Paul's ask. */}
         <div style={{ textAlign: 'center', marginTop: 26 }}>
-          {lastSeenHuman && (
-            <span style={{
-              display: 'inline-flex', alignItems: 'center', gap: 7, fontFamily: UI, fontSize: 12, fontWeight: 600,
-              padding: '6px 13px', borderRadius: 999, marginBottom: 10,
-              background: verificationAged ? T.warm : T.greenBg,
-              color: verificationAged ? T.deep : T.green,
-            }}>
-              {verificationAged
-                ? <><Clock style={{ width: 12, height: 12 }} />Last checked {lastSeenHuman}. Confirm details with the funder before applying.</>
-                : <><CheckCircle style={{ width: 12, height: 12 }} />Checked against the funder&rsquo;s own site on {lastSeenHuman}</>}
-            </span>
-          )}
           <p style={{ fontSize: 13, lineHeight: 1.6, color: T.inkPlace, margin: 0 }}>
             {MCP_BRAND_NAME} keeps a curated catalogue of live, verified UK funding opportunities, every entry traced back to the
-            funder&rsquo;s own published page.{' '}
-            <Link href="/mcp" style={{ color: T.deep, fontWeight: 600, textDecoration: 'underline', textUnderlineOffset: 3, textDecorationColor: T.ghost }}>
-              How we build it
-            </Link>.
+            funder&rsquo;s own published page.
           </p>
         </div>
       </main>

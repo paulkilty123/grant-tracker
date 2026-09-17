@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { getAdminDb } from '@/lib/admin/admin-db'
 import { Resend } from 'resend'
 import { enforceInferenceRateLimit } from '@/lib/mcp-rate-limit'
 import { MCP_CONTACT_EMAIL } from '@/lib/mcp-brand'
-import { EMAIL_FROM, EMAIL_NOTIFY_TO, EMAIL_ACCENT, EMAIL_BRAND_HOST } from '@/lib/mcp-brand'
+import { EMAIL_FROM_HEADER, EMAIL_NOTIFY_TO, EMAIL_ACCENT, EMAIL_BRAND_HOST } from '@/lib/mcp-brand'
 
-const FROM_EMAIL = EMAIL_FROM
+const FROM_EMAIL = EMAIL_FROM_HEADER
 const NOTIFY_TO  = EMAIL_NOTIFY_TO
 
 
@@ -20,10 +20,7 @@ function extractClientIP(req: NextRequest): string {
 }
 
 function adminClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  )
+  return getAdminDb()
 }
 
 function escapeHtml(s: string): string {

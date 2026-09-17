@@ -35,9 +35,12 @@
 // below.
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { getAdminDb } from '@/lib/admin/admin-db'
 import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
 import { recordRun, usageFromAdminJson } from '@/lib/admin/cron-runs'
+import { reenrichUnchanged, currentPageHash, BRIEF_HASH_KEY } from '@/lib/verification/reenrich-unchanged'
+import { gateDecision } from '@/lib/admin/publish-gate'
+import type { ReviewRow } from '@/lib/admin/review-reasons'
 
 export const dynamic     = 'force-dynamic'
 export const maxDuration = 270
@@ -80,6 +83,16 @@ const DIFF_FIELDS = [
   'max_org_income',
 ] as const
 
+// Everything deriveReviewReasons needs to judge a row. Same list as
+// auto-publish's COLS so the gate answers here exactly as it will at 09:00.
+const REVIEW_COLS = [
+  'id', 'title', 'funder', 'is_active', 'pipeline_state', 'url_status', 'url_quality_score',
+  'amount_min', 'amount_max', 'deadline', 'is_rolling', 'next_open_date', 'deadline_cycle',
+  'eligible_structures', 'impact_sectors', 'target_beneficiaries', 'amount_undisclosed',
+  'funder_brief', 'field_provenance', 'raw_data', 'needs_intervention_reason',
+  'field_evidence', 'funding_type', 'apply_url', 'funding_index_url', 'is_invite_only',
+].join(', ')
+
 function arraysEqualUnordered(a: unknown, b: unknown): boolean {
   if (a === b) return true
   if (a == null && b == null) return true
@@ -110,10 +123,7 @@ function detectMaterialDiff(
 }
 
 function adminClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
+  return getAdminDb()
 }
 
 // Internal admin calls send a Bearer ADMIN_SECRET, so they MUST hit the
@@ -160,6 +170,8 @@ type Candidate = {
   funder: string
   url_status: string | null
   field_provenance: Record<string, { source?: string; set_at?: string; pinned?: boolean }> | null
+  funder_brief: Record<string, unknown> | null
+  field_evidence: Record<string, unknown> | null
 }
 
 export async function GET(req: NextRequest) {
@@ -225,7 +237,7 @@ export async function GET(req: NextRequest) {
     const overFetch = effectiveLimit * 3
     const { data: rows, error: fetchErr } = await db
       .from('scraped_grants')
-      .select('id, title, funder, url_status, funder_brief, field_provenance')
+      .select('id, title, funder, url_status, funder_brief, field_provenance, field_evidence')
       .eq('is_active', true)
       .eq('pipeline_state', 'published')
       .is('needs_intervention_reason', null)
@@ -260,6 +272,10 @@ export async function GET(req: NextRequest) {
     const guardCutoff = Date.now() - ADMIN_TOUCH_GUARD_DAYS * 24 * 60 * 60 * 1000
     const eligible: Candidate[] = []
     const skipped: Array<{ id: string; title: string }> = []
+    /** Briefs whose page is byte-identical to the one they were written from.
+     *  Rewriting them would produce the same words for the same money, so they
+     *  are stamped as attempted (14-day backoff) and left alone. Paul, 11 Sept. */
+    const skippedUnchanged: Array<{ id: string; title: string }> = []
 
     for (const row of rows as Candidate[]) {
       const prov = row.field_provenance ?? {}
@@ -273,6 +289,14 @@ export async function GET(req: NextRequest) {
         skipped.push({ id: row.id, title: row.title })
         continue
       }
+      const unchanged = reenrichUnchanged(row.funder_brief, row.field_evidence)
+      if (unchanged.skip) {
+        skippedUnchanged.push({ id: row.id, title: row.title })
+        await db.from('scraped_grants')
+          .update({ last_reenrich_attempt: new Date().toISOString() })
+          .eq('id', row.id)
+        continue
+      }
       eligible.push(row)
       if (eligible.length >= effectiveLimit) break
     }
@@ -283,6 +307,7 @@ export async function GET(req: NextRequest) {
         candidates: rows.length,
         processed:  0,
         skipped_admin_touch: skipped.length,
+        skipped_unchanged:   skippedUnchanged.length,
       }
     }
 
@@ -295,6 +320,8 @@ export async function GET(req: NextRequest) {
       swept:              boolean
       materially_changed: boolean
       flagged_for_review: boolean
+      /** What the publish gate said about the re-read row, when it changed. */
+      gate_outcome?:      'publish' | 'hold' | 'attention'
       diff_fields:        string[]
       stale_dates:        number
       elapsed_ms:         number
@@ -395,6 +422,22 @@ export async function GET(req: NextRequest) {
       }
       result.swept = true
 
+      // Stamp the page fingerprint the brief was written against, so the next
+      // 90-day pass can tell an unchanged page from a changed one. A direct
+      // jsonb edit on purpose: this is bookkeeping about the brief, not a
+      // change to it, and routing it through the merger would restamp the
+      // brief's provenance for a key no reader of the brief ever sees.
+      const pageHashNow = currentPageHash(row.field_evidence)
+      if (pageHashNow) {
+        const { data: fresh } = await db.from('scraped_grants').select('funder_brief').eq('id', row.id).single()
+        const brief = (fresh?.funder_brief ?? null) as Record<string, unknown> | null
+        if (brief) {
+          await db.from('scraped_grants')
+            .update({ funder_brief: { ...brief, [BRIEF_HASH_KEY]: pageHashNow } })
+            .eq('id', row.id)
+        }
+      }
+
       // Step 4: capture post-state and compute diff
       const { data: postRow, error: postErr } = await db
         .from('scraped_grants')
@@ -415,35 +458,63 @@ export async function GET(req: NextRequest) {
       result.materially_changed = changed
       result.diff_fields = Object.keys(diff)
 
-      // Step 5: if material change, flip to tagged_awaiting_review with diff
-      // stamped in provenance so admin can see what changed without re-running.
-      // is_active stays true — surface behaviour shouldn't snap to invisible
-      // while admin reviews; the existing tags still drive matching until they
-      // confirm or revert.
+      // Step 5: if material change, ask the publish gate before doing anything.
+      //
+      // A live row that passes its re-read STAYS LIVE. Paul, 2026-09-02. Until
+      // then every changed row flipped to tagged_awaiting_review, and because
+      // `tags_changed` is informational the gate published almost all of them
+      // straight back, one slot a day each. Twenty-four of the twenty-six live
+      // rows waiting for a slot on 1 Sep had arrived that way, no new row had
+      // been published since 13 August, and every one of them was out of the
+      // sitemap while it waited (the sitemap reads pipeline_state='published').
+      //
+      // So the flip is reserved for rows the gate would BLOCK: those go to the
+      // queue as Live and wrong with the diff stamped so a person can see what
+      // the re-read changed. A row the gate would publish keeps its state and
+      // the diff is recorded under `reenrich_diff` for the record. is_active
+      // stays true either way.
       if (changed) {
-        const existingProv = ((postRow as unknown as { field_provenance?: Record<string, unknown> }).field_provenance ?? {}) as Record<string, unknown>
-        const newProv = {
-          ...existingProv,
-          pipeline_state: {
-            pinned:  false,
-            set_at:  new Date().toISOString(),
-            source:  'system:reenrich_chain:v1',
-            reason:  'reclassify_diff',
-            diff,
-          },
-        }
-        const { error: flipErr } = await db
+        const { data: reviewRow, error: reviewErr } = await db
           .from('scraped_grants')
-          .update({
-            pipeline_state:   'tagged_awaiting_review',
-            field_provenance: newProv,
-          })
+          .select(REVIEW_COLS)
           .eq('id', row.id)
-        if (flipErr) {
-          result.error = `flip-to-NR failed: ${flipErr.message}`
-          console.warn(`[reenrich-stale] flip-to-NR failed for ${row.id}: ${flipErr.message}`)
+          .single()
+        if (reviewErr || !reviewRow) {
+          result.error = `gate fetch failed: ${reviewErr?.message ?? 'no row'}`
+          result.elapsed_ms = Date.now() - t0
+          results.push(result)
+          continue
+        }
+        const gate = gateDecision(reviewRow as unknown as ReviewRow)
+        result.gate_outcome = gate.outcome
+        const existingProv = ((postRow as unknown as { field_provenance?: Record<string, unknown> }).field_provenance ?? {}) as Record<string, unknown>
+        const stamp = {
+          pinned:  false,
+          set_at:  new Date().toISOString(),
+          source:  'system:reenrich_chain:v1',
+          reason:  'reclassify_diff',
+          diff,
+        }
+        if (gate.outcome === 'publish') {
+          const { error: noteErr } = await db
+            .from('scraped_grants')
+            .update({ field_provenance: { ...existingProv, reenrich_diff: { ...stamp, kept_live: true } } })
+            .eq('id', row.id)
+          if (noteErr) console.warn(`[reenrich-stale] diff note failed for ${row.id}: ${noteErr.message}`)
         } else {
-          result.flagged_for_review = true
+          const { error: flipErr } = await db
+            .from('scraped_grants')
+            .update({
+              pipeline_state:   'tagged_awaiting_review',
+              field_provenance: { ...existingProv, pipeline_state: { ...stamp, blocking: gate.blocking.map(b => b.code) } },
+            })
+            .eq('id', row.id)
+          if (flipErr) {
+            result.error = `flip-to-NR failed: ${flipErr.message}`
+            console.warn(`[reenrich-stale] flip-to-NR failed for ${row.id}: ${flipErr.message}`)
+          } else {
+            result.flagged_for_review = true
+          }
         }
       }
 
@@ -451,7 +522,7 @@ export async function GET(req: NextRequest) {
       results.push(result)
 
       const tagDiff = changed
-        ? ` — DIFF on ${result.diff_fields.join(', ')} → flagged for review`
+        ? ` — DIFF on ${result.diff_fields.join(', ')} → ${result.flagged_for_review ? 'flagged for review' : `gate says ${result.gate_outcome}, kept live`}`
         : ''
       console.log(
         `[reenrich-stale] ✓ ${row.id} (${row.title}) — ${result.elapsed_ms}ms` +
@@ -473,6 +544,7 @@ export async function GET(req: NextRequest) {
       materially_changed:  materiallyChanged,
       flagged_for_review:  flaggedForReview,
       skipped_admin_touch: skipped.length,
+      skipped_unchanged:   skippedUnchanged.length,
       results,
     }
   })

@@ -30,7 +30,7 @@ import {
 export const dynamic     = 'force-dynamic'
 export const maxDuration = 300
 
-const GENERATION_MODEL = 'claude-sonnet-4-6'
+const GENERATION_MODEL = 'claude-sonnet-5'   // was claude-sonnet-4-6 until 2026-09-06: newer, and a third cheaper per token
 
 // ── Prompt assembly ──────────────────────────────────────────────────────────
 // The system prompt is static (cacheable). Org content, funder context and

@@ -41,6 +41,18 @@ export type GrantFlagCode =
   // Not rolling, one deadline, no cycle captured, and the text says there will
   // be another round. Will go stale the moment this date passes.
   | 'possible_multi_round_uncaptured'
+  // A reviewer has ruled that this row's non-web apply route IS the real route.
+  //
+  // The Paley Trust has no website and takes applications by email. Paul settled
+  // that on 2026-08-31 as correct, and the queue went on raising it every day,
+  // because `not_a_web_url` fires on any `mailto:` and a ruling made in
+  // conversation is invisible to code. A decision that has to be remade daily is
+  // not a decision, so this is where one gets written down.
+  //
+  // Deliberately a flag on raw_data.checks rather than a column: raw_data is not
+  // in TRACKED_FIELDS, so recording the ruling can never be blocked by the trust
+  // ladder and never pins anything. Clearing the flag brings the row back.
+  | 'apply_route_accepted'
 
 export type GrantFlag = {
   code:   GrantFlagCode
