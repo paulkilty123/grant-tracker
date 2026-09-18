@@ -176,3 +176,21 @@ describe('a prior-receipt threshold or a budget-line cap is not an award (BFI De
     expect(max('Awards of up to £60,000 for feature development.')).toBe(60000)
   })
 })
+
+describe('a figure given to each recipient is the award, not a pot (Coram Voices in Action, 18 Sept 2026)', () => {
+  const coram = 'The Voices in Action Housing Rights Ambassadors are launching a grant programme funding two grass root organisations in London for the next two years. The funding available is £20,000 per organisation per year. A total of £40,000 will be given to each organisation.'
+  it('reads the whole-grant total as the ceiling and never as a range', () => {
+    const r = extractGrantAmounts(buildAwardText([coram]))
+    expect(r.amount_max).toBe(40000)
+    expect(r.amount_min).toBeNull()
+    expect(r.max_cued).toBe(true)
+  })
+  it('"per applicant" and "for each project" beat a total-of on the left', () => {
+    expect(max('A total of £15,000 is available per applicant.')).toBe(15000)
+    expect(max('A total of £8,000 will be awarded for each project.')).toBe(8000)
+  })
+  it('a pot with no recipient wording is still dropped', () => {
+    expect(max('A total of £40,000 will be given out this year.')).toBeNull()
+    expect(max('A total of £2 million will be distributed across the programme.')).toBeNull()
+  })
+})
