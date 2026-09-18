@@ -1,5 +1,5 @@
 import { ImageResponse } from 'next/og'
-import { createClient } from '@/lib/supabase/server'
+import { getAdminDb } from '@/lib/admin/admin-db'
 import { MCP_BRAND_NAME } from '@/lib/mcp-brand'
 
 // Per-opportunity share card.
@@ -38,7 +38,7 @@ function humanDate(s: string | null): string | null {
 
 export default async function Image({ params }: { params: { id: string } }) {
   const id = decodeURIComponent(params.id)
-  const supabase = await createClient()
+  const supabase = getAdminDb()
 
   const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
   const column = UUID_RE.test(id) ? 'id' : 'external_id'

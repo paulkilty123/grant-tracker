@@ -202,7 +202,11 @@ function briefText(brief: Record<string, unknown> | null, key: string): string |
 
 async function loadGrant(rawId: string) {
   const id = decodeURIComponent(rawId)
-  const supabase = await createClient()
+  // The admin client, not the session client: since migration 088 the public
+  // key cannot read the catalogue, so a logged-out reader's session would
+  // return nothing and this page could never decide between "sign in" and
+  // "open to the public". Visibility is enforced by isPubliclyVisible below.
+  const supabase = getAdminDb()
 
   const { data: byExternal } = await supabase
     .from('scraped_grants')
@@ -356,7 +360,13 @@ export default async function PublicGrantPage({
   // anyone who arrives from an old link or a search result is sent to log in
   // and comes back to this page afterwards. The gated rendering below is kept
   // for the day this is reopened, and for the signed-in reader it is unchanged.
-  if (!signedIn) redirect(`/auth/login?next=${encodeURIComponent(`/grants/${id}`)}`)
+  // A row Paul has opened to the public (open_to_public, migration 090) keeps
+  // the gated logged-out rendering below: facts, one sentence, the locked
+  // cards. That is what a LinkedIn link lands on. Every other row asks the
+  // stranger to sign in.
+  if (!signedIn && !(grant as { open_to_public?: boolean | null }).open_to_public) {
+    redirect(`/auth/login?next=${encodeURIComponent(`/grants/${id}`)}`)
+  }
 
   // The funder's homepage, for the public bottom row: the funders table where
   // it has one, else the origin of the apply link. A homepage is a fair thing
