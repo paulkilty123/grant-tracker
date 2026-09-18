@@ -169,8 +169,13 @@ const PER_GRANT_LEFT_CUES = /(?:^|[\s.,;:(])(?:up\s+to|of\s+up\s+to|maximum(?:\s
 // and "Legal fees up to £3,500", which are caps on what a budget may contain,
 // not what an applicant receives. Same family as the pot rule above: a
 // figure the funder states about something other than the award.
-const THRESHOLD_CUES_LEFT = /(?:\b(?:accumulated|cumulative|aggregate)\s+(?:total\s+)?(?:of\s+)?|\b(?:already|previously)\s+(?:received|been\s+awarded|had)\s+(?:an?\s+)?(?:accumulated|cumulative|total)?\s*(?:total\s+)?(?:of\s+)?|\b(?:have|has|having)\s+received\s+(?:more|less)\s+than\s+|\b(?:fees?|overheads?|expenses?|subsistence|accommodation|per\s+diems?)\b[^£]{0,25}(?:up\s+to\s+|capped\s+(?:at\s+)?|of\s+)?|\blocked\s+box\b[^£]{0,30})$/i
-const COST_CAP_RIGHT = /^[\s,()]*(?:per\s+(?:stage|night|day|document|agreement)\b|for\s+(?:writer|option|director)\b|in\s+(?:their|your|the|its)\s+(?:bfi\s+)?locked\s+box\b)/i
+//
+// BBC Charity Appeals, 18 Sept 2026: "featured charities raise an average of
+// around £38,000 in public donations" became amount_max 38,000 on a broadcast
+// appeal with no cash grant. Money RAISED by a recipient, or received "in
+// donations", is what the public gave, not what the funder gives.
+const THRESHOLD_CUES_LEFT = /(?:\brais(?:e|es|ed|ing)\s+(?:an?\s+)?(?:average\s+(?:of\s+)?)?(?:around\s+|about\s+|approximately\s+|over\s+|roughly\s+|some\s+)?|\b(?:accumulated|cumulative|aggregate)\s+(?:total\s+)?(?:of\s+)?|\b(?:already|previously)\s+(?:received|been\s+awarded|had)\s+(?:an?\s+)?(?:accumulated|cumulative|total)?\s*(?:total\s+)?(?:of\s+)?|\b(?:have|has|having)\s+received\s+(?:more|less)\s+than\s+|\b(?:fees?|overheads?|expenses?|subsistence|accommodation|per\s+diems?)\b[^£]{0,25}(?:up\s+to\s+|capped\s+(?:at\s+)?|of\s+)?|\blocked\s+box\b[^£]{0,30})$/i
+const COST_CAP_RIGHT = /^[\s,()]*(?:in\s+(?:public\s+|charitable\s+)?donations\b|per\s+(?:stage|night|day|document|agreement)\b|for\s+(?:writer|option|director)\b|in\s+(?:their|your|the|its)\s+(?:bfi\s+)?locked\s+box\b)/i
 
 // A figure predicated of ONE recipient is an award, whatever precedes it.
 //

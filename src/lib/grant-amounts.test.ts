@@ -204,3 +204,14 @@ describe('government match funding is the pot (Better Futures Fund round 1, 18 S
     expect(max('You can apply for up to £5,000 of funding towards your project costs.')).toBe(5000)
   })
 })
+
+describe('money raised is not an award (BBC Charity Appeals, 18 Sept 2026)', () => {
+  it('drops an average raised in donations', () => {
+    expect(max('No cash grant; featured charities raise an average of around £38,000 in public donations.')).toBeNull()
+    expect(max('Previous appeals raised £120,000 for the charity.')).toBeNull()
+    expect(max('The 2025 appeal raised over £1 million in donations.')).toBeNull()
+  })
+  it('still reads a grant that mentions fundraising nearby', () => {
+    expect(max('Grants of up to £10,000 for charities that raise funds locally.')).toBe(10000)
+  })
+})
