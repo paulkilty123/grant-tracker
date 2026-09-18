@@ -194,3 +194,13 @@ describe('a figure given to each recipient is the award, not a pot (Coram Voices
     expect(max('A total of £2 million will be distributed across the programme.')).toBeNull()
   })
 })
+
+describe('government match funding is the pot (Better Futures Fund round 1, 18 Sept 2026)', () => {
+  it('drops "up to £37 million of government match funding"', () => {
+    expect(max('This application form is for Round 1 of Better Futures Fund and will provide up to £37 million of government match funding towards the Better Futures Fund objectives.')).toBeNull()
+    expect(max('Round one provides up to £37 million of UK government match funding in total.')).toBeNull()
+  })
+  it('still reads "up to £5,000 of funding towards your project"', () => {
+    expect(max('You can apply for up to £5,000 of funding towards your project costs.')).toBe(5000)
+  })
+})

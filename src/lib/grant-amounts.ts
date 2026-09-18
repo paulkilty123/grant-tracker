@@ -141,8 +141,15 @@ const POOL_CUES_RIGHT = /^[\s,()]*(?:distribut(?:es|ed|ing)\b|donat(?:es|ed|ing)
  * Deliberately narrow. A bare "annually" stays in POOL_CUES_RIGHT where a
  * per-grant cue can still override it, because "up to £5,000 annually" really is
  * a per-grant rate.
+ *
+ * "of government match funding" (18 Sept 2026, Better Futures Fund round 1:
+ * "will provide up to £37 million of government match funding towards the
+ * Better Futures Fund objectives") is the fund describing its own pot; no
+ * applicant is offered £37m. Plain "of funding towards your project" stays
+ * per-grant, so the qualifier (government, public, treasury, lottery, match)
+ * is required.
  */
-const STRONG_POOL_RIGHT = /^[\s,()]*(?:available\s+(?:annually|each\s+year|per\s+(?:year|annum)|in\s+total|across\b)|annually\s+(?:in|across|through|over)\b|(?:to\s+be\s+)?(?:shared|split|divided|distributed)\s+(?:across|between|among)|in\s+(?:grants?|funding|awards?)\s+(?:each\s+year|annually|in\s+total)\b)/i
+const STRONG_POOL_RIGHT = /^[\s,()]*(?:of\s+(?:uk\s+|central\s+)?(?:government|public|treasury|lottery|match)\s+(?:match\s+)?funding\b|available\s+(?:annually|each\s+year|per\s+(?:year|annum)|in\s+total|across\b)|annually\s+(?:in|across|through|over)\b|(?:to\s+be\s+)?(?:shared|split|divided|distributed)\s+(?:across|between|among)|in\s+(?:grants?|funding|awards?)\s+(?:each\s+year|annually|in\s+total)\b)/i
 
 // Per-grant qualifiers in LEFT context override the pool-cues-RIGHT check.
 // Without this, "Up to £10,000 per year" is dropped because 'per year' looks
