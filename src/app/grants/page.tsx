@@ -57,11 +57,11 @@ export default async function GrantsIndexPage() {
             Closing soonest
           </h2>
           <ul style={{ margin: 0, padding: 0, borderBottom: `1px solid ${T.hair}` }}>
-            {closingSoon.map(r => <GrantRow key={r.id} row={r} todayISO={todayISO} />)}
+            {closingSoon.map(r => <GrantRow key={r.id} row={r} todayISO={todayISO} bare />)}
           </ul>
           <p style={{ fontSize: 14, color: T.inkMuted, margin: '14px 0 0' }}>
             <Link href="/grants/type/grants" style={{ color: T.deep, fontWeight: 600 }}>All grants</Link>
-            {' '}are listed by deadline, soonest first.
+            {' '}lists more. Closing dates and amounts show once you have an account.
           </p>
           <HubCta signupHref={signupHref} />
         </div>

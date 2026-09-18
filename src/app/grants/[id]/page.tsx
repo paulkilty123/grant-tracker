@@ -2,7 +2,7 @@ import React from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { formatRange, locationLabel } from '@/lib/utils'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { isPubliclyVisible } from '@/lib/public-visibility'
 import LogoMark from '@/components/icons/LogoMark'
 import { eligibilityStated, ELIGIBILITY_NOT_STATED } from '@/lib/eligibility-disclosure'
@@ -351,6 +351,12 @@ export default async function PublicGrantPage({
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   const signedIn = Boolean(user)
+  // 18 Sept 2026, Paul: the record is behind sign-in altogether. The hub pages
+  // list names and funders only, so nothing links a stranger here any more;
+  // anyone who arrives from an old link or a search result is sent to log in
+  // and comes back to this page afterwards. The gated rendering below is kept
+  // for the day this is reopened, and for the signed-in reader it is unchanged.
+  if (!signedIn) redirect(`/auth/login?next=${encodeURIComponent(`/grants/${id}`)}`)
 
   // The funder's homepage, for the public bottom row: the funders table where
   // it has one, else the origin of the apply link. A homepage is a fair thing
