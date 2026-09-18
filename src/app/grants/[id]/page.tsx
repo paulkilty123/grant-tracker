@@ -362,10 +362,13 @@ export default async function PublicGrantPage({
   // for the day this is reopened, and for the signed-in reader it is unchanged.
   // A row Paul has opened to the public (open_to_public, migration 090) keeps
   // the gated logged-out rendering below: facts, one sentence, the locked
-  // cards. That is what a LinkedIn link lands on. Every other row asks the
-  // stranger to sign in.
+  // cards. That is what a LinkedIn link lands on. Every other row sends the
+  // stranger to sign up (Paul, 18 Sept: a stranger almost never has an
+  // account, so sign-in is the wrong first door); the signup page links to
+  // sign in for those who do. A new account needs a profile before the
+  // record shows anything, so there is no return path to carry.
   if (!signedIn && !(grant as { open_to_public?: boolean | null }).open_to_public) {
-    redirect(`/auth/login?next=${encodeURIComponent(`/grants/${id}`)}`)
+    redirect('/signup')
   }
 
   // The funder's homepage, for the public bottom row: the funders table where
