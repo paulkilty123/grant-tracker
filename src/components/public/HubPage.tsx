@@ -52,9 +52,34 @@ export function Crumbs({ items }: { items: { href?: string; label: string }[] })
   )
 }
 
-/** One catalogue row, as a single link line. */
-export function GrantRow({ row, todayISO, showRegion = true }: { row: HubRow; todayISO: string; showRegion?: boolean }) {
+/**
+ * One catalogue row.
+ *
+ * `bare` is the public form (Paul, 18 Sept 2026): the name, the funder and
+ * the funding type, and nothing else. No amount, no deadline, no link to the
+ * record. A stranger, or a crawler, learns that the fund exists and who runs
+ * it, which any newsletter tells them; the facts that make a directory worth
+ * copying stay behind the account. The full row is for signed-in surfaces.
+ */
+export function GrantRow({ row, todayISO, showRegion = true, bare = false }: { row: HubRow; todayISO: string; showRegion?: boolean; bare?: boolean }) {
   const ft = FUNDING_TYPE_COLOUR[typeHubForRow(row).typeKey]
+  if (bare) {
+    return (
+      <li style={{ listStyle: 'none', margin: 0, borderTop: `1px solid ${T.hair}` }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', gap: 14, alignItems: 'center', padding: '13px 4px', color: T.deep }}>
+          <span style={{ minWidth: 0 }}>
+            <span style={{ display: 'block', fontFamily: UI, fontSize: 16, fontWeight: 600, letterSpacing: '-0.012em', lineHeight: 1.3, color: T.deep }}>
+              {row.title}
+            </span>
+            {row.funder && <span style={{ display: 'block', marginTop: 4, fontSize: 13.5, color: T.inkMuted, fontFamily: BODY }}>{row.funder}</span>}
+          </span>
+          <span style={{ fontFamily: UI, fontSize: 11.5, fontWeight: 600, padding: '5px 12px', borderRadius: 999, background: ft.tint, color: ft.fg, whiteSpace: 'nowrap' }}>
+            {ft.label}
+          </span>
+        </div>
+      </li>
+    )
+  }
   const amount = formatRange(row.amount_min, row.amount_max, Boolean(row.amount_undisclosed), row.funding_type)
   const dl = deadlineText(row, todayISO)
   const where = locationLabel(row.is_local, row.location_tag)
@@ -224,13 +249,13 @@ export default function HubPage(p: HubPageProps) {
               <p style={{ fontSize: 15, color: T.inkMuted }}>Nothing live in this list right now. The catalogue is checked daily, so it is worth coming back.</p>
             ) : (
               <ul style={{ margin: 0, padding: 0, borderBottom: `1px solid ${T.hair}` }}>
-                {rows.map(r => <GrantRow key={r.id} row={r} todayISO={todayISO} showRegion={p.showRegion ?? true} />)}
+                {rows.map(r => <GrantRow key={r.id} row={r} todayISO={todayISO} showRegion={p.showRegion ?? true} bare />)}
               </ul>
             )}
             {hidden > 0 && (
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', padding: '18px 4px 4px' }}>
                 <span style={{ fontSize: 14.5, lineHeight: 1.5, color: T.inkMuted, maxWidth: '48ch' }}>
-                  Showing {rows.length} of {roundedCount(all.length)}. <b style={{ color: T.deep, fontWeight: 600 }}>The full list is free with an account</b>, matched to your organisation.
+                  Showing {rows.length} of {roundedCount(all.length)}. <b style={{ color: T.deep, fontWeight: 600 }}>Amounts, deadlines and the full list are free with an account</b>, matched to your organisation.
                 </span>
                 <Link
                   href={signupHref}

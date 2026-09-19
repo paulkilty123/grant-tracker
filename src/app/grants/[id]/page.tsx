@@ -2,7 +2,7 @@ import React from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { formatRange, locationLabel } from '@/lib/utils'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { isPubliclyVisible } from '@/lib/public-visibility'
 import LogoMark from '@/components/icons/LogoMark'
 import { eligibilityStated, ELIGIBILITY_NOT_STATED } from '@/lib/eligibility-disclosure'
@@ -202,7 +202,11 @@ function briefText(brief: Record<string, unknown> | null, key: string): string |
 
 async function loadGrant(rawId: string) {
   const id = decodeURIComponent(rawId)
-  const supabase = await createClient()
+  // The admin client, not the session client: since migration 088 the public
+  // key cannot read the catalogue, so a logged-out reader's session would
+  // return nothing and this page could never decide between "sign in" and
+  // "open to the public". Visibility is enforced by isPubliclyVisible below.
+  const supabase = getAdminDb()
 
   const { data: byExternal } = await supabase
     .from('scraped_grants')
@@ -351,6 +355,21 @@ export default async function PublicGrantPage({
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   const signedIn = Boolean(user)
+  // 18 Sept 2026, Paul: the record is behind sign-in altogether. The hub pages
+  // list names and funders only, so nothing links a stranger here any more;
+  // anyone who arrives from an old link or a search result is sent to log in
+  // and comes back to this page afterwards. The gated rendering below is kept
+  // for the day this is reopened, and for the signed-in reader it is unchanged.
+  // A row Paul has opened to the public (open_to_public, migration 090) keeps
+  // the gated logged-out rendering below: facts, one sentence, the locked
+  // cards. That is what a LinkedIn link lands on. Every other row sends the
+  // stranger to sign up (Paul, 18 Sept: a stranger almost never has an
+  // account, so sign-in is the wrong first door); the signup page links to
+  // sign in for those who do. A new account needs a profile before the
+  // record shows anything, so there is no return path to carry.
+  if (!signedIn && !(grant as { open_to_public?: boolean | null }).open_to_public) {
+    redirect('/signup')
+  }
 
   // The funder's homepage, for the public bottom row: the funders table where
   // it has one, else the origin of the apply link. A homepage is a fair thing

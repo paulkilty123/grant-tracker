@@ -176,3 +176,42 @@ describe('a prior-receipt threshold or a budget-line cap is not an award (BFI De
     expect(max('Awards of up to £60,000 for feature development.')).toBe(60000)
   })
 })
+
+describe('a figure given to each recipient is the award, not a pot (Coram Voices in Action, 18 Sept 2026)', () => {
+  const coram = 'The Voices in Action Housing Rights Ambassadors are launching a grant programme funding two grass root organisations in London for the next two years. The funding available is £20,000 per organisation per year. A total of £40,000 will be given to each organisation.'
+  it('reads the whole-grant total as the ceiling and never as a range', () => {
+    const r = extractGrantAmounts(buildAwardText([coram]))
+    expect(r.amount_max).toBe(40000)
+    expect(r.amount_min).toBeNull()
+    expect(r.max_cued).toBe(true)
+  })
+  it('"per applicant" and "for each project" beat a total-of on the left', () => {
+    expect(max('A total of £15,000 is available per applicant.')).toBe(15000)
+    expect(max('A total of £8,000 will be awarded for each project.')).toBe(8000)
+  })
+  it('a pot with no recipient wording is still dropped', () => {
+    expect(max('A total of £40,000 will be given out this year.')).toBeNull()
+    expect(max('A total of £2 million will be distributed across the programme.')).toBeNull()
+  })
+})
+
+describe('government match funding is the pot (Better Futures Fund round 1, 18 Sept 2026)', () => {
+  it('drops "up to £37 million of government match funding"', () => {
+    expect(max('This application form is for Round 1 of Better Futures Fund and will provide up to £37 million of government match funding towards the Better Futures Fund objectives.')).toBeNull()
+    expect(max('Round one provides up to £37 million of UK government match funding in total.')).toBeNull()
+  })
+  it('still reads "up to £5,000 of funding towards your project"', () => {
+    expect(max('You can apply for up to £5,000 of funding towards your project costs.')).toBe(5000)
+  })
+})
+
+describe('money raised is not an award (BBC Charity Appeals, 18 Sept 2026)', () => {
+  it('drops an average raised in donations', () => {
+    expect(max('No cash grant; featured charities raise an average of around £38,000 in public donations.')).toBeNull()
+    expect(max('Previous appeals raised £120,000 for the charity.')).toBeNull()
+    expect(max('The 2025 appeal raised over £1 million in donations.')).toBeNull()
+  })
+  it('still reads a grant that mentions fundraising nearby', () => {
+    expect(max('Grants of up to £10,000 for charities that raise funds locally.')).toBe(10000)
+  })
+})

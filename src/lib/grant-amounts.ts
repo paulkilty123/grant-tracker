@@ -141,8 +141,15 @@ const POOL_CUES_RIGHT = /^[\s,()]*(?:distribut(?:es|ed|ing)\b|donat(?:es|ed|ing)
  * Deliberately narrow. A bare "annually" stays in POOL_CUES_RIGHT where a
  * per-grant cue can still override it, because "up to £5,000 annually" really is
  * a per-grant rate.
+ *
+ * "of government match funding" (18 Sept 2026, Better Futures Fund round 1:
+ * "will provide up to £37 million of government match funding towards the
+ * Better Futures Fund objectives") is the fund describing its own pot; no
+ * applicant is offered £37m. Plain "of funding towards your project" stays
+ * per-grant, so the qualifier (government, public, treasury, lottery, match)
+ * is required.
  */
-const STRONG_POOL_RIGHT = /^[\s,()]*(?:available\s+(?:annually|each\s+year|per\s+(?:year|annum)|in\s+total|across\b)|annually\s+(?:in|across|through|over)\b|(?:to\s+be\s+)?(?:shared|split|divided|distributed)\s+(?:across|between|among)|in\s+(?:grants?|funding|awards?)\s+(?:each\s+year|annually|in\s+total)\b)/i
+const STRONG_POOL_RIGHT = /^[\s,()]*(?:of\s+(?:uk\s+|central\s+)?(?:government|public|treasury|lottery|match)\s+(?:match\s+)?funding\b|available\s+(?:annually|each\s+year|per\s+(?:year|annum)|in\s+total|across\b)|annually\s+(?:in|across|through|over)\b|(?:to\s+be\s+)?(?:shared|split|divided|distributed)\s+(?:across|between|among)|in\s+(?:grants?|funding|awards?)\s+(?:each\s+year|annually|in\s+total)\b)/i
 
 // Per-grant qualifiers in LEFT context override the pool-cues-RIGHT check.
 // Without this, "Up to £10,000 per year" is dropped because 'per year' looks
@@ -162,8 +169,24 @@ const PER_GRANT_LEFT_CUES = /(?:^|[\s.,;:(])(?:up\s+to|of\s+up\s+to|maximum(?:\s
 // and "Legal fees up to £3,500", which are caps on what a budget may contain,
 // not what an applicant receives. Same family as the pot rule above: a
 // figure the funder states about something other than the award.
-const THRESHOLD_CUES_LEFT = /(?:\b(?:accumulated|cumulative|aggregate)\s+(?:total\s+)?(?:of\s+)?|\b(?:already|previously)\s+(?:received|been\s+awarded|had)\s+(?:an?\s+)?(?:accumulated|cumulative|total)?\s*(?:total\s+)?(?:of\s+)?|\b(?:have|has|having)\s+received\s+(?:more|less)\s+than\s+|\b(?:fees?|overheads?|expenses?|subsistence|accommodation|per\s+diems?)\b[^£]{0,25}(?:up\s+to\s+|capped\s+(?:at\s+)?|of\s+)?|\blocked\s+box\b[^£]{0,30})$/i
-const COST_CAP_RIGHT = /^[\s,()]*(?:per\s+(?:stage|night|day|document|agreement)\b|for\s+(?:writer|option|director)\b|in\s+(?:their|your|the|its)\s+(?:bfi\s+)?locked\s+box\b)/i
+//
+// BBC Charity Appeals, 18 Sept 2026: "featured charities raise an average of
+// around £38,000 in public donations" became amount_max 38,000 on a broadcast
+// appeal with no cash grant. Money RAISED by a recipient, or received "in
+// donations", is what the public gave, not what the funder gives.
+const THRESHOLD_CUES_LEFT = /(?:\brais(?:e|es|ed|ing)\s+(?:an?\s+)?(?:average\s+(?:of\s+)?)?(?:around\s+|about\s+|approximately\s+|over\s+|roughly\s+|some\s+)?|\b(?:accumulated|cumulative|aggregate)\s+(?:total\s+)?(?:of\s+)?|\b(?:already|previously)\s+(?:received|been\s+awarded|had)\s+(?:an?\s+)?(?:accumulated|cumulative|total)?\s*(?:total\s+)?(?:of\s+)?|\b(?:have|has|having)\s+received\s+(?:more|less)\s+than\s+|\b(?:fees?|overheads?|expenses?|subsistence|accommodation|per\s+diems?)\b[^£]{0,25}(?:up\s+to\s+|capped\s+(?:at\s+)?|of\s+)?|\blocked\s+box\b[^£]{0,30})$/i
+const COST_CAP_RIGHT = /^[\s,()]*(?:in\s+(?:public\s+|charitable\s+)?donations\b|per\s+(?:stage|night|day|document|agreement)\b|for\s+(?:writer|option|director)\b|in\s+(?:their|your|the|its)\s+(?:bfi\s+)?locked\s+box\b)/i
+
+// A figure predicated of ONE recipient is an award, whatever precedes it.
+//
+// Coram Voices in Action, 18 Sept 2026: "The funding available is £20,000 per
+// organisation per year. A total of £40,000 will be given to each
+// organisation." The "total of" pool cue dropped the £40,000, leaving the
+// per-year £20,000 as the ceiling; the row then carried £20,000 to £40,000
+// as though it were a range. "To each organisation" says whose money it is:
+// one applicant's, so it is a cap on the award and beats the pool cue. Same
+// family as the multi-year rule: the whole-grant figure is the ceiling.
+const PER_RECIPIENT_RIGHT = /^[\s,()]*(?:(?:will\s+be\s+|is\s+|are\s+)?(?:given|awarded|paid|granted|made|available|provided|offered)?\s*)?(?:(?:to|for)\s+each\s+(?:successful\s+|funded\s+)?(?:organisation|organization|applicant|grantee|recipient|project|group|charity|partner)\b|per\s+(?:organisation|organization|applicant|grantee|recipient|project|group|charity|partner)\b)/i
 
 // Ceiling-specific subset: these assert a cap, never a floor.
 const CEILING_LEFT_CUES = /(?:^|[\s.,;:(])(?:up\s+to|of\s+up\s+to|maximum(?:\s+of)?|max(?:\s+of)?|no\s+more\s+than|limit(?:\s+of)?)\s*$/i
@@ -288,6 +311,13 @@ export function extractGrantAmounts(awardText: string): DetectedAmounts {
     // A threshold on what was already received, or a cap on a budget line, is
     // not an award (see THRESHOLD_CUES_LEFT). Skipped outright, no chain.
     if (THRESHOLD_CUES_LEFT.test(leftCtx) || COST_CAP_RIGHT.test(rightCtx)) continue
+    // "£X to each organisation" / "£X per applicant": one recipient's award,
+    // a ceiling, and it outranks a "total of" on the left (see PER_RECIPIENT_RIGHT).
+    if (PER_RECIPIENT_RIGHT.test(rightCtx)) {
+      const v = parseAmt(m[0])
+      if (v !== null) detected.push({ value: v, cued: true, ceiling: true })
+      continue
+    }
     // Pool total → anchor a breakdown chain and skip the figure itself.
     if (POOL_CUES_LEFT.test(leftCtx)) { chainEnd = idx + m[0].length; continue }
     if (STRONG_POOL_RIGHT.test(rightCtx)) continue
