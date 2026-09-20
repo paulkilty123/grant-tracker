@@ -1,0 +1,56 @@
+<html><head><meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* LinkedIn single-fund card, 1200x1200. Palette and type follow _banner.html
+     (the LIVE hero): cream ground, deep teal ink, the sage highlight. The one
+     thing this card carries that nobody else's does is the "Before you apply"
+     block: the disqualifiers, read off the funder's page. House copy: no dashes. */
+  *{box-sizing:border-box;margin:0}
+  body{width:1200px;height:1200px;overflow:hidden;background:#F6F1E7;
+       font-family:"Plus Jakarta Sans",system-ui,sans-serif;color:#1D3C3E;position:relative;
+       padding:88px 96px;display:flex;flex-direction:column}
+  .kicker{font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:22px;letter-spacing:.12em;
+          text-transform:uppercase;color:#3F5B4E}
+  h1{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:74px;line-height:1.06;
+     letter-spacing:-.015em;margin-top:26px}
+  .hl{position:relative;display:inline-block;isolation:isolate}
+  .hl::before{content:"";position:absolute;left:-.06em;right:-.05em;top:.14em;bottom:.08em;
+              background:rgba(165,201,161,.62);z-index:-1;border-radius:6px}
+  .sub{font-size:30px;line-height:1.4;color:#3F5B4E;margin-top:28px;max-width:960px}
+  .box{margin-top:64px;background:#FFFFFF;border-radius:22px;padding:36px 40px;
+       border:2px solid rgba(29,60,62,.10)}
+  .box .label{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:20px;letter-spacing:.1em;
+       text-transform:uppercase;color:#993C1D;margin-bottom:16px}
+  .box ul{list-style:none;padding:0}
+  .box li{font-size:27px;line-height:1.42;padding-left:34px;position:relative;margin-bottom:8px}
+  .box li::before{content:"";position:absolute;left:0;top:.52em;width:14px;height:14px;border-radius:50%;background:#D85A30}
+  .foot{display:flex;justify-content:space-between;align-items:flex-end;margin-top:auto}
+  .deadline{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:34px}
+  .deadline span{display:block;font-family:"Plus Jakarta Sans",sans-serif;font-weight:500;font-size:20px;
+                 letter-spacing:.1em;text-transform:uppercase;color:#3F5B4E;margin-bottom:6px}
+  .brand{display:flex;align-items:center;gap:12px;font-family:"Space Grotesk",sans-serif;font-weight:500;
+         font-size:40px;letter-spacing:-.01em}
+  .mark{position:absolute;right:-150px;top:-70px;opacity:.09;pointer-events:none}
+</style></head>
+<body>
+  <svg class="mark" width="620" height="620" viewBox="0 0 24 24" fill="none" stroke="#1D3C3E" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 10a6 6 0 0 0 -6 -6h-3v2a6 6 0 0 0 6 6h3"/><path d="M12 14a6 6 0 0 1 6 -6h3v1a6 6 0 0 1 -6 6h-3"/><path d="M12 20l0 -10"/>
+  </svg>
+  <div class="kicker">{{KICKER}}</div>
+  <h1>{{HEADLINE}}</h1>
+  <p class="sub">{{SUB}}</p>
+  <div class="box">
+    <div class="label">Before you apply</div>
+    <ul>{{CATCHES}}</ul>
+  </div>
+  <div class="foot">
+    <div class="deadline"><span>Deadline</span>{{DEADLINE}}</div>
+    <div class="brand">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#1D3C3E" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 10a6 6 0 0 0 -6 -6h-3v2a6 6 0 0 0 6 6h3"/><path d="M12 14a6 6 0 0 1 6 -6h3v1a6 6 0 0 1 -6 6h-3"/><path d="M12 20l0 -10"/>
+      </svg>shoots
+    </div>
+  </div>
+</body></html>
