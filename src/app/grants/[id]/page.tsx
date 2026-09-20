@@ -367,9 +367,15 @@ export default async function PublicGrantPage({
   // account, so sign-in is the wrong first door); the signup page links to
   // sign in for those who do. A new account needs a profile before the
   // record shows anything, so there is no return path to carry.
-  if (!signedIn && !(grant as { open_to_public?: boolean | null }).open_to_public) {
+  const isPublic = Boolean((grant as { open_to_public?: boolean | null }).open_to_public)
+  if (!signedIn && !isPublic) {
     redirect('/signup')
   }
+  // 20 Sept 2026: a public row is what a LinkedIn post links to, and the post
+  // sells the fact that we say who cannot apply. So on a public row the
+  // stranger reads who_can_apply and exclusions in full. Rule 6: eligibility
+  // is never withheld. The judgement half of the brief stays behind the account.
+  const showEligibility = signedIn || isPublic
 
   // The funder's homepage, for the public bottom row: the funders table where
   // it has one, else the origin of the apply link. A homepage is a fair thing
@@ -779,10 +785,10 @@ export default async function PublicGrantPage({
             {!signedIn && eligibilitySummary && (
               <p style={{ fontSize: 15, lineHeight: 1.6, color: T.deep, margin: '14px 0 0' }}>{eligibilitySummary}.</p>
             )}
-            {signedIn && whoCanApply && (
+            {showEligibility && whoCanApply && (
               <p style={{ fontSize: 15, lineHeight: 1.6, color: T.deep, margin: '14px 0 0', whiteSpace: 'pre-line' }}>{whoCanApply}</p>
             )}
-            {signedIn && exclusions && (
+            {showEligibility && exclusions && (
               <div style={{ marginTop: 16, padding: '14px 16px', background: '#FBF1EC', borderRadius: 12 }}>
                 <p style={{ fontFamily: UI, fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#993C1D', margin: '0 0 6px' }}>What they will not fund</p>
                 <p style={{ fontSize: 14.5, lineHeight: 1.6, color: T.deep, margin: 0, whiteSpace: 'pre-line' }}>{exclusions}</p>
