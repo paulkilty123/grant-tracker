@@ -170,6 +170,11 @@ const POLICY: Record<ReviewReasonCode, 'block' | 'info' | 'withhold'> = {
   // after the pre-arming dry run found 29 of these among the 51 rows the gate
   // would have newly published.
   page_describes_different_fund: 'block',
+  // A site front page the engine could not place (20 Sept 2026, EDF Energy
+  // Trust, whose lapsed domain served betting sites). Withhold: a not-live row
+  // waits for a human to open the link; a live row carrying it is usually a
+  // funder's own homepage and is not wrong on that evidence alone.
+  front_door_not_this_funder:    'withhold',
 
   // Nothing says who is giving the money. Three press releases scraped as funds
   // shared this and nothing else.

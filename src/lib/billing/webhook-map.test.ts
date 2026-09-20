@@ -1,0 +1,201 @@
+import { describe, it, expect } from 'vitest'
+import { mapSubscription, type StripeSubscriptionLike } from './webhook-map'
+import { lookupKeyFor } from '@/config/plans'
+
+const sub = (over: Partial<StripeSubscriptionLike> = {}): StripeSubscriptionLike => ({
+  id: 'sub_1', status: 'active', customer: 'cus_1',
+  cancel_at_period_end: false,
+  current_period_end: 1793318400,           // 2026-10-30T00:00:00Z
+  trial_end: null,
+  metadata: { owner_id: '11111111-1111-1111-1111-111111111111', org_id: '22222222-2222-2222-2222-222222222222' },
+  items: { data: [{
+    current_period_end: 1793318400,        // 2026-10-30, where API v2349 puts it
+    price: { id: 'price_1', lookup_key: lookupKeyFor('apply', 'standard', 'monthly') },
+  }] },
+  ...over,
+})
+
+describe('a subscription we recognise', () => {
+  it('maps to the row the database expects', () => {
+    const r = mapSubscription(sub())
+    expect(r.ok).toBe(true)
+    if (!r.ok) return
+    expect(r.row).toEqual({
+      owner_id: '11111111-1111-1111-1111-111111111111',
+      org_id: '22222222-2222-2222-2222-222222222222',
+      plan: 'apply',
+      status: 'active',
+      stripe_customer_id: 'cus_1',
+      stripe_subscription_id: 'sub_1',
+      stripe_price_id: 'price_1',
+      current_period_end: '2026-10-30T00:00:00.000Z',
+      cancel_at_period_end: false,
+      trial_end: null,
+    })
+    expect(r.period).toBe('monthly')
+    expect(r.kind).toBe('standard')
+  })
+
+  it('carries the status through verbatim rather than simplifying it', () => {
+    for (const status of ['trialing', 'past_due', 'canceled', 'unpaid', 'paused']) {
+      const r = mapSubscription(sub({ status }))
+      expect(r.ok && r.row.status).toBe(status)
+    }
+  })
+
+  it('recognises a founding annual price as founding and annual', () => {
+    const r = mapSubscription(sub({
+      items: { data: [{ price: { id: 'p', lookup_key: lookupKeyFor('team', 'founding', 'annual') } }] },
+    }))
+    expect(r.ok).toBe(true)
+    if (r.ok) {
+      expect(r.row.plan).toBe('team')
+      expect(r.kind).toBe('founding')
+      expect(r.period).toBe('annual')
+    }
+  })
+
+  it('converts Stripe seconds to ISO, including the trial end', () => {
+    const r = mapSubscription(sub({ trial_end: 1788998400 }))  // 2026-09-10, verified with python rather than guessed
+    expect(r.ok && r.row.trial_end).toBe('2026-09-10T00:00:00.000Z')
+  })
+
+  it('keeps a pending cancellation as a flag, not as a status change', () => {
+    // Stripe leaves the status 'active' until the period ends, and entitlement
+    // depends on that. Rewriting it here would cut access off early.
+    const r = mapSubscription(sub({ cancel_at_period_end: true }))
+    expect(r.ok && r.row.status).toBe('active')
+    expect(r.ok && r.row.cancel_at_period_end).toBe(true)
+  })
+})
+
+describe('what it refuses, rather than guesses', () => {
+  it('refuses a price it does not recognise', () => {
+    // The expensive failure: falling back to a default here grants a paid tier
+    // for something nobody bought, and it looks exactly like it worked.
+    const r = mapSubscription(sub({
+      items: { data: [{ price: { id: 'p', lookup_key: 'someone_elses_price' } }] },
+    }))
+    expect(r.ok).toBe(false)
+    if (!r.ok) expect(r.reason).toBe('unknown_price')
+  })
+
+  it('refuses a price with no lookup key at all', () => {
+    // What a price created by hand in the dashboard looks like.
+    const r = mapSubscription(sub({ items: { data: [{ price: { id: 'p', lookup_key: null } }] } }))
+    expect(r.ok).toBe(false)
+    if (!r.ok) expect(r.reason).toBe('no_lookup_key')
+  })
+
+  it('refuses a subscription with no owner_id metadata', () => {
+    // Writing this against a guessed owner grants a stranger's organisation the
+    // paid tier.
+    const cases: (Record<string, string> | null)[] = [null, {}, { owner_id: '   ' }]
+    for (const metadata of cases) {
+      const r = mapSubscription(sub({ metadata }))
+      expect(r.ok).toBe(false)
+      if (!r.ok) expect(r.reason).toBe('no_owner_metadata')
+    }
+  })
+
+  it('refuses a multi-item subscription instead of taking the first', () => {
+    const r = mapSubscription(sub({
+      items: { data: [
+        { price: { id: 'a', lookup_key: lookupKeyFor('match', 'standard', 'monthly') } },
+        { price: { id: 'b', lookup_key: lookupKeyFor('team', 'standard', 'annual') } },
+      ] },
+    }))
+    expect(r.ok).toBe(false)
+    if (!r.ok) expect(r.reason).toBe('multiple_items')
+  })
+
+  it('refuses an empty item list', () => {
+    const r = mapSubscription(sub({ items: { data: [] } }))
+    expect(r.ok).toBe(false)
+    if (!r.ok) expect(r.reason).toBe('no_items')
+  })
+
+  it('names the offending value in every refusal, for the log', () => {
+    const r = mapSubscription(sub({ items: { data: [{ price: { id: 'p', lookup_key: 'nope' } }] } }))
+    expect(r.ok).toBe(false)
+    if (!r.ok) expect(r.detail).toContain('nope')
+  })
+})
+
+describe('where the renewal date actually lives', () => {
+  // stripe 22.5.0 targets API v2349, which moved current_period_end onto the
+  // subscription ITEM. Reading only the subscription — what every tutorial
+  // still shows — returns undefined and stores null for every customer, with
+  // no error anywhere: the webhook succeeds and the billing screen just says
+  // "renews —" for everybody.
+  it('reads it from the item', () => {
+    const r = mapSubscription(sub({ current_period_end: undefined }))
+    expect(r.ok && r.row.current_period_end).toBe('2026-10-30T00:00:00.000Z')
+  })
+
+  it('falls back to the subscription for older API versions', () => {
+    const r = mapSubscription(sub({
+      current_period_end: 1788998400,      // 2026-09-10
+      items: { data: [{ price: { id: 'p', lookup_key: lookupKeyFor('match', 'standard', 'monthly') } }] },
+    }))
+    expect(r.ok && r.row.current_period_end).toBe('2026-09-10T00:00:00.000Z')
+  })
+
+  it('prefers the item when both are present and they disagree', () => {
+    const r = mapSubscription(sub({ current_period_end: 1788998400 }))
+    expect(r.ok && r.row.current_period_end).toBe('2026-10-30T00:00:00.000Z')
+  })
+
+  it('stores null rather than inventing a date when neither is present', () => {
+    const r = mapSubscription(sub({
+      current_period_end: undefined,
+      items: { data: [{ price: { id: 'p', lookup_key: lookupKeyFor('match', 'standard', 'monthly') } }] },
+    }))
+    expect(r.ok && r.row.current_period_end).toBeNull()
+  })
+})
+
+describe('which organisation the subscription pays for', () => {
+  // Before migration 076 a subscription named no organisation and
+  // derive_apply_access entitled EVERY org the owner held. Measured on a real
+  // account: one Apply subscription, plan limit one organisation, nine
+  // entitled. The mapper carrying org_id is half the fix; the SQL rule is the
+  // other half.
+  it('carries the organisation checkout named', () => {
+    const r = mapSubscription(sub())
+    expect(r.ok && r.row.org_id).toBe('22222222-2222-2222-2222-222222222222')
+  })
+
+  it('is null when checkout did not say, rather than inventing one', () => {
+    // Every subscription created before 076 looks like this. Null is safe: the
+    // SQL rule uses the owner's only org if they have exactly one and entitles
+    // nothing if they have several, so it becomes an alarm rather than a
+    // silent over-grant.
+    const r = mapSubscription(sub({ metadata: { owner_id: '11111111-1111-1111-1111-111111111111' } }))
+    expect(r.ok).toBe(true)
+    expect(r.ok && r.row.org_id).toBeNull()
+  })
+
+  it('treats a blank org_id as absent', () => {
+    const r = mapSubscription(sub({
+      metadata: { owner_id: '11111111-1111-1111-1111-111111111111', org_id: '   ' },
+    }))
+    expect(r.ok && r.row.org_id).toBeNull()
+  })
+
+  it('still refuses a subscription with no owner, even when an org is named', () => {
+    const r = mapSubscription(sub({ metadata: { org_id: '22222222-2222-2222-2222-222222222222' } }))
+    expect(r.ok).toBe(false)
+    if (!r.ok) expect(r.reason).toBe('no_owner_metadata')
+  })
+})
+
+describe('replay and out-of-order safety', () => {
+  it('is a pure function of the subscription, so a replay maps identically', () => {
+    // The route re-fetches from Stripe rather than mapping event.data.object,
+    // so every event for one subscription converges on the same row whatever
+    // order they arrive in. This asserts the mapper contributes no state.
+    const s = sub()
+    expect(mapSubscription(s)).toEqual(mapSubscription(s))
+  })
+})

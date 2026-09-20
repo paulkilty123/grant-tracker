@@ -75,3 +75,35 @@ describe('an in-kind offer has no amount to be missing', () => {
     expect(codes(inKind({ amount_min: 5_000, amount_max: 1_000 }))).toContain('amount_inverted')
   })
 })
+
+describe('a front page the engine could not place is checked, not excused', () => {
+  const frontDoor = (over: Partial<ReviewRow> = {}): Partial<ReviewRow> => ({
+    id: 'edf', is_active: true, funding_type: 'grant',
+    title: 'EDF Energy Trust', funder: 'EDF Energy',
+    apply_url: 'https://www.edfenergytrust.org.uk/',
+    funder_brief: { source: 'ai_enrich', who_can_apply: 'Individuals and small charities.' },
+    amount_max: 1_000,
+    field_evidence: { _page_read: { note: 'fixable_link: wrong_fund', checked_at: '2026-09-18T01:01:07Z' } } as never,
+    ...over,
+  })
+
+  it('FIRES on a site root the engine read as a different fund', () => {
+    const c = codes(frontDoor())
+    expect(c).toContain('front_door_not_this_funder')
+    expect(c).not.toContain('page_describes_different_fund')
+  })
+
+  it('stays quiet when the page was never actually read', () => {
+    const c = codes(frontDoor({ field_evidence: {
+      _page_read: { note: 'fixable_link: wrong_fund', checked_at: '2026-09-18T01:01:07Z' },
+      _read_exhausted: { reason: 'bot_wall', consecutive: 2 },
+    } as never }))
+    expect(c).not.toContain('front_door_not_this_funder')
+  })
+
+  it('stays quiet on a fund page, which page_describes_different_fund covers', () => {
+    const c = codes(frontDoor({ apply_url: 'https://www.edfenergytrust.org.uk/grants/hardship-fund' }))
+    expect(c).not.toContain('front_door_not_this_funder')
+    expect(c).toContain('page_describes_different_fund')
+  })
+})

@@ -135,6 +135,10 @@
     {
       "path": "/api/cron/expire-access-grants",
       "schedule": "30 5 * * *"
+    },
+    {
+      "path": "/api/cron/reconcile-billing",
+      "schedule": "0 6 * * *"
     }
   ],
   "ignoreCommand": "bash -c 'echo \"$VERCEL_GIT_COMMIT_MESSAGE\" | grep -q \"\\[deploy\\]\\|\\[preview\\]\" && exit 1 || exit 0'"

@@ -47,6 +47,20 @@ export async function getOrganisationByOwner(userId: string): Promise<Organisati
   return data[0]
 }
 
+/**
+ * NOTE ON THE ROW THIS RETURNS: `apply_access` on it may be STALE.
+ *
+ * `organisations` carries an AFTER INSERT trigger that derives apply_access
+ * (migration 069), and PostgREST's returned row is the pre-trigger state. So a
+ * person who subscribed before creating an organisation gets `false` back here
+ * while the database already says true.
+ *
+ * Harmless today: both callers use only `.id`, and the profile page reloads
+ * from the database immediately after. It is written down because the same
+ * shape already produced a real bug in /api/admin/apply-access, where the route
+ * answered "not granted" straight after a successful grant and an admin would
+ * have clicked twice. If you ever need entitlement here, re-read the row.
+ */
 export async function createOrganisation(
   org: Omit<Organisation, 'id' | 'created_at'>
 ): Promise<Organisation> {
