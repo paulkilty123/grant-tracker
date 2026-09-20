@@ -134,6 +134,7 @@ export type ReviewReasonCode =
   | 'page_says_not_funding'
   | 'page_says_round_closed'
   | 'page_describes_different_fund'
+  | 'front_door_not_this_funder'
   | 'no_funder'
   | 'apply_route_not_applyable'
   // The row says invitation only and the funder's page confirms it. Paul,
@@ -622,6 +623,28 @@ export function deriveReviewReasons(row: ReviewRow, todayISO?: string): ReviewRe
       code: 'page_describes_different_fund', severity: 'critical',
       label: 'The page does not describe this fund',
       detail: 'the link loads, but the engine could not find this fund on it',
+    })
+  }
+
+  // A FRONT PAGE THE ENGINE COULD NOT PLACE IS NOT AUTOMATICALLY FINE.
+  //
+  // The exemption above is right for a funder's homepage that simply does not
+  // name the fund. It is wrong for EDF Energy Trust (20 Sept 2026): the trust
+  // closed, the domain lapsed, and the row's link, the site root, now serves a
+  // page of betting sites. The engine said wrong_fund, the front-door exemption
+  // swallowed it, and the card read "nothing is blocking". A front page that
+  // the engine could not connect to this fund needs a human to open it before
+  // the row goes anywhere. Not critical, because most such pages are the right
+  // funder's homepage; a check, because the one that is not is the worst row
+  // the catalogue can carry.
+  if (pageRead?.note === 'fixable_link: wrong_fund'
+      && !describesADiscreteFund(row)
+      && (row.funding_type ?? '').toLowerCase() !== 'in_kind'
+      && !readBlockedByAWall(row.field_evidence)) {
+    reasons.push({
+      code: 'front_door_not_this_funder', severity: 'check',
+      label: 'The link is a site front page and the engine could not find this fund on it',
+      detail: 'open it before publishing: a lapsed domain can serve anything, and a homepage that never names the fund needs a fund page instead',
     })
   }
 
