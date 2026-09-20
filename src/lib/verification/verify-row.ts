@@ -870,6 +870,23 @@ export type HopScope = 'timing' | 'any'
  * nulled both on the strength of that one-page read. This is the signal that
  * turns an unsupported figure into a reason to read further, not a verdict.
  */
+/**
+ * A sentence that says when applications OPEN AGAIN is not a closing date.
+ *
+ * Trading for Good: Bury, 20 Sept 2026: the page says "Applications closed -
+ * Applications will open again in Spring 2027", the model offered 31 May 2027
+ * as the deadline, and the row (deadline null, next_open_date "Spring 2027",
+ * both right) was flagged "page contradicts us" every night. The date in such
+ * a sentence belongs to next_open_date, which the row already carries.
+ */
+export function quotesReopeningNotClosing(quote: string | null | undefined): boolean {
+  if (!quote) return false
+  const q = quote.toLowerCase()
+  const reopens = /\b(open(s|ing)? again|will (re-?)?open|re-?opens?\b|reopening|applications (will )?open (in|from|on)|next round (opens|will open))/.test(q)
+  const closes = /\b(close[sd]? on|closing date|deadline|apply by|applications? (must be )?(received|submitted) by|until)\b/.test(q)
+  return reopens && !closes
+}
+
 export function unsupportedFigures(current: Pick<VerifyResult, 'evidence'>): ('amount' | 'deadline')[] {
   const out = new Set<'amount' | 'deadline'>()
   for (const e of current.evidence) {
@@ -1509,6 +1526,12 @@ async function runModel(
     if (deadlineFact.value === null && row.deadline) {
       notFound.push('deadline')
       stamp('deadline', null, null, undefined, DEADLINE_UNSUPPORTED_NOTE)
+    } else if (extractedDeadline && quotesReopeningNotClosing(deadlineFact.quote) && !row.deadline) {
+      // The page gave a reopening, the model dressed it as a deadline, and the
+      // row correctly holds no deadline. Not a contradiction: timing is answered
+      // by next_open_date, which the reopening detector maintains separately.
+      stamp('deadline', null, null, undefined, 'the page states when applications reopen, not a closing date')
+      notes.push(`deadline withheld: "${deadlineFact.quote!.slice(0, 80)}" says when applications reopen, which is next_open_date, not a closing date`)
     } else {
       consider('deadline', deadlineFact, row.deadline, asDate)
     }

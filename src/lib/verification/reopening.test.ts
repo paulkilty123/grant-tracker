@@ -120,3 +120,18 @@ describe('detectReopening', () => {
     expect(detectReopening(r, TODAY)?.reason).toContain('has not passed')
   })
 })
+
+import { quotesReopeningNotClosing } from './verify-row'
+
+describe('a reopening sentence is not a closing date', () => {
+  it('reads SSE Bury as a reopening', () => {
+    expect(quotesReopeningNotClosing('Applications closed - Applications will open again in Spring 2027')).toBe(true)
+  })
+  it('reads a closing date as a closing date', () => {
+    expect(quotesReopeningNotClosing('Applications close on 30 September 2026')).toBe(false)
+    expect(quotesReopeningNotClosing('The next round opens 23 November and the deadline to apply is 11 January')).toBe(false)
+  })
+  it('is quiet on nothing', () => {
+    expect(quotesReopeningNotClosing(null)).toBe(false)
+  })
+})
