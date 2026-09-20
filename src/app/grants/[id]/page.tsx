@@ -884,7 +884,7 @@ export default async function PublicGrantPage({
                 ? 'There are more in the catalogue. Shoots checks them against your organisation and tells you which ones are open to you now.'
                 : signedIn
                   ? 'Being eligible is not the same as being a good fit. Shoots checks this opportunity against your organisation and tells you where you actually stand.'
-                  : 'Being eligible is not the same as being a good fit. Shoots checks this fund against your organisation, then does the same across every grant, programme and investment in the catalogue, so you spend your time on the ones you can actually win.'}
+                  : 'Eligible is not the same as a good fit. Shoots checks this fund against your organisation, and every other one, so you only chase the ones you can actually win.'}
             </p>
             {/* What an account adds, across the catalogue. No locks: a padlock
                 reads as a paywall, and the moment is about what the reader gains.
