@@ -19,7 +19,7 @@ import {
   IMPACT_SECTOR_LABELS, loadPublicRows, relatedRows, regionHubForRow, sectorSlug, typeHubForRow,
   type HubRow,
 } from '@/lib/hubs'
-import { Crumbs, GrantRow } from '@/components/public/HubPage'
+import { GrantRow } from '@/components/public/HubPage'
 import { getAdminDb } from '@/lib/admin/admin-db'
 
 // ── Public bridge page ───────────────────────────────────────────────────────
@@ -531,14 +531,6 @@ export default async function PublicGrantPage({
   const regionHubOfRow = regionHubForRow(hubRow)
   const typeHubOfRow   = typeHubForRow(hubRow)
   const primarySector  = impactSectors[0] ?? null
-  const crumbs = [
-    { href: '/grants', label: 'Browse funding' },
-    { href: `/grants/type/${typeHubOfRow.slug}`, label: typeHubOfRow.label },
-    ...(regionHubOfRow ? [{ href: `/grants/region/${regionHubOfRow.slug}`, label: regionHubOfRow.label }] : []),
-    ...(primarySector && IMPACT_SECTOR_LABELS[primarySector]
-      ? [{ href: `/grants/sector/${sectorSlug(primarySector)}`, label: IMPACT_SECTOR_LABELS[primarySector] }]
-      : []),
-  ]
   const todayISO = new Date().toISOString().slice(0, 10)
 
   // ── JSON-LD ────────────────────────────────────────────────────────────────
@@ -639,9 +631,6 @@ export default async function PublicGrantPage({
             {MCP_BRAND_NAME.toLowerCase()}
           </Link>
           <span style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
-            <Link href="/grants" style={{ fontFamily: UI, fontSize: 14, fontWeight: 500, color: T.inkMuted, textDecoration: 'none' }}>
-              Browse funding
-            </Link>
             <Link href="/auth/login" style={{ fontFamily: UI, fontSize: 14, fontWeight: 500, color: T.inkMuted, textDecoration: 'none' }}>
               Sign in
             </Link>
@@ -661,7 +650,6 @@ export default async function PublicGrantPage({
       </nav>
 
       <main style={{ maxWidth: 800, margin: '0 auto', padding: '32px 26px 70px' }}>
-        <Crumbs items={crumbs} />
         <div style={{ background: '#fff', border: `1px solid ${T.hair}`, borderRadius: 18, padding: '30px 32px' }}>
 
           {/* Meta chips. No funder-initial avatar: a grey letter in a rounded
