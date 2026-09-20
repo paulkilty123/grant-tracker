@@ -371,11 +371,12 @@ export default async function PublicGrantPage({
   if (!signedIn && !isPublic) {
     redirect('/signup')
   }
-  // 20 Sept 2026: a public row is what a LinkedIn post links to, and the post
-  // sells the fact that we say who cannot apply. So on a public row the
-  // stranger reads who_can_apply and exclusions in full. Rule 6: eligibility
-  // is never withheld. The judgement half of the brief stays behind the account.
-  const showEligibility = signedIn || isPublic
+  // 20 Sept 2026, Paul: a public row is what a LinkedIn post links to, and a
+  // visitor who arrives should see the whole record, not the snapshot. So on a
+  // public row the stranger reads everything a member reads: the full lead,
+  // the facts, who can apply, the exclusions, the apply link. What stays
+  // logged-out-only is the conversion panel, which is the point of the link.
+  const full = signedIn || isPublic
 
   // The funder's homepage, for the public bottom row: the funders table where
   // it has one, else the origin of the apply link. A homepage is a fair thing
@@ -588,7 +589,7 @@ export default async function PublicGrantPage({
                 name: String(grant.funder),
                 // Logged out, the deep link is part of the gated record, so
                 // the funder node carries the homepage instead.
-                ...((signedIn ? applyUrl : funderHomepage) ? { url: signedIn ? applyUrl : funderHomepage } : {}),
+                ...((full ? applyUrl : funderHomepage) ? { url: full ? applyUrl : funderHomepage } : {}),
                 ...(geography ? { areaServed: geography } : {}),
               },
             }
@@ -737,7 +738,7 @@ export default async function PublicGrantPage({
                   one crawl is a dataset; the facts around it are public
                   anyway. Logged in, the whole thing as before. */}
               <p style={{ fontSize: 16, lineHeight: 1.65, color: T.deep, margin: 0, whiteSpace: 'pre-line' }}>
-                {signedIn ? lead : (lead.match(/^[\s\S]{20,}?[.!?](?=\s|$)/)?.[0] ?? lead.slice(0, 220)).trim()}
+                {full ? lead : (lead.match(/^[\s\S]{20,}?[.!?](?=\s|$)/)?.[0] ?? lead.slice(0, 220)).trim()}
               </p>
             </div>
           )}
@@ -782,13 +783,13 @@ export default async function PublicGrantPage({
                 {ELIGIBILITY_NOT_STATED}
               </p>
             )}
-            {!signedIn && eligibilitySummary && (
+            {!full && eligibilitySummary && (
               <p style={{ fontSize: 15, lineHeight: 1.6, color: T.deep, margin: '14px 0 0' }}>{eligibilitySummary}.</p>
             )}
-            {showEligibility && whoCanApply && (
+            {full && whoCanApply && (
               <p style={{ fontSize: 15, lineHeight: 1.6, color: T.deep, margin: '14px 0 0', whiteSpace: 'pre-line' }}>{whoCanApply}</p>
             )}
-            {showEligibility && exclusions && (
+            {full && exclusions && (
               <div style={{ marginTop: 16, padding: '14px 16px', background: '#FBF1EC', borderRadius: 12 }}>
                 <p style={{ fontFamily: UI, fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#993C1D', margin: '0 0 6px' }}>What they will not fund</p>
                 <p style={{ fontSize: 14.5, lineHeight: 1.6, color: T.deep, margin: 0, whiteSpace: 'pre-line' }}>{exclusions}</p>
@@ -796,7 +797,7 @@ export default async function PublicGrantPage({
             )}
           </div>
 
-          {signedIn && programme.length > 0 && (
+          {full && programme.length > 0 && (
             <div style={section}>
               <h2 style={sectionH2}>Programme at a glance</h2>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
@@ -810,7 +811,7 @@ export default async function PublicGrantPage({
             </div>
           )}
 
-          {signedIn && facts.length > 0 && (
+          {full && facts.length > 0 && (
             <div style={section}>
               <h2 style={sectionH2}>From the funder&rsquo;s own pages</h2>
               <div style={{ display: 'grid', gridTemplateColumns: isProgramme ? '1fr' : 'repeat(auto-fit, minmax(240px, 1fr))', gap: isProgramme ? 16 : 18 }}>
@@ -824,7 +825,7 @@ export default async function PublicGrantPage({
             </div>
           )}
 
-          {!signedIn && (
+          {!full && (
             /* The gate, to Paul's mock (Claude outputs/grant-page-mock.html,
                15 Sept). Five cards naming what the full record holds, each
                with a fixed one-line description. None of the record's own
@@ -949,7 +950,7 @@ export default async function PublicGrantPage({
               signup is the kind of thing that makes people distrust a
               catalogue. "Visit", not "Apply": the link often goes to a
               programme overview rather than an application form. */}
-          {!signedIn && funderHomepage && (
+          {!full && funderHomepage && (
             /* Public: the funder's homepage only, labelled with their name.
                The application and guidance pages are part of the record. */
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginTop: 22, paddingTop: 22, borderTop: `1px solid ${T.hair}` }}>
@@ -975,7 +976,7 @@ export default async function PublicGrantPage({
               </a>
             </div>
           )}
-          {signedIn && applyUrl && (
+          {full && applyUrl && (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginTop: 22, paddingTop: 22, borderTop: `1px solid ${T.hair}` }}>
               <span style={{ fontSize: 14.5, lineHeight: 1.55, color: T.inkMuted, maxWidth: '48ch' }}>
                 {deadlinePassed ? (
