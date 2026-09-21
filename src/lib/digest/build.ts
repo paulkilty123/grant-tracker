@@ -1035,18 +1035,16 @@ export async function buildDigest(
     lead = matches.length
       ? `${clear} Your next deadline is in the ${spell(matches.length)} matches below. Add one to your pipeline and this email will track it.`
       : clear
-    const stalledRow = inProgress.find(r => r.stalled)
-    subject = stalledRow
-      ? `${stalledRow.name} has not moved in three weeks`
-      : matches.length
-        ? `${plural(matches.length, 'new match', 'new matches')} for ${org.name}`
-        : `Nothing closes for ${org.name} this month`
+    // One generic subject for the weekly editions (Paul, 21 Sept 2026): a
+    // deadline or a stalled row in the subject read as an alert, and this is
+    // a weekly update. The preheader still carries the specifics.
+    subject = `Your Shoots funding update, ${humanDate(now.toISOString())}`
   } else {
     const n = closingShown.length
     const nearest = closingShown[0]
     const savedOne = closingShown.find(r => r.kind === 'saved')
     lead = `${spellCap(n)} ${verb(n, 'closes', 'close')} in the next ${spell(CLOSING_WINDOW_DAYS / 7)} weeks. The nearest is ${nearest.days === 0 ? 'today' : `${spell(nearest.days)} ${nearest.days === 1 ? 'day' : 'days'} away`}${savedOne ? ', and one is a grant you saved and never decided on' : ''}.`
-    subject = `${nearest.name} closes in ${plural(nearest.days, 'day')}`
+    subject = `Your Shoots funding update, ${humanDate(now.toISOString())}`
   }
 
   /* The preheader carries what the subject could not, composed from the SAME
