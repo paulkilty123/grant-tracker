@@ -39,8 +39,33 @@ function serviceClient() {
   )
 }
 
-export async function resolveOrgAndTier(userId: string | null | undefined): Promise<ResolvedOrgTier> {
-  if (!userId) return { orgId: null, orgName: null, tier: 'free' }
+/**
+ * The pure half of resolveOrgAndTier, so the rule is testable without a
+ * database. `null` means the account gets no tier at all.
+ *
+ * An OAuth account with no organisation, or none with live access, resolves
+ * to NOTHING rather than to the free tier (Paul, 21 Sept 2026). The web app
+ * has required an organisation with apply_access to read the catalogue since
+ * migration 089; the MCP reads with the service key and so never met that
+ * rule, which left a bare signup 50 free searches a month of the whole
+ * catalogue, ten rows at a time. Same test as the app, at the same boundary.
+ * API-key callers do not pass through here and are unchanged.
+ */
+export function pickOrgAndTier(
+  orgs: Array<{ id: string; name: string | null; apply_access?: boolean | null; companion_access?: boolean | null }>,
+): ResolvedOrgTier | null {
+  if (orgs.length === 0) return null
+  // Highest entitlement wins, tie-broken oldest — via the same flags→tier
+  // mapping the web boundary uses (tierForOrgFlags).
+  const companion = orgs.find(o => tierForOrgFlags(o) === 'companion')
+  if (companion) return { orgId: companion.id, orgName: companion.name, tier: 'companion' }
+  const apply = orgs.find(o => tierForOrgFlags(o) === 'apply')
+  if (apply) return { orgId: apply.id, orgName: apply.name, tier: 'apply' }
+  return null
+}
+
+export async function resolveOrgAndTier(userId: string | null | undefined): Promise<ResolvedOrgTier | null> {
+  if (!userId) return null
 
   const { data } = await serviceClient()
     .from('organisations')
@@ -48,16 +73,5 @@ export async function resolveOrgAndTier(userId: string | null | undefined): Prom
     .eq('owner_id', userId)
     .order('created_at', { ascending: true })
 
-  const orgs = (data ?? []) as Array<{ id: string; name: string | null; apply_access: boolean; companion_access: boolean }>
-  if (orgs.length === 0) return { orgId: null, orgName: null, tier: 'free' }
-
-  // Highest entitlement wins, tie-broken oldest — via the same flags→tier
-  // mapping the web boundary uses (tierForOrgFlags).
-  const companion = orgs.find(o => tierForOrgFlags(o) === 'companion')
-  if (companion) return { orgId: companion.id, orgName: companion.name, tier: 'companion' }
-
-  const apply = orgs.find(o => tierForOrgFlags(o) === 'apply')
-  if (apply) return { orgId: apply.id, orgName: apply.name, tier: 'apply' }
-
-  return { orgId: orgs[0].id, orgName: orgs[0].name, tier: 'free' }
+  return pickOrgAndTier((data ?? []) as Array<{ id: string; name: string | null; apply_access: boolean; companion_access: boolean }>)
 }

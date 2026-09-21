@@ -1016,8 +1016,9 @@ const WWW_AUTHENTICATE_VALUE =
   `Bearer realm="${MCP_SERVER_SLUG}", ` +
   `resource_metadata="${MCP_PUBLIC_ORIGIN}/.well-known/oauth-protected-resource"`
 
-function unauthorisedResponse(reason: 'invalid_token' | 'revoked_token' | 'no_credentials'): NextResponse {
+function unauthorisedResponse(reason: 'invalid_token' | 'revoked_token' | 'no_credentials' | 'no_organisation'): NextResponse {
   const message = (() => {
+    if (reason === 'no_organisation') return `This ${MCP_BRAND_NAME} account has no organisation with live access. Finish setting up your organisation at ${MCP_APP_HOST}, or renew your plan, then reconnect.`
     if (reason === 'revoked_token')   return 'Token has been revoked. Re-authorise via OAuth or use a new API key.'
     if (reason === 'invalid_token')   return 'Token is invalid or expired. Re-authorise via OAuth or use a new API key.'
     // No article before the brand name — it varies, and "a/an" can't be
@@ -1057,6 +1058,10 @@ async function handle(req: NextRequest): Promise<Response> {
   // API-key callers have no OAuth identity and stay untiered, hence free.
   if (authCtx.oauth) {
     const resolved = await resolveOrgAndTier(authCtx.oauth.user_id)
+    // No organisation with live access behind this login: no tier, and the
+    // request stops here with the same shape as any other refusal (Paul,
+    // 21 Sept 2026). Before this a bare signup got the free tier.
+    if (!resolved) return unauthorisedResponse('no_organisation')
     authCtx.orgId = resolved.orgId
     authCtx.orgName = resolved.orgName
     authCtx.tier = resolved.tier

@@ -28,9 +28,11 @@ async function main() {
   const none = await resolveOrgAndTier(null)
   const paul = await resolveOrgAndTier(PAUL)
 
-  console.log('unknown user →', unknown, unknown.tier === 'free' && unknown.orgId === null ? '✓' : '✗')
-  console.log('null user    →', none, none.tier === 'free' && none.orgId === null ? '✓' : '✗')
-  console.log('paul         →', paul, paul.tier === 'companion' && paul.orgId === 'f1f9c904-ef5a-4591-8c6d-e7d9a1535133' && paul.orgName === 'Institute of Imagination' ? '✓' : '✗')
+  // Since 21 Sept 2026 an account with no live organisation resolves to
+  // null, not to the free tier (Paul's call; see mcp-entitlement.ts).
+  console.log('unknown user →', unknown, unknown === null ? '✓' : '✗')
+  console.log('null user    →', none, none === null ? '✓' : '✗')
+  console.log('paul         →', paul, paul?.tier === 'companion' && paul.orgId === 'f1f9c904-ef5a-4591-8c6d-e7d9a1535133' && paul.orgName === 'Institute of Imagination' ? '✓' : '✗')
   process.exit(0)
 }
 main().catch(e => { console.error('FATAL', e); process.exit(1) })
