@@ -347,16 +347,18 @@ const STRUCTURE_PLURAL: Record<string, string> = {
 }
 
 /**
- * "Why it fits" (brief, 21 Sept 2026). Composed from the scorer's STRUCTURED
- * facts, never its reason strings: the first digest tried those and shipped
- * "beneficiary group: partial overlap", which is our vocabulary leaking out.
+ * "Why it fits" (brief, 21 Sept 2026; reshaped on Paul's read of the first
+ * preview the same day: "as a user I would want to know more about the fund
+ * here rather than CICs can apply").
  *
- * Three facts can be stated plainly: a sector the fund and the organisation
- * share, where the fund gives, and that the organisation's legal form is on
- * the fund's list. Two or more make a sentence. Fewer, and the line falls
- * back to the first complete sentence of what the funder says it funds, with
- * no exclusions and no truncation; if there is no complete sentence within
- * the limit, null, and the row does not appear.
+ * Two halves. WHAT THE FUND IS: the funder's own first complete sentence of
+ * what they fund, never an exclusion, never cut mid-sentence. THE FIT: the
+ * sector the fund and the organisation share, in the organisation's terms,
+ * and where the fund gives. The legal-form clause is gone: on a shown match
+ * it is always true, so it said nothing.
+ *
+ * A row with neither half is dropped. Composed from the scorer's structured
+ * facts and the funder's words, never from the scorer's reason strings.
  */
 export function whyItFits(f: {
   grantSectors: readonly string[]
@@ -370,8 +372,7 @@ export function whyItFits(f: {
   // The most telling shared sector: the organisation's own first sector if
   // the fund lists it, else the fund's first sector if the organisation does,
   // else any shared sector, with "community" last because it is on half the
-  // catalogue and says the least (Men in Sheds preview, 21 Sept: five rows
-  // all read "they fund community work").
+  // catalogue and says the least.
   const sharedAll = f.grantSectors.filter(x => f.orgSectors.includes(x))
   const shared = sharedAll.includes(f.orgSectors[0]) ? f.orgSectors[0]
     : sharedAll.includes(f.grantSectors[0]) ? f.grantSectors[0]
@@ -379,21 +380,20 @@ export function whyItFits(f: {
   const sector = shared ? (IMPACT_SECTOR_LABELS[shared] ?? shared).toLowerCase().replace(' & ', ' and ') : null
   const tag = (f.locationTag ?? '').trim()
   const national = !tag || /^(uk|united kingdom|uk[- ]wide|great britain|england|scotland|wales|northern ireland)$/i.test(tag)
-  const place = f.locationScore >= 12 ? (national ? (/^(england|scotland|wales|northern ireland)$/i.test(tag) ? `across ${tag}` : 'across the UK') : `in ${tag}`) : null
-  const structure = f.structure && f.eligibleStructures.includes(f.structure) ? STRUCTURE_PLURAL[f.structure] ?? null : null
-  const facts = [sector, place, structure].filter(Boolean).length
-  if (sector && facts >= 2) {
-    const where = place ? ` ${place}` : ''
-    const who = structure ? `, and ${structure} can apply` : ''
-    return `Why it fits: they fund ${sector} work${where}${who}.`
-  }
+  const place = f.locationScore >= 12 && tag && !national ? `in ${tag}` : null
+
+  let what: string | null = null
   if (f.whatTheyFund) {
     const clean = f.whatTheyFund.replace(/\s+/g, ' ').trim()
     const m = clean.match(/^(.{20,170}?[.!?])(\s|$)/)
-    // The funder's sentence, capitalised as they wrote it: lower-casing a
-    // proper noun produced "equipment Stream: studio..." on the first preview.
-    if (m) return `Why it fits: ${m[1]}`
+    if (m) what = m[1]
   }
+  const fit = sector
+    ? `Fits your ${sector} work${place ? ` ${place}` : ''}.`
+    : place ? `Open to organisations ${place}.` : null
+  if (what && fit) return `Why it fits: ${what} ${fit}`
+  if (what) return `Why it fits: ${what}`
+  if (fit) return `Why it fits: ${fit}`
   return null
 }
 

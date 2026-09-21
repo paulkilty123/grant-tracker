@@ -23,23 +23,24 @@ describe('summaryLine', () => {
 })
 
 describe('whyItFits', () => {
-  const base = { orgSectors: ['mental_health', 'community'], structure: 'cic_guarantee', whatTheyFund: 'Grants for community projects in Southwark that improve mental health. They do not fund individuals.' }
-  it('prefers the organisation\'s own first sector over a generic shared one', () => {
-    expect(whyItFits({ ...base, orgSectors: ['mental_health', 'community'], grantSectors: ['community', 'mental_health'], locationTag: 'Hull', locationScore: 15, eligibleStructures: ['registered_charity'], structure: 'registered_charity' }))
-      .toBe('Why it fits: they fund mental health work in Hull, and registered charities can apply.')
+  const base = { orgSectors: ['mental_health', 'community'], structure: 'cic_guarantee', eligibleStructures: ['cic_guarantee'], whatTheyFund: 'Grants for community projects in Southwark that improve mental health. They do not fund individuals.' }
+  it('says what the fund is, then the fit, and never the exclusion', () => {
+    expect(whyItFits({ ...base, grantSectors: ['community', 'mental_health'], locationTag: 'Southwark', locationScore: 15 }))
+      .toBe('Why it fits: Grants for community projects in Southwark that improve mental health. Fits your mental health work in Southwark.')
   })
-  it('composes a sentence from a shared sector, the place and the legal form', () => {
-    expect(whyItFits({ ...base, grantSectors: ['community'], locationTag: 'Southwark', locationScore: 15, eligibleStructures: ['registered_charity', 'cic_guarantee'] }))
-      .toBe('Why it fits: they fund community work in Southwark, and CICs can apply.')
-    expect(whyItFits({ ...base, grantSectors: ['mental_health'], locationTag: 'UK', locationScore: 12, eligibleStructures: [] }))
-      .toBe('Why it fits: they fund mental health work across the UK.')
+  it('drops the place for a UK-wide fund and the legal form always', () => {
+    const out = whyItFits({ ...base, grantSectors: ['mental_health'], locationTag: 'UK', locationScore: 12 })
+    expect(out).toBe('Why it fits: Grants for community projects in Southwark that improve mental health. Fits your mental health work.')
+    expect(out).not.toContain('can apply')
   })
-  it('falls back to the funder\'s first complete sentence, with no exclusion, when the facts are thin', () => {
-    expect(whyItFits({ ...base, grantSectors: ['community'], locationTag: 'Leeds', locationScore: 2, eligibleStructures: [] }))
+  it('gives the funder sentence alone when nothing is shared, and the fit alone when the funder has no sentence', () => {
+    expect(whyItFits({ ...base, grantSectors: ['sport'], locationTag: 'Leeds', locationScore: 2 }))
       .toBe('Why it fits: Grants for community projects in Southwark that improve mental health.')
+    expect(whyItFits({ ...base, grantSectors: ['community'], locationTag: 'Southwark', locationScore: 15, whatTheyFund: null }))
+      .toBe('Why it fits: Fits your community work in Southwark.')
   })
   it('returns null rather than a truncated line', () => {
-    expect(whyItFits({ ...base, grantSectors: [], locationTag: null, locationScore: 12, eligibleStructures: [], whatTheyFund: 'A very long description with no full stop at all that just keeps going and going and going without ever ending in a way that could be shown whole' })).toBeNull()
+    expect(whyItFits({ ...base, grantSectors: [], locationTag: null, locationScore: 12, whatTheyFund: 'A very long description with no full stop at all that just keeps going and going and going without ever ending in a way that could be shown whole' })).toBeNull()
   })
 })
 
