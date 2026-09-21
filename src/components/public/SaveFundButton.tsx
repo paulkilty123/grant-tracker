@@ -46,10 +46,10 @@ export default function SaveFundButton({
         disabled={state === 'busy' || saved}
         aria-live="polite"
         style={{
-          marginTop: 10, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          marginTop: 8, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
           background: saved ? '#EFF5EE' : '#FFFFFF', color: saved ? '#2F6B3A' : deep,
-          border: `1.5px solid ${saved ? 'transparent' : hair}`, borderRadius: 999, padding: '12px 18px',
-          fontFamily: ui, fontWeight: 600, fontSize: 15, cursor: saved ? 'default' : 'pointer',
+          border: `1.5px solid ${saved ? 'transparent' : hair}`, borderRadius: 999, padding: '10px 18px',
+          fontFamily: ui, fontWeight: 600, fontSize: 14, cursor: saved ? 'default' : 'pointer',
         }}
       >
         {saved ? <Check style={{ width: 16, height: 16 }} /> : <Bookmark style={{ width: 16, height: 16 }} />}

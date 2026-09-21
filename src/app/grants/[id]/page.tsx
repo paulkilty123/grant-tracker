@@ -474,9 +474,9 @@ export default async function PublicGrantPage({
   }
   const chip: React.CSSProperties = { fontFamily: UI, fontSize: 14, fontWeight: 600, padding: '6px 13px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', whiteSpace: 'nowrap' }
   const lbl: React.CSSProperties  = { fontFamily: UI, fontWeight: 700, fontSize: 12, letterSpacing: '0.12em', textTransform: 'uppercase', color: P.label }
-  const h2: React.CSSProperties   = { fontFamily: UI, fontWeight: 700, fontSize: 24, letterSpacing: '-0.01em', color: P.ink, margin: 0 }
-  const primaryBtn: React.CSSProperties = { fontFamily: UI, fontWeight: 600, fontSize: 16, background: P.ink, color: '#FFFFFF', borderRadius: 999, padding: '14px 18px', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }
-  const facts: React.CSSProperties = { fontSize: 17, lineHeight: 1.6, color: P.secondary, margin: 0, whiteSpace: 'pre-line' }
+  const h2: React.CSSProperties   = { fontFamily: UI, fontWeight: 700, fontSize: 21, letterSpacing: '-0.01em', color: P.ink, margin: 0 }
+  const primaryBtn: React.CSSProperties = { fontFamily: UI, fontWeight: 600, fontSize: 15, background: P.ink, color: '#FFFFFF', borderRadius: 999, padding: '12px 18px', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }
+  const facts: React.CSSProperties = { fontSize: 16, lineHeight: 1.6, color: P.secondary, margin: 0, whiteSpace: 'pre-line' }
 
   return (
     <div style={{ minHeight: '100vh', background: P.page, color: P.ink, fontFamily: BODY, display: 'flex', flexDirection: 'column' }}>
@@ -503,7 +503,7 @@ export default async function PublicGrantPage({
       </header>
 
       <div style={{ width: '100%', maxWidth: 1000, margin: '0 auto', padding: '26px 16px 0', boxSizing: 'border-box', flexGrow: 1 }}>
-        <main style={{ marginTop: 18, background: P.card, border: `1px solid ${P.border}`, borderRadius: 24, padding: 'clamp(26px, 5vw, 52px) clamp(18px, 6vw, 60px) clamp(28px, 4vw, 44px)' }}>
+        <main style={{ marginTop: 18, background: P.card, border: `1px solid ${P.border}`, borderRadius: 24, padding: 'clamp(24px, 4vw, 40px) clamp(18px, 5vw, 44px) clamp(24px, 3.5vw, 36px)' }}>
 
           {/* Chips: type, funder type, region, then sectors. */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
@@ -516,21 +516,21 @@ export default async function PublicGrantPage({
             })}
           </div>
 
-          <h1 style={{ fontFamily: UI, fontWeight: 700, fontSize: 'clamp(30px, 4.6vw, 48px)', lineHeight: 1.08, letterSpacing: '-0.022em', margin: '22px 0 0', color: P.ink }}>
+          <h1 style={{ fontFamily: UI, fontWeight: 700, fontSize: 'clamp(26px, 3.6vw, 36px)', lineHeight: 1.1, letterSpacing: '-0.02em', margin: '18px 0 0', color: P.ink }}>
             {String(grant.title ?? '')}
           </h1>
 
           {/* Facts strip: amount, closes, actions. Three cells on desktop; stacked on phone via the grid. */}
-          <div className="record-facts" style={{ marginTop: 32, borderTop: `1px solid ${P.rule}`, borderBottom: `1px solid ${P.rule}`, padding: '24px 0', display: 'grid', gap: 22, alignItems: 'center' }}>
+          <div className="record-facts" style={{ marginTop: 26, borderTop: `1px solid ${P.rule}`, borderBottom: `1px solid ${P.rule}`, padding: '20px 0', display: 'grid', gap: 22, alignItems: 'start' }}>
             <div>
               <div style={lbl}>Amount</div>
-              <div style={{ fontFamily: UI, fontWeight: 700, fontSize: amountMuted ? 20 : 30, letterSpacing: '-0.015em', marginTop: 6, color: amountMuted ? P.muted : P.ink }}>{amountShown}</div>
+              <div style={{ fontFamily: UI, fontWeight: 700, fontSize: amountMuted ? 17 : 24, letterSpacing: '-0.015em', marginTop: 6, color: amountMuted ? P.muted : P.ink }}>{amountShown}</div>
             </div>
             <div>
               <div style={lbl}>{closes.label}</div>
-              <div style={{ fontFamily: UI, fontWeight: 700, fontSize: closes.muted || closes.main.length > 18 ? 20 : 30, letterSpacing: '-0.015em', marginTop: 6, color: closes.muted ? P.muted : P.ink }}>{closes.main}</div>
+              <div style={{ fontFamily: UI, fontWeight: 700, fontSize: closes.muted || closes.main.length > 18 ? 17 : 24, letterSpacing: '-0.015em', marginTop: 6, color: closes.muted ? P.muted : P.ink }}>{closes.main}</div>
               {(closes.sub || closes.pill) && (
-                <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 10, fontSize: 15, color: P.secondary, flexWrap: 'wrap' }}>
+                <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: P.secondary, flexWrap: 'wrap' }}>
                   {closes.sub && <span>{closes.sub}</span>}
                   {closes.pill && <span style={{ fontFamily: UI, background: P.gold, color: P.ink, fontWeight: 700, fontSize: 12, padding: '3px 9px', borderRadius: 999 }}>{closes.pill}</span>}
                 </div>
@@ -549,22 +549,22 @@ export default async function PublicGrantPage({
           </div>
 
           {whatTheyFund && (
-            <div style={{ marginTop: 32 }}>
+            <div style={{ marginTop: 28 }}>
               <div style={lbl}>What they fund</div>
-              <p style={{ margin: '10px 0 0', fontSize: 19, lineHeight: 1.6, color: P.ink, maxWidth: 820, whiteSpace: 'pre-line' }}>{whatTheyFund}</p>
+              <p style={{ margin: '10px 0 0', fontSize: 17, lineHeight: 1.6, color: P.ink, maxWidth: 820, whiteSpace: 'pre-line' }}>{whatTheyFund}</p>
             </div>
           )}
 
-          <div style={{ height: 1, background: P.hair, margin: '44px 0' }} />
+          <div style={{ height: 1, background: P.hair, margin: '32px 0' }} />
 
           <h2 style={h2}>Who can apply</h2>
-          <div className="record-who" style={{ display: 'grid', gap: 16, marginTop: 20, alignItems: 'stretch' }}>
-            <div style={{ background: P.eligibleBg, borderRadius: 16, padding: '22px 24px' }}>
+          <div className="record-who" style={{ display: 'grid', gap: 14, marginTop: 16, alignItems: 'stretch' }}>
+            <div style={{ background: P.eligibleBg, borderRadius: 16, padding: '18px 20px' }}>
               <div style={{ fontFamily: UI, display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: 16, color: P.eligibleFg, marginBottom: 12 }}>
                 <Check style={{ width: 20, height: 20 }} />Eligible
               </div>
               {whoCanApply
-                ? <p style={{ margin: 0, fontSize: 17, lineHeight: 1.55, whiteSpace: 'pre-line' }}>{whoCanApply}</p>
+                ? <p style={{ margin: 0, fontSize: 16, lineHeight: 1.55, whiteSpace: 'pre-line' }}>{whoCanApply}</p>
                 : <p style={{ margin: 0, fontSize: 15, lineHeight: 1.55, color: P.muted }}>{ELIGIBILITY_NOT_STATED}</p>}
               {structuresStated && (
                 <div style={{ marginTop: 14, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
@@ -575,23 +575,23 @@ export default async function PublicGrantPage({
               )}
             </div>
             {exclusions && (
-              <div style={{ background: P.exclBg, borderRadius: 16, padding: '22px 24px' }}>
+              <div style={{ background: P.exclBg, borderRadius: 16, padding: '18px 20px' }}>
                 <div style={{ fontFamily: UI, display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: 16, color: P.exclFg, marginBottom: 12 }}>
                   <Ban style={{ width: 20, height: 20 }} />Exclusions
                 </div>
-                <p style={{ margin: 0, fontSize: 17, lineHeight: 1.55, whiteSpace: 'pre-line' }}>{exclusions}</p>
+                <p style={{ margin: 0, fontSize: 16, lineHeight: 1.55, whiteSpace: 'pre-line' }}>{exclusions}</p>
               </div>
             )}
           </div>
 
           {details.length > 0 && (
             <>
-              <div style={{ height: 1, background: P.hair, margin: '44px 0' }} />
+              <div style={{ height: 1, background: P.hair, margin: '32px 0' }} />
               <h2 style={h2}>{detailsHeading}</h2>
-              <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column' }}>
+              <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column' }}>
                 {details.map(({ key, label, Icon, text }) => (
-                  <div key={key} className="record-row" style={{ display: 'grid', gap: '10px 32px', padding: '22px 0', borderTop: `1px solid ${P.hair}` }}>
-                    <div style={{ fontFamily: UI, display: 'flex', alignItems: 'flex-start', gap: 9, fontWeight: 700, fontSize: 16, paddingTop: 2, color: P.ink }}>
+                  <div key={key} className="record-row" style={{ display: 'grid', gap: '8px 28px', padding: '18px 0', borderTop: `1px solid ${P.hair}` }}>
+                    <div style={{ fontFamily: UI, display: 'flex', alignItems: 'flex-start', gap: 9, fontWeight: 700, fontSize: 15, paddingTop: 2, color: P.ink }}>
                       <Icon style={{ width: 18, height: 18, flexShrink: 0, marginTop: 1, color: P.icon }} />{label}
                     </div>
                     <p style={facts}>{text}</p>
@@ -602,8 +602,8 @@ export default async function PublicGrantPage({
           )}
 
           {applyUrl && (
-            <div style={{ marginTop: 40, paddingTop: 32, borderTop: `1px solid ${P.hair}` }}>
-              <a href={applyUrl} target="_blank" rel="noopener noreferrer" style={{ ...primaryBtn, display: 'inline-flex', padding: '14px 24px' }}>
+            <div style={{ marginTop: 32, paddingTop: 26, borderTop: `1px solid ${P.hair}` }}>
+              <a href={applyUrl} target="_blank" rel="noopener noreferrer" style={{ ...primaryBtn, display: 'inline-flex', padding: '12px 22px' }}>
                 Apply on the funder&rsquo;s website <ExternalLink style={{ width: 16, height: 16 }} />
               </a>
             </div>
@@ -612,15 +612,15 @@ export default async function PublicGrantPage({
 
         {/* Sign-up band. Logged out only. The fallback line for everyone (v2). */}
         {!signedIn && (
-          <section className="record-band" style={{ marginTop: 28, background: P.ink, color: P.cream, borderRadius: 24, padding: 'clamp(26px, 4vw, 36px) clamp(22px, 5vw, 48px)', display: 'grid', gap: 24, alignItems: 'center', position: 'relative', overflow: 'hidden' }}>
+          <section className="record-band" style={{ marginTop: 22, background: P.ink, color: P.cream, borderRadius: 24, padding: 'clamp(22px, 3vw, 28px) clamp(20px, 4vw, 36px)', display: 'grid', gap: 20, alignItems: 'center', position: 'relative', overflow: 'hidden' }}>
             <div>
-              <div style={{ fontFamily: UI, fontWeight: 700, fontSize: 'clamp(22px, 3vw, 28px)', letterSpacing: '-0.015em' }}>Find funding matched to you</div>
-              <p style={{ margin: '10px 0 0', fontSize: 17, lineHeight: 1.55, color: '#C7D3CE', maxWidth: 560 }}>
+              <div style={{ fontFamily: UI, fontWeight: 700, fontSize: 'clamp(20px, 2.4vw, 23px)', letterSpacing: '-0.015em' }}>Find funding matched to you</div>
+              <p style={{ margin: '8px 0 0', fontSize: 15.5, lineHeight: 1.55, color: '#C7D3CE', maxWidth: 560 }}>
                 More funding like this is open now. {MCP_BRAND_NAME} checks each fund against your organisation and shows you the ones worth applying for.
               </p>
             </div>
             <div style={{ textAlign: 'center' }}>
-              <Link href={signupHref} style={{ fontFamily: UI, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: P.cream, color: P.ink, borderRadius: 999, padding: '15px 28px', fontWeight: 600, fontSize: 16, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+              <Link href={signupHref} style={{ fontFamily: UI, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: P.cream, color: P.ink, borderRadius: 999, padding: '13px 24px', fontWeight: 600, fontSize: 15, textDecoration: 'none', whiteSpace: 'nowrap' }}>
                 See your funding matches <ArrowRight style={{ width: 16, height: 16 }} />
               </Link>
               <div style={{ marginTop: 10, fontSize: 13, color: '#A9BBB5', whiteSpace: 'nowrap' }}>{ctaSupportParts()[0]}</div>
