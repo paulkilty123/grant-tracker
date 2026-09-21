@@ -1,0 +1,498 @@
+{
+  "job": "docs/handoffs/discovery-week-2026-09-22.md",
+  "run_date": "2026-09-21",
+  "source": "system:discovery-week-2026-09-22",
+  "branch": "discovery/week-2026-09-22",
+  "staging_script": "scripts/discovery-week-stage-2026-09-22.ts",
+  "scoring_script": "scripts/discovery-week-score-2026-09-22.ts",
+  "anthropic_spend": "none. Pages read with curl and a browser user agent. The keyless reader proxy r.jina.ai refused every anonymous request from this network (HTTP 401, 'blocked from performing anonymous queries due to bad network reputation AS9009'), so hosts curl could not read are recorded as bot_walled.",
+  "totals": {
+    "staged": 16,
+    "not_staged_entries": 52,
+    "individual_candidates_assessed": 62,
+    "funder_names_deduped_before_opening_a_page": 123,
+    "target": 30,
+    "note": "62 is the count of candidates individually assessed: 16 staged plus 46 named singly in not_staged. Six not_staged entries are groups covering a further ~60 funder names deduped at provider level before any page was opened."
+  },
+  "dedup": "Whole table paged in 1000s and asserted against the exact count (2126 rows) before any insert, by normalised apply_url and by funder+title. Provider-level dedup was run first on ~120 funder names; most of the brief's named leads were already held, which is why the staged count is 16 rather than 30.",
+  "staged": [
+    {
+      "title": "Golsoncott Foundation — Arts Grants",
+      "funder": "The Golsoncott Foundation",
+      "url": "https://www.golsoncott.org.uk/",
+      "amount_max": 3000,
+      "timing": "rolling, quarterly trustee meetings; window for the late Nov 2026 meeting opened early Sept",
+      "shape": "Mercury Theatre, Unicorn Theatre"
+    },
+    {
+      "title": "Suffolk Community Foundation — Port Community Fund",
+      "funder": "Suffolk Community Foundation",
+      "url": "https://suffolkcf.org.uk/grants/port-community-fund/",
+      "amount_max": 2000,
+      "deadline": "2026-10-19",
+      "shape": "GoStart / Suffolk place layer"
+    },
+    {
+      "title": "Suffolk Community Foundation — Stimulus Fund (tennis)",
+      "funder": "Suffolk Community Foundation",
+      "url": "https://suffolkcf.org.uk/grants/stimulus-fund/",
+      "amount_max": 1000,
+      "timing": "rolling",
+      "shape": "general, sport"
+    },
+    {
+      "title": "Suffolk Community Foundation — Axter Climate & Community Fund",
+      "funder": "Suffolk Community Foundation",
+      "url": "https://suffolkcf.org.uk/grants/the-axter-climate-community-fund/",
+      "amount_max": 3000,
+      "deadline": "2026-10-02",
+      "shape": "GoStart / Suffolk place layer; open to social enterprises"
+    },
+    {
+      "title": "Forever Notts — SWEF Grant Programme (young people's businesses)",
+      "funder": "Forever Notts (Nottinghamshire Community Foundation)",
+      "url": "https://www.forevernotts.com/grant/swef-grant-programme/",
+      "amount_min": 200,
+      "amount_max": 2000,
+      "timing": "rolling, cut-off 7th of each month",
+      "shape": "Redhill Fields; ltd_shares and sole traders admitted"
+    },
+    {
+      "title": "Forever Notts — RTC Fund (rural older people)",
+      "funder": "Forever Notts (Nottinghamshire Community Foundation)",
+      "url": "https://www.forevernotts.com/grant/rtc-fund/",
+      "amount_max": 500,
+      "deadline": "2027-05-22",
+      "shape": "general, older people"
+    },
+    {
+      "title": "Forever Notts — Brian Treffry and Joan Oliver Fund",
+      "funder": "Forever Notts (Nottinghamshire Community Foundation)",
+      "url": "https://www.forevernotts.com/grant/brian-treffry-and-joan-oliver-fund/",
+      "amount_max": 500,
+      "timing": "open, no deadline stated",
+      "shape": "general, arts"
+    },
+    {
+      "title": "Forever Notts — Dave Hartley Fund (music)",
+      "funder": "Forever Notts (Nottinghamshire Community Foundation)",
+      "url": "https://www.forevernotts.com/grant/dave-hartley-fund/",
+      "amount_max": 250,
+      "timing": "rolling",
+      "shape": "general, music"
+    },
+    {
+      "title": "Equity Charitable Trust — Theatre Grants",
+      "funder": "Equity Charitable Trust",
+      "url": "https://www.equitycharitabletrust.org.uk/other-grants/theatre-grants/",
+      "amounts": "undisclosed; the page says the spending threshold 'tends to be in the region of £5K', which is a typical award not a stated maximum",
+      "timing": "rolling, email enquiry",
+      "shape": "Mercury Theatre, Unicorn Theatre"
+    },
+    {
+      "title": "The February Foundation — Grants",
+      "funder": "The February Foundation",
+      "url": "https://www.thefebruaryfoundation.org/",
+      "amounts": "undisclosed; median award £5,000 quoted as a typical award",
+      "timing": "rolling, monthly decisions",
+      "shape": "general"
+    },
+    {
+      "title": "Savoy Educational Trust — Hospitality Education and Training Grants",
+      "funder": "Savoy Educational Trust",
+      "url": "https://savoyeducationaltrust.org.uk/how-to-apply/",
+      "amounts": "undisclosed; banded process at £10,000",
+      "deadline": "2026-10-22",
+      "shape": "general, hospitality skills"
+    },
+    {
+      "title": "Shanly Foundation — General Grants",
+      "funder": "Shanly Foundation",
+      "url": "https://www.shanlyfoundation.com/grants/general-grants/",
+      "amounts": "undisclosed",
+      "timing": "rolling, monthly board",
+      "shape": "general, South East England"
+    },
+    {
+      "title": "Laing Family Trusts — Grants (Kirby Laing, Martin Laing, Maurice & Hilda Laing)",
+      "funder": "Laing Family Trusts",
+      "url": "https://www.laingfamilytrusts.org.uk/how-to-apply/",
+      "amounts": "undisclosed",
+      "timing": "rolling, postal",
+      "shape": "general; the performing arts stream is relevant to Mercury and Unicorn. One row because the four trusts share one coordinated application, which is the real front door."
+    },
+    {
+      "title": "ECB Building Belonging in Cricket Fund",
+      "funder": "England and Wales Cricket Board",
+      "url": "https://www.ecb.co.uk/play/club-support/club-funding/building-belonging-cricket-fund",
+      "amounts": "undisclosed; the £45m on the page is the pot, not an award",
+      "timing": "open, locally led through Recreational Cricket Boards",
+      "shape": "Bridlington Cricket Foundation"
+    },
+    {
+      "title": "Funding Differently 2026/27 — Southwark participatory grants",
+      "funder": "Community Southwark (Funding Differently partnership)",
+      "url": "https://communitysouthwark.org/exciting-grant-opportunity-funding-differently-2026-27-opens-september-9th/",
+      "amount_min": 5000,
+      "amount_max": 10000,
+      "deadline": "2026-10-21",
+      "shape": "Paws and Pause; CICs admitted, mental health and isolation remit, Southwark"
+    },
+    {
+      "title": "BFI National Lottery Screen Heritage Fund — Project funding",
+      "funder": "British Film Institute",
+      "url": "https://www.bfi.org.uk/get-funding-support/bfi-national-lottery-screen-heritage-fund",
+      "amounts": "undisclosed",
+      "timing": "rolling, apply 16 weeks before activity",
+      "shape": "general, film tranche two"
+    }
+  ],
+  "measured_matches": {
+    "note": "Measured with scripts/discovery-week-score-2026-09-22.ts: grants_with_funder rows for this source, normaliseScrapedGrant, computeMatchScore, floor 55. 'structure' is whether the staged row lists the org's legal_structure.",
+    "Bridlington Cricket Foundation (8a3139de, cio)": {
+      "at_55_plus": 5,
+      "listing_structure": 5,
+      "rows": [
+        "ECB Building Belonging in Cricket Fund 87",
+        "Golsoncott 61",
+        "Equity Charitable Trust 61",
+        "February Foundation 61",
+        "Savoy Educational Trust 61"
+      ]
+    },
+    "GoStart (2b8d875a, registered_charity)": {
+      "at_55_plus": 3,
+      "listing_structure": 3,
+      "rows": [
+        "Equity Charitable Trust 61",
+        "February Foundation 61",
+        "Laing Family Trusts 61"
+      ]
+    },
+    "Mercury Theatre (b35d2980, registered_charity)": {
+      "at_55_plus": 4,
+      "listing_structure": 4,
+      "rows": [
+        "Equity Charitable Trust 82",
+        "Golsoncott 63",
+        "February Foundation 61",
+        "Savoy Educational Trust 61"
+      ]
+    },
+    "Unicorn Theatre (a33c3512, registered_charity)": {
+      "at_55_plus": 3,
+      "listing_structure": 3,
+      "rows": [
+        "Equity Charitable Trust 82",
+        "February Foundation 61",
+        "Savoy Educational Trust 61"
+      ]
+    },
+    "The Apex Project (98b5b3e3, cic_shares)": {
+      "at_55_plus": 3,
+      "listing_structure": 2,
+      "rows": [
+        "Golsoncott 59",
+        "Equity Charitable Trust 59 (structure not listed)",
+        "Savoy Educational Trust 55"
+      ]
+    },
+    "Paws and Pause (9bee94d2, cic_guarantee)": {
+      "at_55_plus": 3,
+      "listing_structure": 3,
+      "rows": [
+        "Golsoncott 59",
+        "Equity Charitable Trust 59",
+        "Savoy Educational Trust 55"
+      ]
+    },
+    "Redhill Fields Open Air Events (ff6c8e7a, ltd_shares)": {
+      "at_55_plus": 2,
+      "listing_structure": 0,
+      "rows": [
+        "Equity Charitable Trust 61 (structure not listed)",
+        "Savoy Educational Trust 59 (structure not listed)"
+      ]
+    }
+  },
+  "measurement_findings": [
+    "Every small local fund staged here scores 15 to 35 for the org it was found for, not 55+. Two causes, both in the matcher rather than the tagging. First, grantSize scores 2 of 10 with the label 'Grant size — below your minimum' whenever the award is under the org's stated minimum, which is true of every £250 to £3,000 community foundation fund. Second, a borough-tagged row scores 2 of 15 on location for an org whose primary_location is the city: Funding Differently (location_tag 'Southwark') scores 15 for Paws and Pause, whose profile says 'LONDON'. The row's tag matches the catalogue convention (every held Southwark, Lambeth and Islington row is tagged by borough), so the fix is the org profile or the matcher, not the row.",
+    "The consequence for Tuesday's digest: the rows that will actually surface as new matches are the national, no-maximum trusts, not the local funds. Funding Differently is the single best new fund for Paws and Pause on the page and it will not surface at 55.",
+    "Control: the score spread across all 16 staged rows for Bridlington Cricket Foundation is 15, 15, 15, 15, 15, 15, 15, 15, 15, 44, 44, 61, 61, 61, 61, 87 — the floor does exclude, so the counts above are not a scorer that passes everything."
+  ],
+  "reopenings_dated": [],
+  "reopenings_note": "No held row could be given a dated reopening. Every closed fund walked either gave no date ('Autumn 2026', 'later this year', 'check back later') or a season without a day ('Opening Spring 2027'). Two Ridings, London Community Foundation and Suffolk Community Foundation were the three community foundations most likely to yield one and all three were fully deduped: every open fund they list is already held.",
+  "not_staged": [
+    {
+      "candidate": "Lord's Taverners grants",
+      "why": "out_of_scope",
+      "detail": "Grant-making phased out in favour of delivering community cricket programmes directly."
+    },
+    {
+      "candidate": "East Riding of Yorkshire Council — Do it for East Yorkshire Community Grant",
+      "why": "closed_no_date",
+      "detail": "A search result said the round was open with a 30 September deadline. The council page read in this session says 'The Do it for East Yorkshire Community Grant is currently closed for applications.' No reopening date."
+    },
+    {
+      "candidate": "East Riding of Yorkshire Council — Arts Grants",
+      "why": "closed_no_date",
+      "detail": "Page still advertises the 2025/26 round, opening 20 January 2026 and closing 1 March 2026. Both dates past; no 2026/27 round published."
+    },
+    {
+      "candidate": "East Riding of Yorkshire Council — Our Place Youth Fund",
+      "why": "closed_no_date",
+      "detail": "Closed 12 noon Monday 13 July 2026."
+    },
+    {
+      "candidate": "East Riding of Yorkshire Council — Small events grants",
+      "why": "eligibility_unstated",
+      "detail": "Up to £500, but the page states only that awards are 'subject to passing the relevant criteria' and directs applicants to email for a pack. No stated eligibility."
+    },
+    {
+      "candidate": "Nottinghamshire County Council — Local Communities Fund",
+      "why": "closed_no_date",
+      "detail": "'All Local Communities Fund grant programmes are now closed and will reopen in Autumn 2026.' No date."
+    },
+    {
+      "candidate": "Suffolk County Council — Culture Project Fund small grants",
+      "why": "closed_no_date",
+      "detail": "Presentation sessions were held week beginning 20 April 2026; no current round."
+    },
+    {
+      "candidate": "Suffolk Community Foundation — Suffolk Sports Fund",
+      "why": "closed_no_date",
+      "detail": "Fund page status 'Closed'; opened 27 July 2026, no reopening date."
+    },
+    {
+      "candidate": "Suffolk Community Foundation — Martineau Care Fund",
+      "why": "individuals_only",
+      "detail": "Grants buy daily living equipment for individuals; a Registered Health Professional is the applicant."
+    },
+    {
+      "candidate": "Suffolk Community Foundation — Stronger Suffolk VCFSE Support Programme",
+      "why": "support_service_class",
+      "detail": "Free coordinated support for the sector, not a grant."
+    },
+    {
+      "candidate": "Suffolk Community Foundation — Women and Girls' Fund, High Sheriff's Fund, Lovewell Blake Fund",
+      "why": "closed_no_date",
+      "detail": "Listed as opening December 2026, January 2027 and Spring 2027; only the month or season is given, not a date, and none is a held row needing next_open_date."
+    },
+    {
+      "candidate": "Two Ridings Community Foundation — every open fund",
+      "why": "already_held",
+      "detail": "Community First Prime Opportunities, Fraisthorpe Wind Farm, Rusholme Wind Farm, Sixpenny Wood, Small Grants and York Community Fund are all already in the catalogue. Winter Resilience Fund is paused for new applications with no reopening date."
+    },
+    {
+      "candidate": "London Community Foundation — every open fund",
+      "why": "already_held",
+      "detail": "Only four of the fourteen listed are open: MOPAC Victims Small Grants 2027-29, MOPAC VAWG Grassroots 2027-30, Wimbledon Foundation Community Fund and Ilford Community Fund. All four are held."
+    },
+    {
+      "candidate": "Essex Community Foundation",
+      "why": "already_held",
+      "detail": "Rolling year-round applications through one Grants Hub row already in the catalogue."
+    },
+    {
+      "candidate": "Forever Notts — Randal Foundation Fund",
+      "why": "closed_no_date",
+      "detail": "Deadline 21 September 2026, the day of this run; too late to be useful and no next round published."
+    },
+    {
+      "candidate": "Forever Notts — Kynan Eldridge Fund",
+      "why": "individuals_only",
+      "detail": "One-off grants to young people under 30 using music."
+    },
+    {
+      "candidate": "Forever Notts — Major Oak Fund, MyPad Community Fund",
+      "why": "no_apply_route",
+      "detail": "Invitation only; 'No application process - invitation only'."
+    },
+    {
+      "candidate": "Forever Notts — The Bramley Fund",
+      "why": "not_read",
+      "detail": "£100 for growing apple trees. Plausible but the fund page was not opened in this session, so it was not staged."
+    },
+    {
+      "candidate": "Leche Trust — Performing Arts Grants",
+      "why": "between_rounds_scheduled",
+      "detail": "Round 1 closed 31 August 2026. Round 2 opens 7 December 2026 and closes 11 January 2027. That is 77 days out, beyond the brief's 30-day window, so it is not staged. Worth a between_rounds row if Paul wants it: it is a real gap, UK registered charities with turnover under £1.5m, typical grant around £4,000. Mercury Theatre qualifies on income; Unicorn Theatre does not. It does not fund CICs."
+    },
+    {
+      "candidate": "Fenton Arts Trust",
+      "why": "eligibility_unstated",
+      "detail": "Supports artists at the beginning of their careers; neither the homepage nor the Applying for a Grant page states who may apply or an amount."
+    },
+    {
+      "candidate": "Berkeley Foundation",
+      "why": "closed_no_date",
+      "detail": "'At the moment, we're focused on strengthening our work with existing partners, and are not running any open grant programmes.'"
+    },
+    {
+      "candidate": "Trusthouse Charitable Foundation / Forte Charitable Foundation",
+      "why": "already_held",
+      "detail": "Trusthouse is now Forte Charitable Foundation and the Small & Major Grants row is live."
+    },
+    {
+      "candidate": "The Arts Society External Charity Grants",
+      "why": "already_held",
+      "detail": "Live row. The round opened 1 September and closes 30 September 2026."
+    },
+    {
+      "candidate": "Motability Foundation organisation grants",
+      "why": "closed_no_date",
+      "detail": "'Our funding rounds are currently closed. Please check back later this year for future funding opportunities.' The September 2025 news item announcing community and shared transport rounds is out of date."
+    },
+    {
+      "candidate": "Maudsley Charity — Living Well with Psychosis",
+      "why": "closed_no_date",
+      "detail": "Round one closed November 2024. The page says a second round is available in autumn 2026 and that most grant holders will come from round one; no application is open and no date is given."
+    },
+    {
+      "candidate": "Mercers' Company — Young People and Education",
+      "why": "closed_no_date",
+      "detail": "All three Special Initiatives say 'funding applications now closed'. The mental health strand is funded through Propel rather than a direct route."
+    },
+    {
+      "candidate": "Youth Futures Foundation — Building Futures",
+      "why": "closed_no_date",
+      "detail": "'the closing date for this opportunity has now passed' (23 January 2026)."
+    },
+    {
+      "candidate": "Impetus Skills Grant Round 2026",
+      "why": "closed_no_date",
+      "detail": "Deadline 15 June 2026, passed."
+    },
+    {
+      "candidate": "ECB Grass Pitch Improvement Fund",
+      "why": "closed_no_date",
+      "detail": "Reached its provisional funding limit in Autumn 2025 and is closed to new applications."
+    },
+    {
+      "candidate": "ECB Tackling Climate Change Fund",
+      "why": "closed_no_date",
+      "detail": "Exceeded its provisional funding limit and is closed to new applications."
+    },
+    {
+      "candidate": "Theatres Trust Theatre Improvement Scheme",
+      "why": "closed_no_date",
+      "detail": "'Applications closed on 11 September and are being assessed.' Next round not dated."
+    },
+    {
+      "candidate": "Theatres Trust Resilient Theatres: Resilient Communities",
+      "why": "closed_no_date",
+      "detail": "'This scheme has now closed and we are reviewing the impact of the programme.'"
+    },
+    {
+      "candidate": "Theatres Trust Small Grants Programme",
+      "why": "already_held",
+      "detail": "Live row."
+    },
+    {
+      "candidate": "Ragdoll Foundation",
+      "why": "closed_no_date",
+      "detail": "'although our grants programmes have now closed'."
+    },
+    {
+      "candidate": "Peter Sowerby Foundation",
+      "why": "no_apply_route",
+      "detail": "'The Foundation does not accept unsolicited applications for grants.' Open Calls are announced with no fixed timing."
+    },
+    {
+      "candidate": "John Coates Charitable Trust",
+      "why": "no_apply_route",
+      "detail": "Shortlisted charities are invited to apply; 'The website is closed to applications from any other charities.'"
+    },
+    {
+      "candidate": "Oakdale Trust",
+      "why": "closed_no_date",
+      "detail": "'The next meeting of trustees will be held in October 2026. This meeting is now closed to further applications.'"
+    },
+    {
+      "candidate": "Jill and Norman Franklin Trust",
+      "why": "closed_no_date",
+      "detail": "Funds fully committed apart from a dozen church restoration grants."
+    },
+    {
+      "candidate": "Beatrice Laing Trust",
+      "why": "closed_no_date",
+      "detail": "'closed to new applications until further notice'. Covered by the Laing Family Trusts row, which routes applications to the other three trusts."
+    },
+    {
+      "candidate": "Wixamtree Trust",
+      "why": "eligibility_unstated",
+      "detail": "Bedfordshire focus and a grant-making policy, but the Application Process and Meeting Dates pages returned nothing readable, so no amount, deadline or route could be cited."
+    },
+    {
+      "candidate": "Childwick Trust",
+      "why": "not_found",
+      "detail": "Homepage read but the What we fund and Apply for funding pages 404 or render empty."
+    },
+    {
+      "candidate": "Made By Sport",
+      "why": "out_of_scope",
+      "detail": "madebysport.com now serves an unrelated fitness content blog; no funding programme."
+    },
+    {
+      "candidate": "Creative UK",
+      "why": "not_found",
+      "detail": "The funding page lists Creative Growth Finance (a loan) and investment products; no open grant or programme strand could be read."
+    },
+    {
+      "candidate": "Film Hub North, Film Hub Wales",
+      "why": "not_found",
+      "detail": "Film Hub North's site now redirects funding to BFI NETWORK (individual filmmakers). Film Hub Wales returned 403."
+    },
+    {
+      "candidate": "Bruce Wake Charitable Trust",
+      "why": "bot_walled",
+      "detail": "brucewaketrust.co.uk returns HTTP 418 and a JavaScript cookie challenge to curl. Needs Paul's browser. It is a real gap, rolling quarterly, and the best single candidate found for two orgs at once: Bridlington Cricket Foundation's disability cricket and GoStart's disabled passengers."
+    },
+    {
+      "candidate": "Impact on Urban Health",
+      "why": "bot_walled",
+      "detail": "urbanhealth.org.uk returns 403 to curl on every path tried. It is a co-funder of the Funding Differently row staged here and a Lambeth and Southwark funder in its own right."
+    },
+    {
+      "candidate": "Music Venue Trust Pipeline Investment Fund",
+      "why": "bot_walled",
+      "detail": "musicvenuetrust.com/pipeline-investment-fund/ returns 403 to curl. Relevant to Redhill Fields."
+    },
+    {
+      "candidate": "Persula Foundation, Peter Cruddas Foundation, Garrick Charitable Trust, John Thaw Foundation, Boltini Trust, Lord Barnby's Foundation, John Armitage Charitable Trust, Cockayne Grants for the Arts, Sobell Foundation",
+      "why": "unreadable",
+      "detail": "DNS did not resolve, or the host returned an empty body, from this network on every attempt. All are catalogue gaps worth a second pass."
+    },
+    {
+      "candidate": "Arts Council England open funds",
+      "why": "bot_walled",
+      "detail": "artscouncil.org.uk/our-open-funds returns 403 to curl, so the current strand list could not be checked against the fourteen ACE rows already held."
+    },
+    {
+      "candidate": "Thomas Pocklington Trust, Hospital Saturday Fund, Haberdashers' Company, Sylvia Adams Charitable Trust, Innholders' Company, Leigh Trust, The Springboard Charity, Help Musicians organisational strands, Yorkshire Cricket Foundation grants",
+      "why": "not_found",
+      "detail": "Catalogue gaps whose grants pages 404 at the URLs tried in this session. Each needs one more search to find the live page."
+    },
+    {
+      "candidate": "London Marathon Charitable Trust Active Spaces Fund",
+      "why": "already_held",
+      "detail": "Live row, and the closest existing match to Bridlington Cricket Foundation's facilities need."
+    },
+    {
+      "candidate": "Chance to Shine, Sported, Cash for Kids, Barclays Community Sport Fund, Wooden Spoon, Sir James Reckitt, Barchester Charitable Foundation, Masonic Charitable Foundation, Clothworkers' Foundation, Hedley Foundation, Rayne Foundation, Baring Foundation, D'Oyly Carte, Backstage Trust, Idlewild Trust, Sylvia Waddilove, Harold Hyam Wingate, Paul Hamlyn, Garfield Weston, Jack Petchey, UnLtd, Big Issue Invest, Trust for London, Henry Smith, City Bridge, John Lyon's, Maudsley Charity, Peabody, Portal Trust, Nuffield Foundation, BFI (four strands), Screen Scotland, Ffilm Cymru, Creative Scotland",
+      "why": "already_held",
+      "detail": "Provider-level dedup before any page was opened. This is the reason the batch is 16 rather than 30: the brief's named leads for six of the seven shapes were largely already in the catalogue."
+    }
+  ],
+  "needs_pauls_browser": [
+    "Bruce Wake Charitable Trust (brucewaketrust.co.uk/grants/) — HTTP 418 cookie challenge. Rolling, quarterly, charities and not-for-profits, leisure and sport for physically disabled people. Fits Bridlington and GoStart.",
+    "Impact on Urban Health (urbanhealth.org.uk) — 403. Lambeth and Southwark funder, relevant to Paws and Pause.",
+    "Music Venue Trust Pipeline Investment Fund (musicvenuetrust.com) — 403. Relevant to Redhill Fields.",
+    "Arts Council England open funds (artscouncil.org.uk/our-open-funds) — 403. Needed to check current strands against the fourteen ACE rows held."
+  ],
+  "open_questions_for_paul": [
+    "Leche Trust performing arts: stage a between_rounds_scheduled row with next_open_date 2026-12-07, or leave it until December?",
+    "The grantSize component scores 2 of 10 for any award below an org's stated minimum, which puts every small community foundation fund out of reach of the 55 floor. That is why nine of the sixteen rows staged here score 15 for the org they were found for. Worth a look before the next place-based batch.",
+    "Paws and Pause's profile says primary_location 'LONDON'. Borough-tagged rows score 2 of 15 on location against it. The Southwark fund staged here is the best new match on the page and will not surface."
+  ]
+}
