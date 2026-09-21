@@ -214,8 +214,8 @@ describe('section labels are structure, not furniture', () => {
 describe('funding type is a pill, in the app’s own colours', () => {
   it('draws the tint and foreground for the row’s type', () => {
     // in_kind on the fixture's match row.
-    expect(html).toContain('background:#FAF2E0')
-    expect(html).toContain('color:#7A5A12')
+    expect(html).toContain('background:#F6EFD9')
+    expect(html).toContain('color:#7A5E11')
     expect(html).toMatch(/>In-kind<\/span>/)
   })
 
@@ -229,7 +229,7 @@ describe('funding type is a pill, in the app’s own colours', () => {
 
   it('labels every opportunity row, grants included', () => {
     const titles = (html.match(/font-weight:700;letter-spacing:-\.2px;line-height:1\.3;color:#1D3C3E;text-decoration:none;">[^<]+<\/a>/g) ?? []).length
-    const pills = (html.match(/border-radius:999px;background:#(ECF3EC|F6EBE5|E6F0F2|FAF2E0)/g) ?? []).length
+    const pills = (html.match(/border-radius:999px;background:#(E4F1EA|F2E8E5|E8EFF5|F6EFD9)/g) ?? []).length
     expect(pills).toBeGreaterThan(0)
     expect(titles).toBeGreaterThanOrEqual(pills)
   })

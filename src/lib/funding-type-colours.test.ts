@@ -38,7 +38,7 @@ describe('funding type colours', () => {
   it('falls through to null rather than to a wrong type', () => {
     expect(typeColour('accelerator')).toBeNull()
     expect(typeColour(null)).toBeNull()
-    expect(typeColour('grant')?.fg).toBe('#2F5A38')
+    expect(typeColour('grant')?.fg).toBe('#1B6B3D')
   })
 
   it('keeps the neutral scope out of the four', () => {
