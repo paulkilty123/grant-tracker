@@ -538,7 +538,7 @@ export default async function PublicGrantPage({
                 </div>
               )}
             </div>
-            <div>
+            <div style={{ alignSelf: 'center' }}>
               {applyUrl && (
                 <a href={applyUrl} target="_blank" rel="noopener noreferrer" style={outlineBtn}
                    data-umami-event="record_funder_click" data-umami-event-position="top" data-umami-event-grant={String(grant.id)}>
