@@ -191,9 +191,12 @@ const typedMeta = (type: FundingTypeKey, t: string, isNew = false) =>
 const metaLine = (t: string) =>
   t ? `<p style="margin:0 0 6px;font-family:${BODY};font-size:13px;line-height:1.5;color:${C.body};">${esc(t)}</p>` : ''
 
+// An arrow after the label (Paul, 21 Sept 2026): with the underline gone the
+// weight alone did not read as a link. A text arrow, not an image, so it
+// survives images-off and Outlook alike.
 const textLink = (href: string, label: string) =>
   `<p style="margin:0;font-family:${UI};font-size:13.5px;font-weight:700;">
-     <a href="${esc(href)}" style="color:${C.deep};text-decoration:none;">${esc(label)}</a>
+     <a href="${esc(href)}" style="color:${C.deep};text-decoration:none;">${esc(label)}&nbsp;&rarr;</a>
    </p>`
 
 export interface RenderOptions {
@@ -328,7 +331,7 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
     rows.push(ruledSection(`${sectionLabel('In your pipeline, not started', 10)}
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${lines}
       </table>
-      <p style="margin:12px 0 0;font-family:${UI};font-size:13.5px;font-weight:700;"><a href="${origin}/dashboard/pipeline" style="color:${C.deep};text-decoration:none;">See your pipeline${m.inProgressOverflow > 0 ? ` (${m.inProgressOverflow} more)` : ''}</a></p>`))
+      <p style="margin:12px 0 0;font-family:${UI};font-size:13.5px;font-weight:700;"><a href="${origin}/dashboard/pipeline" style="color:${C.deep};text-decoration:none;">See your pipeline${m.inProgressOverflow > 0 ? ` (${m.inProgressOverflow} more)` : ''}&nbsp;&rarr;</a></p>`))
   }
 
   /* ── New this week. Present ONLY when it has rows: an empty section that
