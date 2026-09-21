@@ -553,8 +553,8 @@ export default async function PublicGrantPage({
 
           {whatTheyFund && (
             <div style={{ marginTop: 28 }}>
-              <div style={lbl}>What they fund</div>
-              <p style={{ margin: '10px 0 0', fontSize: 17, lineHeight: 1.6, color: P.ink, maxWidth: '68ch', whiteSpace: 'pre-line' }}>{whatTheyFund}</p>
+              <h2 style={h2}>What they fund</h2>
+              <p style={{ margin: '12px 0 0', fontSize: 17, lineHeight: 1.6, color: P.ink, whiteSpace: 'pre-line' }}>{whatTheyFund}</p>
             </div>
           )}
 
