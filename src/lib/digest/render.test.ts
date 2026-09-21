@@ -11,6 +11,7 @@ const model: DigestModel = {
   subject: 'Projects for Young People Grants closes in 10 days',
   preheader: '3 matches worth a look.',
   lead: 'Two close in the next 6 weeks.',
+  summary: 'This week: two deadlines in the next six weeks, one fund in your pipeline not yet started, and one new match.',
   closing: [
     { kind: 'pipeline', name: 'Projects for Young People Grants', funder: 'Heathrow Community Trust',
       deadline: '2026-09-10', deadlineLabel: '10 Sep', days: 10,
@@ -23,12 +24,13 @@ const model: DigestModel = {
   ],
   closingOverflow: 0,
   inProgress: [
-    { name: 'Church and Communities Programme', funder: null, stageLabel: 'Submitted',
+    { name: 'Church and Communities Programme', funder: null, stageLabel: 'Identified', deadlineLabel: 'Rolling',
       stalled: false, url: 'https://www.shootsfunding.co.uk/dashboard/search?grant=ccp', key: 'ip1' },
   ],
   inProgressOverflow: 0,
   matches: [
-    { title: 'NCVO Learning & Development', funder: 'NCVO', blurb: 'Training programmes.',
+    { title: 'NCVO Learning & Development', funder: 'NCVO', blurb: 'Training programmes.', isNew: true,
+      why: 'Why it fits: they fund community work across the UK, and CICs can apply.',
       type: 'in_kind', meta: 'NCVO · rolling', days: null,
       url: 'https://www.shootsfunding.co.uk/dashboard/search?grant=ncvo', key: 'm1' },
   ],
@@ -100,8 +102,8 @@ describe('email client constraints', () => {
   it('gives the logo explicit width and height', () => {
     expect(html).toMatch(/<img[^>]*shoots-logo@2x\.png[^>]*width="146"[^>]*height="43"/)
   })
-  it('escapes an ampersand in a funder name', () => {
-    expect(html).toContain('Someone &amp; Co')
+  it('escapes an ampersand in a fund name', () => {
+    expect(html).toContain('NCVO Learning &amp; Development')
   })
   it('stays far below the Gmail clipping threshold', () => {
     expect(html.length).toBeLessThan(102_000)
@@ -112,9 +114,11 @@ describe('honesty rules', () => {
   it('carries no match percentage', () => {
     expect(html).not.toMatch(/\d+%\s*match/i)
   })
-  it('labels a non-fresh set "Matches worth a look", not "New matches"', () => {
-    expect(html).toContain('Matches worth a look')
-    expect(html).not.toContain('New matches')
+  it('heads the section "Your matches" and marks a first-surfaced row New (brief, 21 Sept 2026)', () => {
+    expect(html).toContain('Your matches')
+    expect(html).not.toContain('Matches worth a look')
+    expect(html).toMatch(/>New<\/span>/)
+    expect(html).toContain('Why it fits: they fund community work across the UK, and CICs can apply.')
   })
   it('ships the reassurance line', () => {
     expect(html).toContain('Nothing else closes before 14 October.')
@@ -134,7 +138,7 @@ describe('"New this week" is present only when it has rows', () => {
     const withNew = renderDigest({
       ...model,
       newThisWeek: [{
-        title: 'A Brand New Fund', funder: 'New Funder', blurb: 'Funds community work.',
+        title: 'A Brand New Fund', funder: 'New Funder', blurb: 'Funds community work.', isNew: true, why: 'Why it fits: they fund community work across the UK.',
         type: 'grant', meta: 'New Funder · closes 30 Sep', days: 30,
         url: 'https://www.shootsfunding.co.uk/dashboard/search?grant=new-1', key: 'n1',
       }],
@@ -180,13 +184,13 @@ describe('the feedback ask is not footer boilerplate', () => {
     // ends with. It asks for the two cheapest sources of improvement there are.
     // Cream, not the mint of the profile prompt: two mint cards read as one
     // ask (Paul, 14 Sept 2026).
-    const i = html.indexOf('Seen a funder we are missing')
+    const i = html.indexOf('Spotted something missing or wrong?')
     expect(i).toBeGreaterThan(-1)
     // Generous forward window: inline styles make each element long, and a
     // short slice lands in the profile prompt's button instead.
     const block = html.slice(i - 400, i + 1600)
-    expect(block).toContain('#F5F1E8')
-    expect(block).not.toContain('#EDF6F1')
+    expect(block).toContain('#F4EFE8')
+    expect(block).not.toContain('#ECF3EC')
     expect(block).toContain('>Tell us</a>')
   })
 })
@@ -210,8 +214,8 @@ describe('section labels are structure, not furniture', () => {
 describe('funding type is a pill, in the app’s own colours', () => {
   it('draws the tint and foreground for the row’s type', () => {
     // in_kind on the fixture's match row.
-    expect(html).toContain('background:#F6EFD9')
-    expect(html).toContain('color:#7A5E11')
+    expect(html).toContain('background:#FAF2E0')
+    expect(html).toContain('color:#7A5A12')
     expect(html).toMatch(/>In-kind<\/span>/)
   })
 
@@ -224,8 +228,8 @@ describe('funding type is a pill, in the app’s own colours', () => {
   })
 
   it('labels every opportunity row, grants included', () => {
-    const titles = (html.match(/text-decoration:underline;">[^<]+<\/a>/g) ?? []).length
-    const pills = (html.match(/border-radius:999px;background:#(E4F1EA|F2E8E5|E8EFF5|F6EFD9)/g) ?? []).length
+    const titles = (html.match(/font-weight:700;letter-spacing:-\.2px;line-height:1\.3;color:#1D3C3E;text-decoration:none;">[^<]+<\/a>/g) ?? []).length
+    const pills = (html.match(/border-radius:999px;background:#(ECF3EC|F6EBE5|E6F0F2|FAF2E0)/g) ?? []).length
     expect(pills).toBeGreaterThan(0)
     expect(titles).toBeGreaterThanOrEqual(pills)
   })
@@ -268,7 +272,7 @@ describe('edition block', () => {
     expect(out).toContain('9 funding opportunities added')
     expect(out).toContain('Matches are now ranked by fit.')
     // The ordinary digest still follows it.
-    expect(out).toContain('Upcoming deadlines')
+    expect(out).toContain('Coming up')
   })
 })
 
@@ -281,5 +285,41 @@ describe('the sole-trader notice', () => {
     expect(html.indexOf('Most funders do not fund')).toBeGreaterThan(html.indexOf(model.lead))
     const plain = renderDigest(model, { origin: 'https://www.shootsfunding.co.uk', unsubscribeUrl: 'https://www.shootsfunding.co.uk/u' })
     expect(plain).not.toContain('sole trader')
+  })
+})
+
+describe('the revision brief of 21 Sept 2026', () => {
+  it('shows the summary line under the header, with the lead retired', () => {
+    expect(html).toContain('This week:')
+    expect(html).toContain('one fund in your pipeline not yet started')
+    expect(html).not.toContain('Upcoming deadlines')
+    expect(html).toContain('Coming up')
+  })
+  it('shows an em dash in a fund name as a colon, in the email only', () => {
+    expect(html).toContain('Network for Social Change: Grants')
+    expect(html).not.toContain('Network for Social Change — Grants')
+  })
+  it('renders a closing row as title and close date, with no added date or stage', () => {
+    expect(html).toContain('Closes 10 September')
+    expect(html).not.toContain('added 25 Aug')
+    expect(html).not.toMatch(/<b style="color:#1D3C3E;">Identified<\/b>/)
+  })
+  it('lists not-started pipeline rows with the deadline or Rolling on the right, and no stage label', () => {
+    expect(html).toContain('In your pipeline, not started')
+    expect(html).toMatch(/>Rolling<\/td>/)
+    expect(html).not.toContain('Also in progress')
+    expect(html).toContain('See your pipeline')
+  })
+  it('links are bold dark teal with no underline', () => {
+    expect(html).not.toMatch(/<a href="[^"]*dashboard\/search\?grant=[^"]*"[^>]*text-decoration:underline/)
+    expect(html).toMatch(/<a href="[^"]*dashboard\/search\?grant=ncvo"[^>]*font-weight:700[^>]*color:#1D3C3E;text-decoration:none/)
+  })
+  it('uses the brief\'s prompt copy and colours', () => {
+    expect(html).toContain('Spotted something missing or wrong?')
+    expect(html).toContain('Tell us. We check every suggestion and use it to improve your matches.')
+    expect(html).toContain('background:#ECF3EC')
+  })
+  it('ships no monthly-frequency link, because no preference exists yet', () => {
+    expect(html).not.toContain('Send monthly instead')
   })
 })

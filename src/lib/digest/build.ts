@@ -1,7 +1,8 @@
 import { getAdminDb } from '@/lib/admin/admin-db'
-import { computeMatchScore } from '@/lib/matching'
+import { computeMatchScore, type MatchResult } from '@/lib/matching'
+import { IMPACT_SECTOR_LABELS } from '@/lib/hubs'
 import { pickProfilePrompt, promptTitleWithCount, type ProfilePrompt, type ProfileFieldLabel } from '@/lib/profile-completeness'
-import { daysUntil, humanDate, plural, spell, spellCap, verb } from './text'
+import { daysUntil, humanDate, nine, plural, spell, spellCap, verb } from './text'
 import { findNearMiss, nearMissMeta, amountLabel } from './near-miss'
 import { FUNDING_TYPE_COLOUR, type FundingTypeKey } from '@/lib/funding-type-colours'
 import { activeEdition } from './edition'
@@ -19,6 +20,8 @@ import type { Organisation, FundingType } from '@/types'
 
 /** How far ahead "closing soon" reaches. */
 export const CLOSING_WINDOW_DAYS = 42
+/** A match closing sooner than this is not offered as a match (brief, 21 Sept 2026). */
+const MATCH_MIN_DAYS = 7
 /** Identified and untouched for this long is drifting, and the digest says so. */
 export const STALLED_DAYS = 21
 /** How recently a grant must have appeared to count as a NEW match. */
@@ -85,6 +88,8 @@ export interface ClosingRow {
 export interface ProgressRow {
   name: string
   funder: string | null
+  /** "Closes 23 October", "Rolling", or "" when nothing is known (brief, 21 Sept 2026). */
+  deadlineLabel: string
   /**
    * What sits right-aligned opposite the name. Normally the stage
    * ("Submitted"), but a drifting row says so instead and is rendered in the
@@ -100,6 +105,10 @@ export interface MatchRow {
   title: string
   funder: string
   blurb: string
+  /** First surfaced since the previous digest: not in digest_sent_items for the history window. */
+  isNew: boolean
+  /** "Why it fits: ..." — see whyItFits(). Never truncated mid-sentence, never an exclusion. */
+  why: string
   /** 'grant' | 'programme' | 'investment' | 'in_kind' — drawn as a pill. */
   type: FundingTypeKey
   meta: string
@@ -132,6 +141,14 @@ export interface DigestModel {
   preheader: string
   /** The compact factual summary under "Upcoming deadlines". Never a headline. */
   lead: string
+  /**
+   * The one line under the header (brief, 21 Sept 2026): "This week: one
+   * deadline in the next six weeks, three funds in your pipeline not yet
+   * started, and two new matches." Built by summaryLine() from counts; empty
+   * clauses are left out; all zero reads "Nothing new this week. Here is what
+   * is still open to you."
+   */
+  summary: string
   closing: ClosingRow[]
   closingOverflow: number
   inProgress: ProgressRow[]
@@ -308,8 +325,94 @@ function typeKey(g: Record<string, unknown>): FundingTypeKey {
   return FUNDING_TYPE_COLOUR[k] ? k : 'grant'
 }
 
+/**
+ * The summary line (brief, 21 Sept 2026). Counts in, one sentence out.
+ * Clauses with a zero count are left out; all three zero is the quiet line.
+ */
+export function summaryLine(c: { deadlines: number; notStarted: number; newMatches: number }): string {
+  const bits: string[] = []
+  if (c.deadlines > 0)  bits.push(`${nine(c.deadlines)} ${c.deadlines === 1 ? 'deadline' : 'deadlines'} in the next six weeks`)
+  if (c.notStarted > 0) bits.push(`${nine(c.notStarted)} ${c.notStarted === 1 ? 'fund' : 'funds'} in your pipeline not yet started`)
+  if (c.newMatches > 0) bits.push(`${nine(c.newMatches)} new ${c.newMatches === 1 ? 'match' : 'matches'}`)
+  if (!bits.length) return 'Nothing new this week. Here is what is still open to you.'
+  const list = bits.length === 1 ? bits[0] : `${bits.slice(0, -1).join(', ')}, and ${bits[bits.length - 1]}`
+  return `This week: ${list}.`
+}
+
+const STRUCTURE_PLURAL: Record<string, string> = {
+  registered_charity: 'registered charities', cio: 'CIOs', scio: 'SCIOs',
+  cic_guarantee: 'CICs', cic_shares: 'CICs', ltd_guarantee: 'limited companies', ltd_shares: 'limited companies',
+  llp: 'partnerships', cooperative: 'co-operatives', unincorporated: 'unincorporated groups',
+  sole_trader: 'sole traders', not_registered: 'unregistered groups',
+}
+
+/**
+ * "Why it fits" (brief, 21 Sept 2026). Composed from the scorer's STRUCTURED
+ * facts, never its reason strings: the first digest tried those and shipped
+ * "beneficiary group: partial overlap", which is our vocabulary leaking out.
+ *
+ * Three facts can be stated plainly: a sector the fund and the organisation
+ * share, where the fund gives, and that the organisation's legal form is on
+ * the fund's list. Two or more make a sentence. Fewer, and the line falls
+ * back to the first complete sentence of what the funder says it funds, with
+ * no exclusions and no truncation; if there is no complete sentence within
+ * the limit, null, and the row does not appear.
+ */
+export function whyItFits(f: {
+  grantSectors: readonly string[]
+  orgSectors: readonly string[]
+  locationTag: string | null
+  locationScore: number
+  structure: string | null
+  eligibleStructures: readonly string[]
+  whatTheyFund: string | null
+}): string | null {
+  // The most telling shared sector: the organisation's own first sector if
+  // the fund lists it, else the fund's first sector if the organisation does,
+  // else any shared sector, with "community" last because it is on half the
+  // catalogue and says the least (Men in Sheds preview, 21 Sept: five rows
+  // all read "they fund community work").
+  const sharedAll = f.grantSectors.filter(x => f.orgSectors.includes(x))
+  const shared = sharedAll.includes(f.orgSectors[0]) ? f.orgSectors[0]
+    : sharedAll.includes(f.grantSectors[0]) ? f.grantSectors[0]
+    : sharedAll.find(x => x !== 'community') ?? sharedAll[0] ?? null
+  const sector = shared ? (IMPACT_SECTOR_LABELS[shared] ?? shared).toLowerCase().replace(' & ', ' and ') : null
+  const tag = (f.locationTag ?? '').trim()
+  const national = !tag || /^(uk|united kingdom|uk[- ]wide|great britain|england|scotland|wales|northern ireland)$/i.test(tag)
+  const place = f.locationScore >= 12 ? (national ? (/^(england|scotland|wales|northern ireland)$/i.test(tag) ? `across ${tag}` : 'across the UK') : `in ${tag}`) : null
+  const structure = f.structure && f.eligibleStructures.includes(f.structure) ? STRUCTURE_PLURAL[f.structure] ?? null : null
+  const facts = [sector, place, structure].filter(Boolean).length
+  if (sector && facts >= 2) {
+    const where = place ? ` ${place}` : ''
+    const who = structure ? `, and ${structure} can apply` : ''
+    return `Why it fits: they fund ${sector} work${where}${who}.`
+  }
+  if (f.whatTheyFund) {
+    const clean = f.whatTheyFund.replace(/\s+/g, ' ').trim()
+    const m = clean.match(/^(.{20,170}?[.!?])(\s|$)/)
+    // The funder's sentence, capitalised as they wrote it: lower-casing a
+    // proper noun produced "equipment Stream: studio..." on the first preview.
+    if (m) return `Why it fits: ${m[1]}`
+  }
+  return null
+}
+
+/** whyItFits() fed from the scorer's result and the row. */
+function whyFor(result: MatchResult, g: Record<string, unknown>, org: Organisation): string | null {
+  const brief = (g.funder_brief && typeof g.funder_brief === 'object') ? g.funder_brief as Record<string, unknown> : null
+  return whyItFits({
+    grantSectors: Array.isArray(g.impact_sectors) ? (g.impact_sectors as string[]) : [],
+    orgSectors: org.impact_sectors ?? [],
+    locationTag: g.location_tag ? String(g.location_tag) : null,
+    locationScore: result.breakdown.location.score,
+    structure: org.legal_structure ?? null,
+    eligibleStructures: Array.isArray(g.eligible_structures) ? (g.eligible_structures as string[]) : [],
+    whatTheyFund: brief && typeof brief.what_they_fund === 'string' ? brief.what_they_fund : null,
+  })
+}
+
 /** One shape for every opportunity row, so the two sections cannot drift. */
-function toMatchRow(g: Record<string, unknown>, origin: string, now: Date, blurb: string): MatchRow {
+function toMatchRow(g: Record<string, unknown>, origin: string, now: Date, blurb: string, extra?: { isNew?: boolean; why?: string }): MatchRow {
   // Funder, amount, timing (Paul, 14 Sept 2026: the amount was missing from
   // match rows while near-miss rows carried it).
   const parts = [
@@ -321,6 +424,8 @@ function toMatchRow(g: Record<string, unknown>, origin: string, now: Date, blurb
     title: String(g.title ?? ''),
     funder: String(g.funder ?? ''),
     blurb,
+    isNew: extra?.isNew ?? false,
+    why: extra?.why ?? '',
     type: typeKey(g),
     meta: parts.join(' · '),
     days: g.deadline ? daysUntil(String(g.deadline), now) : null,
@@ -533,14 +638,23 @@ export async function buildDigest(
   for (const p of (pipeline ?? []) as Record<string, unknown>[]) {
     if (closingKeys.has(String(p.id))) continue
     const stage = String(p.stage ?? 'identified')
-    if (stage === 'won' || stage === 'declined') continue
+    // "In your pipeline, not started" (brief, 21 Sept 2026): the identified
+    // stage only. Applying and submitted rows are in hand and stay out.
+    if (stage !== 'identified') continue
     const updated = p.updated_at ? new Date(String(p.updated_at)) : null
     const idleDays = updated ? Math.floor((now.getTime() - updated.getTime()) / 86_400_000) : 0
     const stalled = stage === 'identified' && idleDays >= STALLED_DAYS
     const weeks = Math.floor(idleDays / 7)
+    const catalogueRow = byTitle.get(String(p.grant_name ?? '').trim().toLowerCase())
+    const deadlineLabel = p.deadline
+      ? `Closes ${humanDate(String(p.deadline))}`
+      : catalogueRow?.deadline && !catalogueRow.is_rolling
+        ? `Closes ${humanDate(String(catalogueRow.deadline))}`
+        : catalogueRow?.is_rolling ? 'Rolling' : ''
     inProgressAll.push({
       name: String(p.grant_name ?? 'Untitled'),
       funder: p.funder_name ? String(p.funder_name) : null,
+      deadlineLabel,
       url: pipelineHref(p, `${origin}/dashboard/pipeline`),
       // Only said when true. A digest that notices you have stalled is a tool;
       // one that says it every week is noise.
@@ -563,7 +677,7 @@ export async function buildDigest(
   const pipelineNames = new Set(((pipeline ?? []) as Record<string, unknown>[]).map(p => String(p.grant_name ?? '').toLowerCase()))
   const savedIds = new Set(((interactions ?? []) as Record<string, unknown>[]).map(i => String(i.grant_id)))
 
-  const scored: { row: Record<string, unknown>; score: number; blurb: string | null; fresh: boolean }[] = []
+  const scored: { row: Record<string, unknown>; score: number; blurb: string | null; fresh: boolean; why: string | null }[] = []
   const newThisWeekAll: { row: Record<string, unknown>; score: number }[] = []
   // Scored, because "the first two the catalogue happened to yield" is not the
   // same as "the two nearest". Ranked below.
@@ -579,6 +693,10 @@ export async function buildDigest(
     // 31 August — and the closing section filters those out while the match
     // list did not. Rolling funds have no deadline to pass.
     if (g.deadline && !g.is_rolling && daysUntil(String(g.deadline), now) < 0) continue
+    // Closing within seven days is not a match to start on (brief, 21 Sept
+    // 2026): the 15 Sept send offered a fund closing that day. A fund that
+    // close and already in the pipeline is in "Coming up", not here.
+    if (g.deadline && !g.is_rolling && daysUntil(String(g.deadline), now) < MATCH_MIN_DAYS) continue
     // Invite-only funds stay out of the email. Find Funding shows them with a
     // badge; the email has no badge, and "Reach Fund" as a top match for a
     // reader who cannot apply to it is a false promise (Paul, 14 Sept 2026).
@@ -596,6 +714,7 @@ export async function buildDigest(
     const fresh = !!firstSeen && (now.getTime() - firstSeen.getTime()) / 86_400_000 <= NEW_MATCH_LOOKBACK_DAYS
 
     const blurb = buildBlurb(g.funder_brief)
+    const why = whyFor(result, g, org)
 
     // New this week AND matched to them, at the same floor as the ranked list.
     // The first version ignored score and filtered on eligibility alone, on the
@@ -618,7 +737,7 @@ export async function buildDigest(
     }
 
     if (result.score >= MATCH_FLOOR) {
-      scored.push({ row: g, score: result.score, blurb, fresh })
+      scored.push({ row: g, score: result.score, blurb, fresh, why })
       continue
     }
 
@@ -666,8 +785,9 @@ export async function buildDigest(
   }
 
   scored.sort((a, b) => b.score - a.score)
-  // A blurb that is not conditional and specific does not earn a row.
-  const withBlurb = scored.filter(s => s.blurb)
+  // A row needs both: the funder's own words (blurb) and a "why it fits" line
+  // that is a complete sentence. Neither may be invented.
+  const withBlurb = scored.filter(s => s.blurb && s.why)
 
   const hasHistory = (pipeline?.length ?? 0) > 0 || (interactions?.length ?? 0) > 0
 
@@ -747,7 +867,8 @@ export async function buildDigest(
   const matchCap = hasHistory ? CAPS.newMatches : WEEK_ONE_MATCHES
   const matchesOverflow = Math.max(0, matchTotal - matchCap)
 
-  const matches: MatchRow[] = matchPool.slice(0, matchCap).map(s => toMatchRow(s.row, origin, now, s.blurb!))
+  const matches: MatchRow[] = matchPool.slice(0, matchCap).map(s =>
+    toMatchRow(s.row, origin, now, s.blurb!, { isNew: !seen.has(`new_match:${String(s.row.id)}`), why: s.why! }))
   matches.forEach(m => shown.push({ section: 'new_match', key: m.key }))
 
   const shownPool = matchPool.slice(0, matchCap)
@@ -982,8 +1103,14 @@ export async function buildDigest(
   // is the smallest honest fix; renaming their pipeline item is not ours to do.
   const finalSubject = subject.charAt(0).toUpperCase() + subject.slice(1)
 
+  const summary = summaryLine({
+    deadlines: closingShown.length,
+    notStarted: inProgressAll.length,
+    newMatches: matches.filter(m => m.isNew).length,
+  })
+
   return {
-    org, mode, subject: finalSubject, preheader, lead,
+    org, mode, subject: finalSubject, preheader, lead, summary,
     closing: closingShown, closingOverflow,
     inProgress, inProgressOverflow,
     matches, matchesOverflow, matchTotal, matchLabel, newThisWeek,

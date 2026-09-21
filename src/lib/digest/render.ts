@@ -1,5 +1,5 @@
 import { NEW_THIS_WEEK_SECTION, type DigestModel } from './build'
-import { esc, humanDayDate, plural, spell } from './text'
+import { esc, emailTitle, humanDate, humanDayDate, plural, spell } from './text'
 import { FUNDING_TYPE_COLOUR, type FundingTypeKey } from '@/lib/funding-type-colours'
 import { UI, BODY, C } from '@/lib/email/tokens'
 
@@ -106,10 +106,13 @@ function ghostButton(href: string, label: string): string {
  * version, and it is also the one that survives a client stripping colour.
  */
 function nameLink(href: string | null, text: string, size: number): string {
-  const font = `font-family:${UI};font-size:${size}px;font-weight:600;letter-spacing:-.2px;line-height:1.3;`
+  // Bold dark teal, no underline, and the catalogue's em dash shown as a
+  // colon (brief, 21 Sept 2026). The weight is the affordance now.
+  const font = `font-family:${UI};font-size:${size}px;font-weight:700;letter-spacing:-.2px;line-height:1.3;`
+  const label = esc(emailTitle(text))
   return href
-    ? `<a href="${esc(href)}" style="${font}color:${C.deep};text-decoration:underline;">${esc(text)}</a>`
-    : `<span style="${font}color:${C.deep};">${esc(text)}</span>`
+    ? `<a href="${esc(href)}" style="${font}color:${C.deep};text-decoration:none;">${label}</a>`
+    : `<span style="${font}color:${C.deep};">${label}</span>`
 }
 
 /**
@@ -179,18 +182,18 @@ function typePill(type: FundingTypeKey): string {
 
 /** Gold "New" chip, in front of the type pill on "New this week" rows only. */
 const newChip = () =>
-  `<span style="display:inline-block;padding:3px 9px;border-radius:999px;background:#EBCE78;color:${C.deep};font-family:${UI};font-size:11px;font-weight:700;letter-spacing:.3px;white-space:nowrap;">New</span>&nbsp;`
+  `<span style="display:inline-block;padding:3px 9px;border-radius:999px;background:${C.deep};color:${C.onDeep};font-family:${UI};font-size:11px;font-weight:700;letter-spacing:.3px;white-space:nowrap;">New</span>&nbsp;`
 
 /** The type pill followed by the rest of the meta line. */
 const typedMeta = (type: FundingTypeKey, t: string, isNew = false) =>
-  `<p style="margin:0 0 6px;font-family:${BODY};font-size:13px;line-height:1.9;color:${C.body};">${isNew ? newChip() : ''}${typePill(type)}${t ? `&nbsp;&nbsp;${esc(t)}` : ''}</p>`
+  `<p style="margin:0 0 6px;font-family:${BODY};font-size:13px;line-height:1.9;color:${C.body};">${typePill(type)}&nbsp;${isNew ? newChip() : ''}${t ? `&nbsp;${esc(t)}` : ''}</p>`
 
 const metaLine = (t: string) =>
   t ? `<p style="margin:0 0 6px;font-family:${BODY};font-size:13px;line-height:1.5;color:${C.body};">${esc(t)}</p>` : ''
 
 const textLink = (href: string, label: string) =>
-  `<p style="margin:0;font-family:${UI};font-size:13.5px;font-weight:600;">
-     <a href="${esc(href)}" style="color:${C.deep};text-decoration:underline;">${esc(label)}</a>
+  `<p style="margin:0;font-family:${UI};font-size:13.5px;font-weight:700;">
+     <a href="${esc(href)}" style="color:${C.deep};text-decoration:none;">${esc(label)}</a>
    </p>`
 
 export interface RenderOptions {
@@ -246,10 +249,24 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
   /* ── Lead. The label is the identity, same place every week. No hero
         headline — the subject already named the consequential item, and a
         variable hero means the email is re-learned every send. ── */
-  rows.push(`<tr><td class="gutter" style="background:${C.page};padding:30px 30px 0;">
-    ${sectionLabel(m.mode === 'week_one' ? (m.matches.length ? 'Your first matches' : 'Getting started') : 'Upcoming deadlines', 8)}
+  if (m.mode === 'week_one') {
+    rows.push(`<tr><td class="gutter" style="background:${C.page};padding:30px 30px 0;">
+    ${sectionLabel(m.matches.length ? 'Your first matches' : 'Getting started', 8)}
     <p style="margin:0 0 16px;font-family:${BODY};font-size:16px;line-height:1.55;color:${C.deep};">${esc(m.lead)}</p>
   </td></tr>`)
+  } else {
+    // The summary line (brief, 21 Sept 2026): one mint line under the header
+    // built from counts, in place of the old lead paragraph.
+    const summaryHtml = esc(m.summary).replace(/^This week:/, `<b style="font-weight:600;">This week:</b>`)
+    rows.push(`<tr><td class="gutter" style="background:${C.page};padding:6px 30px 0;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.mint};border-radius:12px;">
+      <tr><td style="padding:16px 20px;font-family:${BODY};font-size:16px;line-height:1.5;color:${C.deep};">${summaryHtml}</td></tr>
+    </table>
+  </td></tr>`)
+    if (m.closing.length) {
+      rows.push(`<tr><td class="gutter" style="background:${C.page};padding:30px 30px 0;">${sectionLabel('Coming up', 14)}</td></tr>`)
+    }
+  }
 
   /* ── The structure notice. Sole traders only: why the list is short, and
         what changes it. Under the lead so it is read before the (usually
@@ -271,11 +288,14 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
     // Meta on one line: funder, close date, the status prefix and the bold
     // status word (design review, 7 Sept). The prefix loses its own trailing
     // separator and capital so it reads as one sentence of fragments.
-    const prefix = r.statusPrefix.replace(/[\s·]+$/, '').replace(/^Added/, 'added')
-    const bits = [r.funder, `closes ${r.deadlineLabel}`, prefix].filter((x): x is string => !!x).map(esc).join(' &middot; ')
+    // Title and the close date only (brief, 21 Sept 2026): no added date, no
+    // stage label. A saved row keeps its one-line nudge, since the decision is
+    // the point of showing it.
+    const closes = `Closes ${humanDate(r.deadline)}`
+    const savedNote = r.kind === 'saved' ? ` &middot; ${esc(r.statusPrefix)}` : ''
     rows.push(tileCard(r.days, `
-      <p style="margin:0 0 4px;">${nameLink(href, r.name, 18)}</p>
-      <p style="margin:0 0 12px;font-family:${BODY};font-size:13px;line-height:1.5;color:${C.body};">${bits}${r.statusStrong ? ` &middot; <b style="color:${C.deep};">${esc(r.statusStrong)}</b>` : ''}</p>
+      <p style="margin:0 0 3px;">${nameLink(href, r.name, 16)}</p>
+      <p style="margin:0 0 14px;font-family:${BODY};font-size:14px;line-height:1.5;color:${C.body};">${closes}${savedNote}</p>
       ${button(href, r.kind === 'saved' ? 'Decide on this' : 'Open in Shoots')}
     `, i === 0))
   })
@@ -294,28 +314,21 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
     </td></tr>`)
   }
 
-  /* ── 2. Also in progress. One line each: name left, stage right. ─────── */
+  /* ── 2. In your pipeline, not started (brief, 21 Sept 2026). Identified-stage
+        rows only, name left, close date or Rolling right, no stage label.
+        No nudge line: there is no effort data to base one on, and an invented
+        one is worse than none. ─────────────────────────────────────────── */
   if (m.inProgress.length) {
-    // Paul's section mockup, 7 Sept: a hairline-ruled list, title over flag,
-    // the flag in grey with only the variable part in the danger colour. The
-    // last row carries the closing rule, whatever the row count.
     const last = m.inProgress.length - 1
-    const flag = (r: { stalled: boolean; stageLabel: string }) => {
-      const m2 = r.stalled ? r.stageLabel.match(/^(No movement (?:since|in) )(.+)$/) : null
-      return m2
-        ? `${esc(m2[1])}<span style="color:${C.danger};">${esc(m2[2])}</span>`
-        : esc(r.stageLabel)
-    }
     const lines = m.inProgress.map((r, i) => `
-        <tr><td style="border-top:1px solid ${C.rule};${i === last ? `border-bottom:1px solid ${C.rule};` : ''}padding:12px 0;">
-          <p style="margin:0 0 3px;">${nameLink(r.url, r.name, 15)}</p>
-          <p style="margin:0;font-family:${BODY};font-size:12.5px;line-height:1.5;color:${C.body};">${flag(r)}</p>
-        </td></tr>`).join('')
-    // "Also" only when something came before it.
-    rows.push(ruledSection(`${sectionLabel(m.closing.length ? 'Also in progress' : 'In progress', 10)}
+        <tr>
+          <td style="border-top:1px solid ${C.rule};${i === last ? `border-bottom:1px solid ${C.rule};` : ''}padding:13px 0;">${nameLink(r.url, r.name, 15)}</td>
+          <td align="right" valign="middle" style="border-top:1px solid ${C.rule};${i === last ? `border-bottom:1px solid ${C.rule};` : ''}padding:13px 0 13px 14px;font-family:${BODY};font-size:13px;line-height:1.5;color:${C.muted};white-space:nowrap;">${esc(r.deadlineLabel)}</td>
+        </tr>`).join('')
+    rows.push(ruledSection(`${sectionLabel('In your pipeline, not started', 10)}
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${lines}
       </table>
-      ${m.inProgressOverflow > 0 ? `<p style="margin:12px 0 0;font-family:${BODY};font-size:13px;line-height:1.6;color:${C.body};"><a href="${origin}/dashboard/pipeline" style="color:${C.deep};text-decoration:underline;">${m.inProgressOverflow} more in progress</a></p>` : ''}`))
+      <p style="margin:12px 0 0;font-family:${UI};font-size:13.5px;font-weight:700;"><a href="${origin}/dashboard/pipeline" style="color:${C.deep};text-decoration:none;">See your pipeline${m.inProgressOverflow > 0 ? ` (${m.inProgressOverflow} more)` : ''}</a></p>`))
   }
 
   /* ── New this week. Present ONLY when it has rows: an empty section that
@@ -353,7 +366,7 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
         rows.push(tileCard(r.days ?? 999, `
           <p style="margin:0 0 4px;">${nameLink(r.url, r.title, 16.5)}</p>
           ${typedMeta(r.type, r.meta)}
-          <p style="margin:0;font-family:${BODY};font-size:13.5px;line-height:1.55;color:${C.body};">${esc(r.blurb)}</p>
+          <p style="margin:0;font-family:${BODY};font-size:13.5px;line-height:1.55;color:${C.body};">${esc(r.why || r.blurb)}</p>
         `, i === 0, '#EBCE78'))
       })
       // The point of this email, as a deep card directly under the matches,
@@ -373,12 +386,17 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
         ${textLink(`${origin}/dashboard/search`, seeAll)}
       </td></tr>`)
     } else {
-      const label = m.matchLabel === 'new' ? 'New matches' : 'Matches worth a look'
-      const body = m.matches.map(r => `
-        <p style="margin:0 0 3px;">${nameLink(r.url, r.title, 16)}</p>
-        ${typedMeta(r.type, r.meta)}
-        <p style="margin:0 0 16px;font-family:${BODY};font-size:13.5px;line-height:1.55;color:${C.body};">${esc(r.blurb)}</p>`).join('')
-      rows.push(ruledSection(`${sectionLabel(label)}${body}${textLink(`${origin}/dashboard/search`, seeAll)}`))
+      // "Your matches" (brief, 21 Sept 2026): a New chip on rows first
+      // surfaced since the previous digest, and one "Why it fits" line in
+      // place of the funder description.
+      const last = m.matches.length - 1
+      const body = m.matches.map((r, i) => `
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="border-top:1px solid ${C.rule};${i === last ? `border-bottom:1px solid ${C.rule};` : ''}padding:14px 0;">
+          ${typedMeta(r.type, r.meta, r.isNew)}
+          <p style="margin:0 0 5px;">${nameLink(r.url, r.title, 16)}</p>
+          <p style="margin:0;font-family:${BODY};font-size:14px;line-height:1.55;color:${C.body};">${esc(r.why)}</p>
+        </td></tr></table>`).join('')
+      rows.push(ruledSection(`${sectionLabel('Your matches', 14)}${body}<div style="height:14px"></div>${textLink(`${origin}/dashboard/search`, seeAll)}`))
     }
   }
 
@@ -406,9 +424,9 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
     // In the profile-gap state the prompt is the only action, so it gets the
     // filled primary. Everywhere else it stays quieter than a deadline.
     rows.push(ruledSection(`
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.card};border-radius:14px;">
-        <tr><td style="padding:18px 20px;">
-          <p style="margin:0 0 6px;font-family:${UI};font-size:15.5px;font-weight:600;letter-spacing:-.2px;color:${C.deep};">${esc(m.prompt.title)}</p>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.mint};border-radius:12px;">
+        <tr><td style="padding:20px 22px;">
+          <p style="margin:0 0 6px;font-family:${UI};font-size:16px;font-weight:600;letter-spacing:-.2px;color:${C.deep};">${esc(m.prompt.title)}</p>
           <p style="margin:0 0 14px;font-family:${BODY};font-size:13.5px;line-height:1.6;color:${C.body};">${esc(m.prompt.body)}</p>
           ${profileGap ? button(m.prompt.href, m.prompt.cta) : ghostButton(m.prompt.href, m.prompt.cta)}
         </td></tr>
@@ -423,7 +441,7 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
     rows.push(ruledSection(`
       ${sectionLabel('What is waiting', 8)}
       <p style="margin:0 0 14px;font-family:${BODY};font-size:15px;line-height:1.6;color:${C.deep};">
-        <a href="${origin}/dashboard/search?entry=live" style="color:${C.deep};font-weight:600;text-decoration:underline;">${m.catalogue.live.toLocaleString()} opportunities are live</a> across grants, programmes, investment and in-kind support${freshLine}. You can search all of them now, with or without a full profile.
+        <a href="${origin}/dashboard/search?entry=live" style="color:${C.deep};font-weight:700;text-decoration:none;">${m.catalogue.live.toLocaleString()} opportunities are live</a> across grants, programmes, investment and in-kind support${freshLine}. You can search all of them now, with or without a full profile.
       </p>
       ${ghostButton(`${origin}/dashboard/search?entry=live`, 'Browse the catalogue')}`))
   }
@@ -440,11 +458,11 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
   // pills gave the prompt and this equal weight.
   if (!profileGap) {
     rows.push(`<tr><td class="gutter" style="background:${C.page};padding:26px 30px 30px;">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.cream};border-radius:14px;">
-      <tr><td style="padding:18px 20px;">
-        <p style="margin:0 0 6px;font-family:${UI};font-size:15px;font-weight:600;letter-spacing:-.2px;color:${C.deep};">Seen a funder we are missing, or something that looks wrong?</p>
-        <p style="margin:0 0 14px;font-family:${BODY};font-size:13.5px;line-height:1.6;color:${C.body};">
-          If a funder is missing, or a match does not fit, tell us. We check every suggestion and use what you flag to improve your matches.</p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.warm};border-radius:12px;">
+      <tr><td style="padding:20px 22px;">
+        <p style="margin:0 0 6px;font-family:${UI};font-size:16px;font-weight:600;letter-spacing:-.2px;color:${C.deep};">Spotted something missing or wrong?</p>
+        <p style="margin:0 0 14px;font-family:${BODY};font-size:14px;line-height:1.55;color:${C.body};">
+          Tell us. We check every suggestion and use it to improve your matches.</p>
         ${ghostButton(`${origin}/dashboard/feedback`, 'Tell us')}
       </td></tr>
     </table>
@@ -458,11 +476,11 @@ export function renderDigest(m: DigestModel, opts: RenderOptions): string {
   // count in its body, so its footer is the two links only.
   rows.push(`<tr><td class="gutter" style="padding:${profileGap ? '30px' : '22px'} 30px 0;">
     ${profileGap ? '' : `<p style="margin:0 0 10px;font-family:${BODY};font-size:12.5px;line-height:1.6;color:${C.muted};">
-      <a href="${origin}/dashboard/search?entry=live" style="color:${C.deep};font-weight:600;text-decoration:underline;">${m.catalogue.live.toLocaleString()} opportunities live</a>${m.catalogue.addedRecently >= 10 ? ` &mdash; ${m.catalogue.addedRecently} added in the last two weeks.` : '.'}
+      <a href="${origin}/dashboard/search?entry=live" style="color:${C.deep};font-weight:700;text-decoration:none;">${m.catalogue.live.toLocaleString()} opportunities live</a>${m.catalogue.addedRecently >= 10 ? ` &mdash; ${m.catalogue.addedRecently} added in the last two weeks.` : '.'}
     </p>`}
     <p style="margin:0;font-family:${BODY};font-size:12.5px;line-height:1.6;color:${C.muted};">
-      <a href="${origin}/dashboard/profile#card-alerts" style="color:${C.deep};font-weight:600;text-decoration:underline;">Email preferences</a> &nbsp;&middot;&nbsp;
-      <a href="${esc(unsubscribeUrl)}" style="color:${C.deep};font-weight:600;text-decoration:underline;">Unsubscribe</a>
+      <a href="${origin}/dashboard/profile#card-alerts" style="color:${C.deep};font-weight:700;text-decoration:none;">Email preferences</a> &nbsp;&middot;&nbsp;
+      <a href="${esc(unsubscribeUrl)}" style="color:${C.deep};font-weight:700;text-decoration:none;">Unsubscribe</a>
     </p>
   </td></tr>`)
 

@@ -30,13 +30,15 @@ export interface TypeColour {
 }
 
 export const FUNDING_TYPE_COLOUR: Record<FundingTypeKey, TypeColour> = {
-  grant:      { label: 'Grant',      rail: '#22874C', tint: '#E4F1EA', fg: '#1B6B3D' },
-  programme:  { label: 'Programme',  rail: '#94402A', tint: '#F2E8E5', fg: '#7A331F' },
-  investment: { label: 'Investment', rail: '#3C79AC', tint: '#E8EFF5', fg: '#2A5A85' },
-  in_kind:    { label: 'In-kind',    rail: '#B08A20', tint: '#F6EFD9', fg: '#7A5E11' },
+  grant:      { label: 'Grant',      rail: '#22874C', tint: '#ECF3EC', fg: '#2F5A38' },
+  programme:  { label: 'Programme',  rail: '#94402A', tint: '#F6EBE5', fg: '#9E4B2B' },
+  investment: { label: 'Investment', rail: '#3C79AC', tint: '#E6F0F2', fg: '#26525C' },
+  in_kind:    { label: 'In-kind',    rail: '#B08A20', tint: '#FAF2E0', fg: '#7A5A12' },
 }
 
 /** Neutral for the "all" scope, and for a row whose type is unknown. */
+// Tint and fg per Paul's digest revision brief, 21 Sept 2026: one mapping
+// for the email and the product. Rails unchanged.
 export const TYPE_NEUTRAL: TypeColour = { label: 'All', rail: '#1D3C3E', tint: '#F0EDE2', fg: '#1D3C3E' }
 
 export function typeColour(key: string | null | undefined): TypeColour | null {

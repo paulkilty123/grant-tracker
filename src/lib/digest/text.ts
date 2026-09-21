@@ -94,3 +94,17 @@ export function esc(s: string): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
 }
+
+/** Words up to nine, figures from 10: the summary line's rule (brief, 21 Sept 2026). */
+export function nine(n: number): string {
+  return n >= 0 && n <= 9 ? WORDS[n] : String(n)
+}
+
+/**
+ * A fund title as the email shows it: the em dash the catalogue uses between
+ * funder and programme becomes a colon. Email only; the catalogue keeps the
+ * dash (brief, 21 Sept 2026).
+ */
+export function emailTitle(title: string): string {
+  return title.replace(/\s+[\u2014\u2013]\s+/g, ': ')
+}
