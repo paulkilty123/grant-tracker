@@ -218,7 +218,7 @@ const gbp = (n: number | null) => (n === null ? '—' : `£${n.toLocaleString('e
  * Deliberately no accent colour. The accent budget on this page belongs to the
  * actions, and a panel that shouts on every row stops meaning anything.
  */
-function EvidencePanel({ evidence }: { evidence: EvidenceSummary | null }) {
+function EvidencePanel({ evidence, onUse }: { evidence: EvidenceSummary | null; onUse?: (field: string, value: unknown) => void }) {
   const display = { fontFamily: 'var(--font-space-grotesk)' }
 
   if (!evidence) {
@@ -283,8 +283,19 @@ function EvidencePanel({ evidence }: { evidence: EvidenceSummary | null }) {
             </div>
           )}
           {line.proposed !== undefined && (
-            <div style={{ fontSize: 11.5, color: 'var(--color-text-tertiary)', marginTop: 3 }}>
-              the page supports: {typeof line.proposed === 'object' ? JSON.stringify(line.proposed) : String(line.proposed)}
+            <div style={{ fontSize: 11.5, color: 'var(--color-text-tertiary)', marginTop: 3, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <span>the page supports: {typeof line.proposed === 'object' ? JSON.stringify(line.proposed) : String(line.proposed)}</span>
+              {/* The engine proposes and never writes (verify-rows reports
+                  proposals, it does not apply them), so until 21 Sept a quoted
+                  date sat here with no way to take it: Paul re-read Comic
+                  Relief, saw "closes 30 September" quoted, and the row still
+                  said nothing. One click, through the admin PATCH, pinned to
+                  the person who took it. */}
+              {onUse && (
+                <button onClick={() => onUse(line.field, line.proposed)} style={{ ...ghostBtn, fontSize: 11.5, padding: '2px 8px' }}>
+                  Use this value
+                </button>
+              )}
             </div>
           )}
           {line.sourceUrl && line.sourceUrl !== evidence.readUrl && (
@@ -1029,6 +1040,21 @@ export function ReviewQueue({ items, gateWindowStart, launch }: {
 
 
   /**
+   * Take a value the page stated and the engine proposed. Same path as
+   * `override`: the admin PATCH stamps admin:<email> and pins, because a person
+   * reading the quote and choosing it is exactly the decision pinning records.
+   */
+  const useProposed = useCallback(async (item: QueueItem, field: string, value: unknown) => {
+    setBusyId(item.id)
+    const ok = await patch(item.id, { [field]: value }, `Setting ${field} from the page`, [field])
+    setBusyId(null)
+    if (!ok) return
+    noteAction(item.id, `${field} set from the funder's page`)
+    toast.success(`${field} set to what the page states, and pinned to you.`)
+    router.refresh()
+  }, [patch, router, toast, noteAction])
+
+  /**
    * Reject — the emergency brake, so it may never fail quietly.
    *
    * Every exit from this function now says something. It used to have two
@@ -1442,6 +1468,7 @@ export function ReviewQueue({ items, gateWindowStart, launch }: {
                      onSetStructures={(next) => setStructures(item, next)}
                      onSetAmount={(min, max) => setAmount(item, min, max)}
                      onSetDeadline={(iso) => setDeadline(item, iso)}
+                     onUseProposed={(field, value) => useProposed(item, field, value)}
                      onReRead={() => reRead(item)} onReClassify={() => reClassify(item)}
                      onFixLink={() => fixLink(item)} onAddSource={() => addSource(item)} onWatch={() => watchBetweenRounds(item)}
                      rejections={refusals[item.id] ?? []}
@@ -1709,7 +1736,7 @@ function RefusalNotice({
 function Row({
   item, open, busy, busyLabel, onToggle, onPublish, onReject, onRevert, onSetFundingType,
   onReRead, onReClassify, onFixLink, onAddSource, onWatch, onSetStructures, onSetAmount,
-  onSetDeadline,
+  onSetDeadline, onUseProposed,
   rejections, onOverride, selected, onSelect,
 }: {
   item: QueueItem
@@ -1727,6 +1754,7 @@ function Row({
   onSetStructures: (next: string[]) => void
   onSetAmount: (min: number | null, max: number | null) => void
   onSetDeadline: (iso: string) => void
+  onUseProposed: (field: string, value: unknown) => void
   onReRead: () => void
   onReClassify: () => void
   onFixLink: () => void
@@ -2420,7 +2448,7 @@ function Row({
                 no brief can still have been read. */}
             <div>
               <SectionLabel>Checked against the funder page</SectionLabel>
-              <EvidencePanel evidence={item.evidence} />
+              <EvidencePanel evidence={item.evidence} onUse={onUseProposed} />
             </div>
 
             {item.brief && (
