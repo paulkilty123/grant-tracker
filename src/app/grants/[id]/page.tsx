@@ -476,6 +476,7 @@ export default async function PublicGrantPage({
   const lbl: React.CSSProperties  = { fontFamily: UI, fontWeight: 700, fontSize: 12, letterSpacing: '0.12em', textTransform: 'uppercase', color: P.label }
   const h2: React.CSSProperties   = { fontFamily: UI, fontWeight: 700, fontSize: 21, letterSpacing: '-0.01em', color: P.ink, margin: 0 }
   const primaryBtn: React.CSSProperties = { fontFamily: UI, fontWeight: 600, fontSize: 15, background: P.ink, color: '#FFFFFF', borderRadius: 999, padding: '12px 18px', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }
+  const outlineBtn: React.CSSProperties = { ...primaryBtn, background: '#FFFFFF', color: P.ink, border: '1.5px solid rgba(29,60,62,0.35)' }
   const facts: React.CSSProperties = { fontSize: 16, lineHeight: 1.6, color: P.secondary, margin: 0, whiteSpace: 'pre-line' }
 
   return (
@@ -493,7 +494,8 @@ export default async function PublicGrantPage({
             {!signedIn && (
               <Link href="/auth/login" style={{ fontFamily: UI, fontSize: 15, fontWeight: 500, color: P.secondary, textDecoration: 'none' }}>Sign in</Link>
             )}
-            <Link href={primaryHref} style={{ fontFamily: UI, fontSize: 15, fontWeight: 600, color: '#fff', background: P.ink, padding: '12px 22px', borderRadius: 999, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+            <Link href={primaryHref} style={{ fontFamily: UI, fontSize: 15, fontWeight: 600, color: '#fff', background: P.ink, padding: '12px 22px', borderRadius: 999, textDecoration: 'none', whiteSpace: 'nowrap' }}
+                  {...(signedIn ? {} : { 'data-umami-event': 'record_signup_click', 'data-umami-event-position': 'header', 'data-umami-event-grant': String(grant.id) })}>
               {/* "Your matches" on phones (v2, question 3): the full label wraps at 360px. */}
               <span className="hidden sm:inline">{signedIn ? 'Your dashboard' : 'See your funding matches'}</span>
               <span className="sm:hidden">{signedIn ? 'Dashboard' : 'Your matches'}</span>
@@ -538,7 +540,8 @@ export default async function PublicGrantPage({
             </div>
             <div>
               {applyUrl && (
-                <a href={applyUrl} target="_blank" rel="noopener noreferrer" style={primaryBtn}>
+                <a href={applyUrl} target="_blank" rel="noopener noreferrer" style={outlineBtn}
+                   data-umami-event="record_funder_click" data-umami-event-position="top" data-umami-event-grant={String(grant.id)}>
                   Funder&rsquo;s page <ExternalLink style={{ width: 16, height: 16 }} />
                 </a>
               )}
@@ -603,7 +606,8 @@ export default async function PublicGrantPage({
 
           {applyUrl && (
             <div style={{ marginTop: 32, paddingTop: 26, borderTop: `1px solid ${P.hair}` }}>
-              <a href={applyUrl} target="_blank" rel="noopener noreferrer" style={{ ...primaryBtn, display: 'inline-flex', padding: '12px 22px' }}>
+              <a href={applyUrl} target="_blank" rel="noopener noreferrer" style={{ ...primaryBtn, display: 'inline-flex', padding: '12px 22px' }}
+                 data-umami-event="record_funder_click" data-umami-event-position="bottom" data-umami-event-grant={String(grant.id)}>
                 Apply on the funder&rsquo;s website <ExternalLink style={{ width: 16, height: 16 }} />
               </a>
             </div>
@@ -620,7 +624,8 @@ export default async function PublicGrantPage({
               </p>
             </div>
             <div style={{ textAlign: 'center' }}>
-              <Link href={signupHref} style={{ fontFamily: UI, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: P.cream, color: P.ink, borderRadius: 999, padding: '13px 24px', fontWeight: 600, fontSize: 15, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+              <Link href={signupHref} style={{ fontFamily: UI, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: P.cream, color: P.ink, borderRadius: 999, padding: '13px 24px', fontWeight: 600, fontSize: 15, textDecoration: 'none', whiteSpace: 'nowrap' }}
+                    data-umami-event="record_signup_click" data-umami-event-position="band" data-umami-event-grant={String(grant.id)}>
                 See your funding matches <ArrowRight style={{ width: 16, height: 16 }} />
               </Link>
               <div style={{ marginTop: 10, fontSize: 13, color: '#A9BBB5', whiteSpace: 'nowrap' }}>{ctaSupportParts()[0]}</div>
