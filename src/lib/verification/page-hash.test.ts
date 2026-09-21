@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { pageHash, unchangedDecision } from './page-hash'
+import { pageHash, unchangedDecision, sourcesFingerprint } from './page-hash'
 
 describe('pageHash', () => {
   it('ignores whitespace differences and nothing else', () => {
@@ -37,5 +37,22 @@ describe('unchangedDecision: the only direction it may fail is an extra read', (
   })
   it('always_open rows may skip: the 180-day cadence already trusts the quote', () => {
     expect(unchangedDecision({ ...base, previousShape: 'always_open' }).skip).toBe(true)
+  })
+})
+
+describe('sourcesFingerprint — an added source page forces a read', () => {
+  it('is null with no sources, and stable across order and whitespace', () => {
+    expect(sourcesFingerprint(null)).toBeNull()
+    expect(sourcesFingerprint([])).toBeNull()
+    expect(sourcesFingerprint([{ url: '', label: 'blank' }])).toBeNull()
+    const a = sourcesFingerprint([{ url: 'https://x.org/faq/' }, { url: ' https://x.org/about/ ' }])
+    const b = sourcesFingerprint([{ url: 'https://x.org/about/' }, { url: 'https://x.org/faq/' }])
+    expect(a).toBe(b)
+  })
+  it('changes when a source is added (Britford, 21 Sept)', () => {
+    const before = sourcesFingerprint([])
+    const after  = sourcesFingerprint([{ url: 'https://thebritfordbridgetrust.org/faq/', text: '', label: '' }])
+    expect(after).not.toBe(before)
+    expect(unchangedDecision({ previousHash: 'h', currentHash: 'h', previousShape: 'silent', previousPassed: true, flagged: after !== before }).skip).toBe(false)
   })
 })

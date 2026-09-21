@@ -15,6 +15,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { deriveEquivalentStructures } from '@/lib/structure-equivalents'
+import { nextCycleDeadline, type CycleEntry } from '@/lib/deadline-cycle'
 
 // ── Tracked fields ────────────────────────────────────────────────────────────
 
@@ -278,6 +279,25 @@ export function isCycleRoll(
   return cycle.some(c => c && typeof c === 'object' && Number((c as { month?: unknown }).month) === month && Number((c as { day?: unknown }).day) === day)
 }
 
+/**
+ * The first closing date a cycle implies for a row that shows none.
+ *
+ * Null when the row already has a deadline, is rolling, the cycle is empty, or
+ * no entry is a closing date (openings and after-the-fact labels are not; see
+ * deadline-cycle.ts). The caller runs the result through the ordinary ladder.
+ */
+export function firstDeadlineFromCycle(input: {
+  cycle: unknown
+  deadline: unknown
+  isRolling: unknown
+  todayISO: string
+}): string | null {
+  if (input.deadline !== null && input.deadline !== undefined) return null
+  if (input.isRolling === true) return null
+  if (!Array.isArray(input.cycle) || input.cycle.length === 0) return null
+  return nextCycleDeadline(input.cycle as CycleEntry[], input.todayISO)
+}
+
 export function mergeFieldUpdate(
   currentValue: unknown,
   currentProv: ProvenanceEntry | undefined,
@@ -537,10 +557,15 @@ export async function mergeGrantUpdate(opts: MergeGrantOptions): Promise<MergeGr
   // deadline_cycle is pulled when deadline is written so the cycle-roll rule
   // (isCycleRoll) can see it; it is not part of the write.
   const needsCycle  = trackedCols.includes('deadline')
+  // deadline and is_rolling are pulled when the cycle is written so the
+  // first-date rule (firstDeadlineFromCycle) can see whether the row has a
+  // closing date to show.
+  const needsFirst  = trackedCols.includes('deadline_cycle')
   const selectCols  = Array.from(new Set([
     ...trackedCols, 'field_provenance', 'pipeline_state',
     ...(needsGeo ? ['location_tag', 'funder_brief'] : []),
     ...(needsCycle ? ['deadline_cycle'] : []),
+    ...(needsFirst ? ['deadline', 'is_rolling'] : []),
   ])).join(', ')
   const { data: current, error: fetchErr } = await db
     .from('scraped_grants')
@@ -637,6 +662,35 @@ export async function mergeGrantUpdate(opts: MergeGrantOptions): Promise<MergeGr
 
   // Auto-transition pipeline_state. Skip if the caller passed an explicit
   // pipeline_state (escape hatch for admin overrides via SQL or ops scripts).
+  // A CYCLE WITHOUT A FIRST DATE IS A CLOSING DATE NOBODY SEES.
+  //
+  // Found 2026-09-21 on Britford Bridge: the FAQ gave four quarterly cut-offs,
+  // the cycle landed, and the card still said "deadline not recorded" because
+  // expire-grants only rolls a deadline that has PASSED, and a null one never
+  // passes. 100 rows were in that shape that morning, 40 of them live. So the
+  // write that lands a cycle also lands the next date on it, through the same
+  // ladder as any deadline write, so a pin still holds.
+  if (applied.includes('deadline_cycle')) {
+    const cycleProv = nextProv.deadline_cycle
+    const next = firstDeadlineFromCycle({
+      cycle:     valuesToWrite.deadline_cycle,
+      deadline:  'deadline'   in valuesToWrite ? valuesToWrite.deadline   : currentRow.deadline,
+      isRolling: 'is_rolling' in valuesToWrite ? valuesToWrite.is_rolling : currentRow.is_rolling,
+      todayISO:  now.slice(0, 10),
+    })
+    if (next && cycleProv) {
+      const d = mergeFieldUpdate(currentRow.deadline, currentProv.deadline, next, cycleProv, 'deadline', { deadlineCycle: valuesToWrite.deadline_cycle })
+      if (d.write) { valuesToWrite.deadline = d.value; nextProv.deadline = d.prov; applied.push('deadline') }
+      else {
+        const holder = d.reason === 'idempotent' ? undefined : currentProv.deadline
+        rejected.push({
+          field: 'deadline', reason: d.reason, attempted: next, attemptedTrust: trustOf(source),
+          ...(holder ? { blockedBy: { source: holder.source, set_at: holder.set_at, pinned: holder.pinned, trust: trustOf(holder.source, holder.backfilled) } } : {}),
+        })
+      }
+    }
+  }
+
   const currentState = readPipelineState(currentRow)
   let nextState: PipelineState | null = null
   if (!('pipeline_state' in fields)) {

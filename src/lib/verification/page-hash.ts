@@ -24,6 +24,25 @@ export function pageHash(text: string): string {
   return createHash('sha256').update(normalised).digest('hex')
 }
 
+/**
+ * A fingerprint of the row's banked source pages (grant_sources), by URL.
+ *
+ * Found 2026-09-21 on Britford Bridge: Paul added the FAQ page as a source,
+ * pressed re-read, and the engine skipped the model because the MAIN page had
+ * not changed. The source was never read. The stamp now carries this alongside
+ * page_hash, and a difference forces a full read.
+ */
+export function sourcesFingerprint(sources: unknown): string | null {
+  if (!Array.isArray(sources)) return null
+  const urls = sources
+    .map(s => (s && typeof s === 'object' ? (s as { url?: unknown }).url : null))
+    .filter((u): u is string => typeof u === 'string' && u.trim().length > 0)
+    .map(u => u.trim())
+    .sort()
+  if (urls.length === 0) return null
+  return createHash('sha256').update(urls.join('\n')).digest('hex')
+}
+
 export type UnchangedInput = {
   /** Hash stored on the row's last `_page_read` stamp, if any. */
   previousHash:  string | null | undefined

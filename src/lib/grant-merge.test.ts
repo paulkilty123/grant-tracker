@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
+  firstDeadlineFromCycle,
   mergeFieldUpdate,
   isCycleRoll,
   trustOf,
@@ -293,5 +294,25 @@ describe('expire-grants cycle roll over a higher-trust deadline', () => {
     expect(isCycleRoll('amount_max', '2026-09-15', '2026-12-15', cron, cycle)).toBe(false)
     // Without the ctx the old behaviour holds exactly.
     expect(mergeFieldUpdate('2026-09-15', held, '2026-12-15', cron, 'deadline')).toEqual({ write: false, reason: 'lower_trust' })
+  })
+})
+
+describe('firstDeadlineFromCycle — a cycle without a first date is a closing date nobody sees', () => {
+  const cycle = [{ day: 30, month: 3 }, { day: 30, month: 6 }, { day: 30, month: 9 }, { day: 31, month: 12 }]
+  it('gives the next cut-off when the row has no deadline and is not rolling (Britford, 21 Sept)', () => {
+    expect(firstDeadlineFromCycle({ cycle, deadline: null, isRolling: false, todayISO: '2026-09-21' })).toBe('2026-09-30')
+  })
+  it('rolls past a cut-off that is today or gone', () => {
+    expect(firstDeadlineFromCycle({ cycle, deadline: null, isRolling: false, todayISO: '2026-09-30' })).toBe('2026-12-31')
+  })
+  it('leaves a row alone when it already shows a date', () => {
+    expect(firstDeadlineFromCycle({ cycle, deadline: '2026-11-01', isRolling: false, todayISO: '2026-09-21' })).toBeNull()
+  })
+  it('leaves a rolling row alone', () => {
+    expect(firstDeadlineFromCycle({ cycle, deadline: null, isRolling: true, todayISO: '2026-09-21' })).toBeNull()
+  })
+  it('gives nothing for an empty cycle or one with no closing dates', () => {
+    expect(firstDeadlineFromCycle({ cycle: [], deadline: null, isRolling: false, todayISO: '2026-09-21' })).toBeNull()
+    expect(firstDeadlineFromCycle({ cycle: [{ month: 4, label: 'Trustees meet in April' }], deadline: null, isRolling: false, todayISO: '2026-09-21' })).toBeNull()
   })
 })

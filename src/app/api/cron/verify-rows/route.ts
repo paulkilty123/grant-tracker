@@ -55,6 +55,7 @@
 // clock rather than on a count, and `stoppedEarly` plus `remaining` are always
 // reported. A run that ran out of time says so.
 
+import { sourcesFingerprint } from '@/lib/verification/page-hash'
 import { NextRequest, NextResponse } from 'next/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { getAdminDb } from '@/lib/admin/admin-db'
@@ -175,6 +176,8 @@ const SELECT_COLS = 'id, title, funder, funding_type, apply_url, deadline, deadl
 type CadenceCols = {
   next_open_date: string | null
   field_evidence: Record<string, unknown> | null
+  /** Banked source pages. A change here forces a full read: see sourcesFingerprint. */
+  grant_sources?: unknown
   /** Set by an outside signal (watchlist, admin). A flagged row is always read
    *  in full: the unchanged-page skip does not apply. */
   verify_flag?:   string | null
@@ -187,13 +190,17 @@ type CadenceCols = {
  */
 function lastRead(row: CadenceCols): { previousHash: string | null; previousShape: string | null; previousPassed: boolean; flagged: boolean } {
   const stamp = (row.field_evidence?.[PAGE_READ_KEY] ?? null) as
-    { page_hash?: unknown; cadence_shape?: unknown; note?: unknown } | null
+    { page_hash?: unknown; sources_hash?: unknown; cadence_shape?: unknown; note?: unknown } | null
   const note = typeof stamp?.note === 'string' ? stamp.note : ''
+  // A source page added since the last read is a change to what the engine
+  // should read, whatever the main page's bytes did (Britford, 21 Sept).
+  const sourcesNow  = sourcesFingerprint(row.grant_sources)
+  const sourcesThen = typeof stamp?.sources_hash === 'string' ? stamp.sources_hash : null
   return {
     previousHash:   typeof stamp?.page_hash === 'string' ? stamp.page_hash : null,
     previousShape:  typeof stamp?.cadence_shape === 'string' ? stamp.cadence_shape : null,
     previousPassed: note.length > 0 && !note.includes(':'),
-    flagged:        !!row.verify_flag,
+    flagged:        !!row.verify_flag || sourcesNow !== sourcesThen,
   }
 }
 
@@ -465,6 +472,7 @@ export async function GET(req: NextRequest) {
           silent_streak: cadence.silentStreak,
           hops: result.notes,
           ...(result.pageHash ? { page_hash: result.pageHash } : {}),
+          ...(sourcesFingerprint(row.grant_sources) ? { sources_hash: sourcesFingerprint(row.grant_sources) as string } : {}),
           cadence_shape: cadence.shape,
         },
       ], { by: VERIFIER, checkedAt })

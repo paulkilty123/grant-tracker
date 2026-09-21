@@ -307,6 +307,9 @@ export type EvidenceInput = {
    *  next read compares against it and skips the model when nothing moved.
    *  Added 2026-09-11; see verification/page-hash.ts. */
   page_hash?: string
+  /** Fingerprint of grant_sources at this read, so adding a source page forces
+   *  the next read even when the main page is unchanged. Page-read stamp only. */
+  sources_hash?: string
   /** The cadence shape this read decided (dated, always_open, silent), so the
    *  next read knows whether it is at a dated checkpoint. Page-read stamp only. */
   cadence_shape?: string
@@ -359,6 +362,7 @@ export function buildEvidencePatch(
       ...(typeof input.silent_streak === 'number' ? { silent_streak: input.silent_streak } : {}),
       ...(Array.isArray(input.hops) && input.hops.length > 0 ? { hops: input.hops } : {}),
       ...(typeof input.page_hash === 'string' ? { page_hash: input.page_hash } : {}),
+      ...(typeof input.sources_hash === 'string' ? { sources_hash: input.sources_hash } : {}),
       ...(typeof input.cadence_shape === 'string' ? { cadence_shape: input.cadence_shape } : {}),
     }
   }
