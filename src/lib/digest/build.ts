@@ -385,7 +385,9 @@ export function whyItFits(f: {
   let what: string | null = null
   if (f.whatTheyFund) {
     const clean = f.whatTheyFund.replace(/\s+/g, ' ').trim()
-    const m = clean.match(/^(.{20,170}?[.!?])(\s|$)/)
+    // 220, not 170: Henry Smith's and Champions for Children's first sentences
+    // run to 172 and 175 and were dropped, leaving the fit half alone.
+    const m = clean.match(/^(.{20,220}?[.!?])(\s|$)/)
     if (m) what = m[1]
   }
   const fit = sector
