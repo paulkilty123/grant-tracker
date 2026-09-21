@@ -1,4 +1,5 @@
 import type { GrantOpportunity, Organisation, LegalStructure, BeneficiaryGroup } from '@/types'
+import { placeParents } from './place-parents'
 import { INDIVIDUAL_APPLICANT_STRUCTURES } from './structures'
 import { runEligibilityChecks } from './eligibility'
 import type { EligibilityStatus as EligibilityStatusFromEngine, EligibilityIssue } from './eligibility'
@@ -1019,7 +1020,11 @@ export function computeMatchScore(
     const city    = org.primary_location.split(',')[0].trim().toLowerCase()
     const region  = org.primary_location.split(',')[1]?.trim().toLowerCase() ?? ''
     const country = org.primary_location.split(',').pop()?.trim().toLowerCase() ?? ''
-    const orgLocationFull = [city, region, country].filter(Boolean).join(' ')
+    // The areas the typed place sits inside (Brixton -> Lambeth, London;
+    // Ratcliffe-on-Soar -> Rushcliffe, Nottinghamshire). Appended so a fund
+    // tagged with the borough or district meets an org that typed the place.
+    const parents = placeParents(city)
+    const orgLocationFull = [city, ...parents, region, country].filter(Boolean).join(' ')
     const orgInScotland = orgLocationFull.includes('scotland')
     const orgInWales    = orgLocationFull.includes('wales')
     const orgInNI       = orgLocationFull.includes('northern ireland')
@@ -1068,7 +1073,7 @@ export function computeMatchScore(
           const mentionedBoroughs = LONDON_BOROUGHS.filter(b => grantText.includes(b))
           if (mentionedBoroughs.length > 0) {
             const orgBoroughMentioned = city !== 'london' && mentionedBoroughs.some(
-              b => b === city || b.includes(city) || city.includes(b)
+              b => b === city || b.includes(city) || city.includes(b) || parents.includes(b)
             )
             if (!orgBoroughMentioned) {
               locationScore = 8
@@ -1088,7 +1093,7 @@ export function computeMatchScore(
       // ── Fallback path: location_tag is null/unknown ──────────────────────
       // Use the legacy is_local boolean + title-regex scanning, same as before.
       if (grant.isLocal) {
-        const cityMatch    = !!(city   && grantText.includes(city))
+        const cityMatch    = !!(city   && grantText.includes(city)) || parents.some(p => grantText.includes(p))
         const regionMatch  = !!(region && grantText.includes(region))
         const countryMatch = !!(country && ['scotland', 'wales', 'northern ireland'].includes(country) && grantText.includes(country))
         const locationMatch = cityMatch || regionMatch || countryMatch
@@ -1100,7 +1105,7 @@ export function computeMatchScore(
             const mentionedBoroughs = LONDON_BOROUGHS.filter(b => grantText.includes(b))
             if (mentionedBoroughs.length > 0) {
               const orgBoroughMentioned = city !== 'london' && mentionedBoroughs.some(
-                b => b === city || b.includes(city) || city.includes(b)
+                b => b === city || b.includes(city) || city.includes(b) || parents.includes(b)
               )
               if (!orgBoroughMentioned) {
                 locationScore = 8
@@ -1865,7 +1870,7 @@ export function computeMatchScore(
       const orgRegion = org.primary_location.split(',')[1]?.trim().toLowerCase() ?? ''
       const country = org.primary_location.split(',').pop()?.trim().toLowerCase() ?? ''
 
-      if (city && eligibilityText.includes(city)) {
+      if (city && (eligibilityText.includes(city) || placeParents(city).some(p => eligibilityText.includes(p)))) {
         eligibilityScore = Math.min(15, eligibilityScore + 2)
         reasons.push('Your location meets eligibility')
       }
