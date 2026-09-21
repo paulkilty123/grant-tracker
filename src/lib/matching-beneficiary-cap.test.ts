@@ -72,8 +72,9 @@ describe('primary beneficiary gate', () => {
     // A five-group fund sharing nothing with the org: goes.
     expect(beneficiaryPrimaryGate(['children', 'young_people', 'carers', 'lgbtq', 'homeless'], ['women_girls', 'families'], 'grant').capped).toBe(true)
   })
-  it('never fires on org-centred types, on a general-public organisation, or when either side is untagged', () => {
-    expect(beneficiaryPrimaryGate(['veterans'], ['women_girls'], 'programme').capped).toBe(false)
+  it('fires on a programme for one group (Barclays veteran founders, 21 Sept 2026), never on investment or in-kind, nor on a general-public organisation or an untagged side', () => {
+    expect(beneficiaryPrimaryGate(['veterans'], ['young_people', 'people_in_poverty'], 'programme').capped).toBe(true)
+    expect(beneficiaryPrimaryGate(['veterans'], ['women_girls'], 'investment').capped).toBe(false)
     expect(beneficiaryPrimaryGate(['veterans'], ['women_girls'], 'in_kind').capped).toBe(false)
     expect(beneficiaryPrimaryGate(['veterans'], ['general_public', 'women_girls'], 'grant').capped).toBe(false)
     expect(beneficiaryPrimaryGate([], ['women_girls'], 'grant').capped).toBe(false)

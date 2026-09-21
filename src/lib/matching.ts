@@ -837,7 +837,12 @@ export function beneficiaryPrimaryGate(
   orgGroups: readonly string[] | null | undefined,
   fundingType: string | null | undefined,
 ): { capped: boolean; primary: string | null } {
-  if (fundingType && fundingType !== 'grant') return { capped: false, primary: null }
+  // Grants and programmes. A programme for veteran founders is as closed to a
+  // youth employment CIC as a veterans' grant is (The Apex Project, 21 Sept
+  // 2026: Barclays' veteran and military spousal founders programme at 71).
+  // Investment and in-kind stay out: they describe who the offer is about,
+  // not who is barred (see unrestrictedInKind).
+  if (fundingType && fundingType !== 'grant' && fundingType !== 'programme') return { capped: false, primary: null }
   const g = (grantGroups ?? []).filter(Boolean)
   const o = (orgGroups ?? []).filter(Boolean)
   if (!g.length || !o.length) return { capped: false, primary: null }
