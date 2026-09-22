@@ -15,9 +15,10 @@ import { getOrganisationByOwner } from '@/lib/organisations'
 import { setDismissSnooze, removeInteraction } from '@/lib/interactions'
 import { emitClientEvent } from '@/lib/events/client'
 import { track } from '@/lib/analytics'
+import { pipelineCsv } from './pipeline-csv'
 import { PIPELINE_STAGES, formatDeadline, formatRange, formatCurrency, cn } from '@/lib/utils'
 import type { PipelineItem, PipelineStage, Organisation } from '@/types'
-import { Sparkles, Loader2, Link, Calendar, AlarmClock, X as XIcon, GripVertical, StickyNote, User as UserIcon, BarChart3, Star } from 'lucide-react'
+import { Sparkles, Loader2, Link, Calendar, AlarmClock, X as XIcon, GripVertical, StickyNote, User as UserIcon, BarChart3, Star, Download } from 'lucide-react'
 import { PipelineModal, STAGE_ICONS, getWritingStage } from '@/components/PipelineModal'
 import { DECLINE_REASONS, declineReasonLabel } from '@/lib/outcomes'
 
@@ -928,6 +929,26 @@ export default function PipelinePage() {
               </div>
             ) : null
           })()}
+          {items.length > 0 && (
+            <button
+              onClick={() => {
+                const csv = pipelineCsv(items)
+                const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }))
+                const a = document.createElement('a')
+                a.href = url
+                a.download = `shoots-pipeline-${new Date().toISOString().slice(0, 10)}.csv`
+                document.body.appendChild(a); a.click(); a.remove()
+                URL.revokeObjectURL(url)
+                track('pipeline_export_csv', { rows: items.length })
+              }}
+              className="flex items-center gap-1.5 px-5 py-2.5 border text-sm font-semibold transition-colors whitespace-nowrap"
+              style={{ background: '#fff', color: '#1D3C3E', borderColor: 'rgba(29,60,62,0.24)', borderWidth: 1.5, borderRadius: 999 }}
+              title="Download your pipeline as a spreadsheet"
+            >
+              <Download size={14} strokeWidth={2} />
+              Download
+            </button>
+          )}
           {items.some(i => i.starred) && (
             <button
               onClick={() => setShowStarredOnly(v => !v)}

@@ -1475,7 +1475,10 @@ export default function SearchPage() {
   const [entryTypeFilter, setEntryTypeFilter]     = useState<'all' | 'live' | 'funders'>(
     initEntryType === 'live' || initEntryType === 'funders' ? initEntryType : 'all',
   )
-  const [showInviteOnly, setShowInviteOnly]       = useState(true)
+  // Hidden by default (Paul, 22 Sept 2026): 16 live rows, and the "Invite
+  // only" badge was missed by a trial user who reported one as open. The
+  // filter still lets them in on request.
+  const [showInviteOnly, setShowInviteOnly]       = useState(false)
   const [expandedGroups, setExpandedGroups]       = useState<Set<string>>(new Set())
   const [activeFunderCategory, setActiveFunderCategory] = useState<string>('all')
   const [activeGeoScope, setActiveGeoScope]             = useState<string>('all')
@@ -1959,14 +1962,20 @@ export default function SearchPage() {
    *  the pipeline_items.notes field. Devi #5. */
   async function handleMarkApplied(
     grant:    GrantOpportunity,
-    outcome:  'pending' | 'won' | 'declined',
+    outcome:  'pending' | 'won' | 'declined' | 'current_funder',
     reasons?: { tags: string[]; freeText: string },
   ) {
     if (!org) { showToast('Complete your profile first to mark grants'); return }
     if (!guardApplyAccess()) return
     try {
-      const stage = outcome === 'pending' ? 'submitted' : outcome
-      const notesText = reasons && (reasons.tags.length > 0 || reasons.freeText.trim().length > 0)
+      // "They already fund us" (Ruth Davey, Unicorn Theatre, 21 Sept 2026): a
+      // current funder is a relationship to renew, not a match to chase. Filed
+      // as a won pipeline row with a note, and the applied interaction takes
+      // it out of the matches like any other outcome.
+      const stage = outcome === 'pending' ? 'submitted' : outcome === 'current_funder' ? 'won' : outcome
+      const notesText = outcome === 'current_funder'
+        ? 'Current funder: they already fund us.'
+        : reasons && (reasons.tags.length > 0 || reasons.freeText.trim().length > 0)
         ? [
             reasons.tags.length > 0 ? `Decline reasons: ${reasons.tags.join(', ')}` : '',
             reasons.freeText.trim(),
@@ -1988,7 +1997,7 @@ export default function SearchPage() {
         contact_name:         null,
         contact_email:        null,
         grant_url:            grant.applyUrl ?? null,
-        outcome_date:         outcome === 'pending' ? null : new Date().toISOString().slice(0, 10),
+        outcome_date:         outcome === 'pending' || outcome === 'current_funder' ? null : new Date().toISOString().slice(0, 10),
         outcome_notes:        null,
         created_by:           userId,
       })
@@ -2001,8 +2010,9 @@ export default function SearchPage() {
         return next
       })
       showToast(
-        outcome === 'declined' ? 'Recorded — won\'t show again' :
-        outcome === 'won'      ? 'Nice. Logged as a win.' :
+        outcome === 'declined'       ? 'Recorded — won\'t show again' :
+        outcome === 'won'            ? 'Nice. Logged as a win.' :
+        outcome === 'current_funder' ? 'Filed as a current funder' :
         'Marked as already applied',
       )
     } catch (e) {
@@ -2520,7 +2530,7 @@ export default function SearchPage() {
     activeSectors.size > 0,
     entryTypeFilter !== 'all',
     freshnessFilter !== 'all',
-    !showInviteOnly,
+    showInviteOnly,
     sortBy !== 'match',
     activeFunderCategory !== 'all',
     activeGeoScope !== 'all',
@@ -2540,7 +2550,7 @@ export default function SearchPage() {
     setSortBy('match')
     setEntryTypeFilter('all')
     setFreshnessFilter('all')
-    setShowInviteOnly(true)
+    setShowInviteOnly(false)
     setCategoryFilter('all')
     setActiveFunderCategory('all')
     setActiveGeoScope('all')
@@ -3434,7 +3444,7 @@ export default function SearchPage() {
             const nonSortFilterCount = [
               !!amountMin, !!amountMax, deadlineFilter !== 'all',
               activeSectors.size > 0, entryTypeFilter !== 'all',
-              freshnessFilter !== 'all', !showInviteOnly,
+              freshnessFilter !== 'all', showInviteOnly,
               activeFunderCategory !== 'all', activeGeoScope !== 'all', !!locationFilter,
             ].filter(Boolean).length
 
@@ -3877,6 +3887,13 @@ export default function SearchPage() {
                     >
                       <strong>Won</strong>
                       <div style={{ fontSize: 12, color: '#1B6B3D', marginTop: 2 }}>Funded, congratulations</div>
+                    </button>
+                    <button
+                      onClick={async () => { await handleMarkApplied(grant, 'current_funder'); close() }}
+                      style={{ textAlign: 'left', padding: '12px 16px', borderRadius: 10, border: '1px solid rgba(0,0,0,0.12)', background: '#fff', cursor: 'pointer', fontSize: 14, fontFamily: 'var(--font-dm-sans)', color: '#2C2C2A' }}
+                    >
+                      <strong>They already fund us</strong>
+                      <div style={{ fontSize: 12, color: '#5F5E5A', marginTop: 2 }}>A current funder, filed to your pipeline as won</div>
                     </button>
                     <button
                       onClick={() => setAppliedFlow(prev => prev ? { ...prev, step: 'declined-reasons' } : prev)}
