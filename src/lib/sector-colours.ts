@@ -50,6 +50,9 @@ export const SECTOR_FAMILY: Record<string, SectorFamily> = {
 
 /** Neutral chip, for anything that is not an impact area. */
 export const TAG_NEUTRAL = { bg: '#F1EDE3', color: '#5F5E5A' }
+/** The same chip on a white ground (public record page, 21 Sept 2026): the warm
+ *  cream reads as a stain on white, so a cool neutral instead. */
+export const TAG_NEUTRAL_COOL = { bg: '#EEF2F0', color: '#3F5B4E' }
 
 export function sectorColour(sector: string): { bg: string; color: string } {
   const family = SECTOR_FAMILY[sector]
