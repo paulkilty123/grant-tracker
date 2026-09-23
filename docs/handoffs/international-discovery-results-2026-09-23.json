@@ -1,0 +1,573 @@
+{
+ "brief": "docs/handoffs/international-discovery-2026-09-23.md",
+ "commissioned_by": "Paul Kilty, 23 September 2026 (\"run the brief\"), after Julia Krepska of Our Sansar reported UK-only results",
+ "run_by": "orchestrated session, branch discovery/international-2026-09-23",
+ "run_date": "2026-09-23",
+ "source": "system:international-discovery-2026-09-23",
+ "staging_script": "scripts/international-discovery-stage-2026-09-23.ts",
+ "budget": "No Anthropic API call was made from this session. Every page was read by direct curl; the keyless reader proxy (r.jina.ai) refused anonymous queries from this network with a 401, so it was not used. Pages that a direct fetch could not reach are listed as bot walls for Paul's browser.",
+ "dedup": "Full read of scraped_grants (2,169 rows, count asserted equal before any comparison), matched on funder name and on normalised apply URL.",
+ "orgs_scored": {
+  "Our Sansar": "9e7c5a10-de40-4686-99f4-048572126a68",
+  "Tibet Watch": "def55d00-7f58-40dd-a4c8-eb5ef72c6306",
+  "Oxfam GB": "ffd69c5a-5425-41be-af94-736644f720a3"
+ },
+ "totals": {
+  "looked_at": 62,
+  "staged": 10,
+  "not_staged": 52,
+  "reaches_at_55": {
+   "Our Sansar": 10,
+   "Tibet Watch": 1,
+   "Oxfam GB": 6
+  }
+ },
+ "note_on_tibet_watch": "Nine of the ten staged rows sit at exactly 49 for Tibet Watch. That is the beneficiary primary gate doing its job: the rows are for children, women and girls or people in poverty, and Tibet Watch's beneficiary groups are ethnic minorities and refugees and migrants. The one row that clears, Oak's International Human Rights Programme at 87, is the one aimed at their work.",
+ "staged": [
+  {
+   "funder": "The Waterloo Foundation",
+   "title": "Waterloo Foundation — World Development: Education Small Grants",
+   "id": "e598ae52-73d8-44d7-a225-a9e7ad759f58",
+   "apply_url": "https://waterloofoundation.org.uk/worlddevelopmentapplicationseducationsmall/",
+   "outcome": "staged",
+   "pipeline_state": "tagged_awaiting_review",
+   "is_active": false,
+   "invite_only": false,
+   "page_read": "direct curl fetch, 200",
+   "scores": {
+    "Our Sansar": 94,
+    "Tibet Watch": 49,
+    "Oxfam GB": 60
+   },
+   "reaches_at_55": [
+    "Our Sansar",
+    "Oxfam GB"
+   ]
+  },
+  {
+   "funder": "The Waterloo Foundation",
+   "title": "Waterloo Foundation — World Development: WASH Small Grants",
+   "id": "4d9ec31e-387e-4530-aab4-c9b4fb71fa1b",
+   "apply_url": "https://waterloofoundation.org.uk/worlddevelopmentapplicationswashsmall/",
+   "outcome": "staged",
+   "pipeline_state": "tagged_awaiting_review",
+   "is_active": false,
+   "invite_only": false,
+   "page_read": "direct curl fetch, 200",
+   "scores": {
+    "Our Sansar": 90,
+    "Tibet Watch": 49,
+    "Oxfam GB": 60
+   },
+   "reaches_at_55": [
+    "Our Sansar",
+    "Oxfam GB"
+   ]
+  },
+  {
+   "funder": "The Waterloo Foundation",
+   "title": "Waterloo Foundation — World Development: Nutrition Small Grants",
+   "id": "8a2a0005-b3a4-4848-b242-69fbf2d65055",
+   "apply_url": "https://waterloofoundation.org.uk/worlddevelopmentapplicationsnutritionsmall/",
+   "outcome": "staged",
+   "pipeline_state": "tagged_awaiting_review",
+   "is_active": false,
+   "invite_only": false,
+   "page_read": "direct curl fetch, 200",
+   "scores": {
+    "Our Sansar": 86,
+    "Tibet Watch": 49,
+    "Oxfam GB": 62
+   },
+   "reaches_at_55": [
+    "Our Sansar",
+    "Oxfam GB"
+   ]
+  },
+  {
+   "funder": "The Waterloo Foundation",
+   "title": "Waterloo Foundation — World Development: Sexual and Reproductive Health Small Grants",
+   "id": "9f35471f-f44a-4d82-b358-36513bdb95a2",
+   "apply_url": "https://waterloofoundation.org.uk/worlddevelopmentapplicationssrhsmall/",
+   "outcome": "staged",
+   "pipeline_state": "tagged_awaiting_review",
+   "is_active": false,
+   "invite_only": false,
+   "page_read": "direct curl fetch, 200",
+   "scores": {
+    "Our Sansar": 92,
+    "Tibet Watch": 49,
+    "Oxfam GB": 49
+   },
+   "reaches_at_55": [
+    "Our Sansar"
+   ]
+  },
+  {
+   "funder": "The Waterloo Foundation",
+   "title": "Waterloo Foundation — World Development: Sexual and Reproductive Health Main Grants",
+   "id": "e65626f1-ff90-48ae-a008-a4629ace3574",
+   "apply_url": "https://waterloofoundation.org.uk/worlddevelopmentapplicationssrhmain/",
+   "outcome": "staged",
+   "pipeline_state": "tagged_awaiting_review",
+   "is_active": false,
+   "invite_only": false,
+   "page_read": "direct curl fetch, 200",
+   "scores": {
+    "Our Sansar": 92,
+    "Tibet Watch": 49,
+    "Oxfam GB": 49
+   },
+   "reaches_at_55": [
+    "Our Sansar"
+   ]
+  },
+  {
+   "funder": "Oak Foundation",
+   "title": "Oak Foundation — Prevent Child Sexual Abuse Programme",
+   "id": "49f82371-8b05-4b86-a361-cf3d9fbff207",
+   "apply_url": "https://oakfnd.org/programmes/prevent-child-sexual-abuse/",
+   "outcome": "staged",
+   "pipeline_state": "tagged_awaiting_review",
+   "is_active": false,
+   "invite_only": false,
+   "page_read": "direct curl fetch, 200",
+   "scores": {
+    "Our Sansar": 85,
+    "Tibet Watch": 49,
+    "Oxfam GB": 68
+   },
+   "reaches_at_55": [
+    "Our Sansar",
+    "Oxfam GB"
+   ]
+  },
+  {
+   "funder": "Oak Foundation",
+   "title": "Oak Foundation — International Human Rights Programme",
+   "id": "0077be08-a421-4fe9-83ed-ff1f8619308d",
+   "apply_url": "https://oakfnd.org/programmes/international-human-rights/",
+   "outcome": "staged",
+   "pipeline_state": "tagged_awaiting_review",
+   "is_active": false,
+   "invite_only": false,
+   "page_read": "direct curl fetch, 200",
+   "scores": {
+    "Our Sansar": 79,
+    "Tibet Watch": 87,
+    "Oxfam GB": 66
+   },
+   "reaches_at_55": [
+    "Our Sansar",
+    "Tibet Watch",
+    "Oxfam GB"
+   ]
+  },
+  {
+   "funder": "Oak Foundation",
+   "title": "Oak Foundation — Issues Affecting Women Programme",
+   "id": "333a035c-e40e-4479-adcd-d8ad4272ebc9",
+   "apply_url": "https://oakfnd.org/programmes/issues-affecting-women/",
+   "outcome": "staged",
+   "pipeline_state": "tagged_awaiting_review",
+   "is_active": false,
+   "invite_only": false,
+   "page_read": "direct curl fetch, 200",
+   "scores": {
+    "Our Sansar": 86,
+    "Tibet Watch": 49,
+    "Oxfam GB": 49
+   },
+   "reaches_at_55": [
+    "Our Sansar"
+   ]
+  },
+  {
+   "funder": "Help for Nepal",
+   "title": "Help for Nepal — Grants for charitable projects in Nepal",
+   "id": "7f50d00d-94e9-4129-ad27-c963573edf65",
+   "apply_url": "https://www.help4nepal.org.uk/funding/",
+   "outcome": "staged",
+   "pipeline_state": "tagged_awaiting_review",
+   "is_active": false,
+   "invite_only": false,
+   "page_read": "direct curl fetch, 200",
+   "scores": {
+    "Our Sansar": 92,
+    "Tibet Watch": 49,
+    "Oxfam GB": 58
+   },
+   "reaches_at_55": [
+    "Our Sansar",
+    "Oxfam GB"
+   ]
+  },
+  {
+   "funder": "Postcode International Trust",
+   "title": "Postcode International Trust — Grants",
+   "id": "4fbbc1a0-dbee-4d78-90a9-ff0278f2bcc3",
+   "apply_url": "https://www.postcodeinternationaltrust.org.uk/about-us/how-to-apply",
+   "outcome": "staged",
+   "pipeline_state": "tagged_awaiting_review",
+   "is_active": false,
+   "invite_only": true,
+   "page_read": "direct curl fetch, 200",
+   "scores": {
+    "Our Sansar": 86,
+    "Tibet Watch": 49,
+    "Oxfam GB": 49
+   },
+   "reaches_at_55": [
+    "Our Sansar"
+   ]
+  }
+ ],
+ "not_staged": [
+  {
+   "funder": "Souter Charitable Trust",
+   "outcome": "held",
+   "reason": "Souter Charitable Trust — General Grants is published in the catalogue.",
+   "group": "held",
+   "apply_url": "https://www.soutercharitabletrust.org.uk/how-to-apply"
+  },
+  {
+   "funder": "The Evan Cornish Foundation",
+   "outcome": "rejected",
+   "reason": "Overseas funding window closed and no date confirmed for the next one; the UK window closed 17 September 2026. Not open and not dated within 30 days.",
+   "group": "closed",
+   "apply_url": "https://www.evancornishfoundation.org.uk/"
+  },
+  {
+   "funder": "Marr-Munning Trust",
+   "outcome": "rejected",
+   "reason": "Does not accept unsolicited applications. Entry is an organisational profile submitted in a three-month window that closed 30 June 2026, and the trust says it has more fundable profiles than funds.",
+   "group": "invitation only",
+   "apply_url": "https://www.marrmunningtrust.org.uk/what-we-fund/"
+  },
+  {
+   "funder": "The Beatrice Laing Trust / Laing Family Trusts",
+   "outcome": "held",
+   "reason": "Laing Family Trusts — Grants is staged in the catalogue against the same how-to-apply page.",
+   "group": "held",
+   "apply_url": "https://www.laingfamilytrusts.org.uk/how-to-apply/"
+  },
+  {
+   "funder": "Tudor Trust",
+   "outcome": "held",
+   "reason": "Held twice (archived general grants, rejected Change We Seek). The site now describes UK racial justice and community power work with no open application route.",
+   "group": "held",
+   "apply_url": "https://www.tudortrust.org.uk/"
+  },
+  {
+   "funder": "The Allan Charitable Trust",
+   "outcome": "rejected",
+   "reason": "No website found; no page states who can apply or what for.",
+   "group": "no page to read"
+  },
+  {
+   "funder": "Charles Hayward Foundation (Overseas)",
+   "outcome": "bot wall",
+   "reason": "Funder held twice in the catalogue. The Overseas strand page returns 403 to a direct fetch on two URL forms, so the strand could not be read.",
+   "group": "bot wall",
+   "apply_url": "https://charleshaywardfoundation.org.uk/overseas/"
+  },
+  {
+   "funder": "The Ashden Trust",
+   "outcome": "held",
+   "reason": "Ashden Awards — Climate Solutions is held (between rounds).",
+   "group": "held"
+  },
+  {
+   "funder": "Sir Halley Stewart Trust",
+   "outcome": "held",
+   "reason": "Sir Halley Stewart Trust — Innovative Project Funding is published.",
+   "group": "held"
+  },
+  {
+   "funder": "The Hilden Charitable Fund (overseas strand)",
+   "outcome": "bot wall",
+   "reason": "Main Grants row is published. The overseas-funding page returns 403 to a direct fetch and the .org.uk host times out.",
+   "group": "bot wall",
+   "apply_url": "https://hildencharitablefund.org/overseas-funding/"
+  },
+  {
+   "funder": "The Fulmer Charitable Trust",
+   "outcome": "rejected",
+   "reason": "No website resolves on any tried host; nothing to read.",
+   "group": "no page to read"
+  },
+  {
+   "funder": "The Zochonis Charitable Trust",
+   "outcome": "held",
+   "reason": "Zochonis Charitable Trust — Grants is published.",
+   "group": "held"
+  },
+  {
+   "funder": "The Gilchrist Educational Trust",
+   "outcome": "rejected",
+   "reason": "Education and Learning Grants for Organisations (up to £4,000, UK charities and CICs, UK or international projects) opens 1 December 2026 with a 28 February 2027 deadline. Outside the 30-day window; a good candidate for the November sweep.",
+   "group": "closed",
+   "apply_url": "https://www.gilchristgrants.org.uk/education-and-learning-grants-for-organisations/"
+  },
+  {
+   "funder": "The Lorimer Trust",
+   "outcome": "rejected",
+   "reason": "No website found.",
+   "group": "no page to read"
+  },
+  {
+   "funder": "The Sylvia Adams Charitable Trust",
+   "outcome": "rejected",
+   "reason": "The Trust has completed its planned spend out and closed permanently.",
+   "group": "closed",
+   "apply_url": "https://www.sylvia-adams.org.uk/"
+  },
+  {
+   "funder": "The Jephcott Charitable Trust",
+   "outcome": "held",
+   "reason": "Jephcott Charitable Trust Grants is published.",
+   "group": "held"
+  },
+  {
+   "funder": "The Rufford Foundation",
+   "outcome": "held",
+   "reason": "Held as a rejected row; conservation only, per the brief.",
+   "group": "held"
+  },
+  {
+   "funder": "The Bryan Guinness Charitable Trust",
+   "outcome": "rejected",
+   "reason": "No website found.",
+   "group": "no page to read"
+  },
+  {
+   "funder": "The Ericson Trust",
+   "outcome": "rejected",
+   "reason": "No website resolves.",
+   "group": "no page to read"
+  },
+  {
+   "funder": "Freedom Fund (Survivor Leadership Fund)",
+   "outcome": "rejected",
+   "reason": "The current round is restricted to organisations located and operating in central and eastern Indonesia and its deadline was 21 September 2026. Applicants must be survivor-led and in the country of delivery.",
+   "group": "wrong applicant",
+   "apply_url": "https://www.freedomfund.org/survivor-leadership-fund/"
+  },
+  {
+   "funder": "Comic Relief",
+   "outcome": "held",
+   "reason": "Comic Relief — International Development is published, plus eight other Comic Relief rows.",
+   "group": "held"
+  },
+  {
+   "funder": "BBC Children in Need",
+   "outcome": "held",
+   "reason": "Held; UK only, per the brief.",
+   "group": "held"
+  },
+  {
+   "funder": "The Big Give Christmas Challenge",
+   "outcome": "bot wall",
+   "reason": "Both thebiggive.org.uk and the christmas-challenge path return 401/403 to a direct fetch. Also match funding rather than a per-applicant award, so it needs a judgement as well as a browser.",
+   "group": "bot wall",
+   "apply_url": "https://www.thebiggive.org.uk/christmas-challenge/"
+  },
+  {
+   "funder": "Global Fund for Children",
+   "outcome": "rejected",
+   "reason": "The only route open to an organisation is joining a directory so GFC is aware of it. No application, nothing received.",
+   "group": "no application route",
+   "apply_url": "https://globalfundforchildren.org/community-based-organizations/"
+  },
+  {
+   "funder": "Stars Foundation",
+   "outcome": "rejected",
+   "reason": "Host no longer serves a matching certificate; the foundation closed.",
+   "group": "closed"
+  },
+  {
+   "funder": "Fondation Botnar",
+   "outcome": "rejected",
+   "reason": "Programme-led with named calls tied to its own initiatives; Nepal is not a focus country and no open route for a UK charity was found.",
+   "group": "no application route",
+   "apply_url": "https://www.fondationbotnar.org/"
+  },
+  {
+   "funder": "Malala Fund",
+   "outcome": "rejected",
+   "reason": "No open application route on the site; grantmaking runs through its own deep engagements.",
+   "group": "invitation only",
+   "apply_url": "https://malala.org/"
+  },
+  {
+   "funder": "Global Fund for Women",
+   "outcome": "rejected",
+   "reason": "No open application route found on the apply page.",
+   "group": "no application route",
+   "apply_url": "https://www.globalfundforwomen.org/apply-for-a-grant/"
+  },
+  {
+   "funder": "Mama Cash",
+   "outcome": "rejected",
+   "reason": "The two funds with published windows closed on 30 April and 20 September 2026, and the funds are for self-led feminist groups in their own country rather than a UK charity delivering abroad.",
+   "group": "wrong applicant",
+   "apply_url": "https://www.mamacash.org/en/apply-for-a-grant"
+  },
+  {
+   "funder": "With and For Girls (Purposeful)",
+   "outcome": "bot wall",
+   "reason": "wearepurposeful.org returns 403 to a direct fetch.",
+   "group": "bot wall",
+   "apply_url": "https://wearepurposeful.org/"
+  },
+  {
+   "funder": "Foundation for a Just Society",
+   "outcome": "rejected",
+   "reason": "Explicitly does not review unsolicited grant requests; invites proposals instead.",
+   "group": "invitation only",
+   "apply_url": "https://www.fjs.org/"
+  },
+  {
+   "funder": "EMpower",
+   "outcome": "rejected",
+   "reason": "Works through ten-year partnerships it selects; no open application route.",
+   "group": "invitation only",
+   "apply_url": "https://empowerweb.org/"
+  },
+  {
+   "funder": "FCDO Small Charities Challenge Fund / UK Aid Direct",
+   "outcome": "rejected",
+   "reason": "All projects have ended and the website will no longer be updated. Closed permanently.",
+   "group": "closed",
+   "apply_url": "https://www.ukaiddirect.org/apply/sccf/"
+  },
+  {
+   "funder": "UK Aid Match",
+   "outcome": "rejected",
+   "reason": "gov.uk marks the fund open and UK non-profits eligible, but the live activity is DEC appeal matching, not a competitive round a single charity applies to, and match funding is not a per-applicant award.",
+   "group": "no application route",
+   "apply_url": "https://www.gov.uk/international-development-funding/uk-aid-match"
+  },
+  {
+   "funder": "gov.uk international development funding finder (144 funds scanned)",
+   "outcome": "rejected",
+   "reason": "The open calls are FCDO procurements and country-specific consortium tenders (Kenya, Sudan, Ukraine, Indonesia and so on), not grants a UK charity applies to for its own delivery. None was Nepal-relevant.",
+   "group": "wrong applicant",
+   "apply_url": "https://www.gov.uk/international-development-funding"
+  },
+  {
+   "funder": "Jersey Overseas Aid",
+   "outcome": "rejected",
+   "reason": "Development and humanitarian grants go to approved partners only; there is no open application.",
+   "group": "invitation only",
+   "apply_url": "https://www.joa.je/"
+  },
+  {
+   "funder": "Guernsey Overseas Aid & Development Commission",
+   "outcome": "rejected",
+   "reason": "Single-year awards of up to £70,000 and multi-year up to £250,000 are open to any charity registered in the British Isles, but the 2026 round closed at noon on 17 April 2026 and the next round is early 2027. Outside the 30-day window; worth a row in the new year.",
+   "group": "closed",
+   "apply_url": "https://www.gov.gg/overseasaid"
+  },
+  {
+   "funder": "Beit Trust",
+   "outcome": "rejected",
+   "reason": "UK charities working with institutions in Zambia, Zimbabwe and Malawi are asked to invite those institutions to apply. The applicant is the in-country institution.",
+   "group": "wrong applicant",
+   "apply_url": "https://beittrust.org.uk/beit-trust-grants/"
+  },
+  {
+   "funder": "Rangoonwala Foundation",
+   "outcome": "rejected",
+   "reason": "The UK stream requires the project to be based in the UK and caps open applications at £5,000, over which it is invitation only. The Pakistan stream is for organisations in Pakistan.",
+   "group": "wrong applicant",
+   "apply_url": "https://rangoonwalafoundation.org/how-to-apply/"
+  },
+  {
+   "funder": "The Noel Buxton Trust (Africa)",
+   "outcome": "rejected",
+   "reason": "The Africa programme is closed to applications and 2026 funds are fully committed, with no reopening date.",
+   "group": "closed",
+   "apply_url": "https://noelbuxtontrust.org.uk/africa/"
+  },
+  {
+   "funder": "A B Charitable Trust",
+   "outcome": "held",
+   "reason": "Held three times. The strategic human rights stream is about the UK human rights framework, not overseas delivery.",
+   "group": "held",
+   "apply_url": "https://abcharitabletrust.org.uk/grant/strategic-human-rights"
+  },
+  {
+   "funder": "The Roddick Foundation",
+   "outcome": "rejected",
+   "reason": "The site publishes no application route or criteria.",
+   "group": "no application route",
+   "apply_url": "https://theroddickfoundation.org/"
+  },
+  {
+   "funder": "Educational Opportunity Foundation (formerly British & Foreign School Society) — Main Fund",
+   "outcome": "held",
+   "reason": "Already staged in the catalogue. Its international criteria (£10,000 to £60,000, UK charities with income £100,000 to £1.5m) are an excellent fit for Our Sansar, so it is worth Paul moving it through review.",
+   "group": "held",
+   "apply_url": "https://educationalopportunity.org.uk/home/grants/main-fund/"
+  },
+  {
+   "funder": "Theirworld Small Grants",
+   "outcome": "held",
+   "reason": "Held as between_rounds_scheduled.",
+   "group": "held"
+  },
+  {
+   "funder": "Calouste Gulbenkian Foundation",
+   "outcome": "held",
+   "reason": "UK Branch grants row is published.",
+   "group": "held"
+  },
+  {
+   "funder": "Ashworth Charitable Trust",
+   "outcome": "bot wall",
+   "reason": "ashworthtrust.org returns 403 to a direct fetch. Directory entries describe registered charities with income under £1m including those working in the developing world, grants usually up to £3,000, trustees meeting in May and November, which would be worth a row.",
+   "group": "bot wall",
+   "apply_url": "https://ashworthtrust.org/"
+  },
+  {
+   "funder": "Ockenden International",
+   "outcome": "bot wall",
+   "reason": "ockenden.org.uk fails the TLS handshake and the aggregator page describing the 2026 prizes returns 403.",
+   "group": "bot wall"
+  },
+  {
+   "funder": "World Connect International, UK",
+   "outcome": "rejected",
+   "reason": "Invests directly in solutions communities design and lead; the applicant is the community group in country.",
+   "group": "wrong applicant",
+   "apply_url": "https://worldconnect.org.uk/"
+  },
+  {
+   "funder": "Polden-Puckham Charitable Foundation",
+   "outcome": "bot wall",
+   "reason": "polden-puckham.org.uk returns 401 to a direct fetch.",
+   "group": "bot wall",
+   "apply_url": "https://polden-puckham.org.uk/"
+  },
+  {
+   "funder": "THET / Global Health Partnerships",
+   "outcome": "rejected",
+   "reason": "Grants run as named health-partnership programmes between UK NHS institutions and overseas counterparts (CwPAMS, SGHPP, fellowships), not a general fund a UK charity applies to.",
+   "group": "wrong applicant",
+   "apply_url": "https://www.globalhealthpartnerships.org/our-work/grants/"
+  },
+  {
+   "funder": "Jewish Child's Day",
+   "outcome": "rejected",
+   "reason": "No website resolves on the tried hosts.",
+   "group": "no page to read"
+  },
+  {
+   "funder": "Oxfam-relevant funders already held",
+   "outcome": "held",
+   "reason": "Barrow Cadbury, Joseph Rowntree Charitable Trust, Sigrid Rausing, Open Society Foundations, Lush Charity Pot, Network for Social Change, Allan & Nesta Ferguson, The Maypole Fund, The Bromley Trust, Dulverton, Headley, True Colours, Steel, Swire, Sterry, Volant, Garfield Weston, Albert Hunt, Eleanor Rathbone, Hobson and Stavros Niarchos were all checked by funder name against the full table and are held.",
+   "group": "held"
+  }
+ ]
+}
