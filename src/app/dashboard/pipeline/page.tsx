@@ -651,6 +651,8 @@ export default function PipelinePage() {
   // Builder bridge: which pipeline items already have an application (id), and
   // whether this user can use the builder (cohort-gated).
   const [builderAllowed, setBuilderAllowed] = useState(false)
+  /** The Download button is a per-org grant (migration 091), off by default. */
+  const [exportAllowed, setExportAllowed] = useState(false)
   // Org name for the blocked screen, so it names the profile rather than the account.
   const [blockedOrgName, setBlockedOrgName] = useState<string | null>(null)
   const [appByPipeline, setAppByPipeline] = useState<Record<string, string>>({})
@@ -677,6 +679,7 @@ export default function PipelinePage() {
       // empty Kanban they can't use.
       const access = await fetch('/api/builder/access').then(r => r.json()).catch(() => ({ allowed: false }))
       setBuilderAllowed(!!access?.allowed)
+      setExportAllowed(access?.export_allowed === true)
       setBlockedOrgName(typeof access?.org_name === 'string' ? access.org_name : null)
       if (!access?.allowed) { setLoading(false); return }
       const o = await getOrganisationByOwner(user.id)
@@ -929,7 +932,10 @@ export default function PipelinePage() {
               </div>
             ) : null
           })()}
-          {items.length > 0 && (
+          {/* Shown only when the org's pipeline_export flag is on (migration
+              091): Ruth and the cohort. Paul, 23 Sept 2026: a trial user who
+              can download the pipeline has taken what makes them stay. */}
+          {items.length > 0 && exportAllowed && (
             <button
               onClick={() => {
                 const csv = pipelineCsv(items)
