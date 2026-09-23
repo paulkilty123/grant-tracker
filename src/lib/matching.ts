@@ -864,6 +864,44 @@ export function beneficiaryPrimaryGate(
 export const UNRESTRICTED_IN_KIND_SCORE_CAP = 60
 
 /**
+ * Overseas delivery, 23 Sept 2026. Julia Krepska (Our Sansar, a Brighton
+ * charity working in Nepal): "I could not see the international option, so I
+ * was getting results for funders supporting projects in the UK. It would be
+ * super helpful if there was a way of getting the funders that only fund UK
+ * projects excluded." Her top ten that morning were Sussex and England youth
+ * funds; none of them fund work in Nepal.
+ *
+ * An organisation DELIVERS OVERSEAS when its reach is "UK + international"
+ * AND it carries the international sector. Reach alone is not enough: most
+ * orgs with that reach are UK theatre companies and film makers who tour,
+ * and a UK-only fund is right for their UK work. The sector is the signal
+ * that the work itself happens abroad.
+ *
+ * A fund EXCLUDES OVERSEAS WORK when its exclusions name work, projects or
+ * travel outside the UK. Applicant residence is deliberately not the test:
+ * "UK-registered charities only" and "non-UK-based applicants" describe Our
+ * Sansar (registered in Brighton) and Sir Halley Stewart says in the same
+ * breath that projects may be international. Those clauses are removed
+ * before the test so they cannot fire it.
+ *
+ * A CAP, like every gate here: the row stays visible at 44 with a reason.
+ */
+const OVERSEAS_DELIVERY_SCORE_CAP = 44
+const APPLICANT_RESIDENCE_CLAUSE = /\b(non[- ]uk[- ]based|(registered|based|located|headquartered)\s+(outside|abroad|overseas)|applicants?\s+(based|registered|located)?\s*(outside|abroad|overseas))[^.;]*/gi
+const OVERSEAS_WORK_RE = /\b(overseas|abroad|outside\s+(of\s+)?(the\s+)?(uk|united kingdom|britain|england|scotland|wales|northern ireland)|(international|foreign)\s+(projects?|work|travel|activities|causes|charities|aid|development))\b/i
+
+export function deliversOverseas(org: Pick<Organisation, 'geographic_reach' | 'impact_sectors'>): boolean {
+  const reach = (org.geographic_reach ?? '').toLowerCase()
+  return reach === 'international' && (org.impact_sectors ?? []).includes('international')
+}
+
+export function excludesOverseasWork(exclusions: unknown): boolean {
+  if (typeof exclusions !== 'string' || !exclusions.trim()) return false
+  const stripped = exclusions.replace(APPLICANT_RESIDENCE_CLAUSE, ' ')
+  return OVERSEAS_WORK_RE.test(stripped)
+}
+
+/**
  * True when nothing on the row narrows who may take it up: not local, no
  * income band, and either no structure list or one wide enough to admit every
  * common form. Beneficiary and sector tags are deliberately NOT consulted:
@@ -1030,11 +1068,31 @@ export function computeMatchScore(
     const orgInNI       = orgLocationFull.includes('northern ireland')
     const orgInEngland  = !orgInScotland && !orgInWales && !orgInNI // default
 
-    const tagClass = classifyLocationTag(grant.locationTag)
+    // "Global" and "Worldwide" fall through to `regional` below, where the tag
+    // is string-matched against the org's town, misses, and the row is capped
+    // as a fund for somebody else's area. For an org carrying the
+    // international sector, read them as International. For everyone else the
+    // old reading stands for now: fixing it for all 54 orgs lifted Google Ad
+    // Grants and AWS credits into thirteen top-ten lists at 74 to 78, above
+    // real grants, which is a product call (measured 2026-09-23), not a tidy.
+    const intlOrg  = (org.impact_sectors ?? []).includes('international')
+    const rawTag   = (grant.locationTag ?? '').trim().toLowerCase()
+    const tagClass = classifyLocationTag(intlOrg && (rawTag === 'global' || rawTag === 'worldwide') ? 'international' : grant.locationTag)
+    // An org whose work happens abroad cannot use a fund for one UK nation or
+    // region, however close to its office. Southover Manor Trust (Sussex young
+    // people) sat first for Our Sansar, a Brighton charity working in Nepal.
+    const overseasOrg = deliversOverseas(org)
 
     if (tagClass.kind === 'national') {
       // UK-wide grant — open to all, give a modest positive signal
       locationScore = 12
+      // A fund tagged International, Global or Worldwide is the one kind of
+      // location an org working abroad actually wants. Score it like a nation
+      // match for any org carrying the international sector, and say so.
+      if (tagClass.label === 'International' && intlOrg) {
+        locationScore = 18
+        reasons.push('Funds work outside the UK')
+      }
     } else if (tagClass.kind === 'multi') {
       // Grant funds a set of specific, non-contiguous areas — no single
       // region tag applies. Stay neutral: don't penalise (no mismatch cap)
@@ -1051,18 +1109,23 @@ export function computeMatchScore(
       const orgNation: UKNation =
         orgInScotland ? 'scotland' : orgInWales ? 'wales' : orgInNI ? 'ni' : 'england'
       const nationOk = (tagClass.nations ?? []).includes(orgNation)
-      if (nationOk) {
+      if (nationOk && !overseasOrg) {
         locationScore = 18
         reasons.push(`${tagClass.label} — open to ${org.primary_location ? org.primary_location.split(',')[0].trim() : 'your area'}`)
       } else {
         locationScore = 2
         locationMismatch = true
-        reasons.push(`Restricted to ${tagClass.label}`)
+        reasons.push(overseasOrg ? `Restricted to ${tagClass.label}: this fund is for work in the UK` : `Restricted to ${tagClass.label}`)
       }
     } else if (tagClass.kind === 'regional') {
       // Specific region, county, city or borough.
       const regionOk = orgMatchesRegionalTag(tagClass.label, orgLocationFull)
-      if (regionOk) {
+      if (regionOk && overseasOrg) {
+        // The office is in the area; the work is not.
+        locationScore = 2
+        locationMismatch = true
+        reasons.push(`Restricted to ${tagClass.label}: this fund is for work in the UK`)
+      } else if (regionOk) {
         locationScore = 20
         reasons.push(`Local to ${tagClass.label} — good fit for ${org.name}`)
 
@@ -2156,6 +2219,13 @@ export function computeMatchScore(
     const reach    = (org.geographic_reach ?? '').toLowerCase()
     const localOrg = reach === 'local' || reach === 'regional'
     score = Math.min(score, localOrg ? 15 : 44)
+  }
+
+  // An org whose work happens abroad, shown a fund whose exclusions rule out
+  // work outside the UK. See deliversOverseas / excludesOverseasWork.
+  if (deliversOverseas(org) && excludesOverseasWork(funderBriefObj?.exclusions)) {
+    score = Math.min(score, OVERSEAS_DELIVERY_SCORE_CAP)
+    reasons.push(`Restricted to UK work: ${grant.funder} does not fund projects outside the UK`)
   }
 
   // Cap total score when the grant is in a specialist domain the org doesn't
