@@ -45,6 +45,7 @@ import {
   arrivalOrigin, isNewArrival, ORIGIN_LABEL, NEW_ARRIVAL_DAYS,
   rootCauseOf, explainedBy, isIncomplete,
   type SectionId,
+  batchOf,
 } from '@/lib/admin/review-sections'
 
 export type QueueItem = {
@@ -416,6 +417,9 @@ export function ReviewQueue({ items, gateWindowStart, launch }: {
   /** Funding type as a FILTER, never as a grouping — as a grouping it gives one
    *  pile of grants and four piles anyone would clear in a minute. */
   const [typeFilter, setTypeFilter] = useState<string | null>(null)
+  /** One staging batch, by its source key. Applied to the whole pool, so every
+   *  tab and count describes that batch alone while it is on. */
+  const [batchFilter, setBatchFilter] = useState<string | null>(null)
 
   const liveAll = useMemo(() => items.filter(i => !done.has(i.id)), [items, done])
 
@@ -427,9 +431,25 @@ export function ReviewQueue({ items, gateWindowStart, launch }: {
   const [q, setQ] = useState('')
   const live = useMemo(() => {
     const needle = q.trim().toLowerCase()
-    if (!needle) return liveAll
-    return liveAll.filter(i => `${i.title} ${i.funder}`.toLowerCase().includes(needle))
-  }, [liveAll, q])
+    const inBatch = batchFilter ? liveAll.filter(i => i.source === batchFilter) : liveAll
+    if (!needle) return inBatch
+    return inBatch.filter(i => `${i.title} ${i.funder}`.toLowerCase().includes(needle))
+  }, [liveAll, q, batchFilter])
+
+  /** The batches with rows still in the queue, newest first. Counted over the
+   *  unfiltered pool, so a chip's number does not change when you pick it. */
+  const batches = useMemo(() => {
+    const m = new Map<string, { label: string; date: string; n: number }>()
+    for (const i of liveAll) {
+      if (i.isActive || i.autoPublishedAt) continue
+      const b = batchOf(i.source)
+      if (!b) continue
+      const cur = m.get(b.key) ?? { label: b.label, date: b.date, n: 0 }
+      cur.n++
+      m.set(b.key, cur)
+    }
+    return Array.from(m.entries()).sort((a, b) => b[1].date.localeCompare(a[1].date)).slice(0, 8)
+  }, [liveAll])
 
   // Gate-published rows are a receipt, not a task, so they are held out of the
   // working views entirely. Counting them under "Everything" would inflate the
@@ -1259,7 +1279,7 @@ export function ReviewQueue({ items, gateWindowStart, launch }: {
    * Position only. Which rows belong in the tab is still live, and a row that
    * leaves is caught by `held` above rather than silently dropped.
    */
-  const orderKey = `${nav}|${sortBy}|${typeFilter ?? ''}|${filter ?? ''}`
+  const orderKey = `${nav}|${sortBy}|${typeFilter ?? ''}|${filter ?? ''}|${batchFilter ?? ''}`
   const orderRef = useRef<{ key: string; ids: string[] }>({ key: orderKey, ids: [] })
   const stableRows = useMemo(() => {
     if (orderRef.current.key !== orderKey) orderRef.current = { key: orderKey, ids: [] }
@@ -1329,6 +1349,22 @@ export function ReviewQueue({ items, gateWindowStart, launch }: {
           <Tab id="unenriched"    nav={nav} onGo={go} n={unenrichedCount} />
           <Tab id="autopublished" nav={nav} onGo={go} n={autoPubCount} />
         </NavGroup>
+
+        {/* BATCHES, NOT A VIEW. A chip here narrows EVERY tab above to the rows
+            one staging job put in, so the sections and their counts describe
+            that batch alone while it is on. "All" puts the whole queue back.
+            Paul, 23 Sept 2026, with ten new rows among 54: "is there a way to
+            filter the latest additions?" */}
+        {batches.length > 0 && (
+          <NavGroup label="Batches" divided>
+            <Chip active={batchFilter === null} onClick={() => { setBatchFilter(null); setSelected(new Set()) }} label="All" n={-1} />
+            {batches.map(([key, b]) => (
+              <Chip key={key} active={batchFilter === key}
+                    onClick={() => { setBatchFilter(batchFilter === key ? null : key); setSelected(new Set()) }}
+                    label={b.label} n={b.n} />
+            ))}
+          </NavGroup>
+        )}
       </div>
 
       {/* ── The body. One section at a time, now the full container width. ── */}
@@ -1362,7 +1398,7 @@ export function ReviewQueue({ items, gateWindowStart, launch }: {
             {picked.length > 0 && (
               <>
                 <span style={{ ...display, fontSize: 12.5, color: 'var(--color-text-secondary)' }}>{picked.length} selected</span>
-                {(nav === 'ready' || nav === 'liveok') && <button style={{ ...primaryBtn, ...btnRow }} disabled={busyId !== null} onClick={() => bulk(picked, 'publish')}><Check size={14} strokeWidth={2.5} />Publish {picked.length}</button>}
+                {(nav === 'ready' || nav === 'liveok') && <button style={{ ...primaryBtn, ...btnRow }} disabled={busyId !== null} onClick={() => bulk(picked, 'publish')}><Check size={14} strokeWidth={2.5} />Publish {picked.length}{batchFilter ? ` from ${batchOf(batchFilter)?.label ?? 'this batch'}` : ''}</button>}
                 {(nav === 'reading' || nav === 'link') && <button style={{ ...secondaryBtn, ...btnRow }} disabled={busyId !== null} onClick={() => bulk(picked, 'reread')}><RefreshCw size={14} strokeWidth={2.25} />Re-read {picked.length}</button>}
                 {nav === 'untruthful' && <button style={{ ...dangerBtn, ...btnRow }} disabled={busyId !== null} onClick={() => bulk(picked, 'reject')}><X size={14} strokeWidth={2.5} />Reject {picked.length}</button>}
                 <button style={ghostBtn} onClick={() => setSelected(new Set())}>Clear</button>
@@ -1849,8 +1885,11 @@ function Row({
               which is the only intake signal on the screen. */}
           {item.firstSeenAt && (
             <Pill bg="var(--bg-pill-neutral)" ink="var(--color-text-tertiary)">
-              {ORIGIN_LABEL[arrivalOrigin(item.source)]} ·{' '}
-              {new Date(item.firstSeenAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+              {/* A staged batch names itself; a crawl or a seed keeps the
+                  generic origin word plus the date it arrived. */}
+              {batchOf(item.source)?.label ?? (
+                `${ORIGIN_LABEL[arrivalOrigin(item.source)]} · ${new Date(item.firstSeenAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
+              )}
             </Pill>
           )}
           {/* The sort axis, named. Without it the order looks arbitrary and the

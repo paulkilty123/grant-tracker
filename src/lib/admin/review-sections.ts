@@ -253,6 +253,30 @@ export const ORIGIN_LABEL: Record<ArrivalOrigin, string> = {
 /** Rows first seen within this many days count as new arrivals. */
 export const NEW_ARRIVAL_DAYS = 7
 
+/**
+ * The BATCH a staged row arrived in, read off its `source`.
+ *
+ * Every discovery job since August stamps `system:<job>-<YYYY-MM-DD>` (or
+ * `user_verified:<who>-<date>`) on the rows it stages, so the batch is already
+ * on every row; nothing needed writing. Paul, 23 Sept 2026, with ten new rows
+ * to find among 54 not-live ones: "is there a way to filter the latest
+ * additions?" A batch chip is that filter, and the label on the card says
+ * where a row came from without opening it.
+ *
+ * Returns null for a crawler or seed source, which is not a batch anyone ran.
+ */
+export type Batch = { key: string; label: string; date: string }
+
+export function batchOf(source: string | null | undefined): Batch | null {
+  if (!source) return null
+  const m = /^(?:system|user_verified):(.+)-(\d{4}-\d{2}-\d{2})$/.exec(source.trim())
+  if (!m) return null
+  const name = m[1].replace(/[-_]+/g, ' ').trim()
+  const d = new Date(`${m[2]}T00:00:00Z`)
+  const when = Number.isNaN(d.getTime()) ? m[2] : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' })
+  return { key: source.trim(), label: `${name}, ${when}`, date: m[2] }
+}
+
 export function isNewArrival(firstSeenAt: string | null, now: Date = new Date()): boolean {
   if (!firstSeenAt) return false
   const t = Date.parse(firstSeenAt)

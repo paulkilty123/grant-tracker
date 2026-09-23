@@ -84,6 +84,25 @@ describe('probeReachability', () => {
     expect(s.asked).toEqual([])
   })
 
+  // Since 18 Sept 2026 a gated live row answers 307 to a logged-out probe. That
+  // is the site applying its own rule, so it proves the probe was read. An
+  // open_to_public row must still answer 200: a 307 from one of those means
+  // the flag stopped working, not that the site is fine.
+  it('a gated canary answering 307 proves the site was read', async () => {
+    const rows = [hidden('a'), hidden('b')]
+    const s = site({ [url(live)]: 307, [url(rows[0])]: 410, [url(rows[1])]: 404 })
+    const r = await probeReachability({ hidden: rows, canary: live, origin: ORIGIN, fetchImpl: s.fetchImpl })
+    expect(r.canaryOk).toBe(true)
+    expect(r.reachable).toEqual([])
+  })
+  it('an open_to_public canary answering 307 voids the run', async () => {
+    const open: ProbeRow = { ...live, id: 'live-open', open_to_public: true }
+    const rows = [hidden('a')]
+    const s = site({ [url(open)]: 307, [url(rows[0])]: 404 })
+    const r = await probeReachability({ hidden: rows, canary: open, origin: ORIGIN, fetchImpl: s.fetchImpl })
+    expect(r.canaryOk).toBe(false)
+  })
+
   it('refuses a canary that is itself hidden', async () => {
     const s = site({})
     await expect(probeReachability({ hidden: [hidden('a')], canary: hidden('z'), origin: ORIGIN, fetchImpl: s.fetchImpl }))

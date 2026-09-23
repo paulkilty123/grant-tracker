@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { sectionOf, evidenceRank, SECTIONS, arrivalOrigin, isNewArrival, rootCauseOf, explainedBy, isIncomplete } from './review-sections'
+import { sectionOf, evidenceRank, SECTIONS, arrivalOrigin, isNewArrival, rootCauseOf, explainedBy, isIncomplete, batchOf } from './review-sections'
 import { BLOCKING_CODES } from './publish-gate'
 import type { EvidenceSummary } from './evidence-summary'
 
@@ -253,5 +253,21 @@ describe('sectionOf — an unreadable row is never sent to be read', () => {
     // missing is ready, re-readable or not.
     expect(sectionOf([], ['read_exhausted'])).toBe('ready')
     expect(sectionOf([], ['read_exhausted', 'link_unverified'])).toBe('ready')
+  })
+})
+
+describe('batchOf — the batch a staged row arrived in, read off its source', () => {
+  it('reads a dated system or user_verified source into a key, a label and a date', () => {
+    expect(batchOf('system:international-discovery-2026-09-23')).toEqual({
+      key: 'system:international-discovery-2026-09-23', label: 'international discovery, 23 Sept', date: '2026-09-23',
+    })
+    expect(batchOf('user_verified:paul-2026-09-21')).toEqual({ key: 'user_verified:paul-2026-09-21', label: 'paul, 21 Sept', date: '2026-09-21' })
+  })
+  it('is null for a crawler, a seed, or nothing', () => {
+    expect(batchOf('homeless_link')).toBeNull()
+    expect(batchOf('discovery_queue')).toBeNull()
+    expect(batchOf('research_batch')).toBeNull()
+    expect(batchOf(null)).toBeNull()
+    expect(batchOf(undefined)).toBeNull()
   })
 })

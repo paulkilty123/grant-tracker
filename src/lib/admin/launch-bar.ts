@@ -56,7 +56,22 @@ export function countLaunchInvariants(liveReasons: ReadonlyArray<ReadonlyArray<P
   return { pastDeadline, unsupportedFigure }
 }
 
-export type ProbeRow = { id: string; external_id: string | null; title: string | null; is_active: boolean | null; pipeline_state: string | null }
+export type ProbeRow = { id: string; external_id: string | null; title: string | null; is_active: boolean | null; pipeline_state: string | null; open_to_public?: boolean | null }
+
+/**
+ * What a LIVE row answers to a logged-out probe, since records went behind
+ * sign-in on 18 Sept 2026: an `open_to_public` row still answers 200; every
+ * other live row answers 307 to /signup. Both prove the site read the probe
+ * and applied its own rule. Hidden rows answer 404 or 410 BEFORE the gate is
+ * consulted, so they are unaffected.
+ *
+ * Found 2026-09-23: the canary was any live row, it answered 307, and the
+ * launch bar reported "not checked" for five days with nobody the wiser.
+ */
+export function canaryAnswered(canary: Pick<ProbeRow, 'open_to_public'>, status: number | null): boolean {
+  if (status === 200) return true
+  return status === 307 && !canary.open_to_public
+}
 
 export type ProbeHit = { key: string; title: string; status: number }
 
@@ -146,7 +161,7 @@ export async function probeReachability(opts: {
     reachable,
     unexpected,
     unchecked,
-    canaryOk: canaryStatus === 200,
+    canaryOk: opts.canary ? canaryAnswered(opts.canary, canaryStatus) : false,
     canary: opts.canary
       ? { key: String(opts.canary.external_id ?? opts.canary.id), title: String(opts.canary.title ?? ''), status: canaryStatus ?? 0 }
       : null,
@@ -155,7 +170,7 @@ export async function probeReachability(opts: {
   }
 }
 
-const PROBE_COLS = 'id, external_id, title, is_active, pipeline_state, last_seen_at'
+const PROBE_COLS = 'id, external_id, title, is_active, pipeline_state, last_seen_at, open_to_public'
 
 /**
  * Which hidden rows to ask about.
@@ -177,8 +192,11 @@ export async function sampleHiddenRows(db: SupabaseClient, perGroup = 6): Promis
     .not('pipeline_state', 'in', '("published","between_rounds_scheduled","rejected","archived")')
     .order('last_seen_at', { ascending: false, nullsFirst: false })
     .limit(perGroup)
+  // An open_to_public row first: it answers 200 logged out, the strongest
+  // proof. Any live row will do otherwise; canaryAnswered accepts its 307.
   const { data: live } = await db.from('scraped_grants').select(PROBE_COLS)
     .eq('is_active', true).eq('pipeline_state', 'published')
+    .order('open_to_public', { ascending: false, nullsFirst: false })
     .order('last_seen_at', { ascending: false, nullsFirst: false })
     .limit(1)
 
