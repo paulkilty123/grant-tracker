@@ -11,13 +11,14 @@ import { ArrowLeft } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { getOrganisationByOwner } from '@/lib/organisations'
 import { T, UI, BODY, DEEP, inputStyle, deepBtn } from '@/components/builder/tokens'
+import { spendNeedHas, toggleSpendNeed, type SpendNeedValue } from '@/lib/builder/project-match'
 
 export default function NewProjectPage() {
   const router = useRouter()
   const [orgId, setOrgId] = useState<string | null>(null)
   const [rawText, setRawText] = useState('')
   const [budget, setBudget] = useState('')
-  const [spendNeed, setSpendNeed] = useState<'capital' | 'revenue' | null>(null)
+  const [spendNeed, setSpendNeed] = useState<SpendNeedValue>(null)
   const [working, setWorking] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -159,17 +160,17 @@ export default function NewProjectPage() {
             and the profile match. Optional: unsaid means the profile's own
             preferences stand. */}
         <p style={{ fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.textPrimary, margin: '18px 0 8px' }}>
-          What is the money for? <span style={{ fontFamily: BODY, fontWeight: 400, fontSize: 12.5, color: T.textSecondary }}>(optional)</span>
+          What is the money for? <span style={{ fontFamily: BODY, fontWeight: 400, fontSize: 12.5, color: T.textSecondary }}>(optional, pick both if it applies)</span>
         </p>
-        <div role="radiogroup" aria-label="What the money is for" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <div role="group" aria-label="What the money is for" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {([
             ['capital', 'A building, equipment or other one-off cost'],
             ['revenue', 'Running the work: staff, activities, overheads'],
           ] as const).map(([value, label]) => {
-            const on = spendNeed === value
+            const on = spendNeedHas(spendNeed, value)
             return (
-              <button key={value} type="button" role="radio" aria-checked={on}
-                      onClick={() => setSpendNeed(on ? null : value)}
+              <button key={value} type="button" role="checkbox" aria-checked={on}
+                      onClick={() => setSpendNeed(toggleSpendNeed(spendNeed, value))}
                       style={{
                         fontFamily: BODY, fontSize: 13, padding: '8px 14px', borderRadius: 999, cursor: 'pointer',
                         border: `1px solid ${on ? DEEP : T.borderStrong}`, background: on ? DEEP : '#fff', color: on ? '#fff' : T.textPrimary,

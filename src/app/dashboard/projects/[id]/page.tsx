@@ -14,7 +14,7 @@ import { createClient } from '@/lib/supabase/client'
 import { getOrganisationByOwner } from '@/lib/organisations'
 import { emitClientEvent } from '@/lib/events/client'
 import { computeMatchScore, MATCH_FLOOR } from '@/lib/matching'
-import { projectMatchProfile } from '@/lib/builder/project-match'
+import { projectMatchProfile, spendNeedHas, toggleSpendNeed } from '@/lib/builder/project-match'
 import { normaliseScrapedGrant, type EnrichedGrant } from '@/lib/grants-normalise'
 import { IMPACT_SECTOR_OPTIONS, BENEFICIARY_OPTIONS } from '@/lib/tag-suggestions'
 import { T, UI, BODY, DEEP, inputStyle, deepBtn, outlineBtn, linkStyle } from '@/components/builder/tokens'
@@ -619,16 +619,16 @@ export default function ProjectPage() {
         {/* What the money is for. Drives the match: a capital project asks for
             capital funders only. Unsaid = the organisation's own preferences. */}
         <div style={{ marginTop: 14 }}>
-          <p style={{ fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.textPrimary, margin: '0 0 6px' }}>What is the money for?</p>
-          <div role="radiogroup" aria-label="What the money is for" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <p style={{ fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.textPrimary, margin: '0 0 6px' }}>What is the money for? <span style={{ fontFamily: BODY, fontWeight: 400, fontSize: 12.5, color: T.textSecondary }}>(pick both if it applies)</span></p>
+          <div role="group" aria-label="What the money is for" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {([
               ['capital', 'A building, equipment or other one-off cost'],
               ['revenue', 'Running the work: staff, activities, overheads'],
             ] as const).map(([value, label]) => {
-              const on = project.spend_need === value
+              const on = spendNeedHas(project.spend_need, value)
               return (
-                <button key={value} type="button" role="radio" aria-checked={on}
-                        onClick={() => queueSave({ spend_need: on ? null : value })}
+                <button key={value} type="button" role="checkbox" aria-checked={on}
+                        onClick={() => queueSave({ spend_need: toggleSpendNeed(project.spend_need, value) })}
                         style={{
                           fontFamily: BODY, fontSize: 13, padding: '8px 14px', borderRadius: 999, cursor: 'pointer',
                           border: `1px solid ${on ? DEEP : T.borderStrong}`, background: on ? DEEP : '#fff', color: on ? '#fff' : T.textPrimary,

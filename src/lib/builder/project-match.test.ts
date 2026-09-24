@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { projectMatchProfile } from './project-match'
+import { projectMatchProfile, spendNeedHas, toggleSpendNeed } from './project-match'
 import { computeMatchScore } from '@/lib/matching'
 import type { GrantOpportunity, Organisation } from '@/types'
 import type { Project } from './projects'
@@ -81,5 +81,23 @@ describe('a capital build scored through its project', () => {
   it('precondition: with no need stated the two score the same', () => {
     const p = projectMatchProfile(org(), project({ spend_need: null }))
     expect(computeMatchScore(wolfson, p).score).toBe(computeMatchScore(youth, p).score)
+  })
+})
+
+describe('both: a building and the staff to run it', () => {
+  it('two pills that can both be on, stored as one word', () => {
+    expect(toggleSpendNeed(null, 'capital')).toBe('capital')
+    expect(toggleSpendNeed('capital', 'revenue')).toBe('both')
+    expect(toggleSpendNeed('both', 'capital')).toBe('revenue')
+    expect(toggleSpendNeed('revenue', 'revenue')).toBeNull()
+    expect(spendNeedHas('both', 'capital')).toBe(true)
+    expect(spendNeedHas('revenue', 'capital')).toBe(false)
+  })
+  it('asks for either kind: Wolfson and the revenue fund both rise above a fund meeting neither', () => {
+    const p = projectMatchProfile(org(), project({ spend_need: 'both' }))
+    expect(p.spend_restriction_preferences).toEqual(['capital', 'restricted'])
+    const neither = grant('Unrestricted Core Fund', ['revenue'], 'unrestricted')
+    expect(computeMatchScore(wolfson, p).score).toBeGreaterThan(computeMatchScore(neither, p).score)
+    expect(computeMatchScore(youth, p).score).toBeGreaterThan(computeMatchScore(neither, p).score)
   })
 })

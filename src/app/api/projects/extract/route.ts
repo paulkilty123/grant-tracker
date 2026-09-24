@@ -102,8 +102,8 @@ export async function POST(req: NextRequest) {
       : null
   // What the money is for, from the form. Not extracted from the prose: a
   // description that mentions "the building" is not a statement of need.
-  const spendNeed: 'capital' | 'revenue' | null =
-    body.spend_need === 'capital' || body.spend_need === 'revenue' ? body.spend_need : null
+  const spendNeed: 'capital' | 'revenue' | 'both' | null =
+    body.spend_need === 'capital' || body.spend_need === 'revenue' || body.spend_need === 'both' ? body.spend_need : null
 
   // Session client — RLS enforces org ownership on the insert below, and the
   // org read here confirms the claimed org belongs to this user.
