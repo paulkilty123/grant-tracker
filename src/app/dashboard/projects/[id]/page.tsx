@@ -622,8 +622,8 @@ export default function ProjectPage() {
           <p style={{ fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.textPrimary, margin: '0 0 6px' }}>What is the money for? <span style={{ fontFamily: BODY, fontWeight: 400, fontSize: 12.5, color: T.textSecondary }}>(pick both if it applies)</span></p>
           <div role="group" aria-label="What the money is for" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {([
-              ['capital', 'A building, equipment or other one-off cost'],
-              ['revenue', 'Running the work: staff, activities, overheads'],
+              ['capital', 'Capital funding for equipment, buildings, etc'],
+              ['revenue', 'Revenue funding for project delivery'],
             ] as const).map(([value, label]) => {
               const on = spendNeedHas(project.spend_need, value)
               return (

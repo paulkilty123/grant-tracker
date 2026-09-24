@@ -164,8 +164,8 @@ export default function NewProjectPage() {
         </p>
         <div role="group" aria-label="What the money is for" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {([
-            ['capital', 'A building, equipment or other one-off cost'],
-            ['revenue', 'Running the work: staff, activities, overheads'],
+            ['capital', 'Capital funding for equipment, buildings, etc'],
+            ['revenue', 'Revenue funding for project delivery'],
           ] as const).map(([value, label]) => {
             const on = spendNeedHas(spendNeed, value)
             return (
