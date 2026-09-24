@@ -134,7 +134,7 @@ source `system:london-boroughs-2026-09-24`, `is_active: false`,
 row. Results file `docs/handoffs/london-boroughs-results-2026-09-24.json`,
 one entry per candidate looked at, staged or not, with the reason.
 
-Before staging, run the scorer (`loadAdminDb`, `grants_with_funder`,
+Before staging, run the scorer (`getAdminDb` from `src/lib/admin/admin-db`, `grants_with_funder`,
 `normaliseScrapedGrant`, `computeMatchScore`) against the eight London orgs
 named above so each staged row's score for them is in the results file. A
 row counts as a new match only at 55 or more. The point of this batch is

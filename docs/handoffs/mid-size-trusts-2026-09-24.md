@@ -145,7 +145,7 @@ source `system:mid-size-trusts-2026-09-24`, `is_active: false`,
 row. Results file `docs/handoffs/mid-size-trusts-results-2026-09-24.json`,
 one entry per candidate looked at, staged or not, with the reason.
 
-Before staging, run the scorer (`loadAdminDb`, `grants_with_funder`,
+Before staging, run the scorer (`getAdminDb` from `src/lib/admin/admin-db`, `grants_with_funder`,
 `normaliseScrapedGrant`, `computeMatchScore`) against six heartland orgs:
 Institute of Imagination (Newham), Learning with Parents (Bristol), Mizen
 Foundation, Common Ground Kitchen CIC (Manchester), Mercury Theatre
