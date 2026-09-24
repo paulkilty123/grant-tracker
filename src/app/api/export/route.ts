@@ -24,7 +24,17 @@ export async function GET() {
   // A copy of anyone's data is still available by email: the right to it is
   // law, the button is not.
   if (!isFoundingCohort(user.created_at)) {
-    return NextResponse.json({ error: 'Data export comes with a paid plan. Email hello@shootsfunding.co.uk for a copy of your data.' }, { status: 403 })
+    // Paying accounts: a subscription row in a live status. Same rule as the
+    // account page's button, so the button and the endpoint cannot disagree.
+    const { data: sub } = await supabase
+      .from('subscriptions')
+      .select('status')
+      .eq('owner_id', user.id)
+      .maybeSingle()
+    const paying = !!sub && ['active', 'trialing', 'past_due'].includes((sub as { status: string }).status)
+    if (!paying) {
+      return NextResponse.json({ error: 'Data export comes with a paid plan. Email hello@shootsfunding.co.uk for a copy of your data.' }, { status: 403 })
+    }
   }
 
   const { data: orgs } = await supabase
