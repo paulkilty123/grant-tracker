@@ -18,6 +18,8 @@ export interface Project {
   outreach: string | null
   learning: string | null
   budget_amount: number | null
+  /** What the money is for. Null = not said; the org's own preferences stand. */
+  spend_need: 'capital' | 'revenue' | null
   sectors: string[]
   beneficiary_groups: string[]
   created_at: string

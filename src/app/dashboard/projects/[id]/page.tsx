@@ -14,6 +14,7 @@ import { createClient } from '@/lib/supabase/client'
 import { getOrganisationByOwner } from '@/lib/organisations'
 import { emitClientEvent } from '@/lib/events/client'
 import { computeMatchScore, MATCH_FLOOR } from '@/lib/matching'
+import { projectMatchProfile } from '@/lib/builder/project-match'
 import { normaliseScrapedGrant, type EnrichedGrant } from '@/lib/grants-normalise'
 import { IMPACT_SECTOR_OPTIONS, BENEFICIARY_OPTIONS } from '@/lib/tag-suggestions'
 import { T, UI, BODY, DEEP, inputStyle, deepBtn, outlineBtn, linkStyle } from '@/components/builder/tokens'
@@ -234,6 +235,7 @@ export default function ProjectPage() {
               outreach: current.outreach,
               learning: current.learning,
               budget_amount: current.budget_amount,
+              spend_need: current.spend_need,
               sectors: current.sectors,
               beneficiary_groups: current.beneficiary_groups,
             }).then(() => {
@@ -271,15 +273,10 @@ export default function ProjectPage() {
         grantPool.current = (data ?? []) as Record<string, unknown>[]
       }
 
-      // Synthetic profile: org base, project relevance. Budget only fills the
-      // size floor when the org hasn't set its own minimum, and leniently
-      // (10%) so partial-funding grants are not wrongly excluded.
-      const synthetic = {
-        ...o,
-        impact_sectors: p.sectors,
-        beneficiary_groups: p.beneficiary_groups,
-        min_grant_target: o.min_grant_target ?? (p.budget_amount ? Math.round(p.budget_amount * 0.1) : null),
-      } as Organisation
+      // Synthetic profile: org base, project relevance, and since 24 Sept 2026
+      // the project's spend need (capital or revenue) in place of the org's.
+      // See projectMatchProfile for the rules and the Portland Charity case.
+      const synthetic = projectMatchProfile(o, p)
 
       const orgStructure = o.legal_structure
       const orgLocation = (o.primary_location ?? '').toLowerCase().trim()
@@ -341,7 +338,7 @@ export default function ProjectPage() {
   }, [project, org, runMatch])
 
   const relevanceKey = project
-    ? `${project.sectors.join(',')}|${project.beneficiary_groups.join(',')}|${project.budget_amount ?? ''}|${readyToMatch(project)}`
+    ? `${project.sectors.join(',')}|${project.beneficiary_groups.join(',')}|${project.budget_amount ?? ''}|${project.spend_need ?? ''}|${readyToMatch(project)}`
     : ''
   useEffect(() => {
     if (!project || !org || !readyToMatch(project)) { setMatches(null); return }
@@ -616,6 +613,30 @@ export default function ProjectPage() {
               placeholder="e.g. 12 months"
               style={inputStyle()}
             />
+          </div>
+        </div>
+
+        {/* What the money is for. Drives the match: a capital project asks for
+            capital funders only. Unsaid = the organisation's own preferences. */}
+        <div style={{ marginTop: 14 }}>
+          <p style={{ fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.textPrimary, margin: '0 0 6px' }}>What is the money for?</p>
+          <div role="radiogroup" aria-label="What the money is for" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {([
+              ['capital', 'A building, equipment or other one-off cost'],
+              ['revenue', 'Running the work: staff, activities, overheads'],
+            ] as const).map(([value, label]) => {
+              const on = project.spend_need === value
+              return (
+                <button key={value} type="button" role="radio" aria-checked={on}
+                        onClick={() => queueSave({ spend_need: on ? null : value })}
+                        style={{
+                          fontFamily: BODY, fontSize: 13, padding: '8px 14px', borderRadius: 999, cursor: 'pointer',
+                          border: `1px solid ${on ? DEEP : T.borderStrong}`, background: on ? DEEP : '#fff', color: on ? '#fff' : T.textPrimary,
+                        }}>
+                  {label}
+                </button>
+              )
+            })}
           </div>
         </div>
 

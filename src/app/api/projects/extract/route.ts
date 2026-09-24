@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) return NextResponse.json({ error: 'ANTHROPIC_API_KEY not configured' }, { status: 500 })
 
-  let body: { org_id?: string; raw_text?: string; budget_hint?: number | null }
+  let body: { org_id?: string; raw_text?: string; budget_hint?: number | null; spend_need?: unknown }
   try {
     body = await req.json()
   } catch {
@@ -100,6 +100,10 @@ export async function POST(req: NextRequest) {
     typeof body.budget_hint === 'number' && Number.isFinite(body.budget_hint) && body.budget_hint > 0
       ? Math.round(body.budget_hint)
       : null
+  // What the money is for, from the form. Not extracted from the prose: a
+  // description that mentions "the building" is not a statement of need.
+  const spendNeed: 'capital' | 'revenue' | null =
+    body.spend_need === 'capital' || body.spend_need === 'revenue' ? body.spend_need : null
 
   // Session client — RLS enforces org ownership on the insert below, and the
   // org read here confirms the claimed org belongs to this user.
@@ -193,7 +197,8 @@ export async function POST(req: NextRequest) {
     learning:            scrub(e.learning),
     // The explicit budget field on the form wins over anything extracted.
     budget_amount:       budgetHint ?? e.budget_amount,
-    sectors:             Array.from(new Set(e.sectors)).slice(0, 3),
+    spend_need:          spendNeed,
+    sectors:            Array.from(new Set(e.sectors)).slice(0, 3),
     beneficiary_groups:  Array.from(new Set(e.beneficiary_groups)).slice(0, 3),
   }
 
