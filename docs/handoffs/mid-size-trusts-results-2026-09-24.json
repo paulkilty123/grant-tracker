@@ -1,0 +1,1934 @@
+{
+ "brief": "docs/handoffs/mid-size-trusts-2026-09-24.md (on branch discovery/briefs-2026-09-24)",
+ "commissioned_by": "Paul, 24 Sept 2026 ('ok can you write them please'), after the gap review of the live catalogue against org profiles",
+ "run_by": "Claude Code session, 25 Sept 2026, on Paul's instruction 'run docs/handoffs/mid-size-trusts-2026-09-24.md'",
+ "run_date": "2026-09-25",
+ "source": "system:mid-size-trusts-2026-09-24",
+ "row_data": "scripts/mid-size-trusts-rows-2026-09-24.ts",
+ "staging_script": "scripts/mid-size-trusts-stage-2026-09-24.ts",
+ "scoring_script": "scripts/mid-size-trusts-score-2026-09-24.ts",
+ "budget": "No Anthropic spend: pages by direct curl, the keyless reader proxy (two calls, both DNS failures), and Claude Code web search to find funder domains and CVS bulletins. The overnight verify read will stamp _page_read on the 31 staged rows (about 31 production-key reads, approved by Paul 24 Sept). No Vercel build.",
+ "dedup": "Full read of scraped_grants, 2,223 rows, count asserted equal to the table count before any comparison. Each candidate checked by funder name, title and apply URL (regex over funder, title and URL); the stage script re-checks normalised URL and exact title and refuses a partial read. Dedup against the London boroughs batch via its results file (Cripplegate, City Bridge, Trust for London strands).",
+ "orgs_scored": {
+  "Institute of Imagination": [
+   "f1f9c904",
+   "7c89f4ff"
+  ],
+  "Learning with Parents": [
+   "650615a8",
+   "0b23fedf",
+   "86df2e31"
+  ],
+  "Mizen Foundation": [
+   "7aba34c1"
+  ],
+  "Common Ground Kitchen CIC": [
+   "4ef429df"
+  ],
+  "Mercury Theatre": [
+   "b35d2980"
+  ],
+  "Bikeworks CIC": [
+   "a2f6a7c6"
+  ]
+ },
+ "scoring_method": "Same gates the dashboard applies (funding type, legal structure, sector intersection, location text) then computeMatchScore; 55 is a match. Every org has an income band set and two names have duplicate records, so every record is scored and a row counts once per org if any record clears 55. Canaries: a Colchester theatre fund must score 55+ for Mercury Theatre (88), and must be stopped by the location gate when tagged Cardiff and by the structure gate when CIC-only; all three held. Second derivation: re-scored from the grants_with_funder view after staging. Every gate agreed; every numeric score was exactly +3 higher, which is the matcher's freshness bonus for rows under three days old (+2 to day 7, +1 to day 14, 0 after). The steady-state numbers are headline; one verdict differs while fresh (Tarmac for Bikeworks, 54 steady, 57 fresh).",
+ "totals": {
+  "programmes_or_funders_read": 183,
+  "results_entries": 84,
+  "staged": 31,
+  "staged_with_stated_ceiling_25k_or_more": 27,
+  "staged_ceiling_in_25k_to_100k": 25,
+  "staged_amount_undisclosed": 4,
+  "reopen": 1,
+  "per_org_rows_at_55_steady_state": {
+   "Institute of Imagination": 3,
+   "Learning with Parents": 3,
+   "Mizen Foundation": 2,
+   "Common Ground Kitchen CIC": 1,
+   "Mercury Theatre": 3,
+   "Bikeworks CIC": 6
+  },
+  "org_row_matches_steady_state": 18,
+  "of_which_site_radius_conditional": 12
+ },
+ "per_org_detail": {
+  "Institute of Imagination": {
+   "rows": [
+    "Clore Duffield Foundation — School Choirs and Singing Programme",
+    "Biffa Award — Community Buildings",
+    "Biffa Award — Cultural Facilities"
+   ],
+   "of_which_site_radius_conditional": [
+    "Biffa Award — Community Buildings",
+    "Biffa Award — Cultural Facilities"
+   ]
+  },
+  "Learning with Parents": {
+   "rows": [
+    "Clore Duffield Foundation — School Choirs and Singing Programme",
+    "Biffa Award — Community Buildings",
+    "Biffa Award — Cultural Facilities"
+   ],
+   "of_which_site_radius_conditional": [
+    "Biffa Award — Community Buildings",
+    "Biffa Award — Cultural Facilities"
+   ]
+  },
+  "Mizen Foundation": {
+   "rows": [
+    "Clore Duffield Foundation — School Choirs and Singing Programme",
+    "David Riddell Memorial CIO — Suicide Prevention Grants 2026/27"
+   ],
+   "of_which_site_radius_conditional": []
+  },
+  "Common Ground Kitchen CIC": {
+   "rows": [
+    "Biffa Award — Community Buildings"
+   ],
+   "of_which_site_radius_conditional": [
+    "Biffa Award — Community Buildings"
+   ]
+  },
+  "Mercury Theatre": {
+   "rows": [
+    "Clore Duffield Foundation — School Choirs and Singing Programme",
+    "Biffa Award — Community Buildings",
+    "Biffa Award — Cultural Facilities"
+   ],
+   "of_which_site_radius_conditional": [
+    "Biffa Award — Community Buildings",
+    "Biffa Award — Cultural Facilities"
+   ]
+  },
+  "Bikeworks CIC": {
+   "rows": [
+    "Biffa Award — Community Buildings",
+    "Biffa Award — Recreation",
+    "Biffa Award — Nature Recovery",
+    "SUEZ Communities Fund — England",
+    "Enovert Community Trust — Landfill Communities Fund Grants",
+    "Vinehill Trust — Health"
+   ],
+   "of_which_site_radius_conditional": [
+    "Biffa Award — Community Buildings",
+    "Biffa Award — Recreation",
+    "Biffa Award — Nature Recovery",
+    "SUEZ Communities Fund — England",
+    "Enovert Community Trust — Landfill Communities Fund Grants"
+   ]
+  }
+ },
+ "findings_for_paul": [
+  "Clore Duffield School Choirs (up to £300k over three years) scores 61 to 63 for Mercury Theatre, Institute of Imagination, Learning with Parents and Mizen, but it needs choral expertise; only Mercury plausibly has it. Real new matches are fewer than the formal count.",
+  "Site-radius funds tagged 'Selected areas' pass the location gate for every org, so Biffa, SUEZ, Enovert, Tarmac and FCC count as matches anywhere; eligibility is decided by the funder's postcode checker. 12 of the 18 org-row matches are of this kind. Unconditional matches: Clore choirs for Institute of Imagination, Learning with Parents, Mizen and Mercury Theatre; David Riddell for Mizen; Vinehill Health for Bikeworks.",
+  "The specialist-domain check caps general community-amenity funds at 44 for orgs without an environment or heritage sector, because their briefs name biodiversity or historic buildings among eligible projects (SUEZ, Enovert, FCC and Tarmac score 44 for Mercury Theatre, Institute of Imagination and Common Ground Kitchen). A theatre could apply to these for building works. Matcher lever, not a row fault; rows were not reworded to dodge it.",
+  "Wolfson's seven charity capital strands (usual £40k-£75k for disability, mental health and older people) open to Stage 1 on 20 November; outside the 30-day rule, ready to stage from about 21 October. Ufi VocTech Activate (£30k-£60k) opens 5 January 2027. Charles Plater updates 15 December. Leeds Building Society large grants (up to £75k, Yorkshire and North East, income under £1m) reopen 'later in 2026', undated.",
+  "Live and wrong, not changed (user-visible): Trust for London 60206220 has no amount and says not rolling (guidelines: £40k-£80k a year, up to £300k, rolling); JRCT Rights and Justice 8f8bc717 is live but closed 2 September; Pilgrim Trust facf81cb has no amount and a URL that now redirects to grants-awarded; Virgin Money Foundation 7b37ff2e is live but its only programme is invitation only; Charles Hayward fedc9b06 is live while the funder says applications are closed; Barrow Cadbury 7e2f1cd7 is live while funds are 'largely committed' outside the Birmingham strand.",
+  "Reopen: Strategic Legal Fund 32949533 is published but hidden with the passed 7 September deadline; next deadline 26 October 2026. Not written: the brief says note it.",
+  "GrantScape administers about 48 community benefit funds, none held before this batch; the 40 not staged are parish-scale wind, solar and battery funds of £2k to £20k, a lead for a local batch."
+ ],
+ "proposed_live_fixes": "See PROPOSED_LIVE_FIXES in the row data file: Trust for London 60206220 amounts and rolling, JRCT 8f8bc717 to between rounds. Not applied.",
+ "staged": [
+  {
+   "id": "9aa8ac2e-b8b2-436d-97da-0825c55e3d1b",
+   "title": "Augean North Community Fund",
+   "apply_url": "https://grantscape.org.uk/fund/augean-north-community-fund/",
+   "location_tag": "Stockton-on-Tees",
+   "amount_min": 10000,
+   "amount_max": 100000,
+   "amount_undisclosed": false,
+   "deadline": "2026-12-09",
+   "is_rolling": false,
+   "pipeline_state": "tagged_awaiting_review",
+   "is_active": false,
+   "ceiling_25k_or_more": true,
+   "scores_steady_state": {
+    "Learning with Parents [650615a8]": "sector",
+    "Learning with Parents [0b23fedf]": "location",
+    "Mizen Foundation": "sector",
+    "Common Ground Kitchen CIC": "location",
+    "Institute of Imagination [f1f9c904]": "location",
+    "Mercury Theatre": "location",
+    "Institute of Imagination [7c89f4ff]": "location",
+    "Learning with Parents [86df2e31]": "sector",
+    "Bikeworks CIC": "location"
+   },
+   "reaches_at_55_steady_state": [],
+   "reaches_at_55_while_fresh": []
+  },
+  {
+   "id": "1775b4fc-7ac8-495a-8571-3f99435cce57",
+   "title": "Augean South Community Fund",
+   "apply_url": "https://grantscape.org.uk/fund/augean-south-community-fund/",
+   "location_tag": "Northamptonshire, Cambridgeshire",
+   "amount_min": null,
+   "amount_max": 50000,
+   "amount_undisclosed": false,
+   "deadline": "2026-11-11",
+   "is_rolling": false,
+   "pipeline_state": "tagged_awaiting_review",
+   "is_active": false,
+   "ceiling_25k_or_more": true,
+   "scores_steady_state": {
+    "Learning with Parents [650615a8]": "sector",
+    "Learning with Parents [0b23fedf]": "location",
+    "Mizen Foundation": "sector",
+    "Common Ground Kitchen CIC": "location",
+    "Institute of Imagination [f1f9c904]": "location",
+    "Mercury Theatre": "location",
+    "Institute of Imagination [7c89f4ff]": "location",
+    "Learning with Parents [86df2e31]": "sector",
+    "Bikeworks CIC": "location"
+   },
+   "reaches_at_55_steady_state": [],
+   "reaches_at_55_while_fresh": []
+  },
+  {
+   "id": "30a6b186-46d8-4b9c-91c6-2a6cdd887ca9",
+   "title": "Ballinger Charitable Trust — Grants for Young and Older People in North East England",
+   "apply_url": "https://www.ballingercharitabletrust.org.uk/funding-eligibility/",
+   "location_tag": "North East England",
+   "amount_min": null,
+   "amount_max": 60000,
+   "amount_undisclosed": false,
+   "deadline": null,
+   "is_rolling": true,
+   "pipeline_state": "tagged_awaiting_review",
+   "is_active": false,
+   "ceiling_25k_or_more": true,
+   "scores_steady_state": {
+    "Learning with Parents [650615a8]": "sector",
+    "Learning with Parents [0b23fedf]": "location",
+    "Mizen Foundation": "location",
+    "Common Ground Kitchen CIC": "location",
+    "Institute of Imagination [f1f9c904]": "location",
+    "Mercury Theatre": "location",
+    "Institute of Imagination [7c89f4ff]": "location",
+    "Learning with Parents [86df2e31]": "sector",
+    "Bikeworks CIC": "location"
+   },
+   "reaches_at_55_steady_state": [],
+   "reaches_at_55_while_fresh": []
+  },
+  {
+   "id": "ad876a12-00b0-45be-95ac-1b581c01959c",
+   "title": "Barrow Cadbury Trust — Building an Alternative Economic Model (Birmingham)",
+   "apply_url": "https://barrowcadbury.org.uk/our-work/economic-justice/",
+   "location_tag": "Birmingham",
+   "amount_min": null,
+   "amount_max": null,
+   "amount_undisclosed": true,
+   "deadline": null,
+   "is_rolling": true,
+   "pipeline_state": "tagged_awaiting_review",
+   "is_active": false,
+   "ceiling_25k_or_more": false,
+   "scores_steady_state": {
+    "Learning with Parents [650615a8]": "location",
+    "Learning with Parents [0b23fedf]": "location",
+    "Mizen Foundation": "sector",
+    "Common Ground Kitchen CIC": "location",
+    "Institute of Imagination [f1f9c904]": "location",
+    "Mercury Theatre": "location",
+    "Institute of Imagination [7c89f4ff]": "location",
+    "Learning with Parents [86df2e31]": "location",
+    "Bikeworks CIC": "location"
+   },
+   "reaches_at_55_steady_state": [],
+   "reaches_at_55_while_fresh": []
+  },
+  {
+   "id": "5b93a085-4130-4d60-b95d-ecb9f84d0091",
+   "title": "Biffa Award — Community Buildings",
+   "apply_url": "https://www.biffa-award.org/home-page/am-i-eligible-can-i-apply/community-buildings/",
+   "location_tag": "Selected areas",
+   "amount_min": 10000,
+   "amount_max": 75000,
+   "amount_undisclosed": false,
+   "deadline": null,
+   "is_rolling": true,
+   "pipeline_state": "tagged_awaiting_review",
+   "is_active": false,
+   "ceiling_25k_or_more": true,
+   "scores_steady_state": {
+    "Learning with Parents [650615a8]": "sector",
+    "Learning with Parents [0b23fedf]": 77,
+    "Mizen Foundation": "sector",
+    "Common Ground Kitchen CIC": 79,
+    "Institute of Imagination [f1f9c904]": 57,
+    "Mercury Theatre": 77,
+    "Institute of Imagination [7c89f4ff]": 57,
+    "Learning with Parents [86df2e31]": "sector",
+    "Bikeworks CIC": 66
+   },
+   "reaches_at_55_steady_state": [
+    "Institute of Imagination",
+    "Learning with Parents",
+    "Common Ground Kitchen CIC",
+    "Mercury Theatre",
+    "Bikeworks CIC"
+   ],
+   "reaches_at_55_while_fresh": [
+    "Institute of Imagination",
+    "Learning with Parents",
+    "Common Ground Kitchen CIC",
+    "Mercury Theatre",
+    "Bikeworks CIC"
+   ]
+  },
+  {
+   "id": "00a24df7-3755-4aa3-b8d2-45ac1b99256c",
+   "title": "Biffa Award — Cultural Facilities",
+   "apply_url": "https://www.biffa-award.org/home-page/am-i-eligible-can-i-apply/community-buildings-2/",
+   "location_tag": "Selected areas",
+   "amount_min": 10000,
+   "amount_max": 75000,
+   "amount_undisclosed": false,
+   "deadline": null,
+   "is_rolling": true,
+   "pipeline_state": "tagged_awaiting_review",
+   "is_active": false,
+   "ceiling_25k_or_more": true,
+   "scores_steady_state": {
+    "Learning with Parents [650615a8]": 44,
+    "Learning with Parents [0b23fedf]": 57,
+    "Mizen Foundation": 44,
+    "Common Ground Kitchen CIC": 44,
+    "Institute of Imagination [f1f9c904]": 57,
+    "Mercury Theatre": 68,
+    "Institute of Imagination [7c89f4ff]": 57,
+    "Learning with Parents [86df2e31]": 44,
+    "Bikeworks CIC": 44
+   },
+   "reaches_at_55_steady_state": [
+    "Institute of Imagination",
+    "Learning with Parents",
+    "Mercury Theatre"
+   ],
+   "reaches_at_55_while_fresh": [
+    "Institute of Imagination",
+    "Learning with Parents",
+    "Mercury Theatre"
+   ]
+  },
+  {
+   "id": "f30f046d-532e-4aed-a994-776e68845b65",
+   "title": "Biffa Award — Nature Recovery",
+   "apply_url": "https://www.biffa-award.org/home-page/am-i-eligible-can-i-apply/rebuilding-biodiversity/",
+   "location_tag": "Selected areas",
+   "amount_min": 10000,
+   "amount_max": 75000,
+   "amount_undisclosed": false,
+   "deadline": null,
+   "is_rolling": true,
+   "pipeline_state": "tagged_awaiting_review",
+   "is_active": false,
+   "ceiling_25k_or_more": true,
+   "scores_steady_state": {
+    "Learning with Parents [650615a8]": "sector",
+    "Learning with Parents [0b23fedf]": "sector",
+    "Mizen Foundation": "sector",
+    "Common Ground Kitchen CIC": "sector",
+    "Institute of Imagination [f1f9c904]": "sector",
+    "Mercury Theatre": "sector",
+    "Institute of Imagination [7c89f4ff]": "sector",
+    "Learning with Parents [86df2e31]": "sector",
+    "Bikeworks CIC": 64
+   },
+   "reaches_at_55_steady_state": [
+    "Bikeworks CIC"
+   ],
+   "reaches_at_55_while_fresh": [
+    "Bikeworks CIC"
+   ]
+  },
+  {
+   "id": "dd3d4e16-f8fc-42ab-aa69-a844e684ddbc",
+   "title": "Biffa Award — Recreation",
+   "apply_url": "https://www.biffa-award.org/home-page/am-i-eligible-can-i-apply/recreation/",
+   "location_tag": "Selected areas",
+   "amount_min": 10000,
+   "amount_max": 75000,
+   "amount_undisclosed": false,
+   "deadline": null,
+   "is_rolling": true,
+   "pipeline_state": "tagged_awaiting_review",
+   "is_active": false,
+   "ceiling_25k_or_more": true,
+   "scores_steady_state": {
+    "Learning with Parents [650615a8]": "sector",
+    "Learning with Parents [0b23fedf]": 44,
+    "Mizen Foundation": "sector",
+    "Common Ground Kitchen CIC": 44,
+    "Institute of Imagination [f1f9c904]": 44,
+    "Mercury Theatre": 44,
+    "Institute of Imagination [7c89f4ff]": 44,
+    "Learning with Parents [86df2e31]": "sector",
+    "Bikeworks CIC": 71
+   },
+   "reaches_at_55_steady_state": [
+    "Bikeworks CIC"
+   ],
+   "reaches_at_55_while_fresh": [
+    "Bikeworks CIC"
+   ]
+  },
+  {
+   "id": "976daf0d-55a1-4930-9398-d1a7d93110de",
+   "title": "Clore Duffield Foundation — School Choirs and Singing Programme",
+   "apply_url": "https://www.cloreduffield.org.uk/clore-school-choirs-and-singing-programme",
+   "location_tag": "England",
+   "amount_min": 150000,
+   "amount_max": 300000,
+   "amount_undisclosed": false,
+   "deadline": "2026-10-30",
+   "is_rolling": false,
+   "pipeline_state": "tagged_awaiting_review",
+   "is_active": false,
+   "ceiling_25k_or_more": true,
+   "scores_steady_state": {
+    "Learning with Parents [650615a8]": 61,
+    "Learning with Parents [0b23fedf]": 59,
+    "Mizen Foundation": 63,
+    "Common Ground Kitchen CIC": "sector",
+    "Institute of Imagination [f1f9c904]": 61,
+    "Mercury Theatre": 63,
+    "Institute of Imagination [7c89f4ff]": 61,
+    "Learning with Parents [86df2e31]": 61,
+    "Bikeworks CIC": "sector"
+   },
+   "reaches_at_55_steady_state": [
+    "Institute of Imagination",
+    "Learning with Parents",
+    "Mizen Foundation",
+    "Mercury Theatre"
+   ],
+   "reaches_at_55_while_fresh": [
+    "Institute of Imagination",
+    "Learning with Parents",
+    "Mizen Foundation",
+    "Mercury Theatre"
+   ]
+  },
+  {
+   "id": "5cb6b4d3-a6af-4f8c-85d0-1873d3adcd36",
+   "title": "David Riddell Memorial CIO — Suicide Prevention Grants 2026/27",
+   "apply_url": "https://www.davidriddell.org/grants",
+   "location_tag": "UK",
+   "amount_min": 5000,
+   "amount_max": 25000,
+   "amount_undisclosed": false,
+   "deadline": "2026-10-31",
+   "is_rolling": false,
+   "pipeline_state": "tagged_awaiting_review",
+   "is_active": false,
+   "ceiling_25k_or_more": true,
+   "scores_steady_state": {
+    "Learning with Parents [650615a8]": "sector",
+    "Learning with Parents [0b23fedf]": "sector",
+    "Mizen Foundation": 71,
+    "Common Ground Kitchen CIC": "sector",
+    "Institute of Imagination [f1f9c904]": "sector",
+    "Mercury Theatre": "sector",
+    "Institute of Imagination [7c89f4ff]": "sector",
+    "Learning with Parents [86df2e31]": "sector",
+    "Bikeworks CIC": "sector"
+   },
+   "reaches_at_55_steady_state": [
+    "Mizen Foundation"
+   ],
+   "reaches_at_55_while_fresh": [
+    "Mizen Foundation"
+   ]
+  },
+  {
+   "id": "22feb16b-4b04-4c08-b9f3-f5c720e2849f",
+   "title": "East Coast Community Fund (Ørsted)",
+   "apply_url": "https://grantscape.org.uk/fund/eastcoastcommunityfund/",
+   "location_tag": "Yorkshire, Lincolnshire",
+   "amount_min": 1000,
+   "amount_max": 50000,
+   "amount_undisclosed": false,
+   "deadline": "2027-02-03",
+   "is_rolling": false,
+   "pipeline_state": "tagged_awaiting_review",
+   "is_active": false,
+   "ceiling_25k_or_more": true,
+   "scores_steady_state": {
+    "Learning with Parents [650615a8]": "sector",
+    "Learning with Parents [0b23fedf]": "location",
+    "Mizen Foundation": "sector",
+    "Common Ground Kitchen CIC": "location",
+    "Institute of Imagination [f1f9c904]": "location",
+    "Mercury Theatre": "location",
+    "Institute of Imagination [7c89f4ff]": "location",
+    "Learning with Parents [86df2e31]": "sector",
+    "Bikeworks CIC": "location"
+   },
+   "reaches_at_55_steady_state": [],
+   "reaches_at_55_while_fresh": []
+  },
+  {
+   "id": "b652665a-2e06-4f02-a893-949b616d4b05",
+   "title": "Enovert Community Trust — Landfill Communities Fund Grants",
+   "apply_url": "https://www.enovert.co.uk/enovert-community-trust/funding/apply-for-funding/",
+   "location_tag": "Selected areas",
+   "amount_min": 5000,
+   "amount_max": 50000,
+   "amount_undisclosed": false,
+   "deadline": "2026-12-04",
+   "is_rolling": false,
+   "pipeline_state": "tagged_awaiting_review",
+   "is_active": false,
+   "ceiling_25k_or_more": true,
+   "scores_steady_state": {
+    "Learning with Parents [650615a8]": "sector",
+    "Learning with Parents [0b23fedf]": 44,
+    "Mizen Foundation": "sector",
+    "Common Ground Kitchen CIC": 44,
+    "Institute of Imagination [f1f9c904]": 44,
+    "Mercury Theatre": 44,
+    "Institute of Imagination [7c89f4ff]": 44,
+    "Learning with Parents [86df2e31]": "sector",
+    "Bikeworks CIC": 62
+   },
+   "reaches_at_55_steady_state": [
+    "Bikeworks CIC"
+   ],
+   "reaches_at_55_while_fresh": [
+    "Bikeworks CIC"
+   ]
+  },
+  {
+   "id": "2455def8-cbbc-412e-9d02-17c1baa6d317",
+   "title": "FCC Communities Foundation — Severn Waste Services Community Action Fund",
+   "apply_url": "https://fcccommunitiesfoundation.org.uk/funds/severn-waste-services-community-action-fund",
+   "location_tag": "Herefordshire, Worcestershire",
+   "amount_min": 5000,
+   "amount_max": 40000,
+   "amount_undisclosed": false,
+   "deadline": "2026-11-18",
+   "is_rolling": false,
+   "pipeline_state": "tagged_awaiting_review",
+   "is_active": false,
+   "ceiling_25k_or_more": true,
+   "scores_steady_state": {
+    "Learning with Parents [650615a8]": "sector",
+    "Learning with Parents [0b23fedf]": "location",
+    "Mizen Foundation": "sector",
+    "Common Ground Kitchen CIC": "structure",
+    "Institute of Imagination [f1f9c904]": "location",
+    "Mercury Theatre": "location",
+    "Institute of Imagination [7c89f4ff]": "location",
+    "Learning with Parents [86df2e31]": "sector",
+    "Bikeworks CIC": "structure"
+   },
+   "reaches_at_55_steady_state": [],
+   "reaches_at_55_while_fresh": []
+  },
+  {
+   "id": "d814a22e-a5b5-4258-bd82-264c00007b17",
+   "title": "FCC Community Action Fund",
+   "apply_url": "https://fcccommunitiesfoundation.org.uk/funds/fcc-community-action-fund",
+   "location_tag": "Selected areas",
+   "amount_min": 10000,
+   "amount_max": 100000,
+   "amount_undisclosed": false,
+   "deadline": "2026-11-18",
+   "is_rolling": false,
+   "pipeline_state": "tagged_awaiting_review",
+   "is_active": false,
+   "ceiling_25k_or_more": true,
+   "scores_steady_state": {
+    "Learning with Parents [650615a8]": "sector",
+    "Learning with Parents [0b23fedf]": 44,
+    "Mizen Foundation": "sector",
+    "Common Ground Kitchen CIC": "structure",
+    "Institute of Imagination [f1f9c904]": 44,
+    "Mercury Theatre": 44,
+    "Institute of Imagination [7c89f4ff]": 44,
+    "Learning with Parents [86df2e31]": "sector",
+    "Bikeworks CIC": "structure"
+   },
+   "reaches_at_55_steady_state": [],
+   "reaches_at_55_while_fresh": []
+  },
+  {
+   "id": "58a20a49-f3cc-40eb-8828-dcf8102dec67",
+   "title": "Hornsea 3 Community Fund (Ørsted)",
+   "apply_url": "https://grantscape.org.uk/fund/hornsea-3-community-fund/",
+   "location_tag": "Norfolk, Suffolk",
+   "amount_min": 500,
+   "amount_max": 75000,
+   "amount_undisclosed": false,
+   "deadline": "2026-12-02",
+   "is_rolling": false,
+   "pipeline_state": "tagged_awaiting_review",
+   "is_active": false,
+   "ceiling_25k_or_more": true,
+   "scores_steady_state": {
+    "Learning with Parents [650615a8]": "sector",
+    "Learning with Parents [0b23fedf]": "location",
+    "Mizen Foundation": "sector",
+    "Common Ground Kitchen CIC": "location",
+    "Institute of Imagination [f1f9c904]": "location",
+    "Mercury Theatre": "location",
+    "Institute of Imagination [7c89f4ff]": "location",
+    "Learning with Parents [86df2e31]": "sector",
+    "Bikeworks CIC": "location"
+   },
+   "reaches_at_55_steady_state": [],
+   "reaches_at_55_while_fresh": []
+  },
+  {
+   "id": "fa0cb72b-23df-4052-b3c8-0947265403b0",
+   "title": "Hornsea 3 Legacy Fund (Ørsted) — Inspired by Green",
+   "apply_url": "https://grantscape.org.uk/fund/hornsea-3-legacy-fund/",
+   "location_tag": "Norfolk, Suffolk",
+   "amount_min": 100000,
+   "amount_max": 100000,
+   "amount_undisclosed": false,
+   "deadline": "2026-12-02",
+   "is_rolling": false,
+   "pipeline_state": "tagged_awaiting_review",
+   "is_active": false,
+   "ceiling_25k_or_more": true,
+   "scores_steady_state": {
+    "Learning with Parents [650615a8]": "sector",
+    "Learning with Parents [0b23fedf]": "location",
+    "Mizen Foundation": "sector",
+    "Common Ground Kitchen CIC": "location",
+    "Institute of Imagination [f1f9c904]": "location",
+    "Mercury Theatre": "location",
+    "Institute of Imagination [7c89f4ff]": "location",
+    "Learning with Parents [86df2e31]": "sector",
+    "Bikeworks CIC": "location"
+   },
+   "reaches_at_55_steady_state": [],
+   "reaches_at_55_while_fresh": []
+  },
+  {
+   "id": "6c997370-640b-43c8-b780-ed4a654e398e",
+   "title": "Liz and Terry Bramall Foundation — Grants",
+   "apply_url": "https://www.bramallfoundation.org/",
+   "location_tag": "Yorkshire",
+   "amount_min": null,
+   "amount_max": null,
+   "amount_undisclosed": true,
+   "deadline": null,
+   "is_rolling": true,
+   "pipeline_state": "tagged_awaiting_review",
+   "is_active": false,
+   "ceiling_25k_or_more": false,
+   "scores_steady_state": {
+    "Learning with Parents [650615a8]": "sector",
+    "Learning with Parents [0b23fedf]": "location",
+    "Mizen Foundation": "sector",
+    "Common Ground Kitchen CIC": "structure",
+    "Institute of Imagination [f1f9c904]": "location",
+    "Mercury Theatre": "location",
+    "Institute of Imagination [7c89f4ff]": "location",
+    "Learning with Parents [86df2e31]": "sector",
+    "Bikeworks CIC": "structure"
+   },
+   "reaches_at_55_steady_state": [],
+   "reaches_at_55_while_fresh": []
+  },
+  {
+   "id": "20a511e6-9646-4dc4-8285-f00678293b36",
+   "title": "Mick George Community Fund",
+   "apply_url": "https://grantscape.org.uk/fund/mick-george-community-fund/",
+   "location_tag": "Bedfordshire, Cambridgeshire, Lincolnshire, Northamptonshire, Norfolk, Rutland",
+   "amount_min": 10000,
+   "amount_max": 30000,
+   "amount_undisclosed": false,
+   "deadline": "2027-03-03",
+   "is_rolling": false,
+   "pipeline_state": "tagged_awaiting_review",
+   "is_active": false,
+   "ceiling_25k_or_more": true,
+   "scores_steady_state": {
+    "Learning with Parents [650615a8]": "sector",
+    "Learning with Parents [0b23fedf]": "location",
+    "Mizen Foundation": "sector",
+    "Common Ground Kitchen CIC": "location",
+    "Institute of Imagination [f1f9c904]": "location",
+    "Mercury Theatre": "location",
+    "Institute of Imagination [7c89f4ff]": "location",
+    "Learning with Parents [86df2e31]": "sector",
+    "Bikeworks CIC": "location"
+   },
+   "reaches_at_55_steady_state": [],
+   "reaches_at_55_while_fresh": []
+  },
+  {
+   "id": "828f2ae9-ddcf-47da-ab3e-ad31a96264ba",
+   "title": "Pilgrim Trust — Conservation of Cultural Heritage",
+   "apply_url": "https://www.thepilgrimtrust.org.uk/preservation-and-conservation-grants/conservation-of-cultural-heritage/",
+   "location_tag": "UK",
+   "amount_min": 1000,
+   "amount_max": 30000,
+   "amount_undisclosed": false,
+   "deadline": null,
+   "is_rolling": true,
+   "pipeline_state": "tagged_awaiting_review",
+   "is_active": false,
+   "ceiling_25k_or_more": true,
+   "scores_steady_state": {
+    "Learning with Parents [650615a8]": "sector",
+    "Learning with Parents [0b23fedf]": "sector",
+    "Mizen Foundation": "sector",
+    "Common Ground Kitchen CIC": "structure",
+    "Institute of Imagination [f1f9c904]": 44,
+    "Mercury Theatre": 44,
+    "Institute of Imagination [7c89f4ff]": 44,
+    "Learning with Parents [86df2e31]": "sector",
+    "Bikeworks CIC": "structure"
+   },
+   "reaches_at_55_steady_state": [],
+   "reaches_at_55_while_fresh": []
+  },
+  {
+   "id": "445c04be-f2d5-4f5e-ad2a-09dbb0d8cb30",
+   "title": "Pilgrim Trust — Historic Buildings and Structures",
+   "apply_url": "https://www.thepilgrimtrust.org.uk/preservation-and-conservation-grants/historic-buildings-and-structures/",
+   "location_tag": "UK",
+   "amount_min": 1000,
+   "amount_max": 30000,
+   "amount_undisclosed": false,
+   "deadline": null,
+   "is_rolling": true,
+   "pipeline_state": "tagged_awaiting_review",
+   "is_active": false,
+   "ceiling_25k_or_more": true,
+   "scores_steady_state": {
+    "Learning with Parents [650615a8]": "sector",
+    "Learning with Parents [0b23fedf]": 44,
+    "Mizen Foundation": "sector",
+    "Common Ground Kitchen CIC": "structure",
+    "Institute of Imagination [f1f9c904]": 44,
+    "Mercury Theatre": 44,
+    "Institute of Imagination [7c89f4ff]": 44,
+    "Learning with Parents [86df2e31]": "sector",
+    "Bikeworks CIC": "structure"
+   },
+   "reaches_at_55_steady_state": [],
+   "reaches_at_55_while_fresh": []
+  },
+  {
+   "id": "61de6bd4-c4fa-4efc-9412-b1d8b6627f57",
+   "title": "SUEZ Communities Fund — England",
+   "apply_url": "https://grantscape.org.uk/fund/suez-communities-fund-england/",
+   "location_tag": "Selected areas",
+   "amount_min": 3000,
+   "amount_max": 50000,
+   "amount_undisclosed": false,
+   "deadline": "2026-11-18",
+   "is_rolling": false,
+   "pipeline_state": "tagged_awaiting_review",
+   "is_active": false,
+   "ceiling_25k_or_more": true,
+   "scores_steady_state": {
+    "Learning with Parents [650615a8]": "sector",
+    "Learning with Parents [0b23fedf]": 44,
+    "Mizen Foundation": "sector",
+    "Common Ground Kitchen CIC": 44,
+    "Institute of Imagination [f1f9c904]": 44,
+    "Mercury Theatre": 44,
+    "Institute of Imagination [7c89f4ff]": 44,
+    "Learning with Parents [86df2e31]": "sector",
+    "Bikeworks CIC": 62
+   },
+   "reaches_at_55_steady_state": [
+    "Bikeworks CIC"
+   ],
+   "reaches_at_55_while_fresh": [
+    "Bikeworks CIC"
+   ]
+  },
+  {
+   "id": "d5f1d340-6963-4f9d-bfde-2cbc66a43cdf",
+   "title": "Sustainable Steps Wales — Green Careers Cardiff",
+   "apply_url": "https://www.tnlcommunityfund.org.uk/funding/funding-programmes/sustainable-steps-wales-green-careers-cardiff",
+   "location_tag": "Cardiff",
+   "amount_min": 300,
+   "amount_max": 25000,
+   "amount_undisclosed": false,
+   "deadline": "2026-10-31",
+   "is_rolling": false,
+   "pipeline_state": "tagged_awaiting_review",
+   "is_active": false,
+   "ceiling_25k_or_more": true,
+   "scores_steady_state": {
+    "Learning with Parents [650615a8]": "sector",
+    "Learning with Parents [0b23fedf]": "sector",
+    "Mizen Foundation": "location",
+    "Common Ground Kitchen CIC": "location",
+    "Institute of Imagination [f1f9c904]": "sector",
+    "Mercury Theatre": "sector",
+    "Institute of Imagination [7c89f4ff]": "sector",
+    "Learning with Parents [86df2e31]": "sector",
+    "Bikeworks CIC": "location"
+   },
+   "reaches_at_55_steady_state": [],
+   "reaches_at_55_while_fresh": []
+  },
+  {
+   "id": "83995d9e-ad64-4a0f-9c0d-e5105b0dc575",
+   "title": "Tarmac Landfill Communities Fund",
+   "apply_url": "https://www.derbyshire.gov.uk/community/lottery-funding/environmental-trust/derbyshire-environmental-trust.aspx",
+   "location_tag": "Selected areas",
+   "amount_min": null,
+   "amount_max": null,
+   "amount_undisclosed": true,
+   "deadline": null,
+   "is_rolling": true,
+   "pipeline_state": "tagged_awaiting_review",
+   "is_active": false,
+   "ceiling_25k_or_more": false,
+   "scores_steady_state": {
+    "Learning with Parents [650615a8]": "sector",
+    "Learning with Parents [0b23fedf]": 44,
+    "Mizen Foundation": "sector",
+    "Common Ground Kitchen CIC": 44,
+    "Institute of Imagination [f1f9c904]": 44,
+    "Mercury Theatre": 44,
+    "Institute of Imagination [7c89f4ff]": 44,
+    "Learning with Parents [86df2e31]": "sector",
+    "Bikeworks CIC": 54
+   },
+   "reaches_at_55_steady_state": [],
+   "reaches_at_55_while_fresh": [
+    "Bikeworks CIC"
+   ]
+  },
+  {
+   "id": "f09266a5-ed85-4d50-a76c-a92a49747ed2",
+   "title": "Transwaste Community Fund",
+   "apply_url": "https://grantscape.org.uk/fund/transwaste-community-fund/",
+   "location_tag": "Fleetwood",
+   "amount_min": 10000,
+   "amount_max": 40000,
+   "amount_undisclosed": false,
+   "deadline": "2027-01-08",
+   "is_rolling": false,
+   "pipeline_state": "tagged_awaiting_review",
+   "is_active": false,
+   "ceiling_25k_or_more": true,
+   "scores_steady_state": {
+    "Learning with Parents [650615a8]": "sector",
+    "Learning with Parents [0b23fedf]": "location",
+    "Mizen Foundation": "sector",
+    "Common Ground Kitchen CIC": "location",
+    "Institute of Imagination [f1f9c904]": "location",
+    "Mercury Theatre": "location",
+    "Institute of Imagination [7c89f4ff]": "location",
+    "Learning with Parents [86df2e31]": "sector",
+    "Bikeworks CIC": "location"
+   },
+   "reaches_at_55_steady_state": [],
+   "reaches_at_55_while_fresh": []
+  },
+  {
+   "id": "3ddb9867-1bef-4901-83e3-c14344b6c936",
+   "title": "Tree Council — Trees Outside Woodland Fund 2026/27",
+   "apply_url": "https://treecouncil.org.uk/grants-and-guidance/our-grants/trees-outside-woodland-fund/",
+   "location_tag": "England",
+   "amount_min": 10000,
+   "amount_max": 40000,
+   "amount_undisclosed": false,
+   "deadline": "2026-10-31",
+   "is_rolling": false,
+   "pipeline_state": "tagged_awaiting_review",
+   "is_active": false,
+   "ceiling_25k_or_more": true,
+   "scores_steady_state": {
+    "Learning with Parents [650615a8]": "sector",
+    "Learning with Parents [0b23fedf]": 44,
+    "Mizen Foundation": "sector",
+    "Common Ground Kitchen CIC": "structure",
+    "Institute of Imagination [f1f9c904]": 44,
+    "Mercury Theatre": 44,
+    "Institute of Imagination [7c89f4ff]": 44,
+    "Learning with Parents [86df2e31]": "sector",
+    "Bikeworks CIC": "structure"
+   },
+   "reaches_at_55_steady_state": [],
+   "reaches_at_55_while_fresh": []
+  },
+  {
+   "id": "d685a8c8-1387-4050-90f0-6493fd24522a",
+   "title": "Trust for London — Disability Justice Fund",
+   "apply_url": "https://trustforlondon.org.uk/funding/social-justice/disability-justice/",
+   "location_tag": "London",
+   "amount_min": 10000,
+   "amount_max": 180000,
+   "amount_undisclosed": false,
+   "deadline": null,
+   "is_rolling": true,
+   "pipeline_state": "tagged_awaiting_review",
+   "is_active": false,
+   "ceiling_25k_or_more": true,
+   "scores_steady_state": {
+    "Learning with Parents [650615a8]": "sector",
+    "Learning with Parents [0b23fedf]": "sector",
+    "Mizen Foundation": "location",
+    "Common Ground Kitchen CIC": "sector",
+    "Institute of Imagination [f1f9c904]": "sector",
+    "Mercury Theatre": "sector",
+    "Institute of Imagination [7c89f4ff]": "sector",
+    "Learning with Parents [86df2e31]": "sector",
+    "Bikeworks CIC": "sector"
+   },
+   "reaches_at_55_steady_state": [],
+   "reaches_at_55_while_fresh": []
+  },
+  {
+   "id": "9038739f-5d41-47a9-acfa-650fe4d883a5",
+   "title": "Trust for London — Racial Justice Fund",
+   "apply_url": "https://trustforlondon.org.uk/funding/social-justice/racial-justice/",
+   "location_tag": "London",
+   "amount_min": null,
+   "amount_max": null,
+   "amount_undisclosed": true,
+   "deadline": null,
+   "is_rolling": true,
+   "pipeline_state": "tagged_awaiting_review",
+   "is_active": false,
+   "ceiling_25k_or_more": false,
+   "scores_steady_state": {
+    "Learning with Parents [650615a8]": "location",
+    "Learning with Parents [0b23fedf]": "location",
+    "Mizen Foundation": "location",
+    "Common Ground Kitchen CIC": "sector",
+    "Institute of Imagination [f1f9c904]": "sector",
+    "Mercury Theatre": "sector",
+    "Institute of Imagination [7c89f4ff]": "sector",
+    "Learning with Parents [86df2e31]": "location",
+    "Bikeworks CIC": "sector"
+   },
+   "reaches_at_55_steady_state": [],
+   "reaches_at_55_while_fresh": []
+  },
+  {
+   "id": "19f2cd47-83a7-48f9-a9d3-fbc25f7c3a3d",
+   "title": "Vinehill Trust — Health",
+   "apply_url": "https://vinehilltrust.uk/health/",
+   "location_tag": "UK",
+   "amount_min": 10000,
+   "amount_max": 100000,
+   "amount_undisclosed": false,
+   "deadline": "2027-06-30",
+   "is_rolling": true,
+   "pipeline_state": "tagged_awaiting_review",
+   "is_active": false,
+   "ceiling_25k_or_more": true,
+   "scores_steady_state": {
+    "Learning with Parents [650615a8]": "sector",
+    "Learning with Parents [0b23fedf]": "sector",
+    "Mizen Foundation": "sector",
+    "Common Ground Kitchen CIC": "sector",
+    "Institute of Imagination [f1f9c904]": "sector",
+    "Mercury Theatre": 44,
+    "Institute of Imagination [7c89f4ff]": "sector",
+    "Learning with Parents [86df2e31]": "sector",
+    "Bikeworks CIC": 69
+   },
+   "reaches_at_55_steady_state": [
+    "Bikeworks CIC"
+   ],
+   "reaches_at_55_while_fresh": [
+    "Bikeworks CIC"
+   ]
+  },
+  {
+   "id": "4606a6ed-3090-4d63-8ec3-cfe370b7ac8b",
+   "title": "Vinehill Trust — Heritage (Building Crafts)",
+   "apply_url": "https://vinehilltrust.uk/heritage/",
+   "location_tag": "UK",
+   "amount_min": 10000,
+   "amount_max": 100000,
+   "amount_undisclosed": false,
+   "deadline": null,
+   "is_rolling": true,
+   "pipeline_state": "tagged_awaiting_review",
+   "is_active": false,
+   "ceiling_25k_or_more": true,
+   "scores_steady_state": {
+    "Learning with Parents [650615a8]": "sector",
+    "Learning with Parents [0b23fedf]": "sector",
+    "Mizen Foundation": "sector",
+    "Common Ground Kitchen CIC": "structure",
+    "Institute of Imagination [f1f9c904]": "sector",
+    "Mercury Theatre": "sector",
+    "Institute of Imagination [7c89f4ff]": "sector",
+    "Learning with Parents [86df2e31]": "sector",
+    "Bikeworks CIC": "structure"
+   },
+   "reaches_at_55_steady_state": [],
+   "reaches_at_55_while_fresh": []
+  },
+  {
+   "id": "bd67f618-23bd-43bc-a506-2b24a15a4790",
+   "title": "Vinehill Trust — Music (Choral and Organ)",
+   "apply_url": "https://vinehilltrust.uk/music/",
+   "location_tag": "UK",
+   "amount_min": 10000,
+   "amount_max": 100000,
+   "amount_undisclosed": false,
+   "deadline": null,
+   "is_rolling": true,
+   "pipeline_state": "tagged_awaiting_review",
+   "is_active": false,
+   "ceiling_25k_or_more": true,
+   "scores_steady_state": {
+    "Learning with Parents [650615a8]": 44,
+    "Learning with Parents [0b23fedf]": 44,
+    "Mizen Foundation": 44,
+    "Common Ground Kitchen CIC": "structure",
+    "Institute of Imagination [f1f9c904]": 44,
+    "Mercury Theatre": 44,
+    "Institute of Imagination [7c89f4ff]": 44,
+    "Learning with Parents [86df2e31]": 44,
+    "Bikeworks CIC": "structure"
+   },
+   "reaches_at_55_steady_state": [],
+   "reaches_at_55_while_fresh": []
+  },
+  {
+   "id": "4831cd4b-31f4-4bc5-98bd-3cecfc652ec0",
+   "title": "Walney Extension Community Fund (Ørsted)",
+   "apply_url": "https://grantscape.org.uk/fund/walney-extension-community-fund/",
+   "location_tag": "Cumbria, Lancashire",
+   "amount_min": 500,
+   "amount_max": 50000,
+   "amount_undisclosed": false,
+   "deadline": "2027-01-08",
+   "is_rolling": false,
+   "pipeline_state": "tagged_awaiting_review",
+   "is_active": false,
+   "ceiling_25k_or_more": true,
+   "scores_steady_state": {
+    "Learning with Parents [650615a8]": "sector",
+    "Learning with Parents [0b23fedf]": "location",
+    "Mizen Foundation": "sector",
+    "Common Ground Kitchen CIC": "location",
+    "Institute of Imagination [f1f9c904]": "location",
+    "Mercury Theatre": "location",
+    "Institute of Imagination [7c89f4ff]": "location",
+    "Learning with Parents [86df2e31]": "sector",
+    "Bikeworks CIC": "location"
+   },
+   "reaches_at_55_steady_state": [],
+   "reaches_at_55_while_fresh": []
+  }
+ ],
+ "rejected_grouped": {
+  "closed_held_funder": [
+   "Tudor Trust",
+   "Nationwide Foundation",
+   "Rank Foundation",
+   "Pears Foundation",
+   "Power to Change",
+   "Lankelly Chase Foundation",
+   "Foyle Foundation"
+  ],
+  "closed": [
+   "Sobell Foundation",
+   "Monument Trust",
+   "Jane Hodge Foundation",
+   "SUEZ Communities Fund — Scotland",
+   "Berkeley Foundation",
+   "Middlemoor Wind Farm Community Benefit Fund (GrantScape)"
+  ],
+  "invitation_only": [
+   "Peter Cundill Foundation",
+   "Segelman Trust",
+   "Tuixen Foundation",
+   "Millfield House Foundation",
+   "Virgin Money Foundation",
+   "Joseph Levy Foundation"
+  ],
+  "no_funder_page_to_cite": [
+   "Persula Foundation",
+   "Lord Leverhulme's Charitable Trust",
+   "Emmandjay Charitable Trust"
+  ],
+  "wrong_applicant": [
+   "Leverhulme Trust"
+  ],
+  "under_25k": [
+   "Batchworth Trust",
+   "Garrick Charitable Trust",
+   "Radcliffe Trust",
+   "Sir George Martin Trust",
+   "Vintners' Foundation",
+   "Yorkshire Building Society Charitable Foundation",
+   "Society of Merchant Venturers Charity (Bristol)",
+   "Colchester Catalyst Charity",
+   "Eastchurch Community Fund (GrantScape)"
+  ],
+  "no_open_route": [
+   "Haberdashers' Company",
+   "Taylor Wimpey, Barratt Redrow, Bellway, Kier, Balfour Beatty"
+  ],
+  "no_live_page": [
+   "Santander Foundation",
+   "NatWest Skills & Opportunities Fund"
+  ],
+  "closes_before_review": [
+   "Cleve Hill Community Benefit Fund (GrantScape)"
+  ],
+  "ambiguous_page": [
+   "Ashcourt Durham and Tees Valley Community Fund (GrantScape)"
+  ]
+ },
+ "candidates": [
+  {
+   "candidate": "Lloyds Bank Foundation",
+   "outcome": "held_between_rounds",
+   "held_ids": [
+    "2f87181a",
+    "65dd568c",
+    "56c37a1d"
+   ],
+   "url": "https://www.lloydsbankfoundation.org.uk/funding/",
+   "reason": "Only programme listed is Good Place to Live: New Beginnings Fund, marked Closed (held 2f87181a, deadline 9 Sept). Page: 'Further funding rounds focused on a Community that's a Good Place to live will follow afterwards'; extension funding and strategic grants are by direct contact. No open or dated round; nothing to stage or reopen.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Tudor Trust",
+   "outcome": "closed",
+   "held_ids": [
+    "6832066b",
+    "2fddeaed"
+   ],
+   "url": "https://www.tudortrust.org.uk/our-work/our-grant-making/",
+   "reason": "Invitation only, no route in: 'We do not have a traditional, written application process... we take time before inviting individual organisations to apply.' Partners are identified through ecosystem mapping. Grants £100k to £1m. Both held rows already archived/rejected; nothing to do.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Baring Foundation",
+   "outcome": "held_between_rounds",
+   "held_ids": [
+    "2b0fb0f0",
+    "ccd7ff18",
+    "5d883343",
+    "21c02ac2"
+   ],
+   "url": "https://baringfoundation.org.uk/our-grant-making/current-funding-opportunities/",
+   "reason": "Current funding opportunities page lists no open call: 'When we have open calls for applications, they will be listed here.' International Development is always invitation only. Strengthening Civil Society (2b0fb0f0) closed 7 Sept. Nothing to stage or reopen.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Nationwide Foundation",
+   "outcome": "closed",
+   "held_ids": [
+    "45d5140a",
+    "b0656c51",
+    "a7c4db30",
+    "05c2be65",
+    "d6598999"
+   ],
+   "url": "https://nationwidefoundation.org.uk/available-funding/",
+   "reason": "'we are currently unable to accept unsolicited applications for funding'; funding stays within existing partners in the current strategy phase. All five held rows already archived or rejected.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Rank Foundation",
+   "outcome": "closed",
+   "held_ids": [
+    "eddc2878",
+    "a91f58e0",
+    "0efbafbc"
+   ],
+   "url": "https://rankfoundation.com/our-approach/",
+   "reason": "'We do not accept unsolicited requests for funding'; Network members are invited or told via the private RankNet platform. /grants/ now 404s. Held rows already archived or rejected.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Pears Foundation",
+   "outcome": "closed",
+   "held_ids": [
+    "0f418b9f"
+   ],
+   "url": "https://pearsfoundation.org.uk/",
+   "reason": "'We are an invitation-only foundation.' The one held row is the UK Youth Fund, a UK Youth-run fund, between rounds; unaffected.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Power to Change",
+   "outcome": "closed",
+   "held_ids": [
+    "72bc6f04",
+    "0ab57b5d",
+    "f89bad1b",
+    "c262f653",
+    "12cf1f69",
+    "f55718a8"
+   ],
+   "url": "https://www.powertochange.org.uk/",
+   "reason": "Now describes itself as a think-do tank; homepage lists reports, the Civic High Street Collective and a Market Drayton partnership, no open fund. /our-funds/ 404s. Held rows already archived or rejected.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Lankelly Chase Foundation",
+   "outcome": "closed",
+   "held_ids": [
+    "76283e86"
+   ],
+   "url": "http://lankellychase.org.uk",
+   "reason": "Skipped per brief: wound down. Held row already archived.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Garfield Weston Foundation",
+   "outcome": "held",
+   "held_ids": [
+    "49ff8ed7"
+   ],
+   "url": "https://garfieldweston.org/for-grant-applicants/how-to-apply/",
+   "reason": "Regular grants (under £100k) are the live row 49ff8ed7. Major Grants (£100k+) need a project costing at least £1m, and core-cost major grants need income of £1m or more; out of the heartland's reach, not staged. No Weston Culture Fund or dated strand on the applicant pages today.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Henry Smith Foundation",
+   "outcome": "held",
+   "held_ids": [
+    "9732902b",
+    "cf29bfb0",
+    "b5b74039",
+    "720c4571"
+   ],
+   "url": "https://henrysmith.foundation/grants/",
+   "reason": "Open now: Domestic Abuse Counselling, Maternity Equity, Clergy (all held live). Improving Lives and Strengthening Communities no longer exist under the 2025-2030 strategy (held 14643497 correctly archived). Coming soon: Opportunity Fund, which its own page says is invitation-only with no route in. Nothing to stage.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Paul Hamlyn Foundation",
+   "outcome": "held",
+   "held_ids": [
+    "a5b9182e",
+    "c99c9f91",
+    "dbf2a937",
+    "3585a7fa"
+   ],
+   "url": "https://www.phf.org.uk/funding",
+   "reason": "All four open UK funds held live (Teacher Development, Migration, Youth, Arts-based Learning). India Fund is for India-based organisations. Arts Fund (£90k-£300k) not accepting applications, no date. Ideas and Pioneers is up to £20k and its 2025 deadline passed. Nothing to stage.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Trust for London",
+   "outcome": "proposed_live_fix",
+   "held_ids": [
+    "60206220",
+    "6ffdea3c"
+   ],
+   "url": "https://trustforlondon.org.uk/funding/",
+   "reason": "Live row 60206220 carries no amount and is_rolling false. The 2026 funding guidelines (Word document linked from the page) say grants normally range £40,000 to £80,000 a year for up to five years, not typically above £300,000 in total, with project and unrestricted funding and no deadlines (rolling). Fixed in place rather than duplicated; Migrant destitution priority temporarily closed, noted in the brief.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Wolfson Foundation (capital strands for charities)",
+   "outcome": "deferred_outside_window",
+   "held_ids": [
+    "229988e1",
+    "68959d7e",
+    "9be78fe2",
+    "e041f738"
+   ],
+   "url": "https://www.wolfson.org.uk/funding/funding-for-places/",
+   "reason": "Separate strands with their own pages: disability, mental health, older people (min £25k, usual £40k-£75k), hospices (usual £50k-£150k), performing arts (usual £50k-£150k), historic buildings (usual £15k-£100k), museums (usual £50k-£500k). Registered charities only, no CICs. Round 1 opens to Stage 1 on 20 November, deadline 5 January; that is 56 days out, outside the 30-day rule, so not staged. Ready to stage from about 21 October; one live whole-funder row (229988e1) holds the place meanwhile.",
+   "programmes_read": 7
+  },
+  {
+   "candidate": "National Lottery Community Fund (open programmes)",
+   "outcome": "held",
+   "held_ids": [
+    "ad844c25",
+    "0d40a15e",
+    "3f6173b6",
+    "e2caeabf",
+    "29e9ed97",
+    "5e04c94c",
+    "cd293f78",
+    "36ebd58a",
+    "13f8f5e6"
+   ],
+   "url": "https://www.tnlcommunityfund.org.uk/funding/funding-programmes?status=open",
+   "reason": "22 programmes open on 25 Sept, read across three pages of the status=open filter. Every one with a ceiling of £25k or more is held live. Not held: Small Eco Awards (up to £20k, under the band) and Sustainable Steps Wales Green Careers Cardiff (staged).",
+   "programmes_read": 21
+  },
+  {
+   "candidate": "Comic Relief",
+   "outcome": "held_between_rounds",
+   "held_ids": [
+    "3b90b319",
+    "aec5dee3"
+   ],
+   "url": "https://www.comicrelief.com/funding/funding-opportunities",
+   "reason": "'There are currently no live funding opportunities.' Community Fund England via Groundwork (held live, under £5k) is the only open route.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Joseph Rowntree Charitable Trust",
+   "outcome": "held_between_rounds",
+   "held_ids": [
+    "8f8bc717",
+    "6344f1bf",
+    "8bb0acde"
+   ],
+   "url": "https://www.jrct.org.uk/when-to-apply",
+   "reason": "All five programmes closed at round two, 2 September 2026; 2027 dates not yet published. LIVE AND WRONG: 8f8bc717 Rights and Justice is live with no deadline, but new applicants had to pass an EOI by 13 July and the round closed 2 September; should be between rounds. Peace and Security and Northern Ireland are not held; same round dates, so not staged now.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Barrow Cadbury Trust",
+   "outcome": "staged",
+   "held_ids": [
+    "7e2f1cd7",
+    "ba7787e6"
+   ],
+   "url": "https://barrowcadbury.org.uk/our-work/economic-justice/",
+   "reason": "Funds largely committed during the strategic review; the one open route is Building an Alternative Economic Model in Birmingham (enquiry form). Staged with amount_undisclosed. Note the live general row 7e2f1cd7 says UK with no amount; other programmes 'expect to update on available funding in 2027'.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Clore Duffield Foundation — School Choirs and Singing Programme",
+   "outcome": "staged",
+   "held_ids": [],
+   "url": "https://www.cloreduffield.org.uk/clore-school-choirs-and-singing-programme",
+   "reason": "New programme: £50,000 to £100,000 a year for three years, five to ten projects, organisations with choral expertise working with at least three state-funded schools in England. Charities, CICs and CLGs admitted per the grant guidance PDF. Open 21 Sept, closes midday 30 Oct 2026. Not held (the one 'Clore' row is Clore Social Leadership, a different body). Clore's School Trips Grant is for schools only, not staged.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Sobell Foundation",
+   "outcome": "rejected_closed",
+   "held_ids": [],
+   "url": "https://sobellfoundation.org.uk/Home.htm",
+   "reason": "'we are currently only accepting applications from charities that have received a grant from The Sobell Foundation within the past five years... Charities that have never received a grant from us are not eligible to apply.'",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Peter Cundill Foundation",
+   "outcome": "rejected_invitation_only",
+   "held_ids": [],
+   "url": "https://www.thepetercundillfoundation.com/grants.html",
+   "reason": "'Our portfolios in the areas where we focus are full. We are currently not accepting unsolicited applications.'",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Segelman Trust",
+   "outcome": "rejected_invitation_only",
+   "held_ids": [],
+   "url": "https://segelmantrust.org.uk/contact",
+   "reason": "'Grant proposals are by invitation only. Segelman does not accept funding requests.' The introduction form is 'not an application'. Typical grant £40k a year, multi-year, income under £2m; would have fitted.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Tuixen Foundation",
+   "outcome": "rejected_invitation_only",
+   "held_ids": [],
+   "url": "https://tuixen.org.uk/about/",
+   "reason": "'Unsolicited applications are not sought and correspondence will not be replied to.'",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Persula Foundation",
+   "outcome": "rejected_no_own_page",
+   "held_ids": [],
+   "url": "https://www.jonmatthews.co.uk/persula-foundation-fairness-foundation/",
+   "reason": "No website of its own (persula.org does not resolve); only third-party directory entries from 2021 onwards. Nothing citable from the funder on who can apply or amounts. Rolling by contacting the Secretary per the directories; worth Paul's browser if he wants it.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Leverhulme Trust",
+   "outcome": "rejected_wrong_applicant",
+   "held_ids": [],
+   "url": "https://www.leverhulme.ac.uk/",
+   "reason": "Research funder; grants go to universities and researchers. Skipped per brief.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Lord Leverhulme's Charitable Trust",
+   "outcome": "rejected_no_own_page",
+   "held_ids": [],
+   "url": "https://register-of-charities.charitycommission.gov.uk/charity-details/?subid=0&regid=212431",
+   "reason": "No website. Directory entries say charities outside Cheshire, Merseyside and South Lancashire should not apply without invitation; no stated amounts.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Batchworth Trust",
+   "outcome": "rejected_under_band",
+   "held_ids": [],
+   "url": "https://register-of-charities.charitycommission.gov.uk/en/charity-search/-/charity-details/245061/charity-overview",
+   "reason": "No website; directories say grants generally £15,000 or less, applications in writing.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Monument Trust",
+   "outcome": "rejected_closed",
+   "held_ids": [],
+   "url": "",
+   "reason": "Spent out and closed; skipped per brief.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Garrick Charitable Trust",
+   "outcome": "rejected_under_band",
+   "held_ids": [],
+   "url": "https://www.garrickclub.co.uk/charitable_trust/",
+   "reason": "Grants normally £2,500 to £5,000 for professional theatre, music, dance and literature organisations.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Radcliffe Trust",
+   "outcome": "rejected_under_band",
+   "held_ids": [],
+   "url": "https://theradcliffetrust.org/guidelines/",
+   "reason": "'Heritage & Crafts grants are generally in the region of £2,500–£7,500. Music grants are in the region of £2,500–£5,000.'",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Ballinger Charitable Trust",
+   "outcome": "staged",
+   "held_ids": [],
+   "url": "https://www.ballingercharitabletrust.org.uk/what-we-do/",
+   "reason": "North East England, young people (0 to 19, 25 with SEN) and older people (55+). 'Our typical grant award is £10,000 to £20,000 per annum for an initial period of 2 to 3 years'; 95% unrestricted. Charities, CICs (with a credible enterprise model) and community groups. Rolling, quarterly trustee meetings. Multi-year total up to £60,000 recorded as amount_max.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Millfield House Foundation",
+   "outcome": "rejected_invitation_only",
+   "held_ids": [],
+   "url": "https://mhfdn.org.uk/",
+   "reason": "'The Trustees do not accept unsolicited grant applications.' Five strategic partners.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Sir George Martin Trust",
+   "outcome": "rejected_under_band",
+   "held_ids": [],
+   "url": "https://www.sirgeorgemartintrust.org.uk/",
+   "reason": "One-off grants £1,000 to £5,000, West Yorkshire registered charities only; October meeting already full.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Liz and Terry Bramall Foundation",
+   "outcome": "staged",
+   "held_ids": [],
+   "url": "https://www.bramallfoundation.org/",
+   "reason": "Rolling, by letter or email, emphasis on Yorkshire; objects cover regeneration in deprived areas, health, arts and music education, Church of England, heritage, recreation. No amount on its own page (directories quote £1,000 to £275,000, not used), so staged amount_undisclosed.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Charles Plater Trust",
+   "outcome": "deferred_outside_window",
+   "held_ids": [],
+   "url": "https://www.plater.org.uk/our-grants",
+   "reason": "'Applications are currently closed'; update on the 2027 small and large grant programmes due 15 December 2026. Registered charities under £10m income, grants up to £60,000 total. Worth staging after 15 Dec.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Emmandjay Charitable Trust",
+   "outcome": "rejected_no_own_page",
+   "held_ids": [],
+   "url": "https://register-of-charities.charitycommission.gov.uk/charity-details/?regid=212279&subid=0",
+   "reason": "No website or published application route found; Charity Commission entry only.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Jane Hodge Foundation",
+   "outcome": "rejected_closed",
+   "held_ids": [],
+   "url": "https://www.hodgefoundation.org.uk/how-to-apply/",
+   "reason": "'Online Applications Temporarily Closed... We have taken the difficult decision to pause all new applications.' Check again later.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Trust for London — Disability Justice Fund",
+   "outcome": "staged",
+   "held_ids": [
+    "60206220"
+   ],
+   "url": "https://trustforlondon.org.uk/funding/social-justice/disability-justice/",
+   "reason": "Own page, own criteria (DDPOs per Inclusion London's definition), rolling until end of 2027. 'Most grants are likely to be between £30,000 and £180,000 for established organisations. Development grants are likely to be between £10,000-£35,000.' Up to four years. Lead left by the London boroughs batch as a London-wide strand; staged beside the whole-funder row 60206220.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Trust for London — Racial Justice Fund",
+   "outcome": "staged",
+   "held_ids": [
+    "60206220"
+   ],
+   "url": "https://trustforlondon.org.uk/funding/social-justice/racial-justice/",
+   "reason": "Own page and guidelines PDF, jointly funded with City Bridge and Lloyds Bank Foundation; economic empowerment of Black and minoritised Londoners; charities, CIOs, CICs, CLGs; rolling via a call then EOI. The RJF guidelines state no per-grant figure, so staged amount_undisclosed; the brief notes Trust for London's general guidelines figure (£40k-£80k a year).",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Haberdashers' Company",
+   "outcome": "rejected_no_open_route",
+   "held_ids": [],
+   "url": "https://haberdashers.co.uk/education/",
+   "reason": "Charitable funds go to the Haberdashers' own schools and academy trusts through endowments; no open grants programme for outside charities.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Vintners' Foundation",
+   "outcome": "rejected_under_band",
+   "held_ids": [],
+   "url": "https://www.vintnershall.co.uk/charity",
+   "reason": "'Most grants are made as one-off awards of up to £5,000'; Favoured Charities are selected, not applied for. Greater London.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Goldsmiths' Foundation",
+   "outcome": "held_closed",
+   "held_ids": [
+    "f88f9555"
+   ],
+   "url": "https://www.thegoldsmiths.co.uk/foundation/",
+   "reason": "'Our Open Grants Fund (Spring 2026) is now closed... we are not currently open to applications for grants.' No next date.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Ironmongers' Company",
+   "outcome": "held_closed",
+   "held_ids": [
+    "717a8aef"
+   ],
+   "url": "https://www.ironmongers.org/helping-charitable-organisations",
+   "reason": "Still 'on pause while we finalise a new funding policy'; grants £3,000 to £10,000 in any case (under the band).",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Fishmongers, Grocers, Skinners, Leathersellers, Drapers, Cripplegate",
+   "outcome": "held",
+   "held_ids": [
+    "3b8727a4",
+    "69275979",
+    "809e464b",
+    "2d515d44",
+    "5fa1e39d",
+    "8d98b098",
+    "e0ed3c06"
+   ],
+   "url": "",
+   "reason": "All held with dates already recorded (Fishmongers reopens late Nov/early Dec, Grocers March 2027, Leathersellers January 2027, Skinners to 30 Nov); ceilings £5k to £25k except Fishmongers (£15k-£90k, reopening outside the 30-day window). Cripplegate covered by the London boroughs batch.",
+   "programmes_read": 6
+  },
+  {
+   "candidate": "FCC Communities Foundation — FCC Community Action Fund",
+   "outcome": "staged",
+   "held_ids": [],
+   "url": "https://fcccommunitiesfoundation.org.uk/funds/fcc-community-action-fund",
+   "reason": "£10,000 to £100,000, capital, within 10 miles of an FCC site in England, registered charities (no CICs); round 2026-4 closes 18 Nov 2026. Not held.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "FCC Communities Foundation — Severn Waste Services Community Action Fund",
+   "outcome": "staged",
+   "held_ids": [],
+   "url": "https://fcccommunitiesfoundation.org.uk/funds/severn-waste-services-community-action-fund",
+   "reason": "£5,000 to £40,000, Herefordshire and Worcestershire near three SWS sites; closes 18 Nov 2026. Not held.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Biffa Award Main Grants Scheme (four themes)",
+   "outcome": "staged",
+   "held_ids": [
+    "ba48807d",
+    "3699fd9f"
+   ],
+   "url": "https://www.biffa-award.org/",
+   "reason": "Held rows archived with dead URLs. Scheme is open, rolling EOI, £10k-£75k, four themes with own pages and criteria: Community Buildings, Cultural Facilities, Recreation, Nature Recovery. Staged one row per theme. Partnership Grants Scheme (£250k-£1m) not checked for opening; over the band.",
+   "programmes_read": 4
+  },
+  {
+   "candidate": "SUEZ Communities Fund — England (GrantScape)",
+   "outcome": "staged",
+   "held_ids": [
+    "9353a0e5"
+   ],
+   "url": "https://grantscape.org.uk/fund/suez-communities-fund-england/",
+   "reason": "£3k-£50k (Smaller Projects up to £20k, Primary Fund up to £50k); closes 18 Nov 2026, then 10 Feb 2027; charities and not-for-profit CICs. Held row is the archived trust homepage. Scotland fund closed (SLCF ended 1 April 2026).",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Enovert Community Trust (formerly Cory Environmental Trust in Britain)",
+   "outcome": "staged",
+   "held_ids": [],
+   "url": "https://www.enovert.co.uk/enovert-community-trust/funding/apply-for-funding/",
+   "reason": "£5k to about £30k, up to £50k exceptionally; next deadline 4 Dec 2026; within 10 miles of Enovert sites. Covers the brief's 'Cory' and 'Ibstock Cory' entries (renamed).",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Tarmac Landfill Communities Fund",
+   "outcome": "staged",
+   "held_ids": [],
+   "url": "https://www.derbyshire.gov.uk/community/lottery-funding/environmental-trust/derbyshire-environmental-trust.aspx",
+   "reason": "Administered nationally by Derbyshire Environmental Trust; rolling, committee meets four times a year; no grant range published, staged amount_undisclosed. DET's own Derbyshire scheme is closed.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "SUEZ Communities Fund — Scotland",
+   "outcome": "rejected_closed",
+   "held_ids": [],
+   "url": "https://grantscape.org.uk/fund/suez-communities-fund-scotland/",
+   "reason": "'THIS FUND IS NOW CLOSED TO APPLICATIONS'; the Scottish Landfill Communities Fund closed to new contributions on 1 April 2026.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Veolia Environmental Trust",
+   "outcome": "held",
+   "held_ids": [
+    "c32ecdba"
+   ],
+   "url": "https://www.veoliatrust.org/funding/",
+   "reason": "Held live, £10k-£75k, deadline 1 Oct 2026. Not re-read.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Berkeley Foundation",
+   "outcome": "rejected_closed",
+   "held_ids": [
+    "df6c6cf5"
+   ],
+   "url": "https://www.berkeleyfoundation.org.uk/funding",
+   "reason": "'We are not currently running any open grant programmes, and we are unable to accept unsolicited funding applications.'",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Taylor Wimpey, Barratt Redrow, Bellway, Kier, Balfour Beatty",
+   "outcome": "rejected_no_open_route",
+   "held_ids": [],
+   "url": "https://www.taylorwimpey.co.uk/why-choose-us/charity-and-local-support",
+   "reason": "Corporate giving to chosen charity partners (St Mungo's, CRASH) and site-level community donations; no published grant programme with criteria and a route in. Balfour Beatty Communities Foundation is the US military-housing foundation. Barratt Foundation page redirects to the group homepage.",
+   "programmes_read": 5
+  },
+  {
+   "candidate": "Co-op Foundation",
+   "outcome": "held_closed",
+   "held_ids": [
+    "13048971",
+    "9e31d839",
+    "c94b6cd4",
+    "8888f9ed"
+   ],
+   "url": "https://www.coopfoundation.org.uk/how-we-fund/",
+   "reason": "Every fund closed: Carbon Innovation ended, Future Communities next round 2028, Green Opportunities closed, Lead the Change phase two expected 2027, Young Gamechangers 2027. Funding Futures is UnLtd's (awards up to £18k).",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "John Lewis Partnership Foundation",
+   "outcome": "held_closed",
+   "held_ids": [
+    "45741c93",
+    "9b48f40a"
+   ],
+   "url": "https://www.johnlewispartnership.co.uk/foundation/grantmaking",
+   "reason": "'Applications for grants are currently closed.' Merging its three grant-makers into one programme.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Virgin Money Foundation",
+   "outcome": "rejected_invitation_only",
+   "held_ids": [
+    "7b37ff2e",
+    "b2988cd6"
+   ],
+   "url": "https://virginmoneyfoundation.org.uk/our-programmes/digital-skills",
+   "reason": "Building Digital Skills Fund (up to £100k over three years) is 'by invitation only'. Note the live whole-funder row 7b37ff2e has no amount and no open route shown on the site.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Leeds Building Society Foundation",
+   "outcome": "held_closed",
+   "held_ids": [
+    "c3b90e15"
+   ],
+   "url": "https://www.leedsbuildingsociety.co.uk/your-society/about-us/foundation/",
+   "reason": "Large grants up to £75,000 over one to three years for Yorkshire and North East charities with turnover of £1m or less (average £40k over two years) would fit the band exactly, but 'Our large grant scheme is currently closed but is due to reopen later in 2026.' No date. Small grants (up to £2,500) are open. Directory listings quoting a Sept-Nov large window conflict with the funder's own page; the funder's page wins. Re-check in October.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Yorkshire Building Society Charitable Foundation",
+   "outcome": "rejected_under_band",
+   "held_ids": [
+    "c9b0a806"
+   ],
+   "url": "https://ocva.org.uk/2026/05/19/funding-yorkshire-building-society-charitable-foundation/",
+   "reason": "£250 to £2,000, by member or colleague recommendation only.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Santander Foundation",
+   "outcome": "rejected_no_live_page",
+   "held_ids": [
+    "9ad3d6f3",
+    "0983d471",
+    "13ddd968"
+   ],
+   "url": "https://www.santandersustainability.co.uk/the-santander-foundation",
+   "reason": "The foundation pages now 404 (santandersustainability redirects to a missing santander.co.uk page; santanderfoundationuk.org does not resolve). Only 2021-22 directory copies of the Financial & Digital Empowerment Fund remain.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "NatWest Skills & Opportunities Fund",
+   "outcome": "rejected_no_live_page",
+   "held_ids": [
+    "7746c32e"
+   ],
+   "url": "https://www.natwest.com/community-banking/skills-and-opportunities-fund.html",
+   "reason": "Page returns 404; no current programme found.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Aviva, Barclays, Asda, Tesco, Greggs, Bank of Scotland, Skipton",
+   "outcome": "held",
+   "held_ids": [
+    "2d0a123a",
+    "e0c1a655",
+    "b8c22c26",
+    "39e09339",
+    "d6f2fc61",
+    "cfb56fe7",
+    "b9e2549b",
+    "436551f5"
+   ],
+   "url": "",
+   "reason": "Held with current states; community funds are all £25k or under (Aviva Communities Fund £1k-£25k; Asda, Greggs, Tesco under £20k). Bank of Scotland Energise (£20k-£40k) held live, opens 28 Sept.",
+   "programmes_read": 7
+  },
+  {
+   "candidate": "Pilgrim Trust — Historic Buildings and Structures; Conservation of Cultural Heritage",
+   "outcome": "staged",
+   "held_ids": [
+    "facf81cb",
+    "2c44d134",
+    "e7451cc5",
+    "975a6cae",
+    "fae1af9e"
+   ],
+   "url": "https://www.thepilgrimtrust.org.uk/preservation-and-conservation-grants/",
+   "reason": "Two strands with their own pages: grants generally £1,000 to £30,000 (sometimes larger), rolling Stage one, quarterly board cut-offs (next 2 October 2026). Held live row facf81cb 'Preservation & Scholarship' has no amount and points at /grants/, which now redirects to grants-awarded. Staged per strand. Places of worship no longer funded for repairs.",
+   "programmes_read": 2
+  },
+  {
+   "candidate": "Masonic Charitable Foundation (Freemasons' Charity)",
+   "outcome": "held",
+   "held_ids": [
+    "6566a492",
+    "d6c9730d"
+   ],
+   "url": "https://freemasonscharity.org.uk/grants-to-charities/eligibility/",
+   "reason": "Large grants £10k-£60k (income £500k-£5m) and small grants held live. Correct.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Foyle Foundation",
+   "outcome": "closed",
+   "held_ids": [
+    "22edc2b4",
+    "58540995",
+    "90b3cb72"
+   ],
+   "url": "https://foylefoundation.org.uk/home/legacygrants/",
+   "reason": "Planned 25-year spend-down completed at the end of 2025; the how-to-apply page now 404s. Held rows already archived; mark closed so it is not looked at again.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Charles Hayward Foundation",
+   "outcome": "held_closed",
+   "held_ids": [
+    "94b70915",
+    "fedc9b06"
+   ],
+   "url": "https://charleshaywardfoundation.org.uk/",
+   "reason": "'Apply for funding: CURRENTLY CLOSED.' Note 94b70915 is pipeline_state published but not active; fedc9b06 (small grants, older people) is live and may also be closed.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Dulverton Trust",
+   "outcome": "held",
+   "held_ids": [
+    "574fc073"
+   ],
+   "url": "https://www.dulverton.org/",
+   "reason": "Held live; national-reach charities, eligibility quiz then EOI.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Blagrave Trust",
+   "outcome": "held_closed",
+   "held_ids": [
+    "76c11d28",
+    "b733cb52"
+   ],
+   "url": "https://www.blagravetrust.org/funding-and-support-for-young-changemakers",
+   "reason": "Challenge and Change, Pathways Fund and Roots & Routes all marked Closed.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Vinehill Trust (Health, Music, Heritage)",
+   "outcome": "staged",
+   "held_ids": [],
+   "url": "https://vinehilltrust.uk/",
+   "reason": "Not held. 'We typically award one-off grants of £10,000-£100,000.' Three strands with own guideline pages: Health (2027 cycle open now until 30 June 2027; charities, non-profits, CICs), Music (choral and organ traditions for children and young people; historic organ restoration), Heritage (historic building restoration with heritage craft training). Staged one row per strand.",
+   "programmes_read": 3
+  },
+  {
+   "candidate": "Strategic Legal Fund for Vulnerable Young Migrants",
+   "outcome": "reopen",
+   "held_ids": [
+    "32949533"
+   ],
+   "url": "https://strategiclegalfund.org.uk/how-to-apply/",
+   "reason": "Held row 32949533 is pipeline_state published but not active, carrying the passed 7 Sept 2026 deadline. The page lists the next deadline as 26 October 2026 (six closing dates a year). Max grant £30,000. Reopen: deadline 2026-10-26 on the held row, no new row.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Triangle Trust, Rewilding Challenge Fund, Shoosmiths Foundation, True Colours, Wise Music, Better Futures Fund",
+   "outcome": "held",
+   "held_ids": [
+    "d18b6db9",
+    "d828c430",
+    "f635ceba",
+    "85286aab",
+    "31807e92",
+    "10835bbc"
+   ],
+   "url": "https://www.wcvs.org.uk/post/this-week-s-funding-bulletin-september-7th-september-11th-2026",
+   "reason": "Bulletin leads already held (Triangle £50k-£100k live to 15 Oct; Rewilding £100k live to 9 Oct; Shoosmiths up to £50k live).",
+   "programmes_read": 6
+  },
+  {
+   "candidate": "Society of Merchant Venturers Charity (Bristol)",
+   "outcome": "rejected_under_band",
+   "held_ids": [],
+   "url": "https://www.merchantventurers.com/our-impact/charitable-giving/",
+   "reason": "'Grants awarded are usually between £500 and £5,000.' Window 1 Oct to 9 Dec 2026. Lead for a Bristol local batch.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Colchester Catalyst Charity",
+   "outcome": "rejected_under_band",
+   "held_ids": [],
+   "url": "https://colchestercatalyst.co.uk/generalgrants/",
+   "reason": "Health and disability equipment and projects in the CO postcode; no stated ceiling, published awards £7k to £17k. Lead for an Essex local batch.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "David Riddell Memorial CIO — Small Grant Programme 2026/27",
+   "outcome": "staged",
+   "held_ids": [],
+   "url": "https://www.davidriddell.org/grants",
+   "reason": "Not held. £5,000 to £25,000 for suicide awareness and prevention; charities, CIOs and CICs limited by guarantee; income over £1m unlikely to succeed; window 1 Sept to 31 Oct 2026, two rounds, awards March 2027. Found via Dudley CVS September bulletin.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Tree Council — Trees Outside Woodland Fund 2026/27",
+   "outcome": "staged",
+   "held_ids": [],
+   "url": "https://treecouncil.org.uk/grants-and-guidance/our-grants/trees-outside-woodland-fund/",
+   "reason": "Not held. £10,000 to £40,000 per application for trees and capital items outside woodland, England; registered charities with income over £100,000 and local authorities; open until 31 Oct 2026 or until allocated, first come first served.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Common Ground Award, Green Community Grants, A B Charitable Trust, LGBT+ Get Active, SSE Gateway, Magdalen, Shackleton",
+   "outcome": "held",
+   "held_ids": [
+    "5891ba25",
+    "87dae8fd",
+    "a94ae453",
+    "5415f474",
+    "5b3ee9d2",
+    "8ef744d0",
+    "482cfc54"
+   ],
+   "url": "https://www.dudleycvs.org.uk/septembers-funding-news-5/",
+   "reason": "Dudley CVS bulletin leads already held.",
+   "programmes_read": 7
+  },
+  {
+   "candidate": "Ufi VocTech Trust — VocTech Activate",
+   "outcome": "deferred_outside_window",
+   "held_ids": [
+    "f2a00b69",
+    "ab26d988",
+    "e15e9d51"
+   ],
+   "url": "https://ufi.co.uk/grant-funding/voctech-activate/",
+   "reason": "£30,000 to £60,000; applications open 5 January 2027 (Stage 1 deadline early February). Outside the 30-day window. VocTech Challenge closed. Held rows archived.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Ernest Cook Trust — Outdoor Learning Leader Grant",
+   "outcome": "deferred_outside_window",
+   "held_ids": [
+    "cc8ced9c",
+    "38eb7529"
+   ],
+   "url": "https://ernestcooktrust.org.uk/grants/",
+   "reason": "Up to £20,000 a year for up to three years, specific postcodes; 'next application window ... anticipated October 2026', no date. Communities Grant (£500) open. Re-check in October.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Joseph Levy Foundation",
+   "outcome": "rejected_invitation_only",
+   "held_ids": [],
+   "url": "https://www.jlf.org.uk/grants/application-process",
+   "reason": "'we do not accept unsolicited applications.'",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "GrantScape-administered funds (48 funds read from the closing-dates page)",
+   "outcome": "staged",
+   "held_ids": [],
+   "url": "https://grantscape.org.uk/closing-dates/",
+   "reason": "None of GrantScape's funds were held (SUEZ only via its old trust homepage). Read all 48 fund pages; staged the eight with a ceiling of £25k or more and an open round: Hornsea 3 Community (£500-£75k, 2 Dec), Hornsea 3 Legacy (£100k single grant, 2 Dec), East Coast Community (£1k-£50k, 3 Feb 2027), Walney Extension Community (£500-£50k, 8 Jan 2027), Augean North (£10k-£100k, 9 Dec), Augean South (up to £50k, 11 Nov), Mick George (£10k-£30k, 3 Mar 2027), Transwaste (£10k-£40k, 8 Jan 2027). The other 40 are wind, solar and battery community benefit funds for one or a few parishes with ceilings from £2,000 to £20,000: a lead for a local batch, not this one.",
+   "programmes_read": 42
+  },
+  {
+   "candidate": "Cleve Hill Community Benefit Fund (GrantScape)",
+   "outcome": "rejected_timing",
+   "held_ids": [],
+   "url": "https://grantscape.org.uk/fund/cleve-hill-community-benefit-fund/",
+   "reason": "Up to £50,000 but for two Kent parishes only (Graveney with Goodnestone, Hernhill) and the round closes 30 Sept 2026, before review can publish.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Eastchurch Community Fund (GrantScape)",
+   "outcome": "rejected_under_band",
+   "held_ids": [],
+   "url": "https://grantscape.org.uk/fund/eastchurchcommunityfund/",
+   "reason": "Autumn round (closing 7 Oct) maximum is £10,000; the £30,000 maximum applies only to the spring round. One parish.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Ashcourt Durham and Tees Valley Community Fund (GrantScape)",
+   "outcome": "rejected_ambiguous",
+   "held_ids": [],
+   "url": "https://grantscape.org.uk/fund/ashcourt-durham-and-tees-valley-community-fund/",
+   "reason": "£5k-£25k, next closing 17 Feb 2027, but the page describes the fund in the past tense ('was provided', 'GrantScape administered', 'Applications were accepted'), which reads as wound up. Not staged; check with GrantScape.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "Middlemoor Wind Farm Community Benefit Fund (GrantScape)",
+   "outcome": "rejected_closed",
+   "held_ids": [],
+   "url": "https://grantscape.org.uk/fund/middlemoor-wind-farm-community-benefit-fund/",
+   "reason": "Up to £50,000 but the round closed 16 Sept 2026; next date not listed.",
+   "programmes_read": 1
+  },
+  {
+   "candidate": "National Lottery Community Fund — Sustainable Steps Wales: Green Careers Cardiff",
+   "outcome": "staged",
+   "held_ids": [],
+   "url": "https://www.tnlcommunityfund.org.uk/funding/funding-programmes/sustainable-steps-wales-green-careers-cardiff",
+   "reason": "Open programme not held. Development funding £300 to £25,000 open 1 Aug to 31 Oct 2026 for partnerships helping ethnically minoritised young people in Cardiff into green careers; project funding (£100k-£1.8m) by invitation after development funding.",
+   "programmes_read": 1
+  }
+ ]
+}
