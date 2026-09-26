@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, Suspense } from 'react'
+import './login.css'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -113,7 +114,7 @@ function LoginForm() {
   const banner = error ?? urlErrorMessage
 
   return (
-    <div className="shoots-a">
+    <div className="shoots-a login">
       <div className="page">
 
         {/* Logo only. The spec puts "New here? Join the waitlist" here AND a
@@ -127,6 +128,8 @@ function LoginForm() {
             <LogoMark size={28} />
             <span>shoots</span>
           </Link>
+          {/* Mirrors the sign-up page's top-right "Already have an account? Sign in". */}
+          <p className="toplink">New to Shoots? <Link href="/signup">Start your free trial</Link></p>
         </header>
 
         <main className="centred">
@@ -189,12 +192,6 @@ function LoginForm() {
                   {loading ? <><span className="spin" />Signing in…</> : 'Sign in'}
                 </button>
               </form>
-
-              <div style={{ marginTop: 26, paddingTop: 22, borderTop: '1px solid var(--border-hair)' }}>
-                <p className="t-meta">
-                  New to Shoots? <Link href="/signup" className="link" style={{ fontSize: 12.8 }}>Start your free trial</Link> →
-                </p>
-              </div>
 
             </div>
           </div>

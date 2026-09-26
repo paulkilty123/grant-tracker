@@ -1,0 +1,32 @@
+/* Sign-in page, brought into line with the sign-up page's form rules
+   (src/app/signup/signup.css, Paul's design of 9 September 2026), Paul's
+   review of 26 September: same input borders and corners, one label style,
+   plain bold links with no underline, the newcomer link top right. Scoped
+   under .shoots-a.login so onboarding, which shares the band-a sheet, is
+   untouched. */
+.shoots-a.login { --line: rgba(29,60,62,.16); --ink-soft: #5f6b64; --ink-mute: #7a857e; }
+
+.shoots-a.login .toplink { font-size: 14px; color: var(--ink-soft); margin: 0; }
+.shoots-a.login .toplink a { font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif; font-weight: 600; color: var(--deep); text-decoration: none; }
+.shoots-a.login header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+
+.shoots-a.login .card { border: 1px solid var(--line); box-shadow: 0 10px 30px rgba(29,60,62,.06); }
+
+.shoots-a.login h1.t-title { font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 600; letter-spacing: -.7px; line-height: 1.2; color: var(--deep); margin: 0; }
+.shoots-a.login p.t-body { font-size: 15.5px; line-height: 1.55; color: var(--ink-soft); }
+
+.shoots-a.login .field label,
+.shoots-a.login .lblrow label { display: block; font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 600; color: var(--deep); margin: 0 0 6px; }
+.shoots-a.login .lblrow { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.shoots-a.login .lblrow label { margin-bottom: 6px; }
+
+.shoots-a.login .input { font-size: 15.5px; color: var(--ink); background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; box-shadow: none; }
+.shoots-a.login .input::placeholder { color: var(--ink-mute); }
+.shoots-a.login .input:focus { outline: 2px solid var(--deep); outline-offset: 1px; border-color: var(--deep); box-shadow: none; }
+.shoots-a.login .pw { position: relative; }
+.shoots-a.login .pw .input { padding-right: 74px; }
+.shoots-a.login .reveal { font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif; font-size: 13.5px; font-weight: 600; color: var(--deep); text-decoration: none; border-radius: 8px; padding: 6px 10px; }
+.shoots-a.login .reveal:hover { background: rgba(29,60,62,.06); }
+
+.shoots-a.login .link { font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif; font-weight: 600; color: var(--deep); text-decoration: none; }
+.shoots-a.login .link:hover { text-decoration: underline; text-underline-offset: 3px; }
