@@ -1374,7 +1374,7 @@ export default function ApplicationWorkspacePage() {
                 ? `${streamedCount} of ${app.questions.length} done. Finished cards are ready below while the rest are prepared.`
                 : 'Reading your profile, your content blocks and the funder context. The first card lands in a few seconds.'
               : blockCount === 0
-                ? 'You have no saved material yet, so answer plans and drafts will be mostly gaps. Import a past application first (in the &#8943; menu above) and we&apos;ll work from your real material.'
+                ? 'You have no saved material yet, so answer plans and drafts will be mostly gaps. Import a past application first (in the \u22EF menu above) and we\u2019ll work from your real material.'
                 : 'For each question: what a strong answer covers, your own content mapped in, and what is missing. You write the answers, in your voice.'}
           </p>
           {genError && (
