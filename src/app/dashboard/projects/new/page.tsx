@@ -137,7 +137,7 @@ export default function NewProjectPage() {
           Rough budget <span style={{ fontFamily: BODY, fontWeight: 400, fontSize: 12.5, color: T.textSecondary }}>(optional)</span>
         </label>
         <p style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary, margin: '-4px 0 10px', lineHeight: 1.6 }}>
-          So we can leave out funders whose grants are far too small or far too large for what you need.
+          Skip this if you gave a figure above. It lets us leave out funders whose grants are far too small or far too large for what you need.
         </p>
         <div style={{ position: 'relative', maxWidth: 220 }}>
           <span style={{
