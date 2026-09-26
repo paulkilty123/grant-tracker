@@ -192,7 +192,7 @@ function LoginForm() {
 
               <div style={{ marginTop: 26, paddingTop: 22, borderTop: '1px solid var(--border-hair)' }}>
                 <p className="t-meta">
-                  New to Shoots? <Link href="/#waitlist" className="link" style={{ fontSize: 12.8 }}>Join the waitlist</Link> →
+                  New to Shoots? <Link href="/signup" className="link" style={{ fontSize: 12.8 }}>Start your free trial</Link> →
                 </p>
               </div>
 
