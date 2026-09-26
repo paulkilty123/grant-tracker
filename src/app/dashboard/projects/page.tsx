@@ -32,8 +32,8 @@ const HOW_STEPS = [
 ]
 
 const HOW_EXAMPLE = {
-  label: 'A project, in one line',
-  text: 'A weekly cooking club for isolated older people in Hastings. £8,000 for a year of sessions and a part-time coordinator.',
+  label: 'A project, in a few lines',
+  text: 'A weekly cooking club for isolated older people in Hastings, run from the community centre on Thursday mornings. Twelve places a session, with referrals from the GP surgery and Age UK. We want £8,000 for a year: a part-time coordinator, ingredients, and a minibus for people who cannot get there on their own.',
 }
 
 function HowItWorks({ withCta }: { withCta?: boolean }) {
