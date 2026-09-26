@@ -322,7 +322,8 @@ Rounded corners everywhere: `rounded-xl` (cards/panels), `rounded-lg` (inputs/bu
 | Mid green | `#639922` | Hover states, filled accents |
 | Sage | `#3B6D11` | Green text on light bg |
 | Pale green | `#F1F7E4` | Green-tinted card bg |
-| Cream | `#F5F1E8` | Neutral warm bg |
+| Cream | `#F5F1E8` | Neutral warm bg (cards, tints) |
+| Page ground | `#FAFAF7` | The app page ground since 26 Sept 2026 (Paul's choice): dashboard, login, onboarding, pricing. Cards on it need their border. `--ground` in shoots-band-a.css |
 | Coral | `#D85A30` | Urgency, overdue |
 | Charcoal | `#2C2C2A` | Primary text |
 | Mid | `#5F5E5A` | Secondary text |
