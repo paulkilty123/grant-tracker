@@ -27,10 +27,17 @@ export interface HowStep { title: string; body: string }
 export function HowItWorksPanel({
   steps,
   cta,
+  example,
 }: {
   steps: readonly HowStep[]
   /** Optional primary action below the steps. */
   cta?: { href: string; label: string }
+  /**
+   * One worked example of the thing the steps ask for, shown between the
+   * steps and the action. A new arrival gets more from one real sentence
+   * than from four explanations (Paul, 26 Sept 2026).
+   */
+  example?: { label: string; text: string }
 }) {
   return (
     <div style={{ background: T.white, border: '1px solid rgba(29,60,62,0.10)', borderRadius: 16, padding: '20px 22px 22px' }}>
@@ -59,6 +66,12 @@ export function HowItWorksPanel({
           </div>
         ))}
       </div>
+      {example && (
+        <div style={{ marginTop: 20, background: '#F6F1E7', borderRadius: 12, padding: '14px 16px', maxWidth: 720 }}>
+          <p style={{ fontFamily: UI, fontWeight: 600, fontSize: 11.5, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#5F5E5A', margin: '0 0 6px' }}>{example.label}</p>
+          <p style={{ fontFamily: BODY, fontSize: 14, color: '#2C2C2A', margin: 0, lineHeight: 1.55, fontStyle: 'italic' }}>{example.text}</p>
+        </div>
+      )}
       {cta && (
         <Link href={cta.href} style={{
           fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: '#F6F1E7', background: '#1D3C3E',

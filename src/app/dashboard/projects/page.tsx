@@ -22,17 +22,25 @@ const STATUS_STYLE: Record<string, { bg: string; color: string; label: string }>
   archived: { bg: T.cream,      color: T.textSecondary, label: 'Archived' },
 }
 
+// Three steps in plain words. The earlier four explained the completeness bar
+// before anyone had typed a sentence; that shows itself once they are inside
+// a project (Paul, 26 Sept 2026).
 const HOW_STEPS = [
-  { title: 'Describe it once', body: 'Type a few sentences or paste from an old document. We turn it into a structured project.' },
-  { title: 'Fill the gaps', body: 'A completeness bar shows what each missing detail buys you. Fill as much or as little as you like.' },
-  { title: 'See who fits', body: 'We match the project against the catalogue: your organisation covers eligibility, the project covers relevance.' },
-  { title: 'Apply to each', body: 'Start an application for any match, with the project carried in as material.' },
+  { title: 'Describe it', body: 'A few sentences in your own words, or paste from an old bid. We turn it into a project.' },
+  { title: 'See who fits', body: 'We match it against the catalogue. Your organisation covers eligibility, the project covers relevance.' },
+  { title: 'Apply', body: 'Start an application for any match, with the project already in it.' },
 ]
+
+const HOW_EXAMPLE = {
+  label: 'A project, in one line',
+  text: 'A weekly cooking club for isolated older people in Hastings. £8,000 for a year of sessions and a part-time coordinator.',
+}
 
 function HowItWorks({ withCta }: { withCta?: boolean }) {
   return (
     <HowItWorksPanel
       steps={HOW_STEPS}
+      example={HOW_EXAMPLE}
       cta={withCta ? { href: '/dashboard/projects/new', label: 'New project' } : undefined}
     />
   )
@@ -130,8 +138,8 @@ export default function ProjectsPage() {
             Projects
           </h1>
           <p style={{ fontFamily: BODY, fontSize: 13.5, color: '#5F5E5A', margin: '5px 0 0', lineHeight: 1.55, maxWidth: 560 }}>
-            A clear project is the foundation of every strong application. Describe what needs
-            funding once, match it against the catalogue, and carry it into every application you build.
+            Describe one thing you need funding for, in your own words. We structure it, show
+            which funders fit, and carry it into every application you write.
           </p>
         </div>
         <div style={{ display: 'flex', gap: 26, alignItems: 'flex-end', flexWrap: 'wrap' }}>
@@ -148,6 +156,9 @@ export default function ProjectsPage() {
               </span>
             ))
           })()}
+          {/* One next step on the empty state: the guide below carries the
+              button, so the header does not repeat it until there is a list. */}
+          {loaded && projects.length > 0 && (
           <Link
             href="/dashboard/projects/new"
             style={{
@@ -159,6 +170,7 @@ export default function ProjectsPage() {
           >
             <Plus size={15} /> New project
           </Link>
+          )}
         </div>
       </div>
 
