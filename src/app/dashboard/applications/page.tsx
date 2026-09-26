@@ -26,16 +26,17 @@ const STRONG_APPLICATION_PRINCIPLES = [
 ]
 
 const HOW_IT_WORKS_STEPS = [
-  { title: 'Add the questions', body: 'Paste them from the funder’s form, or import a past application.' },
-  { title: 'Get a guide', body: 'Each question gets a plan: what to cover, and which of your material fits.' },
-  { title: 'Write your answers', body: 'In your own words. We flag gaps, word limits and missing evidence.' },
-  { title: 'Check and submit', body: 'Score each answer, fix what’s flagged, then download and submit on the funder’s portal.' },
+  { title: 'Add the questions', body: 'Paste them from the funder’s form, or import a past bid.' },
+  { title: 'See what each needs', body: 'What to cover, and which of your material fits.' },
+  { title: 'Write your answers', body: 'In your own words. We flag gaps and word limits.' },
+  { title: 'Check and send', body: 'Score each answer, fix what’s flagged, then submit on the funder’s site.' },
 ]
 
 function HowItWorks({ withCta }: { withCta?: boolean }) {
   return (
     <HowItWorksPanel
       steps={HOW_IT_WORKS_STEPS}
+      example={{ label: 'A question, as the funder asks it', text: 'Tell us about your project and who it will benefit. (Maximum 300 words.)' }}
       cta={withCta ? { href: '/dashboard/applications/new', label: 'New application' } : undefined}
     />
   )
@@ -248,9 +249,8 @@ export default function ApplicationsPage() {
             Applications
           </h1>
           <p style={{ fontFamily: BODY, fontSize: 13.5, color: '#5F5E5A', margin: '5px 0 0', lineHeight: 1.55, maxWidth: 600 }}>
-            Shoots shapes each answer from your own material, shows you what a strong response
-            to this funder needs to cover, and flags the gaps before you start. You write it in your
-            own words.
+            Bring the funder&apos;s questions and we help you answer them: what each one needs to
+            cover, which of your material fits, and what is missing before you send it.
           </p>
         </div>
         <div style={{ display: 'flex', gap: 26, alignItems: 'flex-end', flexWrap: 'wrap' }}>
@@ -278,6 +278,9 @@ export default function ApplicationsPage() {
           >
             Your material
           </Link>
+          {/* One next step on the empty state: the guide carries the button
+              until there is a list, as on Projects. */}
+          {loaded && (apps.length > 0 || readyToStart.length > 0) && (
           <Link
             href="/dashboard/applications/new"
             style={{
@@ -289,39 +292,8 @@ export default function ApplicationsPage() {
           >
             <Plus size={15} /> New application
           </Link>
+          )}
         </div>
-      </div>
-
-      {/* Ethos: what makes a strong application (collapsible, light) */}
-      <div style={{ marginTop: 14 }}>
-        <DisclosureControl open={principlesOpen} onClick={() => setPrinciplesOpen(o => !o)} icon={<Lightbulb size={15} />}>
-          What makes a strong application
-        </DisclosureControl>
-        {principlesOpen && (
-          <div style={{
-            /* White, not softGreen. The tint is a hair off the cream page and
-               read as a wrong shade rather than as a panel, and the How it
-               works strip below it is white. Paul, 2026-09-04. */
-            background: T.white, border: `1px solid ${T.border}`, borderRadius: 12,
-            padding: '18px 20px', marginTop: 10, display: 'flex', flexDirection: 'column', gap: 12,
-          }}>
-            {STRONG_APPLICATION_PRINCIPLES.map((p, i) => (
-              <div key={i} style={{ display: 'flex', gap: 11 }}>
-                <span style={{
-                  fontFamily: UI, fontWeight: 700, fontSize: 11, color: '#1D3C3E', background: '#F1EDE3',
-                  width: 22, height: 22, borderRadius: 999, display: 'flex', alignItems: 'center',
-                  justifyContent: 'center', flexShrink: 0, marginTop: 1,
-                }}>
-                  {i + 1}
-                </span>
-                <div>
-                  <p style={{ fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: T.textPrimary, margin: '0 0 2px' }}>{p.t}</p>
-                  <p style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary, margin: 0, lineHeight: 1.55 }}>{p.b}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* The three stat cards that sat here are now the header cluster above. */}
@@ -609,6 +581,39 @@ export default function ApplicationsPage() {
             )
         )}
       </div>
+
+      {/* Ethos: what makes a strong application (collapsible, light) */}
+      <div style={{ marginTop: 22 }}>
+        <DisclosureControl open={principlesOpen} onClick={() => setPrinciplesOpen(o => !o)} icon={<Lightbulb size={15} />}>
+          What makes a strong application
+        </DisclosureControl>
+        {principlesOpen && (
+          <div style={{
+            /* White, not softGreen. The tint is a hair off the cream page and
+               read as a wrong shade rather than as a panel, and the How it
+               works strip below it is white. Paul, 2026-09-04. */
+            background: T.white, border: `1px solid ${T.border}`, borderRadius: 12,
+            padding: '18px 20px', marginTop: 10, display: 'flex', flexDirection: 'column', gap: 12,
+          }}>
+            {STRONG_APPLICATION_PRINCIPLES.map((p, i) => (
+              <div key={i} style={{ display: 'flex', gap: 11 }}>
+                <span style={{
+                  fontFamily: UI, fontWeight: 700, fontSize: 11, color: '#1D3C3E', background: '#F1EDE3',
+                  width: 22, height: 22, borderRadius: 999, display: 'flex', alignItems: 'center',
+                  justifyContent: 'center', flexShrink: 0, marginTop: 1,
+                }}>
+                  {i + 1}
+                </span>
+                <div>
+                  <p style={{ fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: T.textPrimary, margin: '0 0 2px' }}>{p.t}</p>
+                  <p style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary, margin: 0, lineHeight: 1.55 }}>{p.b}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
     </div>
   )
 }
