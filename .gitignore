@@ -38,3 +38,4 @@ next-env.d.ts
 .mcp-test-fixtures.json
 .mcp-reviewer-account.json
 spend-restriction-proposal.json
+.test-trial-account.json

@@ -1,31 +1,54 @@
-// The pricing page.
+// The pricing page, for people already signed in (it sits behind the auth
+// gate). Same three cards as the landing page's pricing section, same copy,
+// same look, plus the monthly or annual choice the landing page does not need.
 //
-// Renders only what Stripe can actually sell. `sellablePlans()` is given the
-// lookup keys Stripe currently holds, so a plan whose price is missing is left
-// off rather than rendered as a button that fails when clicked — the failure
-// mode a hardcoded list produces the first time a price is renamed.
-//
-// It does NOT mention the trial. `TRIAL_IS_LIVE` is false and the CTA here goes
-// to ordinary signup, which lands people on Match, which does not trial. Saying
-// "free for 14 days" beside a button that cannot deliver one is the mistake that
-// shipped onto the public opportunity page on 29 August and came straight back
-// off. `ctaSupportLine()` is the only thing allowed to decide that sentence.
+// Renders only what Stripe can actually sell: `sellablePlans()` is given the
+// lookup keys Stripe currently holds, so a plan whose price is missing shows
+// as not purchasable rather than as a button that fails when clicked.
 
-import Link from 'next/link'
 import { getStripe } from '@/lib/billing/stripe-client'
-import {
-  PLANS, PLAN_ORDER, sellablePlans, contactOnlyPlans,
-  amountFor, formatAmount, LAUNCH_PRICE_MONTHS, type PlanId, type PriceKind,
-} from '@/config/plans'
+import { PLANS, PLAN_ORDER, sellablePlans, contactOnlyPlans, amountFor, type PriceKind } from '@/config/plans'
 import { launchPriceIsOpen } from '@/lib/billing/founding'
-import { ctaSupportLine } from '@/lib/trial'
-import BuyButton from './BuyButton'
+import PricingCards, { type CardPlan } from './PricingCards'
 
 export const dynamic = 'force-dynamic'
 
-const INK = '#2C2C2A'
-const MID = '#5F5E5A'
-const LINE = '#E6E3DC'
+const DEEP = '#1D3C3E', MUTE = '#7a857e', INK_SOFT = '#5f6b64'
+const GROTESK = "var(--font-space-grotesk), 'Space Grotesk', sans-serif"
+
+/** Copy from public/landing/launch.html, the pricing section. Keep the two in step. */
+const CARD_COPY: Record<string, { strap: string; pill: string; features: string[] }> = {
+  match: {
+    strap: 'Find the funding', pill: '#9BCA9D',
+    features: [
+      'Grants, programmes, investment and in-kind',
+      'Eligibility matched to you',
+      'Insight on every opportunity',
+      'Saved opportunities and deadlines',
+      'Weekly update, new matches and deadlines',
+      'Claude connector, search only',
+    ],
+  },
+  apply: {
+    strap: 'The workspace', pill: '#EBCE78',
+    features: [
+      'Everything in Match',
+      'Pipeline from identified to secured',
+      'Projects with funding search',
+      'Application management',
+      'Export your pipeline',
+      'Claude connector with pipeline tools',
+    ],
+  },
+  team: {
+    strap: 'For teams and consultants', pill: '#ABCBEE',
+    features: [
+      'Everything in Apply',
+      'Up to 5 people in one organisation',
+      'Or 5 organisation profiles, each with its own pipeline',
+    ],
+  },
+}
 
 async function availableLookupKeys(): Promise<Set<string>> {
   try {
@@ -33,96 +56,9 @@ async function availableLookupKeys(): Promise<Set<string>> {
     return new Set(prices.data.map(p => p.lookup_key).filter((k): k is string => !!k))
   } catch {
     // A pricing page that 500s because Stripe is briefly unreachable is worse
-    // than one that says nothing is purchasable right now: the second is true,
-    // recoverable, and does not lose the rest of the page.
+    // than one that says nothing is purchasable right now.
     return new Set()
   }
-}
-
-function Row({ label, on }: { label: string; on: boolean }) {
-  return (
-    <li style={{
-      display: 'flex', gap: 8, alignItems: 'flex-start',
-      fontSize: 14, color: on ? INK : '#A8A6A0', lineHeight: 1.5,
-      textDecoration: on ? 'none' : 'line-through',
-    }}>
-      <span aria-hidden style={{ color: on ? '#639922' : '#C9C6BF' }}>{on ? '✓' : '·'}</span>
-      {label}
-    </li>
-  )
-}
-
-function PlanCard({ id, sellable, kind }: { id: PlanId; sellable: boolean; kind: PriceKind }) {
-  const plan = PLANS[id]
-  const monthly = amountFor(id, kind, 'monthly')
-  const annual = amountFor(id, kind, 'annual')
-  const listMonthly = amountFor(id, 'standard', 'monthly')
-  const listAnnual = amountFor(id, 'standard', 'annual')
-  const priced = sellable && monthly !== null && annual !== null
-  const c = plan.capabilities
-
-  return (
-    <div style={{
-      background: '#fff', border: `1px solid ${LINE}`, borderRadius: 12,
-      padding: 24, display: 'flex', flexDirection: 'column', gap: 16,
-    }}>
-      <div>
-        <h2 style={{
-          fontFamily: 'var(--font-space-grotesk)', fontWeight: 600,
-          fontSize: 20, color: INK, margin: 0,
-        }}>{plan.name}</h2>
-        <p style={{ margin: '6px 0 0', fontSize: 14, color: MID, lineHeight: 1.5 }}>{plan.summary}</p>
-      </div>
-
-      <div>
-        {priced ? (
-          <>
-            <div style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 32, color: INK }}>
-              {formatAmount(monthly)}
-              <span style={{ fontSize: 15, fontWeight: 500, color: MID }}> a month</span>
-            </div>
-            <div style={{ fontSize: 13, color: MID, marginTop: 2 }}>
-              or {formatAmount(annual)} a year, which is two months free
-            </div>
-            {kind === 'launch' && listMonthly !== null && listAnnual !== null && (
-              <div style={{ fontSize: 13, color: MID, marginTop: 6, lineHeight: 1.5 }}>
-                Launch price, held for {LAUNCH_PRICE_MONTHS} months from the day you subscribe.
-                After that {formatAmount(listMonthly)} a month or {formatAmount(listAnnual)} a year.
-              </div>
-            )}
-          </>
-        ) : (
-          <div style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, fontSize: 20, color: INK }}>
-            By conversation
-          </div>
-        )}
-      </div>
-
-      <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 8 }}>
-        <Row label="Matched search and eligibility checking" on={c.search} />
-        <Row label="Bookmarks with deadline reminders" on={c.bookmarks} />
-        <Row label="Alerts when new opportunities open" on={c.alerts} />
-        <Row label="Pipeline to track what you are applying for" on={c.pipeline} />
-        <Row label="Projects and the application workspace" on={c.applications} />
-        {c.orgLimit > 1 && <Row label={`Up to ${c.orgLimit} organisation profiles`} on />}
-      </ul>
-
-      {priced ? (
-        <BuyButton plan={id} period="monthly" kind={kind} label={`Choose ${plan.name}`} />
-      ) : (
-        <a
-          href="mailto:hello@shootsfunding.co.uk?subject=Team%20plan"
-          style={{
-            display: 'block', textAlign: 'center', textDecoration: 'none',
-            fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, fontSize: 15,
-            color: INK, border: `1px solid ${INK}`, borderRadius: 8, padding: '11px 18px',
-          }}
-        >
-          Get in touch
-        </a>
-      )}
-    </div>
-  )
 }
 
 export default async function PricingPage() {
@@ -135,27 +71,33 @@ export default async function PricingPage() {
   const kind: PriceKind = launchOpen ? 'launch' : 'standard'
   const sellable = new Set(sellablePlans(keys, kind))
 
+  const plans: CardPlan[] = PLAN_ORDER.map(id => ({
+    id,
+    name: PLANS[id].name,
+    strap: CARD_COPY[id].strap,
+    pill: CARD_COPY[id].pill,
+    features: CARD_COPY[id].features,
+    monthly: amountFor(id, kind, 'monthly'),
+    annual: amountFor(id, kind, 'annual'),
+    listMonthly: amountFor(id, 'standard', 'monthly'),
+    listAnnual: amountFor(id, 'standard', 'annual'),
+    sellable: sellable.has(id) && !contactOnly.has(id),
+    popular: id === 'apply',
+  }))
+
   return (
-    <main style={{ maxWidth: 1040, margin: '0 auto', padding: '56px 24px 80px' }}>
-      <h1 style={{
-        fontFamily: 'var(--font-space-grotesk)', fontWeight: 700,
-        fontSize: 36, color: INK, margin: 0,
-      }}>
+    <main style={{ maxWidth: 1120, margin: '0 auto', padding: '56px 24px 80px' }}>
+      <p style={{ fontFamily: GROTESK, fontSize: 13, fontWeight: 600, letterSpacing: '0.18em', textTransform: 'uppercase', color: DEEP, margin: '0 0 16px' }}>
         Pricing
+      </p>
+      <h1 style={{ fontFamily: GROTESK, fontWeight: 500, letterSpacing: '-0.01em', fontSize: 'clamp(32px, 4vw, 44px)', color: DEEP, margin: 0 }}>
+        Choose your plan.
       </h1>
-      <p style={{ margin: '10px 0 0', fontSize: 16, color: MID, maxWidth: 560, lineHeight: 1.6 }}>
-        Eligibility and exclusions are shown in full on every plan, including the free one.
-        Knowing you cannot apply is worth as much as knowing you can. {ctaSupportLine()}
+      <p style={{ margin: '14px 0 0', fontSize: 17, lineHeight: 1.6, color: INK_SOFT, maxWidth: '34em' }}>
+        Every new organisation starts with 14 days on Apply. No card, and you choose a plan at the end. Nothing you have saved is lost.
       </p>
 
-      <div style={{
-        marginTop: 32, display: 'grid', gap: 20,
-        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-      }}>
-        {PLAN_ORDER.map(id => (
-          <PlanCard key={id} id={id} kind={kind} sellable={sellable.has(id) && !contactOnly.has(id)} />
-        ))}
-      </div>
+      <PricingCards plans={plans} kind={kind} launchOpen={launchOpen} />
 
       {sellable.size === 0 && (
         <p style={{ marginTop: 24, fontSize: 14, color: '#993C1D' }}>
@@ -163,16 +105,13 @@ export default async function PricingPage() {
         </p>
       )}
 
-      {launchOpen && (
-        <p style={{ marginTop: 28, fontSize: 14, color: MID, lineHeight: 1.6 }}>
-          The launch price is open to anyone who subscribes before the end of October.
-          Team, for up to five people or five organisation profiles, is arranged by conversation:{' '}
-          <Link href="mailto:hello@shootsfunding.co.uk?subject=Team%20plan" style={{ color: '#3B6D11' }}>
-            get in touch
-          </Link>
-          .
-        </p>
-      )}
+      <p style={{ fontSize: 14, color: MUTE, lineHeight: 1.7, margin: '26px 0 0', maxWidth: '70em' }}>
+        {launchOpen && <><b>Launch price.</b> Take it before 31 October and it is yours for 12 months. After that, Match is £19 a month and Apply is £35. </>}
+        <b>Cancel any time.</b> If you ask in your first month, we refund you in full, no questions asked.
+      </p>
+      <p style={{ fontSize: 14, color: MUTE, margin: '12px 0 0' }}>
+        Every plan includes direct email support from the founder, not a ticket queue.
+      </p>
     </main>
   )
 }

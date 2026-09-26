@@ -701,9 +701,11 @@ export default function AccountPage() {
                 : card.state === 'trial'
                   ? <>{TRIAL_DAYS} days on {TRIAL_PLAN}, ending {strong(card.endsOn)}. You choose a plan at the end, and nothing you have saved is lost.</>
                   : <>Your trial has ended. Choose a plan to pick up where you left off; everything you saved is still here.</>
+          // The landing page's ghost pill, not the app's lime: this is a
+          // commercial step, not an action inside the product.
           const buttonStyle: React.CSSProperties = {
-            fontFamily: UI, fontWeight: 600, fontSize: 13, textDecoration: 'none', whiteSpace: 'nowrap',
-            padding: '9px 16px', borderRadius: 8, border: '1.5px solid rgba(29,60,62,0.24)', background: '#fff', color: T.deep,
+            fontFamily: UI, fontWeight: 600, fontSize: 14, textDecoration: 'none', whiteSpace: 'nowrap',
+            padding: '11px 22px', borderRadius: 999, border: `1.5px solid ${T.deep}`, background: 'transparent', color: T.deep,
             cursor: 'pointer',
           }
           const action =
@@ -712,7 +714,7 @@ export default function AccountPage() {
                   {portalBusy ? 'Opening…' : 'Manage billing'}
                 </button>
               : card.state === 'trial' || card.state === 'ended'
-                ? <Link href="/pricing" style={{ ...buttonStyle, background: '#8ECB3C', color: '#173404', border: '1.5px solid #8ECB3C' }}>See plans</Link>
+                ? <Link href="/pricing" style={buttonStyle}>See plans</Link>
                 : null
           return (
             <div style={{ background: T.cream, border: '1px solid rgba(23,52,4,0.10)', borderRadius: 12, padding: '22px 26px', display: 'flex', gap: 16, alignItems: isMobile ? 'flex-start' : 'center', flexDirection: isMobile ? 'column' : 'row' }}>

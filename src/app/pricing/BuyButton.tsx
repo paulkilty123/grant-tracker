@@ -7,17 +7,25 @@ import { useState } from 'react'
  *
  * The refusal cases are rendered rather than swallowed. `/api/billing/checkout`
  * answers 409 with a specific message for the states that are not faults —
- * already subscribed, Team is not self-serve, the founding offer has closed —
- * and showing "something went wrong" for those would turn an answerable
- * question into a support email.
+ * already subscribed, Team is not self-serve, an offer has closed — and
+ * showing "something went wrong" for those would turn an answerable question
+ * into a support email.
+ *
+ * Styled as the landing page's pill buttons: deep fill for the plan we lead
+ * with, deep outline for the others. Not the app's lime, which is for actions
+ * inside the product.
  */
+const DEEP = '#1D3C3E', CREAM = '#F6F1E7'
+const GROTESK = "var(--font-space-grotesk), 'Space Grotesk', sans-serif"
+
 export default function BuyButton({
-  plan, period, kind = 'standard', label,
+  plan, period, kind = 'standard', label, variant = 'primary',
 }: {
   plan: string
   period: 'monthly' | 'annual'
   kind?: 'standard' | 'launch' | 'founding'
   label: string
+  variant?: 'primary' | 'ghost'
 }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -55,14 +63,11 @@ export default function BuyButton({
         onClick={go}
         disabled={busy}
         style={{
-          width: '100%',
-          fontFamily: 'var(--font-space-grotesk)',
-          fontWeight: 600, fontSize: 15,
-          background: '#8ECB3C', color: '#173404',
-          border: 'none', borderRadius: 8,
-          padding: '11px 18px',
-          cursor: busy ? 'default' : 'pointer',
-          opacity: busy ? 0.6 : 1,
+          width: '100%', fontFamily: GROTESK, fontWeight: 600, fontSize: 16, padding: '15px 32px', borderRadius: 999,
+          background: variant === 'primary' ? DEEP : 'transparent',
+          color: variant === 'primary' ? CREAM : DEEP,
+          border: `1.5px solid ${DEEP}`,
+          cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1,
         }}
       >
         {busy ? 'Starting…' : label}
