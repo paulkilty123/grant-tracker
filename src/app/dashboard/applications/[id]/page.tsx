@@ -1171,7 +1171,7 @@ export default function ApplicationWorkspacePage() {
         <div style={{ background: T.cream, borderRadius: 12, padding: '11px 18px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 9 }}>
           <FileText size={14} color={T.textTertiary} style={{ flexShrink: 0 }} />
           <span style={{ fontFamily: BODY, fontSize: 12.5, color: T.textSecondary }}>
-            No funder linked. Guides build from your profile and library only, and there is no
+            No funder linked. Guides build from your profile and material only, and there is no
             eligibility check, so read the funder&apos;s criteria yourself.
           </span>
         </div>
@@ -1374,7 +1374,7 @@ export default function ApplicationWorkspacePage() {
                 ? `${streamedCount} of ${app.questions.length} done. Finished cards are ready below while the rest are prepared.`
                 : 'Reading your profile, your content blocks and the funder context. The first card lands in a few seconds.'
               : blockCount === 0
-                ? 'You have no saved material yet, so answer plans and drafts will be mostly gaps. Import a past application first (in the \u22EF menu above) and we\u2019ll work from your real material.'
+                ? 'Plans draw on this project and your profile. Importing a past application (in the \u22EF menu above) gives the drafts more of your own words to work from.'
                 : 'For each question: what a strong answer covers, your own content mapped in, and what is missing. You write the answers, in your voice.'}
           </p>
           {genError && (
