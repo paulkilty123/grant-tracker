@@ -36,7 +36,6 @@ function HowItWorks({ withCta }: { withCta?: boolean }) {
   return (
     <HowItWorksPanel
       steps={HOW_IT_WORKS_STEPS}
-      example={{ label: 'A question, as the funder asks it', text: 'Tell us about your project and who it will benefit. (Maximum 300 words.)' }}
       cta={withCta ? { href: '/dashboard/applications/new', label: 'New application' } : undefined}
     />
   )
@@ -249,8 +248,9 @@ export default function ApplicationsPage() {
             Applications
           </h1>
           <p style={{ fontFamily: BODY, fontSize: 13.5, color: '#5F5E5A', margin: '5px 0 0', lineHeight: 1.55, maxWidth: 600 }}>
-            Bring the funder&apos;s questions and we help you answer them: what each one needs to
-            cover, which of your material fits, and what is missing before you send it.
+            Paste in a funder&apos;s application questions. We show what each answer needs to cover,
+            pull in the right material from your profile and projects, and flag what&apos;s missing
+            before you send it.
           </p>
         </div>
         <div style={{ display: 'flex', gap: 26, alignItems: 'flex-end', flexWrap: 'wrap' }}>
