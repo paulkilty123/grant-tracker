@@ -138,8 +138,8 @@ export default function ProjectsPage() {
             Projects
           </h1>
           <p style={{ fontFamily: BODY, fontSize: 13.5, color: '#5F5E5A', margin: '5px 0 0', lineHeight: 1.55, maxWidth: 560 }}>
-            Describe one thing you need funding for, in your own words. We structure it, show
-            which funders fit, and carry it into every application you write.
+            Describe a piece of work you want funded: what you&apos;ll do, who it&apos;s for, and roughly
+            what it costs. We structure it, show which funders fit, and carry it into every application you write.
           </p>
         </div>
         <div style={{ display: 'flex', gap: 26, alignItems: 'flex-end', flexWrap: 'wrap' }}>
