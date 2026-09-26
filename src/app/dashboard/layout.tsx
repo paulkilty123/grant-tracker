@@ -91,7 +91,8 @@ export default async function AppLayout({
           // today, so scoping here would silently recolour tools nobody asked
           // us to touch. The scope goes on the Sidebar and the dashboard page
           // only; widening it is a 40-page audit, not a one-line change.
-          style={{ background: '#FBF8F2' }}
+          // Ground under review (Paul, 26 Sept): the neutral, on every surface, for a look.
+          style={{ background: '#FAFAF7' }}
         >
           {lapsed && (
             <div style={{ background: '#1D3C3E', color: '#F6F1E7', padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>

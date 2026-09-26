@@ -38,6 +38,9 @@
 .shoots-a {
   /* brand — already live at the landing page */
   --cream:            #F6F1E7;
+  /* Page ground under review (Paul, 26 Sept): the neutral the old app shell
+     used. --cream stays the warm tone for text on deep and for tinted cards. */
+  --ground:           #FAFAF7;
   --deep:             #1D3C3E;
   --charcoal:         #2E2E2E;
   --sage:             #9BCA9D;
@@ -87,7 +90,7 @@
   --font-ui:   var(--font-space-grotesk), "Space Grotesk", system-ui, sans-serif;
   --font-body: var(--font-dm-sans), "Plus Jakarta Sans", system-ui, sans-serif;
 
-  background: var(--cream);
+  background: var(--ground);
   color: var(--charcoal);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
