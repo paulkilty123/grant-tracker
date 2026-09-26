@@ -519,7 +519,7 @@ export default function ProjectPage() {
             {ready ? 'Ready to match' : 'Not ready to match yet'}
           </span>
           <p style={{ fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.textSecondary, margin: 0 }}>
-            {gaps.length === 0 ? 'Fully described' : `Described ${filledCount} of ${PROJECT_FIELDS.length}`}
+            {gaps.length === 0 ? 'Fully described' : `${gaps.length} more you could add`}
           </p>
         </div>
         <div style={{ height: 7, background: 'rgba(29,60,62,0.15)', borderRadius: 999, overflow: 'hidden' }}>
@@ -671,8 +671,7 @@ export default function ProjectPage() {
           )}
         </div>
         <p style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary, margin: '0 0 14px', lineHeight: 1.55 }}>
-          Your organisation covers the eligibility side; this project covers the relevance side. We
-          re-check against the catalogue each time you open this project.
+          Re-checked against the catalogue each time you open this project.
         </p>
 
         {!ready && (
@@ -767,7 +766,14 @@ export default function ProjectPage() {
                                       )}
                                     </div>
                                     <span style={{ fontFamily: BODY, fontSize: 12.5, color: T.textSecondary }}>
-                                      {grant.funder}
+                                      {/* Why it fits, not the name again: the first sentence of what
+                                          they fund, falling back to the funder when there is no brief. */}
+                                      {(() => {
+                                        const what = grant.funderBrief?.what_they_fund?.trim()
+                                        if (!what) return grant.funder
+                                        const first = what.match(/^(.{20,140}?[.!?])(\s|$)/)
+                                        return (first ? first[1] : what.length > 140 ? `${what.slice(0, 140).trimEnd()}…` : what)
+                                      })()}
                                       {amount ? ` · ${amount}` : ''}
                                       {grant.deadline ? ` · Deadline ${new Date(grant.deadline).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}` : grant.isRolling ? ' · Rolling' : ''}
                                     </span>
