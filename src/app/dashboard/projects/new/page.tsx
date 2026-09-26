@@ -38,7 +38,7 @@ export default function NewProjectPage() {
     setError(null)
     if (!orgId) { setError('Complete your organisation profile first'); return }
     if (rawText.trim().length < 30) {
-      setError('A sentence or two is enough, but it needs at least thirty characters')
+      setError('Tell us a little more: a sentence or two about what the project does and who it is for.')
       return
     }
     const budgetNum = budget.trim() ? Number(budget.replace(/[£,\s]/g, '')) : null
@@ -97,9 +97,8 @@ export default function NewProjectPage() {
         Describe your project
       </h1>
       <p style={{ fontFamily: BODY, fontSize: 13.5, color: '#5F5E5A', margin: '0 0 22px', lineHeight: 1.55, maxWidth: 560 }}>
-        In your own words: what it will do, who it is for, and the difference it makes. A
-        sentence or two is enough to start, and you can paste straight from an old application.
-        We will sort it into sections you can edit.
+        In your own words: what it will do, who it is for, and the difference it makes.
+        You can paste from an old application. We sort it into sections you can edit.
       </p>
 
       <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, padding: '20px 24px' }}>
@@ -112,7 +111,7 @@ export default function NewProjectPage() {
             user started typing, exactly when they were trying to follow it. It
             stays above the field, in italics so it reads as a quotation. */}
         <p style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary, margin: '0 0 10px', lineHeight: 1.6 }}>
-          For example: <i>&ldquo;Weekly football coaching for 40 young people aged 11 to 16 on the Larkfield estate, where there is nothing for them after school. Two qualified coaches, a year of sessions, and kit. Around £12,000.&rdquo;</i>
+          For example: <i>&ldquo;A weekly cooking club for isolated older people in Hastings, run from the community centre on Thursday mornings. Twelve places a session, with referrals from the GP surgery and Age UK. We want £8,000 for a year: a part-time coordinator, ingredients, and a minibus for people who cannot get there on their own.&rdquo;</i>
         </p>
         <textarea
           id="project-description"
@@ -129,7 +128,7 @@ export default function NewProjectPage() {
           }}
         />
         <p id="project-description-hint" style={{ fontFamily: BODY, fontSize: 12.5, color: T.textTertiary, margin: '6px 0 0' }}>
-          A sentence or two is enough, thirty characters at the least. The box grows as you type.
+          The box grows as you type.
         </p>
 
         <label htmlFor="project-budget" style={{
@@ -138,7 +137,7 @@ export default function NewProjectPage() {
           Rough budget <span style={{ fontFamily: BODY, fontWeight: 400, fontSize: 12.5, color: T.textSecondary }}>(optional)</span>
         </label>
         <p style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary, margin: '-4px 0 10px', lineHeight: 1.6 }}>
-          Lets us drop funders whose grants are far too small or far too large for what you need.
+          So we can leave out funders whose grants are far too small or far too large for what you need.
         </p>
         <div style={{ position: 'relative', maxWidth: 220 }}>
           <span style={{
@@ -164,8 +163,8 @@ export default function NewProjectPage() {
         </p>
         <div role="group" aria-label="What the money is for" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {([
-            ['capital', 'Capital funding for equipment, buildings, etc'],
-            ['revenue', 'Revenue funding for project delivery'],
+            ['capital', 'Equipment, buildings or vehicles'],
+            ['revenue', 'Running the project: staff, sessions, materials'],
           ] as const).map(([value, label]) => {
             const on = spendNeedHas(spendNeed, value)
             return (
