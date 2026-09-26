@@ -765,15 +765,20 @@ export default function ProjectPage() {
                                         </span>
                                       )}
                                     </div>
+                                    {/* Why it fits, not the name again: the first sentence of what
+                                        they fund, cut at a word if it runs long, with the funder
+                                        when there is no brief. Amount and deadline on their own line
+                                        so they are never pushed off the end. */}
+                                    {(() => {
+                                      const what = grant.funderBrief?.what_they_fund?.trim()
+                                      if (!what) return null
+                                      const first = what.match(/^(.{20,160}?[.!?])(\s|$)/)
+                                      let line = first ? first[1] : what
+                                      if (line.length > 120) line = `${line.slice(0, 120).replace(/\s+\S*$/, '')}…`
+                                      return <span style={{ display: 'block', fontFamily: BODY, fontSize: 12.5, color: T.textSecondary, lineHeight: 1.45 }}>{line}</span>
+                                    })()}
                                     <span style={{ fontFamily: BODY, fontSize: 12.5, color: T.textSecondary }}>
-                                      {/* Why it fits, not the name again: the first sentence of what
-                                          they fund, falling back to the funder when there is no brief. */}
-                                      {(() => {
-                                        const what = grant.funderBrief?.what_they_fund?.trim()
-                                        if (!what) return grant.funder
-                                        const first = what.match(/^(.{20,140}?[.!?])(\s|$)/)
-                                        return (first ? first[1] : what.length > 140 ? `${what.slice(0, 140).trimEnd()}…` : what)
-                                      })()}
+                                      {grant.funder}
                                       {amount ? ` · ${amount}` : ''}
                                       {grant.deadline ? ` · Deadline ${new Date(grant.deadline).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}` : grant.isRolling ? ' · Rolling' : ''}
                                     </span>
