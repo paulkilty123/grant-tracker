@@ -333,38 +333,14 @@ export default function NewApplicationPage() {
       {step === 'setup' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-          {/* Cross-nudge to the project-first path (replaces the old fork). */}
-          <div style={{
-            background: T.paleGreen, borderRadius: 10, padding: '12px 16px',
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap',
-          }}>
-            <span style={{ fontFamily: BODY, fontSize: 12.5, color: T.sage, lineHeight: 1.5 }}>
-              Applying to more than one funder, or the form is behind a portal? Start with a project
-              and we&apos;ll match you to funders.
-            </span>
-            <button
-              onClick={() => {
-                emitClientEvent(orgId, 'builder_path_chosen', { path: 'project' })
-                router.push('/dashboard/projects/new')
-              }}
-              style={{
-                fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: '#1D3C3E', background: 'transparent',
-                border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: 4,
-              }}
-            >
-              Start a project instead →
-            </button>
-          </div>
-
           {/* Funder / opportunity card */}
           <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, padding: '20px 24px' }}>
             <h2 style={{ fontFamily: UI, fontWeight: 600, fontSize: 16, color: T.textPrimary, margin: '0 0 4px' }}>
               Who are you applying to?
             </h2>
             <p style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary, margin: '0 0 14px', lineHeight: 1.55 }}>
-              Choose a funder from the catalogue and we&apos;ll use everything Shoots knows
-              about them: priorities, exclusions, what a strong application covers. We&apos;ll also
-              check your eligibility before you spend any time writing.
+              Choose a funder from the catalogue. We use what Shoots knows about them and check
+              your eligibility before you write a word.
             </p>
 
             {picked ? (
@@ -454,8 +430,7 @@ export default function NewApplicationPage() {
             </h2>
             <p style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary, margin: '0 0 14px', lineHeight: 1.55 }}>
               Copy the questions straight from the funder&apos;s form or guidance, numbering, word
-              limits and all. We&apos;ll sort them into a checklist you can correct before
-              anything else happens.
+              limits and all. We&apos;ll sort them into a checklist you can correct.
             </p>
 
             {/* Where to get the questions — apply-page link + how-to-apply
@@ -541,8 +516,8 @@ export default function NewApplicationPage() {
             ) : (
               <>
                 <p style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary, margin: '0 0 14px', lineHeight: 1.55 }}>
-                  Filing it against a project is what tells your applications apart when several go to
-                  the same funder, and it colours them to match on your dashboard.
+                  The answers draw on that project&apos;s plans. Pick one, or leave it blank to work
+                  from your profile alone.
                 </p>
                 <select
                   value={projectId ?? 'none'}
@@ -561,6 +536,9 @@ export default function NewApplicationPage() {
           {/* Describe this project — optional material fed into the Build step
               so the per-question drafts compose from real plans, not just the
               org profile. Persisted as applications.project_brief. */}
+          {/* Only when no project is chosen: a chosen project already carries its
+              description, and asking again was a duplicate (Paul, 26 Sept). */}
+          {!projectId && (
           <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, padding: '20px 24px' }}>
             <h2 style={{ fontFamily: UI, fontWeight: 600, fontSize: 16, color: T.textPrimary, margin: '0 0 4px' }}>
               Describe this project{' '}
@@ -575,10 +553,27 @@ export default function NewApplicationPage() {
               value={projectBrief}
               onChange={e => setProjectBrief(e.target.value)}
               rows={6}
-              placeholder={'e.g. We want to run weekly employability workshops for 40 young people in Southall who are not in education or work, over 12 months, with two part-time coaches. The aim is to get at least half into training or a job…'}
+              placeholder={'e.g. A weekly cooking club for isolated older people in Hastings, run from the community centre on Thursday mornings. Twelve places a session, with referrals from the GP surgery and Age UK. We want £8,000 for a year: a part-time coordinator, ingredients, and a minibus for people who cannot get there on their own.'}
               style={{ ...inputStyle(), background: T.editorBg, resize: 'vertical', lineHeight: 1.6, fontSize: 13.5 }}
             />
           </div>
+          )}
+
+          {/* The project-first path, as a quiet line at the end rather than a
+              banner before anyone has started (Paul, 26 Sept). */}
+          <p style={{ fontFamily: BODY, fontSize: 12.5, color: T.textTertiary, margin: '4px 0 0', lineHeight: 1.5 }}>
+            Applying to several funders, or is the form behind a portal?{' '}
+            <button
+              onClick={() => {
+                emitClientEvent(orgId, 'builder_path_chosen', { path: 'project' })
+                router.push('/dashboard/projects/new')
+              }}
+              style={{ fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: '#1D3C3E', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
+            >
+              Start with a project instead
+            </button>
+            {' '}and we match you to funders.
+          </p>
 
           {error && (
             <p style={{ fontFamily: BODY, fontSize: 13.5, color: T.coralText, margin: 0 }}>{error}</p>
