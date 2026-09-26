@@ -7,6 +7,9 @@ import { agentEnabledForOrg } from '@/lib/agent/orchestrator/config'
 import { tierForOrgFlags } from '@/lib/mcp-entitlement'
 import { ToastProvider } from '@/components/ui/Toast'
 import type { Organisation } from '@/types'
+import Link from 'next/link'
+import { isFoundingCohort } from '@/lib/founding-cohort'
+import { billingCard, type SubscriptionRowLike } from '@/lib/billing/account-card'
 
 export default async function AppLayout({
   children,
@@ -42,6 +45,29 @@ export default async function AppLayout({
   // the org row that RLS will be checked against.
   const applyAccess = !!(org as { apply_access?: boolean | null } | null)?.apply_access
 
+  // Day 15. An account whose trial has run out used to land here with the
+  // Apply features quietly missing and nothing saying why (six of the first
+  // cohort, 24 September). One decision, the same one the account page makes,
+  // so the banner and the Billing card cannot disagree. Own row only, by RLS.
+  let lapsed: { endedOn: string | null } | null = null
+  if (org && !applyAccess) {
+    const { data: subRow } = await supabase
+      .from('subscriptions')
+      .select('plan, status, current_period_end, cancel_at_period_end, stripe_customer_id')
+      .eq('owner_id', user.id)
+      .maybeSingle()
+    const card = billingCard({
+      subscription: (subRow as SubscriptionRowLike | null) ?? null,
+      isCohort: isFoundingCohort(user.created_at),
+      grantedAccessUntil: (org as { granted_access_until?: string | null }).granted_access_until ?? null,
+    })
+    if (card.state === 'ended') {
+      const until = (org as { granted_access_until?: string | null }).granted_access_until
+      const d = until && until !== 'infinity' ? new Date(until) : null
+      lapsed = { endedOn: d && !Number.isNaN(d.getTime()) ? d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' }) : null }
+    }
+  }
+
   return (
     <ToastProvider>
       <div className="flex min-h-screen">
@@ -67,6 +93,19 @@ export default async function AppLayout({
           // only; widening it is a 40-page audit, not a one-line change.
           style={{ background: '#FBF8F2' }}
         >
+          {lapsed && (
+            <div style={{ background: '#1D3C3E', color: '#F6F1E7', padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+              <div style={{ fontSize: 14.5, lineHeight: 1.5 }}>
+                <span style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 600 }}>
+                  {lapsed.endedOn ? `Your free trial ended on ${lapsed.endedOn}.` : 'Your free trial has ended.'}
+                </span>{' '}
+                Choose a plan to keep going. Nothing you saved is lost.
+              </div>
+              <Link href="/pricing" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, fontSize: 14, color: '#1D3C3E', background: '#F6F1E7', padding: '9px 20px', borderRadius: 999, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                See plans
+              </Link>
+            </div>
+          )}
           <div className="flex-1 px-4 pt-16 pb-8 md:pt-8 md:px-16">
             {children}
           </div>
